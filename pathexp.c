@@ -38,41 +38,40 @@
 
 #include <glob/strmatch.h>
 
-static int glob_name_is_acceptable PARAMS((const char *));
-static void ignore_globbed_names PARAMS((char **, sh_ignore_func_t *));
-static char *split_ignorespec PARAMS((char *, int *));
-	       
+static bool glob_name_is_acceptable (const char *);
+static void ignore_globbed_names (char **, sh_ignore_func_t *);
+static char *split_ignorespec (char *, int *);
+
 #if defined (USE_POSIX_GLOB_LIBRARY)
 #  include <glob.h>
-typedef int posix_glob_errfunc_t PARAMS((const char *, int));
+typedef int posix_glob_errfunc_t (const char *, int);
 #else
 #  include <glob/glob.h>
 #endif
 
 /* Control whether * matches .files in globbing. */
-int glob_dot_filenames;
+bool glob_dot_filenames;
 
 /* Control whether the extended globbing features are enabled. */
-int extended_glob = EXTGLOB_DEFAULT;
+bool extended_glob = EXTGLOB_DEFAULT;
 
 /* Control enabling special handling of `**' */
-int glob_star = 0;
+bool glob_star = false;
 
 /* Return nonzero if STRING has any unquoted special globbing chars in it.
    This is supposed to be called when pathname expansion is performed, so
    it implements the rules in Posix 2.13.3, specifically that an unquoted
    slash cannot appear in a bracket expression. */
-int
-unquoted_glob_pattern_p (string)
-     register char *string;
+bool
+unquoted_glob_pattern_p (const char *string)
 {
-  register int c;
-  char *send;
-  int open, bsquote;
+  int c;
+  const char *send;
+  bool open;
 
   DECLARE_MBSTATE;
 
-  open = bsquote = 0;
+  open = false;
   send = string + strlen (string);
 
   while (c = *string++)
@@ -81,26 +80,26 @@ unquoted_glob_pattern_p (string)
 	{
 	case '?':
 	case '*':
-	  return (1);
+	  return true;
 
 	case '[':
-	  open++;
+	  open = true;
 	  continue;
 
 	case ']':
 	  if (open)		/* XXX - if --open == 0? */
-	    return (1);
+	    return true;
 	  continue;
 
 	case '/':
 	  if (open)
-	    open = 0;
+	    open = false;
 
 	case '+':
 	case '@':
 	case '!':
 	  if (*string == '(')	/*)*/
-	    return (1);
+	    return true;
 	  continue;
 
 	/* A pattern can't end with a backslash, but a backslash in the pattern
@@ -109,7 +108,6 @@ unquoted_glob_pattern_p (string)
 	case '\\':
 	  if (*string != '\0' && *string != '/')
 	    {
-	      bsquote = 1;
 	      string++;
 	      continue;
 	    }
@@ -119,11 +117,11 @@ unquoted_glob_pattern_p (string)
 	      continue;
 	    }
 	  else if (*string == 0)
-	    return (0);
-	 	  
+	    return false;
+
 	case CTLESC:
 	  if (*string++ == '\0')
-	    return (0);
+	    return false;
 	}
 
       /* Advance one fewer byte than an entire multibyte character to
@@ -137,18 +135,13 @@ unquoted_glob_pattern_p (string)
 #endif
     }
 
-#if 0
-  return (bsquote ? 2 : 0);
-#else
-  return (0);
-#endif
+  return false;
 }
 
 /* Return 1 if C is a character that is `special' in a POSIX ERE and needs to
    be quoted to match itself. */
-static inline int
-ere_char (c)
-     int c;
+static inline bool
+ere_char (int c)
 {
   switch (c)
     {
@@ -164,16 +157,15 @@ ere_char (c)
     case '|':
     case '^':
     case '$':
-      return 1;
-    default: 
-      return 0;
+      return true;
+    default:
+      return false;
     }
-  return (0);
+  return false;
 }
 
-int
-glob_char_p (s)
-     const char *s;
+bool
+glob_char_p (const char *s)
 {
   switch (*s)
     {
@@ -182,15 +174,15 @@ glob_char_p (s)
     case ']':
     case '?':
     case '\\':
-      return 1;
+      return true;
     case '+':
     case '@':
     case '!':
       if (s[1] == '(')	/*(*/
-	return 1;
+	return true;
       break;
     }
-  return 0;
+  return false;
 }
 
 /* PATHNAME can contain characters prefixed by CTLESC; this indicates
@@ -207,12 +199,10 @@ glob_char_p (s)
    performed.  QGLOB_REGEXP means we're quoting for a Posix ERE (for
    [[ string =~ pat ]]) and that requires some special handling. */
 char *
-quote_string_for_globbing (pathname, qflags)
-     const char *pathname;
-     int qflags;
+quote_string_for_globbing (const char *pathname, int qflags)
 {
   char *temp;
-  register int i, j;
+  int i, j;
   int cclass, collsym, equiv, c, last_was_backslash;
   int savei, savej;
 
@@ -381,8 +371,7 @@ endpat:
 }
 
 char *
-quote_globbing_chars (string)
-     const char *string;
+quote_globbing_chars (const char *string)
 {
   size_t slen;
   char *temp, *t;
@@ -408,12 +397,10 @@ quote_globbing_chars (string)
 
 /* Call the glob library to do globbing on PATHNAME. */
 char **
-shell_glob_filename (pathname, qflags)
-     const char *pathname;
-     int qflags;
+shell_glob_filename (const char *pathname, int qflags)
 {
 #if defined (USE_POSIX_GLOB_LIBRARY)
-  register int i;
+  int i;
   char *temp, **results;
   glob_t filenames;
   int glob_flags;
@@ -502,8 +489,7 @@ static struct ignorevar globignore =
    has changed.  If GLOBIGNORE is being unset, we also need to disable
    the globbing of filenames beginning with a `.'. */
 void
-setup_glob_ignore (name)
-     char *name;
+setup_glob_ignore (const char *name)
 {
   char *v;
 
@@ -516,19 +502,18 @@ setup_glob_ignore (name)
     glob_dot_filenames = 0;
 }
 
-int
+bool
 should_ignore_glob_matches ()
 {
-  return globignore.num_ignores;
+  return !!(globignore.num_ignores);
 }
 
 /* Return 0 if NAME matches a pattern in the globignore.ignores list. */
-static int
-glob_name_is_acceptable (name)
-     const char *name;
+static bool
+glob_name_is_acceptable (const char *name)
 {
   struct ign *p;
-  char *n;
+  const char *n;
   int flags;
 
   /* . and .. are never matched. We extend this to the terminal component of a
@@ -540,15 +525,15 @@ glob_name_is_acceptable (name)
     n++;
 
   if (n[0] == '.' && (n[1] == '\0' || (n[1] == '.' && n[2] == '\0')))
-    return (0);
+    return false;
 
   flags = FNM_PATHNAME | FNMATCH_EXTFLAG | FNMATCH_NOCASEGLOB;
   for (p = globignore.ignores; p->val; p++)
     {
       if (strmatch (p->val, (char *)name, flags) != FNM_NOMATCH)
-	return (0);
+	return false;
     }
-  return (1);
+  return true;
 }
 
 /* Internal function to test whether filenames in NAMES should be
@@ -558,9 +543,7 @@ glob_name_is_acceptable (name)
    be removed from NAMES. */
 
 static void
-ignore_globbed_names (names, name_func)
-     char **names;
-     sh_ignore_func_t *name_func;
+ignore_globbed_names (char **names, sh_ignore_func_t *name_func)
 {
   char **newnames;
   int n, i;
@@ -595,8 +578,7 @@ ignore_globbed_names (names, name_func)
 }
 
 void
-ignore_glob_matches (names)
-     char **names;
+ignore_glob_matches (char **names)
 {
   if (globignore.num_ignores == 0)
     return;
@@ -605,9 +587,7 @@ ignore_glob_matches (names)
 }
 
 static char *
-split_ignorespec (s, ip)
-     char *s;
-     int *ip;
+split_ignorespec (char *s, int *ip)
 {
   char *t;
   int n, i;
@@ -623,14 +603,13 @@ split_ignorespec (s, ip)
   t = substring (s, i, n);
 
   if (s[n] == ':')
-    n++;  
-  *ip = n;  
+    n++;
+  *ip = n;
   return t;
 }
-  
+
 void
-setup_ignore_patterns (ivp)
-     struct ignorevar *ivp;
+setup_ignore_patterns (struct ignorevar *ivp)
 {
   int numitems, maxitems, ptr;
   char *colon_bit, *this_ignoreval;

@@ -55,10 +55,10 @@
 
 /* Match STRING against the filename pattern PATTERN,
    returning zero if it matches, FNM_NOMATCH if not.  */
-extern int strmatch PARAMS((char *, char *, int));
+extern int strmatch (const char *, const char *, int);
 
 #if HANDLE_MULTIBYTE
-extern int wcsmatch PARAMS((wchar_t *, wchar_t *, int));
+extern int wcsmatch (const wchar_t *, const wchar_t *, int);
 #endif
 
 #endif /* _STRMATCH_H */

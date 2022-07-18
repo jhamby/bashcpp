@@ -3,7 +3,7 @@
 /* Copyright (C) 1987-2017 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -49,13 +49,13 @@
 #include "rlprivate.h"
 #include "xmalloc.h"
 
-extern void _hs_replace_history_data PARAMS((int, histdata_t *, histdata_t *));
+extern void _hs_replace_history_data (int, histdata_t *, histdata_t *);
 
 extern HIST_ENTRY *_rl_saved_line_for_history;
 
 /* Non-zero tells rl_delete_text and rl_insert_text to not add to
    the undo list. */
-int _rl_doing_an_undo = 0;
+bool _rl_doing_an_undo = false;
 
 /* How many unclosed undo groups we currently have. */
 int _rl_undo_group_level = 0;
@@ -129,28 +129,28 @@ rl_free_undo_list (void)
 UNDO_LIST *
 _rl_copy_undo_entry (UNDO_LIST *entry)
 {
-  UNDO_LIST *new;
+  UNDO_LIST *new_entry;
 
-  new = alloc_undo_entry (entry->what, entry->start, entry->end, (char *)NULL);
-  new->text = entry->text ? savestring (entry->text) : 0;
-  return new;
+  new_entry = alloc_undo_entry (entry->what, entry->start, entry->end, (char *)NULL);
+  new_entry->text = entry->text ? savestring (entry->text) : 0;
+  return new_entry;
 }
 
 UNDO_LIST *
 _rl_copy_undo_list (UNDO_LIST *head)
 {
-  UNDO_LIST *list, *new, *roving, *c;
+  UNDO_LIST *list, *new_list, *roving, *c;
 
   if (head == 0)
     return head;
 
   list = head;
-  new = 0;
+  new_list = 0;
   while (list)
     {
       c = _rl_copy_undo_entry (list);
-      if (new == 0)
-	roving = new = c;
+      if (new_list == 0)
+	roving = new_list = c;
       else
 	{
 	  roving->next = c;
@@ -160,7 +160,7 @@ _rl_copy_undo_list (UNDO_LIST *head)
     }
 
   roving->next = 0;
-  return new;
+  return new_list;
 }
 
 /* Undo the next thing in the list.  Return 0 if there
@@ -180,7 +180,7 @@ rl_do_undo (void)
       if (rl_undo_list == 0)
 	return (0);
 
-      _rl_doing_an_undo = 1;
+      _rl_doing_an_undo = true;
       RL_SETSTATE(RL_STATE_UNDOING);
 
       /* To better support vi-mode, a start or end value of -1 means
@@ -222,7 +222,7 @@ rl_do_undo (void)
 	  break;
 	}
 
-      _rl_doing_an_undo = 0;
+      _rl_doing_an_undo = false;
       RL_UNSETSTATE(RL_STATE_UNDOING);
 
       release = rl_undo_list;
@@ -342,7 +342,7 @@ rl_revert_line (int count, int key)
 	rl_point = rl_mark = 0;		/* rl_end should be set correctly */
 #endif
     }
-    
+
   return 0;
 }
 

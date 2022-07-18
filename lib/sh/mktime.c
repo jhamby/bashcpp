@@ -56,14 +56,6 @@
 #define mktime my_mktime
 #endif /* DEBUG_MKTIME */
 
-#ifndef PARAMS
-#if defined (__GNUC__) || (defined (__STDC__) && __STDC__)
-#define PARAMS(args) args
-#else
-#define PARAMS(args) ()
-#endif  /* GCC.  */
-#endif  /* Not PARAMS.  */
-
 #ifndef CHAR_BIT
 #define CHAR_BIT 8
 #endif
@@ -90,7 +82,7 @@
   ((t) (! TYPE_SIGNED (t) \
 	? (t) -1 \
 	: ((((t) 1 << (sizeof (t) * CHAR_BIT - 2)) - 1) * 2 + 1)))
-                  
+
 #ifndef TIME_T_MIN
 # define TIME_T_MIN TYPE_MINIMUM (time_t)
 #endif
@@ -117,17 +109,15 @@ const unsigned short int __mon_yday[2][13] =
     { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }
   };
 
-static time_t ydhms_tm_diff PARAMS ((int, int, int, int, int, const struct tm *));
-time_t __mktime_internal PARAMS ((struct tm *,
+static time_t ydhms_tm_diff (int, int, int, int, int, const struct tm *);
+time_t __mktime_internal (struct tm *,
 			       struct tm *(*) (const time_t *, struct tm *),
-			       time_t *));
+			       time_t *);
 
 
-static struct tm *my_localtime_r PARAMS ((const time_t *, struct tm *));
+static struct tm *my_localtime_r (const time_t *, struct tm *);
 static struct tm *
-my_localtime_r (t, tp)
-     const time_t *t;
-     struct tm *tp;
+my_localtime_r (const time_t *t, struct tm *tp)
 {
   struct tm *l = localtime (t);
   if (! l)
@@ -143,9 +133,7 @@ my_localtime_r (t, tp)
    All values are in range, except possibly YEAR.
    If overflow occurs, yield the low order bits of the correct answer.  */
 static time_t
-ydhms_tm_diff (year, yday, hour, min, sec, tp)
-     int year, yday, hour, min, sec;
-     const struct tm *tp;
+ydhms_tm_diff (int year, int yday, int hour, int min, int sec, const struct tm *tp)
 {
   /* Compute intervening leap days correctly even if year is negative.
      Take care to avoid int overflow.  time_t overflow is OK, since
@@ -172,8 +160,7 @@ static time_t localtime_offset;
 
 /* Convert *TP to a time_t value.  */
 time_t
-mktime (tp)
-     struct tm *tp;
+mktime (struct tm *tp)
 {
 #ifdef _LIBC
   /* POSIX.1 8.1.1 requires that whenever mktime() is called, the
@@ -191,10 +178,9 @@ mktime (tp)
    compared to what the result would be for UTC without leap seconds.
    If *OFFSET's guess is correct, only one CONVERT call is needed.  */
 time_t
-__mktime_internal (tp, convert, offset)
-     struct tm *tp;
-     struct tm *(*convert) PARAMS ((const time_t *, struct tm *));
-     time_t *offset;
+__mktime_internal (struct tm *tp,
+		   struct tm *(*convert) (const time_t *, struct tm *),
+		   time_t *offset)
 {
   time_t t, dt, t0;
   struct tm tm;
@@ -321,9 +307,7 @@ weak_alias (mktime, timelocal)
 #if DEBUG_MKTIME
 
 static int
-not_equal_tm (a, b)
-     struct tm *a;
-     struct tm *b;
+not_equal_tm (const struct tm *a, const struct tm *b)
 {
   return ((a->tm_sec ^ b->tm_sec)
 	  | (a->tm_min ^ b->tm_min)
@@ -337,8 +321,7 @@ not_equal_tm (a, b)
 }
 
 static void
-print_tm (tp)
-     struct tm *tp;
+print_tm (struct tm *tp)
 {
   printf ("%04d-%02d-%02d %02d:%02d:%02d yday %03d wday %d isdst %d",
 	  tp->tm_year + TM_YEAR_BASE, tp->tm_mon + 1, tp->tm_mday,
@@ -347,11 +330,7 @@ print_tm (tp)
 }
 
 static int
-check_result (tk, tmk, tl, tml)
-     time_t tk;
-     struct tm tmk;
-     time_t tl;
-     struct tm tml;
+check_result (time_t tk, struct tm tmk, time_t tl, struct tm tml)
 {
   if (tk != tl || not_equal_tm (&tmk, &tml))
     {
@@ -367,9 +346,7 @@ check_result (tk, tmk, tl, tml)
 }
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   int status = 0;
   struct tm tm, tmk, tml;
@@ -430,7 +407,7 @@ main (argc, argv)
 }
 
 #endif /* DEBUG_MKTIME */
-
+
 /*
 Local Variables:
 compile-command: "gcc -DDEBUG=1 -Wall -O -g mktime.c -o mktime"

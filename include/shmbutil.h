@@ -17,7 +17,7 @@
    You should have received a copy of the GNU General Public License
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
-                                 
+
 #if !defined (_SH_MBUTIL_H_)
 #define _SH_MBUTIL_H_
 
@@ -29,13 +29,13 @@
 #if defined (HANDLE_MULTIBYTE)
 #include "shmbchar.h"
 
-extern size_t xwcsrtombs PARAMS((char *, const wchar_t **, size_t, mbstate_t *));
-extern size_t xmbsrtowcs PARAMS((wchar_t *, const char **, size_t, mbstate_t *));
-extern size_t xdupmbstowcs PARAMS((wchar_t **, char ***, const char *));
+extern size_t xwcsrtombs (char *, const wchar_t **, size_t, mbstate_t *);
+extern size_t xmbsrtowcs (wchar_t *, const char **, size_t, mbstate_t *);
+extern size_t xdupmbstowcs (wchar_t **, char ***, const char *);
 
-extern size_t mbstrlen PARAMS((const char *));
+extern size_t mbstrlen (const char *);
 
-extern char *xstrchr PARAMS((const char *, int));
+extern char *xstrchr (const char *, int);
 
 extern int locale_mb_cur_max;	/* XXX */
 extern int locale_utf8locale;	/* XXX */
@@ -377,7 +377,7 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      mblength = (mblength < 1) ? 1 : mblength; \
 \
-	    temp = xmalloc (mblength + 2); \
+	    temp = (char *)xmalloc (mblength + 2); \
 	    temp[0] = _escchar; \
 	    for (_i = 0; _i < mblength; _i++) \
 	      temp[_i + 1] = _src[_si++]; \

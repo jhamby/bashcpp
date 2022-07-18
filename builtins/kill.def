@@ -70,7 +70,7 @@ $END
 extern int errno;
 #endif /* !errno */
 
-static void kill_error PARAMS((pid_t, int));
+static void kill_error (pid_t, int);
 
 #if !defined (CONTINUE_AFTER_KILL_ERROR)
 #  define CONTINUE_OR_FAIL return (EXECUTION_FAILURE)
@@ -82,11 +82,10 @@ static void kill_error PARAMS((pid_t, int));
    kill -KILL %1?  No, if you fill up the process table this way you
    can still kill some. */
 int
-kill_builtin (list)
-     WORD_LIST *list;
+kill_builtin (WORD_LIST *list)
 {
-  int sig, any_succeeded, listing, saw_signal, dflags;
-  char *sigspec, *word;
+  int sig, dflags;
+  const char *sigspec, *word;
   pid_t pid;
   intmax_t pid_value;
 
@@ -97,7 +96,7 @@ kill_builtin (list)
     }
   CHECK_HELPOPT (list);
 
-  any_succeeded = listing = saw_signal = 0;
+  bool any_succeeded = false, listing = false, saw_signal = false;
   sig = SIGTERM;
   sigspec = "TERM";
 
@@ -109,12 +108,12 @@ kill_builtin (list)
 
       if (ISOPTION (word, 'l') || ISOPTION (word, 'L'))
 	{
-	  listing++;
-	  list = list->next;
+	  listing = true;
+	  list = (WORD_LIST *)list->next;
 	}
       else if (ISOPTION (word, 's') || ISOPTION (word, 'n'))
 	{
-	  list = list->next;
+	  list = (WORD_LIST *)list->next;
 	  if (list)
 	    {
 	      sigspec = list->word->word;
@@ -123,8 +122,8 @@ use_sigspec:
 		sig = 0;
 	      else
 		sig = decode_signal (sigspec, dflags);
-	      list = list->next;
-	      saw_signal++;
+	      list = (WORD_LIST *)list->next;
+	      saw_signal = true;
 	    }
 	  else
 	    {
@@ -144,7 +143,7 @@ use_sigspec:
 	}
       else if (ISOPTION (word, '-'))
 	{
-	  list = list->next;
+	  list = (WORD_LIST *)list->next;
 	  break;
 	}
       else if (ISOPTION (word, '?'))
@@ -159,8 +158,8 @@ use_sigspec:
 	{
 	  sigspec = word + 1;
 	  sig = decode_signal (sigspec, dflags);
-	  saw_signal++;
-	  list = list->next;
+	  saw_signal = true;
+	  list = (WORD_LIST *)list->next;
 	}
       else
 	break;
@@ -203,7 +202,7 @@ use_sigspec:
 	      CONTINUE_OR_FAIL;
 	    }
 	  else
-	    any_succeeded++;
+	    any_succeeded = true;
 	}
 #if defined (JOB_CONTROL)
       else if (*list->word->word && *list->word->word != '%')
@@ -214,12 +213,10 @@ use_sigspec:
       else if (*word)
 	/* Posix.2 says you can kill without job control active (4.32.4) */
 	{			/* Must be a job spec.  Check it out. */
-	  int job;
 	  sigset_t set, oset;
-	  JOB *j;
 
 	  BLOCK_CHILD (set, oset);
-	  job = get_job_spec (list);
+	  int job = get_job_spec (list);
 
 	  if (INVALID_JOB (job))
 	    {
@@ -229,7 +226,7 @@ use_sigspec:
 	      CONTINUE_OR_FAIL;
 	    }
 
-	  j = get_job_by_jid (job);
+	  JOB *j = get_job_by_jid (job);
 	  /* Job spec used.  Kill the process group. If the job was started
 	     without job control, then its pgrp == shell_pgrp, so we have
 	     to be careful.  We take the pid of the first job in the pipeline
@@ -247,7 +244,7 @@ use_sigspec:
 	      CONTINUE_OR_FAIL;
 	    }
 	  else
-	    any_succeeded++;
+	    any_succeeded = true;
 	}
 #endif /* !JOB_CONTROL */
       else
@@ -256,16 +253,14 @@ use_sigspec:
 	  CONTINUE_OR_FAIL;
 	}
     continue_killing:
-      list = list->next;
+      list = (WORD_LIST *)list->next;
     }
 
   return (any_succeeded ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
 }
 
 static void
-kill_error (pid, e)
-     pid_t pid;
-     int e;
+kill_error (pid_t pid, int e)
 {
   char *x;
 

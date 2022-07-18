@@ -4,7 +4,7 @@
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -80,27 +80,27 @@ extern int errno;
 #  define RL_READLINE_VERSION	0x0800
 #endif
 
-extern void _rl_free_history_entry PARAMS((HIST_ENTRY *));
+extern void _rl_free_history_entry (HIST_ENTRY *);
 
 #if defined (COLOR_SUPPORT)
-extern void _rl_parse_colors PARAMS((void));		/* XXX */
+extern void _rl_parse_colors (void);		/* XXX */
 #endif
 
 
 /* Forward declarations used in this file. */
-static char *readline_internal PARAMS((void));
-static void readline_initialize_everything PARAMS((void));
+static char *readline_internal (void);
+static void readline_initialize_everything (void);
 
-static void bind_arrow_keys_internal PARAMS((Keymap));
-static void bind_arrow_keys PARAMS((void));
+static void bind_arrow_keys_internal (Keymap);
+static void bind_arrow_keys (void);
 
-static void bind_bracketed_paste_prefix PARAMS((void));
+static void bind_bracketed_paste_prefix (void);
 
-static void readline_default_bindings PARAMS((void));
-static void reset_default_bindings PARAMS((void));
+static void readline_default_bindings (void);
+static void reset_default_bindings (void);
 
-static int _rl_subseq_result PARAMS((int, Keymap, int, int));
-static int _rl_subseq_getchar PARAMS((int));
+static int _rl_subseq_result (int, Keymap, int, int);
+static int _rl_subseq_getchar (int);
 
 /* **************************************************************** */
 /*								    */
@@ -131,23 +131,23 @@ int rl_insert_mode = RL_IM_DEFAULT;
 int rl_dispatching;
 
 /* Non-zero if the previous command was a kill command. */
-int _rl_last_command_was_kill = 0;
+bool _rl_last_command_was_kill = false;
 
 /* The current value of the numeric argument specified by the user. */
 int rl_numeric_arg = 1;
 
 /* Non-zero if an argument was typed. */
-int rl_explicit_arg = 0;
+int rl_explicit_arg = false;
 
 /* Temporary value used while generating the argument. */
 int rl_arg_sign = 1;
 
 /* Non-zero means we have been called at least once before. */
-static int rl_initialized;
+static bool rl_initialized;
 
 #if 0
 /* If non-zero, this program is running in an EMACS buffer. */
-static int running_in_emacs;
+static bool running_in_emacs;
 #endif
 
 /* Flags word encapsulating the current readline state. */
@@ -182,7 +182,7 @@ FILE *rl_outstream = (FILE *)NULL;
    set to 1 if there is a controlling terminal, we can get its attributes,
    and the attributes include `echo'.  Look at rltty.c:prepare_terminal_settings
    for the code that sets it. */
-int _rl_echoing_p = 0;
+bool _rl_echoing_p = false;
 
 /* Current prompt. */
 char *rl_prompt = (char *)NULL;
@@ -219,22 +219,22 @@ int _rl_eof_char = CTRL ('D');
 int rl_pending_input = 0;
 
 /* If non-zero when readline_internal returns, it means we found EOF */
-int _rl_eof_found = 0;
+bool _rl_eof_found = false;
 
 /* Pointer to a useful terminal name. */
 const char *rl_terminal_name = (const char *)NULL;
 
 /* Non-zero means to always use horizontal scrolling in line display. */
-int _rl_horizontal_scroll_mode = 0;
+bool _rl_horizontal_scroll_mode = false;
 
 /* Non-zero means to display an asterisk at the starts of history lines
    which have been modified. */
-int _rl_mark_modified_lines = 0;
+bool _rl_mark_modified_lines = false;
 
 /* The style of `bell' notification preferred.  This can be set to NO_BELL,
    AUDIBLE_BELL, or VISIBLE_BELL. */
 int _rl_bell_preference = AUDIBLE_BELL;
-     
+
 /* String inserted into the line by rl_insert_comment (). */
 char *_rl_comment_begin;
 
@@ -275,11 +275,11 @@ int _rl_keyseq_timeout = 500;
       if (rl_key_sequence_length + 2 >= _rl_executing_keyseq_size) \
 	{ \
 	  _rl_executing_keyseq_size += 16; \
-	  rl_executing_keyseq = xrealloc (rl_executing_keyseq, _rl_executing_keyseq_size); \
+	  rl_executing_keyseq = (char *)xrealloc (rl_executing_keyseq, _rl_executing_keyseq_size); \
 	} \
     } \
   while (0);
-        
+
 /* Forward declarations used by the display, termcap, and history code. */
 
 /* **************************************************************** */
@@ -290,39 +290,39 @@ int _rl_keyseq_timeout = 500;
 
 /* Non-zero means do not parse any lines other than comments and
    parser directives. */
-unsigned char _rl_parsing_conditionalized_out = 0;
+unsigned char _rl_parsing_conditionalized_out = false;
 
 /* Non-zero means to convert characters with the meta bit set to
    escape-prefixed characters so we can indirect through
    emacs_meta_keymap or vi_escape_keymap. */
-int _rl_convert_meta_chars_to_ascii = 1;
+bool _rl_convert_meta_chars_to_ascii = true;
 
 /* Non-zero means to output characters with the meta bit set directly
    rather than as a meta-prefixed escape sequence. */
-int _rl_output_meta_chars = 0;
+bool _rl_output_meta_chars = false;
 
 /* Non-zero means to look at the termios special characters and bind
    them to equivalent readline functions at startup. */
-int _rl_bind_stty_chars = 1;
+bool _rl_bind_stty_chars = true;
 
 /* Non-zero means to go through the history list at every newline (or
    whenever rl_done is set and readline returns) and revert each line to
    its initial state. */
-int _rl_revert_all_at_newline = 0;
+bool _rl_revert_all_at_newline = false;
 
 /* Non-zero means to honor the termios ECHOCTL bit and echo control
    characters corresponding to keyboard-generated signals. */
-int _rl_echo_control_chars = 1;
+bool _rl_echo_control_chars = true;
 
 /* Non-zero means to prefix the displayed prompt with a character indicating
    the editing mode: @ for emacs, : for vi-command, + for vi-insert. */
-int _rl_show_mode_in_prompt = 0;
+bool _rl_show_mode_in_prompt = false;
 
 /* Non-zero means to attempt to put the terminal in `bracketed paste mode',
    where it will prefix pasted text with an escape sequence and send
    another to mark the end of the paste. */
-int _rl_enable_bracketed_paste = BRACKETED_PASTE_DEFAULT;
-int _rl_enable_active_region = BRACKETED_PASTE_DEFAULT;
+bool _rl_enable_bracketed_paste = BRACKETED_PASTE_DEFAULT;
+bool _rl_enable_active_region = BRACKETED_PASTE_DEFAULT;
 
 /* **************************************************************** */
 /*								    */
@@ -331,7 +331,7 @@ int _rl_enable_active_region = BRACKETED_PASTE_DEFAULT;
 /* **************************************************************** */
 
 /* Non-zero means treat 0200 bit in terminal input as Meta bit. */
-int _rl_meta_flag = 0;	/* Forward declaration */
+bool _rl_meta_flag = false;	/* Forward declaration */
 
 /* Set up the prompt and expand it.  Called from readline() and
    rl_callback_handler_install (). */
@@ -345,7 +345,7 @@ rl_set_prompt (const char *prompt)
   rl_visible_prompt_length = rl_expand_prompt (rl_prompt);
   return 0;
 }
-  
+
 /* Read a line of input.  Prompt with PROMPT.  An empty PROMPT means
    none.  A return value of NULL means that EOF was encountered. */
 char *
@@ -822,19 +822,19 @@ _rl_dispatch_callback (_rl_keyseq_cxt *cxt)
   return r;
 }
 #endif /* READLINE_CALLBACKS */
-  
+
 /* Do the command associated with KEY in MAP.
    If the associated command is really a keymap, then read
    another key, and dispatch into that map. */
 int
-_rl_dispatch (register int key, Keymap map)
+_rl_dispatch (int key, Keymap map)
 {
   _rl_dispatching_keymap = map;
   return _rl_dispatch_subseq (key, map, 0);
 }
 
 int
-_rl_dispatch_subseq (register int key, Keymap map, int got_subseq)
+_rl_dispatch_subseq (int key, Keymap map, int got_subseq)
 {
   int r, newkey;
   char *macro;
@@ -964,7 +964,7 @@ _rl_dispatch_subseq (register int key, Keymap map, int got_subseq)
 	      (RL_ISSTATE (RL_STATE_MACROINPUT) && _rl_peek_macro_key () == 0) &&
 	      _rl_pushed_input_available () == 0 &&
 	      _rl_input_queued ((_rl_keyseq_timeout > 0) ? _rl_keyseq_timeout*1000 : 0) == 0)
-	    return (_rl_dispatch (ANYOTHERKEY, FUNCTION_TO_KEYMAP (map, key)));	      
+	    return (_rl_dispatch (ANYOTHERKEY, FUNCTION_TO_KEYMAP (map, key)));
 #endif
 
 	  RESIZE_KEYSEQ_BUFFER ();
@@ -1145,12 +1145,12 @@ rl_initialize (void)
 {
   /* If we have never been called before, initialize the
      terminal and data structures. */
-  if (rl_initialized == 0)
+  if (!rl_initialized)
     {
       RL_SETSTATE(RL_STATE_INITIALIZING);
       readline_initialize_everything ();
       RL_UNSETSTATE(RL_STATE_INITIALIZING);
-      rl_initialized++;
+      rl_initialized = true;
       RL_SETSTATE(RL_STATE_INITIALIZED);
     }
   else
@@ -1258,7 +1258,7 @@ readline_initialize_everything (void)
 
   /* Decide whether we should automatically go into eight-bit mode. */
   _rl_init_eightbit ();
-      
+
   /* Read in the init file. */
   rl_read_init_file ((char *)NULL);
 
@@ -1290,7 +1290,7 @@ readline_initialize_everything (void)
     _rl_parse_colors ();
 #endif
 
-  rl_executing_keyseq = malloc (_rl_executing_keyseq_size = 16);
+  rl_executing_keyseq = (char *)malloc (_rl_executing_keyseq_size = 16);
   if (rl_executing_keyseq)
     rl_executing_keyseq[rl_key_sequence_length = 0] = '\0';
 }
@@ -1416,7 +1416,7 @@ bind_bracketed_paste_prefix (void)
 
   _rl_keymap = xkeymap;
 }
-  
+
 /* **************************************************************** */
 /*								    */
 /*		Saving and Restoring Readline's state		    */

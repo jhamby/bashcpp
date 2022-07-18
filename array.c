@@ -45,25 +45,25 @@
 #include "array.h"
 #include "builtins/common.h"
 
-#define ADD_BEFORE(ae, new) \
+#define ADD_BEFORE(ae, new_) \
 	do { \
-		ae->prev->next = new; \
-		new->prev = ae->prev; \
-		ae->prev = new; \
-		new->next = ae; \
+		ae->prev->next = new_; \
+		new_->prev = ae->prev; \
+		ae->prev = new_; \
+		new_->next = ae; \
 	} while(0)
-	
-#define ADD_AFTER(ae, new) \
+
+#define ADD_AFTER(ae, new_) \
 	do { \
-		ae->next->prev = new; \
-		new->next = ae->next; \
-		new->prev = ae; \
-		ae->next = new; \
+		ae->next->prev = new_; \
+		new_->next = ae->next; \
+		new_->prev = ae; \
+		ae->next = new_; \
 	} while (0)
 
-static char *array_to_string_internal PARAMS((ARRAY_ELEMENT *, ARRAY_ELEMENT *, char *, int));
+static char *array_to_string_internal (ARRAY_ELEMENT *, ARRAY_ELEMENT *, const char *, int);
 
-static char *spacesep = " ";
+static const char *spacesep = " ";
 
 #define IS_LASTREF(a)	(a->lastref)
 
@@ -95,15 +95,12 @@ array_create()
 }
 
 void
-array_flush (a)
-ARRAY	*a;
+array_flush (ARRAY *a)
 {
-	register ARRAY_ELEMENT *r, *r1;
-
 	if (a == 0)
 		return;
-	for (r = element_forw(a->head); r != a->head; ) {
-		r1 = element_forw(r);
+	for (ARRAY_ELEMENT *r = element_forw(a->head); r != a->head; ) {
+		ARRAY_ELEMENT *r1 = element_forw(r);
 		array_dispose_element(r);
 		r = r1;
 	}
@@ -114,8 +111,7 @@ ARRAY	*a;
 }
 
 void
-array_dispose(a)
-ARRAY	*a;
+array_dispose(ARRAY *a)
 {
 	if (a == 0)
 		return;
@@ -125,11 +121,10 @@ ARRAY	*a;
 }
 
 ARRAY *
-array_copy(a)
-ARRAY	*a;
+array_copy(ARRAY *a)
 {
 	ARRAY	*a1;
-	ARRAY_ELEMENT	*ae, *new;
+	ARRAY_ELEMENT	*ae, *new_;
 
 	if (a == 0)
 		return((ARRAY *) NULL);
@@ -138,10 +133,10 @@ ARRAY	*a;
 	a1->max_index = a->max_index;
 	a1->num_elements = a->num_elements;
 	for (ae = element_forw(a->head); ae != a->head; ae = element_forw(ae)) {
-		new = array_create_element(element_index(ae), element_value(ae));
-		ADD_BEFORE(a1->head, new);
+		new_ = array_create_element(element_index(ae), element_value(ae));
+		ADD_BEFORE(a1->head, new_);
 		if (ae == LASTREF(a))
-			SET_LASTREF(a1, new);
+			SET_LASTREF(a1, new_);
 	}
 	return(a1);
 }
@@ -151,9 +146,7 @@ ARRAY	*a;
  * S to E, inclusive.
  */
 ARRAY *
-array_slice(array, s, e)
-ARRAY		*array;
-ARRAY_ELEMENT	*s, *e;
+array_slice(ARRAY *array, ARRAY_ELEMENT *s, ARRAY_ELEMENT *e)
 {
 	ARRAY	*a;
 	ARRAY_ELEMENT *p, *n;
@@ -178,18 +171,16 @@ ARRAY_ELEMENT	*s, *e;
  * element as the argument.
  */
 void
-array_walk(a, func, udata)
-ARRAY	*a;
-sh_ae_map_func_t *func;
-void	*udata;
+array_walk(ARRAY *a, sh_ae_map_func_t *func, void *udata)
 {
-	register ARRAY_ELEMENT *ae;
-
 	if (a == 0 || array_empty(a))
 		return;
-	for (ae = element_forw(a->head); ae != a->head; ae = element_forw(ae))
+	for (ARRAY_ELEMENT *ae = element_forw(a->head); ae != a->head;
+	     ae = element_forw(ae))
+	  {
 		if ((*func)(ae, udata) < 0)
 			return;
+	  }
 }
 
 /*
@@ -201,12 +192,10 @@ void	*udata;
  * and returns NULL.
  */
 ARRAY_ELEMENT *
-array_shift(a, n, flags)
-ARRAY	*a;
-int	n, flags;
+array_shift(ARRAY *a, int n, int flags)
 {
-	register ARRAY_ELEMENT *ae, *ret;
-	register int i;
+	ARRAY_ELEMENT *ae, *ret;
+	int i;
 
 	if (a == 0 || array_empty(a) || n <= 0)
 		return ((ARRAY_ELEMENT *)NULL);
@@ -261,22 +250,17 @@ int	n, flags;
  * shift.
  */
 int
-array_rshift (a, n, s)
-ARRAY	*a;
-int	n;
-char	*s;
+array_rshift (ARRAY *a, int n, char *s)
 {
-	register ARRAY_ELEMENT	*ae, *new;
-
 	if (a == 0 || (array_empty(a) && s == 0))
 		return 0;
 	else if (n <= 0)
 		return (a->num_elements);
 
-	ae = element_forw(a->head);
+	ARRAY_ELEMENT *ae = element_forw(a->head);
 	if (s) {
-		new = array_create_element(0, s);
-		ADD_BEFORE(ae, new);
+		ARRAY_ELEMENT *new_ = array_create_element(0, s);
+		ADD_BEFORE(ae, new_);
 		a->num_elements++;
 		if (array_num_elements(a) == 1)	{	/* array was empty */
 			a->max_index = 0;
@@ -297,23 +281,19 @@ char	*s;
 }
 
 ARRAY_ELEMENT *
-array_unshift_element(a)
-ARRAY	*a;
+array_unshift_element(ARRAY *a)
 {
 	return (array_shift (a, 1, 0));
 }
 
 int
-array_shift_element(a, v)
-ARRAY	*a;
-char	*v;
+array_shift_element(ARRAY *a, char *v)
 {
 	return (array_rshift (a, 1, v));
 }
 
 ARRAY *
-array_quote(array)
-ARRAY	*array;
+array_quote(ARRAY *array)
 {
 	ARRAY_ELEMENT	*a;
 	char	*t;
@@ -329,8 +309,7 @@ ARRAY	*array;
 }
 
 ARRAY *
-array_quote_escapes(array)
-ARRAY	*array;
+array_quote_escapes(ARRAY *array)
 {
 	ARRAY_ELEMENT	*a;
 	char	*t;
@@ -346,8 +325,7 @@ ARRAY	*array;
 }
 
 ARRAY *
-array_dequote(array)
-ARRAY	*array;
+array_dequote(ARRAY *array)
 {
 	ARRAY_ELEMENT	*a;
 	char	*t;
@@ -363,8 +341,7 @@ ARRAY	*array;
 }
 
 ARRAY *
-array_dequote_escapes(array)
-ARRAY	*array;
+array_dequote_escapes(ARRAY *array)
 {
 	ARRAY_ELEMENT	*a;
 	char	*t;
@@ -380,8 +357,7 @@ ARRAY	*array;
 }
 
 ARRAY *
-array_remove_quoted_nulls(array)
-ARRAY	*array;
+array_remove_quoted_nulls(ARRAY *array)
 {
 	ARRAY_ELEMENT	*a;
 
@@ -398,10 +374,8 @@ ARRAY	*array;
  * Since arrays are sparse, unset array elements are not counted.
  */
 char *
-array_subrange (a, start, nelem, starsub, quoted, pflags)
-ARRAY	*a;
-arrayind_t	start, nelem;
-int	starsub, quoted, pflags;
+array_subrange (ARRAY *a, arrayind_t start, arrayind_t nelem, int starsub,
+                int quoted, int pflags)
 {
 	ARRAY		*a2;
 	ARRAY_ELEMENT	*h, *p;
@@ -443,10 +417,7 @@ int	starsub, quoted, pflags;
 }
 
 char *
-array_patsub (a, pat, rep, mflags)
-ARRAY	*a;
-char	*pat, *rep;
-int	mflags;
+array_patsub (ARRAY *a, char *pat, char *rep, int mflags)
 {
 	char	*t;
 	int	pchar, qflags, pflags;
@@ -459,7 +430,7 @@ int	mflags;
 	if (wl == 0)
 		return (char *)NULL;
 
-	for (save = wl; wl; wl = wl->next) {
+	for (save = wl; wl; wl = (WORD_LIST *)(wl->next)) {
 		t = pat_subst (wl->word->word, pat, rep, mflags);
 		FREE (wl->word->word);
 		wl->word->word = t;
@@ -476,11 +447,7 @@ int	mflags;
 }
 
 char *
-array_modcase (a, pat, modop, mflags)
-ARRAY	*a;
-char	*pat;
-int	modop;
-int	mflags;
+array_modcase (ARRAY *a, char *pat, int modop, int mflags)
 {
 	char	*t;
 	int	pchar, qflags, pflags;
@@ -493,7 +460,7 @@ int	mflags;
 	if (wl == 0)
 		return ((char *)NULL);
 
-	for (save = wl; wl; wl = wl->next) {
+	for (save = wl; wl; wl = (WORD_LIST *)(wl->next)) {
 		t = sh_modcase(wl->word->word, pat, modop);
 		FREE(wl->word->word);
 		wl->word->word = t;
@@ -514,9 +481,7 @@ int	mflags;
  * VALUE.
  */
 ARRAY_ELEMENT *
-array_create_element(indx, value)
-arrayind_t	indx;
-char	*value;
+array_create_element(arrayind_t indx, char *value)
 {
 	ARRAY_ELEMENT *r;
 
@@ -529,8 +494,7 @@ char	*value;
 
 #ifdef INCLUDE_UNUSED
 ARRAY_ELEMENT *
-array_copy_element(ae)
-ARRAY_ELEMENT	*ae;
+array_copy_element(ARRAY_ELEMENT *ae)
 {
 	return(ae ? array_create_element(element_index(ae), element_value(ae))
 		  : (ARRAY_ELEMENT *) NULL);
@@ -538,8 +502,7 @@ ARRAY_ELEMENT	*ae;
 #endif
 
 void
-array_dispose_element(ae)
-ARRAY_ELEMENT	*ae;
+array_dispose_element(ARRAY_ELEMENT *ae)
 {
 	if (ae) {
 		FREE(ae->value);
@@ -551,34 +514,27 @@ ARRAY_ELEMENT	*ae;
  * Add a new element with index I and value V to array A (a[i] = v).
  */
 int
-array_insert(a, i, v)
-ARRAY	*a;
-arrayind_t	i;
-char	*v;
+array_insert(ARRAY *a, arrayind_t i, char *v)
 {
-	register ARRAY_ELEMENT *new, *ae, *start;
-	arrayind_t startind;
-	int direction;
-
 	if (a == 0)
 		return(-1);
-	new = array_create_element(i, v);
+	ARRAY_ELEMENT *new_ = array_create_element(i, v);
 	if (i > array_max_index(a)) {
 		/*
 		 * Hook onto the end.  This also works for an empty array.
 		 * Fast path for the common case of allocating arrays
 		 * sequentially.
 		 */
-		ADD_BEFORE(a->head, new);
+		ADD_BEFORE(a->head, new_);
 		a->max_index = i;
 		a->num_elements++;
-		SET_LASTREF(a, new);
+		SET_LASTREF(a, new_);
 		return(0);
 	} else if (i < array_first_index(a)) {
 		/* Hook at the beginning */
-		ADD_AFTER(a->head, new);
+		ADD_AFTER(a->head, new_);
 		a->num_elements++;
-		SET_LASTREF(a, new);
+		SET_LASTREF(a, new_);
 		return(0);
 	}
 #if OPTIMIZE_SEQUENTIAL_ARRAY_ASSIGNMENT
@@ -587,10 +543,11 @@ char	*v;
 	 * handle optimizes the case of sequential or almost-sequential
 	 * assignments that are not at the end of the array.
 	 */
-	start = LASTREF(a);
+	ARRAY_ELEMENT *start = LASTREF(a);
 	/* Use same strategy as array_reference to avoid paying large penalty
 	   for semi-random assignment pattern. */
-	startind = element_index(start);
+	arrayind_t startind = element_index(start);
+	int direction;
 	if (i < startind/2) {
 		start = element_forw(a->head);
 		startind = element_index(start);
@@ -605,32 +562,32 @@ char	*v;
 	startind = element_index(start);
 	direction = 1;
 #endif
-	for (ae = start; ae != a->head; ) {
+	for (ARRAY_ELEMENT *ae = start; ae != a->head; ) {
 		if (element_index(ae) == i) {
 			/*
 			 * Replacing an existing element.
 			 */
 			free(element_value(ae));
 			/* Just swap in the new value */
-			ae->value = new->value;
-			new->value = 0;
-			array_dispose_element(new);
+			ae->value = new_->value;
+			new_->value = 0;
+			array_dispose_element(new_);
 			SET_LASTREF(a, ae);
 			return(0);
 		} else if (direction == 1 && element_index(ae) > i) {
-			ADD_BEFORE(ae, new);
+			ADD_BEFORE(ae, new_);
 			a->num_elements++;
-			SET_LASTREF(a, new);
+			SET_LASTREF(a, new_);
 			return(0);
 		} else if (direction == -1 && element_index(ae) < i) {
-			ADD_AFTER(ae, new);
+			ADD_AFTER(ae, new_);
 			a->num_elements++;
-			SET_LASTREF(a, new);
+			SET_LASTREF(a, new_);
 			return(0);
 		}
 		ae = direction == 1 ? element_forw(ae) : element_back(ae);
 	}
-	array_dispose_element(new);
+	array_dispose_element(new_);
 	INVALIDATE_LASTREF(a);
 	return (-1);		/* problem */
 }
@@ -640,22 +597,17 @@ char	*v;
  * caller can dispose of it.
  */
 ARRAY_ELEMENT *
-array_remove(a, i)
-ARRAY	*a;
-arrayind_t	i;
+array_remove(ARRAY *a, arrayind_t i)
 {
-	register ARRAY_ELEMENT *ae, *start;
-	arrayind_t startind;
-	int direction;
-
 	if (a == 0 || array_empty(a))
 		return((ARRAY_ELEMENT *) NULL);
 	if (i > array_max_index(a) || i < array_first_index(a))
 		return((ARRAY_ELEMENT *)NULL);	/* Keep roving pointer into array to optimize sequential access */
-	start = LASTREF(a);
+	ARRAY_ELEMENT *start = LASTREF(a);
 	/* Use same strategy as array_reference to avoid paying large penalty
 	   for semi-random assignment pattern. */
-	startind = element_index(start);
+	arrayind_t startind = element_index(start);
+	int direction;
 	if (i < startind/2) {
 		start = element_forw(a->head);
 		startind = element_index(start);
@@ -665,7 +617,7 @@ arrayind_t	i;
 	} else {
 		direction = -1;
 	}
-	for (ae = start; ae != a->head; ) {
+	for (ARRAY_ELEMENT *ae = start; ae != a->head; ) {
 		if (element_index(ae) == i) {
 			ae->next->prev = ae->prev;
 			ae->prev->next = ae->next;
@@ -697,20 +649,16 @@ arrayind_t	i;
  * Return the value of a[i].
  */
 char *
-array_reference(a, i)
-ARRAY	*a;
-arrayind_t	i;
+array_reference(ARRAY *a, arrayind_t i)
 {
-	register ARRAY_ELEMENT *ae, *start;
-	arrayind_t startind;
-	int direction;
-
 	if (a == 0 || array_empty(a))
 		return((char *) NULL);
 	if (i > array_max_index(a) || i < array_first_index(a))
 		return((char *)NULL);	/* Keep roving pointer into array to optimize sequential access */
-	start = LASTREF(a);	/* lastref pointer */
-	startind = element_index(start);
+
+	ARRAY_ELEMENT *start = LASTREF(a);	/* lastref pointer */
+	arrayind_t startind = element_index(start);
+	int direction;
 	if (i < startind/2) {	/* XXX - guess */
 		start = element_forw(a->head);
 		startind = element_index(start);
@@ -720,7 +668,7 @@ arrayind_t	i;
 	} else {
 		direction = -1;
 	}
-	for (ae = start; ae != a->head; ) {
+	for (ARRAY_ELEMENT *ae = start; ae != a->head; ) {
 		if (element_index(ae) == i) {
 			SET_LASTREF(a, ae);
 			return(element_value(ae));
@@ -751,8 +699,7 @@ arrayind_t	i;
    by the rest of the code. */
 
 WORD_LIST *
-array_to_word_list(a)
-ARRAY	*a;
+array_to_word_list(ARRAY *a)
 {
 	WORD_LIST	*list;
 	ARRAY_ELEMENT	*ae;
@@ -766,8 +713,7 @@ ARRAY	*a;
 }
 
 ARRAY *
-array_from_word_list (list)
-WORD_LIST	*list;
+array_from_word_list (WORD_LIST *list)
 {
 	ARRAY	*a;
 
@@ -778,8 +724,7 @@ WORD_LIST	*list;
 }
 
 WORD_LIST *
-array_keys_to_word_list(a)
-ARRAY	*a;
+array_keys_to_word_list(ARRAY *a)
 {
 	WORD_LIST	*list;
 	ARRAY_ELEMENT	*ae;
@@ -797,22 +742,18 @@ ARRAY	*a;
 }
 
 ARRAY *
-array_assign_list (array, list)
-ARRAY	*array;
-WORD_LIST	*list;
+array_assign_list (ARRAY *array, WORD_LIST *list)
 {
-	register WORD_LIST *l;
-	register arrayind_t i;
+	WORD_LIST *l;
+	arrayind_t i;
 
-	for (l = list, i = 0; l; l = l->next, i++)
+	for (l = list, i = 0; l; l = (WORD_LIST *)(l->next), i++)
 		array_insert(array, i, l->word->word);
 	return array;
 }
 
 char **
-array_to_argv (a, countp)
-ARRAY	*a;
-int	*countp;
+array_to_argv (ARRAY *a, int *countp)
 {
 	char		**ret, *t;
 	int		i;
@@ -835,16 +776,14 @@ int	*countp;
 		*countp = i;
 	return (ret);
 }
-	
+
 /*
  * Return a string that is the concatenation of the elements in A from START
  * to END, separated by SEP.
  */
 static char *
-array_to_string_internal (start, end, sep, quoted)
-ARRAY_ELEMENT	*start, *end;
-char	*sep;
-int	quoted;
+array_to_string_internal (ARRAY_ELEMENT *start, ARRAY_ELEMENT *end,
+                          const char *sep, int quoted)
 {
 	char	*result, *t;
 	ARRAY_ELEMENT *ae;
@@ -882,9 +821,7 @@ int	quoted;
 }
 
 char *
-array_to_kvpair (a, quoted)
-ARRAY	*a;
-int	quoted;
+array_to_kvpair (ARRAY *a, int quoted)
 {
 	char	*result, *valstr, *is;
 	char	indstr[INT_STRLEN_BOUND(intmax_t) + 1];
@@ -936,9 +873,7 @@ int	quoted;
 }
 
 char *
-array_to_assign (a, quoted)
-ARRAY	*a;
-int	quoted;
+array_to_assign (ARRAY *a, int quoted)
 {
 	char	*result, *valstr, *is;
 	char	indstr[INT_STRLEN_BOUND(intmax_t) + 1];
@@ -990,10 +925,7 @@ int	quoted;
 }
 
 char *
-array_to_string (a, sep, quoted)
-ARRAY	*a;
-char	*sep;
-int	quoted;
+array_to_string (ARRAY *a, const char *sep, int quoted)
 {
 	if (a == 0)
 		return((char *)NULL);
@@ -1007,8 +939,7 @@ int	quoted;
  * Return an array consisting of elements in S, separated by SEP
  */
 ARRAY *
-array_from_string(s, sep)
-char	*s, *sep;
+array_from_string(char *s, char *sep)
 {
 	ARRAY	*a;
 	WORD_LIST *w;
@@ -1031,8 +962,7 @@ char	*s, *sep;
 int interrupt_immediately = 0;
 
 int
-signal_is_trapped(s)
-int	s;
+signal_is_trapped(int s)
 {
 	return 0;
 }
@@ -1052,8 +982,7 @@ programming_error(const char *s, ...)
 }
 
 WORD_DESC *
-make_bare_word (s)
-const char	*s;
+make_bare_word (const char *s)
 {
 	WORD_DESC *w;
 
@@ -1064,9 +993,7 @@ const char	*s;
 }
 
 WORD_LIST *
-make_word_list(x, l)
-WORD_DESC	*x;
-WORD_LIST	*l;
+make_word_list(WORD_DESC *x, WORD_LIST *l)
 {
 	WORD_LIST *w;
 
@@ -1077,9 +1004,7 @@ WORD_LIST	*l;
 }
 
 WORD_LIST *
-list_string(s, t, i)
-char	*s, *t;
-int	i;
+list_string(char *s, char *t, int i)
 {
 	char	*r, *a;
 	WORD_LIST	*wl;
@@ -1097,10 +1022,9 @@ int	i;
 }
 
 GENERIC_LIST *
-list_reverse (list)
-GENERIC_LIST	*list;
+list_reverse (GENERIC_LIST *list)
 {
-	register GENERIC_LIST *next, *prev;
+	GENERIC_LIST *next, *prev;
 
 	for (prev = 0; list; ) {
 		next = list->next;
@@ -1112,22 +1036,18 @@ GENERIC_LIST	*list;
 }
 
 char *
-pat_subst(s, t, u, i)
-char	*s, *t, *u;
-int	i;
+pat_subst(char *s, char *t, char *u, int i)
 {
 	return ((char *)NULL);
 }
 
 char *
-quote_string(s)
-char	*s;
+quote_string(char *s)
 {
 	return savestring(s);
 }
 
-print_element(ae)
-ARRAY_ELEMENT	*ae;
+print_element(ARRAY_ELEMENT *ae)
 {
 	char	lbuf[INT_STRLEN_BOUND (intmax_t) + 1];
 
@@ -1136,8 +1056,7 @@ ARRAY_ELEMENT	*ae;
 		element_value(ae));
 }
 
-print_array(a)
-ARRAY	*a;
+print_array(ARRAY *a)
 {
 	printf("\n");
 	array_walk(a, print_element, (void *)NULL);

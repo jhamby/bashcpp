@@ -55,7 +55,7 @@ struct timeval
 #endif
 
 #if !HAVE_GETTIMEOFDAY
-extern int gettimeofday PARAMS((struct timeval *, void *));
+extern int gettimeofday (struct timeval *, void *);
 #endif
 
 #endif /* _POSIXTIME_H_ */

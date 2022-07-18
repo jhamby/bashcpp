@@ -44,13 +44,12 @@
 #include "assoc.h"
 #include "builtins/common.h"
 
-static WORD_LIST *assoc_to_word_list_internal PARAMS((HASH_TABLE *, int));
+static WORD_LIST *assoc_to_word_list_internal (HASH_TABLE *, int);
 
 /* assoc_create == hash_create */
 
 void
-assoc_dispose (hash)
-     HASH_TABLE *hash;
+assoc_dispose (HASH_TABLE *hash)
 {
   if (hash)
     {
@@ -60,17 +59,13 @@ assoc_dispose (hash)
 }
 
 void
-assoc_flush (hash)
-     HASH_TABLE *hash;
+assoc_flush (HASH_TABLE *hash)
 {
   hash_flush (hash, 0);
 }
 
 int
-assoc_insert (hash, key, value)
-     HASH_TABLE *hash;
-     char *key;
-     char *value;
+assoc_insert (HASH_TABLE *hash, char *key, char *value)
 {
   BUCKET_CONTENTS *b;
 
@@ -89,10 +84,7 @@ assoc_insert (hash, key, value)
 
 /* Like assoc_insert, but returns b->data instead of freeing it */
 PTR_T
-assoc_replace (hash, key, value)
-     HASH_TABLE *hash;
-     char *key;
-     char *value;
+assoc_replace (HASH_TABLE *hash, char *key, char *value)
 {
   BUCKET_CONTENTS *b;
   PTR_T t;
@@ -111,9 +103,7 @@ assoc_replace (hash, key, value)
 }
 
 void
-assoc_remove (hash, string)
-     HASH_TABLE *hash;
-     char *string;
+assoc_remove (HASH_TABLE *hash, char *string)
 {
   BUCKET_CONTENTS *b;
 
@@ -127,9 +117,7 @@ assoc_remove (hash, string)
 }
 
 char *
-assoc_reference (hash, string)
-     HASH_TABLE *hash;
-     char *string;
+assoc_reference (HASH_TABLE *hash, const char *string)
 {
   BUCKET_CONTENTS *b;
 
@@ -143,8 +131,7 @@ assoc_reference (hash, string)
 /* Quote the data associated with each element of the hash table ASSOC,
    using quote_string */
 HASH_TABLE *
-assoc_quote (h)
-     HASH_TABLE *h;
+assoc_quote (HASH_TABLE *h)
 {
   int i;
   BUCKET_CONTENTS *tlist;
@@ -152,7 +139,7 @@ assoc_quote (h)
 
   if (h == 0 || assoc_empty (h))
     return ((HASH_TABLE *)NULL);
-  
+
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
@@ -167,8 +154,7 @@ assoc_quote (h)
 /* Quote escape characters in the data associated with each element
    of the hash table ASSOC, using quote_escapes */
 HASH_TABLE *
-assoc_quote_escapes (h)
-     HASH_TABLE *h;
+assoc_quote_escapes (HASH_TABLE *h)
 {
   int i;
   BUCKET_CONTENTS *tlist;
@@ -176,7 +162,7 @@ assoc_quote_escapes (h)
 
   if (h == 0 || assoc_empty (h))
     return ((HASH_TABLE *)NULL);
-  
+
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
@@ -189,8 +175,7 @@ assoc_quote_escapes (h)
 }
 
 HASH_TABLE *
-assoc_dequote (h)
-     HASH_TABLE *h;
+assoc_dequote (HASH_TABLE *h)
 {
   int i;
   BUCKET_CONTENTS *tlist;
@@ -198,7 +183,7 @@ assoc_dequote (h)
 
   if (h == 0 || assoc_empty (h))
     return ((HASH_TABLE *)NULL);
-  
+
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
@@ -211,8 +196,7 @@ assoc_dequote (h)
 }
 
 HASH_TABLE *
-assoc_dequote_escapes (h)
-     HASH_TABLE *h;
+assoc_dequote_escapes (HASH_TABLE *h)
 {
   int i;
   BUCKET_CONTENTS *tlist;
@@ -220,7 +204,7 @@ assoc_dequote_escapes (h)
 
   if (h == 0 || assoc_empty (h))
     return ((HASH_TABLE *)NULL);
-  
+
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
@@ -233,8 +217,7 @@ assoc_dequote_escapes (h)
 }
 
 HASH_TABLE *
-assoc_remove_quoted_nulls (h)
-     HASH_TABLE *h;
+assoc_remove_quoted_nulls (HASH_TABLE *h)
 {
   int i;
   BUCKET_CONTENTS *tlist;
@@ -242,7 +225,7 @@ assoc_remove_quoted_nulls (h)
 
   if (h == 0 || assoc_empty (h))
     return ((HASH_TABLE *)NULL);
-  
+
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
@@ -258,10 +241,8 @@ assoc_remove_quoted_nulls (h)
  * the STARTth element and spanning NELEM members.  Null elements are counted.
  */
 char *
-assoc_subrange (hash, start, nelem, starsub, quoted, pflags)
-     HASH_TABLE *hash;
-     arrayind_t start, nelem;
-     int starsub, quoted, pflags;
+assoc_subrange (HASH_TABLE *hash, arrayind_t start, arrayind_t nelem,
+                int starsub, int quoted, int pflags)
 {
   WORD_LIST *l, *save, *h, *t;
   int i, j;
@@ -275,7 +256,7 @@ assoc_subrange (hash, start, nelem, starsub, quoted, pflags)
     return ((char *)NULL);
 
   for (i = 1; l && i < start; i++)
-    l = l->next;
+    l = (WORD_LIST *)l->next;
   if (l == 0)
     {
       dispose_words (save);
@@ -284,7 +265,7 @@ assoc_subrange (hash, start, nelem, starsub, quoted, pflags)
   for (j = 0,h = t = l; l && j < nelem; j++)
     {
       t = l;
-      l = l->next;
+      l = (WORD_LIST *)l->next;
     }
 
   t->next = (WORD_LIST *)NULL;
@@ -300,10 +281,7 @@ assoc_subrange (hash, start, nelem, starsub, quoted, pflags)
 }
 
 char *
-assoc_patsub (h, pat, rep, mflags)
-     HASH_TABLE *h;
-     char *pat, *rep;
-     int mflags;
+assoc_patsub (HASH_TABLE *h, char *pat, char *rep, int mflags)
 {
   char	*t;
   int pchar, qflags, pflags;
@@ -316,7 +294,7 @@ assoc_patsub (h, pat, rep, mflags)
   if (wl == 0)
     return (char *)NULL;
 
-  for (save = wl; wl; wl = wl->next)
+  for (save = wl; wl; wl = (WORD_LIST *)wl->next)
     {
       t = pat_subst (wl->word->word, pat, rep, mflags);
       FREE (wl->word->word);
@@ -334,11 +312,7 @@ assoc_patsub (h, pat, rep, mflags)
 }
 
 char *
-assoc_modcase (h, pat, modop, mflags)
-     HASH_TABLE *h;
-     char *pat;
-     int modop;
-     int mflags;
+assoc_modcase (HASH_TABLE *h, char *pat, int modop, int mflags)
 {
   char	*t;
   int pchar, qflags, pflags;
@@ -351,7 +325,7 @@ assoc_modcase (h, pat, modop, mflags)
   if (wl == 0)
     return ((char *)NULL);
 
-  for (save = wl; wl; wl = wl->next)
+  for (save = wl; wl; wl = (WORD_LIST *)wl->next)
     {
       t = sh_modcase (wl->word->word, pat, modop);
       FREE (wl->word->word);
@@ -369,9 +343,7 @@ assoc_modcase (h, pat, modop, mflags)
 }
 
 char *
-assoc_to_kvpair (hash, quoted)
-     HASH_TABLE *hash;
-     int quoted;
+assoc_to_kvpair (HASH_TABLE *hash, int quoted)
 {
   char *ret;
   char *istr, *vstr;
@@ -381,7 +353,7 @@ assoc_to_kvpair (hash, quoted)
   if (hash == 0 || assoc_empty (hash))
     return (char *)0;
 
-  ret = xmalloc (rsize = 128);
+  ret = (char *)xmalloc (rsize = 128);
   ret[rlen = 0] = '\0';
 
   for (i = 0; i < hash->nbuckets; i++)
@@ -392,9 +364,9 @@ assoc_to_kvpair (hash, quoted)
 	else if (sh_contains_shell_metas (tlist->key))
 	  istr = sh_double_quote (tlist->key);
 	else if (ALL_ELEMENT_SUB (tlist->key[0]) && tlist->key[1] == '\0')
-	  istr = sh_double_quote (tlist->key);	
+	  istr = sh_double_quote (tlist->key);
 	else
-	  istr = tlist->key;	
+	  istr = tlist->key;
 
 	vstr = tlist->data ? (ansic_shouldquote ((char *)tlist->data) ?
 				ansic_quote ((char *)tlist->data, 0, (int *)0) :
@@ -439,9 +411,7 @@ assoc_to_kvpair (hash, quoted)
 }
 
 char *
-assoc_to_assign (hash, quoted)
-     HASH_TABLE *hash;
-     int quoted;
+assoc_to_assign (HASH_TABLE *hash, int quoted)
 {
   char *ret;
   char *istr, *vstr;
@@ -451,7 +421,7 @@ assoc_to_assign (hash, quoted)
   if (hash == 0 || assoc_empty (hash))
     return (char *)0;
 
-  ret = xmalloc (rsize = 128);
+  ret = (char *)xmalloc (rsize = 128);
   ret[0] = '(';
   rlen = 1;
 
@@ -463,9 +433,9 @@ assoc_to_assign (hash, quoted)
 	else if (sh_contains_shell_metas (tlist->key))
 	  istr = sh_double_quote (tlist->key);
 	else if (ALL_ELEMENT_SUB (tlist->key[0]) && tlist->key[1] == '\0')
-	  istr = sh_double_quote (tlist->key);	
+	  istr = sh_double_quote (tlist->key);
 	else
-	  istr = tlist->key;	
+	  istr = tlist->key;
 
 	vstr = tlist->data ? (ansic_shouldquote ((char *)tlist->data) ?
 				ansic_quote ((char *)tlist->data, 0, (int *)0) :
@@ -508,9 +478,7 @@ assoc_to_assign (hash, quoted)
 }
 
 static WORD_LIST *
-assoc_to_word_list_internal (h, t)
-     HASH_TABLE *h;
-     int t;
+assoc_to_word_list_internal (HASH_TABLE *h, int t)
 {
   WORD_LIST *list;
   int i;
@@ -520,7 +488,7 @@ assoc_to_word_list_internal (h, t)
   if (h == 0 || assoc_empty (h))
     return((WORD_LIST *)NULL);
   list = (WORD_LIST *)NULL;
-  
+
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
@@ -531,24 +499,19 @@ assoc_to_word_list_internal (h, t)
 }
 
 WORD_LIST *
-assoc_to_word_list (h)
-     HASH_TABLE *h;
+assoc_to_word_list (HASH_TABLE *h)
 {
   return (assoc_to_word_list_internal (h, 0));
 }
 
 WORD_LIST *
-assoc_keys_to_word_list (h)
-     HASH_TABLE *h;
+assoc_keys_to_word_list (HASH_TABLE *h)
 {
   return (assoc_to_word_list_internal (h, 1));
 }
 
 char *
-assoc_to_string (h, sep, quoted)
-     HASH_TABLE *h;
-     char *sep;
-     int quoted;
+assoc_to_string (HASH_TABLE *h, const char *sep, int quoted)
 {
   BUCKET_CONTENTS *tlist;
   int i;
@@ -579,7 +542,7 @@ assoc_to_string (h, sep, quoted)
   l = REVERSE_LIST(list, WORD_LIST *);
 
   result = l ? string_list_internal (l, sep) : savestring ("");
-  dispose_words (l);  
+  dispose_words (l);
 
   return result;
 }

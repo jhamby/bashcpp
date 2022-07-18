@@ -91,36 +91,37 @@ extern char **shell_environment;
 extern WORD_LIST *rest_of_args;
 
 /* Generalized global variables. */
-extern char *command_execution_string;
+extern const char *command_execution_string;
 
-extern int debugging_mode;
-extern int executing, login_shell;
-extern int interactive, interactive_shell;
+extern char debugging_mode;
+extern bool executing;
+extern int login_shell;
+extern bool interactive, interactive_shell;
 extern int startup_state;
-extern int reading_shell_script;
-extern int shell_initialized;
-extern int bash_argv_initialized;
+extern bool reading_shell_script;
+extern bool shell_initialized;
+extern bool bash_argv_initialized;
 extern int subshell_environment;
 extern int current_command_number;
 extern int indirection_level;
 extern int shell_compatibility_level;
-extern int running_under_emacs;
+extern bool running_under_emacs;
 
-extern int posixly_correct;
-extern int no_line_editing;
+extern char posixly_correct;
+extern bool no_line_editing;
 
-extern char *shell_name;
-extern char *current_host_name;
+extern const char *shell_name;
+extern const char *current_host_name;
 
 extern int subshell_argc;
 extern char **subshell_argv;
 extern char **subshell_envp;
 
 /* variables managed using shopt */
-extern int hup_on_exit;
-extern int check_jobs_at_exit;
-extern int autocd;
-extern int check_window_size;
+extern char hup_on_exit;
+extern char check_jobs_at_exit;
+extern char autocd;
+extern char check_window_size;
 
 /* from version.c */
 extern int build_version, patch_level;
@@ -182,7 +183,7 @@ typedef struct _sh_parser_state_t {
   /* Nothing right now for multibyte state, but might want something later. */
 #endif
 
-  char **prompt_string_pointer;
+  const char **prompt_string_pointer;
 
   /* history state affecting or modified by the parser */
   int current_command_line_count;
@@ -220,10 +221,10 @@ typedef struct _sh_input_line_state_t {
 } sh_input_line_state_t;
 
 /* Let's try declaring these here. */
-extern char *parser_remaining_input PARAMS((void));
+extern const char *parser_remaining_input (void);
 
-extern sh_parser_state_t *save_parser_state PARAMS((sh_parser_state_t *));
-extern void restore_parser_state PARAMS((sh_parser_state_t *));
+extern sh_parser_state_t *save_parser_state (sh_parser_state_t *);
+extern void restore_parser_state (sh_parser_state_t *);
 
-extern sh_input_line_state_t *save_input_line_state PARAMS((sh_input_line_state_t *));
-extern void restore_input_line_state PARAMS((sh_input_line_state_t *));
+extern sh_input_line_state_t *save_input_line_state (sh_input_line_state_t *);
+extern void restore_input_line_state (sh_input_line_state_t *);

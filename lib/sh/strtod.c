@@ -3,7 +3,7 @@
 /* Copyright (C) 1991, 1992 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
-   
+
    Bash is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -50,17 +50,15 @@ extern int errno;
 #endif
 
 #ifndef locale_decpoint
-extern int locale_decpoint PARAMS((void));
+extern int locale_decpoint (void);
 #endif
 
 /* Convert NPTR to a double.  If ENDPTR is not NULL, a pointer to the
    character after the last one used in the number is put in *ENDPTR.  */
 double
-strtod (nptr, endptr)
-     const char *nptr;
-     char **endptr;
+strtod (const char *nptr, char **endptr)
 {
-  register const char *s;
+  const char *s;
   short sign;
 
   /* The number so far.  */

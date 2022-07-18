@@ -39,13 +39,12 @@ extern int errno;
 #endif
 
 int
-rename (from, to)
-     const char *from, *to;
+rename (const char *from, const char *to)
 {
   struct stat fb, tb;
 
   if (stat (from, &fb) < 0)
-    return -1;  
+    return -1;
 
   if (stat (to, &tb) < 0)
     {

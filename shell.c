@@ -62,8 +62,8 @@
 #include "jobs.h"
 #else
 extern int running_in_background;
-extern int initialize_job_control PARAMS((int));
-extern int get_tty_state PARAMS((void));
+extern int initialize_job_control (int);
+extern int get_tty_state (void);
 #endif /* JOB_CONTROL */
 
 #include "input.h"
@@ -107,10 +107,10 @@ extern int gnu_error_format;
 
 /* Non-zero means that this shell has already been run; i.e. you should
    call shell_reinitialize () if you need to start afresh. */
-int shell_initialized = 0;
-int bash_argv_initialized = 0;
+bool shell_initialized = false;
+bool bash_argv_initialized = false;
 
-COMMAND *global_command = (COMMAND *)NULL;
+COMMAND *global_command = NULL;
 
 /* Information about the current user. */
 struct user_info current_user =
@@ -120,7 +120,7 @@ struct user_info current_user =
 };
 
 /* The current host's name. */
-char *current_host_name = (char *)NULL;
+const char *current_host_name = NULL;
 
 /* Non-zero means that this shell is a login shell.
    Specifically:
@@ -134,20 +134,20 @@ int login_shell = 0;
 /* Non-zero means that at this moment, the shell is interactive.  In
    general, this means that the shell is at this moment reading input
    from the keyboard. */
-int interactive = 0;
+bool interactive = false;
 
 /* Non-zero means that the shell was started as an interactive shell. */
-int interactive_shell = 0;
+bool interactive_shell = false;
 
 /* Non-zero means to send a SIGHUP to all jobs when an interactive login
    shell exits. */
-int hup_on_exit = 0;
+char hup_on_exit = 0;
 
 /* Non-zero means to list status of running and stopped jobs at shell exit */
-int check_jobs_at_exit = 0;
+char check_jobs_at_exit = 0;
 
 /* Non-zero means to change to a directory name supplied as a command name */
-int autocd = 0;
+char autocd = 0;
 
 /* Tells what state the shell was in when it started:
 	0 = non-interactive shell script
@@ -157,16 +157,17 @@ int autocd = 0;
    This is a superset of the information provided by interactive_shell.
 */
 int startup_state = 0;
-int reading_shell_script = 0;
+
+bool reading_shell_script = false;
 
 /* Special debugging helper. */
-int debugging_login_shell = 0;
+bool debugging_login_shell = false;
 
 /* The environment that the shell passes to other commands. */
 char **shell_environment;
 
 /* Non-zero when we are executing a top-level command. */
-int executing = 0;
+bool executing = false;
 
 /* The number of commands executed so far. */
 int current_command_number = 1;
@@ -175,100 +176,121 @@ int current_command_number = 1;
 int indirection_level = 0;
 
 /* The name of this shell, as taken from argv[0]. */
-char *shell_name = (char *)NULL;
+const char *shell_name = NULL;
 
 /* time in seconds when the shell was started */
 time_t shell_start_time;
 struct timeval shellstart;
 
 /* Are we running in an emacs shell window? */
-int running_under_emacs;
+bool running_under_emacs;
 
 /* Do we have /dev/fd? */
 #ifdef HAVE_DEV_FD
-int have_devfd = HAVE_DEV_FD;
+bool have_devfd = HAVE_DEV_FD;
 #else
-int have_devfd = 0;
+bool have_devfd = 0;
 #endif
 
 /* The name of the .(shell)rc file. */
-static char *bashrc_file = DEFAULT_BASHRC;
+static const char *bashrc_file = DEFAULT_BASHRC;
 
 /* Non-zero means to act more like the Bourne shell on startup. */
-static int act_like_sh;
+static bool act_like_sh;
 
 /* Non-zero if this shell is being run by `su'. */
-static int su_shell;
+static bool su_shell;
 
 /* Non-zero if we have already expanded and sourced $ENV. */
-static int sourced_env;
+static bool sourced_env;
 
 /* Is this shell running setuid? */
-static int running_setuid;
+static bool running_setuid;
 
 /* Values for the long-winded argument names. */
-static int debugging;			/* Do debugging things. */
-static int no_rc;			/* Don't execute ~/.bashrc */
-static int no_profile;			/* Don't execute .profile */
-static int do_version;			/* Display interesting version info. */
-static int make_login_shell;		/* Make this shell be a `-bash' shell. */
-static int want_initial_help;		/* --help option */
+static bool debugging;			/* Do debugging things. */
+static bool no_rc;			/* Don't execute ~/.bashrc */
+static bool no_profile;			/* Don't execute .profile */
+static bool do_version;			/* Display interesting version info. */
+static bool make_login_shell;		/* Make this shell be a `-bash' shell. */
+static bool want_initial_help;		/* --help option */
 
-int debugging_mode = 0;		/* In debugging mode with --debugger */
+char debugging_mode = 0;	/* In debugging mode with --debugger */
 #if defined (READLINE)
-int no_line_editing = 0;	/* non-zero -> don't do fancy line editing. */
+bool no_line_editing = false;	/* non-zero -> don't do fancy line editing. */
 #else
-int no_line_editing = 1;	/* can't have line editing without readline */
+bool no_line_editing = true;	/* can't have line editing without readline */
 #endif
-int dump_translatable_strings;	/* Dump strings in $"...", don't execute. */
-int dump_po_strings;		/* Dump strings in $"..." in po format */
-int wordexp_only = 0;		/* Do word expansion only */
-int protected_mode = 0;		/* No command substitution with --wordexp */
+bool dump_translatable_strings;	/* Dump strings in $"...", don't execute. */
+bool dump_po_strings;		/* Dump strings in $"..." in po format */
+bool wordexp_only = false;	/* Do word expansion only */
+bool protected_mode = false;	/* No command substitution with --wordexp */
 
-int pretty_print_mode = 0;	/* pretty-print a shell script */
+bool pretty_print_mode = false;	/* pretty-print a shell script */
 
 #if defined (STRICT_POSIX)
-int posixly_correct = 1;	/* Non-zero means posix.2 superset. */
+char posixly_correct = 1;	/* Non-zero means posix.2 superset. */
 #else
-int posixly_correct = 0;	/* Non-zero means posix.2 superset. */
+char posixly_correct = 0;	/* Non-zero means posix.2 superset. */
 #endif
 
-/* Some long-winded argument names.  These are obviously new. */
-#define Int 1
-#define Charp 2
-static const struct {
+/* Some long-winded argument names. */
+typedef enum { Bool, Flag, Charp } arg_type;
+
+struct LongArg {
   const char *name;
-  int type;
-  int *int_value;
-  char **char_value;
-} long_args[] = {
-  { "debug", Int, &debugging, (char **)0x0 },
+  const arg_type type;
+  union {
+    bool *bool_ptr;
+    char *flag_ptr;
+    const char **charp_ptr;
+  } value;
+
+  LongArg() : name(0), type(Bool) {
+    value.bool_ptr = NULL;
+  }
+
+  LongArg(const char *n, bool *bp) : name(n), type(Bool) {
+    value.bool_ptr = bp;
+  }
+
+  LongArg(const char *n, char *fp) : name(n), type(Flag) {
+    value.flag_ptr = fp;
+  }
+
+  LongArg(const char *n, const char **cpp) : name(n), type(Charp) {
+    value.charp_ptr = cpp;
+  }
+};
+
+static const LongArg long_args[] = {
+  LongArg( "debug",		&debugging ),
 #if defined (DEBUGGER)
-  { "debugger", Int, &debugging_mode, (char **)0x0 },
+  LongArg( "debugger",		&debugging_mode ),
 #endif
-  { "dump-po-strings", Int, &dump_po_strings, (char **)0x0 },
-  { "dump-strings", Int, &dump_translatable_strings, (char **)0x0 },
-  { "help", Int, &want_initial_help, (char **)0x0 },
-  { "init-file", Charp, (int *)0x0, &bashrc_file },
-  { "login", Int, &make_login_shell, (char **)0x0 },
-  { "noediting", Int, &no_line_editing, (char **)0x0 },
-  { "noprofile", Int, &no_profile, (char **)0x0 },
-  { "norc", Int, &no_rc, (char **)0x0 },
-  { "posix", Int, &posixly_correct, (char **)0x0 },
-  { "pretty-print", Int, &pretty_print_mode, (char **)0x0 },
+  LongArg( "dump-po-strings",	&dump_po_strings ),
+  LongArg( "dump-strings",	&dump_translatable_strings ),
+  LongArg( "help",		&want_initial_help ),
+  LongArg( "init-file",		&bashrc_file ),
+  LongArg( "login",		&make_login_shell ),
+  LongArg( "noediting",		&no_line_editing ),
+  LongArg( "noprofile",		&no_profile ),
+  LongArg( "norc",		&no_rc ),
+  LongArg( "posix",		&posixly_correct ),
+  LongArg( "pretty-print",	&pretty_print_mode ),
 #if defined (WORDEXP_OPTION)
-  { "protected", Int, &protected_mode, (char **)0x0 },
+  LongArg( "protected",		&protected_mode ),
 #endif
-  { "rcfile", Charp, (int *)0x0, &bashrc_file },
+  LongArg( "rcfile",		&bashrc_file ),
 #if defined (RESTRICTED_SHELL)
-  { "restricted", Int, &restricted, (char **)0x0 },
+  LongArg( "restricted",	&restricted ),
 #endif
-  { "verbose", Int, &verbose_flag, (char **)0x0 },
-  { "version", Int, &do_version, (char **)0x0 },
+  LongArg( "verbose",		&verbose_flag ),
+  LongArg( "version",		&do_version ),
 #if defined (WORDEXP_OPTION)
-  { "wordexp", Int, &wordexp_only, (char **)0x0 },
+  LongArg( "wordexp",		&wordexp_only ),
 #endif
-  { (char *)0x0, Int, (int *)0x0, (char **)0x0 }
+  LongArg()	/* empty LongArg to end the list */
 };
 
 /* These are extern so execute_simple_command can set them, and then
@@ -288,14 +310,14 @@ int default_buffered_input = -1;
 #endif
 
 /* The following two variables are not static so they can show up in $-. */
-int read_from_stdin;		/* -s flag supplied */
-int want_pending_command;	/* -c flag supplied */
+bool read_from_stdin;		/* -s flag supplied */
+bool want_pending_command;	/* -c flag supplied */
 
 /* This variable is not static so it can be bound to $BASH_EXECUTION_STRING */
-char *command_execution_string;	/* argument to -c option */
-char *shell_script_filename; 	/* shell script */
+const char *command_execution_string;	/* argument to -c option */
+const char *shell_script_filename; 	/* shell script */
 
-int malloc_trace_at_exit = 0;
+bool malloc_trace_at_exit = 0;
 
 static int shell_reinitialized = 0;
 
@@ -304,38 +326,38 @@ static FILE *default_input;
 static STRING_INT_ALIST *shopt_alist;
 static int shopt_ind = 0, shopt_len = 0;
 
-static int parse_long_options PARAMS((char **, int, int));
-static int parse_shell_options PARAMS((char **, int, int));
-static int bind_args PARAMS((char **, int, int, int));
+static int parse_long_options (char **, int, int);
+static int parse_shell_options (char **, int, int);
+static int bind_args (char **, int, int, int);
 
-static void start_debugger PARAMS((void));
+static void start_debugger (void);
 
-static void add_shopt_to_alist PARAMS((char *, int));
-static void run_shopt_alist PARAMS((void));
+static void add_shopt_to_alist (char *, int);
+static void run_shopt_alist (void);
 
-static void execute_env_file PARAMS((char *));
-static void run_startup_files PARAMS((void));
-static int open_shell_script PARAMS((char *));
-static void set_bash_input PARAMS((void));
-static int run_one_command PARAMS((char *));
+static void execute_env_file (char *);
+static void run_startup_files (void);
+static int open_shell_script (const char *);
+static void set_bash_input (void);
+static int run_one_command (const char *);
 #if defined (WORDEXP_OPTION)
-static int run_wordexp PARAMS((char *));
+static int run_wordexp (const char *);
 #endif
 
-static int uidget PARAMS((void));
+static bool uidget (void);
 
-static void set_option_defaults PARAMS((void));
-static void reset_option_defaults PARAMS((void));
+static void set_option_defaults (void);
+static void reset_option_defaults (void);
 
-static void init_interactive PARAMS((void));
-static void init_noninteractive PARAMS((void));
-static void init_interactive_script PARAMS((void));
+static void init_interactive (void);
+static void init_noninteractive (void);
+static void init_interactive_script (void);
 
-static void set_shell_name PARAMS((char *));
-static void shell_initialize PARAMS((void));
-static void shell_reinitialize PARAMS((void));
+static void set_shell_name (char *);
+static void shell_initialize (void);
+static void shell_reinitialize (void);
 
-static void show_shell_usage PARAMS((FILE *, int));
+static void show_shell_usage (FILE *, int);
 
 #ifdef __CYGWIN__
 static void
@@ -356,22 +378,18 @@ _cygwin32_check_tmp ()
 #if defined (NO_MAIN_ENV_ARG)
 /* systems without third argument to main() */
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 #else /* !NO_MAIN_ENV_ARG */
 int
-main (argc, argv, env)
-     int argc;
-     char **argv, **env;
+main (int argc, char **argv, char **env)
 #endif /* !NO_MAIN_ENV_ARG */
 {
-  register int i;
+  int i;
   int code, old_errexit_flag;
 #if defined (RESTRICTED_SHELL)
   int saverst;
 #endif
-  volatile int locally_skip_execution;
+  volatile bool locally_skip_execution;
   volatile int arg_index, top_level_arg_index;
 #ifdef __OPENNT
   char **env;
@@ -399,7 +417,9 @@ main (argc, argv, env)
   malloc_set_register (1);	/* XXX - change to 1 for malloc debugging */
 #endif
 
+#if 0
   check_dev_tty ();
+#endif
 
 #ifdef __CYGWIN__
   _cygwin32_check_tmp ();
@@ -413,7 +433,7 @@ main (argc, argv, env)
   running_setuid = uidget ();
 
   if (getenv ("POSIXLY_CORRECT") || getenv ("POSIX_PEDANTIC"))
-    posixly_correct = 1;
+    posixly_correct = true;
 
 #if defined (USE_GNU_MALLOC_LIBRARY)
   mcheck (programming_error, (void (*) ())0);
@@ -424,17 +444,17 @@ main (argc, argv, env)
       argc = subshell_argc;
       argv = subshell_argv;
       env = subshell_envp;
-      sourced_env = 0;
+      sourced_env = false;
     }
 
-  shell_reinitialized = 0;
+  shell_reinitialized = false;
 
   /* Initialize `local' variables for all `invocations' of main (). */
   arg_index = 1;
   if (arg_index > argc)
     arg_index = argc;
-  command_execution_string = shell_script_filename = (char *)NULL;
-  want_pending_command = locally_skip_execution = read_from_stdin = 0;
+  command_execution_string = shell_script_filename = NULL;
+  want_pending_command = locally_skip_execution = read_from_stdin = false;
   default_input = stdin;
 #if defined (BUFFERED_INPUT)
   default_buffered_input = -1;
@@ -467,7 +487,7 @@ main (argc, argv, env)
 
   /* Find full word arguments first. */
   arg_index = parse_long_options (argv, arg_index, argc);
-  
+
   if (want_initial_help)
     {
       show_shell_usage (stdout, 1);
@@ -540,6 +560,7 @@ main (argc, argv, env)
   else
     init_noninteractive ();
 
+#if 0
   /*
    * Some systems have the bad habit of starting login shells with lots of open
    * file descriptors.  For instance, most systems that have picked up the
@@ -554,6 +575,7 @@ main (argc, argv, env)
       for (i = 3; i < 20; i++)
 	SET_CLOSE_ON_EXEC (i);
     }
+#endif
 
   /* If we're in a strict Posix.2 mode, turn on interactive comments,
      alias expansion in non-interactive shells, and other Posix.2 things. */
@@ -639,7 +661,7 @@ main (argc, argv, env)
 	  /* Reset value of `set -e', since it's turned off before running
 	     the startup files. */
 	  exit_immediately_on_error += old_errexit_flag;
-	  locally_skip_execution++;
+	  locally_skip_execution = true;
 	}
     }
 
@@ -813,9 +835,7 @@ main (argc, argv, env)
 }
 
 static int
-parse_long_options (argv, arg_start, arg_end)
-     char **argv;
-     int arg_start, arg_end;
+parse_long_options (char **argv, int arg_start, int arg_end)
 {
   int arg_index, longarg, i;
   char *arg_string;
@@ -837,15 +857,17 @@ parse_long_options (argv, arg_start, arg_end)
 	{
 	  if (STREQ (arg_string + 1, long_args[i].name))
 	    {
-	      if (long_args[i].type == Int)
-		*long_args[i].int_value = 1;
+	      if (long_args[i].type == Bool)
+		*long_args[i].value.bool_ptr = true;
+	      else if (long_args[i].type == Flag)
+		*long_args[i].value.flag_ptr = 1;
 	      else if (argv[++arg_index] == 0)
 		{
 		  report_error (_("%s: option requires an argument"), long_args[i].name);
 		  exit (EX_BADUSAGE);
 		}
 	      else
-		*long_args[i].char_value = argv[arg_index];
+		*long_args[i].value.charp_ptr = argv[arg_index];
 
 	      break;
 	    }
@@ -868,9 +890,7 @@ parse_long_options (argv, arg_start, arg_end)
 }
 
 static int
-parse_shell_options (argv, arg_start, arg_end)
-     char **argv;
-     int arg_start, arg_end;
+parse_shell_options (char **argv, int arg_start, int arg_end)
 {
   int arg_index;
   int arg_character, on_or_off, next_arg, i;
@@ -898,20 +918,20 @@ parse_shell_options (argv, arg_start, arg_end)
 	  switch (arg_character)
 	    {
 	    case 'c':
-	      want_pending_command = 1;
+	      want_pending_command = true;
 	      break;
 
 	    case 'l':
-	      make_login_shell = 1;
+	      make_login_shell = true;
 	      break;
 
 	    case 's':
-	      read_from_stdin = 1;
+	      read_from_stdin = true;
 	      break;
 
 	    case 'o':
 	      o_option = argv[next_arg];
-	      if (o_option == 0)
+	      if (o_option == NULL)
 		{
 		  set_option_defaults ();
 		  list_minus_o_opts (-1, (on_or_off == '-') ? 0 : 1);
@@ -961,8 +981,7 @@ parse_shell_options (argv, arg_start, arg_end)
 
 /* Exit the shell with status S. */
 void
-exit_shell (s)
-     int s;
+exit_shell (int s)
 {
   fflush (stdout);		/* XXX */
   fflush (stderr);
@@ -1016,8 +1035,7 @@ exit_shell (s)
 /* A wrapper for exit that (optionally) can do other things, like malloc
    statistics tracing. */
 void
-sh_exit (s)
-     int s;
+sh_exit (int s)
 {
 #if defined (MALLOC_DEBUG) && defined (USING_BASH_MALLOC)
   if (malloc_trace_at_exit && (subshell_environment & (SUBSHELL_COMSUB|SUBSHELL_PROCSUB)) == 0)
@@ -1032,8 +1050,7 @@ sh_exit (s)
    do any more cleanup, since a subshell is created as an exact copy of its
    parent. */
 void
-subshell_exit (s)
-     int s;
+subshell_exit (int s)
 {
   fflush (stdout);
   fflush (stderr);
@@ -1047,8 +1064,7 @@ subshell_exit (s)
 }
 
 void
-set_exit_status (s)
-     int s;
+set_exit_status (int s)
 {
   set_pipestatus_from_exit (last_command_exit_value = s);
 }
@@ -1081,8 +1097,7 @@ set_exit_status (s)
 */
 
 static void
-execute_env_file (env_file)
-      char *env_file;
+execute_env_file (char *env_file)
 {
   char *fn;
 
@@ -1099,13 +1114,12 @@ static void
 run_startup_files ()
 {
 #if defined (JOB_CONTROL)
-  int old_job_control;
+  bool old_job_control;
 #endif
-  int sourced_login, run_by_ssh;
+  bool sourced_login, run_by_ssh;
 
   /* get the rshd/sshd case out of the way first. */
-  if (interactive_shell == 0 && no_rc == 0 && login_shell == 0 &&
-      act_like_sh == 0 && command_execution_string)
+  if (!interactive_shell && !no_rc && (login_shell == 0) && !act_like_sh && command_execution_string)
     {
 #ifdef SSH_SOURCE_BASHRC
       run_by_ssh = (find_variable ("SSH_CLIENT") != (SHELL_VAR *)0) ||
@@ -1132,35 +1146,35 @@ run_startup_files ()
 
 #if defined (JOB_CONTROL)
   /* Startup files should be run without job control enabled. */
-  old_job_control = interactive_shell ? set_job_control (0) : 0;
+  old_job_control = interactive_shell ? set_job_control (false) : false;
 #endif
 
-  sourced_login = 0;
+  sourced_login = false;
 
   /* A shell begun with the --login (or -l) flag that is not in posix mode
      runs the login shell startup files, no matter whether or not it is
      interactive.  If NON_INTERACTIVE_LOGIN_SHELLS is defined, run the
      startup files if argv[0][0] == '-' as well. */
 #if defined (NON_INTERACTIVE_LOGIN_SHELLS)
-  if (login_shell && posixly_correct == 0)
+  if (login_shell && !posixly_correct)
 #else
-  if (login_shell < 0 && posixly_correct == 0)
+  if (login_shell < 0 && !posixly_correct)
 #endif
     {
       /* We don't execute .bashrc for login shells. */
-      no_rc++;
+      no_rc = true;
 
       /* Execute /etc/profile and one of the personal login shell
 	 initialization files. */
-      if (no_profile == 0)
+      if (!no_profile)
 	{
-	  maybe_execute_file (SYS_PROFILE, 1);
+	  maybe_execute_file (SYS_PROFILE, true);
 
 	  if (act_like_sh)	/* sh */
-	    maybe_execute_file ("~/.profile", 1);
-	  else if ((maybe_execute_file ("~/.bash_profile", 1) == 0) &&
-		   (maybe_execute_file ("~/.bash_login", 1) == 0))	/* bash */
-	    maybe_execute_file ("~/.profile", 1);
+	    maybe_execute_file ("~/.profile", true);
+	  else if ((maybe_execute_file ("~/.bash_profile", true) == 0) &&
+		   (maybe_execute_file ("~/.bash_login", true) == 0))	/* bash */
+	    maybe_execute_file ("~/.profile", true);
 	}
 
       sourced_login = 1;
@@ -1170,57 +1184,64 @@ run_startup_files ()
      executes commands from $BASH_ENV.  If `su' starts a shell with `-c cmd'
      and `-su' as the name of the shell, we want to read the startup files.
      No other non-interactive shells read any startup files. */
-  if (interactive_shell == 0 && !(su_shell && login_shell))
+  if (!interactive_shell && !(su_shell && login_shell))
     {
-      if (posixly_correct == 0 && act_like_sh == 0 && privileged_mode == 0 &&
-	    sourced_env++ == 0)
+      if (!posixly_correct && !act_like_sh && !privileged_mode && !sourced_env) {
+	sourced_env = true;
 	execute_env_file (get_string_value ("BASH_ENV"));
+      }
       return;
     }
 
   /* Interactive shell or `-su' shell. */
-  if (posixly_correct == 0)		  /* bash, sh */
+  if (!posixly_correct)		  /* bash, sh */
     {
-      if (login_shell && sourced_login++ == 0)
+      if (login_shell && !sourced_login)
 	{
+	  sourced_login = true;
+
 	  /* We don't execute .bashrc for login shells. */
-	  no_rc++;
+	  no_rc = true;
 
 	  /* Execute /etc/profile and one of the personal login shell
 	     initialization files. */
-	  if (no_profile == 0)
+	  if (!no_profile)
 	    {
-	      maybe_execute_file (SYS_PROFILE, 1);
+	      maybe_execute_file (SYS_PROFILE, true);
 
 	      if (act_like_sh)	/* sh */
-		maybe_execute_file ("~/.profile", 1);
-	      else if ((maybe_execute_file ("~/.bash_profile", 1) == 0) &&
-		       (maybe_execute_file ("~/.bash_login", 1) == 0))	/* bash */
-		maybe_execute_file ("~/.profile", 1);
+		maybe_execute_file ("~/.profile", true);
+	      else if ((maybe_execute_file ("~/.bash_profile", true) == 0) &&
+		       (maybe_execute_file ("~/.bash_login", true) == 0))	/* bash */
+		maybe_execute_file ("~/.profile", true);
 	    }
 	}
 
       /* bash */
-      if (act_like_sh == 0 && no_rc == 0)
+      if (!act_like_sh && !no_rc)
 	{
 #ifdef SYS_BASHRC
 #  if defined (__OPENNT)
-	  maybe_execute_file (_prefixInstallPath(SYS_BASHRC, NULL, 0), 1);
+	  maybe_execute_file (_prefixInstallPath(SYS_BASHRC, NULL, 0), true);
 #  else
-	  maybe_execute_file (SYS_BASHRC, 1);
+	  maybe_execute_file (SYS_BASHRC, true);
 #  endif
 #endif
-	  maybe_execute_file (bashrc_file, 1);
+	  maybe_execute_file (bashrc_file, true);
 	}
       /* sh */
-      else if (act_like_sh && privileged_mode == 0 && sourced_env++ == 0)
+      else if (act_like_sh && !privileged_mode && !sourced_env) {
+	sourced_env = true;
 	execute_env_file (get_string_value ("ENV"));
+      }
     }
   else		/* bash --posix, sh --posix */
     {
       /* bash and sh */
-      if (interactive_shell && privileged_mode == 0 && sourced_env++ == 0)
+      if (interactive_shell && !privileged_mode && !sourced_env) {
+	sourced_env = true;
 	execute_env_file (get_string_value ("ENV"));
+      }
     }
 
 #if defined (JOB_CONTROL)
@@ -1232,11 +1253,10 @@ run_startup_files ()
 /* Return 1 if the shell should be a restricted one based on NAME or the
    value of `restricted'.  Don't actually do anything, just return a
    boolean value. */
-int
-shell_is_restricted (name)
-     char *name;
+bool
+shell_is_restricted (const char *name)
 {
-  char *temp;
+  const char *temp;
 
   if (restricted)
     return 1;
@@ -1253,11 +1273,10 @@ shell_is_restricted (name)
    and non-unsettable.
    Do this also if `restricted' is already set to 1; maybe the shell was
    started with -r. */
-int
-maybe_make_restricted (name)
-     char *name;
+bool
+maybe_make_restricted (const char *name)
 {
-  char *temp;
+  const char *temp;
 
   temp = base_pathname (name);
   if (*temp == '-')
@@ -1281,7 +1300,7 @@ maybe_make_restricted (name)
 
 /* Fetch the current set of uids and gids and return 1 if we're running
    setuid or setgid. */
-static int
+static bool
 uidget ()
 {
   uid_t u;
@@ -1335,8 +1354,7 @@ disable_priv_mode ()
 
 #if defined (WORDEXP_OPTION)
 static int
-run_wordexp (words)
-     char *words;
+run_wordexp (char *words)
 {
   int code, nw, nb;
   WORD_LIST *wl, *tl, *result;
@@ -1411,8 +1429,7 @@ run_wordexp (words)
 /* Run one command, given as the argument to the -c option.  Tell
    parse_and_execute not to fork for a simple command. */
 static int
-run_one_command (command)
-     char *command;
+run_one_command (const char *command)
 {
   int code;
 
@@ -1442,11 +1459,9 @@ run_one_command (command)
 #endif /* ONESHOT */
 
 static int
-bind_args (argv, arg_start, arg_end, start_index)
-     char **argv;
-     int arg_start, arg_end, start_index;
+bind_args (char **argv, int arg_start, int arg_end, int start_index)
 {
-  register int i;
+  int i;
   WORD_LIST *args, *tl;
 
   for (i = arg_start, args = tl = (WORD_LIST *)NULL; i < arg_end; i++)
@@ -1456,7 +1471,7 @@ bind_args (argv, arg_start, arg_end, start_index)
       else
 	{
 	  tl->next = make_word_list (make_word (argv[i]), (WORD_LIST *)NULL);
-	  tl = tl->next;
+	  tl = (WORD_LIST *)(tl->next);
 	}
     }
 
@@ -1469,10 +1484,10 @@ bind_args (argv, arg_start, arg_end, start_index)
 	  shell_name = savestring (args->word->word);
 	  FREE (dollar_vars[0]);
 	  dollar_vars[0] = savestring (args->word->word);
-	  remember_args (args->next, 1);
+	  remember_args ((WORD_LIST *)(args->next), 1);
 	  if (debugging_mode)
 	    {
-	      push_args (args->next);	/* BASH_ARGV and BASH_ARGC */
+	      push_args ((WORD_LIST *)(args->next));	/* BASH_ARGV and BASH_ARGC */
 	      bash_argv_initialized = 1;
 	    }
 	}
@@ -1528,8 +1543,7 @@ start_debugger ()
 }
 
 static int
-open_shell_script (script_name)
-     char *script_name;
+open_shell_script (const char *script_name)
 {
   int fd, e, fd_is_tty;
   char *filename, *path_filename, *t;
@@ -1604,7 +1618,7 @@ open_shell_script (script_name)
       array_push (bash_lineno_a, t);
       free (t);
     }
-  array_push (funcname_a, "main");
+  array_push (funcname_a, savestring("main"));  /* XXX leak? */
 #endif
 
 #ifdef HAVE_DEV_FD
@@ -1628,7 +1642,7 @@ open_shell_script (script_name)
 #if defined (EISDIR)
 	      errno = EISDIR;
 	      file_error (filename);
-#else	      
+#else
 	      internal_error (_("%s: Is a directory"), filename);
 #endif
 	    }
@@ -1731,8 +1745,7 @@ set_bash_input ()
    is non-zero, we close default_buffered_input even if it's the standard
    input (fd 0). */
 void
-unset_bash_input (check_zero)
-     int check_zero;
+unset_bash_input (int check_zero)
 {
 #if defined (BUFFERED_INPUT)
   if ((check_zero && default_buffered_input >= 0) ||
@@ -1750,15 +1763,14 @@ unset_bash_input (check_zero)
     }
 #endif /* !BUFFERED_INPUT */
 }
-      
+
 
 #if !defined (PROGRAM)
 #  define PROGRAM "bash"
 #endif
 
 static void
-set_shell_name (argv0)
-     char *argv0;
+set_shell_name (char *argv0)
 {
   /* Here's a hack.  If the name of this shell is "sh", then don't do
      any startup files; just try to be more like /bin/sh. */
@@ -1772,9 +1784,9 @@ set_shell_name (argv0)
     }
 
   if (shell_name[0] == 's' && shell_name[1] == 'h' && shell_name[2] == '\0')
-    act_like_sh++;
+    act_like_sh = true;
   if (shell_name[0] == 's' && shell_name[1] == 'u' && shell_name[2] == '\0')
-    su_shell++;
+    su_shell = true;
 
   shell_name = argv0 ? argv0 : PROGRAM;
   FREE (dollar_vars[0]);
@@ -2024,9 +2036,7 @@ shell_reinitialize ()
 }
 
 static void
-show_shell_usage (fp, extra)
-     FILE *fp;
-     int extra;
+show_shell_usage (FILE *fp, int extra)
 {
   int i;
   char *set_opts, *s, *t;
@@ -2075,9 +2085,7 @@ show_shell_usage (fp, extra)
 }
 
 static void
-add_shopt_to_alist (opt, on_or_off)
-     char *opt;
-     int on_or_off;
+add_shopt_to_alist (char *opt, int on_or_off)
 {
   if (shopt_ind >= shopt_len)
     {
@@ -2092,7 +2100,7 @@ add_shopt_to_alist (opt, on_or_off)
 static void
 run_shopt_alist ()
 {
-  register int i;
+  int i;
 
   for (i = 0; i < shopt_ind; i++)
     if (shopt_setopt (shopt_alist[i].word, (shopt_alist[i].token == '-')) != EXECUTION_SUCCESS)

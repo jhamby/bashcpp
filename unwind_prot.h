@@ -21,32 +21,27 @@
 #if !defined (_UNWIND_PROT_H)
 #define _UNWIND_PROT_H
 
-extern void uwp_init PARAMS((void));
+extern void uwp_init ();
 
 /* Run a function without interrupts. */
-extern void begin_unwind_frame PARAMS((char *));
-extern void discard_unwind_frame PARAMS((char *));
-extern void run_unwind_frame PARAMS((char *));
-extern void add_unwind_protect (); /* Not portable to arbitrary C99 hosts.  */
-extern void remove_unwind_protect PARAMS((void));
-extern void run_unwind_protects PARAMS((void));
-extern void clear_unwind_protect_list PARAMS((int));
-extern int have_unwind_protects PARAMS((void));
-extern int unwind_protect_tag_on_stack PARAMS((const char *));
-extern void uwp_init PARAMS((void));
+extern void begin_unwind_frame (const char *);
+extern void discard_unwind_frame (const char *);
+extern void run_unwind_frame (const char *);
+extern void add_unwind_protect (sh_voidfunc_t *cleanup);
+extern void add_unwind_protect_int (sh_intfunc_t *cleanup, int arg);
+extern void add_unwind_protect_ptr (sh_free_func_t *cleanup, void *arg);
+extern void remove_unwind_protect ();
+extern void run_unwind_protects ();
+extern void clear_unwind_protect_list (bool);
+extern bool have_unwind_protects ();
+extern bool unwind_protect_tag_on_stack (const char *);
+extern void uwp_init ();
 
 /* Define for people who like their code to look a certain way. */
 #define end_unwind_frame()
 
-/* How to protect a variable.  */
-#define unwind_protect_var(X) unwind_protect_mem ((char *)&(X), sizeof (X))
-extern void unwind_protect_mem PARAMS((char *, int));
-
-/* Backwards compatibility */
-#define unwind_protect_int	unwind_protect_var
-#define unwind_protect_short	unwind_protect_var
-#define unwind_protect_string	unwind_protect_var
-#define unwind_protect_pointer	unwind_protect_var
-#define unwind_protect_jmp_buf	unwind_protect_var
+/* How to protect a variable (note: casts away volatile).  */
+#define unwind_protect_var(X) unwind_protect_mem ((void *)&(X), sizeof (X))
+extern void unwind_protect_mem (void *, size_t);
 
 #endif /* _UNWIND_PROT_H */

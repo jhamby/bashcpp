@@ -35,7 +35,7 @@
 
 #define ISOPT(s)	(((*(s) == '-') || (plus && *(s) == '+')) && (s)[1])
 #define NOTOPT(s)	(((*(s) != '-') && (!plus || *(s) != '+')) || (s)[1] == '\0')
-			
+
 static int	sp;
 
 char    *list_optarg;
@@ -47,12 +47,8 @@ WORD_LIST	*lcurrent = (WORD_LIST *)NULL;
 WORD_LIST	*loptend;	/* Points to the first non-option argument in the list */
 
 int
-internal_getopt(list, opts)
-WORD_LIST	*list;
-char		*opts;
+internal_getopt(WORD_LIST *list, const char *opts)
 {
-	register int c;
-	register char *cp;
 	int	plus;	/* nonzero means to handle +option */
 	static char errstr[3] = { '-', '\0', '\0' };
 
@@ -86,24 +82,26 @@ char		*opts;
 			   lcurrent->word->word[1] == '-' &&
 			   lcurrent->word->word[2] == 0) {
 			lhead = (WORD_LIST *)NULL;
-			loptend = lcurrent->next;
+			loptend = (WORD_LIST *)lcurrent->next;
 			return(-1);
 		}
 		errstr[0] = list_opttype = lcurrent->word->word[0];
 	}
 
+	int c;
+	const char *cp;
 	list_optopt = c = lcurrent->word->word[sp];
 
 	if (c == ':' || (cp = strchr(opts, c)) == NULL) {
 		errstr[1] = c;
-		sh_invalidopt (errstr);		
+		sh_invalidopt (errstr);
 		if (lcurrent->word->word[++sp] == '\0') {
-			lcurrent = lcurrent->next;
+			lcurrent = (WORD_LIST *)lcurrent->next;
 			sp = 1;
 		}
 		list_optarg = NULL;
 		if (lcurrent)
-			loptend = lcurrent->next;
+			loptend = (WORD_LIST *)lcurrent->next;
 		return('?');
 	}
 
@@ -113,20 +111,20 @@ char		*opts;
 		/* We allow -l2 as equivalent to -l 2 */
 		if (lcurrent->word->word[sp+1]) {
 			list_optarg = lcurrent->word->word + sp + 1;
-			lcurrent = lcurrent->next;
+			lcurrent = (WORD_LIST *)lcurrent->next;
 		/* If the specifier is `;', don't set optarg if the next
 		   argument looks like another option. */
 #if 0
 		} else if (lcurrent->next && (*cp == ':' || lcurrent->next->word->word[0] != '-')) {
 #else
-		} else if (lcurrent->next && (*cp == ':' || NOTOPT(lcurrent->next->word->word))) {
+		} else if (lcurrent->next && (*cp == ':' || NOTOPT(((WORD_LIST *)lcurrent->next)->word->word))) {
 #endif
-			lcurrent = lcurrent->next;
+			lcurrent = (WORD_LIST *)lcurrent->next;
 			list_optarg = lcurrent->word->word;
-			lcurrent = lcurrent->next;
+			lcurrent = (WORD_LIST *)lcurrent->next;
 		} else if (*cp == ';') {
 			list_optarg = (char *)NULL;
-			lcurrent = lcurrent->next;
+			lcurrent = (WORD_LIST *)lcurrent->next;
 		} else {	/* lcurrent->next == NULL */
 			errstr[1] = c;
 			sh_needarg (errstr);
@@ -140,14 +138,14 @@ char		*opts;
 		if (lcurrent->word->word[sp+1]) {
 			if (DIGIT(lcurrent->word->word[sp+1])) {
 				list_optarg = lcurrent->word->word + sp + 1;
-				lcurrent = lcurrent->next;
+				lcurrent = (WORD_LIST *)lcurrent->next;
 			} else
 				list_optarg = (char *)NULL;
 		} else {
-			if (lcurrent->next && legal_number(lcurrent->next->word->word, (intmax_t *)0)) {
-				lcurrent = lcurrent->next;
+			if (lcurrent->next && legal_number(((WORD_LIST *)lcurrent->next)->word->word, (intmax_t *)0)) {
+				lcurrent = (WORD_LIST *)lcurrent->next;
 				list_optarg = lcurrent->word->word;
-				lcurrent = lcurrent->next;
+				lcurrent = (WORD_LIST *)lcurrent->next;
 			} else {
 				errstr[1] = c;
 				sh_neednumarg (errstr);
@@ -161,7 +159,7 @@ char		*opts;
 		/* No argument, just return the option. */
 		if (lcurrent->word->word[++sp] == '\0') {
 			sp = 1;
-			lcurrent = lcurrent->next;
+			lcurrent = (WORD_LIST *)lcurrent->next;
 		}
 		list_optarg = (char *)NULL;
 	}

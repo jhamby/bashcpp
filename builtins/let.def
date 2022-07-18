@@ -80,17 +80,16 @@ $END
 
 /* Arithmetic LET function. */
 int
-let_builtin (list)
-     WORD_LIST *list;
+let_builtin (WORD_LIST *list)
 {
   intmax_t ret;
-  int expok;
+  bool expok;
 
   CHECK_HELPOPT (list);
 
   /* Skip over leading `--' argument. */
   if (list && list->word && ISOPTION (list->word->word, '-'))
-    list = list->next;
+    list = (WORD_LIST *)list->next;
 
   if (list == 0)
     {
@@ -98,7 +97,7 @@ let_builtin (list)
       return (EXECUTION_FAILURE);
     }
 
-  for (; list; list = list->next)
+  for (; list; list = (WORD_LIST *)list->next)
     {
       ret = evalexp (list->word->word, EXP_EXPANDED, &expok);
       if (expok == 0)
@@ -110,12 +109,11 @@ let_builtin (list)
 
 #ifdef INCLUDE_UNUSED
 int
-exp_builtin (list)
-     WORD_LIST *list;
+exp_builtin (WORD_LIST *list)
 {
   char *exp;
   intmax_t ret;
-  int expok;
+  bool expok;
 
   if (list == 0)
     {

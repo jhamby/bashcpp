@@ -87,30 +87,30 @@ extern int errno;
 
 #define SHELL_FD_BASE	10
 
-int expanding_redir;
+bool expanding_redir;
 
 extern REDIRECT *redirection_undo_list;
 extern REDIRECT *exec_redirection_undo_list;
 
 /* Static functions defined and used in this file. */
-static void add_exec_redirect PARAMS((REDIRECT *));
-static int add_undo_redirect PARAMS((int, enum r_instruction, int));
-static int add_undo_close_redirect PARAMS((int));
-static int expandable_redirection_filename PARAMS((REDIRECT *));
-static int stdin_redirection PARAMS((enum r_instruction, int));
-static int undoablefd PARAMS((int));
-static int do_redirection_internal PARAMS((REDIRECT *, int, char **));
+static void add_exec_redirect (REDIRECT *);
+static int add_undo_redirect (int, enum r_instruction, int);
+static int add_undo_close_redirect (int);
+static int expandable_redirection_filename (REDIRECT *);
+static int stdin_redirection (enum r_instruction, int);
+static int undoablefd (int);
+static int do_redirection_internal (REDIRECT *, int, char **);
 
-static char *heredoc_expand PARAMS((WORD_DESC *, enum r_instruction, size_t *));
-static int heredoc_write PARAMS((int, char *, size_t));
-static int here_document_to_fd PARAMS((WORD_DESC *, enum r_instruction));
+static char *heredoc_expand (WORD_DESC *, enum r_instruction, size_t *);
+static int heredoc_write (int, char *, size_t);
+static int here_document_to_fd (WORD_DESC *, enum r_instruction);
 
-static int redir_special_open PARAMS((int, char *, int, int, enum r_instruction));
-static int noclobber_open PARAMS((char *, int, int, enum r_instruction));
-static int redir_open PARAMS((char *, int, int, enum r_instruction));
+static int redir_special_open (int, char *, int, int, enum r_instruction);
+static int noclobber_open (char *, int, int, enum r_instruction);
+static int redir_open (char *, int, int, enum r_instruction);
 
-static int redir_varassign PARAMS((REDIRECT *, int));
-static int redir_varvalue PARAMS((REDIRECT *));
+static int redir_varassign (REDIRECT *, int);
+static int redir_varvalue (REDIRECT *);
 
 /* Spare redirector used when translating [N]>&WORD[-] or [N]<&WORD[-] to
    a new redirection and when creating the redirection undo list. */
@@ -132,10 +132,8 @@ do { \
 } while (0)
 
 void
-redirection_error (temp, error, fn)
-     REDIRECT *temp;
-     int error;
-     char *fn;		/* already-expanded filename */
+redirection_error (REDIRECT *temp, int error,
+                   char *fn)		/* already-expanded filename */
 {
   char *filename, *allocname;
   int oflags;
@@ -237,9 +235,7 @@ redirection_error (temp, error, fn)
    is non-zero, file descriptors opened in do_redirection () have their
    close-on-exec flag set. */
 int
-do_redirections (list, flags)
-     REDIRECT *list;
-     int flags;
+do_redirections (REDIRECT *list, int flags)
 {
   int error;
   REDIRECT *temp;
@@ -274,8 +270,7 @@ do_redirections (list, flags)
 /* Return non-zero if the redirection pointed to by REDIRECT has a
    redirectee.filename that can be expanded. */
 static int
-expandable_redirection_filename (redirect)
-     REDIRECT *redirect;
+expandable_redirection_filename (REDIRECT *redirect)
 {
   switch (redirect->instruction)
     {
@@ -301,8 +296,7 @@ expandable_redirection_filename (redirect)
 /* Expand the word in WORD returning a string.  If WORD expands to
    multiple words (or no words), then return NULL. */
 char *
-redirection_expand (word)
-     WORD_DESC *word;
+redirection_expand (WORD_DESC *word)
 {
   char *result;
   WORD_LIST *tlist1, *tlist2;
@@ -352,10 +346,7 @@ redirection_expand (word)
    descriptor is specified. In particular, it adds a newline to the end of
    a here-string to preserve previous semantics. */
 static char *
-heredoc_expand (redirectee, ri, lenp)
-     WORD_DESC *redirectee;
-     enum r_instruction ri;
-     size_t *lenp;
+heredoc_expand (WORD_DESC *redirectee, enum r_instruction ri, size_t *lenp)
 {
   char *document;
   size_t dlen;
@@ -375,7 +366,7 @@ heredoc_expand (redirectee, ri, lenp)
         *lenp = STRLEN (redirectee->word);
       return (redirectee->word);
     }
-  
+
   expanding_redir = 1;
   /* Now that we've changed the variable search order to ignore the temp
      environment, see if we need to change the cached IFS values. */
@@ -396,12 +387,12 @@ heredoc_expand (redirectee, ri, lenp)
   /* XXX - Add trailing newline to here-string */
   if (ri == r_reading_string)
     {
-      document = xrealloc (document, dlen + 2);
+      document = (char *)xrealloc (document, dlen + 2);
       document[dlen++] = '\n';
       document[dlen] = '\0';
     }
   if (lenp)
-    *lenp = dlen;    
+    *lenp = dlen;
 
   return document;
 }
@@ -409,10 +400,7 @@ heredoc_expand (redirectee, ri, lenp)
 /* Write HEREDOC (of length HDLEN) to FD, returning 0 on success and ERRNO on
    error. Don't handle interrupts. */
 static int
-heredoc_write (fd, heredoc, herelen)
-     int fd;
-     char *heredoc;
-     size_t herelen;
+heredoc_write (int fd, char *heredoc, size_t herelen)
 {
   ssize_t nw;
   int e;
@@ -433,9 +421,7 @@ heredoc_write (fd, heredoc, herelen)
    pointed to by REDIRECTEE, and return a file descriptor open for reading
    to it. Return -1 on any error, and make sure errno is set appropriately. */
 static int
-here_document_to_fd (redirectee, ri)
-     WORD_DESC *redirectee;
-     enum r_instruction ri;
+here_document_to_fd (WORD_DESC *redirectee, enum r_instruction ri)
 {
   char *filename;
   int r, fd, fd2, herepipe[2];
@@ -598,11 +584,8 @@ static STRING_INT_ALIST _redir_special_filenames[] = {
 };
 
 static int
-redir_special_open (spec, filename, flags, mode, ri)
-     int spec;
-     char *filename;
-     int flags, mode;
-     enum r_instruction ri;
+redir_special_open (int spec, char *filename, int flags, int mode,
+                    enum r_instruction ri)
 {
   int fd;
 #if !defined (HAVE_DEV_FD)
@@ -655,15 +638,12 @@ redir_special_open (spec, filename, flags, mode, ri)
 
   return fd;
 }
-      
+
 /* Open FILENAME with FLAGS in noclobber mode, hopefully avoiding most
    race conditions and avoiding the problem where the file is replaced
    between the stat(2) and open(2). */
 static int
-noclobber_open (filename, flags, mode, ri)
-     char *filename;
-     int flags, mode;
-     enum r_instruction ri;
+noclobber_open (char *filename, int flags, int mode, enum r_instruction ri)
 {
   int r, fd;
   struct stat finfo, finfo2;
@@ -706,16 +686,13 @@ noclobber_open (filename, flags, mode, ri)
     return fd;
 
   /* The file has been replaced.  badness. */
-  close (fd);  
+  close (fd);
   errno = EEXIST;
   return (NOCLOBBER_REDIRECT);
 }
 
 static int
-redir_open (filename, flags, mode, ri)
-     char *filename;
-     int flags, mode;
-     enum r_instruction ri;
+redir_open (char *filename, int flags, int mode, enum r_instruction ri)
 {
   int fd, r, e;
 
@@ -759,8 +736,7 @@ redir_open (filename, flags, mode, ri)
 }
 
 static int
-undoablefd (fd)
-     int fd;
+undoablefd (int fd)
 {
   int clexec;
 
@@ -779,10 +755,7 @@ undoablefd (fd)
    close-on-exec. FNP, if non-null is a pointer to a location where the
    expanded filename is stored. The caller will free it. */
 static int
-do_redirection_internal (redirect, flags, fnp)
-     REDIRECT *redirect;
-     int flags;
-     char **fnp;
+do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
 {
   WORD_DESC *redirectee;
   int redir_fd, fd, redirector, r, oflags;
@@ -803,7 +776,7 @@ do_redirection_internal (redirect, flags, fnp)
   if (TRANSLATE_REDIRECT (ri))
     {
       /* We have [N]>&WORD[-] or [N]<&WORD[-] (or {V}>&WORD[-] or {V}<&WORD-).
-         and WORD, then translate the redirection into a new one and 
+         and WORD, then translate the redirection into a new one and
 	 continue. */
       redirectee_word = redirection_expand (redirectee);
 
@@ -1184,7 +1157,7 @@ do_redirection_internal (redirect, flags, fnp)
 	     when the fd is restored. */
 	  if ((redirect->flags & RX_INTERNAL) && (redirect->flags & RX_SAVCLEXEC) && redirector >= 3 && (redir_fd >= SHELL_FD_BASE || (redirect->flags & RX_SAVEFD)))
 	    SET_OPEN_ON_EXEC (redirector);
-	    
+
 	  /* dup-and-close redirection */
 	  if (ri == r_move_input || ri == r_move_output)
 	    {
@@ -1260,10 +1233,7 @@ do_redirection_internal (redirect, flags, fnp)
    puts the process over its fd limit, causing fcntl to fail, we try
    again with SHELL_FD_BASE.  Return 0 on success, -1 on error. */
 static int
-add_undo_redirect (fd, ri, fdbase)
-     int fd;
-     enum r_instruction ri;
-     int fdbase;
+add_undo_redirect (int fd, enum r_instruction ri, int fdbase)
 {
   int new_fd, clexec_flag, savefd_flag;
   REDIRECT *new_redirect, *closer, *dummy_redirect;
@@ -1350,8 +1320,7 @@ add_undo_redirect (fd, ri, fdbase)
 /* Set up to close FD when we are finished with the current command
    and its redirections.  Return 0 on success, -1 on error. */
 static int
-add_undo_close_redirect (fd)
-     int fd;
+add_undo_close_redirect (int fd)
 {
   REDIRECT *closer;
   REDIRECTEE sd;
@@ -1367,8 +1336,7 @@ add_undo_close_redirect (fd)
 }
 
 static void
-add_exec_redirect (dummy_redirect)
-     REDIRECT *dummy_redirect;
+add_exec_redirect (REDIRECT *dummy_redirect)
 {
   dummy_redirect->next = exec_redirection_undo_list;
   exec_redirection_undo_list = dummy_redirect;
@@ -1377,9 +1345,7 @@ add_exec_redirect (dummy_redirect)
 /* Return 1 if the redirection specified by RI and REDIRECTOR alters the
    standard input. */
 static int
-stdin_redirection (ri, redirector)
-     enum r_instruction ri;
-     int redirector;
+stdin_redirection (enum r_instruction ri, int redirector)
 {
   switch (ri)
     {
@@ -1413,8 +1379,7 @@ stdin_redirection (ri, redirector)
 /* Return non-zero if any of the redirections in REDIRS alter the standard
    input. */
 int
-stdin_redirects (redirs)
-     REDIRECT *redirs;
+stdin_redirects (REDIRECT *redirs)
 {
   REDIRECT *rp;
   int n;
@@ -1424,11 +1389,10 @@ stdin_redirects (redirs)
       n += stdin_redirection (rp->instruction, rp->redirector.dest);
   return n;
 }
+
 /* bind_var_to_int handles array references */
 static int
-redir_varassign (redir, fd)
-     REDIRECT *redir;
-     int fd;
+redir_varassign (REDIRECT *redir, int fd)
 {
   WORD_DESC *w;
   SHELL_VAR *v;
@@ -1444,8 +1408,7 @@ redir_varassign (redir, fd)
 
 /* Handles {array[ind]} for redirection words */
 static int
-redir_varvalue (redir)
-     REDIRECT *redir;
+redir_varvalue (REDIRECT *redir)
 {
   SHELL_VAR *v;
   char *val, *w;
@@ -1482,7 +1445,7 @@ redir_varvalue (redir)
 	}
 #endif
     }
-	
+
   if (v == 0 || invisible_p (v))
     return -1;
 

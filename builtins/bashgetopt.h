@@ -36,7 +36,7 @@ extern int list_opttype;
 extern WORD_LIST *lcurrent;
 extern WORD_LIST *loptend;
 
-extern int internal_getopt PARAMS((WORD_LIST *, char *));
-extern void reset_internal_getopt PARAMS((void));
+extern int internal_getopt (WORD_LIST *, const char *);
+extern void reset_internal_getopt (void);
 
 #endif /* !__BASH_GETOPT_H */

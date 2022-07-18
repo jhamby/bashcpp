@@ -3,7 +3,7 @@
    Copyright (C) 2010-2020 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne-Again SHell.
-   
+
    Bash is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -38,7 +38,7 @@
 #include "glob.h"
 
 /* Make sure these names continue to agree with what's in smatch.c */
-extern char *glob_patscan PARAMS((char *, char *, int));
+extern const unsigned char *glob_patscan (const unsigned char *, const unsigned char *, int);
 
 /* Compile `gm_loop.c' for single-byte characters. */
 #define CHAR	char
@@ -78,12 +78,10 @@ extern char *glob_patscan PARAMS((char *, char *, int));
 /* Skip characters in PAT and return the final occurrence of DIRSEP.  This
    is only called when extended_glob is set, so we have to skip over extglob
    patterns x(...) */
-char *
-glob_dirscan (pat, dirsep)
-     char *pat;
-     int dirsep;
+const char *
+glob_dirscan (const char *pat, int dirsep)
 {
-  char *p, *d, *pe, *se;
+  const char *p, *d, *pe, *se;
 
   d = pe = se = 0;
   for (p = pat; p && *p; p++)
@@ -92,7 +90,8 @@ glob_dirscan (pat, dirsep)
 	{
 	  if (se == 0)
 	    se = p + strlen (p) - 1;
-	  pe = glob_patscan (p + 2, se, 0);
+	  pe = (char *)glob_patscan ((unsigned char *)(p + 2),
+				     (unsigned char *)se, 0);
 	  if (pe == 0)
 	    continue;
 	  else if (*pe == 0)

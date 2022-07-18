@@ -3,7 +3,7 @@
 /* Copyright (C) 1992-2020 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ _rl_search_cxt *_rl_nscxt = 0;
 extern HIST_ENTRY *_rl_saved_line_for_history;
 
 /* Functions imported from the rest of the library. */
-extern void _rl_free_history_entry PARAMS((HIST_ENTRY *));
+extern void _rl_free_history_entry (HIST_ENTRY *);
 
 static char *noninc_search_string = (char *) NULL;
 static int noninc_history_pos;
@@ -72,16 +72,16 @@ static int rl_history_search_flags;
 static char *history_search_string;
 static int history_string_size;
 
-static void make_history_line_current PARAMS((HIST_ENTRY *));
-static int noninc_search_from_pos PARAMS((char *, int, int, int, int *));
-static int noninc_dosearch PARAMS((char *, int, int));
-static int noninc_search PARAMS((int, int));
-static int rl_history_search_internal PARAMS((int, int));
-static void rl_history_search_reinit PARAMS((int));
+static void make_history_line_current (HIST_ENTRY *);
+static int noninc_search_from_pos (char *, int, int, int, int *);
+static int noninc_dosearch (char *, int, int);
+static int noninc_search (int, int);
+static int rl_history_search_internal (int, int);
+static void rl_history_search_reinit (int);
 
-static _rl_search_cxt *_rl_nsearch_init PARAMS((int, int));
-static void _rl_nsearch_abort PARAMS((_rl_search_cxt *));
-static int _rl_nsearch_dispatch PARAMS((_rl_search_cxt *, int));
+static _rl_search_cxt *_rl_nsearch_init (int, int);
+static void _rl_nsearch_abort (_rl_search_cxt *);
+static int _rl_nsearch_dispatch (_rl_search_cxt *, int);
 
 /* Make the data from the history entry ENTRY be the contents of the
    current line.  This doesn't do anything with rl_point; the caller
@@ -184,7 +184,7 @@ noninc_dosearch (char *string, int dir, int flags)
   oldpos = where_history ();
   history_set_pos (noninc_history_pos);
   entry = current_history ();		/* will never be NULL after successful search */
-  
+
 #if defined (VI_MODE)
   if (rl_editing_mode != vi_mode)
 #endif
@@ -201,7 +201,7 @@ noninc_dosearch (char *string, int dir, int flags)
       rl_activate_mark ();
     }
   else
-    {  
+    {
       rl_point = 0;
       rl_mark = rl_end;
     }
@@ -282,7 +282,7 @@ _rl_nsearch_dispatch (_rl_search_cxt *cxt, int c)
   int n;
 
   if (c < 0)
-    c = CTRL ('C');  
+    c = CTRL ('C');
 
   switch (c)
     {
@@ -419,7 +419,7 @@ noninc_search (int dir, int pchar)
 	  _rl_nsearch_abort (cxt);
 	  return 1;
 	}
-	  
+
       if (c == 0)
 	break;
 
@@ -427,7 +427,7 @@ noninc_search (int dir, int pchar)
       if (r < 0)
         return 1;
       else if (r == 0)
-	break;        
+	break;
     }
 
   r = _rl_nsearch_dosearch (cxt);
@@ -515,7 +515,7 @@ _rl_nsearch_callback (_rl_search_cxt *cxt)
   return ((r >= 0) ? _rl_nsearch_cleanup (cxt, r) : (r != 1));
 }
 #endif
-  
+
 static int
 rl_history_search_internal (int count, int dir)
 {

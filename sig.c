@@ -55,11 +55,11 @@
 #  include "bashhist.h"
 #endif
 
-extern void initialize_siglist PARAMS((void));
-extern void set_original_signal PARAMS((int, SigHandler *));
+extern void initialize_siglist (void);
+extern void set_original_signal (int, SigHandler *);
 
 #if !defined (JOB_CONTROL)
-extern void initialize_job_signals PARAMS((void));
+extern void initialize_job_signals (void);
 #endif
 
 /* Non-zero after SIGINT. */
@@ -93,11 +93,10 @@ int terminate_immediately = 0;
 static SigHandler *old_winch = (SigHandler *)SIG_DFL;
 #endif
 
-static void initialize_shell_signals PARAMS((void));
+static void initialize_shell_signals (void);
 
 void
-initialize_signals (reinit)
-     int reinit;
+initialize_signals (int reinit)
 {
   initialize_shell_signals ();
   initialize_job_signals ();
@@ -228,7 +227,7 @@ static int termsigs_initialized = 0;
 void
 initialize_terminating_signals ()
 {
-  register int i;
+  int i;
 #if defined (HAVE_POSIX_SIGNALS)
   struct sigaction act, oact;
 #endif
@@ -340,7 +339,7 @@ initialize_shell_signals ()
 void
 reset_terminating_signals ()
 {
-  register int i;
+  int i;
 #if defined (HAVE_POSIX_SIGNALS)
   struct sigaction act;
 #endif
@@ -438,7 +437,7 @@ throw_to_top_level ()
 
   /* This needs to stay because jobs.c:make_child() uses it without resetting
      the signal mask. */
-  restore_sigmask ();  
+  restore_sigmask ();
 
   reset_parser ();
 
@@ -472,8 +471,7 @@ throw_to_top_level ()
 
 /* This is just here to isolate the longjmp calls. */
 void
-jump_to_top_level (value)
-     int value;
+jump_to_top_level (int value)
 {
   sh_longjmp (top_level, value);
 }
@@ -487,8 +485,7 @@ restore_sigmask ()
 }
 
 sighandler
-termsig_sighandler (sig)
-     int sig;
+termsig_sighandler (int sig)
 {
   /* If we get called twice with the same signal before handling it,
      terminate right away. */
@@ -561,8 +558,7 @@ termsig_sighandler (sig)
 }
 
 void
-termsig_handler (sig)
-     int sig;
+termsig_handler (int sig)
 {
   static int handling_termsig = 0;
   int i, core;
@@ -654,8 +650,7 @@ termsig_handler (sig)
 
 /* What we really do when SIGINT occurs. */
 sighandler
-sigint_sighandler (sig)
-     int sig;
+sigint_sighandler (int sig)
 {
 #if defined (MUST_REINSTALL_SIGHANDLERS)
   signal (sig, sigint_sighandler);
@@ -702,8 +697,7 @@ sigint_sighandler (sig)
 
 #if defined (SIGWINCH)
 sighandler
-sigwinch_sighandler (sig)
-     int sig;
+sigwinch_sighandler (int sig)
 {
 #if defined (MUST_REINSTALL_SIGHANDLERS)
   set_signal_handler (SIGWINCH, sigwinch_sighandler);
@@ -730,8 +724,7 @@ unset_sigwinch_handler ()
 }
 
 sighandler
-sigterm_sighandler (sig)
-     int sig;
+sigterm_sighandler (int sig)
 {
   sigterm_received = 1;		/* XXX - counter? */
   SIGRETURN (0);
@@ -741,8 +734,7 @@ sigterm_sighandler (sig)
 #if !defined (HAVE_POSIX_SIGNALS)
 
 /* Perform OPERATION on NEWSET, perhaps leaving information in OLDSET. */
-sigprocmask (operation, newset, oldset)
-     int operation, *newset, *oldset;
+sigprocmask (int operation, int *newset, int *oldset)
 {
   int old, new;
 
@@ -780,9 +772,7 @@ sigprocmask (operation, newset, oldset)
 #endif
 
 SigHandler *
-set_signal_handler (sig, handler)
-     int sig;
-     SigHandler *handler;
+set_signal_handler (int sig, SigHandler *handler)
 {
   struct sigaction act, oact;
 

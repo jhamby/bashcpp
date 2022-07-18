@@ -3,7 +3,7 @@
 /* Copyright (C) 1999-2009 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -24,10 +24,10 @@
 
 #include "rlstdc.h"
 
-extern char *sh_single_quote PARAMS((char *));
-extern void sh_set_lines_and_columns PARAMS((int, int));
-extern char *sh_get_env_value PARAMS((const char *));
-extern char *sh_get_home_dir PARAMS((void));
-extern int sh_unset_nodelay_mode PARAMS((int));
+extern char *sh_single_quote (const char *);
+extern void sh_set_lines_and_columns (int, int);
+extern char *sh_get_env_value (const char *);
+extern char *sh_get_home_dir (void);
+extern int sh_unset_nodelay_mode (int);
 
 #endif /* _RL_SHELL_H_ */

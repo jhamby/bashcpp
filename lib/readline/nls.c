@@ -3,7 +3,7 @@
 /* Copyright (C) 1996-2017 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -54,9 +54,9 @@
 #include "rlshell.h"
 #include "rlprivate.h"
 
-static int utf8locale PARAMS((char *));
+static int utf8locale (char *);
 
-#if !defined (HAVE_SETLOCALE)    
+#if !defined (HAVE_SETLOCALE)
 /* A list of legal values for the LANG or LC_CTYPE environment variables.
    If a locale name in this list is the value for the LC_ALL, LC_CTYPE,
    or LANG environment variable (using the first of those with a value),
@@ -78,12 +78,12 @@ static char *legal_lang_values[] =
   0
 };
 
-static char *normalize_codeset PARAMS((char *));
+static char *normalize_codeset (char *);
 #endif /* !HAVE_SETLOCALE */
 
-static char *find_codeset PARAMS((char *, size_t *));
+static char *find_codeset (char *, size_t *);
 
-static char *_rl_get_locale_var PARAMS((const char *));
+static char *_rl_get_locale_var (const char *);
 
 static char *
 _rl_get_locale_var (const char *v)
@@ -122,10 +122,8 @@ utf8locale (char *lspec)
 char *
 _rl_init_locale (void)
 {
-  char *ret, *lspec;
-
   /* Set the LC_CTYPE locale category from environment variables. */
-  lspec = _rl_get_locale_var ("LC_CTYPE");
+  const char *lspec = _rl_get_locale_var ("LC_CTYPE");
   /* Since _rl_get_locale_var queries the right environment variables,
      we query the current locale settings with setlocale(), and, if
      that doesn't return anything, we set lspec to the empty string to
@@ -135,7 +133,7 @@ _rl_init_locale (void)
     lspec = setlocale (LC_CTYPE, (char *)NULL);
   if (lspec == 0)
     lspec = "";
-  ret = setlocale (LC_CTYPE, lspec);	/* ok, since it does not change locale */
+  char *ret = setlocale (LC_CTYPE, lspec);	/* ok, since it does not change locale */
 
   _rl_utf8locale = (ret && *ret) ? utf8locale (ret) : 0;
 
@@ -254,7 +252,7 @@ find_codeset (char *name, size_t *lenp)
   /* This does not make sense: language has to be specified.  As
      an exception we allow the variable to contain only the codeset
      name.  Perhaps there are funny codeset names.  */
-  if (language == cp) 
+  if (language == cp)
     {
       *lenp = strlen (language);
       result = language;

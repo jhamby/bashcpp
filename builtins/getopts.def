@@ -86,23 +86,21 @@ $END
 #define G_INVALID_OPT	-2
 #define G_ARG_MISSING	-3
 
-static int getopts_unbind_variable PARAMS((char *));
-static int getopts_bind_variable PARAMS((char *, char *));
-static int dogetopts PARAMS((int, char **));
+static int getopts_unbind_variable (char *);
+static int getopts_bind_variable (char *, char *);
+static int dogetopts (int, char **);
 
 /* getopts_reset is magic code for when OPTIND is reset.  N is the
    value that has just been assigned to OPTIND. */
 void
-getopts_reset (newind)
-     int newind;
+getopts_reset (int newind)
 {
   sh_optind = newind;
   sh_badopt = 0;
 }
 
 static int
-getopts_unbind_variable (name)
-     char *name;
+getopts_unbind_variable (const char *name)
 {
 #if 0
   return (unbind_variable (name));
@@ -112,8 +110,7 @@ getopts_unbind_variable (name)
 }
 
 static int
-getopts_bind_variable (name, value)
-     char *name, *value;
+getopts_bind_variable (char *name, char *value)
 {
   SHELL_VAR *v;
 
@@ -146,7 +143,7 @@ getopts_bind_variable (name, value)
                 OPTARG unset
                 diagnostic message
         fi
- 
+
   MISSING OPTION ARGUMENT;
         if (special_error) then
                 name -> ":"
@@ -159,9 +156,7 @@ getopts_bind_variable (name, value)
  */
 
 static int
-dogetopts (argc, argv)
-     int argc;
-     char **argv;
+dogetopts (int argc, char **argv)
 {
   int ret, special_error, old_opterr, i, n;
   char strval[2], numval[16];
@@ -209,14 +204,14 @@ dogetopts (argc, argv)
     }
   else
     {
-      register WORD_LIST *words;
+      WORD_LIST *words;
       char **v;
 
       i = number_of_args () + 1;	/* +1 for $0 */
       v = strvec_create (i + 1);
       for (i = 0; i < 10 && dollar_vars[i]; i++)
 	v[i] = dollar_vars[i];
-      for (words = rest_of_args; words; words = words->next, i++)
+      for (words = rest_of_args; words; words = (WORD_LIST *)words->next, i++)
 	v[i] = words->word->word;
       v[i] = (char *)NULL;
       sh_getopt_restore_state (v);
@@ -259,7 +254,7 @@ dogetopts (argc, argv)
       else if (sh_optarg[0] == '\0')
 	ret = G_ARG_MISSING;
     }
-	    
+
   if (ret == G_EOF)
     {
       getopts_unbind_variable ("OPTARG");
@@ -301,7 +296,7 @@ dogetopts (argc, argv)
 	  getopts_unbind_variable ("OPTARG");
 	}
       return (ret);
-    }			
+    }
 
   bind_variable ("OPTARG", sh_optarg, 0);
 
@@ -312,8 +307,7 @@ dogetopts (argc, argv)
 
 /* The getopts builtin.  Build an argv, and call dogetopts with it. */
 int
-getopts_builtin (list)
-     WORD_LIST *list;
+getopts_builtin (WORD_LIST *list)
 {
   char **av;
   int ac, ret;

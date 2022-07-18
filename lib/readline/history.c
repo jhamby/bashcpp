@@ -62,7 +62,7 @@ extern int errno;
 /* The number of slots to increase the_history by. */
 #define DEFAULT_HISTORY_GROW_SIZE 50
 
-static char *hist_inittime PARAMS((void));
+static char *hist_inittime (void);
 
 /* **************************************************************** */
 /*								    */
@@ -75,7 +75,7 @@ static HIST_ENTRY **the_history = (HIST_ENTRY **)NULL;
 
 /* Non-zero means that we have enforced a limit on the amount of
    history that we save. */
-static int history_stifled;
+static bool history_stifled;
 
 /* The current number of slots allocated to the input_history. */
 static int history_size;
@@ -165,7 +165,7 @@ history_set_pos (int pos)
   history_offset = pos;
   return (1);
 }
- 
+
 /* Return the current history array.  The caller has to be careful, since this
    is the actual array of data, and could be bashed or made corrupt easily.
    The array is terminated with a NULL pointer. */
@@ -373,7 +373,7 @@ copy_history_entry (HIST_ENTRY *hist)
 
   return ret;
 }
-  
+
 /* Make the history entry at WHICH have LINE and DATA.  This returns
    the old entry so you can dispose of the data.  In the case of an
    invalid WHICH, a NULL pointer is returned. */
@@ -420,7 +420,7 @@ _hs_append_history_line (int which, const char *line)
     newlen = minlen;
   /* Assume that realloc returns the same pointer and doesn't try a new
      alloc/copy if the new size is the same as the one last passed. */
-  newline = realloc (hent->line, newlen);
+  newline = (char *)realloc (hent->line, newlen);
   if (newline)
     {
       hent->line = newline;
@@ -436,7 +436,7 @@ _hs_append_history_line (int which, const char *line)
    WHICH >= 0 means to replace that particular history entry's data, as
    long as it matches OLD. */
 void
-_hs_replace_history_data (int which, histdata_t *old, histdata_t *new)
+_hs_replace_history_data (int which, histdata_t *old, histdata_t *new_)
 {
   HIST_ENTRY *entry;
   register int i, last;
@@ -448,7 +448,7 @@ _hs_replace_history_data (int which, histdata_t *old, histdata_t *new)
     {
       entry = the_history[which];
       if (entry && entry->data == old)
-	entry->data = new;
+	entry->data = new_;
       return;
     }
 
@@ -462,16 +462,16 @@ _hs_replace_history_data (int which, histdata_t *old, histdata_t *new)
 	{
 	  last = i;
 	  if (which == -1)
-	    entry->data = new;
+	    entry->data = new_;
 	}
     }
   if (which == -2 && last >= 0)
     {
       entry = the_history[last];
-      entry->data = new;	/* XXX - we don't check entry->old */
+      entry->data = new_;	/* XXX - we don't check entry->old */
     }
-}      
-  
+}
+
 /* Remove history element WHICH from the history.  The removed
    element is returned to you so you can free the line, data,
    and containing structure. */

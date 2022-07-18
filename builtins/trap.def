@@ -75,8 +75,8 @@ $END
 #include "common.h"
 #include "bashgetopt.h"
 
-static void showtrap PARAMS((int, int));
-static int display_traps PARAMS((WORD_LIST *, int));
+static void showtrap (int, int);
+static int display_traps (WORD_LIST *, int);
 
 /* The trap command:
 
@@ -98,8 +98,7 @@ static int display_traps PARAMS((WORD_LIST *, int));
 #define IGNORE 2		/* Ignore this signal. */
 
 int
-trap_builtin (list)
-     WORD_LIST *list;
+trap_builtin (WORD_LIST *list)
 {
   int list_signal_names, display, result, opt;
 
@@ -159,7 +158,7 @@ trap_builtin (list)
 	operation = REVERT;
       else
 	{
-	  list = list->next;
+	  list = (WORD_LIST *)list->next;
 	  if (list == 0)
 	    {
 	      builtin_usage ();
@@ -238,7 +237,7 @@ trap_builtin (list)
 		    break;
 		}
 	    }
-	  list = list->next;
+	  list = (WORD_LIST *)list->next;
 	}
     }
 
@@ -246,16 +245,15 @@ trap_builtin (list)
 }
 
 static void
-showtrap (i, show_default)
-     int i, show_default;
+showtrap (int i, int show_default)
 {
-  char *t, *p, *sn;
+  char *t, *p;
 
   p = trap_list[i];
   if (p == (char *)DEFAULT_SIG && signal_is_hard_ignored (i) == 0)
     {
       if (show_default)
-	t = "-";
+	t = (char *)"-";
       else
 	return;
     }
@@ -264,7 +262,7 @@ showtrap (i, show_default)
   else
     t = (p == (char *)IGNORE_SIG) ? (char *)NULL : sh_single_quote (p);
 
-  sn = signal_name (i);
+  const char *sn = signal_name (i);
   /* Make sure that signals whose names are unknown (for whatever reason)
      are printed as signal numbers. */
   if (STREQN (sn, "SIGJUNK", 7) || STREQN (sn, "unknown", 7))
@@ -279,14 +277,12 @@ showtrap (i, show_default)
   else
     printf ("trap -- %s %s\n", t ? t : "''", sn);
 
-  if (show_default == 0)
+  if (!show_default)
     FREE (t);
 }
 
 static int
-display_traps (list, show_all)
-     WORD_LIST *list;
-     int show_all;
+display_traps (WORD_LIST *list, int show_all)
 {
   int result, i;
 
@@ -297,7 +293,7 @@ display_traps (list, show_all)
       return (EXECUTION_SUCCESS);
     }
 
-  for (result = EXECUTION_SUCCESS; list; list = list->next)
+  for (result = EXECUTION_SUCCESS; list; list = (WORD_LIST *)list->next)
     {
       i = decode_signal (list->word->word, DSIG_NOCASE|DSIG_SIGPREFIX);
       if (i == NO_SIG)

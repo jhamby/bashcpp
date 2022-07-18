@@ -39,7 +39,7 @@ char *sys_siglist[NSIG];
 void
 initialize_siglist ()
 {
-  register int i;
+  int i;
 
   for (i = 0; i < NSIG; i++)
     sys_siglist[i] = (char *)0x0;

@@ -69,8 +69,7 @@ extern int errno;
 #endif /* !errno */
 
 int
-caller_builtin (list)
-     WORD_LIST *list;
+caller_builtin (WORD_LIST *list)
 {
 #if !defined (ARRAY_VARS)
   printf ("1 NULL\n");
@@ -105,7 +104,7 @@ caller_builtin (list)
       printf("%s %s\n", lineno_s ? lineno_s : "NULL", source_s ? source_s : "NULL");
       return (EXECUTION_SUCCESS);
     }
-  
+
   if (funcname_a == 0 || array_empty (funcname_a))
     return (EXECUTION_FAILURE);
 

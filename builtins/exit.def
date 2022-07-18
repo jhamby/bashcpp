@@ -48,14 +48,13 @@ $END
 #include "common.h"
 #include "builtext.h"	/* for jobs_builtin */
 
-extern int check_jobs_at_exit;
+extern char check_jobs_at_exit;
 
-static int exit_or_logout PARAMS((WORD_LIST *));
+static int exit_or_logout (WORD_LIST *);
 static int sourced_logout;
 
 int
-exit_builtin (list)
-     WORD_LIST *list;
+exit_builtin (WORD_LIST *list)
 {
   CHECK_HELPOPT (list);
 
@@ -79,8 +78,7 @@ $END
 
 /* How to logout. */
 int
-logout_builtin (list)
-     WORD_LIST *list;
+logout_builtin (WORD_LIST *list)
 {
   CHECK_HELPOPT (list);
 
@@ -94,8 +92,7 @@ logout_builtin (list)
 }
 
 static int
-exit_or_logout (list)
-     WORD_LIST *list;
+exit_or_logout (WORD_LIST *list)
 {
   int exit_value;
 
@@ -110,7 +107,7 @@ exit_or_logout (list)
   /* Check for stopped jobs if the user wants to. */
   if (exit_immediate_okay == 0)
     {
-      register int i;
+      int i;
       for (i = stopmsg = 0; i < js.j_jobslots; i++)
 	if (jobs[i] && STOPPED (i))
 	  stopmsg = JSTOPPED;

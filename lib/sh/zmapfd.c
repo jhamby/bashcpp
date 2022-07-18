@@ -40,15 +40,12 @@ extern int errno;
 #  define ZBUFSIZ 4096
 #endif
 
-extern ssize_t zread PARAMS((int, char *, size_t));
+extern ssize_t zread (int, char *, size_t);
 
 /* Dump contents of file descriptor FD to *OSTR.  FN is the filename for
    error messages (not used right now). */
 int
-zmapfd (fd, ostr, fn)
-     int fd;
-     char **ostr;
-     char *fn;
+zmapfd (int fd, char **ostr, char *fn)
 {
   ssize_t nr;
   int rval;

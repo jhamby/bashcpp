@@ -68,14 +68,12 @@ extern int errno;
 extern int shell_tty;
 
 #if defined (READLINE)
-extern void rl_set_screen_size PARAMS((int, int));
+extern "C" void rl_set_screen_size (int, int);
 #endif
-extern void sh_set_lines_and_columns PARAMS((int, int));
+extern void sh_set_lines_and_columns (int, int);
 
 void
-get_new_window_size (from_sig, rp, cp)
-     int from_sig;
-     int *rp, *cp;
+get_new_window_size (int from_sig, int *rp, int *cp)
 {
 #if defined (TIOCGWINSZ)
   struct winsize win;

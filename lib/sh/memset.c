@@ -18,10 +18,12 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-char *
-memset (char *str, int c, unsigned int len)
+#include <sys/types.h>
+
+void *
+memset (void *str, int c, size_t len)
 {
-  register char *st = str;
+  char *st = (char *)str;
 
   while (len-- > 0)
     *st++ = c;

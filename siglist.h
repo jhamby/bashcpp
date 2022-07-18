@@ -38,7 +38,7 @@ extern char *sys_siglist[];
 #endif /* !strsignal && !HAVE_STRSIGNAL */
 
 #if !defined (strsignal) && !HAVE_DECL_STRSIGNAL
-extern char *strsignal PARAMS((int));
+extern char *strsignal (int);
 #endif
 
 #endif /* _SIGLIST_H */

@@ -53,8 +53,8 @@ AR = @AR@
 CC = @CC@
 LIBTOOL = @LIBTOOL@
 RANLIB = @RANLIB@
-YACC = @INTLBISON@ -y -d
-YFLAGS = --name-prefix=__gettext
+BISON = @INTLBISON@
+BISONFLAGS = --name-prefix=__gettext
 
 ARFLAGS = @ARFLAGS@
 
@@ -174,9 +174,20 @@ LTV_AGE=3
 .c.o:
 	$(COMPILE) $<
 
-.y.c:
-	$(YACC) $(YFLAGS) --output $@ $<
-	rm -f $*.h
+$(srcdir)/plural.c: $(srcdir)/plural.y
+	$(BISON) -d $(BISONFLAGS) $< \
+	&& test ':' = '$(BISON)' || { \
+	  sed -e 's|".*/plural.y"|"plural.y"|' \
+	      -e 's|"plural\.tab\.c"|"plural.c"|' \
+	      -e 's|"plural\.tab\.h"|"plural.h"|' \
+	      < plural.tab.c > plural.c-tmp \
+	  && sed -e 's|".*/plural.y"|"plural.y"|' \
+	         -e 's|"plural\.tab\.h"|"plural.h"|' \
+	         < plural.tab.h > plural.h-tmp \
+	  && rm -f plural.tab.c plural.tab.h \
+	  && mv plural.c-tmp $(srcdir)/plural.c \
+	  && mv plural.h-tmp $(srcdir)/plural.h; \
+	}
 
 bindtextdom.lo: $(srcdir)/bindtextdom.c
 	$(LIBTOOL) --mode=compile $(COMPILE) $(srcdir)/bindtextdom.c

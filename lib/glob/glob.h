@@ -33,14 +33,14 @@
 #define GX_RECURSE	0x800	/* internal -- glob_filename called recursively */
 #define GX_SYMLINK	0x1000	/* internal -- symlink to a directory */
 
-extern int glob_pattern_p PARAMS((const char *));
-extern char **glob_vector PARAMS((char *, char *, int));
-extern char **glob_filename PARAMS((char *, int));
+extern bool glob_pattern_p (const char *);
+extern char **glob_vector (const char *, const char *, int);
+extern char **glob_filename (const char *, int);
 
-extern int extglob_pattern_p PARAMS((const char *));
+extern int extglob_pattern_p (const char *);
 
 extern char *glob_error_return;
-extern int noglob_dot_filenames;
-extern int glob_ignore_case;
+extern bool noglob_dot_filenames;
+extern bool glob_ignore_case;
 
 #endif /* _GLOB_H_ */

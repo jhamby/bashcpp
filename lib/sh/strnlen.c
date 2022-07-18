@@ -3,7 +3,7 @@
 /* Copyright (C) 2004 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
-   
+
    Bash is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -35,11 +35,9 @@
 /* Find the length of S, but scan at most MAXLEN characters.  If no '\0'
    terminator is found within the first MAXLEN characters, return MAXLEN. */
 size_t
-strnlen (s, maxlen)
-     register const char *s;
-     size_t maxlen;
+strnlen (const char *s, size_t maxlen)
 {
-  register const char *e;
+  const char *e;
   size_t n;
 
   for (e = s, n = 0; *e && n < maxlen; e++, n++)

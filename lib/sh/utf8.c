@@ -32,27 +32,23 @@ extern int locale_utf8locale;
 
 #if defined (HANDLE_MULTIBYTE)
 
-char *
-utf8_mbschr (s, c)
-     const char *s;
-     int c;
+const char *
+utf8_mbschr (const char *s, int c)
 {
   return strchr (s, c);		/* for now */
 }
 
 int
-utf8_mbscmp (s1, s2)
-     const char *s1, *s2;
+utf8_mbscmp (const char *s1, const char *s2)
 {
   /* Use the fact that the UTF-8 encoding preserves lexicographic order.  */
   return strcmp (s1, s2);
 }
 
 char *
-utf8_mbsmbchar (str)
-     const char *str;
+utf8_mbsmbchar (const char *str)
 {
-  register char *s;
+  char *s;
 
   for (s = (char *)str; *s; s++)
     if ((*s & 0xc0) == 0x80)
@@ -61,12 +57,9 @@ utf8_mbsmbchar (str)
 }
 
 int
-utf8_mbsnlen(src, srclen, maxlen)
-     const char *src;
-     size_t srclen;
-     int maxlen;
+utf8_mbsnlen(const char *src, size_t srclen, int maxlen)
 {
-  register int sind, count;
+  int sind, count;
 
   for (sind = count = 0; src[sind] && sind <= maxlen; sind++)
     {
@@ -78,9 +71,7 @@ utf8_mbsnlen(src, srclen, maxlen)
 
 /* Adapted from GNU gnulib. Handles UTF-8 characters up to 4 bytes long */
 int
-utf8_mblen (s, n)
-     const char *s;
-     size_t n;
+utf8_mblen (const char *s, size_t n)
 {
   unsigned char c, c1, c2, c3;
 
@@ -139,7 +130,7 @@ utf8_mblen (s, n)
 	{
 	  if (n == 1)
 	    return -2;
-	 
+
 	  /*
 	   *				c	c1	c2	c3
 	   *
@@ -147,7 +138,7 @@ utf8_mblen (s, n)
 	   *    U+40000..U+FFFFF     F1..F3   80..BF   80..BF   80..BF
 	   *    U+100000..U+10FFFF   F4       80..8F   80..BF   80..BF
 	   */
-	  if (((c1 ^ 0x80) < 0x40) 
+	  if (((c1 ^ 0x80) < 0x40)
 		&& (c >= 0xf1 || c1 >= 0x90)
 		&& (c < 0xf4 || (c == 0xf4 && c1 < 0x90)))
 	    {
@@ -174,8 +165,7 @@ utf8_mblen (s, n)
 /* We can optimize this if we know the locale is UTF-8, but needs to handle
    malformed byte sequences. */
 size_t
-utf8_mbstrlen(s)
-     const char *s;
+utf8_mbstrlen(const char *s)
 {
   size_t clen, nc;
   int mb_cur_max;

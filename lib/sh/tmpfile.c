@@ -54,15 +54,15 @@ extern int errno;
 
 extern pid_t dollar_dollar_pid;
 
-static char *get_sys_tmpdir PARAMS((void));
-static char *get_tmpdir PARAMS((int));
+static const char *get_sys_tmpdir (void);
+static const char *get_tmpdir (int);
 
-static char *sys_tmpdir = (char *)NULL;
+static const char *sys_tmpdir = NULL;
 static int ntmpfiles;
 static int tmpnamelen = -1;
 static unsigned long filenum = 1L;
 
-static char *
+static const char *
 get_sys_tmpdir ()
 {
   if (sys_tmpdir)
@@ -91,11 +91,10 @@ get_sys_tmpdir ()
   return sys_tmpdir;
 }
 
-static char *
-get_tmpdir (flags)
-     int flags;
+static const char *
+get_tmpdir (int flags)
 {
-  char *tdir;
+  const char *tdir;
 
   tdir = (flags & MT_USETMPDIR) ? get_string_value ("TMPDIR") : (char *)NULL;
   if (tdir && (file_iswdir (tdir) == 0 || strlen (tdir) > PATH_MAX))
@@ -123,7 +122,7 @@ sh_seedrand ()
   if (seeded == 0)
     {
       struct timeval tv;
-  	      
+
       gettimeofday (&tv, NULL);
       srandom (tv.tv_sec ^ tv.tv_usec ^ (getpid () << 16) ^ (uintptr_t)&d);
       seeded = 1;
@@ -132,20 +131,18 @@ sh_seedrand ()
 }
 
 char *
-sh_mktmpname (nameroot, flags)
-     char *nameroot;
-     int flags;
+sh_mktmpname (char *nameroot, int flags)
 {
-  char *filename, *tdir, *lroot;
+  char *filename;
   struct stat sb;
   int r, tdlen;
   static int seeded = 0;
 
   filename = (char *)xmalloc (PATH_MAX + 1);
-  tdir = get_tmpdir (flags);
+  const char *tdir = get_tmpdir (flags);
   tdlen = strlen (tdir);
 
-  lroot = nameroot ? nameroot : DEFAULT_NAMEROOT;
+  const char *lroot = nameroot ? nameroot : DEFAULT_NAMEROOT;
   if (nameroot == 0)
     flags &= ~MT_TEMPLATE;
 
@@ -187,19 +184,15 @@ sh_mktmpname (nameroot, flags)
 }
 
 int
-sh_mktmpfd (nameroot, flags, namep)
-     char *nameroot;
-     int flags;
-     char **namep;
+sh_mktmpfd (const char *nameroot, int flags, char **namep)
 {
-  char *filename, *tdir, *lroot;
   int fd, tdlen;
-  
-  filename = (char *)xmalloc (PATH_MAX + 1);
-  tdir = get_tmpdir (flags);
+
+  char *filename = (char *)xmalloc (PATH_MAX + 1);
+  const char *tdir = get_tmpdir (flags);
   tdlen = strlen (tdir);
 
-  lroot = nameroot ? nameroot : DEFAULT_NAMEROOT;
+  const char *lroot = nameroot ? nameroot : DEFAULT_NAMEROOT;
   if (nameroot == 0)
     flags &= ~MT_TEMPLATE;
 
@@ -245,10 +238,7 @@ sh_mktmpfd (nameroot, flags, namep)
 }
 
 FILE *
-sh_mktmpfp (nameroot, flags, namep)
-     char *nameroot;
-     int flags;
-     char **namep;
+sh_mktmpfp (const char *nameroot, int flags, char **namep)
 {
   int fd;
   FILE *fp;
@@ -263,19 +253,14 @@ sh_mktmpfp (nameroot, flags, namep)
 }
 
 char *
-sh_mktmpdir (nameroot, flags)
-     char *nameroot;
-     int flags;
+sh_mktmpdir (char *nameroot, int flags)
 {
-  char *filename, *tdir, *lroot, *dirname;
-  int fd, tdlen;
-  
 #ifdef USE_MKDTEMP
-  filename = (char *)xmalloc (PATH_MAX + 1);
-  tdir = get_tmpdir (flags);
-  tdlen = strlen (tdir);
+  char *filename = (char *)xmalloc (PATH_MAX + 1);
+  const char *tdir = get_tmpdir (flags);
+  int tdlen = strlen (tdir);
 
-  lroot = nameroot ? nameroot : DEFAULT_NAMEROOT;
+  const char *lroot = nameroot ? nameroot : DEFAULT_NAMEROOT;
   if (nameroot == 0)
     flags &= ~MT_TEMPLATE;
 
@@ -286,7 +271,7 @@ sh_mktmpdir (nameroot, flags)
     strcpy (filename, nameroot);
   else
     sprintf (filename, "%s/%s.XXXXXX", tdir, lroot);
-  dirname = mkdtemp (filename);
+  char *dirname = mkdtemp (filename);
   if (dirname == 0)
     {
       free (filename);
@@ -294,7 +279,8 @@ sh_mktmpdir (nameroot, flags)
     }
   return dirname;
 #else /* !USE_MKDTEMP */
-  filename = (char *)NULL;
+  char *filename = (char *)NULL;
+  int fd;
   do
     {
       filename = sh_mktmpname (nameroot, flags);

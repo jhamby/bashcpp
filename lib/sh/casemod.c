@@ -67,7 +67,7 @@
 
 #define CASE_USEWORDS	0x1000		/* modify behavior to act on words in passed string */
 
-extern char *substring PARAMS((char *, int, int));
+extern char *substring (const char *, int, int);
 
 #ifndef UCHAR_MAX
 #  define UCHAR_MAX	TYPE_MAXIMUM(unsigned char)
@@ -75,14 +75,12 @@ extern char *substring PARAMS((char *, int, int));
 
 #if defined (HANDLE_MULTIBYTE)
 static wchar_t
-cval (s, i)
-     char *s;
-     int i;
+cval (const char *s, int i)
 {
   size_t tmp;
   wchar_t wc;
   int l;
-  mbstate_t mps;  
+  mbstate_t mps;
 
   if (MB_CUR_MAX == 1 || is_basic (s[i]))
     return ((wchar_t)s[i]);
@@ -93,17 +91,14 @@ cval (s, i)
   tmp = mbrtowc (&wc, s + i, l - i, &mps);
   if (MB_INVALIDCH (tmp) || MB_NULLWCH (tmp))
     return ((wchar_t)s[i]);
-  return wc;  
+  return wc;
 }
 #endif
 
 /* Modify the case of characters in STRING matching PAT based on the value of
    FLAGS.  If PAT is null, modify the case of each character */
 char *
-sh_modcase (string, pat, flags)
-     const char *string;
-     char *pat;
-     int flags;
+sh_modcase (const char *string, char *pat, int flags)
 {
   int start, next, end, retind;
   int inword, c, nc, nop, match, usewords;

@@ -88,10 +88,10 @@ $END
 extern int wait_signal_received;
 
 procenv_t wait_intr_buf;
-int wait_intr_flag;
+bool wait_intr_flag;
 
-static int set_waitlist PARAMS((WORD_LIST *));
-static void unset_waitlist PARAMS((void));
+static int set_waitlist (WORD_LIST *);
+static void unset_waitlist (void);
 
 /* Wait for the pid in LIST to stop or die.  If no arguments are given, then
    wait for all of the active background processes of the shell and return
@@ -101,15 +101,14 @@ static void unset_waitlist PARAMS((void));
 #define WAIT_RETURN(s) \
   do \
     { \
-      wait_signal_received = 0; \
-      wait_intr_flag = 0; \
+      wait_signal_received = false; \
+      wait_intr_flag = false; \
       return (s);\
     } \
   while (0)
 
 int
-wait_builtin (list)
-     WORD_LIST *list;
+wait_builtin (WORD_LIST *list)
 {
   int status, code, opt, nflag;
   volatile int wflags;
@@ -136,7 +135,7 @@ wait_builtin (list)
 	  break;
 	case 'p':
 	  vname = list_optarg;
-	  break;	
+	  break;
 #endif
 	CASE_HELPOPT;
 	default:
@@ -153,9 +152,9 @@ wait_builtin (list)
       int arrayflags;
 
       arrayflags = assoc_expand_once ? (VA_NOEXPAND|VA_ONEWORD) : 0;
-      if (legal_identifier (vname) == 0 && valid_array_reference (vname, arrayflags) == 0)
+      if (!legal_identifier (vname) && !valid_array_reference (vname, arrayflags))
 #else
-      if (legal_identifier (vname) == 0)
+      if (!legal_identifier (vname))
 #endif
 	{
 	  sh_invalidid (vname);
@@ -173,7 +172,7 @@ wait_builtin (list)
 
      We handle SIGINT here; it's the only one that needs to be treated
      specially (I think), since it's handled specially in {no,}jobs.c. */
-  wait_intr_flag = 1;
+  wait_intr_flag = true;
   code = setjmp_sigs (wait_intr_buf);
 
   if (code)
@@ -226,7 +225,7 @@ wait_builtin (list)
       WAIT_RETURN (status);
     }
 #endif
-      
+
   /* But wait without any arguments means to wait for all of the shell's
      currently active background processes. */
   if (list == 0)
@@ -280,7 +279,7 @@ wait_builtin (list)
 	      status = 127;	/* As per Posix.2, section 4.70.2 */
 	      pstat.pid = NO_PID;
 	      pstat.status = status;
-	      list = list->next;
+	      list = (WORD_LIST *)list->next;
 	      continue;
 	    }
 
@@ -306,7 +305,7 @@ wait_builtin (list)
 	  WAIT_RETURN (status);
 	}
 
-      list = list->next;
+      list = (WORD_LIST *)list->next;
     }
 
   WAIT_RETURN (status);
@@ -317,19 +316,16 @@ wait_builtin (list)
    J_WAITING, so wait -n knows which jobs to wait for. Return the number of
    jobs we found. */
 static int
-set_waitlist (list)
-     WORD_LIST *list;
+set_waitlist (WORD_LIST *list)
 {
   sigset_t set, oset;
-  int job, r, njob;
-  intmax_t pid;
-  WORD_LIST *l;
 
   BLOCK_CHILD (set, oset);
-  njob = 0;
-  for (l = list; l; l = l->next)
+  int njob = 0;
+  for (WORD_LIST *l = list; l; l = (WORD_LIST *)l->next)
     {
-      job = NO_JOB;
+      int job = NO_JOB;
+      intmax_t pid;
       job = (l && legal_number (l->word->word, &pid) && pid == (pid_t) pid)
 		? get_job_by_pid ((pid_t) pid, 0, 0)
 		: get_job_spec (l);
@@ -355,11 +351,10 @@ set_waitlist (list)
 static void
 unset_waitlist ()
 {
-  int i;
   sigset_t set, oset;
 
   BLOCK_CHILD (set, oset);
-  for (i = 0; i < js.j_jobslots; i++)
+  for (int i = 0; i < js.j_jobslots; i++)
     if (jobs[i] && (jobs[i]->flags & J_WAITING))
       jobs[i]->flags &= ~J_WAITING;
   UNBLOCK_CHILD (oset);

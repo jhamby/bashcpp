@@ -79,21 +79,20 @@ extern int errno;
 extern const char * const bash_copyright;
 extern const char * const bash_license;
 
-static void show_builtin_command_help PARAMS((void));
-static int open_helpfile PARAMS((char *));
-static void show_desc PARAMS((char *, int));
-static void show_manpage PARAMS((char *, int));
-static void show_longdoc PARAMS((int));
+static void show_builtin_command_help (void);
+static int open_helpfile (const char *);
+static void show_desc (const char *, int);
+static void show_manpage (const char *, int);
+static void show_longdoc (int);
 
 /* Print out a list of the known functions in the shell, and what they do.
    If LIST is supplied, print out the list which matches for each pattern
    specified. */
 int
-help_builtin (list)
-     WORD_LIST *list;
+help_builtin (WORD_LIST *list)
 {
-  register int i;
-  char *pattern, *name;
+  int i;
+  const char *pattern, *name;
   int plen, match_found, sflag, dflag, mflag, m, pass, this_found;
 
   dflag = sflag = mflag = 0;
@@ -135,7 +134,7 @@ help_builtin (list)
       printf ("%s", _("'\n\n"));
     }
 
-  for (match_found = 0, pattern = ""; list; list = list->next)
+  for (match_found = 0, pattern = ""; list; list = (WORD_LIST *)list->next)
     {
       pattern = list->word->word;
       plen = strlen (pattern);
@@ -209,12 +208,11 @@ builtin_help ()
 #endif
 
   printf ("%s: %s\n", this_command_name, _(shell_builtins[ind].short_doc));
-  show_longdoc (ind);  
+  show_longdoc (ind);
 }
 
 static int
-open_helpfile (name)
-     char *name;
+open_helpfile (const char *name)
 {
   int fd;
 
@@ -231,10 +229,8 @@ open_helpfile (name)
    used, the long_doc array contains one string -- the full pathname of the
    help file for this builtin.  */
 static void
-show_longdoc (i)
-     int i;
+show_longdoc (int i)
 {
-  register int j;
   char * const *doc;
   int fd;
 
@@ -249,16 +245,13 @@ show_longdoc (i)
       close (fd);
     }
   else if (doc)
-    for (j = 0; doc[j]; j++)
+    for (int j = 0; doc[j]; j++)
       printf ("%*s%s\n", BASE_INDENT, " ", _(doc[j]));
 }
 
 static void
-show_desc (name, i)
-     char *name;
-     int i;
+show_desc (const char *name, int i)
 {
-  register int j, r;
   char **doc, *line;
   int fd, usefile;
 
@@ -270,7 +263,7 @@ show_desc (name, i)
       fd = open_helpfile (doc[0]);
       if (fd < 0)
 	return;
-      r = zmapfd (fd, &line, doc[0]);
+      int r = zmapfd (fd, &line, doc[0]);
       close (fd);
       /* XXX - handle errors if zmapfd returns < 0 */
     }
@@ -278,13 +271,13 @@ show_desc (name, i)
     line = doc ? doc[0] : (char *)NULL;
 
   printf ("%s - ", name);
-  for (j = 0; line && line[j]; j++)
+  for (int j = 0; line && line[j]; j++)
     {
       putchar (line[j]);
       if (line[j] == '\n')
 	break;
     }
-  
+
   fflush (stdout);
 
   if (usefile)
@@ -293,11 +286,8 @@ show_desc (name, i)
 
 /* Print builtin help in pseudo-manpage format. */
 static void
-show_manpage (name, i)
-     char *name;
-     int i;
+show_manpage (const char *name, int i)
 {
-  register int j;
   char **doc, *line;
   int fd, usefile;
 
@@ -318,7 +308,7 @@ show_manpage (name, i)
   /* NAME */
   printf ("NAME\n");
   printf ("%*s%s - ", BASE_INDENT, " ", name);
-  for (j = 0; line && line[j]; j++)
+  for (int j = 0; line && line[j]; j++)
     {
       putchar (line[j]);
       if (line[j] == '\n')
@@ -334,12 +324,12 @@ show_manpage (name, i)
   printf ("DESCRIPTION\n");
   if (usefile == 0)
     {
-      for (j = 0; doc[j]; j++)
+      for (int j = 0; doc[j]; j++)
         printf ("%*s%s\n", BASE_INDENT, " ", _(doc[j]));
     }
   else
     {
-      for (j = 0; line && line[j]; j++)
+      for (int j = 0; line && line[j]; j++)
 	{
 	  putchar (line[j]);
 	  if (line[j] == '\n')
@@ -367,18 +357,10 @@ show_manpage (name, i)
 }
 
 static void
-dispcolumn (i, buf, bufsize, width, height)
-     int i;
-     char *buf;
-     size_t bufsize;
-     int width, height;
+dispcolumn (int i, char *buf, size_t bufsize, int width, int height)
 {
-  int j;
-  int dispcols;
-  char *helpdoc;
-
   /* first column */
-  helpdoc = _(shell_builtins[i].short_doc);
+  char *helpdoc = _(shell_builtins[i].short_doc);
 
   buf[0] = (shell_builtins[i].flags & BUILTIN_ENABLED) ? ' ' : '*';
   strncpy (buf + 1, helpdoc, width - 2);
@@ -391,9 +373,9 @@ dispcolumn (i, buf, bufsize, width, height)
       return;
     }
 
-  dispcols = strlen (buf);
+  int dispcols = strlen (buf);
   /* two spaces */
-  for (j = dispcols; j < width; j++)
+  for (int j = dispcols; j < width; j++)
     putc (' ', stdout);
 
   /* second column */
@@ -409,23 +391,13 @@ dispcolumn (i, buf, bufsize, width, height)
 
 #if defined (HANDLE_MULTIBYTE)
 static void
-wdispcolumn (i, buf, bufsize, width, height)
-     int i;
-     char *buf;
-     size_t bufsize;
-     int width, height;
+wdispcolumn (int i, char *buf, size_t bufsize, int width, int height)
 {
-  int j;
-  int dispcols, dispchars;
-  char *helpdoc;
-  wchar_t *wcstr;
-  size_t slen, n;
-
   /* first column */
-  helpdoc = _(shell_builtins[i].short_doc);
+  char *helpdoc = _(shell_builtins[i].short_doc);
 
-  wcstr = 0;
-  slen = mbstowcs ((wchar_t *)0, helpdoc, 0);
+  wchar_t *wcstr = 0;
+  size_t slen = mbstowcs ((wchar_t *)0, helpdoc, 0);
   if (slen == -1)
     {
       dispcolumn (i, buf, bufsize, width, height);
@@ -436,19 +408,19 @@ wdispcolumn (i, buf, bufsize, width, height)
   if (slen >= width)
     slen = width - 2;
   wcstr = (wchar_t *)xmalloc (sizeof (wchar_t) * (width + 2));
-  n = mbstowcs (wcstr+1, helpdoc, slen + 1);
+  size_t n = mbstowcs (wcstr+1, helpdoc, slen + 1);
   wcstr[n+1] = L'\0';
 
   /* Turn tabs and newlines into spaces for column display, since wcwidth
      returns -1 for them */
-  for (j = 1; j < n; j++)
+  for (int j = 1; j < n; j++)
     if (wcstr[j] == L'\n' || wcstr[j] == L'\t')
       wcstr[j] = L' ';
 
   /* dispchars == number of characters that will be displayed */
-  dispchars = wcsnwidth (wcstr+1, slen, width - 2);
+  int dispchars = wcsnwidth (wcstr+1, slen, width - 2);
   /* dispcols == number of columns required to display DISPCHARS */
-  dispcols = wcswidth (wcstr+1, dispchars) + 1;	/* +1 for ' ' or '*' */
+  int dispcols = wcswidth (wcstr+1, dispchars) + 1;	/* +1 for ' ' or '*' */
 
   wcstr[0] = (shell_builtins[i].flags & BUILTIN_ENABLED) ? L' ' : L'*';
 
@@ -467,7 +439,7 @@ wdispcolumn (i, buf, bufsize, width, height)
     }
 
   /* at least one space */
-  for (j = dispcols; j < width; j++)
+  for (int j = dispcols; j < width; j++)
     putc (' ', stdout);
 
   /* second column */
@@ -488,14 +460,14 @@ wdispcolumn (i, buf, bufsize, width, height)
   wcstr[n+1] = L'\0';		/* make sure null-terminated */
 
   /* Turn tabs and newlines into spaces for column display */
-  for (j = 1; j < n; j++)
+  for (int j = 1; j < n; j++)
     if (wcstr[j] == L'\n' || wcstr[j] == L'\t')
       wcstr[j] = L' ';
 
   /* dispchars == number of characters that will be displayed */
   dispchars = wcsnwidth (wcstr+1, slen, width - 2);
   dispcols = wcswidth (wcstr+1, dispchars) + 1;	/* +1 for ' ' or '*' */
-  
+
   wcstr[0] = (shell_builtins[i+height].flags & BUILTIN_ENABLED) ? L' ' : L'*';
 
   /* The dispchars-1 is there for terminals that behave strangely when you
@@ -516,10 +488,6 @@ wdispcolumn (i, buf, bufsize, width, height)
 static void
 show_builtin_command_help ()
 {
-  int i, j;
-  int height, width;
-  char *t, blurb[128];
-
   printf (
 _("These shell commands are defined internally.  Type `help' to see this list.\n\
 Type `help name' to find out more about the function `name'.\n\
@@ -529,16 +497,17 @@ Use `man -k' or `info' to find out more about commands not in this list.\n\
 A star (*) next to a name means that the command is disabled.\n\
 \n"));
 
-  width = default_columns ();
+  int width = default_columns ();
+  char blurb[128];
 
   width /= 2;
   if (width > sizeof (blurb))
     width = sizeof (blurb);
   if (width <= 3)
     width = 40;
-  height = (num_shell_builtins + 1) / 2;	/* number of rows */
+  int height = (num_shell_builtins + 1) / 2;	/* number of rows */
 
-  for (i = 0; i < height; i++)
+  for (int i = 0; i < height; i++)
     {
       QUIT;
 

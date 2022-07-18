@@ -119,24 +119,24 @@ struct ttsave
 };
 
 #if defined (READLINE)
-static void reset_attempted_completion_function PARAMS((char *));
-static int set_itext PARAMS((void));
-static char *edit_line PARAMS((char *, char *));
-static void set_eol_delim PARAMS((int));
-static void reset_eol_delim PARAMS((char *));
+static void reset_attempted_completion_function ();
+static int set_itext (void);
+static char *edit_line (const char *, char *);
+static void set_eol_delim (int);
+static void reset_eol_delim ();
 #endif
-static SHELL_VAR *bind_read_variable PARAMS((char *, char *));
+static SHELL_VAR *bind_read_variable (const char *, char *);
 #if defined (HANDLE_MULTIBYTE)
-static int read_mbchar PARAMS((int, char *, int, int, int));
+static int read_mbchar (int, char *, int, int, int);
 #endif
-static void ttyrestore PARAMS((struct ttsave *));
+static void ttyrestore (void *ttp);
 
-static sighandler sigalrm PARAMS((int));
-static void reset_alarm PARAMS((void));
+static sighandler sigalrm (int);
+static void reset_alarm (void);
 
 /* Try this to see what the rest of the shell can do with the information. */
 procenv_t alrmbuf;
-int sigalrm_seen;
+bool sigalrm_seen;
 
 static int reading, tty_modified;
 static SigHandler *old_alrm;
@@ -151,10 +151,9 @@ static struct ttsave termsave;
 /* Set a flag that CHECK_ALRM can check.  This relies on zread or read_builtin
    calling trap.c:check_signals(), which knows about sigalrm_seen and alrmbuf. */
 static sighandler
-sigalrm (s)
-     int s;
+sigalrm (int s)
 {
-  sigalrm_seen = 1;
+  sigalrm_seen = true;
 }
 
 static void
@@ -172,13 +171,11 @@ reset_alarm ()
    gets the remainder of the words on the line.  If no variables
    are mentioned in LIST, then the default variable is $REPLY. */
 int
-read_builtin (list)
-     WORD_LIST *list;
+read_builtin (WORD_LIST *list)
 {
-  register char *varname;
   int size, nr, pass_next, saw_escape, eof, opt, retval, code, print_ps2, nflag;
   volatile int i;
-  int input_is_tty, input_is_pipe, unbuffered_read, skip_ctlesc, skip_ctlnul;
+  bool input_is_tty, input_is_pipe, unbuffered_read, skip_ctlesc, skip_ctlnul;
   int raw, edit, nchars, silent, have_timeout, ignore_delim, fd;
   int lastsig, t_errno;
   int mb_cur_max;
@@ -186,8 +183,8 @@ read_builtin (list)
   long ival, uval;
   intmax_t intval;
   char c;
-  char *input_string, *orig_input_string, *ifs_chars, *prompt, *arrayname;
-  char *e, *t, *t1, *ps2, *tofree;
+  char *input_string, *orig_input_string, *prompt, *arrayname;
+  char *t, *t1, *ps2, *tofree;
   struct stat tsb;
   SHELL_VAR *var;
   TTYSTRUCT ttattrs, ttset;
@@ -213,7 +210,6 @@ read_builtin (list)
   USE_VAR(tmusec);
   USE_VAR(nchars);
   USE_VAR(silent);
-  USE_VAR(ifs_chars);
   USE_VAR(prompt);
   USE_VAR(arrayname);
 #if defined (READLINE)
@@ -354,14 +350,16 @@ read_builtin (list)
     delim = -1;
 
   /* IF IFS is unset, we use the default of " \t\n". */
-  ifs_chars = getifs ();
+  const char *ifs_chars = getifs ();
   if (ifs_chars == 0)		/* XXX - shouldn't happen */
     ifs_chars = "";
   /* If we want to read exactly NCHARS chars, don't split on IFS */
   if (ignore_delim)
     ifs_chars = "";
-  for (skip_ctlesc = skip_ctlnul = 0, e = ifs_chars; *e; e++)
-    skip_ctlesc |= *e == CTLESC, skip_ctlnul |= *e == CTLNUL;
+
+  const char *ifs_char;
+  for (skip_ctlesc = skip_ctlnul = 0, ifs_char = ifs_chars; *ifs_char; ifs_char++)
+    skip_ctlesc |= *ifs_char == CTLESC, skip_ctlnul |= *ifs_char == CTLNUL;
 
   input_string = (char *)xmalloc (size = 112);	/* XXX was 128 */
   input_string[0] = '\0';
@@ -375,6 +373,7 @@ read_builtin (list)
     }
 
   /* $TMOUT, if set, is the default timeout for read. */
+  char *e;
   if (have_timeout == 0 && (e = get_string_value ("TMOUT")))
     {
       code = uconvert (e, &ival, &uval, (char **)NULL);
@@ -419,7 +418,7 @@ read_builtin (list)
 
 #if defined (READLINE)
   if (edit)
-    add_unwind_protect (xfree, rlbuf);
+    add_unwind_protect_ptr (xfree, rlbuf);
 #endif
 
   pass_next = 0;	/* Non-zero signifies last char was backslash. */
@@ -438,7 +437,7 @@ read_builtin (list)
       code = setjmp_nosigs (alrmbuf);
       if (code)
 	{
-	  sigalrm_seen = 0;
+	  sigalrm_seen = false;
 	  /* Tricky.  The top of the unwind-protect stack is the free of
 	     input_string.  We want to run all the rest and use input_string,
 	     so we have to save input_string temporarily, run the unwind-
@@ -461,12 +460,12 @@ read_builtin (list)
       if (interactive_shell == 0)
 	initialize_terminating_signals ();
       old_alrm = set_signal_handler (SIGALRM, sigalrm);
-      add_unwind_protect (reset_alarm, (char *)NULL);
+      add_unwind_protect (reset_alarm);
 #if defined (READLINE)
       if (edit)
 	{
-	  add_unwind_protect (reset_attempted_completion_function, (char *)NULL);
-	  add_unwind_protect (bashline_reset_event_hook, (char *)NULL);
+	  add_unwind_protect (reset_attempted_completion_function);
+	  add_unwind_protect (bashline_reset_event_hook);
 	}
 #endif
       falarm (tmsec, tmusec);
@@ -482,13 +481,13 @@ read_builtin (list)
 	{
 	  if (nchars > 0)
 	    {
-	      unwind_protect_int (rl_num_chars_to_read);
+	      unwind_protect_var (rl_num_chars_to_read);
 	      rl_num_chars_to_read = nchars;
 	    }
 	  if (delim != '\n')
 	    {
 	      set_eol_delim (delim);
-	      add_unwind_protect (reset_eol_delim, (char *)NULL);
+	      add_unwind_protect (reset_eol_delim);
 	    }
 	}
       else
@@ -500,12 +499,12 @@ read_builtin (list)
 	  ttgetattr (fd, &ttattrs);
 	  termsave.attrs = ttattrs;
 
-	  ttset = ttattrs;	  
+	  ttset = ttattrs;
 	  i = silent ? ttfd_cbreak (fd, &ttset) : ttfd_onechar (fd, &ttset);
 	  if (i < 0)
 	    sh_ttyerror (1);
 	  tty_modified = 1;
-	  add_unwind_protect ((Function *)ttyrestore, (char *)&termsave);
+	  add_unwind_protect_ptr (ttyrestore, &termsave);
 	  if (interactive_shell == 0)
 	    initialize_terminating_signals ();
 	}
@@ -523,7 +522,7 @@ read_builtin (list)
 	sh_ttyerror (1);
 
       tty_modified = 1;
-      add_unwind_protect ((Function *)ttyrestore, (char *)&termsave);
+      add_unwind_protect_ptr (ttyrestore, &termsave);
       if (interactive_shell == 0)
 	initialize_terminating_signals ();
     }
@@ -537,13 +536,13 @@ read_builtin (list)
 
       unwind_protect_var (rl_instream);
       save_instream = rl_instream;
-      rl_instream = fdopen (fd, "r");	
+      rl_instream = fdopen (fd, "r");
     }
 #endif
 
   /* This *must* be the top unwind-protect on the stack, so the manipulation
      of the unwind-protect stack after the realloc() works right. */
-  add_unwind_protect (xfree, input_string);
+  add_unwind_protect_ptr (xfree, input_string);
 
   CHECK_ALRM;
   if ((nchars > 0) && (input_is_tty == 0) && ignore_delim)	/* read -N */
@@ -657,7 +656,7 @@ read_builtin (list)
 	    {
 	      input_string = t;
 	      remove_unwind_protect ();
-	      add_unwind_protect (xfree, input_string);
+	      add_unwind_protect_ptr (xfree, input_string);
 	    }
 	}
 
@@ -768,7 +767,7 @@ add_char:
 	  if (nchars > 0)
 	    rl_num_chars_to_read = 0;
 	  if (delim != '\n')
-	    reset_eol_delim ((char *)NULL);
+	    reset_eol_delim ();
 	}
       else
 #endif
@@ -833,7 +832,7 @@ assign_vars:
       free (input_string);
       return (retval);
     }
-#endif /* ARRAY_VARS */ 
+#endif /* ARRAY_VARS */
 
   /* If there are no variables, save the text of the line read to the
      variable $REPLY.  ksh93 strips leading and trailing IFS whitespace,
@@ -879,9 +878,9 @@ assign_vars:
   for (t = input_string; ifs_chars && *ifs_chars && spctabnl(*t) && isifs(*t); t++)
     ;
   input_string = t;
-  for (; list->next; list = list->next)
+  for (; list->next; list = (WORD_LIST *)list->next)
     {
-      varname = list->word->word;
+      char *varname = list->word->word;
 #if defined (ARRAY_VARS)
       if (legal_identifier (varname) == 0 && valid_array_reference (varname, vflags) == 0)
 #else
@@ -910,7 +909,7 @@ assign_vars:
 	      free (t1);
 	    }
 	  else
-	    var = bind_read_variable (varname, t ? t : "");
+	    var = bind_read_variable (varname, t ? t : (char *)"");
 	}
       else
 	{
@@ -971,7 +970,7 @@ assign_vars:
       free (t);
     }
   else
-    var = bind_read_variable (list->word->word, input_string ? input_string : "");
+    var = bind_read_variable (list->word->word, input_string ? input_string : (char *)"");
 
   if (var)
     {
@@ -988,8 +987,7 @@ assign_vars:
 }
 
 static SHELL_VAR *
-bind_read_variable (name, value)
-     char *name, *value;
+bind_read_variable (const char *name, char *value)
 {
   SHELL_VAR *v;
 
@@ -1000,10 +998,7 @@ bind_read_variable (name, value)
 
 #if defined (HANDLE_MULTIBYTE)
 static int
-read_mbchar (fd, string, ind, ch, unbuffered)
-     int fd;
-     char *string;
-     int ind, ch, unbuffered;
+read_mbchar (int fd, char *string, int ind, int ch, int unbuffered)
 {
   char mbchar[MB_LEN_MAX + 1];
   int i, n, r;
@@ -1014,7 +1009,7 @@ read_mbchar (fd, string, ind, ch, unbuffered)
 
   memset (&ps, '\0', sizeof (mbstate_t));
   memset (&ps_back, '\0', sizeof (mbstate_t));
-  
+
   mbchar[0] = ch;
   i = 1;
   for (n = 0; n <= MB_LEN_MAX; n++)
@@ -1034,7 +1029,7 @@ read_mbchar (fd, string, ind, ch, unbuffered)
 	    r = zreadc (fd, &c);
 	  if (r <= 0)
 	    goto mbchar_return;
-	  mbchar[i++] = c;	
+	  mbchar[i++] = c;
 	  continue;
 	}
       else if (ret == (size_t)-1 || ret == (size_t)0 || ret > (size_t)0)
@@ -1052,9 +1047,9 @@ mbchar_return:
 
 
 static void
-ttyrestore (ttp)
-     struct ttsave *ttp;
+ttyrestore (void *arg)
 {
+  struct ttsave *ttp = (struct ttsave *)arg;
   ttsetattr (ttp->fd, &(ttp->attrs));
   tty_modified = 0;
 }
@@ -1078,8 +1073,7 @@ static rl_hook_func_t *old_startup_hook;
 static char *deftext;
 
 static void
-reset_attempted_completion_function (cp)
-     char *cp;
+reset_attempted_completion_function ()
 {
   if (rl_attempted_completion_function == 0 && old_attempted_completion_function)
     rl_attempted_completion_function = old_attempted_completion_function;
@@ -1104,9 +1098,7 @@ set_itext ()
 }
 
 static char *
-edit_line (p, itext)
-     char *p;
-     char *itext;
+edit_line (const char *p, char *itext)
 {
   char *ret;
   int len;
@@ -1147,8 +1139,7 @@ static rl_command_func_t *old_newline_func;
 static unsigned char delim_char;
 
 static void
-set_eol_delim (c)
-     int c;
+set_eol_delim (int c)
 {
   Keymap cmap;
 
@@ -1174,8 +1165,7 @@ set_eol_delim (c)
 }
 
 static void
-reset_eol_delim (cp)
-     char *cp;
+reset_eol_delim ()
 {
   Keymap cmap;
 

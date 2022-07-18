@@ -3,7 +3,7 @@
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -59,19 +59,19 @@
 #include "xmalloc.h"
 
 /* Forward declarations. */
-static int rl_change_case PARAMS((int, int));
-static int _rl_char_search PARAMS((int, int, int));
+static int rl_change_case (int, int);
+static int _rl_char_search (int, int, int);
 
 #if defined (READLINE_CALLBACKS)
-static int _rl_insert_next_callback PARAMS((_rl_callback_generic_arg *));
-static int _rl_char_search_callback PARAMS((_rl_callback_generic_arg *));
+static int _rl_insert_next_callback (_rl_callback_generic_arg *);
+static int _rl_char_search_callback (_rl_callback_generic_arg *);
 #endif
 
 /* The largest chunk of text that can be inserted in one call to
    rl_insert_text.  Text blocks larger than this are divided. */
 #define TEXT_COUNT_MAX	1024
 
-int _rl_optimize_typeahead = 1;	/* rl_insert tries to read typeahead */
+bool _rl_optimize_typeahead = true;	/* rl_insert tries to read typeahead */
 
 /* **************************************************************** */
 /*								    */
@@ -85,16 +85,14 @@ int _rl_optimize_typeahead = 1;	/* rl_insert tries to read typeahead */
 int
 rl_insert_text (const char *string)
 {
-  register int i, l;
-
-  l = (string && *string) ? strlen (string) : 0;
+  int l = (string && *string) ? strlen (string) : 0;
   if (l == 0)
     return 0;
 
   if (rl_end + l >= rl_line_buffer_len)
     rl_extend_line_buffer (rl_end + l);
 
-  for (i = rl_end; i >= rl_point; i--)
+  for (int i = rl_end; i >= rl_point; i--)
     rl_line_buffer[i + l] = rl_line_buffer[i];
   strncpy (rl_line_buffer + rl_point, string, l);
 
@@ -122,9 +120,6 @@ rl_insert_text (const char *string)
 int
 rl_delete_text (int from, int to)
 {
-  register char *text;
-  register int diff, i;
-
   /* Fix it if the caller is confused. */
   if (from > to)
     SWAP (from, to);
@@ -139,11 +134,11 @@ rl_delete_text (int from, int to)
   if (from < 0)
     from = 0;
 
-  text = rl_copy_text (from, to);
+  char *text = rl_copy_text (from, to);
 
   /* Some versions of strncpy() can't handle overlapping arguments. */
-  diff = to - from;
-  for (i = from; i < rl_end - diff; i++)
+  int diff = to - from;
+  for (int i = from; i < rl_end - diff; i++)
     rl_line_buffer[i] = rl_line_buffer[i + diff];
 
   /* Remember how to undo this delete. */
@@ -191,9 +186,7 @@ _rl_fix_mark (void)
 int
 _rl_replace_text (const char *text, int start, int end)
 {
-  int n;
-
-  n = 0;
+  int n = 0;
   rl_begin_undo_group ();
   if (start <= end)
     rl_delete_text (start, end + 1);
@@ -210,9 +203,7 @@ _rl_replace_text (const char *text, int start, int end)
 void
 rl_replace_line (const char *text, int clear_undo)
 {
-  int len;
-
-  len = strlen (text);
+  int len = strlen (text);
   if (len >= rl_line_buffer_len)
     rl_extend_line_buffer (len);
   strcpy (rl_line_buffer, text);
@@ -379,7 +370,7 @@ rl_forward_char (int count, int key)
   return (rl_forward_byte (count, key));
 }
 #endif /* !HANDLE_MULTIBYTE */
-  
+
 /* Backwards compatibility. */
 int
 rl_forward (int count, int key)
@@ -563,7 +554,7 @@ rl_backward_word (int count, int key)
       while (rl_point)
 	{
 	  p = MB_PREVCHAR (rl_line_buffer, rl_point, MB_FIND_NONZERO);
-	  c = _rl_char_value (rl_line_buffer, p);	  
+	  c = _rl_char_value (rl_line_buffer, p);
 	  if (_rl_walphabetic (c) == 0)
 	    break;
 	  else
@@ -707,7 +698,6 @@ static mbstate_t ps = {0};
 int
 _rl_insert_char (int count, int c)
 {
-  register int i;
   char *string;
 #ifdef HANDLE_MULTIBYTE
   int string_size;
@@ -793,7 +783,7 @@ _rl_insert_char (int count, int c)
 	}
     }
 #endif /* HANDLE_MULTIBYTE */
-	  
+
   /* If we can optimize, then do it.  But don't let people crash
      readline because of extra large arguments. */
   if (count > 1 && count <= TEXT_COUNT_MAX)
@@ -802,7 +792,7 @@ _rl_insert_char (int count, int c)
       string_size = count * incoming_length;
       string = (char *)xmalloc (1 + string_size);
 
-      i = 0;
+      int i = 0;
       while (i < string_size)
 	{
 	  if (incoming_length == 1)
@@ -818,6 +808,7 @@ _rl_insert_char (int count, int c)
 #else /* !HANDLE_MULTIBYTE */
       string = (char *)xmalloc (1 + count);
 
+      int i;
       for (i = 0; i < count; i++)
 	string[i] = c;
 #endif /* !HANDLE_MULTIBYTE */
@@ -836,7 +827,7 @@ _rl_insert_char (int count, int c)
       string_size = incoming_length * TEXT_COUNT_MAX;
       string = (char *)xmalloc (1 + string_size);
 
-      i = 0;
+      int i = 0;
       while (i < string_size)
 	{
 	  if (incoming_length == 1)
@@ -862,7 +853,7 @@ _rl_insert_char (int count, int c)
 #else /* !HANDLE_MULTIBYTE */
       char str[TEXT_COUNT_MAX+1];
 
-      for (i = 0; i < TEXT_COUNT_MAX; i++)
+      for (int i = 0; i < TEXT_COUNT_MAX; i++)
 	str[i] = c;
 
       while (count)
@@ -946,13 +937,11 @@ _rl_overwrite_char (int count, int c)
 int
 rl_insert (int count, int c)
 {
-  int r, n, x;
-
-  r = (rl_insert_mode == RL_IM_INSERT) ? _rl_insert_char (count, c) : _rl_overwrite_char (count, c);
+  int r = (rl_insert_mode == RL_IM_INSERT) ? _rl_insert_char (count, c) : _rl_overwrite_char (count, c);
 
   /* XXX -- attempt to batch-insert pending input that maps to self-insert */
-  x = 0;
-  n = (unsigned short)-2;
+  int x = 0;
+  int n = (unsigned short)-2;
   while (_rl_optimize_typeahead &&
 	 rl_num_chars_to_read == 0 &&
 	 (RL_ISSTATE (RL_STATE_INPUTPENDING|RL_STATE_MACROINPUT) == 0) &&
@@ -983,7 +972,7 @@ rl_insert (int count, int c)
     {
       /* setting rl_pending_input inhibits setting rl_last_func so we do it
 	 ourselves here */
-      rl_last_func = rl_insert; 
+      rl_last_func = rl_insert;
       _rl_reset_argument ();
       rl_executing_keyseq[rl_key_sequence_length = 0] = '\0';
       r = rl_execute_next (n);
@@ -1013,17 +1002,15 @@ _rl_insert_next (int count)
     _rl_restore_tty_signals ();
 #endif
 
-  return (_rl_insert_char (count, c));  
+  return (_rl_insert_char (count, c));
 }
 
 #if defined (READLINE_CALLBACKS)
 static int
 _rl_insert_next_callback (_rl_callback_generic_arg *data)
 {
-  int count, r;
-
-  count = data->count;
-  r = 0;
+  int count = data->count;
+  int r = 0;
 
   if (count < 0)
     {
@@ -1046,7 +1033,7 @@ _rl_insert_next_callback (_rl_callback_generic_arg *data)
   return _rl_insert_next (count);
 }
 #endif
-  
+
 int
 rl_quoted_insert (int count, int key)
 {
@@ -1178,7 +1165,7 @@ _rl_overwrite_rubout (int count, int key)
 
   return 0;
 }
-  
+
 /* Rubout the character behind point. */
 int
 rl_rubout (int count, int key)
@@ -1279,7 +1266,7 @@ rl_delete (int count, int key)
 /* Delete the character under the cursor, unless the insertion
    point is at the end of the line, in which case the character
    behind the cursor is deleted.  COUNT is obeyed and may be used
-   to delete forward or backward that many characters. */      
+   to delete forward or backward that many characters. */
 int
 rl_rubout_or_delete (int count, int key)
 {
@@ -1287,7 +1274,7 @@ rl_rubout_or_delete (int count, int key)
     return (_rl_rubout_char (count, key));
   else
     return (rl_delete (count, key));
-}  
+}
 
 /* Delete all spaces and tabs around point. */
 int
@@ -1336,7 +1323,7 @@ rl_delete_or_show_completions (int count, int key)
 int
 rl_insert_comment (int count, int key)
 {
-  char *rl_comment_text;
+  const char *rl_comment_text;
   int rl_comment_len;
 
   rl_beg_of_line (1, key);
@@ -1756,8 +1743,7 @@ _rl_char_search (int count, int fdir, int bdir)
 
 #if defined (READLINE_CALLBACKS)
 static int
-_rl_char_search_callback (data)
-     _rl_callback_generic_arg *data;
+_rl_char_search_callback (_rl_callback_generic_arg *data)
 {
   _rl_callback_func = 0;
   _rl_want_redisplay = 1;
@@ -1779,7 +1765,7 @@ rl_char_search (int count, int key)
       return (0);
     }
 #endif
-  
+
   return (_rl_char_search (count, FFIND, BFIND));
 }
 
@@ -1849,28 +1835,28 @@ rl_exchange_point_and_mark (int count, int key)
 /* Active mark support */
 
 /* Is the region active? */
-static int mark_active = 0;
+static bool mark_active = false;
 
 /* Does the current command want the mark to remain active when it completes? */
-int _rl_keep_mark_active;
+bool _rl_keep_mark_active;
 
 void
 rl_keep_mark_active (void)
 {
-  _rl_keep_mark_active++;
+  _rl_keep_mark_active = true;
 }
 
 void
 rl_activate_mark (void)
 {
-  mark_active = 1;
+  mark_active = true;
   rl_keep_mark_active ();
 }
 
 void
 rl_deactivate_mark (void)
 {
-  mark_active = 0;
+  mark_active = false;
 }
 
 int

@@ -3,7 +3,7 @@
 /* Copyright (C) 1994-2020 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -70,10 +70,10 @@ static int rl_kill_index;
 /* How many slots we have in the kill ring. */
 static int rl_kill_ring_length;
 
-static int _rl_copy_to_kill_ring PARAMS((char *, int));
-static int region_kill_internal PARAMS((int));
-static int _rl_copy_word_as_kill PARAMS((int, int));
-static int rl_yank_nth_arg_internal PARAMS((int, int, int));
+static int _rl_copy_to_kill_ring (char *, int);
+static int region_kill_internal (bool);
+static int _rl_copy_word_as_kill (int, int);
+static int rl_yank_nth_arg_internal (int, int, int);
 
 /* How to say that you only want to save a certain amount
    of kill material. */
@@ -90,7 +90,7 @@ rl_set_retained_kills (int num)
 static int
 _rl_copy_to_kill_ring (char *text, int append)
 {
-  char *old, *new;
+  char *old;
   int slot;
 
   /* First, find the slot to work with. */
@@ -131,21 +131,21 @@ _rl_copy_to_kill_ring (char *text, int append)
   if (_rl_last_command_was_kill && rl_kill_ring[slot] && rl_editing_mode != vi_mode)
     {
       old = rl_kill_ring[slot];
-      new = (char *)xmalloc (1 + strlen (old) + strlen (text));
+      char *new_ = (char *)xmalloc (1 + strlen (old) + strlen (text));
 
       if (append)
 	{
-	  strcpy (new, old);
-	  strcat (new, text);
+	  strcpy (new_, old);
+	  strcat (new_, text);
 	}
       else
 	{
-	  strcpy (new, text);
-	  strcat (new, old);
+	  strcpy (new_, text);
+	  strcat (new_, old);
 	}
       xfree (old);
       xfree (text);
-      rl_kill_ring[slot] = new;
+      rl_kill_ring[slot] = new_;
     }
   else
     rl_kill_ring[slot] = text;
@@ -167,7 +167,7 @@ rl_kill_text (int from, int to)
   /* Is there anything to kill? */
   if (from == to)
     {
-      _rl_last_command_was_kill++;
+      _rl_last_command_was_kill = true;
       return 0;
     }
 
@@ -178,7 +178,7 @@ rl_kill_text (int from, int to)
 
   _rl_copy_to_kill_ring (text, from < to);
 
-  _rl_last_command_was_kill++;
+  _rl_last_command_was_kill = true;
   return 0;
 }
 
@@ -396,20 +396,20 @@ rl_unix_line_discard (int count, int key)
 /* Copy the text in the `region' to the kill ring.  If DELETE is non-zero,
    delete the text from the line as well. */
 static int
-region_kill_internal (int delete)
+region_kill_internal (bool delete_)
 {
   char *text;
 
   if (rl_mark != rl_point)
     {
       text = rl_copy_text (rl_point, rl_mark);
-      if (delete)
+      if (delete_)
 	rl_delete_text (rl_point, rl_mark);
       _rl_copy_to_kill_ring (text, rl_point < rl_mark);
     }
 
   _rl_fix_point (1);
-  _rl_last_command_was_kill++;
+  _rl_last_command_was_kill = true;
   return 0;
 }
 
@@ -480,7 +480,7 @@ rl_copy_backward_word (int count, int key)
 
   return (_rl_copy_word_as_kill (count, -1));
 }
-  
+
 /* Yank back the last killed text.  This ignores arguments. */
 int
 rl_yank (int count, int key)
@@ -657,7 +657,7 @@ rl_yank_last_arg (int count, int key)
       if (history_skip < 0)
 	history_skip = 0;
     }
- 
+
   if (explicit_arg_p)
     retval = rl_yank_nth_arg_internal (count_passed, key, history_skip);
   else
@@ -678,7 +678,7 @@ _rl_bracketed_text (size_t *lenp)
   char *buf;
 
   len = 0;
-  buf = xmalloc (cap = 64);
+  buf = (char *)xmalloc (cap = 64);
   buf[0] = '\0';
 
   RL_SETSTATE (RL_STATE_MOREINPUT);
@@ -691,7 +691,7 @@ _rl_bracketed_text (size_t *lenp)
 	c = '\n';
 
       if (len == cap)
-	buf = xrealloc (buf, cap *= 2);
+	buf = (char *)xrealloc (buf, cap *= 2);
 
       buf[len++] = c;
       if (len >= BRACK_PASTE_SLEN && c == BRACK_PASTE_LAST &&
@@ -706,7 +706,7 @@ _rl_bracketed_text (size_t *lenp)
   if (c >= 0)
     {
       if (len == cap)
-	buf = xrealloc (buf, cap + 1);
+	buf = (char *)xrealloc (buf, cap + 1);
       buf[len] = '\0';
     }
 
@@ -739,10 +739,10 @@ rl_bracketed_paste_begin (int count, int key)
 int
 _rl_read_bracketed_paste_prefix (int c)
 {
-  char pbuf[BRACK_PASTE_SLEN+1], *pbpref;
+  char pbuf[BRACK_PASTE_SLEN+1];
   int key, ind, j;
 
-  pbpref = BRACK_PASTE_PREF;		/* XXX - debugging */
+  const char *pbpref = BRACK_PASTE_PREF;		/* XXX - debugging */
   if (c != pbpref[0])
     return (0);
   pbuf[ind = 0] = c;

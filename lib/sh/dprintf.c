@@ -17,7 +17,7 @@
    You should have received a copy of the GNU General Public License
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
-                                 
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -28,23 +28,12 @@
 #  include <unistd.h>
 #endif
 
-#if defined (PREFER_STDARG)
-#  include <stdarg.h>
-#else
-#  include <varargs.h>
-#endif
+#include <stdarg.h>
 
 #include <stdio.h>
 
 int
-#if defined (PREFER_STDARG)
 dprintf(int fd, const char *format, ...)
-#else
-dprintf(fd, format, va_alist)
-     int fd;
-     const char *format;
-     va_dcl
-#endif
 {
   FILE *fp;
   int fd2, rc, r2;
@@ -67,4 +56,4 @@ dprintf(fd, format, va_alist)
   r2 = fclose (fp);	/* check here */
 
   return rc;
-}           
+}

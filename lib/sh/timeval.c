@@ -29,14 +29,13 @@
 #include <stdc.h>
 
 #ifndef locale_decpoint
-extern int locale_decpoint PARAMS((void));
+extern int locale_decpoint (void);
 #endif
 
 #include <stdio.h>
 
 struct timeval *
-difftimeval (d, t1, t2)
-     struct timeval *d, *t1, *t2;
+difftimeval (struct timeval *d, struct timeval *t1, struct timeval *t2)
 {
   d->tv_sec = t2->tv_sec - t1->tv_sec;
   d->tv_usec = t2->tv_usec - t1->tv_usec;
@@ -54,8 +53,7 @@ difftimeval (d, t1, t2)
 }
 
 struct timeval *
-addtimeval (d, t1, t2)
-     struct timeval *d, *t1, *t2;
+addtimeval (struct timeval *d, struct timeval *t1, struct timeval *t2)
 {
   d->tv_sec = t1->tv_sec + t2->tv_sec;
   d->tv_usec = t1->tv_usec + t2->tv_usec;
@@ -68,9 +66,7 @@ addtimeval (d, t1, t2)
 }
 
 struct timeval *
-multimeval (d, m)
-     struct timeval *d;
-     int m;
+multimeval (struct timeval *d, int m)
 {
   time_t t;
 
@@ -81,9 +77,7 @@ multimeval (d, m)
 }
 
 struct timeval *
-divtimeval (d, m)
-     struct timeval *d;
-     int m;
+divtimeval (struct timeval *d, int m)
 {
   time_t t;
 
@@ -92,21 +86,20 @@ divtimeval (d, m)
   d->tv_usec = (d->tv_usec + 1000000 * (t % m)) / m;
   return d;
 }
-  
+
 /* Do "cpu = ((user + sys) * 10000) / real;" with timevals.
    Barely-tested code from Deven T. Corzine <deven@ties.org>. */
 int
-timeval_to_cpu (rt, ut, st)
-     struct timeval *rt, *ut, *st;	/* real, user, sys */
+timeval_to_cpu (struct timeval *rt, struct timeval *ut,
+                struct timeval *st)	/* real, user, sys */
 {
   struct timeval t1, t2;
-  register int i;
 
   addtimeval (&t1, ut, st);
   t2.tv_sec = rt->tv_sec;
   t2.tv_usec = rt->tv_usec;
 
-  for (i = 0; i < 6; i++)
+  for (int i = 0; i < 6; i++)
     {
       if ((t1.tv_sec > 99999999) || (t2.tv_sec > 99999999))
 	break;
@@ -119,7 +112,7 @@ timeval_to_cpu (rt, ut, st)
       t2.tv_usec *= 10;
       t2.tv_usec %= 1000000;
     }
-  for (i = 0; i < 4; i++)
+  for (int i = 0; i < 4; i++)
     {
       if (t1.tv_sec < 100000000)
 	t1.tv_sec *= 10;
@@ -128,16 +121,13 @@ timeval_to_cpu (rt, ut, st)
     }
 
   return ((t2.tv_sec == 0) ? 0 : t1.tv_sec / t2.tv_sec);
-}  
+}
 
 /* Convert a pointer to a struct timeval to seconds and thousandths of a
    second, returning the values in *SP and *SFP, respectively.  This does
    rounding on the fractional part, not just truncation to three places. */
 void
-timeval_to_secs (tvp, sp, sfp)
-     struct timeval *tvp;
-     time_t *sp;
-     int *sfp;
+timeval_to_secs (struct timeval *tvp, time_t *sp, int *sfp)
 {
   int rest;
 
@@ -156,13 +146,11 @@ timeval_to_secs (tvp, sp, sfp)
       *sfp -= 1000;
     }
 }
-  
+
 /* Print the contents of a struct timeval * in a standard way to stdio
    stream FP.  */
 void
-print_timeval (fp, tvp)
-     FILE *fp;
-     struct timeval *tvp;
+print_timeval (FILE *fp, struct timeval *tvp)
 {
   time_t timestamp;
   long minutes;

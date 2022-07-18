@@ -43,7 +43,7 @@
 
 HASH_TABLE *prog_completes = (HASH_TABLE *)NULL;
 
-static void free_progcomp PARAMS((PTR_T));
+static void free_progcomp (PTR_T);
 
 COMPSPEC *
 compspec_create ()
@@ -69,8 +69,7 @@ compspec_create ()
 }
 
 void
-compspec_dispose (cs)
-     COMPSPEC *cs;
+compspec_dispose (COMPSPEC *cs)
 {
   cs->refcount--;
   if (cs->refcount == 0)
@@ -89,27 +88,26 @@ compspec_dispose (cs)
 }
 
 COMPSPEC *
-compspec_copy (cs)
-     COMPSPEC *cs;
+compspec_copy (COMPSPEC *cs)
 {
-  COMPSPEC *new;
+  COMPSPEC *newcs;
 
-  new = (COMPSPEC *)xmalloc (sizeof (COMPSPEC));
+  newcs = (COMPSPEC *)xmalloc (sizeof (COMPSPEC));
 
-  new->refcount = 1; 	/* was cs->refcount, but this is a fresh copy */
-  new->actions = cs->actions;
-  new->options = cs->options;
+  newcs->refcount = 1; 	/* was cs->refcount, but this is a fresh copy */
+  newcs->actions = cs->actions;
+  newcs->options = cs->options;
 
-  new->globpat = STRDUP (cs->globpat);
-  new->words = STRDUP (cs->words);
-  new->prefix = STRDUP (cs->prefix);
-  new->suffix = STRDUP (cs->suffix);
-  new->funcname = STRDUP (cs->funcname);
-  new->command = STRDUP (cs->command);
-  new->lcommand = STRDUP (cs->lcommand);
-  new->filterpat = STRDUP (cs->filterpat);
+  newcs->globpat = STRDUP (cs->globpat);
+  newcs->words = STRDUP (cs->words);
+  newcs->prefix = STRDUP (cs->prefix);
+  newcs->suffix = STRDUP (cs->suffix);
+  newcs->funcname = STRDUP (cs->funcname);
+  newcs->command = STRDUP (cs->command);
+  newcs->lcommand = STRDUP (cs->lcommand);
+  newcs->filterpat = STRDUP (cs->filterpat);
 
-  return new;
+  return newcs;
 }
 
 void
@@ -126,15 +124,14 @@ progcomp_size ()
 }
 
 static void
-free_progcomp (data)
-     PTR_T data;
+free_progcomp (PTR_T data)
 {
   COMPSPEC *cs;
 
   cs = (COMPSPEC *)data;
   compspec_dispose (cs);
 }
-  
+
 void
 progcomp_flush ()
 {
@@ -151,10 +148,9 @@ progcomp_dispose ()
 }
 
 int
-progcomp_remove (cmd)
-     char *cmd;
+progcomp_remove (char *cmd)
 {
-  register BUCKET_CONTENTS *item;
+  BUCKET_CONTENTS *item;
 
   if (prog_completes == 0)
     return 1;
@@ -172,11 +168,9 @@ progcomp_remove (cmd)
 }
 
 int
-progcomp_insert (cmd, cs)
-      char *cmd;
-      COMPSPEC *cs;
+progcomp_insert (char *cmd, COMPSPEC *cs)
 {
-  register BUCKET_CONTENTS *item;
+  BUCKET_CONTENTS *item;
 
   if (cs == NULL)
     programming_error (_("progcomp_insert: %s: NULL COMPSPEC"), cmd);
@@ -196,10 +190,9 @@ progcomp_insert (cmd, cs)
 }
 
 COMPSPEC *
-progcomp_search (cmd)
-     const char *cmd;
+progcomp_search (const char *cmd)
 {
-  register BUCKET_CONTENTS *item;
+  BUCKET_CONTENTS *item;
   COMPSPEC *cs;
 
   if (prog_completes == 0)
@@ -216,8 +209,7 @@ progcomp_search (cmd)
 }
 
 void
-progcomp_walk (pfunc)
-     hash_wfunc *pfunc;
+progcomp_walk (hash_wfunc *pfunc)
 {
   if (prog_completes == 0 || pfunc == 0 || HASH_ENTRIES (prog_completes) == 0)
     return;

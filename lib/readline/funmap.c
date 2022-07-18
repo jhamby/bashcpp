@@ -3,7 +3,7 @@
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ typedef int QSFUNC (const void *, const void *);
 typedef int QSFUNC ();
 #endif
 
-extern int _rl_qsort_string_compare PARAMS((char **, char **));
+extern int _rl_qsort_string_compare (char **, char **);
 
 FUNMAP **funmap;
 static int funmap_size;
@@ -215,7 +215,7 @@ rl_add_funmap_entry (const char *name, rl_command_func_t *function)
       funmap_size += 64;
       funmap = (FUNMAP **)xrealloc (funmap, funmap_size * sizeof (FUNMAP *));
     }
-  
+
   funmap[funmap_entry] = (FUNMAP *)xmalloc (sizeof (FUNMAP));
   funmap[funmap_entry]->name = name;
   funmap[funmap_entry]->function = function;

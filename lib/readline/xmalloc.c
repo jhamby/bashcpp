@@ -3,7 +3,7 @@
 /* Copyright (C) 1991-2017 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@
 /* **************************************************************** */
 
 static void
-memory_error_and_abort (char *fname)
+memory_error_and_abort (const char *fname)
 {
   fprintf (stderr, "%s: out of virtual memory\n", fname);
   exit (2);

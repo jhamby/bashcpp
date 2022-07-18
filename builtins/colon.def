@@ -61,16 +61,14 @@ $END
 
 /* Return a successful result. */
 int
-colon_builtin (ignore)
-     WORD_LIST *ignore;
+colon_builtin (WORD_LIST *ignore)
 {
   return (0);
 }
 
 /* Return an unsuccessful result. */
 int
-false_builtin (ignore)
-     WORD_LIST *ignore;
+false_builtin (WORD_LIST *ignore)
 {
   return (1);
 }

@@ -3,7 +3,7 @@
 /* Copyright (C) 1987, 1989, 1992-2015, 2017 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -53,18 +53,18 @@ extern char *strchr (), *strrchr ();
 #include "readline.h"
 #include "rlprivate.h"
 
-static int find_matching_open PARAMS((char *, int, int));
+static int find_matching_open (char *, int, int);
 
 /* Non-zero means try to blink the matching open parenthesis when the
    close parenthesis is inserted. */
-int rl_blink_matching_paren = 0;
+bool rl_blink_matching_paren = false;
 
 static int _paren_blink_usec = 500000;
 
 /* Change emacs_standard_keymap to have bindings for paren matching when
    ON_OR_OFF is 1, change them back to self_insert when ON_OR_OFF == 0. */
 void
-_rl_enable_paren_matching (int on_or_off)
+_rl_enable_paren_matching (bool on_or_off)
 {
   if (on_or_off)
     {
@@ -147,8 +147,7 @@ rl_insert_close (int count, int invoking_key)
 static int
 find_matching_open (char *string, int from, int closer)
 {
-  register int i;
-  int opener, level, delimiter;
+  int opener;
 
   switch (closer)
     {
@@ -159,9 +158,10 @@ find_matching_open (char *string, int from, int closer)
       return (-1);
     }
 
-  level = 1;			/* The closer passed in counts as 1. */
-  delimiter = 0;		/* Delimited state unknown. */
+  int level = 1;		/* The closer passed in counts as 1. */
+  int delimiter = 0;		/* Delimited state unknown. */
 
+  int i;
   for (i = from; i > -1; i--)
     {
       if (delimiter && (string[i] == delimiter))

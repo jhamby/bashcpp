@@ -44,7 +44,7 @@
  */
 #define LASTSIG NSIG+2
 
-char *signal_names[2 * (LASTSIG)];
+const char *signal_names[2 * (LASTSIG)];
 
 #define signal_names_size (sizeof(signal_names)/sizeof(signal_names[0]))
 
@@ -69,12 +69,11 @@ extern char *progname;
 void
 initialize_signames ()
 {
-  register int i;
 #if defined (SIGRTMAX) || defined (SIGRTMIN)
   int rtmin, rtmax, rtcnt;
 #endif
 
-  for (i = 1; i < signal_names_size; i++)
+  for (int i = 1; i < signal_names_size; i++)
     signal_names[i] = (char *)NULL;
 
   /* `signal' 0 is what we do on exit. */
@@ -118,14 +117,14 @@ initialize_signames ()
 #endif
 	}
 
-      for (i = 1; i <= rtcnt; i++)
+      for (int i = 1; i <= rtcnt; i++)
 	{
 	  signal_names[rtmin+i] = (char *)malloc(RTLEN);
 	  if (signal_names[rtmin+i])
-	    sprintf (signal_names[rtmin+i], "SIGRTMIN+%d", i);
+	    sprintf ((char *)signal_names[rtmin+i], "SIGRTMIN+%d", i);
 	  signal_names[rtmax-i] = (char *)malloc(RTLEN);
 	  if (signal_names[rtmax-i])
-	    sprintf (signal_names[rtmax-i], "SIGRTMAX-%d", i);
+	    sprintf ((char *)signal_names[rtmax-i], "SIGRTMAX-%d", i);
 	}
 
       if (rtcnt < RTLIM/2-1 && rtcnt != (rtmax-rtmin)/2)
@@ -133,7 +132,7 @@ initialize_signames ()
 	  /* Need an extra RTMIN signal */
 	  signal_names[rtmin+rtcnt+1] = (char *)malloc(RTLEN);
 	  if (signal_names[rtmin+rtcnt+1])
-	    sprintf (signal_names[rtmin+rtcnt+1], "SIGRTMIN+%d", rtcnt+1);
+	    sprintf ((char *)signal_names[rtmin+rtcnt+1], "SIGRTMIN+%d", rtcnt+1);
 	}
     }
 #endif /* SIGRTMIN && SIGRTMAX */
@@ -432,12 +431,12 @@ initialize_signames ()
   signal_names[SIGKILLTHR] = "SIGKILLTHR";
 #endif
 
-  for (i = 0; i < NSIG; i++)
+  for (int i = 0; i < NSIG; i++)
     if (signal_names[i] == (char *)NULL)
       {
 	signal_names[i] = (char *)malloc (18);
 	if (signal_names[i])
-	  sprintf (signal_names[i], "SIGJUNK(%d)", i);
+	  sprintf ((char *)signal_names[i], "SIGJUNK(%d)", i);
       }
 
   signal_names[NSIG] = "DEBUG";

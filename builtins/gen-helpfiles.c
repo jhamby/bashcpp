@@ -22,7 +22,7 @@
    the long_doc members of each struct builtin element and writes those to
    the file named by the `handle' member of the struct builtin element. */
 
-#if !defined (CROSS_COMPILING) 
+#if !defined (CROSS_COMPILING)
 #  include <config.h>
 #else	/* CROSS_COMPILING */
 /* A conservative set of defines based on POSIX/SUS3/XPG6 */
@@ -98,15 +98,13 @@ char *helpfile_directory;
 
 /* Forward declarations. */
 
-int write_helpfiles PARAMS((struct builtin *));
+int write_helpfiles (struct builtin *);
 
 /* For each file mentioned on the command line, process it and
    write the information to STRUCTFILE and EXTERNFILE, while
    creating the production file if necessary. */
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   int arg_index = 1;
 
@@ -137,10 +135,7 @@ main (argc, argv)
    internationalization (gettext) and the single-string vs. multiple-strings
    issues. */
 void
-write_documentation (stream, documentation, indentation)
-     FILE *stream;
-     char *documentation;
-     int indentation;
+write_documentation (FILE *stream, const char *documentation, int indentation)
 {
   if (stream == 0)
     return;
@@ -150,8 +145,7 @@ write_documentation (stream, documentation, indentation)
 }
 
 int
-write_helpfiles (builtins)
-     struct builtin *builtins;
+write_helpfiles (struct builtin *builtins)
 {
   char *helpfile, *bname, *fname;
   FILE *helpfp;

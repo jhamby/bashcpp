@@ -36,8 +36,8 @@
 #include "shmbchar.h"
 #include "shmbutil.h"
 
-extern char *ansic_quote PARAMS((char *, int, int *));
-extern int ansic_shouldquote PARAMS((const char *));
+extern char *ansic_quote (const char *, int, int *);
+extern int ansic_shouldquote (const char *);
 
 /* Default set of characters that should be backslash-quoted in strings */
 static const char bstab[256] =
@@ -92,10 +92,9 @@ static const char bstab[256] =
 /* Return a new string which is the single-quoted version of STRING.
    Used by alias and trap, among others. */
 char *
-sh_single_quote (string)
-     const char *string;
+sh_single_quote (const char *string)
 {
-  register int c;
+  int c;
   char *result, *r;
   const char *s;
 
@@ -132,10 +131,9 @@ sh_single_quote (string)
 
 /* Quote STRING using double quotes.  Return a new string. */
 char *
-sh_double_quote (string)
-     const char *string;
+sh_double_quote (const char *string)
 {
-  register unsigned char c;
+  unsigned char c;
   int mb_cur_max;
   char *result, *r;
   size_t slen;
@@ -180,9 +178,7 @@ sh_double_quote (string)
 /* Turn S into a simple double-quoted string.  If FLAGS is non-zero, quote
    double quote characters in S with backslashes. */
 char *
-sh_mkdoublequoted (s, slen, flags)
-     const char *s;
-     int slen, flags;
+sh_mkdoublequoted (const char *s, int slen, int flags)
 {
   char *r, *ret;
   const char *send;
@@ -220,10 +216,9 @@ sh_mkdoublequoted (s, slen, flags)
    double quotes.  Return a new string.  XXX - should this handle CTLESC
    and CTLNUL? */
 char *
-sh_un_double_quote (string)
-     char *string;
+sh_un_double_quote (char *string)
 {
-  register int c, pass_next;
+  int c, pass_next;
   char *result, *r, *s;
 
   r = result = (char *)xmalloc (strlen (string) + 1);
@@ -257,23 +252,20 @@ sh_un_double_quote (string)
    set with char needing to be backslash-quoted if table[char]==1.  FLAGS,
    if 1, causes tildes to be quoted as well.  If FLAGS&2, backslash-quote
    other shell blank characters. */
-   
+
 char *
-sh_backslash_quote (string, table, flags)
-     char *string;
-     char *table;
-     int flags;
+sh_backslash_quote (char *string, const char *table, int flags)
 {
   int c, mb_cur_max;
   size_t slen;
-  char *result, *r, *s, *backslash_table, *send;
+  char *result, *r, *s, *send;
   DECLARE_MBSTATE;
 
   slen = strlen (string);
   send = string + slen;
   result = (char *)xmalloc (2 * slen + 1);
 
-  backslash_table = table ? table : (char *)bstab;
+  const char *backslash_table = table ? table : (char *)bstab;
   mb_cur_max = MB_CUR_MAX;
 
   for (r = result, s = string; s && (c = *s); s++)
@@ -315,15 +307,14 @@ sh_backslash_quote (string, table, flags)
 /* Quote characters that get special treatment when in double quotes in STRING
    using backslashes.  Return a new string. */
 char *
-sh_backslash_quote_for_double_quotes (string)
-     char *string;
+sh_backslash_quote_for_double_quotes (char *string)
 {
   unsigned char c;
   char *result, *r, *s, *send;
   size_t slen;
   int mb_cur_max;
   DECLARE_MBSTATE;
- 
+
   slen = strlen (string);
   send = string + slen;
   mb_cur_max = MB_CUR_MAX;
@@ -357,9 +348,7 @@ sh_backslash_quote_for_double_quotes (string)
 #endif /* PROMPT_STRING_DECODE */
 
 char *
-sh_quote_reusable (s, flags)
-     char *s;
-     int flags;
+sh_quote_reusable (char *s, int flags)
 {
   char *ret;
 
@@ -382,8 +371,7 @@ sh_quote_reusable (s, flags)
 }
 
 int
-sh_contains_shell_metas (string)
-     const char *string;
+sh_contains_shell_metas (const char *string)
 {
   const char *s;
 
@@ -417,8 +405,7 @@ sh_contains_shell_metas (string)
 }
 
 int
-sh_contains_quotes (string)
-     const char *string;
+sh_contains_quotes (const char *string)
 {
   const char *s;
 

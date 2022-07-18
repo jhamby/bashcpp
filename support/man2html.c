@@ -107,7 +107,7 @@ static char th_page_and_sec[128] = { '\0' };
 static char th_datestr[128] = { '\0' };
 static char th_version[128] = { '\0' };
 
-char   *signature = "<HR>\nThis document was created by man2html from %s.<BR>\nTime: %s\n";
+const char   *signature = "<HR>\nThis document was created by man2html from %s.<BR>\nTime: %s\n";
 
 /* timeformat for signature */
 #define TIMEFORMAT "%d %B %Y %T %Z"
@@ -147,26 +147,26 @@ strerror(int e)
 static char *
 strgrow(char *old, int len)
 {
-	char   *new = realloc(old, (strlen(old) + len + 1) * sizeof(char));
+	char   *newstr = (char *)realloc(old, (strlen(old) + len + 1) * sizeof(char));
 
-	if (!new) {
+	if (!newstr) {
 		fprintf(stderr, "man2html: out of memory");
 		exit(EXIT_FAILURE);
 	}
-	return new;
+	return newstr;
 }
 
 static char *
 stralloc(int len)
 {
 	/* allocate enough for len + NULL */
-	char   *new = malloc((len + 1) * sizeof(char));
+	char   *newstr = (char *)malloc((len + 1) * sizeof(char));
 
-	if (!new) {
+	if (!newstr) {
 		fprintf(stderr, "man2html: out of memory");
 		exit(EXIT_FAILURE);
 	}
-	return new;
+	return newstr;
 }
 
 void *
@@ -189,15 +189,15 @@ xmalloc (size_t size)
 static char *
 strduplicate(char *from)
 {
-	char   *new = stralloc(strlen(from));
+	char   *newstr = stralloc(strlen(from));
 
-	strcpy(new, from);
-	return new;
+	strcpy(newstr, from);
+	return newstr;
 }
 
 /* Assumes space for n plus a null */
 static char *
-strmaxcpy(char *to, char *from, int n)
+strmaxcpy(char *to, const char *from, int n)
 {
 	int     len = strlen(from);
 
@@ -240,7 +240,7 @@ static char *
 escape_input(char *str)
 {
 	int     i, j = 0;
-	static char new[NULL_TERMINATED(MED_STR_MAX)];
+	static char newstr[NULL_TERMINATED(MED_STR_MAX)];
 
 	if (strlen(str) * 2 + 1 > MED_STR_MAX) {
 		fprintf(stderr,
@@ -252,14 +252,14 @@ escape_input(char *str)
 		if (!(((str[i] >= 'A') && (str[i] <= 'Z')) ||
 		      ((str[i] >= 'a') && (str[i] <= 'z')) ||
 		      ((str[i] >= '0') && (str[i] <= '9')))) {
-			new[j] = '\\';
+			newstr[j] = '\\';
 			j++;
 		}
-		new[j] = str[i];
+		newstr[j] = str[i];
 		j++;
 	}
-	new[j] = '\0';
-	return new;
+	newstr[j] = '\0';
+	return newstr;
 }
 
 static void
@@ -278,7 +278,7 @@ usage(void)
 typedef struct STRDEF STRDEF;
 struct STRDEF {
 	int     nr, slen;
-	char   *st;
+	const char   *st;
 	STRDEF *next;
 };
 
@@ -459,7 +459,7 @@ print_sig(void)
 	printf(signature, manpage, datbuf);
 }
 
-static char *
+static const char *
 expand_char(int nr)
 {
 	STRDEF *h;
@@ -485,7 +485,7 @@ expand_char(int nr)
 	return charb;
 }
 
-static char *
+static const char *
 expand_string(int nr)
 {
 	STRDEF *h = strdef;
@@ -533,15 +533,15 @@ read_man_page(char *filename)
 
 static char outbuffer[NULL_TERMINATED(HUGE_STR_MAX)];
 static int obp = 0;
-static int no_newline_output = 0;
+static bool no_newline_output = false;
 static int newline_for_fun = 0;
-static int output_possible = 0;
+static bool output_possible = false;
 static int out_length = 0;
 
 /*
  * Add the links to the output. At the moment the following are
  * recognized:
- * 
+ *
 #if 0
  *	name(*)                 -> ../man?/name.*
 #endif
@@ -550,9 +550,9 @@ static int out_length = 0;
  *	ftp.host.name           -> ftp://ftp.host.name
  *	name@host               -> mailto:name@host
  *	<name.h>                -> file:/usr/include/name.h   (guess)
- * 
+ *
  * Other possible links to add in the future:
- * 
+ *
  * /dir/dir/file  -> file:/dir/dir/file
  */
 static void
@@ -772,33 +772,20 @@ add_links(char *c)
 
 static int current_font = 0;
 static int current_size = 0;
-static int fillout = 1;
+static bool fillout = true;
 
 static void
-out_html(char *c)
+out_html(const char *c)
 {
 	if (!c)
 		return;
-	if (no_newline_output) {
-		int     i = 0;
 
-		no_newline_output = 1;
-		while (c[i]) {
-			if (!no_newline_output)
-				c[i - 1] = c[i];
-			if (c[i] == '\n')
-				no_newline_output = 1;
-			i++;
-		}
-		if (!no_newline_output)
-			c[i - 1] = 0;
-	}
 	if (scaninbuff) {
 		while (*c) {
 			if (buffpos >= buffmax) {
 				char   *h;
 
-				h = realloc(buffer, buffmax * 2);
+				h = (char *)realloc(buffer, buffmax * 2);
 				if (!h)
 					return;
 				buffer = h;
@@ -828,14 +815,14 @@ out_html(char *c)
 #define FO3 "<TT>"
 #define FC3 "</TT>"
 
-static char *switchfont[16] = {
+static const char *switchfont[16] = {
 	"", FC0 FO1, FC0 FO2, FC0 FO3,
 	FC1 FO0, "", FC1 FO2, FC1 FO3,
 	FC2 FO0, FC2 FO1, "", FC2 FO3,
 	FC3 FO0, FC3 FO1, FC3 FO2, ""
 };
 
-static char *
+static const char *
 change_to_font(int nr)
 {
 	int     i;
@@ -881,7 +868,7 @@ change_to_font(int nr)
 
 static char sizebuf[200];
 
-static char *
+static const char *
 change_to_size(int nr)
 {
 	int     i;
@@ -939,16 +926,16 @@ static int intresult = 0;
 
 #define SKIPEOL while (*c && *c++!='\n')
 
-static int skip_escape = 0;
-static int single_escape = 0;
+static bool skip_escape = false;
+static bool single_escape = false;
 
 static char *
 scan_escape(char *c)
 {
-	char   *h = NULL;
+	const char   *h = NULL;
 	char    b[5];
 	INTDEF *intd;
-	int     exoutputp, exskipescape;
+	bool     exoutputp, exskipescape;
 	int     i, j;
 
 	intresult = 0;
@@ -1122,7 +1109,7 @@ scan_escape(char *c)
 		c++;
 		exoutputp = output_possible;
 		exskipescape = skip_escape;
-		output_possible = 0;
+		output_possible = false;
 		skip_escape = 1;
 		j = 0;
 		while (*c != i) {
@@ -1150,7 +1137,7 @@ scan_escape(char *c)
 		c++;
 		exoutputp = output_possible;
 		exskipescape = skip_escape;
-		output_possible = 0;
+		output_possible = false;
 		skip_escape = 1;
 		while (*c != i)
 			if (*c == escapesym)
@@ -1161,7 +1148,7 @@ scan_escape(char *c)
 		skip_escape = exskipescape;
 		break;
 	case 'c':
-		no_newline_output = 1;
+		no_newline_output = true;
 		break;
 	case '{':
 		newline_for_fun++;
@@ -1224,7 +1211,7 @@ struct TABLEROW {
 	TABLEROW *prev, *next;
 };
 
-static char *tableopt[] = {
+static const char *tableopt[] = {
 	"center", "expand", "box", "allbox", "doublebox",
 	"tab", "linesize", "delim", NULL
 };
@@ -2003,7 +1990,7 @@ unescape (char *c)
 	}
 	return c;
 }
-	
+
 static char *
 fill_words(char *c, char *words[], int *n)
 {
@@ -2050,7 +2037,7 @@ fill_words(char *c, char *words[], int *n)
 	return sl;
 }
 
-static char *abbrev_list[] = {
+static const char *abbrev_list[] = {
 	"GSBG", "Getting Started ",
 	"SUBG", "Customizing SunOS",
 	"SHBG", "Basic Troubleshooting",
@@ -2095,7 +2082,7 @@ static char *abbrev_list[] = {
 	"KR", "The C Programming Language",
 NULL, NULL};
 
-static char *
+static const char *
 lookup_abbrev(char *c)
 {
 	int     i = 0;
@@ -2267,11 +2254,11 @@ scan_request(char *c)
 					strdef = de;
 				} else {
 					if (de->st)
-						free(de->st);
+						free((char *)(de->st));
 					de->slen = 0;
 					de->st = NULL;
 				}
-				scan_troff(h, 0, &de->st);
+				scan_troff(h, 0, (char **)&de->st);
 				*c = '.';
 				while (*c && *c++ != '\n');
 				break;
@@ -2323,11 +2310,11 @@ scan_request(char *c)
 						char   *h = NULL;
 
 						c = scan_troff(c, 1, &h);
-						free(de->st);
+						free((char *)de->st);
 						de->slen = 0;
 						de->st = h;
 					} else
-						c = scan_troff(c, 1, &de->st);
+						c = scan_troff(c, 1, (char **)&de->st);
 					de->slen += curpos;
 				}
 				single_escape = 0;
@@ -2473,7 +2460,7 @@ scan_request(char *c)
 			break;
 		case V('i', 'g'):
 			{
-				char   *endwith = "..\n";
+				const char   *endwith = "..\n";
 
 				i = 3;
 				c = c + j;
@@ -2898,7 +2885,7 @@ scan_request(char *c)
 					for (i = 1; i < words; i++)
 						wordlist[i][-1] = '\0';
 					*sl = '\0';
-					output_possible = 1;
+					output_possible = true;
 					sprintf(th_page_and_sec, "%s(%s)", wordlist[0], wordlist[1]);
 					if (words > 2) {
 						t = unescape(wordlist[2]);
@@ -2918,7 +2905,7 @@ scan_request(char *c)
 					out_html("</TITLE>\n</HEAD>\n<BODY>");
 
 					outputPageHeader(th_page_and_sec, th_datestr, th_page_and_sec);
-					
+
 					out_html("<BR><A HREF=\"#index\">Index</A>\n");
 					*sl = '\n';
 					out_html("<HR>\n");
@@ -2936,7 +2923,7 @@ scan_request(char *c)
 			out_html(change_to_font('I'));
 			if (words > 1)
 				wordlist[1][-1] = '\0';
-			c = lookup_abbrev(wordlist[0]);
+			c = (char *)lookup_abbrev(wordlist[0]);
 			curpos += strlen(c);
 			out_html(c);
 			out_html(change_to_font('R'));
@@ -2969,7 +2956,7 @@ scan_request(char *c)
 					de = de->next;
 				if (de) {
 					if (de->st)
-						free(de->st);
+						free((char *)de->st);
 					de->nr = 0;
 				}
 				de = strdef;
@@ -3070,7 +3057,7 @@ scan_request(char *c)
 					h[j] = '\0';
 					if (de) {
 						if (de->st)
-							free(de->st);
+							free((char *)de->st);
 						de->st = h;
 					} else {
 						de = (STRDEF *) xmalloc(sizeof(STRDEF));
@@ -3690,14 +3677,14 @@ scan_request(char *c)
 				for (i = words; i < 20; i++)
 					wordlist[i] = NULL;
 				deflen = strlen(owndef->st);
-				for (i = 0; owndef->st[deflen + 2 + i] = owndef->st[i]; i++);
+				for (i = 0; ((char *)owndef->st)[deflen + 2 + i] = owndef->st[i]; i++);
 				oldargument = argument;
 				argument = wordlist;
 				onff = newline_for_fun;
 				if (mandoc_command) {
-					scan_troff_mandoc(owndef->st + deflen + 2, 0, NULL);
+					scan_troff_mandoc((char *)(owndef->st + deflen + 2), 0, NULL);
 				} else {
-					scan_troff(owndef->st + deflen + 2, 0, NULL);
+					scan_troff((char *)(owndef->st + deflen + 2), 0, NULL);
 				}
 				newline_for_fun = onff;
 				argument = oldargument;

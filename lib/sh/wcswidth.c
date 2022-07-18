@@ -27,13 +27,11 @@
 #include <bashansi.h>
 
 int
-wcswidth(pwcs, n)
-     const wchar_t *pwcs;
-     size_t n;
+wcswidth(const wchar_t *pwcs, size_t n)
 {
   wchar_t wc;
   int len, l;
-			
+
   len = 0;
   while (n-- > 0 && (wc = *pwcs++) != L'\0')
     {

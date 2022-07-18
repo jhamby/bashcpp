@@ -65,10 +65,10 @@
 #endif
 
 #if !defined (errno)
-extern int errno;   
+extern int errno;
 #endif /* !errno */
 
-extern const char * const bash_getcwd_errstr;
+extern const char *bash_getcwd_errstr;
 
 /* Used by some builtins and the mainline code. */
 sh_builtin_func_t *last_shell_builtin = (sh_builtin_func_t *)NULL;
@@ -87,7 +87,7 @@ sh_builtin_func_t *this_shell_builtin = (sh_builtin_func_t *)NULL;
 static void
 builtin_error_prolog ()
 {
-  char *name;
+  const char *name;
 
   name = get_name_for_error ();
   fprintf (stderr, "%s: ", name);
@@ -100,13 +100,7 @@ builtin_error_prolog ()
 }
 
 void
-#if defined (PREFER_STDARG)
 builtin_error (const char *format, ...)
-#else
-builtin_error (format, va_alist)
-     const char *format;
-     va_dcl
-#endif
 {
   va_list args;
 
@@ -120,13 +114,7 @@ builtin_error (format, va_alist)
 }
 
 void
-#if defined (PREFER_STDARG)
 builtin_warning (const char *format, ...)
-#else
-builtin_warning (format, va_alist)
-     const char *format;
-     va_dcl
-#endif
 {
   va_list args;
 
@@ -153,8 +141,7 @@ builtin_usage ()
 /* Return if LIST is NULL else barf and jump to top_level.  Used by some
    builtins that do not accept arguments. */
 void
-no_args (list)
-     WORD_LIST *list;
+no_args (WORD_LIST *list)
 {
   if (list)
     {
@@ -167,8 +154,7 @@ no_args (list)
 /* Check that no options were given to the currently-executing builtin,
    and return 0 if there were options. */
 int
-no_options (list)
-     WORD_LIST *list;
+no_options (WORD_LIST *list)
 {
   int opt;
 
@@ -187,22 +173,19 @@ no_options (list)
 }
 
 void
-sh_needarg (s)
-     char *s;
+sh_needarg (const char *s)
 {
   builtin_error (_("%s: option requires an argument"), s);
 }
 
 void
-sh_neednumarg (s)
-     char *s;
+sh_neednumarg (const char *s)
 {
   builtin_error (_("%s: numeric argument required"), s);
 }
 
 void
-sh_notfound (s)
-     char *s;
+sh_notfound (const char *s)
 {
   builtin_error (_("%s: not found"), s);
 }
@@ -210,29 +193,25 @@ sh_notfound (s)
 /* Function called when one of the builtin commands detects an invalid
    option. */
 void
-sh_invalidopt (s)
-     char *s;
+sh_invalidopt (const char *s)
 {
   builtin_error (_("%s: invalid option"), s);
 }
 
 void
-sh_invalidoptname (s)
-     char *s;
+sh_invalidoptname (const char *s)
 {
   builtin_error (_("%s: invalid option name"), s);
 }
 
 void
-sh_invalidid (s)
-     char *s;
+sh_invalidid (const char *s)
 {
   builtin_error (_("`%s': not a valid identifier"), s);
 }
 
 void
-sh_invalidnum (s)
-     char *s;
+sh_invalidnum (const char *s)
 {
   char *msg;
 
@@ -246,29 +225,25 @@ sh_invalidnum (s)
 }
 
 void
-sh_invalidsig (s)
-     char *s;
+sh_invalidsig (const char *s)
 {
   builtin_error (_("%s: invalid signal specification"), s);
 }
 
 void
-sh_badpid (s)
-     char *s;
+sh_badpid (const char *s)
 {
   builtin_error (_("`%s': not a pid or valid job spec"), s);
 }
 
 void
-sh_readonly (s)
-     const char *s;
+sh_readonly (const char *s)
 {
   builtin_error (_("%s: readonly variable"), s);
 }
 
 void
-sh_erange (s, desc)
-     char *s, *desc;
+sh_erange (const char *s, const char *desc)
 {
   if (s)
     builtin_error (_("%s: %s out of range"), s, desc ? desc : _("argument"));
@@ -278,15 +253,13 @@ sh_erange (s, desc)
 
 #if defined (JOB_CONTROL)
 void
-sh_badjob (s)
-     char *s;
+sh_badjob (const char *s)
 {
   builtin_error (_("%s: no such job"), s);
 }
 
 void
-sh_nojobs (s)
-     char *s;
+sh_nojobs (const char *s)
 {
   if (s)
     builtin_error (_("%s: no job control"), s);
@@ -297,8 +270,7 @@ sh_nojobs (s)
 
 #if defined (RESTRICTED_SHELL)
 void
-sh_restricted (s)
-     char *s;
+sh_restricted (const char *s)
 {
   if (s)
     builtin_error (_("%s: restricted"), s);
@@ -308,8 +280,7 @@ sh_restricted (s)
 #endif
 
 void
-sh_notbuiltin (s)
-     char *s;
+sh_notbuiltin (const char *s)
 {
   builtin_error (_("%s: not a shell builtin"), s);
 }
@@ -324,8 +295,7 @@ sh_wrerror ()
 }
 
 void
-sh_ttyerror (set)
-     int set;
+sh_ttyerror (int set)
 {
   if (set)
     builtin_error (_("error setting terminal attributes: %s"), strerror (errno));
@@ -334,8 +304,7 @@ sh_ttyerror (set)
 }
 
 int
-sh_chkwrite (s)
-     int s;
+sh_chkwrite (int s)
 {
   QUIT;
   fflush (stdout);
@@ -360,14 +329,12 @@ sh_chkwrite (s)
    in the list in *IP, if IP is non-null.  A convenience function for
    loadable builtins; also used by `test'. */
 char **
-make_builtin_argv (list, ip)
-     WORD_LIST *list;
-     int *ip;
+make_builtin_argv (WORD_LIST *list, int *ip)
 {
   char **argv;
 
   argv = strvec_from_word_list (list, 0, 1, ip);
-  argv[0] = this_command_name;
+  argv[0] = savestring(this_command_name);
   return argv;
 }
 
@@ -376,15 +343,11 @@ make_builtin_argv (list, ip)
    only discard the ones that are to be replaced.  Set POSPARAM_COUNT
    to the number of args assigned (length of LIST). */
 void
-remember_args (list, destructive)
-     WORD_LIST *list;
-     int destructive;
+remember_args (WORD_LIST *list, int destructive)
 {
-  register int i;
-
   posparam_count = 0;
 
-  for (i = 1; i < 10; i++)
+  for (int i = 1; i < 10; i++)
     {
       if ((destructive || list) && dollar_vars[i])
 	{
@@ -395,7 +358,7 @@ remember_args (list, destructive)
       if (list)
 	{
 	  dollar_vars[posparam_count = i] = savestring (list->word->word);
-	  list = list->next;
+	  list = (WORD_LIST *)list->next;
 	}
     }
 
@@ -416,12 +379,8 @@ remember_args (list, destructive)
 }
 
 void
-shift_args (times)
-     int times;
+shift_args (int times)
 {
-  WORD_LIST *temp;
-  int count;
-
   if (times <= 0)		/* caller should check */
     return;
 
@@ -430,14 +389,14 @@ shift_args (times)
       if (dollar_vars[1])
 	free (dollar_vars[1]);
 
-      for (count = 1; count < 9; count++)
+      for (int count = 1; count < 9; count++)
 	dollar_vars[count] = dollar_vars[count + 1];
 
       if (rest_of_args)
 	{
-	  temp = rest_of_args;
+	  WORD_LIST *temp = rest_of_args;
 	  dollar_vars[9] = savestring (temp->word->word);
-	  rest_of_args = rest_of_args->next;
+	  rest_of_args = (WORD_LIST *)rest_of_args->next;
 	  temp->next = (WORD_LIST *)NULL;
 	  dispose_words (temp);
 	}
@@ -452,7 +411,7 @@ int
 number_of_args ()
 {
 #ifdef DEBUG
-  register WORD_LIST *list;
+  WORD_LIST *list;
   int n;
 
   for (n = 0; n < 9 && dollar_vars[n+1]; n++)
@@ -508,10 +467,7 @@ set_dollar_vars_changed ()
    current command; if FATAL is 0, return an indication of an invalid
    number by setting *NUMOK == 0 and return -1. */
 int
-get_numeric_arg (list, fatal, count)
-     WORD_LIST *list;
-     int fatal;
-     intmax_t *count;
+get_numeric_arg (WORD_LIST *list, int fatal, intmax_t *count)
 {
   char *arg;
 
@@ -519,7 +475,7 @@ get_numeric_arg (list, fatal, count)
     *count = 1;
 
   if (list && list->word && ISOPTION (list->word->word, '-'))
-    list = list->next;
+    list = (WORD_LIST *)list->next;
 
   if (list)
     {
@@ -537,7 +493,7 @@ get_numeric_arg (list, fatal, count)
 	      jump_to_top_level (DISCARD);
 	    }
 	}
-      no_args (list->next);
+      no_args ((WORD_LIST *)list->next);
     }
 
   return (1);
@@ -545,15 +501,14 @@ get_numeric_arg (list, fatal, count)
 
 /* Get an eight-bit status value from LIST */
 int
-get_exitstat (list)
-     WORD_LIST *list;
+get_exitstat (WORD_LIST *list)
 {
   int status;
   intmax_t sval;
   char *arg;
 
   if (list && list->word && ISOPTION (list->word->word, '-'))
-    list = list->next;
+    list = (WORD_LIST *)list->next;
 
   if (list == 0)
     {
@@ -574,7 +529,7 @@ get_exitstat (list)
       sh_neednumarg (list->word->word ? list->word->word : "`'");
       return EX_BADUSAGE;
     }
-  no_args (list->next);
+  no_args ((WORD_LIST *)list->next);
 
   status = sval & 255;
   return status;
@@ -583,8 +538,7 @@ get_exitstat (list)
 /* Return the octal number parsed from STRING, or -1 to indicate
    that the string contained a bad number. */
 int
-read_octal (string)
-     char *string;
+read_octal (const char *string)
 {
   int result, digits;
 
@@ -614,8 +568,7 @@ read_octal (string)
 char *the_current_working_directory = (char *)NULL;
 
 char *
-get_working_directory (for_whom)
-     char *for_whom;
+get_working_directory (const char *for_whom)
 {
   if (no_symbolic_links)
     {
@@ -644,8 +597,7 @@ get_working_directory (for_whom)
 
 /* Make NAME our internal idea of the current working directory. */
 void
-set_working_directory (name)
-     char *name;
+set_working_directory (const char *name)
 {
   FREE (the_current_working_directory);
   the_current_working_directory = savestring (name);
@@ -659,28 +611,23 @@ set_working_directory (name)
 
 #if defined (JOB_CONTROL)
 int
-get_job_by_name (name, flags)
-     const char *name;
-     int flags;
+get_job_by_name (const char *name, int flags)
 {
-  register int i, wl, cl, match, job;
-  register PROCESS *p;
-  register JOB *j;
-
-  job = NO_JOB;
-  wl = strlen (name);
-  for (i = js.j_jobslots - 1; i >= 0; i--)
+  int job = NO_JOB;
+  int wl = strlen (name);
+  for (int i = js.j_jobslots - 1; i >= 0; i--)
     {
-      j = get_job_by_jid (i);
+      JOB *j = get_job_by_jid (i);
       if (j == 0 || ((flags & JM_STOPPED) && J_JOBSTATE(j) != JSTOPPED))
         continue;
 
-      p = j->pipe;
+      PROCESS *p = j->pipe;
       do
         {
+	  int match;
 	  if (flags & JM_EXACT)
 	    {
-	      cl = strlen (p->command);
+	      int cl = strlen (p->command);
 	      match = STREQN (p->command, name, cl);
 	    }
 	  else if (flags & JM_SUBSTRING)
@@ -714,16 +661,12 @@ get_job_by_name (name, flags)
 
 /* Return the job spec found in LIST. */
 int
-get_job_spec (list)
-     WORD_LIST *list;
+get_job_spec (WORD_LIST *list)
 {
-  register char *word;
-  int job, jflags;
-
   if (list == 0)
     return (js.j_current);
 
-  word = list->word->word;
+  char *word = list->word->word;
 
   if (*word == '\0')
     return (NO_JOB);
@@ -733,11 +676,11 @@ get_job_spec (list)
 
   if (DIGIT (*word) && all_digits (word))
     {
-      job = atoi (word);
+      int job = atoi (word);
       return ((job < 0 || job > js.j_jobslots) ? NO_JOB : job - 1);
     }
 
-  jflags = 0;
+  int jflags = 0;
   switch (*word)
     {
     case 0:
@@ -763,21 +706,15 @@ get_job_spec (list)
  * NOTE:  `kill' calls this function with forcecols == 0
  */
 int
-display_signal_list (list, forcecols)
-     WORD_LIST *list;
-     int forcecols;
+display_signal_list (WORD_LIST *list, int forcecols)
 {
-  register int i, column;
-  char *name;
-  int result, signum, dflags;
-  intmax_t lsignum;
-
-  result = EXECUTION_SUCCESS;
+  int result = EXECUTION_SUCCESS;
   if (!list)
     {
-      for (i = 1, column = 0; i < NSIG; i++)
+      int column = 0;
+      for (int i = 1; i < NSIG; i++)
 	{
-	  name = signal_name (i);
+	  const char *name = signal_name (i);
 	  if (STREQN (name, "SIGJUNK", 7) || STREQN (name, "Unknown", 7))
 	    continue;
 
@@ -811,6 +748,7 @@ display_signal_list (list, forcecols)
   /* List individual signal names or numbers. */
   while (list)
     {
+      intmax_t lsignum;
       if (legal_number (list->word->word, &lsignum))
 	{
 	  /* This is specified by Posix.2 so that exit statuses can be
@@ -821,15 +759,15 @@ display_signal_list (list, forcecols)
 	    {
 	      sh_invalidsig (list->word->word);
 	      result = EXECUTION_FAILURE;
-	      list = list->next;
+	      list = (WORD_LIST *)list->next;
 	      continue;
 	    }
 
-	  signum = lsignum;
-	  name = signal_name (signum);
+	  int signum = lsignum;
+	  const char *name = signal_name (signum);
 	  if (STREQN (name, "SIGJUNK", 7) || STREQN (name, "Unknown", 7))
 	    {
-	      list = list->next;
+	      list = (WORD_LIST *)list->next;
 	      continue;
 	    }
 	  /* POSIX.2 says that `kill -l signum' prints the signal name without
@@ -838,20 +776,20 @@ display_signal_list (list, forcecols)
 	}
       else
 	{
-	  dflags = DSIG_NOCASE;
+	  int dflags = DSIG_NOCASE;
 	  if (posixly_correct == 0 || this_shell_builtin != kill_builtin)
 	    dflags |= DSIG_SIGPREFIX;
-	  signum = decode_signal (list->word->word, dflags);
+	  int signum = decode_signal (list->word->word, dflags);
 	  if (signum == NO_SIG)
 	    {
 	      sh_invalidsig (list->word->word);
 	      result = EXECUTION_FAILURE;
-	      list = list->next;
+	      list = (WORD_LIST *)list->next;
 	      continue;
 	    }
 	  printf ("%d\n", signum);
 	}
-      list = list->next;
+      list = (WORD_LIST *)list->next;
     }
   return (result);
 }
@@ -868,9 +806,7 @@ display_signal_list (list, forcecols)
    Return the address of the builtin.
    DISABLED_OKAY means find it even if the builtin is disabled. */
 struct builtin *
-builtin_address_internal (name, disabled_okay)
-     char *name;
-     int disabled_okay;
+builtin_address_internal (const char *name, int disabled_okay)
 {
   int hi, lo, mid, j;
 
@@ -908,8 +844,7 @@ builtin_address_internal (name, disabled_okay)
 
 /* Return the pointer to the function implementing builtin command NAME. */
 sh_builtin_func_t *
-find_shell_builtin (name)
-     char *name;
+find_shell_builtin (const char *name)
 {
   current_builtin = builtin_address_internal (name, 0);
   return (current_builtin ? current_builtin->function : (sh_builtin_func_t *)NULL);
@@ -917,8 +852,7 @@ find_shell_builtin (name)
 
 /* Return the address of builtin with NAME, whether it is enabled or not. */
 sh_builtin_func_t *
-builtin_address (name)
-     char *name;
+builtin_address (const char *name)
 {
   current_builtin = builtin_address_internal (name, 1);
   return (current_builtin ? current_builtin->function : (sh_builtin_func_t *)NULL);
@@ -927,18 +861,16 @@ builtin_address (name)
 /* Return the function implementing the builtin NAME, but only if it is a
    POSIX.2 special builtin. */
 sh_builtin_func_t *
-find_special_builtin (name)
-     char *name;
+find_special_builtin (const char *name)
 {
   current_builtin = builtin_address_internal (name, 0);
   return ((current_builtin && (current_builtin->flags & SPECIAL_BUILTIN)) ?
   			current_builtin->function :
   			(sh_builtin_func_t *)NULL);
 }
-  
+
 static int
-shell_builtin_compare (sbp1, sbp2)
-     struct builtin *sbp1, *sbp2;
+shell_builtin_compare (struct builtin *sbp1, struct builtin *sbp2)
 {
   int result;
 
@@ -972,10 +904,7 @@ builtin_help ()
 /* **************************************************************** */
 
 SHELL_VAR *
-builtin_bind_variable (name, value, flags)
-     char *name;
-     char *value;
-     int flags;
+builtin_bind_variable (const char *name, char *value, int flags)
 {
   SHELL_VAR *v;
 
@@ -997,8 +926,7 @@ builtin_bind_variable (name, value, flags)
 /* Like check_unbind_variable, but for use by builtins (only matters for
    error messages). */
 int
-builtin_unbind_variable (vname)
-     const char *vname;
+builtin_unbind_variable (const char *vname)
 {
   SHELL_VAR *v;
 

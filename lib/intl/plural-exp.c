@@ -37,12 +37,12 @@
 static const struct expression plvar =
 {
   .nargs = 0,
-  .operation = var,
+  .operation = expression::var,
 };
 static const struct expression plone =
 {
   .nargs = 0,
-  .operation = num,
+  .operation = expression::num,
   .val =
   {
     .num = 1
@@ -51,7 +51,7 @@ static const struct expression plone =
 struct expression GERMANIC_PLURAL =
 {
   .nargs = 2,
-  .operation = not_equal,
+  .operation = expression::not_equal,
   .val =
   {
     .args =
@@ -98,10 +98,10 @@ init_germanic_plural ()
 
 void
 internal_function
-EXTRACT_PLURAL_EXPRESSION (nullentry, pluralp, npluralsp)
-     const char *nullentry;
-     struct expression **pluralp;
-     unsigned long int *npluralsp;
+EXTRACT_PLURAL_EXPRESSION (
+     const char *nullentry,
+     struct expression **pluralp,
+     unsigned long int *npluralsp)
 {
   if (nullentry != NULL)
     {

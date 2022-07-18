@@ -17,7 +17,7 @@
    You should have received a copy of the GNU General Public License
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
-   
+
 #include <config.h>
 
 #if !defined (HAVE_STRCASECMP)
@@ -29,14 +29,11 @@
 /* Compare at most COUNT characters from string1 to string2.  Case
    doesn't matter. */
 int
-strncasecmp (string1, string2, count)
-     const char *string1;
-     const char *string2;
-     size_t count;
+strncasecmp (const char *string1, const char *string2, size_t count)
 {
-  register const char *s1;
-  register const char *s2;
-  register int r;
+  const char *s1;
+  const char *s2;
+  int r;
 
   if (count <= 0 || (string1 == string2))
     return 0;
@@ -58,13 +55,11 @@ strncasecmp (string1, string2, count)
 
 /* strcmp (), but caseless. */
 int
-strcasecmp (string1, string2)
-     const char *string1;
-     const char *string2;
+strcasecmp (const char *string1, const char *string2)
 {
-  register const char *s1;
-  register const char *s2;
-  register int r;
+  const char *s1;
+  const char *s2;
+  int r;
 
   s1 = string1;
   s2 = string2;

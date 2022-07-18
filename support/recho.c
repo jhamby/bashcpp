@@ -31,14 +31,12 @@
 #include "bashansi.h"
 #include <stdio.h>
 
-void strprint();
+static void strprint(const char *str);
 
 int
-main(argc, argv)
-int	argc;
-char	**argv;
+main(int argc, char **argv)
 {
-	register int	i;
+	int i;
 
 	for (i = 1; i < argc; i++) {
 		printf("argv[%d] = <", i);
@@ -49,10 +47,9 @@ char	**argv;
 }
 
 void
-strprint(str)
-char	*str;
+strprint(const char *str)
 {
-	register unsigned char *s;
+	unsigned char *s;
 
 	for (s = (unsigned char *)str; s && *s; s++) {
 		if (*s < ' ') {

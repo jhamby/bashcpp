@@ -40,8 +40,8 @@
 #include <maxpath.h>
 #include <stdc.h>
 
-static int mindist PARAMS((char *, char *, char *));
-static int spdist PARAMS((char *, char *));
+static int mindist (char *, char *, char *);
+static int spdist (char *, char *);
 
 /*
  * `spname' and its helpers are inspired by the code in "The UNIX
@@ -59,9 +59,7 @@ static int spdist PARAMS((char *, char *));
  *	Stores corrected name in `newname'.
  */
 int
-spname(oldname, newname)
-     char *oldname;
-     char *newname;
+spname(char *oldname, char *newname)
 {
   char *op, *np, *p;
   char guess[PATH_MAX + 1], best[PATH_MAX + 1];
@@ -104,10 +102,7 @@ spname(oldname, newname)
  *  Search directory for a guess
  */
 static int
-mindist(dir, guess, best)
-     char *dir;
-     char *guess;
-     char *best;
+mindist(char *dir, char *guess, char *best)
 {
   DIR *fd;
   struct dirent *dp;
@@ -155,41 +150,39 @@ mindist(dir, guess, best)
  *      3 otherwise
  */
 static int
-spdist(cur, new)
-     char *cur, *new;
+spdist(char *cur, char *new_)
 {
-  while (*cur == *new)
+  while (*cur == *new_)
     {
       if (*cur == '\0')
 	return 0;    /* Exact match */
       cur++;
-      new++;
+      new_++;
     }
 
   if (*cur)
     {
-      if (*new)
+      if (*new_)
 	{
-	  if (cur[1] && new[1] && cur[0] == new[1] && cur[1] == new[0] && strcmp (cur + 2, new + 2) == 0)
+	  if (cur[1] && new_[1] && cur[0] == new_[1] && cur[1] == new_[0] && strcmp (cur + 2, new_ + 2) == 0)
 	    return 1;  /* Transposition */
 
-	  if (strcmp (cur + 1, new + 1) == 0)
+	  if (strcmp (cur + 1, new_ + 1) == 0)
 	    return 2;  /* One character mismatch */
 	}
 
-      if (strcmp(&cur[1], &new[0]) == 0)
+      if (strcmp(&cur[1], &new_[0]) == 0)
 	return 2;    /* Extra character */
     }
 
-  if (*new && strcmp(cur, new + 1) == 0)
+  if (*new_ && strcmp(cur, new_ + 1) == 0)
     return 2;      /* Missing character */
 
   return 3;
 }
 
 char *
-dirspell (dirname)
-     char *dirname;
+dirspell (char *dirname)
 {
   int n;
   char *guess;

@@ -23,18 +23,18 @@
 
 #include "stdc.h"
 
-extern void dispose_command PARAMS((COMMAND *));
-extern void dispose_word_desc PARAMS((WORD_DESC *));
-extern void dispose_word PARAMS((WORD_DESC *));
-extern void dispose_words PARAMS((WORD_LIST *));
-extern void dispose_word_array PARAMS((char **));
-extern void dispose_redirects PARAMS((REDIRECT *));
+extern void dispose_command (void *);
+extern void dispose_word_desc (void *);
+extern void dispose_word (void *);
+extern void dispose_words (void *);
+extern void dispose_word_array (void *);
+extern void dispose_redirects (void *);
 
 #if defined (COND_COMMAND)
-extern void dispose_cond_node PARAMS((COND_COM *));
+extern void dispose_cond_node (void *);
 #endif
 
-extern void dispose_function_def_contents PARAMS((FUNCTION_DEF *));
-extern void dispose_function_def PARAMS((FUNCTION_DEF *));
+extern void dispose_function_def_contents (void *);
+extern void dispose_function_def (void *);
 
 #endif /* !_DISPOSE_CMD_H_ */

@@ -56,14 +56,6 @@
 # include <libintl.h>
 #endif
 
-/* Faked cheap 'bool'.  */
-#undef bool
-#undef false
-#undef true
-#define bool int
-#define false 0
-#define true 1
-
 /* Pathname support.
    ISSLASH(C)           tests whether C is a directory separator character.
    IS_PATH_WITH_DIR(P)  tests whether P contains a directory specification.

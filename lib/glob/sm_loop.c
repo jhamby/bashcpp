@@ -1,7 +1,7 @@
 /* Copyright (C) 1991-2020 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
-   
+
    Bash is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -18,28 +18,25 @@
 
 struct STRUCT
 {
-  CHAR *pattern;
-  CHAR *string;
+  const CHAR *pattern;
+  const CHAR *string;
 };
 
-int FCT PARAMS((CHAR *, CHAR *, int));
+int FCT (const CHAR *, const CHAR *, int);
 
-static int GMATCH PARAMS((CHAR *, CHAR *, CHAR *, CHAR *, struct STRUCT *, int));
-static CHAR *PARSE_COLLSYM PARAMS((CHAR *, INT *));
-static CHAR *BRACKMATCH PARAMS((CHAR *, U_CHAR, int));
-static int EXTMATCH PARAMS((INT, CHAR *, CHAR *, CHAR *, CHAR *, int));
+static int GMATCH (const CHAR *, const CHAR *, const CHAR *, const CHAR *, struct STRUCT *, int);
+static const CHAR *PARSE_COLLSYM (const CHAR *, INT *);
+static const CHAR *BRACKMATCH (const CHAR *, U_CHAR, int);
+static int EXTMATCH (INT, const CHAR *, const CHAR *, const CHAR *, const CHAR *, int);
 
-extern void DEQUOTE_PATHNAME PARAMS((CHAR *));
+extern void DEQUOTE_PATHNAME (CHAR *);
 
-/*static*/ CHAR *PATSCAN PARAMS((CHAR *, CHAR *, INT));
+/*static*/ const CHAR *PATSCAN (const CHAR *, const CHAR *, INT);
 
 int
-FCT (pattern, string, flags)
-     CHAR *pattern;
-     CHAR *string;
-     int flags;
+FCT (const CHAR *pattern, const CHAR *string, int flags)
 {
-  CHAR *se, *pe;
+  const CHAR *se, *pe;
 
   if (string == 0 || pattern == 0)
     return FNM_NOMATCH;
@@ -53,13 +50,10 @@ FCT (pattern, string, flags)
 /* Match STRING against the filename pattern PATTERN, returning zero if
    it matches, FNM_NOMATCH if not.  */
 static int
-GMATCH (string, se, pattern, pe, ends, flags)
-     CHAR *string, *se;
-     CHAR *pattern, *pe;
-     struct STRUCT *ends;
-     int flags;
+GMATCH (const CHAR *string, const CHAR *se, const CHAR *pattern, const CHAR *pe,
+	struct STRUCT *ends, int flags)
 {
-  CHAR *p, *n;		/* pattern, string */
+  const CHAR *p, *n;	/* pattern, string */
   INT c;		/* current pattern character - XXX U_CHAR? */
   INT sc;		/* current string character - XXX U_CHAR? */
 
@@ -160,7 +154,7 @@ fprintf(stderr, "gmatch: pattern = %s; pe = %s\n", pattern, pe);
 #ifdef EXTENDED_GLOB
 	      else if ((flags & FNM_EXTMATCH) && c == L('?') && *p == L('(')) /* ) */
 		{
-		  CHAR *newn;
+		  const CHAR *newn;
 
 		  /* We can match 0 or 1 times.  If we match, return success */
 		  if (EXTMATCH (c, n, se, p, pe, flags) == 0)
@@ -190,7 +184,7 @@ fprintf(stderr, "gmatch: pattern = %s; pe = %s\n", pattern, pe);
 	      /* Handle ******(patlist) */
 	      if ((flags & FNM_EXTMATCH) && c == L('*') && *p == L('('))  /*)*/
 		{
-		  CHAR *newn;
+		  const CHAR *newn;
 		  /* We need to check whether or not the extended glob
 		     pattern matches the remainder of the string.
 		     If it does, we match the entire pattern. */
@@ -266,7 +260,7 @@ fprintf(stderr, "gmatch: pattern = %s; pe = %s\n", pattern, pe);
 	    struct STRUCT end;
 
 	    end.pattern = NULL;
-	    endp = MEMCHR (n, (flags & FNM_PATHNAME) ? L('/') : L('\0'), se - n);
+	    endp = (const CHAR *)MEMCHR (n, (flags & FNM_PATHNAME) ? L('/') : L('\0'), se - n);
 	    if (endp == 0)
 	      endp = se;
 
@@ -298,7 +292,7 @@ fprintf(stderr, "gmatch: pattern = %s; pe = %s\n", pattern, pe);
 	    /* This is a clever idea from glibc, used to avoid backtracking
 	       to a `*' that appears earlier in the pattern.  We get away
 	       without saving se and pe because they are always the same,
-	       even in the recursive calls to gmatch */ 
+	       even in the recursive calls to gmatch */
 	    if (end.pattern != NULL)
 	      {
 		p = end.pattern;
@@ -341,23 +335,21 @@ fprintf(stderr, "gmatch: pattern = %s; pe = %s\n", pattern, pe);
   if ((flags & FNM_LEADING_DIR) && *n == L('/'))
     /* The FNM_LEADING_DIR flag says that "foo*" matches "foobar/frobozz".  */
     return 0;
-	  
+
   return (FNM_NOMATCH);
 }
 
 /* Parse a bracket expression collating symbol ([.sym.]) starting at P, find
    the value of the symbol, and move P past the collating symbol expression.
    The value is returned in *VP, if VP is not null. */
-static CHAR *
-PARSE_COLLSYM (p, vp)
-     CHAR *p;
-     INT *vp;
+static const CHAR *
+PARSE_COLLSYM (const CHAR *p, INT *vp)
 {
-  register int pc;
+  int pc;
   INT val;
 
   p++;				/* move past the `.' */
-	  
+
   for (pc = 0; p[pc]; pc++)
     if (p[pc] == L('.') && p[pc+1] == L(']'))
       break;
@@ -374,22 +366,15 @@ PARSE_COLLSYM (p, vp)
 }
 
 /* Use prototype definition here because of type promotion. */
-static CHAR *
-#if defined (PROTOTYPES)
-BRACKMATCH (CHAR *p, U_CHAR test, int flags)
-#else
-BRACKMATCH (p, test, flags)
-     CHAR *p;
-     U_CHAR test;
-     int flags;
-#endif
+static const CHAR *
+BRACKMATCH (const CHAR *p, U_CHAR test, int flags)
 {
-  register CHAR cstart, cend, c;
-  register int not;    /* Nonzero if the sense of the character class is inverted.  */
+  CHAR cstart, cend, c;
+  bool inverted;    /* Nonzero if the sense of the character class is inverted.  */
   int brcnt, forcecoll, isrange;
   INT pc;
-  CHAR *savep;
-  CHAR *brchrp;
+  const CHAR *savep;
+  const CHAR *brchrp;
   U_CHAR orig_test;
 
   orig_test = test;
@@ -401,7 +386,7 @@ BRACKMATCH (p, test, flags)
      circumflex (`^') in its role in a `nonmatching list'.  A bracket
      expression starting with an unquoted circumflex character produces
      unspecified results.  This implementation treats the two identically. */
-  if (not = (*p == L('!') || *p == L('^')))
+  if (inverted = (*p == L('!') || *p == L('^')))
     ++p;
 
   c = *p++;
@@ -441,7 +426,8 @@ BRACKMATCH (p, test, flags)
       /* POSIX.2 character class expression.  See POSIX.2 2.8.3.2. */
       if (c == L('[') && *p == L(':'))
 	{
-	  CHAR *close, *ccname;
+	  const CHAR *close;
+	  CHAR *ccname;
 
 	  pc = 0;	/* make sure invalid char classes don't match. */
 	  /* Find end of character class name */
@@ -481,7 +467,7 @@ BRACKMATCH (p, test, flags)
 
 	      free (ccname);
 	    }
-	    
+
 	  if (pc)
 	    {
 /*[*/	      /* Move past the closing `]', since the first thing we do at
@@ -502,7 +488,7 @@ BRACKMATCH (p, test, flags)
 	      continue;
 	    }
 	}
- 
+
       /* POSIX.2 collating symbols.  See POSIX.2 2.8.3.2.  Find the end of
 	 the symbol name, make sure it is terminated by `.]', translate
 	 the name to a character using the external table, and do the
@@ -592,7 +578,7 @@ BRACKMATCH (p, test, flags)
 	break;
     }
   /* No match. */
-  return (!not ? (CHAR *)0 : p);
+  return (!inverted ? (CHAR *)0 : p);
 
 matched:
   /* Skip the rest of the [...] that already matched.  */
@@ -640,7 +626,7 @@ matched:
 	  ++p;
 	}
     }
-  return (not ? (CHAR *)0 : p);
+  return (inverted ? (CHAR *)0 : p);
 }
 
 #if defined (EXTENDED_GLOB)
@@ -664,23 +650,21 @@ matched:
    DELIM.  In all cases, we never scan past END.  The return value is the
    first character after the matching DELIM or NULL if the pattern is
    empty or invalid. */
-/*static*/ CHAR *
-PATSCAN (string, end, delim)
-     CHAR *string, *end;
-     INT delim;
+/*static*/ const CHAR *
+PATSCAN (const CHAR *string, const CHAR *end, INT delim)
 {
   int pnest, bnest, skip;
   INT cchar;
-  CHAR *s, c, *bfirst;
+  CHAR c;
 
   pnest = bnest = skip = 0;
   cchar = 0;
-  bfirst = NULL;
+  const CHAR *bfirst = NULL;
 
   if (string == end)
     return (NULL);
 
-  for (s = string; c = *s; s++)
+  for (const CHAR *s = string; c = *s; s++)
     {
       if (s >= end)
 	return (s);
@@ -696,7 +680,7 @@ PATSCAN (string, end, delim)
 	  break;
 
 	case L('\0'):
-	  return ((CHAR *)NULL);
+	  return ((const CHAR *)NULL);
 
 	/* `[' is not special inside a bracket expression, but it may
 	   introduce one of the special POSIX bracket expressions
@@ -751,8 +735,7 @@ PATSCAN (string, end, delim)
 
 /* Return 0 if dequoted pattern matches S in the current locale. */
 static int
-STRCOMPARE (p, pe, s, se)
-     CHAR *p, *pe, *s, *se;
+STRCOMPARE (const CHAR *p, const CHAR *pe, const CHAR *s, const CHAR *se)
 {
   int ret;
   CHAR c1, c2;
@@ -763,15 +746,15 @@ STRCOMPARE (p, pe, s, se)
 
   if (l1 != l2)
     return (FNM_NOMATCH);	/* unequal lengths, can't be identical */
-  
-  c1 = *pe;
+
+  c1 = *pe;		/* save and restore from otherwise-const inputs */
   c2 = *se;
 
   if (c1 != 0)
-    *pe = '\0';
+    *((CHAR *)pe) = '\0';
   if (c2 != 0)
-    *se = '\0';
-    
+    *((CHAR *)se) = '\0';
+
 #if HAVE_MULTIBYTE || defined (HAVE_STRCOLL)
   ret = STRCOLL ((XCHAR *)p, (XCHAR *)s);
 #else
@@ -779,9 +762,9 @@ STRCOMPARE (p, pe, s, se)
 #endif
 
   if (c1 != 0)
-    *pe = c1;
+    *((CHAR *)pe) = c1;
   if (c2 != 0)
-    *se = c2;
+    *((CHAR *)se) = c2;
 
   return (ret == 0 ? ret : FNM_NOMATCH);
 }
@@ -791,16 +774,12 @@ STRCOMPARE (p, pe, s, se)
    the first time an extended pattern specifier is encountered, so it calls
    gmatch recursively. */
 static int
-EXTMATCH (xc, s, se, p, pe, flags)
-     INT xc;		/* select which operation */
-     CHAR *s, *se;
-     CHAR *p, *pe;
-     int flags;
+EXTMATCH (INT xc, const CHAR *s, const CHAR *se, const CHAR *p, const CHAR *pe, int flags)
 {
-  CHAR *prest;			/* pointer to rest of pattern */
-  CHAR *psub;			/* pointer to sub-pattern */
-  CHAR *pnext;			/* pointer to next sub-pattern */
-  CHAR *srest;			/* pointer to rest of string */
+  const CHAR *prest;			/* pointer to rest of pattern */
+  const CHAR *psub;			/* pointer to sub-pattern */
+  const CHAR *pnext;			/* pointer to next sub-pattern */
+  const CHAR *srest;			/* pointer to rest of string */
   int m1, m2, xflags;		/* xflags = flags passed to recursive matches */
 
 #if DEBUG_MATCHING

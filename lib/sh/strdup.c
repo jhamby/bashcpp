@@ -3,7 +3,7 @@
 /* Copyright (C) 2013 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
-   
+
    Bash is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -17,7 +17,7 @@
    You should have received a copy of the GNU General Public License
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
-                              
+
 
 #include <config.h>
 
@@ -27,8 +27,7 @@
 
 /* Duplicate S, returning an identical malloc'd string.  */
 char *
-strdup (s)
-     const char *s;
+strdup (const char *s)
 {
   size_t len;
   void *new;

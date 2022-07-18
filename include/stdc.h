@@ -24,47 +24,8 @@
 
 /* Adapted from BSD /usr/include/sys/cdefs.h. */
 
-/* A function can be defined using prototypes and compile on both ANSI C
-   and traditional C compilers with something like this:
-	extern char *func PARAMS((char *, char *, int)); */
-
-#if !defined (PARAMS)
-#  if defined (__STDC__) || defined (__GNUC__) || defined (__cplusplus) || defined (PROTOTYPES)
-#    define PARAMS(protos) protos
-#  else 
-#    define PARAMS(protos) ()
-#  endif
-#endif
-
 /* Fortify, at least, has trouble with this definition */
-#if defined (HAVE_STRINGIZE)
-#  define CPP_STRING(x) #x
-#else
-#  define CPP_STRING(x) "x"
-#endif
-
-#if !defined (__STDC__)
-
-#if defined (__GNUC__)		/* gcc with -traditional */
-#  if !defined (signed)
-#    define signed __signed
-#  endif
-#  if !defined (volatile)
-#    define volatile __volatile
-#  endif
-#else /* !__GNUC__ */
-#  if !defined (inline)
-#    define inline
-#  endif
-#  if !defined (signed)
-#    define signed
-#  endif
-#  if !defined (volatile)
-#    define volatile
-#  endif
-#endif /* !__GNUC__ */
-
-#endif /* !__STDC__ */
+#define CPP_STRING(x) #x
 
 #ifndef __attribute__
 #  if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 8)
@@ -74,16 +35,15 @@
 
 /* For those situations when gcc handles inlining a particular function but
    other compilers complain. */
-#ifdef __GNUC__
-#  define INLINE inline
-#else
-#  define INLINE
-#endif
+#define INLINE inline
 
-#if defined (PREFER_STDARG)
-#  define SH_VA_START(va, arg)  va_start(va, arg)
-#else
-#  define SH_VA_START(va, arg)  va_start(va)
-#endif
+#define SH_VA_START(va, arg)  va_start(va, arg)
+
+/* All structs which contain a `next' field should have that field
+   as the first field in the struct.  This means that functions
+   can be written to handle the general case for linked lists. */
+typedef struct g_list {
+  struct g_list *next;
+} GENERIC_LIST;
 
 #endif /* !_STDC_H_ */

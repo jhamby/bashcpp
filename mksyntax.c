@@ -46,7 +46,7 @@ extern char *strerror();
 
 struct wordflag {
 	int	flag;
-	char	*fstr;
+	const char	*fstr;
 } wordflags[] = {
 	{ CWORD,	"CWORD" },
 	{ CSHMETA,	"CSHMETA" },
@@ -64,7 +64,7 @@ struct wordflag {
 	{ CSUBSTOP,	"CSUBSTOP" },
 	{ CBLANK,	"CBLANK" },
 };
-	
+
 #define N_WFLAGS	(sizeof (wordflags) / sizeof (wordflags[0]))
 #define SYNSIZE		256
 
@@ -92,8 +92,7 @@ usage()
 
 #ifdef INCLUDE_UNUSED
 static int
-getcflag (s)
-     char *s;
+getcflag (char *s)
 {
   int i;
 
@@ -104,9 +103,8 @@ getcflag (s)
 }
 #endif
 
-static char *
-cdesc (i)
-     int i;
+static const char *
+cdesc (int i)
 {
   static char xbuf[16];
 
@@ -127,7 +125,7 @@ cdesc (i)
 
   xbuf[0] = '\\';
   xbuf[2] = '\0';
-    
+
   switch (i)
     {
 #ifdef __STDC__
@@ -145,12 +143,11 @@ cdesc (i)
     default: sprintf (xbuf, "%d", i); break;
     }
 
-  return xbuf;	
+  return xbuf;
 }
 
-static char *
-getcstr (f)
-     int f;
+static const char *
+getcstr (int f)
 {
   int i;
 
@@ -161,11 +158,9 @@ getcstr (f)
 }
 
 static void
-addcstr (str, flag)
-     char *str;
-     int flag;
+addcstr (const char *str, int flag)
 {
-  char *s, *fstr;
+  const char *s, *fstr;
   unsigned char uc;
 
   for (s = str; s && *s; s++)
@@ -177,17 +172,15 @@ addcstr (str, flag)
 	  fstr = getcstr (flag);
 	  fprintf(stderr, "added %s for character %s\n", fstr, cdesc(uc));
 	}
-	
+
       lsyntax[uc] |= flag;
     }
 }
 
 static void
-addcchar (c, flag)
-     unsigned char c;
-     int flag;
+addcchar (unsigned char c, int flag)
 {
-  char *fstr;
+  const char *fstr;
 
   if (debug)
     {
@@ -200,7 +193,7 @@ addcchar (c, flag)
 static void
 addblanks ()
 {
-  register int i;
+  int i;
   unsigned char uc;
 
   for (i = 0; i < SYNSIZE; i++)
@@ -252,9 +245,7 @@ load_lsyntax ()
 }
 
 static void
-dump_lflags (fp, ind)
-     FILE *fp;
-     int ind;
+dump_lflags (FILE *fp, int ind)
 {
   int xflags, first, i;
 
@@ -278,20 +269,17 @@ dump_lflags (fp, ind)
 }
 
 static void
-wcomment (fp, i)
-     FILE *fp;
-     int i;
+wcomment (FILE *fp, int i)
 {
   fputs ("\t\t/* ", fp);
 
   fprintf (fp, "%s", cdesc(i));
-      
+
   fputs (" */", fp);
 }
 
 static void
-dump_lsyntax (fp)
-     FILE *fp;
+dump_lsyntax (FILE *fp)
 {
   int i;
 
@@ -311,12 +299,10 @@ dump_lsyntax (fp)
 }
 
 int
-main(argc, argv)
-     int argc;
-     char **argv;
+main(int argc, char **argv)
 {
   int opt, i;
-  char *filename;
+  const char *filename;
   FILE *fp;
 
   if ((progname = strrchr (argv[0], '/')) == 0)
@@ -395,8 +381,7 @@ main(argc, argv)
 #endif
 
 char *
-strerror (e)
-     int e;
+strerror (int e)
 {
   static char emsg[40];
 #if defined (HAVE_SYS_ERRLIST)

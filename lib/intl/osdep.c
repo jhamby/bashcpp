@@ -20,7 +20,7 @@
 
 #if defined __EMX__
 # include "os2compat.c"
-#else
+#elif defined (_AIX)
 /* Avoid AIX compiler warning.  */
 typedef int dummy;
 #endif

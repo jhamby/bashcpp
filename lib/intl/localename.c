@@ -383,9 +383,7 @@
    The result must not be freed; it is statically allocated.  */
 
 const char *
-_nl_locale_name (category, categoryname)
-     int category;
-     const char *categoryname;
+_nl_locale_name (int category, const char *categoryname)
 {
   const char *retval;
 

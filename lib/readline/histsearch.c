@@ -49,9 +49,9 @@
 
 /* The list of alternate characters that can delimit a history search
    string. */
-char *history_search_delimiter_chars = (char *)NULL;
+const char *history_search_delimiter_chars = (char *)NULL;
 
-static int history_search_internal PARAMS((const char *, int, int));
+static int history_search_internal (const char *, int, int);
 
 /* Search the history for STRING, starting at history_offset.
    If DIRECTION < 0, then the search is through previous entries, else
@@ -251,7 +251,7 @@ _hs_history_patsearch (const char *string, int direction, int flags)
     free (pat);
   return ret;
 }
-	
+
 /* Do a non-anchored search for STRING through the history in DIRECTION. */
 int
 history_search (const char *string, int direction)

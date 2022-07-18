@@ -45,10 +45,9 @@ extern char *signal_names[];
 char *progname;
 
 void
-write_signames (stream)
-     FILE *stream;
+write_signames (FILE *stream)
 {
-  register int i;
+  int i;
 
   fprintf (stream, "/* This file was automatically created by %s.\n",
 	   progname);
@@ -56,10 +55,10 @@ write_signames (stream)
   fprintf (stream,
 	   "/* A translation list so we can be polite to our users. */\n");
 #if defined (CROSS_COMPILING)
-  fprintf (stream, "extern char *signal_names[];\n\n");
-  fprintf (stream, "extern void initialize_signames PARAMS((void));\n\n");
+  fprintf (stream, "extern const char *signal_names[];\n\n");
+  fprintf (stream, "extern void initialize_signames (void);\n\n");
 #else
-  fprintf (stream, "char *signal_names[NSIG + 4] = {\n");
+  fprintf (stream, "const char *signal_names[NSIG + 4] = {\n");
 
   for (i = 0; i <= LASTSIG; i++)
     fprintf (stream, "    \"%s\",\n", signal_names[i]);
@@ -71,11 +70,9 @@ write_signames (stream)
 }
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
-  char *stream_name;
+  const char *stream_name;
   FILE *stream;
 
   progname = argv[0];

@@ -44,13 +44,13 @@
 extern int optind;
 extern char *optarg;
 
-extern char *dist_version;
-extern int patch_level;
+extern const char * const dist_version;
+extern const int patch_level;
 
-extern char *shell_version_string PARAMS((void));
-extern void show_shell_version PARAMS((int));
+extern char *shell_version_string (void);
+extern void show_shell_version (int);
 
-char *shell_name = "bash";
+const char *shell_name = "bash";
 char *progname;
 
 static void
@@ -60,12 +60,11 @@ usage()
 }
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   int opt, oflags;
-  char dv[128], *rv;
+  char dv[128];
+  char *rv;
 
   if (progname = strrchr (argv[0], '/'))
     progname++;
@@ -116,7 +115,7 @@ main (argc, argv)
       exit (2);
     }
 
-  /* default behavior */  
+  /* default behavior */
   if (oflags == 0)
     oflags = SFLAG;
 

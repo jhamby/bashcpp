@@ -90,17 +90,14 @@ extern int errno;
    one converted is stored in *ENDPTR.  */
 
 INT
-strtol (nptr, endptr, base)
-     const char *nptr;
-     char **endptr;
-     int base;
+strtol (const char *nptr, char **endptr, int base)
 {
   int negative;
-  register unsigned LONG int cutoff;
-  register unsigned int cutlim;
-  register unsigned LONG int i;
-  register const char *s;
-  register unsigned char c;
+  unsigned LONG int cutoff;
+  unsigned int cutlim;
+  unsigned LONG int i;
+  const char *s;
+  unsigned char c;
   const char *save, *end;
   int overflow;
 

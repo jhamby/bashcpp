@@ -57,7 +57,7 @@
 
 #define fielddelim(c)	(whitespace(c) || (c) == '\n')
 
-typedef int _hist_search_func_t PARAMS((const char *, int));
+typedef int _hist_search_func_t (const char *, int);
 
 static char error_pointer;
 
@@ -68,16 +68,16 @@ static int subst_rhs_len;
 
 /* Characters that delimit history event specifications and separate event
    specifications from word designators.  Static for now */
-static char *history_event_delimiter_chars = HISTORY_EVENT_DELIMITERS;
+static const char *history_event_delimiter_chars = HISTORY_EVENT_DELIMITERS;
 
-static char *get_history_word_specifier PARAMS((char *, char *, int *));
-static int history_tokenize_word PARAMS((const char *, int));
-static char **history_tokenize_internal PARAMS((const char *, int, int *));
-static char *history_substring PARAMS((const char *, int, int));
-static void freewords PARAMS((char **, int));
-static char *history_find_word PARAMS((char *, int));
+static char *get_history_word_specifier (char *, char *, int *);
+static int history_tokenize_word (const char *, int);
+static char **history_tokenize_internal (const char *, int, int *);
+static char *history_substring (const char *, int, int);
+static void freewords (char **, int);
+static char *history_find_word (char *, int);
 
-static char *quote_breaks PARAMS((char *));
+static char *quote_breaks (char *);
 
 /* Variables exported by this file. */
 /* The character that represents the start of a history expansion
@@ -96,14 +96,14 @@ char history_comment_char = '\0';
 
 /* The list of characters which inhibit the expansion of text if found
    immediately following history_expansion_char. */
-char *history_no_expand_chars = " \t\n\r=";
+const char *history_no_expand_chars = " \t\n\r=";
 
 /* If set to a non-zero value, single quotes inhibit history expansion.
    The default is 0. */
 int history_quotes_inhibit_expansion = 0;
 
 /* Used to split words by history_tokenize_internal. */
-char *history_word_delimiters = HISTORY_WORD_DELIMITERS;
+const char *history_word_delimiters = HISTORY_WORD_DELIMITERS;
 
 /* If set, this points to a function that is called to verify that a
    particular history expansion should be performed. */
@@ -284,7 +284,7 @@ get_history_event (const char *string, int *caller_index, int delimiting_quote)
 	  if (entry == 0)
 	    FAIL_SEARCH ();
 	  history_offset = history_length;
-	
+
 	  /* If this was a substring search, then remember the
 	     string that we matched for word substitution. */
 	  if (substring_okay)
@@ -491,17 +491,17 @@ get_subst_pattern (char *str, int *iptr, int delimiter, int is_rhs, int *lenptr)
 static void
 postproc_subst_rhs (void)
 {
-  char *new;
+  char *new_;
   int i, j, new_size;
 
-  new = (char *)xmalloc (new_size = subst_rhs_len + subst_lhs_len);
+  new_ = (char *)xmalloc (new_size = subst_rhs_len + subst_lhs_len);
   for (i = j = 0; i < subst_rhs_len; i++)
     {
       if (subst_rhs[i] == '&')
 	{
 	  if (j + subst_lhs_len >= new_size)
-	    new = (char *)xrealloc (new, (new_size = new_size * 2 + subst_lhs_len));
-	  strcpy (new + j, subst_lhs);
+	    new_ = (char *)xrealloc (new_, (new_size = new_size * 2 + subst_lhs_len));
+	  strcpy (new_ + j, subst_lhs);
 	  j += subst_lhs_len;
 	}
       else
@@ -510,13 +510,13 @@ postproc_subst_rhs (void)
 	  if (subst_rhs[i] == '\\' && subst_rhs[i + 1] == '&')
 	    i++;
 	  if (j >= new_size)
-	    new = (char *)xrealloc (new, new_size *= 2);
-	  new[j++] = subst_rhs[i];
+	    new_ = (char *)xrealloc (new_, new_size *= 2);
+	  new_[j++] = subst_rhs[i];
 	}
     }
-  new[j] = '\0';
+  new_[j] = '\0';
   xfree (subst_rhs);
-  subst_rhs = new;
+  subst_rhs = new_;
   subst_rhs_len = j;
 }
 
@@ -562,7 +562,7 @@ history_expand_internal (char *string, int start, int qc, int *end_index_ptr, ch
     }
   else
     event = get_history_event (string, &i, qc);
-	  
+
   if (event == 0)
     {
       *ret_string = hist_error (string, start, i, EVENT_NOT_FOUND);
@@ -932,7 +932,7 @@ history_expand (char *hstring, char **output)
       *output = savestring (hstring);
       return (0);
     }
-    
+
   /* Prepare the buffer for printing error messages. */
   result = (char *)xmalloc (result_len = 256);
   result[0] = '\0';
@@ -1061,9 +1061,9 @@ history_expand (char *hstring, char **output)
 	      if (cc == '\'' || cc == history_expansion_char)
 		i++;
 	    }
-	  
+
 	}
-	  
+
       if (string[i] != history_expansion_char)
 	{
 	  xfree (result);
@@ -1087,7 +1087,7 @@ history_expand (char *hstring, char **output)
       hist_string_extract_single_quoted (string, &i, 0);
       squote = 0;
       for (c = 0; c < i; c++)
-	ADD_CHAR (string[c]);      
+	ADD_CHAR (string[c]);
       if (string[i])
 	{
 	  ADD_CHAR (string[i]);
@@ -1150,7 +1150,7 @@ history_expand (char *hstring, char **output)
 	  dquote = 1 - dquote;
 	  ADD_CHAR (tchar);
 	  break;
-	  
+
 	case '\'':
 	  {
 	    /* If history_quotes_inhibit_expansion is set, single quotes
@@ -1556,7 +1556,7 @@ get_word:
 	    delimiter = 0;
 	  continue;
 	}
-      
+
       if (delimiter && string[i] == delimiter)
 	{
 	  delimiter = 0;
@@ -1572,7 +1572,7 @@ get_word:
 	  nestdelim = 1;
 	  continue;
 	}
-      
+
       if (delimiter == 0 && (member (string[i], history_word_delimiters)))
 	break;
 

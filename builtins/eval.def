@@ -46,8 +46,7 @@ $END
 
 /* Parse the string that these words make, and execute the command found. */
 int
-eval_builtin (list)
-     WORD_LIST *list;
+eval_builtin (WORD_LIST *list)
 {
   if (no_options (list))
     return (EX_USAGE);

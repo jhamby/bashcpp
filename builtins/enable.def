@@ -1,7 +1,7 @@
 This file is enable.def, from which is created enable.c.
 It implements the builtin "enable" in Bash.
 
-Copyright (C) 1987-2020 Free Software Foundation, Inc. 
+Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
 This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -84,13 +84,13 @@ $END
 #define SFLAG	0x20
 
 #if defined (HAVE_DLOPEN) && defined (HAVE_DLSYM)
-static int dyn_load_builtin PARAMS((WORD_LIST *, int, char *));
+static int dyn_load_builtin (WORD_LIST *, int, const char *);
 #endif
 
 #if defined (HAVE_DLCLOSE)
-static int dyn_unload_builtin PARAMS((char *));
-static void delete_builtin PARAMS((struct builtin *));
-static int local_dlclose PARAMS((void *));
+static int dyn_unload_builtin (const char *);
+static void delete_builtin (struct builtin *);
+static int local_dlclose (void *);
 #endif
 
 #define STRUCT_SUFFIX	"_struct"
@@ -98,15 +98,14 @@ static int local_dlclose PARAMS((void *));
 #define LOAD_SUFFIX	"_builtin_load"
 #define UNLOAD_SUFFIX	"_builtin_unload"
 
-static void list_some_builtins PARAMS((int));
-static int enable_shell_command PARAMS((char *, int));
+static void list_some_builtins (int);
+static int enable_shell_command (const char *, bool);
 
 /* Enable/disable shell commands present in LIST.  If list is not specified,
    then print out a list of shell commands showing which are enabled and
    which are disabled. */
 int
-enable_builtin (list)
-     WORD_LIST *list;
+enable_builtin (WORD_LIST *list)
 {
   int result, flags;
   int opt, filter;
@@ -200,7 +199,7 @@ enable_builtin (list)
 	  opt = dyn_unload_builtin (list->word->word);
 	  if (opt == EXECUTION_FAILURE)
 	    result = EXECUTION_FAILURE;
-	  list = list->next;
+	  list = (WORD_LIST *)list->next;
 	}
 #if defined (PROGRAMMABLE_COMPLETION)
       set_itemlist_dirty (&it_builtins);
@@ -218,7 +217,7 @@ enable_builtin (list)
 	      sh_notbuiltin (list->word->word);
 	      result = EXECUTION_FAILURE;
 	    }
-	  list = list->next;
+	  list = (WORD_LIST *)list->next;
 	}
     }
   return (result);
@@ -227,12 +226,9 @@ enable_builtin (list)
 /* List some builtins.
    FILTER is a mask with two slots: ENABLED and DISABLED. */
 static void
-list_some_builtins (filter)
-     int filter;
+list_some_builtins (int filter)
 {
-  register int i;
-
-  for (i = 0; i < num_shell_builtins; i++)
+  for (int i = 0; i < num_shell_builtins; i++)
     {
       if (shell_builtins[i].function == 0 || (shell_builtins[i].flags & BUILTIN_DELETED))
 	continue;
@@ -252,9 +248,7 @@ list_some_builtins (filter)
 /* Enable the shell command NAME.  If DISABLE_P is non-zero, then
    disable NAME instead. */
 static int
-enable_shell_command (name, disable_p)
-     char *name;
-     int disable_p;
+enable_shell_command (const char *name, bool disable_p)
 {
   struct builtin *b;
 
@@ -289,15 +283,11 @@ enable_shell_command (name, disable_p)
 #endif
 
 static int
-dyn_load_builtin (list, flags, filename)
-     WORD_LIST *list;
-     int flags;
-     char *filename;
+dyn_load_builtin (WORD_LIST *list, int flags, const char *filename)
 {
-  WORD_LIST *l;
   void *handle;
-  
-  int total, size, new, replaced, r;
+
+  int total, size, r;
   char *struct_name, *name, *funcname;
   sh_load_func_t *loadfunc;
   struct builtin **new_builtins, *b, *new_shell_builtins, *old_builtin;
@@ -346,14 +336,16 @@ dyn_load_builtin (list, flags, filename)
       return (EXECUTION_FAILURE);
     }
 
-  for (new = 0, l = list; l; l = l->next, new++)
+  int new_size = 0;
+  for (WORD_LIST *l = list; l; l = (WORD_LIST *)l->next, new_size++)
     ;
-  new_builtins = (struct builtin **)xmalloc (new * sizeof (struct builtin *));
+  new_builtins = (struct builtin **)xmalloc (new_size * sizeof (struct builtin *));
 
   /* For each new builtin in the shared object, find it and its describing
      structure.  If this is overwriting an existing builtin, do so, otherwise
      save the loaded struct for creating the new list of builtins. */
-  for (replaced = new = 0; list; list = list->next)
+  int replaced;
+  for (replaced = new_size = 0; list; list = (WORD_LIST *)list->next)
     {
       name = list->word->word;
 
@@ -376,7 +368,7 @@ dyn_load_builtin (list, flags, filename)
 	  continue;
 	}
 
-      funcname = xrealloc (struct_name, size + sizeof (LOAD_SUFFIX) + 1);
+      funcname = (char *)xrealloc (struct_name, size + sizeof (LOAD_SUFFIX) + 1);
       strcpy (funcname, name);
       strcpy (funcname + size, LOAD_SUFFIX);
 
@@ -407,25 +399,25 @@ dyn_load_builtin (list, flags, filename)
 	  FASTCOPY ((char *)b, (char *)old_builtin, sizeof (struct builtin));
 	}
       else
-	  new_builtins[new++] = b;
+	  new_builtins[new_size++] = b;
     }
 
-  if (replaced == 0 && new == 0)
+  if (replaced == 0 && new_size == 0)
     {
       free (new_builtins);
       dlclose (handle);
       return (EXECUTION_FAILURE);
     }
 
-  if (new)
+  if (new_size)
     {
-      total = num_shell_builtins + new;
+      total = num_shell_builtins + new_size;
       size = (total + 1) * sizeof (struct builtin);
 
       new_shell_builtins = (struct builtin *)xmalloc (size);
       FASTCOPY ((char *)shell_builtins, (char *)new_shell_builtins,
 		num_shell_builtins * sizeof (struct builtin));
-      for (replaced = 0; replaced < new; replaced++)
+      for (replaced = 0; replaced < new_size; replaced++)
 	FASTCOPY ((char *)new_builtins[replaced],
 		  (char *)&new_shell_builtins[num_shell_builtins + replaced],
 		  sizeof (struct builtin));
@@ -449,8 +441,7 @@ dyn_load_builtin (list, flags, filename)
 
 #if defined (HAVE_DLCLOSE)
 static void
-delete_builtin (b)
-     struct builtin *b;
+delete_builtin (struct builtin *b)
 {
   int ind, size;
   struct builtin *new_shell_builtins;
@@ -485,20 +476,18 @@ delete_builtin (b)
 /* Tenon's MachTen has a dlclose that doesn't return a value, so we
    finesse it with a local wrapper. */
 static int
-local_dlclose (handle)
-     void *handle;
+local_dlclose (void *handle)
 {
 #if !defined (__MACHTEN__)
   return (dlclose (handle));
 #else /* __MACHTEN__ */
   dlclose (handle);
-  return ((dlerror () != NULL) ? -1 : 0);    
+  return ((dlerror () != NULL) ? -1 : 0);
 #endif /* __MACHTEN__ */
 }
 
 static int
-dyn_unload_builtin (name)
-     char *name;
+dyn_unload_builtin (const char *name)
 {
   struct builtin *b;
   void *handle;
@@ -527,7 +516,7 @@ dyn_unload_builtin (name)
 
   /* Call any unload function */
   size = strlen (name);
-  funcname = xmalloc (size + sizeof (UNLOAD_SUFFIX) + 1);
+  funcname = (char *)xmalloc (size + sizeof (UNLOAD_SUFFIX) + 1);
   strcpy (funcname, name);
   strcpy (funcname + size, UNLOAD_SUFFIX);
 

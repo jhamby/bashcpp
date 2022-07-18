@@ -172,52 +172,52 @@ static int	lasttok;	/* the previous token */
 static int	assigntok;	/* the OP in OP= */
 static char	*tokstr;	/* current token string */
 static intmax_t	tokval;		/* current token value */
-static int	noeval;		/* set to 1 if no assignment to be done */
+static int	noeval;		/* set to non-zero if no assignment to be done */
 static procenv_t evalbuf;
 
 /* set to 1 if the expression has already been run through word expansion */
-static int	already_expanded;
+static bool	already_expanded;
 
 static struct lvalue curlval = {0, 0, 0, -1};
 static struct lvalue lastlval = {0, 0, 0, -1};
 
-static int	_is_arithop PARAMS((int));
-static void	readtok PARAMS((void));	/* lexical analyzer */
+static bool	_is_arithop (int);
+static void	readtok (void);	/* lexical analyzer */
 
-static void	init_lvalue PARAMS((struct lvalue *));
-static struct lvalue *alloc_lvalue PARAMS((void));
-static void	free_lvalue PARAMS((struct lvalue *));
+static void	init_lvalue (struct lvalue *);
+static struct lvalue *alloc_lvalue (void);
+static void	free_lvalue (struct lvalue *);
 
-static intmax_t	expr_streval PARAMS((char *, int, struct lvalue *));
-static intmax_t	strlong PARAMS((char *));
-static void	evalerror PARAMS((const char *));
+static intmax_t	expr_streval (char *, int, struct lvalue *);
+static intmax_t	strlong (const char *);
+static void	evalerror (const char *);
 
-static void	pushexp PARAMS((void));
-static void	popexp PARAMS((void));
-static void	expr_unwind PARAMS((void));
-static void	expr_bind_variable PARAMS((char *, char *));
+static void	pushexp (void);
+static void	popexp (void);
+static void	expr_unwind (void);
+static void	expr_bind_variable (char *, char *);
 #if defined (ARRAY_VARS)
-static void	expr_bind_array_element PARAMS((char *, arrayind_t, char *));
+static void	expr_bind_array_element (const char *, arrayind_t, char *);
 #endif
 
-static intmax_t subexpr PARAMS((char *));
+static intmax_t subexpr (const char *);
 
-static intmax_t	expcomma PARAMS((void));
-static intmax_t expassign PARAMS((void));
-static intmax_t	expcond PARAMS((void));
-static intmax_t explor PARAMS((void));
-static intmax_t expland PARAMS((void));
-static intmax_t	expbor PARAMS((void));
-static intmax_t	expbxor PARAMS((void));
-static intmax_t	expband PARAMS((void));
-static intmax_t exp5 PARAMS((void));
-static intmax_t exp4 PARAMS((void));
-static intmax_t expshift PARAMS((void));
-static intmax_t exp3 PARAMS((void));
-static intmax_t expmuldiv PARAMS((void));
-static intmax_t	exppower PARAMS((void));
-static intmax_t exp1 PARAMS((void));
-static intmax_t exp0 PARAMS((void));
+static intmax_t	expcomma (void);
+static intmax_t expassign (void);
+static intmax_t	expcond (void);
+static intmax_t explor (void);
+static intmax_t expland (void);
+static intmax_t	expbor (void);
+static intmax_t	expbxor (void);
+static intmax_t	expband (void);
+static intmax_t exp5 (void);
+static intmax_t exp4 (void);
+static intmax_t expshift (void);
+static intmax_t exp3 (void);
+static intmax_t expmuldiv (void);
+static intmax_t	exppower (void);
+static intmax_t exp1 (void);
+static intmax_t exp0 (void);
 
 /* Global var which contains the stack of expression contexts. */
 static EXPR_CONTEXT **expr_stack;
@@ -225,7 +225,7 @@ static int expr_depth;		   /* Location in the stack. */
 static int expr_stack_size;	   /* Number of slots already allocated. */
 
 #if defined (ARRAY_VARS)
-extern const char * const bash_badsub_errmsg;
+extern const char *bash_badsub_errmsg;
 #endif
 
 #define SAVETOK(X) \
@@ -319,8 +319,7 @@ expr_unwind ()
 }
 
 static void
-expr_bind_variable (lhs, rhs)
-     char *lhs, *rhs;
+expr_bind_variable (char *lhs, char *rhs)
 {
   SHELL_VAR *v;
   int aflags;
@@ -343,8 +342,7 @@ expr_bind_variable (lhs, rhs)
 /* This is similar to the logic in arrayfunc.c:valid_array_subscript when
    you pass VA_NOEXPAND. */
 static int
-expr_skipsubscript (vp, cp)
-     char *vp, *cp;
+expr_skipsubscript (const char *vp, char *cp)
 {
   int flags, isassoc;
   SHELL_VAR *entry;
@@ -364,10 +362,7 @@ expr_skipsubscript (vp, cp)
 /* Rewrite tok, which is of the form vname[expression], to vname[ind], where
    IND is the already-calculated value of expression. */
 static void
-expr_bind_array_element (tok, ind, rhs)
-     char *tok;
-     arrayind_t ind;
-     char *rhs;
+expr_bind_array_element (const char *tok, arrayind_t ind, char *rhs)
 {
   char *lhs, *vname;
   size_t llen;
@@ -377,10 +372,10 @@ expr_bind_array_element (tok, ind, rhs)
   vname = array_variable_name (tok, 0, (char **)NULL, (int *)NULL);
 
   llen = strlen (vname) + sizeof (ibuf) + 3;
-  lhs = xmalloc (llen);
+  lhs = (char *)xmalloc (llen);
 
   sprintf (lhs, "%s[%s]", vname, istr);		/* XXX */
-  
+
 /*itrace("expr_bind_array_element: %s=%s", lhs, rhs);*/
   expr_bind_variable (lhs, rhs);
   free (vname);
@@ -402,22 +397,18 @@ expr_bind_array_element (tok, ind, rhs)
    safe to let the loop terminate when expr_depth == 0, without freeing up
    any of the expr_depth[0] stuff. */
 intmax_t
-evalexp (expr, flags, validp)
-     char *expr;
-     int flags;
-     int *validp;
+evalexp (const char *expr, int flags, bool *validp)
 {
-  intmax_t val;
-  int c;
   procenv_t oevalbuf;
 
-  val = 0;
+  intmax_t val = 0;
+
   noeval = 0;
   already_expanded = (flags&EXP_EXPANDED);
 
   FASTCOPY (evalbuf, oevalbuf, sizeof (evalbuf));
 
-  c = setjmp_nosigs (evalbuf);
+  int c = setjmp_nosigs (evalbuf);
 
   if (c)
     {
@@ -432,14 +423,14 @@ evalexp (expr, flags, validp)
       FASTCOPY (oevalbuf, evalbuf, sizeof (evalbuf));
 
       if (validp)
-	*validp = 0;
+	*validp = false;
       return (0);
     }
 
   val = subexpr (expr);
 
   if (validp)
-    *validp = 1;
+    *validp = true;
 
   FASTCOPY (oevalbuf, evalbuf, sizeof (evalbuf));
 
@@ -447,11 +438,10 @@ evalexp (expr, flags, validp)
 }
 
 static intmax_t
-subexpr (expr)
-     char *expr;
+subexpr (const char *expr)
 {
   intmax_t val;
-  char *p;
+  const char *p;
 
   for (p = expr; p && *p && cr_whitespace (*p); p++)
     ;
@@ -487,7 +477,7 @@ subexpr (expr)
 static intmax_t
 expcomma ()
 {
-  register intmax_t value;
+  intmax_t value;
 
   value = expassign ();
   while (curtok == COMMA)
@@ -498,11 +488,11 @@ expcomma ()
 
   return value;
 }
-  
+
 static intmax_t
 expassign ()
 {
-  register intmax_t value;
+  intmax_t value;
   char *lhs, *rhs;
   arrayind_t lind;
 #if defined (HAVE_IMAXDIV)
@@ -622,15 +612,14 @@ static intmax_t
 expcond ()
 {
   intmax_t cval, val1, val2, rval;
-  int set_noeval;
+  bool set_noeval = false;
 
-  set_noeval = 0;
   rval = cval = explor ();
   if (curtok == QUES)		/* found conditional expr */
     {
       if (cval == 0)
 	{
-	  set_noeval = 1;
+	  set_noeval = true;
 	  noeval++;
 	}
 
@@ -645,10 +634,10 @@ expcond ()
       if (curtok != COL)
 	evalerror (_("`:' expected for conditional expression"));
 
-      set_noeval = 0;
+      set_noeval = false;
       if (cval)
  	{
- 	  set_noeval = 1;
+ 	  set_noeval = true;
 	  noeval++;
  	}
 
@@ -669,18 +658,17 @@ expcond ()
 static intmax_t
 explor ()
 {
-  register intmax_t val1, val2;
-  int set_noeval;
+  intmax_t val1, val2;
 
   val1 = expland ();
 
   while (curtok == LOR)
     {
-      set_noeval = 0;
+      bool set_noeval = false;
       if (val1 != 0)
 	{
 	  noeval++;
-	  set_noeval = 1;
+	  set_noeval = true;
 	}
       readtok ();
       val2 = expland ();
@@ -697,17 +685,16 @@ explor ()
 static intmax_t
 expland ()
 {
-  register intmax_t val1, val2;
-  int set_noeval;
+  intmax_t val1, val2;
 
   val1 = expbor ();
 
   while (curtok == LAND)
     {
-      set_noeval = 0;
+      bool set_noeval = false;
       if (val1 == 0)
 	{
-	  set_noeval = 1;
+	  set_noeval = true;
 	  noeval++;
 	}
       readtok ();
@@ -725,7 +712,7 @@ expland ()
 static intmax_t
 expbor ()
 {
-  register intmax_t val1, val2;
+  intmax_t val1, val2;
 
   val1 = expbxor ();
 
@@ -744,7 +731,7 @@ expbor ()
 static intmax_t
 expbxor ()
 {
-  register intmax_t val1, val2;
+  intmax_t val1, val2;
 
   val1 = expband ();
 
@@ -763,7 +750,7 @@ expbxor ()
 static intmax_t
 expband ()
 {
-  register intmax_t val1, val2;
+  intmax_t val1, val2;
 
   val1 = exp5 ();
 
@@ -781,7 +768,7 @@ expband ()
 static intmax_t
 exp5 ()
 {
-  register intmax_t val1, val2;
+  intmax_t val1, val2;
 
   val1 = exp4 ();
 
@@ -803,7 +790,7 @@ exp5 ()
 static intmax_t
 exp4 ()
 {
-  register intmax_t val1, val2;
+  intmax_t val1, val2;
 
   val1 = expshift ();
   while ((curtok == LEQ) ||
@@ -833,7 +820,7 @@ exp4 ()
 static intmax_t
 expshift ()
 {
-  register intmax_t val1, val2;
+  intmax_t val1, val2;
 
   val1 = exp3 ();
 
@@ -857,7 +844,7 @@ expshift ()
 static intmax_t
 exp3 ()
 {
-  register intmax_t val1, val2;
+  intmax_t val1, val2;
 
   val1 = expmuldiv ();
 
@@ -880,7 +867,7 @@ exp3 ()
 static intmax_t
 expmuldiv ()
 {
-  register intmax_t val1, val2;
+  intmax_t val1, val2;
 #if defined (HAVE_IMAXDIV)
   imaxdiv_t idiv;
 #endif
@@ -939,8 +926,7 @@ expmuldiv ()
 }
 
 static intmax_t
-ipow (base, exp)
-     intmax_t base, exp;
+ipow (intmax_t base, intmax_t exp)
 {
   intmax_t result;
 
@@ -958,7 +944,7 @@ ipow (base, exp)
 static intmax_t
 exppower ()
 {
-  register intmax_t val1, val2, c;
+  intmax_t val1, val2, c;
 
   val1 = exp1 ();
   while (curtok == POWER)
@@ -978,7 +964,7 @@ exppower ()
 static intmax_t
 exp1 ()
 {
-  register intmax_t val;
+  intmax_t val;
 
   if (curtok == NOT)
     {
@@ -1013,7 +999,7 @@ exp1 ()
 static intmax_t
 exp0 ()
 {
-  register intmax_t val = 0, v2;
+  intmax_t val = 0, v2;
   char *vincdec;
   int stok;
   EXPR_CONTEXT ec;
@@ -1100,7 +1086,7 @@ exp0 ()
 	      RESTORETOK (&ec);
  	    }
 	}
-	  
+
       readtok ();
     }
   else
@@ -1110,8 +1096,7 @@ exp0 ()
 }
 
 static void
-init_lvalue (lv)
-     struct lvalue *lv;
+init_lvalue (struct lvalue *lv)
 {
   lv->tokstr = 0;
   lv->tokvar = 0;
@@ -1123,23 +1108,19 @@ alloc_lvalue ()
 {
   struct lvalue *lv;
 
-  lv = xmalloc (sizeof (struct lvalue));
+  lv = (struct lvalue *)xmalloc (sizeof (struct lvalue));
   init_lvalue (lv);
   return (lv);
 }
 
 static void
-free_lvalue (lv)
-     struct lvalue *lv;
+free_lvalue (struct lvalue *lv)
 {
   free (lv);		/* should be inlined */
 }
 
 static intmax_t
-expr_streval (tok, e, lvalue)
-     char *tok;
-     int e;
-     struct lvalue *lvalue;
+expr_streval (char *tok, int e, struct lvalue *lvalue)
 {
   SHELL_VAR *v;
   char *value;
@@ -1170,7 +1151,7 @@ expr_streval (tok, e, lvalue)
   v = find_variable (tok);
 #endif
   if (v == 0 && e != ']')
-    v = find_variable_last_nameref (tok, 0);  
+    v = find_variable_last_nameref (tok, 0);
 
   if ((v == 0 || invisible_p (v)) && unbound_vars_is_error)
     {
@@ -1233,13 +1214,12 @@ expr_streval (tok, e, lvalue)
       lvalue->ind = -1;
 #endif
     }
-	  
+
   return (tval);
 }
 
-static int
-_is_multiop (c)
-     int c;
+static bool
+_is_multiop (int c)
 {
   switch (c)
     {
@@ -1258,15 +1238,14 @@ _is_multiop (c)
     case PREDEC:
     case POSTINC:
     case POSTDEC:
-      return 1;
+      return true;
     default:
-      return 0;
+      return false;
     }
 }
 
-static int
-_is_arithop (c)
-     int c;
+static bool
+_is_arithop (int c)
 {
   switch (c)
     {
@@ -1285,13 +1264,13 @@ _is_arithop (c)
     case BOR:
     case BXOR:
     case BNOT:
-      return 1;		/* operator tokens */
+      return true;		/* operator tokens */
     case QUES:
     case COL:
     case COMMA:
-      return 1;		/* questionable */
+      return true;		/* questionable */
     default:
-      return 0;		/* anything else is invalid */
+      return false;		/* anything else is invalid */
     }
 }
 
@@ -1302,9 +1281,9 @@ _is_arithop (c)
 static void
 readtok ()
 {
-  register char *cp, *xp;
-  register unsigned char c, c1;
-  register int e;
+  char *cp, *xp;
+  unsigned char c, c1;
+  int e;
   struct lvalue lval;
 
   /* Skip leading whitespace. */
@@ -1502,10 +1481,9 @@ readtok ()
 }
 
 static void
-evalerror (msg)
-     const char *msg;
+evalerror (const char *msg)
 {
-  char *name, *t;
+  const char *name, *t;
 
   name = this_command_name;
   for (t = expression; t && whitespace (*t); t++)
@@ -1530,11 +1508,10 @@ evalerror (msg)
 #define VALID_NUMCHAR(c)	(ISALNUM(c) || ((c) == '_') || ((c) == '@'))
 
 static intmax_t
-strlong (num)
-     char *num;
+strlong (const char *num)
 {
-  register char *s;
-  register unsigned char c;
+  const char *s;
+  unsigned char c;
   int base, foundbase;
   intmax_t val;
 
@@ -1608,16 +1585,13 @@ strlong (num)
 
 #if defined (EXPR_TEST)
 void *
-xmalloc (n)
-     int n;
+xmalloc (int n)
 {
   return (malloc (n));
 }
 
 void *
-xrealloc (s, n)
-     char *s;
-     int n;
+xrealloc (void *s, int n)
 {
   return (realloc (s, n));
 }
@@ -1629,11 +1603,9 @@ char *get_string_value () { return 0; }
 
 procenv_t top_level;
 
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
-  register int i;
+  int i;
   intmax_t v;
   int expok;
 
@@ -1652,8 +1624,7 @@ main (argc, argv)
 }
 
 int
-builtin_error (format, arg1, arg2, arg3, arg4, arg5)
-     char *format;
+builtin_error (const char *format, int arg1, int arg2, int arg3, int arg4, int arg5)
 {
   fprintf (stderr, "expr: ");
   fprintf (stderr, format, arg1, arg2, arg3, arg4, arg5);
@@ -1662,8 +1633,7 @@ builtin_error (format, arg1, arg2, arg3, arg4, arg5)
 }
 
 char *
-itos (n)
-     intmax_t n;
+itos (intmax_t n)
 {
   return ("42");
 }

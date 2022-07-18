@@ -29,20 +29,10 @@
 
 #include "loadinfo.h"
 
-/* On some strange systems still no definition of NULL is found.  Sigh!  */
-#ifndef NULL
-# if defined __STDC__ && __STDC__
-#  define NULL ((void *) 0)
-# else
-#  define NULL 0
-# endif
-#endif
-
 /* @@ end of prolog @@ */
 
 char *
-_nl_find_language (name)
-     const char *name;
+_nl_find_language (const char *name)
 {
   while (name[0] != '\0' && name[0] != '_' && name[0] != '@'
 	 && name[0] != '+' && name[0] != ',')
@@ -53,17 +43,15 @@ _nl_find_language (name)
 
 
 int
-_nl_explode_name (name, language, modifier, territory, codeset,
-		  normalized_codeset, special, sponsor, revision)
-     char *name;
-     const char **language;
-     const char **modifier;
-     const char **territory;
-     const char **codeset;
-     const char **normalized_codeset;
-     const char **special;
-     const char **sponsor;
-     const char **revision;
+_nl_explode_name (char *name,
+     const char **language,
+     const char **modifier,
+     const char **territory,
+     const char **codeset,
+     const char **normalized_codeset,
+     const char **special,
+     const char **sponsor,
+     const char **revision)
 {
   enum { undecided, xpg, cen } syntax;
   char *cp;
@@ -88,7 +76,7 @@ _nl_explode_name (name, language, modifier, territory, codeset,
   if (*language == cp)
     /* This does not make sense: language has to be specified.  Use
        this entry as it is without exploding.  Perhaps it is an alias.  */
-    cp = strchr (*language, '\0');
+    cp = (char *)strchr (*language, '\0');
   else if (cp[0] == '_')
     {
       /* Next is the territory.  */

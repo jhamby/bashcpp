@@ -52,7 +52,7 @@ extern int errno;
 rl_vintfunc_t *rl_prep_term_function = rl_prep_terminal;
 rl_voidfunc_t *rl_deprep_term_function = rl_deprep_terminal;
 
-static void set_winsize PARAMS((int));
+static void set_winsize (int);
 
 /* **************************************************************** */
 /*								    */
@@ -80,8 +80,7 @@ static int ksrflow;
 /* Dummy call to force a backgrounded readline to stop before it tries
    to get the tty settings. */
 static void
-set_winsize (tty)
-     int tty;
+set_winsize (int tty)
 {
 #if defined (TIOCGWINSZ)
   struct winsize w;
@@ -119,15 +118,15 @@ struct bsdtty {
 
 static TIOTYPE otio;
 
-static void save_tty_chars PARAMS((TIOTYPE *));
-static int _get_tty_settings PARAMS((int, TIOTYPE *));
-static int get_tty_settings PARAMS((int, TIOTYPE *));
-static int _set_tty_settings PARAMS((int, TIOTYPE *));
-static int set_tty_settings PARAMS((int, TIOTYPE *));
+static void save_tty_chars (TIOTYPE *);
+static int _get_tty_settings (int, TIOTYPE *);
+static int get_tty_settings (int, TIOTYPE *);
+static int _set_tty_settings (int, TIOTYPE *);
+static int set_tty_settings (int, TIOTYPE *);
 
-static void prepare_terminal_settings PARAMS((int, TIOTYPE, TIOTYPE *));
+static void prepare_terminal_settings (int, TIOTYPE, TIOTYPE *);
 
-static void set_special_char PARAMS((Keymap, TIOTYPE *, int, rl_command_func_t *));
+static void set_special_char (Keymap, TIOTYPE *, int, rl_command_func_t *);
 
 static void
 save_tty_chars (TIOTYPE *tiop)
@@ -332,16 +331,16 @@ prepare_terminal_settings (int meta_flag, TIOTYPE oldtio, TIOTYPE *tiop)
 
 static TIOTYPE otio;
 
-static void save_tty_chars PARAMS((TIOTYPE *));
-static int _get_tty_settings PARAMS((int, TIOTYPE *));
-static int get_tty_settings PARAMS((int, TIOTYPE *));
-static int _set_tty_settings PARAMS((int, TIOTYPE *));
-static int set_tty_settings PARAMS((int, TIOTYPE *));
+static void save_tty_chars (TIOTYPE *);
+static int _get_tty_settings (int, TIOTYPE *);
+static int get_tty_settings (int, TIOTYPE *);
+static int _set_tty_settings (int, TIOTYPE *);
+static int set_tty_settings (int, TIOTYPE *);
 
-static void prepare_terminal_settings PARAMS((int, TIOTYPE, TIOTYPE *));
+static void prepare_terminal_settings (int, TIOTYPE, TIOTYPE *);
 
-static void set_special_char PARAMS((Keymap, TIOTYPE *, int, rl_command_func_t *));
-static void _rl_bind_tty_special_chars PARAMS((Keymap, TIOTYPE));
+static void set_special_char (Keymap, TIOTYPE *, int, rl_command_func_t *);
+static void _rl_bind_tty_special_chars (Keymap, TIOTYPE);
 
 #if defined (FLUSHO)
 #  define OUTPUT_BEING_FLUSHED(tp)  (tp->c_lflag & FLUSHO)
@@ -477,7 +476,7 @@ set_tty_settings (int tty, TIOTYPE *tiop)
 {
   if (_set_tty_settings (tty, tiop) < 0)
     return -1;
-    
+
 #if 0
 
 #if defined (TERMIOS_TTY_DRIVER)
@@ -725,7 +724,7 @@ rl_tty_set_echoing (int u)
   _rl_echoing_p = u;
   return o;
 }
-
+
 /* **************************************************************** */
 /*								    */
 /*			Bogus Flow Control      		    */
@@ -948,7 +947,7 @@ _rl_restore_tty_signals (void)
 #else
 
 static TIOTYPE sigstty, nosigstty;
-static int tty_sigs_disabled = 0;
+static bool tty_sigs_disabled = false;
 
 int
 _rl_disable_tty_signals (void)
@@ -967,7 +966,7 @@ _rl_disable_tty_signals (void)
   if (_set_tty_settings (fileno (rl_instream), &nosigstty) < 0)
     return (_set_tty_settings (fileno (rl_instream), &sigstty));
 
-  tty_sigs_disabled = 1;
+  tty_sigs_disabled = true;
   return 0;
 }
 
@@ -976,13 +975,13 @@ _rl_restore_tty_signals (void)
 {
   int r;
 
-  if (tty_sigs_disabled == 0)
+  if (!tty_sigs_disabled)
     return 0;
 
   r = _set_tty_settings (fileno (rl_instream), &sigstty);
 
   if (r == 0)
-    tty_sigs_disabled = 0;
+    tty_sigs_disabled = false;
 
   return r;
 }

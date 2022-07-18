@@ -46,13 +46,10 @@
 extern int errno;
 #endif /* !errno */
 
-extern char *get_working_directory PARAMS((char *));
+extern char *get_working_directory (const char *);
 
 static int
-_path_readlink (path, buf, bufsiz)
-     char *path;
-     char *buf;
-     int bufsiz;
+_path_readlink (const char *path, char *buf, int bufsiz)
 {
 #ifdef HAVE_READLINK
   return readlink (path, buf, bufsiz);
@@ -72,9 +69,7 @@ _path_readlink (path, buf, bufsiz)
  */
 
 char *
-sh_physpath (path, flags)
-     char *path;
-     int flags;
+sh_physpath (const char *path, int flags)
 {
   char tbuf[PATH_MAX+1], linkbuf[PATH_MAX+1];
   char *result, *p, *q, *qsave, *qbase, *workpath;
@@ -158,7 +153,7 @@ sh_physpath (path, flags)
 #endif
 		  goto error;
 		}
-		
+
 	      *q++ = *p++;
 	    }
 
@@ -221,7 +216,7 @@ error:
 #endif
 	      double_slash_path = DOUBLE_SLASH (workpath);
 	      qbase += double_slash_path;
-    
+
 	      for (p = workpath; p < qbase; )
 		*q++ = *p++;
 	      qbase = q;
@@ -252,9 +247,7 @@ error:
 }
 
 char *
-sh_realpath (pathname, resolved)
-     const char *pathname;
-     char *resolved;
+sh_realpath (const char *pathname, char *resolved)
 {
   char *tdir, *wd;
 

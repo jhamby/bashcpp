@@ -66,11 +66,7 @@ $END
 #  define INT_MIN		(-2147483647-1)
 #endif
 
-#if defined (PREFER_STDARG)
-#  include <stdarg.h>
-#else
-#  include <varargs.h>
-#endif
+#include <stdarg.h>
 
 #include <stdio.h>
 #include <chartypes.h>
@@ -187,25 +183,25 @@ extern int errno;
 extern time_t shell_start_time;
 
 #if !HAVE_ASPRINTF
-extern int asprintf PARAMS((char **, const char *, ...)) __attribute__((__format__ (printf, 2, 3)));
+extern int asprintf (char **, const char *, ...) __attribute__((__format__ (printf, 2, 3)));
 #endif
 
 #if !HAVE_VSNPRINTF
-extern int vsnprintf PARAMS((char *, size_t, const char *, va_list)) __attribute__((__format__ (printf, 3, 0)));
+extern int vsnprintf (char *, size_t, const char *, va_list) __attribute__((__format__ (printf, 3, 0)));
 #endif
 
-static void printf_erange PARAMS((char *));
-static int printstr PARAMS((char *, char *, int, int, int));
-static int tescape PARAMS((char *, char *, int *, int *));
-static char *bexpand PARAMS((char *, int, int *, int *));
-static char *vbadd PARAMS((char *, int));
-static int vbprintf PARAMS((const char *, ...)) __attribute__((__format__ (printf, 1, 2)));
-static char *mklong PARAMS((char *, char *, size_t));
-static int getchr PARAMS((void));
-static char *getstr PARAMS((void));
-static int  getint PARAMS((void));
-static intmax_t getintmax PARAMS((void));
-static uintmax_t getuintmax PARAMS((void));
+static void printf_erange (const char *);
+static int printstr (const char *, const char *, int, int, int);
+static int tescape (char *, char *, int *, int *);
+static char *bexpand (char *, int, int *, int *);
+static char *vbadd (char *, int);
+static int vbprintf (const char *, ...) __attribute__((__format__ (printf, 1, 2)));
+static char *mklong (char *, char *, size_t);
+static int getchr (void);
+static char *getstr (void);
+static int  getint (void);
+static intmax_t getintmax (void);
+static uintmax_t getuintmax (void);
 
 #if defined (HAVE_LONG_DOUBLE) && HAVE_DECL_STRTOLD && !defined(STRTOLD_BROKEN)
 typedef long double floatmax_t;
@@ -216,16 +212,16 @@ typedef double floatmax_t;
 #  define FLOATMAX_CONV	""
 #  define strtofltmax	strtod
 #endif
-static floatmax_t getfloatmax PARAMS((void));
+static floatmax_t getfloatmax (void);
 
-static intmax_t asciicode PARAMS((void));
+static intmax_t asciicode (void);
 
 static WORD_LIST *garglist, *orig_arglist;
 static int retval;
-static int conversion_error;
+static bool conversion_error;
 
 /* printf -v var support */
-static int vflag = 0;
+static bool vflag = false;
 static char *vbuf, *vname;
 static size_t vbsize;
 static int vblen;
@@ -236,8 +232,7 @@ static char *conv_buf;
 static size_t conv_bufsize;
 
 int
-printf_builtin (list)
-     WORD_LIST *list;
+printf_builtin (WORD_LIST *list)
 {
   int ch, fieldwidth, precision;
   int have_fieldwidth, have_precision;
@@ -250,10 +245,10 @@ printf_builtin (list)
   int arrayflags;
 #endif
 
-  conversion_error = 0;
+  conversion_error = false;
   retval = EXECUTION_SUCCESS;
 
-  vflag = 0;
+  vflag = false;
 
   reset_internal_getopt ();
   while ((ch = internal_getopt (list, "v:")) != -1)
@@ -269,9 +264,9 @@ printf_builtin (list)
 	  if (legal_identifier (vname))
 #endif
 	    {
-	      vflag = 1;
+	      vflag = true;
 	      if (vbsize == 0)
-		vbuf = xmalloc (vbsize = 16);
+		vbuf = (char *)xmalloc (vbsize = 16);
 	      vblen = 0;
 	      if (vbuf)
 		vbuf[0] = 0;
@@ -311,7 +306,7 @@ printf_builtin (list)
   format = list->word->word;
   tw = 0;
 
-  garglist = orig_arglist = list->next;
+  garglist = orig_arglist = (WORD_LIST *)list->next;
 
   /* If the format string is empty after preprocessing, return immediately. */
   if (format == 0 || *format == 0)
@@ -413,7 +408,7 @@ printf_builtin (list)
 	  modstart = fmt;
 	  while (*fmt && strchr (LENMODS, *fmt))
 	    fmt++;
-	    
+
 	  if (*fmt == 0)
 	    {
 	      builtin_error (_("`%s': missing format character"), start);
@@ -456,7 +451,7 @@ printf_builtin (list)
 		struct tm *tm;
 
 		modstart[1] = nextch;	/* restore char after left paren */
-		timefmt = xmalloc (strlen (fmt) + 3);
+		timefmt = (char *)xmalloc (strlen (fmt) + 3);
 		fmt++;	/* skip over left paren */
 		for (t = timefmt, n = 1; *fmt; )
 		  {
@@ -696,20 +691,19 @@ printf_builtin (list)
 }
 
 static void
-printf_erange (s)
-     char *s;
+printf_erange (const char *s)
 {
   builtin_error (_("warning: %s: %s"), s, strerror(ERANGE));
 }
 
 /* We duplicate a lot of what printf(3) does here. */
 static int
-printstr (fmt, string, len, fieldwidth, precision)
-     char *fmt;			/* format */
-     char *string;		/* expanded string argument */
-     int len;			/* length of expanded string */
-     int fieldwidth;		/* argument for width of `*' */
-     int precision;		/* argument for precision of `*' */
+printstr (
+     const char *fmt,		/* format */
+     const char *string,	/* expanded string argument */
+     int len,			/* length of expanded string */
+     int fieldwidth,		/* argument for width of `*' */
+     int precision)		/* argument for precision of `*' */
 {
 #if 0
   char *s;
@@ -813,7 +807,7 @@ printstr (fmt, string, len, fieldwidth, precision)
 
   return (ferror (stdout) ? -1 : 0);
 }
-  
+
 /* Convert STRING by expanding the escape sequences specified by the
    POSIX standard for printf's `%b' format string.  If SAWC is non-null,
    perform the processing appropriate for %b arguments.  In particular,
@@ -828,12 +822,9 @@ printstr (fmt, string, len, fieldwidth, precision)
    do the \c short-circuiting, and \c is treated as an unrecognized escape
    sequence; we also bypass the other processing specific to %b arguments.  */
 static int
-tescape (estart, cp, lenp, sawc)
-     char *estart;
-     char *cp;
-     int *lenp, *sawc;
+tescape (char *estart, char *cp, int *lenp, int *sawc)
 {
-  register char *p;
+  char *p;
   int temp, c, evalue;
   unsigned long uvalue;
 
@@ -912,7 +903,7 @@ tescape (estart, cp, lenp, sawc)
 	  }
 	break;
 #endif
-	
+
       case '\\':	/* \\ -> \ */
 	*cp = c;
 	break;
@@ -945,9 +936,7 @@ tescape (estart, cp, lenp, sawc)
 }
 
 static char *
-bexpand (string, len, sawc, lenp)
-     char *string;
-     int len, *sawc, *lenp;
+bexpand (char *string, int len, int *sawc, int *lenp)
 {
   int temp;
   char *ret, *r, *s, c;
@@ -995,7 +984,7 @@ bexpand (string, len, sawc, lenp)
 	*r++ = mbch[mbind];
 #else
       *r++ = c;
-#endif      
+#endif
     }
 
   *r = '\0';
@@ -1005,9 +994,7 @@ bexpand (string, len, sawc, lenp)
 }
 
 static char *
-vbadd (buf, blen)
-     char *buf;
-     int blen;
+vbadd (char *buf, int blen)
 {
   size_t nlen;
 
@@ -1036,13 +1023,7 @@ vbadd (buf, blen)
 }
 
 static int
-#if defined (PREFER_STDARG)
 vbprintf (const char *format, ...)
-#else
-vbprintf (format, va_alist)
-  const char *format;
-  va_dcl
-#endif
 {
   va_list args;
   size_t nlen;
@@ -1069,15 +1050,12 @@ vbprintf (format, va_alist)
   if  (strlen (vbuf) != vblen)
     internal_error  ("printf:vbprintf: vblen (%d) != strlen (vbuf) (%d)", vblen, (int)strlen (vbuf));
 #endif
-  
+
   return (blen);
 }
 
 static char *
-mklong (str, modifiers, mlen)
-     char *str;
-     char *modifiers;
-     size_t mlen;
+mklong (char *str, char *modifiers, size_t mlen)
 {
   size_t len, slen;
 
@@ -1107,7 +1085,7 @@ getchr ()
     return ('\0');
 
   ret = (int)garglist->word->word[0];
-  garglist = garglist->next;
+  garglist = (WORD_LIST *)garglist->next;
   return ret;
 }
 
@@ -1120,7 +1098,7 @@ getstr ()
     return ("");
 
   ret = garglist->word->word;
-  garglist = garglist->next;
+  garglist = (WORD_LIST *)garglist->next;
   return ret;
 }
 
@@ -1179,7 +1157,7 @@ getintmax ()
   else if (errno == ERANGE)
     printf_erange (garglist->word->word);
 
-  garglist = garglist->next;
+  garglist = (WORD_LIST *)garglist->next;
   return (ret);
 }
 
@@ -1197,7 +1175,7 @@ getuintmax ()
 
   errno = 0;
   ret = strtoumax (garglist->word->word, &ep, 0);
-  
+
   if (*ep)
     {
       sh_invalidnum (garglist->word->word);
@@ -1210,7 +1188,7 @@ getuintmax ()
   else if (errno == ERANGE)
     printf_erange (garglist->word->word);
 
-  garglist = garglist->next;
+  garglist = (WORD_LIST *)garglist->next;
   return (ret);
 }
 
@@ -1241,7 +1219,7 @@ getfloatmax ()
   else if (errno == ERANGE)
     printf_erange (garglist->word->word);
 
-  garglist = garglist->next;
+  garglist = (WORD_LIST *)garglist->next;
   return (ret);
 }
 
@@ -1249,7 +1227,7 @@ getfloatmax ()
 static intmax_t
 asciicode ()
 {
-  register intmax_t ch;
+  intmax_t ch;
 #if defined (HANDLE_MULTIBYTE)
   wchar_t wc;
   size_t slen;
@@ -1267,6 +1245,6 @@ asciicode ()
 #endif
     ch = (unsigned char)garglist->word->word[1];
 
-  garglist = garglist->next;
+  garglist = (WORD_LIST *)garglist->next;
   return (ch);
 }

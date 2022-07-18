@@ -86,10 +86,10 @@ $END
 extern int errno;
 #endif
 
-static char *histtime PARAMS((HIST_ENTRY *, const char *));
-static int display_history PARAMS((WORD_LIST *));
-static void push_history PARAMS((WORD_LIST *));
-static int expand_and_print_history PARAMS((WORD_LIST *));
+static char *histtime (HIST_ENTRY *, const char *);
+static int display_history (WORD_LIST *);
+static void push_history (WORD_LIST *);
+static int expand_and_print_history (WORD_LIST *);
 
 #define AFLAG	0x01
 #define RFLAG	0x02
@@ -101,12 +101,10 @@ static int expand_and_print_history PARAMS((WORD_LIST *));
 #define DFLAG	0x80
 
 int
-history_builtin (list)
-     WORD_LIST *list;
+history_builtin (WORD_LIST *list)
 {
-  int flags, opt, result, old_history_lines, obase, ind;
-  char *filename, *delete_arg, *range;
-  intmax_t delete_offset;
+  int flags, opt;
+  char *delete_arg;
 
   flags = 0;
   reset_internal_getopt ();
@@ -164,6 +162,7 @@ history_builtin (list)
 	return (EXECUTION_SUCCESS);
     }
 
+  char *range;
   if (flags & SFLAG)
     {
       if (list)
@@ -218,13 +217,14 @@ range_error:
 	delete_end -= history_base;
       if (delete_end < 0 || delete_end >= history_length)
 	goto range_error;
-      result = bash_delete_history_range (delete_start, delete_end);
+      int result = bash_delete_history_range (delete_start, delete_end);
       if (where_history () > history_length)
 	history_set_pos (history_length);
       return (result ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
     }
   else if (flags & DFLAG)
     {
+      intmax_t delete_offset;
       if (legal_number (delete_arg, &delete_offset) == 0)
 	{
 	  sh_erange (delete_arg, _("history position"));
@@ -236,7 +236,7 @@ range_error:
 	  /* since the_history[history_length] == 0x0, this calculation means
 	     that history -d -1 will delete the last history entry, which at
 	     this point is the history -d -1 we just added. */
-	  ind = history_length + delete_offset;
+	  int ind = history_length + delete_offset;
 	  if (ind < history_base)
 	    {
 	      sh_erange (delete_arg, _("history position"));
@@ -254,7 +254,7 @@ range_error:
 
       /* Positive arguments from numbers as displayed by display_history need
 	 to be offset by history_base */
-      result = bash_delete_histent (opt - history_base);
+      int result = bash_delete_histent (opt - history_base);
       /* Since remove_history changes history_length, this can happen if
 	 we delete the last history entry. */
       if (where_history () > history_length)
@@ -263,12 +263,12 @@ range_error:
     }
   else if ((flags & (AFLAG|RFLAG|NFLAG|WFLAG|CFLAG)) == 0)
     {
-      result = display_history (list);
+      int result = display_history (list);
       return (sh_chkwrite (result));
     }
 
-  filename = list ? list->word->word : get_string_value ("HISTFILE");
-  result = EXECUTION_SUCCESS;
+  char *filename = list ? list->word->word : get_string_value ("HISTFILE");
+  int result = EXECUTION_SUCCESS;
 
 #if defined (RESTRICTED_SHELL)
   if (restricted && strchr (filename, '/'))
@@ -291,8 +291,8 @@ range_error:
   else if (flags & NFLAG)	/* Read `new' history from file. */
     {
       /* Read all of the lines in the file that we haven't already read. */
-      old_history_lines = history_lines_in_file;
-      obase = history_base;
+      int old_history_lines = history_lines_in_file;
+      int obase = history_base;
 
       using_history ();
       result = read_history_range (filename, history_lines_in_file, -1);
@@ -324,9 +324,7 @@ range_error:
 #define histdata(i) (hlist[(i)]->data)
 
 static char *
-histtime (hlist, histtimefmt)
-     HIST_ENTRY *hlist;
-     const char *histtimefmt;
+histtime (HIST_ENTRY *hlist, const char *histtimefmt)
 {
   static char timestr[128];
   time_t t;
@@ -345,13 +343,9 @@ histtime (hlist, histtimefmt)
 }
 
 static int
-display_history (list)
-     WORD_LIST *list;
+display_history (WORD_LIST *list)
 {
-  register int i;
   intmax_t limit;
-  HIST_ENTRY **hlist;
-  char *histtimefmt, *timestr;
 
   if (list)
     {
@@ -364,10 +358,11 @@ display_history (list)
   else
     limit = -1;
 
-  hlist = history_list ();
+  HIST_ENTRY **hlist = history_list ();
 
   if (hlist)
     {
+      int i;
       for (i = 0;  hlist[i]; i++)
 	;
 
@@ -376,13 +371,13 @@ display_history (list)
       else
 	i = 0;
 
-      histtimefmt = get_string_value ("HISTTIMEFORMAT");
+      char *histtimefmt = get_string_value ("HISTTIMEFORMAT");
 
       while (hlist[i])
 	{
 	  QUIT;
 
-	  timestr = (histtimefmt && *histtimefmt) ? histtime (hlist[i], histtimefmt) : (char *)NULL;
+	  char *timestr = (histtimefmt && *histtimefmt) ? histtime (hlist[i], histtimefmt) : (char *)NULL;
 	  printf ("%5d%c %s%s\n", i + history_base,
 		  histdata(i) ? '*' : ' ',
 		  ((timestr && *timestr) ? timestr : ""),
@@ -397,11 +392,8 @@ display_history (list)
 /* Remove the last entry in the history list and add each argument in
    LIST to the history. */
 static void
-push_history (list)
-     WORD_LIST *list;
+push_history (WORD_LIST *list)
 {
-  char *s;
-
   /* Delete the last history entry if it was a single entry added to the
      history list (generally the `history -s' itself), or if `history -s'
      is being used in a compound command and the compound command was
@@ -419,7 +411,7 @@ push_history (list)
 #endif
       return;
 
-  s = string_list (list);
+  char *s = string_list (list);
   /* Call check_add_history with FORCE set to 1 to skip the check against
      current_command_line_count.  If history -s is used in a compound
      command, the above code will delete the compound command's history
@@ -434,18 +426,16 @@ push_history (list)
 
 #if defined (BANG_HISTORY)
 static int
-expand_and_print_history (list)
-     WORD_LIST *list;
+expand_and_print_history (WORD_LIST *list)
 {
-  char *s;
-  int r, result;
-
-  if (hist_last_line_pushed == 0 && hist_last_line_added && bash_delete_last_history () == 0)
+  if (hist_last_line_pushed == 0 && hist_last_line_added && !(bash_delete_last_history ()))
     return EXECUTION_FAILURE;
-  result = EXECUTION_SUCCESS;
+
+  int result = EXECUTION_SUCCESS;
   while (list)
     {
-      r = history_expand (list->word->word, &s);
+      char *s;
+      int r = history_expand (list->word->word, &s);
       if (r < 0)
 	{
 	  builtin_error (_("%s: history expansion failed"), list->word->word);
@@ -457,7 +447,7 @@ expand_and_print_history (list)
 	  putchar ('\n');
 	}
       FREE (s);
-      list = list->next;
+      list = (WORD_LIST *)list->next;
     }
   fflush (stdout);
   return result;

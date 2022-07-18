@@ -31,12 +31,13 @@
 
 #endif /* PTR_T */
 
+#if 0
 #define OC_MEMSET(memp, xch, nbytes)					\
 do {									\
   if ((nbytes) <= 32) {							\
-    register char * mzp = (char *)(memp);				\
+    char * mzp = (char *)(memp);					\
     unsigned long mctmp = (nbytes);					\
-    register long mcn;							\
+    long mcn;								\
     if (mctmp < 8) mcn = 0; else { mcn = (mctmp-1)/8; mctmp &= 7; }	\
     switch (mctmp) {							\
       case 0: for(;;) { *mzp++ = xch;					\
@@ -51,6 +52,9 @@ do {									\
   } else								\
     memset ((memp), (xch), (nbytes));					\
 } while(0)
+#else
+#define OC_MEMSET(memp, xch, nbytes) memset ((memp), (xch), (nbytes))
+#endif
 
 typedef struct objcache {
 	PTR_T	data;

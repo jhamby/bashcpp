@@ -111,13 +111,8 @@ int sh_badopt = 0;
 #define NEEDARG(x) fprintf (stderr, _("%s: option requires an argument -- %c\n"), argv[0], x)
 
 int
-sh_getopt (argc, argv, optstring)
-     int argc;
-     char *const *argv;
-     const char *optstring;
+sh_getopt (int argc, char *const *argv, const char *optstring)
 {
-  char c, *temp;
-
   sh_optarg = 0;
 
   if (sh_optind >= argc || sh_optind < 0)	/* XXX was sh_optind > argc */
@@ -143,7 +138,7 @@ sh_getopt (argc, argv, optstring)
       if (sh_optind >= argc)
 	return EOF;
 
-      temp = argv[sh_optind];
+      char *temp = argv[sh_optind];
 
       /* Special ARGV-element `--' means premature end of options.
 	 Skip it like a null option, and return EOF. */
@@ -167,8 +162,8 @@ sh_getopt (argc, argv, optstring)
 
   /* Look at and handle the next option-character.  */
 
-  c = *nextchar++; sh_charindex++;
-  temp = strchr (optstring, c);
+  char c = *nextchar++; sh_charindex++;
+  const char *temp = strchr (optstring, c);
 
   sh_optopt = c;
 
@@ -216,8 +211,7 @@ sh_getopt (argc, argv, optstring)
 }
 
 void
-sh_getopt_restore_state (argv)
-     char **argv;
+sh_getopt_restore_state (char **argv)
 {
   if (nextchar)
     nextchar = argv[sh_curopt] + sh_charindex;
@@ -233,8 +227,7 @@ sh_getopt_alloc_istate ()
 }
 
 void
-sh_getopt_dispose_istate (gs)
-     sh_getopt_state_t *gs;
+sh_getopt_dispose_istate (sh_getopt_state_t *gs)
 {
   free (gs);
 }
@@ -257,8 +250,7 @@ sh_getopt_save_istate ()
 }
 
 void
-sh_getopt_restore_istate (state)
-     sh_getopt_state_t *state;
+sh_getopt_restore_istate (sh_getopt_state_t *state)
 {
   sh_optarg = state->gs_optarg;
   sh_optind = state->gs_optind;
@@ -271,8 +263,7 @@ sh_getopt_restore_istate (state)
 
 #if 0
 void
-sh_getopt_debug_restore_state (argv)
-     char **argv;
+sh_getopt_debug_restore_state (char **argv)
 {
   if (nextchar && nextchar != argv[sh_curopt] + sh_charindex)
     {
@@ -281,16 +272,14 @@ sh_getopt_debug_restore_state (argv)
     }
 }
 #endif
- 
+
 #ifdef TEST
 
 /* Compile with -DTEST to make an executable for use in testing
    the above definition of `sh_getopt'.  */
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   int c;
   int digit_sh_optind = 0;

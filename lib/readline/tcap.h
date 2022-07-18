@@ -3,7 +3,7 @@
 /* Copyright (C) 1996-2015 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -46,14 +46,15 @@ extern char *UP, *BC;
 
 extern short ospeed;
 
-extern int tgetent ();
-extern int tgetflag ();
-extern int tgetnum ();
-extern char *tgetstr ();
+extern int tgetent (char *buffer, const char *termtype);
 
-extern int tputs ();
+extern int tgetnum (const char *name);
+extern int tgetflag (const char *name);
+extern char *tgetstr (const char *name, char **area);
 
-extern char *tgoto ();
+extern int tputs (const char *string, int nlines, int (*outfun) (int));
+
+extern char *tgoto (const char *cstring, int hpos, int vpos);
 
 #endif /* HAVE_TERMCAP_H */
 

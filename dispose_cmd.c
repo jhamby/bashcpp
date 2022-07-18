@@ -33,9 +33,9 @@ extern sh_obj_cache_t wdcache, wlcache;
 
 /* Dispose of the command structure passed. */
 void
-dispose_command (command)
-     COMMAND *command;
+dispose_command (void *arg)
 {
+  COMMAND *command = (COMMAND *)arg;
   if (command == 0)
     return;
 
@@ -49,7 +49,7 @@ dispose_command (command)
     case cm_select:
 #endif
       {
-	register FOR_COM *c;
+	FOR_COM *c;
 #if defined (SELECT_COMMAND)
 	if (command->type == cm_select)
 	  c = (FOR_COM *)command->value.Select;
@@ -66,7 +66,7 @@ dispose_command (command)
 #if defined (ARITH_FOR_COMMAND)
     case cm_arith_for:
       {
-	register ARITH_FOR_COM *c;
+	ARITH_FOR_COM *c;
 
 	c = command->value.ArithFor;
 	dispose_words (c->init);
@@ -102,7 +102,7 @@ dispose_command (command)
 
     case cm_case:
       {
-	register CASE_COM *c;
+	CASE_COM *c;
 	PATTERN_LIST *t, *p;
 
 	c = command->value.Case;
@@ -123,7 +123,7 @@ dispose_command (command)
     case cm_until:
     case cm_while:
       {
-	register WHILE_COM *c;
+	WHILE_COM *c;
 
 	c = command->value.While;
 	dispose_command (c->test);
@@ -134,7 +134,7 @@ dispose_command (command)
 
     case cm_if:
       {
-	register IF_COM *c;
+	IF_COM *c;
 
 	c = command->value.If;
 	dispose_command (c->test);
@@ -146,7 +146,7 @@ dispose_command (command)
 
     case cm_simple:
       {
-	register SIMPLE_COM *c;
+	SIMPLE_COM *c;
 
 	c = command->value.Simple;
 	dispose_words (c->words);
@@ -157,7 +157,7 @@ dispose_command (command)
 
     case cm_connection:
       {
-	register CONNECTION *c;
+	CONNECTION *c;
 
 	c = command->value.Connection;
 	dispose_command (c->first);
@@ -169,7 +169,7 @@ dispose_command (command)
 #if defined (DPAREN_ARITHMETIC)
     case cm_arith:
       {
-	register ARITH_COM *c;
+	ARITH_COM *c;
 
 	c = command->value.Arith;
 	dispose_words (c->exp);
@@ -181,7 +181,7 @@ dispose_command (command)
 #if defined (COND_COMMAND)
     case cm_cond:
       {
-	register COND_COM *c;
+	COND_COM *c;
 
 	c = command->value.Cond;
 	dispose_cond_node (c);
@@ -191,7 +191,7 @@ dispose_command (command)
 
     case cm_function_def:
       {
-	register FUNCTION_DEF *c;
+	FUNCTION_DEF *c;
 
 	c = command->value.Function_def;
 	dispose_function_def (c);
@@ -208,9 +208,9 @@ dispose_command (command)
 #if defined (COND_COMMAND)
 /* How to free a node in a conditional command. */
 void
-dispose_cond_node (cond)
-     COND_COM *cond;
+dispose_cond_node (void *arg)
 {
+  COND_COM *cond = (COND_COM *)arg;
   if (cond)
     {
       if (cond->left)
@@ -225,51 +225,51 @@ dispose_cond_node (cond)
 #endif /* COND_COMMAND */
 
 void
-dispose_function_def_contents (c)
-     FUNCTION_DEF *c;
+dispose_function_def_contents (void *arg)
 {
+  FUNCTION_DEF *c = (FUNCTION_DEF *)arg;
   dispose_word (c->name);
   dispose_command (c->command);
   FREE (c->source_file);
 }
 
 void
-dispose_function_def (c)
-     FUNCTION_DEF *c;
+dispose_function_def (void *arg)
 {
+  FUNCTION_DEF *c = (FUNCTION_DEF *)arg;
   dispose_function_def_contents (c);
   free (c);
 }
 
 /* How to free a WORD_DESC. */
 void
-dispose_word (w)
-     WORD_DESC *w;
+dispose_word (void *arg)
 {
+  WORD_DESC *w = (WORD_DESC *)arg;
   FREE (w->word);
   ocache_free (wdcache, WORD_DESC, w);
 }
 
 /* Free a WORD_DESC, but not the word contained within. */
 void
-dispose_word_desc (w)
-     WORD_DESC *w;
+dispose_word_desc (void *arg)
 {
+  WORD_DESC *w = (WORD_DESC *)arg;
   w->word = 0;
   ocache_free (wdcache, WORD_DESC, w);
 }
 
 /* How to get rid of a linked list of words.  A WORD_LIST. */
 void
-dispose_words (list)
-     WORD_LIST *list;
+dispose_words (void *arg)
 {
+  WORD_LIST *list = (WORD_LIST *)arg;
   WORD_LIST *t;
 
   while (list)
     {
       t = list;
-      list = list->next;
+      list = (WORD_LIST *)(list->next);
       dispose_word (t->word);
 #if 0
       free (t);
@@ -283,10 +283,10 @@ dispose_words (list)
 /* How to dispose of an array of pointers to char.  This is identical to
    free_array in stringlib.c. */
 void
-dispose_word_array (array)
-     char **array;
+dispose_word_array (void *arg)
 {
-  register int count;
+  char **array = (char **)arg;
+  int count;
 
   if (array == 0)
     return;
@@ -300,10 +300,10 @@ dispose_word_array (array)
 
 /* How to dispose of an list of redirections.  A REDIRECT. */
 void
-dispose_redirects (list)
-     REDIRECT *list;
+dispose_redirects (void *arg)
 {
-  register REDIRECT *t;
+  REDIRECT *list = (REDIRECT *)arg;
+  REDIRECT *t;
 
   while (list)
     {

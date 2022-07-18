@@ -85,8 +85,7 @@ int no_exit_on_failed_exec;
 /* If the user wants this to look like a login shell, then
    prepend a `-' onto NAME and return the new name. */
 static char *
-mkdashname (name)
-     char *name;
+mkdashname (const char *name)
 {
   char *ret;
 
@@ -97,8 +96,7 @@ mkdashname (name)
 }
 
 int
-exec_builtin (list)
-     WORD_LIST *list;
+exec_builtin (WORD_LIST *list)
 {
   int exit_value = EXECUTION_FAILURE;
   int cleanenv, login, opt, orig_job_control;
@@ -205,7 +203,7 @@ exec_builtin (list)
       env[0] = (char *)0;
     }
   else
-    {	
+    {
       maybe_make_export_env ();
       env = export_env;
     }

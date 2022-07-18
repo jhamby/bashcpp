@@ -23,25 +23,22 @@
 #endif
 
 /* Evaluate the plural expression and return an index value.  */
-STATIC unsigned long int plural_eval PARAMS ((struct expression *pexp,
-					      unsigned long int n))
+STATIC unsigned long plural_eval (struct expression *pexp, unsigned long n)
      internal_function;
 
 STATIC
-unsigned long int
+unsigned long
 internal_function
-plural_eval (pexp, n)
-     struct expression *pexp;
-     unsigned long int n;
+plural_eval (struct expression *pexp, unsigned long n)
 {
   switch (pexp->nargs)
     {
     case 0:
       switch (pexp->operation)
 	{
-	case var:
+	case expression::var:
 	  return n;
-	case num:
+	case expression::num:
 	  return pexp->val.num;
 	default:
 	  break;
@@ -57,9 +54,9 @@ plural_eval (pexp, n)
     case 2:
       {
 	unsigned long int leftarg = plural_eval (pexp->val.args[0], n);
-	if (pexp->operation == lor)
+	if (pexp->operation == expression::lor)
 	  return leftarg || plural_eval (pexp->val.args[1], n);
-	else if (pexp->operation == land)
+	else if (pexp->operation == expression::land)
 	  return leftarg && plural_eval (pexp->val.args[1], n);
 	else
 	  {
@@ -67,35 +64,35 @@ plural_eval (pexp, n)
 
 	    switch (pexp->operation)
 	      {
-	      case mult:
+	      case expression::mult:
 		return leftarg * rightarg;
-	      case divide:
+	      case expression::divide:
 #if !INTDIV0_RAISES_SIGFPE
 		if (rightarg == 0)
 		  raise (SIGFPE);
 #endif
 		return leftarg / rightarg;
-	      case module:
+	      case expression::module:
 #if !INTDIV0_RAISES_SIGFPE
 		if (rightarg == 0)
 		  raise (SIGFPE);
 #endif
 		return leftarg % rightarg;
-	      case plus:
+	      case expression::plus:
 		return leftarg + rightarg;
-	      case minus:
+	      case expression::minus:
 		return leftarg - rightarg;
-	      case less_than:
+	      case expression::less_than:
 		return leftarg < rightarg;
-	      case greater_than:
+	      case expression::greater_than:
 		return leftarg > rightarg;
-	      case less_or_equal:
+	      case expression::less_or_equal:
 		return leftarg <= rightarg;
-	      case greater_or_equal:
+	      case expression::greater_or_equal:
 		return leftarg >= rightarg;
-	      case equal:
+	      case expression::equal:
 		return leftarg == rightarg;
-	      case not_equal:
+	      case expression::not_equal:
 		return leftarg != rightarg;
 	      default:
 		break;
@@ -107,7 +104,7 @@ plural_eval (pexp, n)
     case 3:
       {
 	/* pexp->operation must be qmop.  */
-	unsigned long int boolarg = plural_eval (pexp->val.args[0], n);
+	bool boolarg = plural_eval (pexp->val.args[0], n);
 	return plural_eval (pexp->val.args[boolarg ? 1 : 2], n);
       }
     }

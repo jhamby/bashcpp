@@ -54,7 +54,7 @@ $END
 #include "common.h"
 #include "bashgetopt.h"
 
-static sighandler suspend_continue PARAMS((int));
+static sighandler suspend_continue (int);
 
 static SigHandler *old_cont;
 #if 0
@@ -63,8 +63,7 @@ static SigHandler *old_stop;
 
 /* Continue handler. */
 static sighandler
-suspend_continue (sig)
-     int sig;
+suspend_continue (int sig)
 {
   set_signal_handler (SIGCONT, old_cont);
 #if 0
@@ -76,8 +75,7 @@ suspend_continue (sig)
 /* Suspending the shell.  If -f is the arg, then do the suspend
    no matter what.  Otherwise, complain if a login shell. */
 int
-suspend_builtin (list)
-     WORD_LIST *list;
+suspend_builtin (WORD_LIST *list)
 {
   int opt, force;
 
@@ -94,7 +92,7 @@ suspend_builtin (list)
 	builtin_usage ();
 	return (EX_USAGE);
       }
-      
+
   list = loptend;
 
   if (job_control == 0)
@@ -103,7 +101,7 @@ suspend_builtin (list)
       return (EXECUTION_FAILURE);
     }
 
-  if (force == 0)  
+  if (force == 0)
     {
       no_args (list);
 

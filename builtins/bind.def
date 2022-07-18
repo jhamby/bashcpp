@@ -86,9 +86,9 @@ extern int errno;
 #include "bashgetopt.h"
 #include "common.h"
 
-static int query_bindings PARAMS((char *));
-static int unbind_command PARAMS((char *));
-static int unbind_keyseq PARAMS((char *));
+static int query_bindings (char *);
+static int unbind_command (char *);
+static int unbind_keyseq (char *);
 
 #define BIND_RETURN(x)  do { return_code = x; goto bind_exit; } while (0)
 
@@ -108,8 +108,7 @@ static int unbind_keyseq PARAMS((char *));
 #define XXFLAG	0x2000
 
 int
-bind_builtin (list)
-     WORD_LIST *list;
+bind_builtin (WORD_LIST *list)
 {
   int return_code;
   Keymap kmap, saved_keymap;
@@ -139,7 +138,7 @@ bind_builtin (list)
 
   rl_outstream = stdout;
 
-  reset_internal_getopt ();  
+  reset_internal_getopt ();
   while ((opt = internal_getopt (list, "lvpVPsSXf:q:u:m:r:x:")) != -1)
     {
       switch (opt)
@@ -299,7 +298,7 @@ bind_builtin (list)
       strvec_dispose (obindings);
       strvec_dispose (nbindings);
 
-      list = list->next;
+      list = (WORD_LIST *)list->next;
     }
 
  bind_exit:
@@ -315,8 +314,7 @@ bind_builtin (list)
 }
 
 static int
-query_bindings (name)
-     char *name;
+query_bindings (char *name)
 {
   rl_command_func_t *function;
   char **keyseqs;
@@ -347,8 +345,7 @@ query_bindings (name)
 }
 
 static int
-unbind_command (name)
-     char *name;
+unbind_command (char *name)
 {
   rl_command_func_t *function;
 
@@ -364,8 +361,7 @@ unbind_command (name)
 }
 
 static int
-unbind_keyseq (seq)
-     char *seq;
+unbind_keyseq (char *seq)
 {
   char *kseq;
   int kslen, type;

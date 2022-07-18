@@ -1,7 +1,7 @@
 /* Copyright (C) 1991-2017 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
-   
+
    Bash is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -18,8 +18,7 @@
 
 #if EXTENDED_GLOB
 int
-EXTGLOB_PATTERN_P (pat)
-     const CHAR *pat;
+EXTGLOB_PATTERN_P (const CHAR *pat)
 {
   switch (pat[0])
     {
@@ -32,7 +31,7 @@ EXTGLOB_PATTERN_P (pat)
     default:
       return 0;
     }
-    
+
   return 0;
 }
 #endif
@@ -42,9 +41,7 @@ EXTGLOB_PATTERN_P (pat)
    versions.  FLAGS is a subset of strmatch flags; used to do case-insensitive
    matching for now. */
 int
-MATCH_PATTERN_CHAR (pat, string, flags)
-     CHAR *pat, *string;
-     int flags;
+MATCH_PATTERN_CHAR (const CHAR *pat, const CHAR *string, int flags)
 {
   CHAR c;
 
@@ -71,9 +68,7 @@ MATCH_PATTERN_CHAR (pat, string, flags)
 }
 
 int
-MATCHLEN (pat, max)
-     CHAR *pat;
-     size_t max;
+MATCHLEN (const CHAR *pat, size_t max)
 {
   CHAR c;
   int matlen, bracklen, t, in_cclass, in_collsym, in_equiv;

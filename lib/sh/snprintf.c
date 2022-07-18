@@ -4,7 +4,7 @@
  build a test version with
    gcc -g -DDRIVER -I../.. -I../../include -o test-snprintf snprintf.c fmtu*long.o
 */
- 
+
 /*
    Unix snprintf implementation.
    derived from inetutils/libinetutils/snprintf.c Version 1.1
@@ -25,7 +25,7 @@
 
    You should have received a copy of the GNU General Public License
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-   
+
    Original (pre-bash) Revision History:
 
    1.1:
@@ -129,8 +129,8 @@
 #  define FL_ADDBASE    0x02    /* add base# prefix to converted value */
 #  define FL_HEXUPPER   0x04    /* use uppercase when converting to hex */
 #  define FL_UNSIGNED   0x08    /* don't add any sign */
-extern char *fmtulong PARAMS((unsigned long int, int, char *, size_t, int));
-extern char *fmtullong PARAMS((unsigned long long int, int, char *, size_t, int));
+extern char *fmtulong (unsigned long int, int, char *, size_t, int);
+extern char *fmtullong (unsigned long long int, int, char *, size_t, int);
 #endif
 
 #ifndef FREE
@@ -187,7 +187,7 @@ static int decpoint;
 static int thoussep;
 static char *grouping;
 
-/* 
+/*
  * For the FLOATING POINT FORMAT :
  *  the challenge was finding a way to
  *  manipulate the Real numbers without having
@@ -203,20 +203,20 @@ static char *grouping;
       fraction = b(1)*10^-1 + b(2)*10^-2 + ...
 
       where:
-       0 <= a(i) => 9 
-       0 <= b(i) => 9 
- 
+       0 <= a(i) => 9
+       0 <= b(i) => 9
+
     from then it was simple math
  */
 
 /*
  * size of the buffer for the integral part
- * and the fraction part 
+ * and the fraction part
  */
 #define MAX_INT  99 + 1 /* 1 for the null */
 #define MAX_FRACT 307 + 1
 
-/* 
+/*
  * These functions use static buffers to store the results,
  * and so are not reentrant
  */
@@ -271,38 +271,38 @@ struct DATA
 
 /* the floating point stuff */
 #ifdef FLOATING_POINT
-static double pow_10 PARAMS((int));
-static int log_10 PARAMS((double));
-static double integral PARAMS((double, double *));
-static char *numtoa PARAMS((double, int, int, char **));
+static double pow_10 (int);
+static int log_10 (double);
+static double integral (double, double *);
+static char *numtoa (double, int, int, char **);
 #endif
 
-static void init_data PARAMS((struct DATA *, char *, size_t, const char *, int));
-static void init_conv_flag PARAMS((struct DATA *));
+static void init_data (struct DATA *, char *, size_t, const char *, int);
+static void init_conv_flag (struct DATA *);
 
 /* for the format */
 #ifdef FLOATING_POINT
-static void floating PARAMS((struct DATA *, double));
-static void exponent PARAMS((struct DATA *, double));
+static void floating (struct DATA *, double);
+static void exponent (struct DATA *, double);
 #endif
-static void number PARAMS((struct DATA *, unsigned long, int));
+static void number (struct DATA *, unsigned long, int);
 #ifdef HAVE_LONG_LONG
-static void lnumber PARAMS((struct DATA *, unsigned long long, int));
+static void lnumber (struct DATA *, unsigned long long, int);
 #endif
-static void pointer PARAMS((struct DATA *, unsigned long));
-static void strings PARAMS((struct DATA *, char *));
+static void pointer (struct DATA *, unsigned long);
+static void strings (struct DATA *, char *);
 
 #ifdef FLOATING_POINT
 #  define FALLBACK_FMTSIZE	32
 #  define FALLBACK_BASE		4096
 #  define LFALLBACK_BASE	5120
 #  ifdef HAVE_LONG_DOUBLE
-static void ldfallback PARAMS((struct DATA *, const char *, const char *, long double));
+static void ldfallback (struct DATA *, const char *, const char *, long double);
 #  endif
-static void dfallback PARAMS((struct DATA *, const char *, const char *, double));
+static void dfallback (struct DATA *, const char *, const char *, double);
 #endif
 
-static char *groupnum PARAMS((char *));
+static char *groupnum (char *);
 
 #if defined (HAVE_LONG_DOUBLE)
 #  define LONGDOUBLE long double
@@ -319,7 +319,7 @@ static char *groupnum PARAMS((char *));
        : sizeof (x) == sizeof (double) ? isnan_d (x) \
        : isnan_f (x))
 #endif
-  
+
 #ifndef isinf
   static inline int isinf_f  (float       x) { return !isnan (x) && isnan (x - x); }
   static inline int isinf_d  (double      x) { return !isnan (x) && isnan (x - x); }
@@ -332,9 +332,9 @@ static char *groupnum PARAMS((char *));
 
 #ifdef DRIVER
 static void memory_error_and_abort ();
-static void *xmalloc PARAMS((size_t));
-static void *xrealloc PARAMS((void *, size_t));
-static void xfree PARAMS((void *));
+static void *xmalloc (size_t);
+static void *xrealloc (void *, size_t);
+static void xfree (void *);
 #else
 #  include <xmalloc.h>
 #endif
@@ -398,7 +398,7 @@ static void xfree PARAMS((void *));
 	    if (((p)->flags & PF_SPACE) && (d) > zero) \
 	      PUT_CHAR(' ', p)
 
-/* pad right */ 
+/* pad right */
 #define PAD_RIGHT(p) \
 	    if ((p)->width > 0 && (p)->justify != LEFT) \
 	      for (; (p)->width > 0; (p)->width--) \
@@ -470,9 +470,8 @@ static void xfree PARAMS((void *));
  * Find the nth power of 10
  */
 static double
-pow_10(n)
-     int n;
-{ 
+pow_10(int n)
+{
   double P;
 
   /* handle common cases with fast switch statement. */
@@ -504,7 +503,7 @@ pow_10(n)
 }
 
 /*
- * Find the integral part of the log in base 10 
+ * Find the integral part of the log in base 10
  * Note: this not a real log10()
 	 I just need and approximation(integerpart) of x in:
 	  10^x ~= r
@@ -514,9 +513,8 @@ pow_10(n)
  * NOTE: do not call this with r == 0 -- an infinite loop results.
  */
 static int
-log_10(r)
-     double r;
-{ 
+log_10(double r)
+{
   int i = 0;
   double result = 1.;
 
@@ -549,10 +547,8 @@ log_10(r)
  * In many ways it resemble the modf() found on most Un*x
  */
 static double
-integral(real, ip)
-     double real;
-     double *ip;
-{ 
+integral(double real, double *ip)
+{
   int j;
   double i, s, p;
   double real_integral = 0.;
@@ -591,19 +587,16 @@ integral(real, ip)
 }
 
 #define PRECISION 1.e-6
-/* 
+/*
  * return an ascii representation of the integral part of the number
  * and set fract to be an ascii representation of the fraction part
  * the container for the fraction and the integral part or statically
- * declare with fix size 
+ * declare with fix size
  */
 static char *
-numtoa(number, base, precision, fract)
-     double number;
-     int base, precision;
-     char **fract;
+numtoa(double number, int base, int precision, char **fract)
 {
-  register int i, j;
+  int i, j;
   double ip, fp; /* integer and fraction part */
   double fraction;
   int digits, sign;
@@ -613,7 +606,7 @@ numtoa(number, base, precision, fract)
 
   /* taking care of the obvious case: 0.0 */
   if (number == 0.)
-    { 
+    {
       integral_part[0] = '0';
       integral_part[1] = '\0';
       /* The fractional part has to take the precision into account */
@@ -659,7 +652,7 @@ numtoa(number, base, precision, fract)
 	  number = ip;
 	 }
     }
-     
+
   /* Oh No !! out of bound, ho well fill it up ! */
   if (number != 0.)
     for (i = 0; i < digits; ++i)
@@ -673,7 +666,7 @@ numtoa(number, base, precision, fract)
 
   /* reverse every thing */
   for ( i--, j = 0; j < i; j++, i--)
-    SWAP_INT(integral_part[i], integral_part[j]);  
+    SWAP_INT(integral_part[i], integral_part[j]);
 
   /* the fractional part */
   for (i=0, fp=fraction; precision > 0 && i < MAX_FRACT ; i++, precision--)
@@ -696,10 +689,7 @@ numtoa(number, base, precision, fract)
  * the representation with the right padding
  */
 static void
-number(p, d, base)
-     struct DATA *p;
-     unsigned long d;
-     int base;
+number(struct DATA *p, unsigned long d, int base)
 {
   char *tmp, *t;
   long sd;
@@ -772,10 +762,7 @@ number(p, d, base)
  * identical to number() but works for `long long'
  */
 static void
-lnumber(p, d, base)
-     struct DATA *p;
-     unsigned long long d;
-     int base;
+lnumber(struct DATA *p, unsigned long long d, int base)
 {
   char *tmp, *t;
   long long sd;
@@ -844,9 +831,7 @@ lnumber(p, d, base)
 #endif
 
 static void
-pointer(p, d)
-     struct DATA *p;
-     unsigned long d;
+pointer(struct DATA *p, unsigned long d)
 {
   char *tmp;
 
@@ -869,9 +854,7 @@ pointer(p, d)
 
 /* %s strings */
 static void
-strings(p, tmp)
-     struct DATA *p;
-     char *tmp;
+strings(struct DATA *p, char *tmp)
 {
   size_t len;
 
@@ -886,9 +869,7 @@ strings(p, tmp)
 #if HANDLE_MULTIBYTE
 /* %ls wide-character strings */
 static void
-wstrings(p, tmp)
-     struct DATA *p;
-     wchar_t *tmp;
+wstrings(struct DATA *p, wchar_t *tmp)
 {
   size_t len;
   mbstate_t mbs;
@@ -917,7 +898,7 @@ wstrings(p, tmp)
   if (len == (size_t)-1)
     {
       /* invalid multibyte sequence; bail now. */
-      FREE (os);      
+      FREE (os);
       return;
     }
 
@@ -927,9 +908,7 @@ wstrings(p, tmp)
 }
 
 static void
-wchars (p, wc)
-     struct DATA *p;
-     wint_t wc;
+wchars (struct DATA *p, wint_t wc)
 {
   char *lbuf, *l;
   mbstate_t mbs;
@@ -956,10 +935,8 @@ wchars (p, wc)
    (mode == 2) we check for NaN.  This does the necessary printing.  Returns
    1 if Inf or Nan, 0 if not. */
 static int
-chkinfnan(p, d, mode)
-     struct DATA *p;
-     double d;
-     int mode;		/* == 1 for inf, == 2 for nan */
+chkinfnan(struct DATA *p, double d,
+     int mode)		/* == 1 for inf, == 2 for nan */
 {
   int i;
   char *tmp;
@@ -987,9 +964,7 @@ chkinfnan(p, d, mode)
 
 /* %f %F %g %G floating point representation */
 static void
-floating(p, d)
-     struct DATA *p;
-     double d;
+floating(struct DATA *p, double d)
 {
   char *tmp, *tmp2, *t;
   int i;
@@ -1009,7 +984,7 @@ floating(p, d)
     {
       /* smash the trailing zeros unless altform */
       for (i = strlen(tmp2) - 1; i >= 0 && tmp2[i] == '0'; i--)
-	tmp2[i] = '\0'; 
+	tmp2[i] = '\0';
       if (tmp2[0] == '\0')
 	p->precision = 0;
     }
@@ -1052,15 +1027,13 @@ floating(p, d)
 
   for (; *tmp2; tmp2++)
     PUT_CHAR(*tmp2, p); /* the fraction */
-  
+
   PAD_LEFT(p);
-} 
+}
 
 /* %e %E %g %G exponent representation */
 static void
-exponent(p, d)
-     struct DATA *p;
-     double d;
+exponent(struct DATA *p, double d)
 {
   char *tmp, *tmp2;
   int j, i;
@@ -1076,14 +1049,14 @@ exponent(p, d)
     {
       j = log_10(d);
       d = d / pow_10(j);  /* get the Mantissa */
-      d = ROUND(d, p);		  
+      d = ROUND(d, p);
     }
   tmp = dtoa(d, p->precision, &tmp2);
 
   /* 1 for unit, 1 for the '.', 1 for 'e|E',
    * 1 for '+|-', 2 for 'exp'  (but no `.' if precision == 0 */
   /* calculate how much padding need */
-  p->width = p->width - 
+  p->width = p->width -
   	    /* XXX - should this be d>0. && (p->flags & PF_PLUS) ? */
 #if 0
 	     ((d > 0. && p->justify == RIGHT) ? 1:0) -
@@ -1119,7 +1092,7 @@ exponent(p, d)
   if ((*p->pf == 'g' || *p->pf == 'G') && (p->flags & PF_ALTFORM) == 0)
     /* smash the trailing zeros unless altform */
     for (i = strlen(tmp2) - 1; i >= 0 && tmp2[i] == '0'; i--)
-      tmp2[i] = '\0'; 
+      tmp2[i] = '\0';
 
   for (; *tmp2; tmp2++)
     PUT_CHAR(*tmp2, p); /* the fraction */
@@ -1160,8 +1133,7 @@ exponent(p, d)
    grouping info and thousands separator.  If no grouping should be performed,
    this returns NULL; the caller needs to check for it. */
 static char *
-groupnum (s)
-     char *s;
+groupnum (const char *s)
 {
   char *se, *ret, *re, *g;
   int len, slen;
@@ -1215,14 +1187,13 @@ groupnum (s)
 #else
     strcpy (ret, re);
 #endif
-   
+
   return ret;
 }
 
 /* initialize the conversion specifiers */
 static void
-init_conv_flag (p)
-     struct DATA *p;
+init_conv_flag (struct DATA *p)
 {
   p->flags &= PF_ALLOCBUF;		/* preserve PF_ALLOCBUF flag */
   p->precision = p->width = NOT_FOUND;
@@ -1231,12 +1202,7 @@ init_conv_flag (p)
 }
 
 static void
-init_data (p, string, length, format, mode)
-     struct DATA *p;
-     char *string;
-     size_t length;
-     const char *format;
-     int mode;
+init_data (struct DATA *p, char *string, size_t length, const char *format, int mode)
 {
   p->length = length - 1; /* leave room for '\0' */
   p->holder = p->base = string;
@@ -1246,16 +1212,7 @@ init_data (p, string, length, format, mode)
 }
 
 static int
-#if defined (__STDC__)
 vsnprintf_internal(struct DATA *data, char *string, size_t length, const char *format, va_list args)
-#else
-vsnprintf_internal(data, string, length, format, args)
-     struct DATA *data;
-     char *string;
-     size_t length;
-     const char *format;
-     va_list args;
-#endif
 {
   double d; /* temporary holder */
 #ifdef HAVE_LONG_DOUBLE
@@ -1426,7 +1383,7 @@ vsnprintf_internal(data, string, length, format, args)
 		data->flags |= PF_PTRDIFF_T;
 		SET_SIZE_FLAGS(data, ptrdiff_t);
 		continue;
-		
+
 	      /* Conversion specifiers */
 #ifdef FLOATING_POINT
 	      case 'f':  /* float, double */
@@ -1434,10 +1391,10 @@ vsnprintf_internal(data, string, length, format, args)
 		STAR_ARGS(data);
 		d = GETDOUBLE(data);
 		floating(data, d);
-conv_break:		
+conv_break:
 		state = 0;
 		break;
-	      case 'g': 
+	      case 'g':
 	      case 'G':
 		STAR_ARGS(data);
 		DEF_PREC(data);
@@ -1536,7 +1493,7 @@ conv_break:
 		  }
 		state = 0;
 		break;
-	      case 'x': 
+	      case 'x':
 	      case 'X':  /* hexadecimal */
 		STAR_ARGS(data);
 #ifdef HAVE_LONG_LONG
@@ -1574,7 +1531,7 @@ conv_break:
 		  }
 		else
 #endif
-		  {		
+		  {
 		    ul = GETARG (int);
 		    PUT_CHAR(ul, data);
 		  }
@@ -1639,12 +1596,9 @@ conv_break:
  * at it.  Fall back to sprintf for long double formats.
  */
 static void
-ldfallback (data, fs, fe, ld)
-     struct DATA *data;
-     const char *fs, *fe;
-     long double ld;
+ldfallback (struct DATA *data, const char *fs, const char *fe, long double ld)
 {
-  register char *x;
+  char *x;
   char fmtbuf[FALLBACK_FMTSIZE], *obuf;
   int fl;
 
@@ -1664,7 +1618,7 @@ ldfallback (data, fs, fe, ld)
     sprintf (obuf, fmtbuf, ld);
 
   for (x = obuf; *x; x++)
-    PUT_CHAR (*x, data);    
+    PUT_CHAR (*x, data);
   xfree (obuf);
 }
 #endif /* FLOATING_POINT && HAVE_LONG_DOUBLE */
@@ -1672,12 +1626,9 @@ ldfallback (data, fs, fe, ld)
 #ifdef FLOATING_POINT
 /* Used for %a, %A if the libc printf supports them. */
 static void
-dfallback (data, fs, fe, d)
-     struct DATA *data;
-     const char *fs, *fe;
-     double d;
+dfallback (struct DATA *data, const char *fs, const char *fe, double d)
 {
-  register char *x;
+  char *x;
   char fmtbuf[FALLBACK_FMTSIZE], obuf[FALLBACK_BASE];
   int fl;
 
@@ -1695,22 +1646,14 @@ dfallback (data, fs, fe, d)
     sprintf (obuf, fmtbuf, d);
 
   for (x = obuf; *x; x++)
-    PUT_CHAR (*x, data);    
+    PUT_CHAR (*x, data);
 }
 #endif /* FLOATING_POINT */
 
 #if !HAVE_SNPRINTF
 
 int
-#if defined (__STDC__)
 vsnprintf(char *string, size_t length, const char *format, va_list args)
-#else
-vsnprintf(string, length, format, args)
-     char *string;
-     size_t length;
-     const char *format;
-     va_list args;
-#endif
 {
   struct DATA data;
 
@@ -1721,15 +1664,7 @@ vsnprintf(string, length, format, args)
 }
 
 int
-#if defined(PREFER_STDARG)
 snprintf(char *string, size_t length, const char * format, ...)
-#else
-snprintf(string, length, format, va_alist)
-     char *string;
-     size_t length;
-     const char *format;
-     va_dcl
-#endif
 {
   struct DATA data;
   int rval;
@@ -1752,14 +1687,7 @@ snprintf(string, length, format, va_alist)
 #if !HAVE_ASPRINTF
 
 int
-#if defined (__STDC__)
 vasprintf(char **stringp, const char *format, va_list args)
-#else
-vasprintf(stringp, format, args)
-     char **stringp;
-     const char *format;
-     va_list args;
-#endif
 {
   struct DATA data;
   char *string;
@@ -1773,14 +1701,7 @@ vasprintf(stringp, format, args)
 }
 
 int
-#if defined(PREFER_STDARG)
 asprintf(char **stringp, const char * format, ...)
-#else
-asprintf(stringp, format, va_alist)
-     char **stringp;
-     const char *format;
-     va_dcl
-#endif
 {
   int rval;
   va_list args;
@@ -1808,8 +1729,7 @@ memory_error_and_abort ()
 }
 
 static void *
-xmalloc(bytes)
-     size_t bytes;
+xmalloc(size_t bytes)
 {
   void *ret;
 
@@ -1820,9 +1740,7 @@ xmalloc(bytes)
 }
 
 static void *
-xrealloc (pointer, bytes)
-     void *pointer;
-     size_t bytes;
+xrealloc (void *pointer, size_t bytes)
 {
   void *ret;
 
@@ -1833,8 +1751,7 @@ xrealloc (pointer, bytes)
 }
 
 static void
-xfree(x)
-     void *x;
+xfree(void *x)
 {
   if (x)
     free (x);
@@ -1858,7 +1775,7 @@ main()
   printf("snprintf returns %d with non-NULL first argument and size of 0\n", si);
   si = snprintf((char *)NULL, 16, "abcde\n");
   printf("snprintf returns %d with NULL first argument and non-zero size\n", si);
-  
+
 /*
   printf("Suite of test for snprintf:\n");
   printf("a_format\n");
@@ -2032,9 +1949,9 @@ main()
   printf("%s\n", h);
 
   printf("/%%.1G/, 3100000000.4\n");
-  snprintf(holder, sizeof holder, "/%.1G/\n", 3100000000.4);  
-  asprintf(&h, "/%.1G/\n", 3100000000.4);  
-  printf("/%.1G/\n", 3100000000.4); 
+  snprintf(holder, sizeof holder, "/%.1G/\n", 3100000000.4);
+  asprintf(&h, "/%.1G/\n", 3100000000.4);
+  printf("/%.1G/\n", 3100000000.4);
   printf("%s", holder);
   printf("%s\n", h);
 
@@ -2044,7 +1961,7 @@ main()
   printf("%s", holder); printf("%d\n\n", i);
   asprintf(&h, "abc%n", &i);
   printf("%s", h); printf("%d\n\n", i);
-  
+
   printf("%%*.*s --> 10.10\n");
   snprintf(holder, sizeof holder, "%*.*s\n", 10, 10, BLURB);
   asprintf(&h, "%*.*s\n", 10, 10, BLURB);
@@ -2061,7 +1978,7 @@ main()
 
 #define BIG "Hello this is a too big string for the buffer"
 /*  printf("A buffer to small of 10, trying to put this:\n");*/
-  printf("<%%>, %s\n", BIG); 
+  printf("<%%>, %s\n", BIG);
   i = snprintf(holder, 10, "%s\n", BIG);
   i = asprintf(&h, "%s", BIG);
   printf("<%s>\n", BIG);
@@ -2072,7 +1989,7 @@ main()
   i = snprintf(holder, 100, "%p", vsnprintf);
   i = asprintf(&h, "%p", vsnprintf);
   printf("<%p>\n", vsnprintf);
-  printf("<%s>\n", holder);  
+  printf("<%s>\n", holder);
   printf("<%s>\n\n", h);
 
   printf ("<%%lu> LONG_MAX+1\n");

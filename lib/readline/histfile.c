@@ -114,7 +114,7 @@ extern int errno;
 #  define PATH_MAX	1024	/* default */
 #endif
 
-extern void _hs_append_history_line PARAMS((int, const char *));
+extern void _hs_append_history_line (int, const char *);
 
 /* history file version; currently unused */
 int history_file_version = 1;
@@ -141,11 +141,11 @@ int history_lines_written_to_file = 0;
    for more extensive tests. */
 #define HIST_TIMESTAMP_START(s)		(*(s) == history_comment_char && isdigit ((unsigned char)(s)[1]) )
 
-static char *history_backupfile PARAMS((const char *));
-static char *history_tempfile PARAMS((const char *));
-static int histfile_backup PARAMS((const char *, const char *));
-static int histfile_restore PARAMS((const char *, const char *));
-static int history_rename PARAMS((const char *, const char *));
+static char *history_backupfile (const char *);
+static char *history_tempfile (const char *);
+static int histfile_backup (const char *, const char *);
+static int histfile_restore (const char *, const char *);
+static int history_rename (const char *, const char *);
 
 /* Return the string that should be used in the place of this
    filename.  This only matters when you don't specify the
@@ -161,7 +161,7 @@ history_filename (const char *filename)
 
   if (return_val)
     return (return_val);
-  
+
   home = sh_get_env_value ("HOME");
 #if defined (_WIN32)
   if (home == 0)
@@ -194,7 +194,7 @@ history_backupfile (const char *filename)
   ssize_t n;
   struct stat fs;
 
-  fn = filename;  
+  fn = filename;
 #if defined (HAVE_READLINK)
   /* Follow symlink to avoid backing up symlink itself; call will fail if
      not a symlink */
@@ -204,15 +204,15 @@ history_backupfile (const char *filename)
       fn = linkbuf;
     }
 #endif
-      
+
   len = strlen (fn);
-  ret = xmalloc (len + 2);
+  ret = (char *)xmalloc (len + 2);
   strcpy (ret, fn);
   ret[len] = '-';
   ret[len+1] = '\0';
   return ret;
 }
-  
+
 static char *
 history_tempfile (const char *filename)
 {
@@ -223,7 +223,7 @@ history_tempfile (const char *filename)
   struct stat fs;
   int pid;
 
-  fn = filename;  
+  fn = filename;
 #if defined (HAVE_READLINK)
   /* Follow symlink so tempfile created in the same directory as any symlinked
      history file; call will fail if not a symlink */
@@ -233,9 +233,9 @@ history_tempfile (const char *filename)
       fn = linkbuf;
     }
 #endif
-      
+
   len = strlen (fn);
-  ret = xmalloc (len + 11);
+  ret = (char *)xmalloc (len + 11);
   strcpy (ret, fn);
 
   pid = (int)getpid ();
@@ -251,7 +251,7 @@ history_tempfile (const char *filename)
 
   return ret;
 }
-  
+
 /* Add the contents of FILENAME to the history list, a line at a time.
    If FILENAME is NULL, then read from ~/.history.  Returns 0 if
    successful, or errno if not. */
@@ -460,12 +460,12 @@ read_history_range (const char *filename, int from, int to)
 /* We need a special version for WIN32 because Windows rename() refuses to
    overwrite an existing file. */
 static int
-history_rename (const char *old, const char *new)
+history_rename (const char *old, const char *new_)
 {
 #if defined (_WIN32)
-  return (MoveFileEx (old, new, MOVEFILE_REPLACE_EXISTING) == 0 ? -1 : 0);
+  return (MoveFileEx (old, new_, MOVEFILE_REPLACE_EXISTING) == 0 ? -1 : 0);
 #else
-  return (rename (old, new));
+  return (rename (old, new_));
 #endif
 }
 
@@ -512,7 +512,7 @@ histfile_restore (const char *backup, const char *orig)
 
 #define SHOULD_CHOWN(finfo, nfinfo) \
   (finfo.st_uid != nfinfo.st_uid || finfo.st_gid != nfinfo.st_gid)
-  
+
 /* Truncate the history file FNAME, leaving only LINES trailing lines.
    If FNAME is NULL, then use ~/.history.  Writes a new file and renames
    it to the original name.  Returns 0 on success, errno on failure. */
@@ -749,7 +749,7 @@ mmap_error:
 	FREE (tempname);
 	return rv;
       }
-#else    
+#else
     buffer = (char *)malloc (buffer_size);
     if (buffer == 0)
       {

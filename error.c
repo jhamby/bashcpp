@@ -52,18 +52,18 @@ extern int errno;
 #  include "bashhist.h"
 #endif
 
-extern int executing_line_number PARAMS((void));
+extern int executing_line_number (void);
 
 #if defined (JOB_CONTROL)
 extern pid_t shell_pgrp;
-extern int give_terminal_to PARAMS((pid_t, int));
+extern int give_terminal_to (pid_t, int);
 #endif /* JOB_CONTROL */
 
 #if defined (ARRAY_VARS)
 extern const char * const bash_badsub_errmsg;
 #endif
 
-static void error_prolog PARAMS((int));
+static void error_prolog (int);
 
 /* The current maintainer of the shell.  You change this in the
    Makefile. */
@@ -76,10 +76,9 @@ const char * const the_current_maintainer = MAINTAINER;
 int gnu_error_format = 0;
 
 static void
-error_prolog (print_lineno)
-     int print_lineno;
+error_prolog (int print_lineno)
 {
-  char *ename;
+  const char *ename;
   int line;
 
   ename = get_name_for_error ();
@@ -92,10 +91,10 @@ error_prolog (print_lineno)
 }
 
 /* Return the name of the shell or the shell script for error reporting. */
-char *
+const char *
 get_name_for_error ()
 {
-  char *name;
+  const char *name;
 #if defined (ARRAY_VARS)
   SHELL_VAR *bash_source_v;
   ARRAY *bash_source_a;
@@ -129,20 +128,13 @@ get_name_for_error ()
    sys_error so the filename is not interpreted as a printf-style
    format string. */
 void
-file_error (filename)
-     const char *filename;
+file_error (const char *filename)
 {
   report_error ("%s: %s", filename, strerror (errno));
 }
 
 void
-#if defined (PREFER_STDARG)
 programming_error (const char *format, ...)
-#else
-programming_error (format, va_alist)
-     const char *format;
-     va_dcl
-#endif
 {
   va_list args;
   char *h;
@@ -180,13 +172,7 @@ programming_error (format, va_alist)
    outside this file mostly to report substitution and expansion errors,
    and for bad invocation options. */
 void
-#if defined (PREFER_STDARG)
 report_error (const char *format, ...)
-#else
-report_error (format, va_alist)
-     const char *format;
-     va_dcl
-#endif
 {
   va_list args;
 
@@ -207,13 +193,7 @@ report_error (format, va_alist)
 }
 
 void
-#if defined (PREFER_STDARG)
 fatal_error (const char *format, ...)
-#else
-fatal_error (format, va_alist)
-     const char *format;
-     va_dcl
-#endif
 {
   va_list args;
 
@@ -229,13 +209,7 @@ fatal_error (format, va_alist)
 }
 
 void
-#if defined (PREFER_STDARG)
 internal_error (const char *format, ...)
-#else
-internal_error (format, va_alist)
-     const char *format;
-     va_dcl
-#endif
 {
   va_list args;
 
@@ -250,13 +224,7 @@ internal_error (format, va_alist)
 }
 
 void
-#if defined (PREFER_STDARG)
 internal_warning (const char *format, ...)
-#else
-internal_warning (format, va_alist)
-     const char *format;
-     va_dcl
-#endif
 {
   va_list args;
 
@@ -272,13 +240,7 @@ internal_warning (format, va_alist)
 }
 
 void
-#if defined (PREFER_STDARG)
 internal_inform (const char *format, ...)
-#else
-internal_inform (format, va_alist)
-     const char *format;
-     va_dcl
-#endif
 {
   va_list args;
 
@@ -295,13 +257,7 @@ internal_inform (format, va_alist)
 }
 
 void
-#if defined (PREFER_STDARG)
 sys_error (const char *format, ...)
-#else
-sys_error (format, va_alist)
-     const char *format;
-     va_dcl
-#endif
 {
   int e;
   va_list args;
@@ -326,17 +282,10 @@ sys_error (format, va_alist)
    the input file name is inserted only if it is different from the
    shell name. */
 void
-#if defined (PREFER_STDARG)
 parser_error (int lineno, const char *format, ...)
-#else
-parser_error (lineno, format, va_alist)
-     int lineno;
-     const char *format;
-     va_dcl
-#endif
 {
   va_list args;
-  char *ename, *iname;
+  const char *ename, *iname;
 
   ename = get_name_for_error ();
   iname = yy_input_name ();
@@ -364,8 +313,7 @@ parser_error (lineno, format, va_alist)
 #ifdef DEBUG
 /* This assumes ASCII and is suitable only for debugging */
 char *
-strescape (str)
-     const char *str;
+strescape (const char *str)
 {
   char *r, *result;
   unsigned char *s;
@@ -393,13 +341,7 @@ strescape (str)
 }
 
 void
-#if defined (PREFER_STDARG)
 itrace (const char *format, ...)
-#else
-itrace (format, va_alist)
-     const char *format;
-     va_dcl
-#endif
 {
   va_list args;
 
@@ -418,13 +360,7 @@ itrace (format, va_alist)
 /* A trace function for silent debugging -- doesn't require a control
    terminal. */
 void
-#if defined (PREFER_STDARG)
 trace (const char *format, ...)
-#else
-trace (format, va_alist)
-     const char *format;
-     va_dcl
-#endif
 {
   va_list args;
   static FILE *tracefp = (FILE *)NULL;
@@ -467,9 +403,7 @@ static const char * const cmd_error_table[] = {
 };
 
 void
-command_error (func, code, e, flags)
-     const char *func;
-     int code, e, flags;	/* flags currently unused */
+command_error (const char *func, int code, int e, int flags)
 {
   if (code > CMDERR_LAST)
     code = CMDERR_DEFAULT;
@@ -478,8 +412,7 @@ command_error (func, code, e, flags)
 }
 
 char *
-command_errstr (code)
-     int code;
+command_errstr (int code)
 {
   if (code > CMDERR_LAST)
     code = CMDERR_DEFAULT;
@@ -489,23 +422,20 @@ command_errstr (code)
 
 #ifdef ARRAY_VARS
 void
-err_badarraysub (s)
-     const char *s;
+err_badarraysub (const char *s)
 {
   report_error ("%s: %s", s, _(bash_badsub_errmsg));
 }
 #endif
 
 void
-err_unboundvar (s)
-     const char *s;
+err_unboundvar (const char *s)
 {
   report_error (_("%s: unbound variable"), s);
 }
 
 void
-err_readonly (s)
-     const char *s;
+err_readonly (const char *s)
 {
   report_error (_("%s: readonly variable"), s);
 }

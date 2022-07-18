@@ -31,9 +31,7 @@
    PWCS.  If the display width exceeds MAX, return the number of wide chars
    from PWCS required to display MAX characters on the screen. */
 int
-wcsnwidth(pwcs, n, max)
-     const wchar_t *pwcs;
-     size_t n, max;
+wcsnwidth(const wchar_t *pwcs, size_t n, size_t max)
 {
   wchar_t wc, *ws;
   int len, l;

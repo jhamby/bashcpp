@@ -25,8 +25,8 @@
    in smatch.c:collsym(). */
 
 typedef struct _COLLSYM {
-  XCHAR *name;
-  CHAR code;
+  const XCHAR *name;
+  const CHAR code;
 } __COLLSYM;
 
 static __COLLSYM POSIXCOLL [] =

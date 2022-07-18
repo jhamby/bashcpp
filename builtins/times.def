@@ -59,8 +59,7 @@ $END
 
 /* Print the totals for system and user time used. */
 int
-times_builtin (list)
-     WORD_LIST *list;
+times_builtin (WORD_LIST *list)
 {
 #if defined (HAVE_GETRUSAGE) && defined (HAVE_TIMEVAL) && defined (RUSAGE_SELF)
   struct rusage self, kids;
@@ -84,7 +83,7 @@ times_builtin (list)
 
 #else
 #  if defined (HAVE_TIMES)
-  /* This uses the POSIX.1/XPG5 times(2) interface, which fills in a 
+  /* This uses the POSIX.1/XPG5 times(2) interface, which fills in a
      `struct tms' with values of type clock_t. */
   struct tms t;
 

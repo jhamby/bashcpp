@@ -3,7 +3,7 @@
 /* Copyright (C) 1993-2009 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -23,18 +23,6 @@
 #define _RL_STDC_H_
 
 /* Adapted from BSD /usr/include/sys/cdefs.h. */
-
-/* A function can be defined using prototypes and compile on both ANSI C
-   and traditional C compilers with something like this:
-	extern char *func PARAMS((char *, char *, int)); */
-
-#if !defined (PARAMS)
-#  if defined (__STDC__) || defined (__GNUC__) || defined (__cplusplus)
-#    define PARAMS(protos) protos
-#  else
-#    define PARAMS(protos) ()
-#  endif
-#endif
 
 #ifndef __attribute__
 #  if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 8)

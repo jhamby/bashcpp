@@ -73,10 +73,7 @@ extern int errno;
    the inode corresponding to PATH/DIR is identical to THISINO. */
 #if !defined (D_FILENO_AVAILABLE)
 static int
-_path_checkino (dotp, name, thisino)
-     char *dotp;
-     char *name;
-     ino_t thisino;
+_path_checkino (const char *dotp, const char *name, ino_t thisino)
 {
   char *fullpath;
   int r, e;
@@ -94,7 +91,7 @@ _path_checkino (dotp, name, thisino)
   return (st.st_ino == thisino);
 }
 #endif
-    
+
 /* Get the pathname of the current working directory,
    and put it in SIZE bytes of BUF.  Returns NULL if the
    directory couldn't be determined or SIZE was too small.
@@ -102,15 +99,8 @@ _path_checkino (dotp, name, thisino)
    an array is allocated with `malloc'; the array is SIZE
    bytes long, unless SIZE <= 0, in which case it is as
    big as necessary.  */
-#if defined (__STDC__)
 char *
 getcwd (char *buf, size_t size)
-#else /* !__STDC__ */
-char *
-getcwd (buf, size)
-     char *buf;
-     size_t size;
-#endif /* !__STDC__ */
 {
   static const char dots[]
     = "../../../../../../../../../../../../../../../../../../../../../../../\
@@ -121,7 +111,7 @@ getcwd (buf, size)
   dev_t rootdev, thisdev;
   ino_t rootino, thisino;
   char path[PATH_MAX + 1];
-  register char *pathp;
+  char *pathp;
   char *pathbuf;
   size_t pathsize;
   struct stat st;
@@ -155,8 +145,6 @@ getcwd (buf, size)
   dotlist = dots;
   while (!(thisdev == rootdev && thisino == rootino))
     {
-      register DIR *dirstream;
-      register struct dirent *d;
       dev_t dotdev;
       ino_t dotino;
       char mount_point;
@@ -197,9 +185,10 @@ getcwd (buf, size)
       mount_point = dotdev != thisdev;
 
       /* Search for the last directory.  */
-      dirstream = opendir (dotp);
+      DIR *dirstream = opendir (dotp);
       if (dirstream == NULL)
 	goto lose;
+      struct dirent *d;
       while ((d = readdir (dirstream)) != NULL)
 	{
 	  if (d->d_name[0] == '.' &&
@@ -335,9 +324,7 @@ getcwd (buf, size)
 
 #if defined (TEST)
 #  include <stdio.h>
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   char b[PATH_MAX];
 

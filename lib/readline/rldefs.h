@@ -5,7 +5,7 @@
 /* Copyright (C) 1987-2011 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -79,14 +79,14 @@ extern char *strchr (), *strrchr ();
 #define _rl_stricmp strcasecmp
 #define _rl_strnicmp strncasecmp
 #else
-extern int _rl_stricmp PARAMS((const char *, const char *));
-extern int _rl_strnicmp PARAMS((const char *, const char *, int));
+extern int _rl_stricmp (const char *, const char *);
+extern int _rl_strnicmp (const char *, const char *, int);
 #endif
 
 #if defined (HAVE_STRPBRK) && !defined (HAVE_MULTIBYTE)
 #  define _rl_strpbrk(a,b)	strpbrk((a),(b))
 #else
-extern char *_rl_strpbrk PARAMS((const char *, const char *));
+extern char *_rl_strpbrk (const char *, const char *);
 #endif
 
 #if !defined (emacs_mode)
@@ -96,8 +96,8 @@ extern char *_rl_strpbrk PARAMS((const char *, const char *));
 #endif
 
 #if !defined (RL_IM_INSERT)
-#  define RL_IM_INSERT		1
-#  define RL_IM_OVERWRITE	0
+#  define RL_IM_INSERT		true
+#  define RL_IM_OVERWRITE	false
 #
 #  define RL_IM_DEFAULT		RL_IM_INSERT
 #endif

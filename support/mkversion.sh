@@ -153,8 +153,8 @@ echo "#define SCCSVERSION \"@(#)Bash version ${sccs_string}\""
 # extern function declarations
 #echo
 #echo '/* Functions from version.c. */'
-#echo 'extern char *shell_version_string PARAMS((void));'
-#echo 'extern void show_shell_version PARAMS((int));'
+#echo 'extern char *shell_version_string (void);'
+#echo 'extern void show_shell_version (int);'
 
 if [ -n "$inc_build" ]; then
 	# Make sure we can write to .build
@@ -164,5 +164,5 @@ if [ -n "$inc_build" ]; then
 		echo "$build_ver" > .build
 	fi
 fi
-	
+
 exit 0

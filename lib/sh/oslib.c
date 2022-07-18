@@ -54,11 +54,9 @@ extern int errno;
 /* Make the functions strchr and strrchr if they do not exist. */
 #if !defined (HAVE_STRCHR)
 char *
-strchr (string, c)
-     char *string;
-     int c;
+strchr (char *string, int c)
 {
-  register char *s;
+  char *s;
 
   for (s = string; s && *s; s++)
     if (*s == c)
@@ -68,11 +66,9 @@ strchr (string, c)
 }
 
 char *
-strrchr (string, c)
-     char *string;
-     int c;
+strrchr (char *string, int c)
 {
-  register char *s, *t;
+  char *s, *t;
 
   for (s = string, t = (char *)NULL; s && *s; s++)
     if (*s == c)
@@ -85,8 +81,7 @@ strrchr (string, c)
 /* Replacement for dup2 (), for those systems which either don't have it,
    or supply one with broken behaviour. */
 int
-dup2 (fd1, fd2)
-     int fd1, fd2;
+dup2 (int fd1, int fd2)
 {
   int saved_errno, r;
 
@@ -166,9 +161,7 @@ getdtablesize ()
 #    undef bcopy
 #  endif
 void
-bcopy (s,d,n)
-     char *d, *s;
-     int n;
+bcopy (const void *s, void *d, int n)
 {
   FASTCOPY (s, d, n);
 }
@@ -179,12 +172,10 @@ bcopy (s,d,n)
 #    undef bzero
 #  endif
 void
-bzero (s, n)
-     char *s;
-     int n;
+bzero (void *s, int n)
 {
-  register int i;
-  register char *r;
+  int i;
+  char *r;
 
   for (i = 0, r = s; i < n; i++)
     *r++ = '\0';
@@ -195,9 +186,7 @@ bzero (s, n)
 #  if defined (HAVE_UNAME)
 #    include <sys/utsname.h>
 int
-gethostname (name, namelen)
-     char *name;
-     int namelen;
+gethostname (char *name, int namelen)
 {
   int i;
   struct utsname ut;
@@ -212,9 +201,7 @@ gethostname (name, namelen)
 }
 #  else /* !HAVE_UNAME */
 int
-gethostname (name, namelen)
-     char *name;
-     int namelen;
+gethostname (char *name, int namelen)
 {
   strncpy (name, "unknown", namelen);
   name[namelen] = '\0';
@@ -225,9 +212,7 @@ gethostname (name, namelen)
 
 #if !defined (HAVE_KILLPG)
 int
-killpg (pgrp, sig)
-     pid_t pgrp;
-     int sig;
+killpg (pid_t pgrp, int sig)
 {
   return (kill (-pgrp, sig));
 }
@@ -235,9 +220,7 @@ killpg (pgrp, sig)
 
 #if !defined (HAVE_MKFIFO) && defined (PROCESS_SUBSTITUTION)
 int
-mkfifo (path, mode)
-     char *path;
-     int mode;
+mkfifo (char *path, int mode)
 {
 #if defined (S_IFIFO)
   return (mknod (path, (mode | S_IFIFO), 0));
@@ -268,7 +251,7 @@ getmaxgroups ()
 #    else /* !NGROUPS */
   maxgroups = DEFAULT_MAXGROUPS;
 #    endif /* !NGROUPS */
-#  endif /* !NGROUPS_MAX */  
+#  endif /* !NGROUPS_MAX */
 #endif /* !HAVE_SYSCONF || !SC_NGROUPS_MAX */
 
   if (maxgroups <= 0)

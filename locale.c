@@ -66,10 +66,10 @@ static char *lang;
 
 /* Called to reset all of the locale variables to their appropriate values
    if (and only if) LC_ALL has not been assigned a value. */
-static int reset_locale_vars PARAMS((void));
+static int reset_locale_vars (void);
 
-static void locale_setblanks PARAMS((void));
-static int locale_isutf8 PARAMS((char *));
+static void locale_setblanks (void);
+static bool locale_isutf8 (const char *);
 
 /* Set the value of default_locale and make the current locale the
    system default locale.  This should be called very early in main(). */
@@ -171,14 +171,10 @@ set_default_locale_vars ()
 
 /* Set one of the locale categories (specified by VAR) to VALUE.  Returns 1
   if successful, 0 otherwise. */
-int
-set_locale_var (var, value)
-     char *var, *value;
+bool
+set_locale_var (const char *var, const char *value)
 {
-  int r;
-  char *x;
-
-  x = "";
+  const char *x = "";
   errno = 0;
   if (var[0] == 'T' && var[10] == 0)		/* TEXTDOMAIN */
     {
@@ -186,7 +182,7 @@ set_locale_var (var, value)
       default_domain = value ? savestring (value) : (char *)NULL;
       if (default_dir && *default_dir)
 	bindtextdomain (default_domain, default_dir);
-      return (1);
+      return true;
     }
   else if (var[0] == 'T')			/* TEXTDOMAINDIR */
     {
@@ -194,7 +190,7 @@ set_locale_var (var, value)
       default_dir = value ? savestring (value) : (char *)NULL;
       if (default_domain && *default_domain)
 	bindtextdomain (default_domain, default_dir);
-      return (1);
+      return true;
     }
 
   /* var[0] == 'L' && var[1] == 'C' && var[2] == '_' */
@@ -210,7 +206,7 @@ set_locale_var (var, value)
 	  lc_all[0] = '\0';
 	}
 #if defined (HAVE_SETLOCALE)
-      r = *lc_all ? ((x = setlocale (LC_ALL, lc_all)) != 0) : reset_locale_vars ();
+      bool r = *lc_all ? ((x = setlocale (LC_ALL, lc_all)) != 0) : reset_locale_vars ();
       if (x == 0)
 	{
 	  if (errno == 0)
@@ -231,7 +227,7 @@ set_locale_var (var, value)
       u32reset ();
       return r;
 #else
-      return (1);
+      return true;
 #endif
     }
 
@@ -285,7 +281,7 @@ set_locale_var (var, value)
 #  endif /* LC_TIME */
     }
 #endif /* HAVE_SETLOCALE */
-  
+
   if (x == 0)
     {
       if (errno == 0)
@@ -301,8 +297,7 @@ set_locale_var (var, value)
    reset_locale_vars() to reset any default values if LC_ALL is unset or
    null. */
 int
-set_lang (var, value)
-     char *var, *value;
+set_lang (const char *var, const char *value)
 {
   FREE (lang);
   if (value)
@@ -333,11 +328,10 @@ set_default_lang ()
 /* Get the value of one of the locale variables (LC_MESSAGES, LC_CTYPE).
    The precedence is as POSIX.2 specifies:  LC_ALL has precedence over
    the specific locale variables, and LANG, if set, is used as the default. */
-char *
-get_locale_var (var)
-     char *var;
+const char *
+get_locale_var (const char *var)
 {
-  char *locale;
+  const char *locale;
 
   locale = lc_all;
 
@@ -384,7 +378,7 @@ reset_locale_vars ()
   t = setlocale (LC_TIME, get_locale_var ("LC_TIME"));
 #  endif
 
-  locale_setblanks ();  
+  locale_setblanks ();
   locale_mb_cur_max = MB_CUR_MAX;
   if (x)
     locale_utf8locale = locale_isutf8 (x);
@@ -403,14 +397,8 @@ reset_locale_vars ()
    is not available, the passed string is returned unchanged.  The
    length of the translated string is returned in LENP, if non-null. */
 char *
-localetrans (string, len, lenp)
-     char *string;
-     int len, *lenp;
+localetrans (const char *string, int len, int *lenp)
 {
-  char *locale, *t;
-  char *translated;
-  int tlen;
-
   /* Don't try to translate null strings. */
   if (string == 0 || *string == 0)
     {
@@ -419,11 +407,12 @@ localetrans (string, len, lenp)
       return ((char *)NULL);
     }
 
-  locale = get_locale_var ("LC_MESSAGES");
+  const char *locale = get_locale_var ("LC_MESSAGES");
 
   /* If we don't have setlocale() or the current locale is `C' or `POSIX',
      just return the string.  If we don't have gettext(), there's no use
      doing anything else. */
+  char *t;
   if (locale == 0 || locale[0] == '\0' ||
       (locale[0] == 'C' && locale[1] == '\0') || STREQ (locale, "POSIX"))
     {
@@ -435,6 +424,7 @@ localetrans (string, len, lenp)
     }
 
   /* Now try to translate it. */
+  const char *translated;
   if (default_domain && *default_domain)
     translated = dgettext (default_domain, string);
   else
@@ -449,7 +439,7 @@ localetrans (string, len, lenp)
     }
   else
     {
-      tlen = strlen (translated);
+      int tlen = strlen (translated);
       t = (char *)xmalloc (tlen + 1);
       strcpy (t, translated);
       if (lenp)
@@ -461,11 +451,9 @@ localetrans (string, len, lenp)
 /* Change a bash string into a string suitable for inclusion in a `po' file.
    This backslash-escapes `"' and `\' and changes newlines into \\\n"\n". */
 char *
-mk_msgstr (string, foundnlp)
-     char *string;
-     int *foundnlp;
+mk_msgstr (char *string, bool *foundnlp)
 {
-  register int c, len;
+  int c, len;
   char *result, *r, *s;
 
   for (len = 0, s = string; s && *s; s++)
@@ -476,7 +464,7 @@ mk_msgstr (string, foundnlp)
       else if (*s == '\n')
 	len += 5;
     }
-  
+
   r = result = (char *)xmalloc (len + 3);
   *r++ = '"';
 
@@ -490,7 +478,7 @@ mk_msgstr (string, foundnlp)
 	  *r++ = '\n';
 	  *r++ = '"';
 	  if (foundnlp)
-	    *foundnlp = 1;
+	    *foundnlp = true;
 	  continue;
 	}
       if (c == '"' || c == '\\')
@@ -512,14 +500,11 @@ mk_msgstr (string, foundnlp)
    by the caller.  The length of the translated string is returned in LENP,
    if non-null. */
 char *
-localeexpand (string, start, end, lineno, lenp)
-     char *string;
-     int start, end, lineno, *lenp;
+localeexpand (const char *string, int start, int end, int lineno, int *lenp)
 {
-  int len, tlen, foundnl;
-  char *temp, *t, *t2;
+  int len, tlen;
 
-  temp = (char *)xmalloc (end - start + 1);
+  char *temp = (char *)xmalloc (end - start + 1);
   for (tlen = 0, len = start; len < end; )
     temp[tlen++] = string[len++];
   temp[tlen] = '\0';
@@ -535,9 +520,9 @@ localeexpand (string, start, end, lineno, lenp)
     {
       if (dump_po_strings)
 	{
-	  foundnl = 0;
-	  t = mk_msgstr (temp, &foundnl);
-	  t2 = foundnl ? "\"\"\n" : "";
+	  bool foundnl = false;
+	  char *t = mk_msgstr (temp, &foundnl);
+	  const char *t2 = foundnl ? "\"\"\n" : "";
 
 	  printf ("#: %s:%d\nmsgid %s%s\nmsgstr \"\"\n",
 			yy_input_name (), lineno, t2, t);
@@ -552,7 +537,7 @@ localeexpand (string, start, end, lineno, lenp)
     }
   else if (*temp)
     {
-      t = localetrans (temp, tlen, &len);
+      char *t = localetrans (temp, tlen, &len);
       free (temp);
       if (lenp)
 	*lenp = len;
@@ -590,9 +575,8 @@ locale_setblanks ()
 /* Parse a locale specification
      language[_territory][.codeset][@modifier][+special][,[sponsor][_revision]]
    and return TRUE if the codeset is UTF-8 or utf8 */
-static int
-locale_isutf8 (lspec)
-     char *lspec;
+static bool
+locale_isutf8 (const char *lspec)
 {
   char *cp, *encoding;
 
@@ -613,12 +597,12 @@ locale_isutf8 (lspec)
 	  /* The encoding (codeset) is the substring between encoding and cp */
 	  if ((cp - encoding == 5 && STREQN (encoding, "UTF-8", 5)) ||
 	      (cp - encoding == 4 && STREQN (encoding, "utf8", 4)))
-	    return 1;
+	    return true;
 	  else
-	    return 0;
+	    return false;
 	}
     }
-  return 0;
+  return false;
 #endif
 }
 

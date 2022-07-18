@@ -32,8 +32,7 @@
 
 /* Cause STREAM to buffer lines as opposed to characters or blocks. */
 int
-sh_setlinebuf (stream)
-     FILE *stream;
+sh_setlinebuf (FILE *stream)
 {
   char *local_linebuf;
 

@@ -51,8 +51,7 @@ extern int utf8_mblen (const char *, size_t);
 /* Count the number of characters in S, counting multi-byte characters as a
    single character. */
 size_t
-mbstrlen (s)
-     const char *s;
+mbstrlen (const char *s)
 {
   size_t clen, nc;
   mbstate_t mbs = { 0 }, mbsbak = { 0 };
@@ -81,8 +80,7 @@ mbstrlen (s)
 /* XXX - if we know that the locale is UTF-8, we can just check whether or
    not any byte has the eighth bit turned on */
 char *
-mbsmbchar (s)
-     const char *s;
+mbsmbchar (const char *s)
 {
   char *t;
   size_t clen;
@@ -115,10 +113,7 @@ mbsmbchar (s)
 }
 
 int
-sh_mbsnlen(src, srclen, maxlen)
-     const char *src;
-     size_t srclen;
-     int maxlen;
+sh_mbsnlen(const char *src, size_t srclen, int maxlen)
 {
   int count;
   int sind;

@@ -4,7 +4,7 @@
 /* Copyright (C) 1991-2020 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
-   
+
    Bash is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -24,16 +24,13 @@
 #include "stdc.h"
 #include "strmatch.h"
 
-extern int xstrmatch PARAMS((char *, char *, int));
+extern int xstrmatch (const char *, const char *, int);
 #if defined (HANDLE_MULTIBYTE)
-extern int internal_wstrmatch PARAMS((wchar_t *, wchar_t *, int));
+extern int internal_wstrmatch (const wchar_t *, const wchar_t *, int);
 #endif
 
 int
-strmatch (pattern, string, flags)
-     char *pattern;
-     char *string;
-     int flags;
+strmatch (const char *pattern, const char *string, int flags)
 {
   if (string == 0 || pattern == 0)
     return FNM_NOMATCH;
@@ -43,10 +40,7 @@ strmatch (pattern, string, flags)
 
 #if defined (HANDLE_MULTIBYTE)
 int
-wcsmatch (wpattern, wstring, flags)
-     wchar_t *wpattern;
-     wchar_t *wstring;
-     int flags;
+wcsmatch (const wchar_t *wpattern, const wchar_t *wstring, int flags)
 {
   if (wstring == 0 || wpattern == 0)
     return (FNM_NOMATCH);
@@ -56,9 +50,7 @@ wcsmatch (wpattern, wstring, flags)
 #endif
 
 #ifdef TEST
-main (c, v)
-     int c;
-     char **v;
+main (int c, char **v)
 {
   char *string, *pat;
 

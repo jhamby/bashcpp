@@ -90,13 +90,12 @@ $END
 #include "builtext.h"
 #include "bashgetopt.h"
 
-static SHELL_VAR *declare_find_variable PARAMS((const char *, int, int));
-static int declare_internal PARAMS((register WORD_LIST *, int));
+static SHELL_VAR *declare_find_variable (const char *, int, int);
+static int declare_internal (WORD_LIST *, int);
 
 /* Declare or change variable attributes. */
 int
-declare_builtin (list)
-     register WORD_LIST *list;
+declare_builtin (WORD_LIST *list)
 {
   return (declare_internal (list, 0));
 }
@@ -117,8 +116,7 @@ Returns success unless an invalid option is supplied, a variable
 assignment error occurs, or the shell is not executing a function.
 $END
 int
-local_builtin (list)
-     register WORD_LIST *list;
+local_builtin (WORD_LIST *list)
 {
   /* Catch a straight `local --help' before checking function context */
   if (list && list->word && STREQ (list->word->word, "--help"))
@@ -126,7 +124,7 @@ local_builtin (list)
       builtin_help ();
       return (EX_USAGE);
     }
-    
+
   if (variable_context)
     return (declare_internal (list, 1));
   else
@@ -143,9 +141,7 @@ local_builtin (list)
 #endif
 
 static SHELL_VAR *
-declare_find_variable (name, mkglobal, chklocal)
-     const char *name;
-     int mkglobal, chklocal;
+declare_find_variable (const char *name, int mkglobal, int chklocal)
 {
   SHELL_VAR *var;
 
@@ -164,18 +160,16 @@ declare_find_variable (name, mkglobal, chklocal)
 
 /* The workhorse function. */
 static int
-declare_internal (list, local_var)
-     register WORD_LIST *list;
-     int local_var;
+declare_internal (WORD_LIST *list, int local_var)
 {
   int flags_on, flags_off, *flags;
-  int any_failed, assign_error, pflag, nodefs, opt, onref, offref;
+  int assign_error, pflag, nodefs, opt, onref, offref;
   int mkglobal, chklocal, inherit_flag;
   char *t, *subscript_start;
   SHELL_VAR *var, *refvar, *v;
   FUNCTION_DEF *shell_fn;
 
-  flags_on = flags_off = any_failed = assign_error = pflag = nodefs = 0;
+  flags_on = flags_off = assign_error = pflag = nodefs = 0;
   mkglobal = chklocal = inherit_flag = 0;
   refvar = (SHELL_VAR *)NULL;
   reset_internal_getopt ();
@@ -287,9 +281,10 @@ declare_internal (list, local_var)
       return (sh_chkwrite (EXECUTION_SUCCESS));
     }
 
+  bool any_failed = false;
   if (pflag)	/* declare -p [-aAfFirtx] name [name...] */
     {
-      for (any_failed = 0; list; list = list->next)
+      for (; list; list = (WORD_LIST *)list->next)
 	{
 	  if (flags_on & att_function)
 	    pflag = show_func_attributes (list->word->word, nodefs);
@@ -300,18 +295,19 @@ declare_internal (list, local_var)
 	  if (pflag)
 	    {
 	      sh_notfound (list->word->word);
-	      any_failed++;
+	      any_failed = true;
 	    }
 	}
       return (sh_chkwrite (any_failed ? EXECUTION_FAILURE : EXECUTION_SUCCESS));
     }
 
-#define NEXT_VARIABLE() free (name); list = list->next; continue
+#define NEXT_VARIABLE() free (name); list = (WORD_LIST *)list->next; continue
 
   /* There are arguments left, so we are making variables. */
   while (list)		/* declare [-aAfFirx] name [name ...] */
     {
-      char *value, *name, *oldname;
+      char *value;
+      char *name;
       int offset, aflags, wflags, created_var, namelen;
       int assoc_noexpand;
 #if defined (ARRAY_VARS)
@@ -351,7 +347,7 @@ declare_internal (list, local_var)
 	    }
 	}
       else
-	value = "";
+	value = (char *)"";
 
       /* Do some lexical error checking on the LHS and RHS of the assignment
 	 that is specific to nameref variables. */
@@ -488,13 +484,13 @@ restart_new_var_name:
 
 	  if (var == 0)
 	    {
-	      any_failed++;
+	      any_failed = true;
 	      NEXT_VARIABLE ();
 	    }
 	  if (var && nameref_p (var) && readonly_p (var) && nameref_cell (var) && (flags_off & att_nameref))
 	    {
 	      sh_readonly (name);
-	      any_failed++;
+	      any_failed = true;
 	      NEXT_VARIABLE ();
 	    }
 	}
@@ -524,13 +520,13 @@ restart_new_var_name:
 		  if (readonly_p (var) && (flags_off & att_readonly))
 		    {
 		      builtin_error (_("%s: readonly function"), name);
-		      any_failed++;
+		      any_failed = true;
 		      NEXT_VARIABLE ();
 		    }
 		  else if (flags_on & (att_array|att_assoc))
 		    {
 		      sh_invalidopt ((flags_on & att_array) ? "-a" : "-A");
-		      any_failed++;
+		      any_failed = true;
 		      NEXT_VARIABLE ();
 		    }
 		  /* declare -[Ff] name [name...] */
@@ -547,7 +543,7 @@ restart_new_var_name:
 			}
 		      else
 #endif /* DEBUGGER */
-			{	
+			{
 			  t = nodefs ? var->name
 				     : named_function_string (name, function_cell (var), FUNC_MULTILINE|FUNC_EXTERNAL);
 			  printf ("%s\n", t);
@@ -562,7 +558,7 @@ restart_new_var_name:
 		    }
 		}
 	      else
-		any_failed++;
+		any_failed = true;
 	      NEXT_VARIABLE ();
 	    }
 	}
@@ -610,7 +606,7 @@ restart_new_var_name:
 	      if (refvar && nameref_cell (refvar) && readonly_p (refvar))
 		{
 		  sh_readonly (name);
-		  any_failed++;
+		  any_failed = true;
 		  NEXT_VARIABLE ();
 		}
 
@@ -660,7 +656,7 @@ restart_new_var_name:
 		var = mkglobal ? find_global_variable (nameref_cell (refvar)) : find_variable (nameref_cell (refvar));
 	      if (refvar && var == 0)
 		{
-		  oldname = name;	/* need to free this */
+		  char *oldname = name;	/* need to free this */
 
 		  namelen = strlen (nameref_cell (refvar));
 #if defined (ARRAY_VARS)
@@ -670,7 +666,7 @@ restart_new_var_name:
 		      namelen +=  strlen (subscript_start);
 		    }
 #endif
-		  name = xmalloc (namelen + 2 + strlen (value) + 1);
+		  name = (char *)xmalloc (namelen + 2 + strlen (value) + 1);
 		  strcpy (name, nameref_cell (refvar));
 #if defined (ARRAY_VARS)
 		  if (subscript_start)
@@ -760,7 +756,7 @@ restart_new_var_name:
 	  else if (nameref_p (var) && (flags_on & att_nameref) == 0 && (flags_off & att_nameref) == 0 && offset && valid_nameref_value (value, 1) == 0)
 	    {
 	      builtin_error (_("`%s': invalid variable name for name reference"), value);
-	      any_failed++;
+	      any_failed = true;
 	      NEXT_VARIABLE ();
 	    }
 	  else if (flags_on & att_nameref)
@@ -771,25 +767,25 @@ restart_new_var_name:
 	      if (nameref_p (var) == 0 && var_isset (var) && offset == 0 && valid_nameref_value (value_cell (var), 0) == 0)
 		{
 		  builtin_error (_("`%s': invalid variable name for name reference"), value_cell (var));
-		  any_failed++;
+		  any_failed = true;
 		  NEXT_VARIABLE ();
 		}
 #endif
 	      if (readonly_p (var))
 		{
 		  sh_readonly (name);
-		  any_failed++;
+		  any_failed = true;
 		  NEXT_VARIABLE ();
 		}
 	      /* ksh93 compat: turning on nameref attribute turns off -ilu */
 	      VUNSETATTR (var, att_integer|att_uppercase|att_lowercase|att_capcase);
 	    }
 
-	  /* Cannot use declare +r to turn off readonly attribute. */ 
+	  /* Cannot use declare +r to turn off readonly attribute. */
 	  if (readonly_p (var) && (flags_off & att_readonly))
 	    {
 	      sh_readonly (name_cell (var));
-	      any_failed++;
+	      any_failed = true;
 	      NEXT_VARIABLE ();
 	    }
 
@@ -819,7 +815,7 @@ restart_new_var_name:
 		  /* The warning is only printed when using compound assignment
 		     to an array variable that doesn't already exist.  We use
 		     creating_array to allow things like
-		     declare -a foo$bar='(abc)' to work. */		     
+		     declare -a foo$bar='(abc)' to work. */
 		  if (array_exists == 0 && creating_array == 0)
 		    internal_warning (_("%s: quoted compound array assignment deprecated"), list->word->word);
 		  compound_array_assign = array_exists || creating_array;
@@ -836,32 +832,32 @@ restart_new_var_name:
 	  if (((flags_off & att_array) && array_p (var)) || ((flags_off & att_assoc) && assoc_p (var)))
 	    {
 	      builtin_error (_("%s: cannot destroy array variables in this way"), name);
-	      any_failed++;
+	      any_failed = true;
 	      NEXT_VARIABLE ();
 	    }
 
 	  if ((flags_on & att_array) && assoc_p (var))
 	    {
 	      builtin_error (_("%s: cannot convert associative to indexed array"), name);
-	      any_failed++;
+	      any_failed = true;
 	      NEXT_VARIABLE ();
 	    }
 	  if ((flags_on & att_assoc) && array_p (var))
 	    {
 	      builtin_error (_("%s: cannot convert indexed to associative array"), name);
-	      any_failed++;
+	      any_failed = true;
 	      NEXT_VARIABLE ();
 	    }
 
 	  /* declare -A name[[n]] makes name an associative array variable. */
 	  if (flags_on & att_assoc)
 	    {
-	      if (assoc_p (var) == 0)
+	      if (!assoc_p (var))
 		var = convert_var_to_assoc (var);
 	    }
 	  /* declare -a name[[n]] or declare name[n] makes name an indexed
 	     array variable. */
-	  else if ((making_array_special || (flags_on & att_array)) && array_p (var) == 0 && assoc_p (var) == 0)
+	  else if ((making_array_special || (flags_on & att_array)) && !array_p (var) && !assoc_p (var))
 	    var = convert_var_to_array (var);
 #endif /* ARRAY_VARS */
 
@@ -995,6 +991,6 @@ restart_new_var_name:
     }
 
   return (assign_error ? EX_BADASSIGN
-		       : ((any_failed == 0) ? EXECUTION_SUCCESS
-  					    : EXECUTION_FAILURE));
+		       : ((!any_failed) ? EXECUTION_SUCCESS
+					: EXECUTION_FAILURE));
 }

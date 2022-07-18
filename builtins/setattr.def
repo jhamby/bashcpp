@@ -42,7 +42,7 @@ $PRODUCES setattr.c
 extern sh_builtin_func_t *this_shell_builtin;
 
 #ifdef ARRAY_VARS
-extern int declare_builtin PARAMS((WORD_LIST *));
+extern int declare_builtin (WORD_LIST *);
 #endif
 
 #define READONLY_OR_EXPORT \
@@ -73,8 +73,7 @@ $END
    exported attribute from variables named in LIST.  An argument of
   -f indicates that the names present in LIST refer to functions. */
 int
-export_builtin (list)
-     register WORD_LIST *list;
+export_builtin (WORD_LIST *list)
 {
   return (set_or_show_attributes (list, att_exported, 0));
 }
@@ -104,8 +103,7 @@ $END
 /* For each variable name in LIST, make that variable readonly.  Given an
    empty LIST, print out all existing readonly variables. */
 int
-readonly_builtin (list)
-     register WORD_LIST *list;
+readonly_builtin (WORD_LIST *list)
 {
   return (set_or_show_attributes (list, att_readonly, 0));
 }
@@ -120,11 +118,8 @@ readonly_builtin (list)
    ATTRIBUTE.  An arg of `-n' says to remove the attribute from the the
    remaining names in LIST (doesn't work for readonly). */
 int
-set_or_show_attributes (list, attribute, nodefs)
-     register WORD_LIST *list;
-     int attribute, nodefs;
+set_or_show_attributes (WORD_LIST *list, int attribute, int nodefs)
 {
-  register SHELL_VAR *var;
   int assign, undo, any_failed, assign_error, opt;
   int functions_only, arrays_only, assoc_only;
   int aflags;
@@ -183,7 +178,7 @@ set_or_show_attributes (list, attribute, nodefs)
 
 	  if (functions_only)		/* xxx -f name */
 	    {
-	      var = find_function (name);
+	      SHELL_VAR *var = find_function (name);
 	      if (var == 0)
 		{
 		  builtin_error (_("%s: not a function"), name);
@@ -197,7 +192,7 @@ set_or_show_attributes (list, attribute, nodefs)
 	      else
 		SETVARATTR (var, attribute, undo);
 
-	      list = list->next;
+	      list = (WORD_LIST *)list->next;
 	      continue;
 	    }
 
@@ -222,7 +217,7 @@ set_or_show_attributes (list, attribute, nodefs)
 		assign_error++;
 	      else
 		any_failed++;
-	      list = list->next;
+	      list = (WORD_LIST *)list->next;
 	      continue;
 	    }
 
@@ -236,7 +231,7 @@ set_or_show_attributes (list, attribute, nodefs)
 		 declare -ra xxx=yyy and see what that gets us. */
 	      if (arrays_only || assoc_only)
 		{
-		  tlist = list->next;
+		  tlist = (WORD_LIST *)list->next;
 		  list->next = (WORD_LIST *)NULL;
 		  /* Add -g to avoid readonly/export creating local variables:
 		     only local/declare/typeset create local variables */
@@ -283,13 +278,13 @@ set_or_show_attributes (list, attribute, nodefs)
 	      if (aflags & ASS_APPEND)
 		name[assign-1] = '+';
 	    }
-	  list = list->next;
+	  list = (WORD_LIST *)list->next;
 	}
     }
   else
     {
       SHELL_VAR **variable_list;
-      register int i;
+      int i;
 
       if ((attribute & att_function) || functions_only)
 	{
@@ -317,6 +312,7 @@ set_or_show_attributes (list, attribute, nodefs)
 
       if (variable_list)
 	{
+	  SHELL_VAR *var;
 	  for (i = 0; var = variable_list[i]; i++)
 	    {
 #if defined (ARRAY_VARS)
@@ -350,15 +346,14 @@ set_or_show_attributes (list, attribute, nodefs)
 /* Show all variable variables (v == 1) or functions (v == 0) with
    attributes. */
 int
-show_all_var_attributes (v, nodefs)
-     int v, nodefs;
+show_all_var_attributes (int v, int nodefs)
 {
   SHELL_VAR **variable_list, *var;
   int any_failed;
-  register int i;
+  int i;
 
   variable_list = v ? all_shell_variables () : all_shell_functions ();
-  if (variable_list == 0)  
+  if (variable_list == 0)
     return (EXECUTION_SUCCESS);
 
   for (i = any_failed = 0; var = variable_list[i]; i++)
@@ -374,15 +369,14 @@ show_all_var_attributes (v, nodefs)
 /* Show all local variable variables with their attributes. This shows unset
    local variables (all_local_variables called with 0 argment). */
 int
-show_local_var_attributes (v, nodefs)
-     int v, nodefs;
+show_local_var_attributes (int v, int nodefs)
 {
   SHELL_VAR **variable_list, *var;
   int any_failed;
-  register int i;
+  int i;
 
   variable_list = all_local_variables (0);
-  if (variable_list == 0)  
+  if (variable_list == 0)
     return (EXECUTION_SUCCESS);
 
   for (i = any_failed = 0; var = variable_list[i]; i++)
@@ -396,10 +390,7 @@ show_local_var_attributes (v, nodefs)
 }
 
 int
-var_attribute_string (var, pattr, flags)
-     SHELL_VAR *var;
-     int pattr;
-     char *flags;	/* filled in with attributes */
+var_attribute_string (SHELL_VAR *var, int pattr, char *flags)	/* filled in with attributes */
 {
   int i;
 
@@ -468,9 +459,7 @@ var_attribute_string (var, pattr, flags)
    or `readonly') instead of `declare', and doesn't print function defs
    when called by `export' or `readonly'. */
 int
-show_var_attributes (var, pattr, nodefs)
-     SHELL_VAR *var;
-     int pattr, nodefs;
+show_var_attributes (SHELL_VAR *var, int pattr, int nodefs)
 {
   char flags[MAX_ATTRIBUTES], *x;
   int i;
@@ -522,9 +511,7 @@ show_var_attributes (var, pattr, nodefs)
 }
 
 int
-show_name_attributes (name, nodefs)
-     char *name;
-     int nodefs;
+show_name_attributes (const char *name, int nodefs)
 {
   SHELL_VAR *var;
 
@@ -540,9 +527,7 @@ show_name_attributes (name, nodefs)
 }
 
 int
-show_localname_attributes (name, nodefs)
-     char *name;
-     int nodefs;
+show_localname_attributes (const char *name, int nodefs)
 {
   SHELL_VAR *var;
 
@@ -558,9 +543,7 @@ show_localname_attributes (name, nodefs)
 }
 
 int
-show_func_attributes (name, nodefs)
-     char *name;
-     int nodefs;
+show_func_attributes (const char *name, int nodefs)
 {
   SHELL_VAR *var;
 
@@ -576,9 +559,7 @@ show_func_attributes (name, nodefs)
 }
 
 void
-set_var_attribute (name, attribute, undo)
-     char *name;
-     int attribute, undo;
+set_var_attribute (const char *name, int attribute, int undo)
 {
   SHELL_VAR *var, *tv, *v, *refvar;
   char *tvalue;
@@ -657,5 +638,5 @@ set_var_attribute (name, attribute, undo)
     SETVARATTR (var, attribute, undo);
 
   if (var && (exported_p (var) || (attribute & att_exported)))
-    array_needs_making++;	/* XXX */
+    array_needs_making = true;	/* XXX */
 }

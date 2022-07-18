@@ -55,7 +55,7 @@ struct builtin {
   int flags;			/* One of the #defines above. */
   char * const *long_doc;	/* NULL terminated array of strings. */
   const char *short_doc;	/* Short version of documentation. */
-  char *handle;			/* for future use */
+  void *handle;			/* dlsym() handle */
 };
 
 /* Found in builtins.c, created by builtins/mkbuiltins. */

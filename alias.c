@@ -48,17 +48,17 @@
 
 #define ALIAS_HASH_BUCKETS	64	/* must be power of two */
 
-typedef int sh_alias_map_func_t PARAMS((alias_t *));
+typedef int sh_alias_map_func_t (alias_t *);
 
-static void free_alias_data PARAMS((PTR_T));
-static alias_t **map_over_aliases PARAMS((sh_alias_map_func_t *));
-static void sort_aliases PARAMS((alias_t **));
-static int qsort_alias_compare PARAMS((alias_t **, alias_t **));
+static void free_alias_data (PTR_T);
+static alias_t **map_over_aliases (sh_alias_map_func_t *);
+static void sort_aliases (alias_t **);
+static int qsort_alias_compare (alias_t **, alias_t **);
 
 #if defined (READLINE)
-static int skipquotes PARAMS((char *, int));
-static int skipws PARAMS((char *, int));
-static int rd_token PARAMS((char *, int));
+static int skipquotes (const char *, int);
+static int skipws (const char *, int);
+static int rd_token (const char *, int);
 #endif
 
 /* Non-zero means expand all words on the line.  Otherwise, expand
@@ -78,8 +78,7 @@ initialize_aliases ()
 /* Scan the list of aliases looking for one with NAME.  Return NULL
    if the alias doesn't exist, else a pointer to the alias_t. */
 alias_t *
-find_alias (name)
-     char *name;
+find_alias (const char *name)
 {
   BUCKET_CONTENTS *al;
 
@@ -92,8 +91,7 @@ find_alias (name)
 
 /* Return the value of the alias for NAME, or NULL if there is none. */
 char *
-get_alias_value (name)
-     char *name;
+get_alias_value (const char *name)
 {
   alias_t *alias;
 
@@ -107,8 +105,7 @@ get_alias_value (name)
 /* Make a new alias from NAME and VALUE.  If NAME can be found,
    then replace its value. */
 void
-add_alias (name, value)
-     char *name, *value;
+add_alias (const char *name, const char *value)
 {
   BUCKET_CONTENTS *elt;
   alias_t *temp;
@@ -158,12 +155,9 @@ add_alias (name, value)
 
 /* Delete a single alias structure. */
 static void
-free_alias_data (data)
-     PTR_T data;
+free_alias_data (PTR_T data)
 {
-  register alias_t *a;
-
-  a = (alias_t *)data;
+  alias_t *a = (alias_t *)data;
 
   if (a->flags & AL_BEINGEXPANDED)
     clear_string_list_expander (a);	/* call back to the parser */
@@ -177,15 +171,12 @@ free_alias_data (data)
    the number of aliases left in the table, or -1 if the alias didn't
    exist. */
 int
-remove_alias (name)
-     char *name;
+remove_alias (const char *name)
 {
-  BUCKET_CONTENTS *elt;
-
   if (aliases == 0)
     return (-1);
 
-  elt = hash_remove (name, aliases, 0);
+  BUCKET_CONTENTS *elt = hash_remove (name, aliases, 0);
   if (elt)
     {
       free_alias_data (elt->data);
@@ -217,22 +208,19 @@ delete_all_aliases ()
 /* Return an array of aliases that satisfy the conditions tested by FUNCTION.
    If FUNCTION is NULL, return all aliases. */
 static alias_t **
-map_over_aliases (function)
-     sh_alias_map_func_t *function;
+map_over_aliases (sh_alias_map_func_t *function)
 {
-  register int i;
-  register BUCKET_CONTENTS *tlist;
   alias_t *alias, **list;
   int list_index;
 
-  i = HASH_ENTRIES (aliases);
+  int i = HASH_ENTRIES (aliases);
   if (i == 0)
     return ((alias_t **)NULL);
 
   list = (alias_t **)xmalloc ((i + 1) * sizeof (alias_t *));
   for (i = list_index = 0; i < aliases->nbuckets; i++)
     {
-      for (tlist = hash_items (i, aliases); tlist; tlist = tlist->next)
+      for (BUCKET_CONTENTS *tlist = hash_items (i, aliases); tlist; tlist = tlist->next)
 	{
 	  alias = (alias_t *)tlist->data;
 
@@ -247,15 +235,13 @@ map_over_aliases (function)
 }
 
 static void
-sort_aliases (array)
-     alias_t **array;
+sort_aliases (alias_t **array)
 {
   qsort (array, strvec_len ((char **)array), sizeof (alias_t *), (QSFUNC *)qsort_alias_compare);
 }
 
 static int
-qsort_alias_compare (as1, as2)
-     alias_t **as1, **as2;
+qsort_alias_compare (alias_t **as1, alias_t **as2)
 {
   int result;
 
@@ -281,8 +267,7 @@ all_aliases ()
 }
 
 char *
-alias_expand_word (s)
-     char *s;
+alias_expand_word (const char *s)
 {
   alias_t *r;
 
@@ -319,15 +304,13 @@ static int command_word;
    backslash-escaped characters. */
 
 static int
-skipquotes (string, start)
-     char *string;
-     int start;
+skipquotes (const char *string, int start)
 {
-  register int i;
   int delimiter = string[start];
 
   /* i starts at START + 1 because string[START] is the opening quote
      character. */
+  int i;
   for (i = start + 1 ; string[i] ; i++)
     {
       if (string[i] == '\\')
@@ -348,12 +331,9 @@ skipquotes (string, start)
    START.  Return the new index into STRING, after zero or more characters
    have been skipped. */
 static int
-skipws (string, start)
-     char *string;
-     int start;
+skipws (const char *string, int start)
 {
-  register int i;
-  int pass_next, backslash_quoted_word;
+  int i, pass_next, backslash_quoted_word;
   unsigned char peekc;
 
   /* skip quoted strings, in ' or ", and words in which a character is quoted
@@ -435,11 +415,9 @@ skipws (string, start)
    skipquotes () for quoted strings in the middle or at the end of tokens,
    so all characters show up (e.g. foo'' and foo""bar) */
 static int
-rd_token (string, start)
-     char *string;
-     int start;
+rd_token (const char *string, int start)
 {
-  register int i;
+  int i;
 
   /* From here to next separator character is a token. */
   for (i = start; string[i] && token_char (string[i]); i++)
@@ -476,10 +454,8 @@ rd_token (string, start)
 
 /* Return a new line, with any aliases substituted. */
 char *
-alias_expand (string)
-     char *string;
+alias_expand (const char *string)
 {
-  register int i, j, start;
   char *line, *token;
   int line_len, tl, real_start, expand_next, expand_this_token;
   alias_t *alias;
@@ -488,7 +464,7 @@ alias_expand (string)
   line = (char *)xmalloc (line_len);
   token = (char *)xmalloc (line_len);
 
-  line[0] = i = 0;
+  line[0] = 0;
   expand_next = 0;
   command_word = 1; /* initialized to expand the first word on the line */
 
@@ -497,11 +473,12 @@ alias_expand (string)
      then try again with the next word.  Else, if there is no value, or if
      the value does not end in space, we are done. */
 
+  int i = 0;
   for (;;)
     {
 
       token[0] = 0;
-      start = i;
+      int start = i;
 
       /* Skip white space and quoted characters */
       i = skipws (string, start);
@@ -514,7 +491,7 @@ alias_expand (string)
 
       /* copy the just-skipped characters into the output string,
 	 expanding it if there is not enough room. */
-      j = strlen (line);
+      int j = strlen (line);
       tl = i - start;	/* number of characters just skipped */
       RESIZE_MALLOCED_BUFFER (line, j, (tl + 1), line_len, (tl + 50));
       strncpy (line + j, string + start, tl);

@@ -37,11 +37,10 @@
 /* Allocate a new STRINGLIST, with room for N strings. */
 
 STRINGLIST *
-strlist_create (n)
-     int n;
+strlist_create (int n)
 {
   STRINGLIST *ret;
-  register int i;
+  int i;
 
   ret = (STRINGLIST *)xmalloc (sizeof (STRINGLIST));
   if (n)
@@ -61,11 +60,9 @@ strlist_create (n)
 }
 
 STRINGLIST *
-strlist_resize (sl, n)
-     STRINGLIST *sl;
-     int n;
+strlist_resize (STRINGLIST *sl, int n)
 {
-  register int i;
+  int i;
 
   if (sl == 0)
     return (sl = strlist_create (n));
@@ -81,18 +78,16 @@ strlist_resize (sl, n)
 }
 
 void
-strlist_flush (sl)
-     STRINGLIST *sl;
+strlist_flush (STRINGLIST *sl)
 {
   if (sl == 0 || sl->list == 0)
     return;
   strvec_flush (sl->list);
   sl->list_len = 0;
 }
-  
+
 void
-strlist_dispose (sl)
-     STRINGLIST *sl;
+strlist_dispose (STRINGLIST *sl)
 {
   if (sl == 0)
     return;
@@ -102,9 +97,7 @@ strlist_dispose (sl)
 }
 
 int
-strlist_remove (sl, s)
-     STRINGLIST *sl;
-     char *s;
+strlist_remove (STRINGLIST *sl, char *s)
 {
   int r;
 
@@ -118,34 +111,32 @@ strlist_remove (sl, s)
 }
 
 STRINGLIST *
-strlist_copy (sl)
-     STRINGLIST *sl;
+strlist_copy (STRINGLIST *sl)
 {
-  STRINGLIST *new;
-  register int i;
+  STRINGLIST *new_;
+  int i;
 
   if (sl == 0)
     return ((STRINGLIST *)0);
-  new = strlist_create (sl->list_size);
+  new_ = strlist_create (sl->list_size);
   /* I'd like to use strvec_copy, but that doesn't copy everything. */
   if (sl->list)
     {
       for (i = 0; i < sl->list_size; i++)
-	new->list[i] = STRDUP (sl->list[i]);
+	new_->list[i] = STRDUP (sl->list[i]);
     }
-  new->list_size = sl->list_size;
-  new->list_len = sl->list_len;
+  new_->list_size = sl->list_size;
+  new_->list_len = sl->list_len;
   /* just being careful */
-  if (new->list)
-    new->list[new->list_len] = (char *)NULL;
-  return new;
+  if (new_->list)
+    new_->list[new_->list_len] = (char *)NULL;
+  return new_;
 }
 
 /* Return a new STRINGLIST with everything from M1 and M2. */
 
 STRINGLIST *
-strlist_merge (m1, m2)
-     STRINGLIST *m1, *m2;
+strlist_merge (STRINGLIST *m1, STRINGLIST *m2)
 {
   STRINGLIST *sl;
   int i, n, l1, l2;
@@ -165,10 +156,9 @@ strlist_merge (m1, m2)
 
 /* Make STRINGLIST M1 contain everything in M1 and M2. */
 STRINGLIST *
-strlist_append (m1, m2)
-     STRINGLIST *m1, *m2;
+strlist_append (STRINGLIST *m1, STRINGLIST *m2)
 {
-  register int i, n, len1, len2;
+  int i, n, len1, len2;
 
   if (m1 == 0)
     return (m2 ? strlist_copy (m2) : (STRINGLIST *)0);
@@ -189,9 +179,7 @@ strlist_append (m1, m2)
 }
 
 STRINGLIST *
-strlist_prefix_suffix (sl, prefix, suffix)
-     STRINGLIST *sl;
-     char *prefix, *suffix;
+strlist_prefix_suffix (STRINGLIST *sl, char *prefix, char *suffix)
 {
   int plen, slen, tlen, llen, i;
   char *t;
@@ -219,15 +207,13 @@ strlist_prefix_suffix (sl, prefix, suffix)
       sl->list[i] = t;
     }
 
-  return (sl);	 
+  return (sl);
 }
-   
+
 void
-strlist_print (sl, prefix)
-     STRINGLIST *sl;
-     char *prefix;
+strlist_print (STRINGLIST *sl, char *prefix)
 {
-  register int i;
+  int i;
 
   if (sl == 0)
     return;
@@ -236,22 +222,19 @@ strlist_print (sl, prefix)
 }
 
 void
-strlist_walk (sl, func)
-     STRINGLIST *sl;
-     sh_strlist_map_func_t *func;
+strlist_walk (STRINGLIST *sl, sh_strlist_map_func_t *func)
 {
-  register int i;
+  int i;
 
   if (sl == 0)
     return;
   for (i = 0; i < sl->list_len; i++)
     if ((*func)(sl->list[i]) < 0)
       break;
-} 
-     
+}
+
 void
-strlist_sort (sl)
-     STRINGLIST *sl;
+strlist_sort (STRINGLIST *sl)
 {
   if (sl == 0 || sl->list_len == 0 || sl->list == 0)
     return;
@@ -259,9 +242,7 @@ strlist_sort (sl)
 }
 
 STRINGLIST *
-strlist_from_word_list (list, alloc, starting_index, ip)
-     WORD_LIST *list;
-     int alloc, starting_index, *ip;
+strlist_from_word_list (WORD_LIST *list, int alloc, int starting_index, int *ip)
 {
   STRINGLIST *ret;
   int slen, len;
@@ -283,9 +264,7 @@ strlist_from_word_list (list, alloc, starting_index, ip)
 }
 
 WORD_LIST *
-strlist_to_word_list (sl, alloc, starting_index)
-     STRINGLIST *sl;
-     int alloc, starting_index;
+strlist_to_word_list (STRINGLIST *sl, int alloc, int starting_index)
 {
   WORD_LIST *list;
 

@@ -35,16 +35,13 @@
 #include <bashintl.h>
 
 #ifndef locale_decpoint
-extern int locale_decpoint PARAMS((void));
+extern int locale_decpoint (void);
 #endif
 
-extern long get_clk_tck PARAMS((void));
+extern long get_clk_tck (void);
 
 void
-clock_t_to_secs (t, sp, sfp)
-     clock_t t;
-     time_t *sp;
-     int *sfp;
+clock_t_to_secs (clock_t t, time_t *sp, int *sfp)
 {
   static long clk_tck = -1;
 
@@ -69,9 +66,7 @@ clock_t_to_secs (t, sp, sfp)
    terms of the value of CLK_TCK, which is what is returned by the
    `times' call. */
 void
-print_clock_t (fp, t)
-     FILE *fp;
-     clock_t t;
+print_clock_t (FILE *fp, clock_t t)
 {
   time_t timestamp;
   long minutes;

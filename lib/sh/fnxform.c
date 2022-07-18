@@ -35,9 +35,9 @@
 #endif
 
 #if defined (HAVE_LOCALE_CHARSET)
-extern const char *locale_charset PARAMS((void));
+extern "C" const char *locale_charset (void);
 #else
-extern char *get_locale_var PARAMS((char *));
+extern char *get_locale_var (const char *);
 #endif
 
 #if defined (HAVE_ICONV)
@@ -49,11 +49,11 @@ static iconv_t conv_tofs = (iconv_t)-1;
 static char *outbuf = 0;
 static size_t outlen = 0;
 
-static char *curencoding PARAMS((void));
-static void init_tofs PARAMS((void));
-static void init_fromfs PARAMS((void));
+static const char *curencoding (void);
+static void init_tofs (void);
+static void init_fromfs (void);
 
-static char *
+static const char *
 curencoding ()
 {
   char *loc;
@@ -61,25 +61,24 @@ curencoding ()
   loc = (char *)locale_charset ();
   return loc;
 #else
-  char *dot, *mod;
 
   loc = get_locale_var ("LC_CTYPE");
   if (loc == 0 || *loc == 0)
     return "";
-  dot = strchr (loc, '.');
+  char *dot = strchr (loc, '.');
   if (dot == 0)
     return loc;
-  mod = strchr (dot, '@');
+  char *mod = strchr (dot, '@');
   if (mod)
     *mod = '\0';
   return ++dot;
 #endif
-}  
+}
 
 static void
 init_tofs ()
 {
-  char *cur;
+  const char *cur;
 
   cur = curencoding ();
   conv_tofs = iconv_open ("UTF-8-MAC", cur);
@@ -88,22 +87,20 @@ init_tofs ()
 static void
 init_fromfs ()
 {
-  char *cur;
+  const char *cur;
 
   cur = curencoding ();
   conv_fromfs = iconv_open (cur, "UTF-8-MAC");
 }
 
 char *
-fnx_tofs (string, len)
-     char *string;
-     size_t len;
+fnx_tofs (char *string, size_t len)
 {
 #ifdef MACOSX
   ICONV_CONST char *inbuf;
   char *tempbuf;
   size_t templen;
-  
+
   if (conv_tofs == (iconv_t)-1)
     init_tofs ();
   if (conv_tofs == (iconv_t)-1)
@@ -139,9 +136,7 @@ fnx_tofs (string, len)
 }
 
 char *
-fnx_fromfs (string, len)
-     char *string;
-     size_t len;
+fnx_fromfs (char *string, size_t len)
 {
 #ifdef MACOSX
   ICONV_CONST char *inbuf;
@@ -184,15 +179,13 @@ fnx_fromfs (string, len)
 
 #else
 char *
-fnx_tofs (string)
-     char *string;
+fnx_tofs (char *string)
 {
   return string;
 }
 
 char *
-fnx_fromfs (string)
-     char *string;
+fnx_fromfs (char *string)
 {
   return string;
 }

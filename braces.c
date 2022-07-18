@@ -59,7 +59,7 @@ extern int errno;
 
 #define BRACE_SEQ_SPECIFIER	".."
 
-extern int asprintf PARAMS((char **, const char *, ...)) __attribute__((__format__ (printf, 2, 3)));
+extern int asprintf (char **, const char *, ...) __attribute__((__format__ (printf, 2, 3)));
 
 /* Basic idea:
 
@@ -73,24 +73,15 @@ extern int asprintf PARAMS((char **, const char *, ...)) __attribute__((__format
 /* The character which is used to separate arguments. */
 static const int brace_arg_separator = ',';
 
-#if defined (PARAMS)
-static int brace_gobbler PARAMS((char *, size_t, int *, int));
-static char **expand_amble PARAMS((char *, size_t, int));
-static char **expand_seqterm PARAMS((char *, size_t));
-static char **mkseq PARAMS((intmax_t, intmax_t, intmax_t, int, int));
-static char **array_concat PARAMS((char **, char **));
-#else
-static int brace_gobbler ();
-static char **expand_amble ();
-static char **expand_seqterm ();
-static char **mkseq();
-static char **array_concat ();
-#endif
+static int brace_gobbler (char *, size_t, int *, int);
+static char **expand_amble (char *, size_t, int);
+static char **expand_seqterm (char *, size_t);
+static char **mkseq (intmax_t, intmax_t, intmax_t, int, int);
+static char **array_concat (char **, char **);
 
 #if 0
 static void
-dump_result (a)
-     char **a;
+dump_result (char **a)
 {
   int i;
 
@@ -101,10 +92,8 @@ dump_result (a)
 
 /* Return an array of strings; the brace expansion of TEXT. */
 char **
-brace_expand (text)
-     char *text;
+brace_expand (char *text)
 {
-  register int start;
   size_t tlen;
   char *preamble, *postamble, *amble;
   size_t alen;
@@ -129,7 +118,7 @@ brace_expand (text)
 	 go on.  Loop stops when there are no more open braces in the word. */
       if (c)
 	{
-	  start = j = i + 1;	/* { */
+	  j = i + 1;	/* { */
 	  c = brace_gobbler (text, tlen, &j, '}');
 	  if (c == 0)		/* it's not */
 	    {
@@ -164,7 +153,7 @@ brace_expand (text)
     return (result);
 
   /* Find the amble.  This is the stuff inside this set of braces. */
-  start = ++i;
+  int start = ++i;
   c = brace_gobbler (text, tlen, &i, '}');
 
   /* What if there isn't a matching close brace? */
@@ -282,10 +271,7 @@ add_tack:
    expand each slot which needs it, until there are no more slots which
    need it. */
 static char **
-expand_amble (text, tlen, flags)
-     char *text;
-     size_t tlen;
-     int flags;
+expand_amble (char *text, size_t tlen, int flags)
 {
   char **result, **partial, **tresult;
   char *tem;
@@ -316,10 +302,8 @@ expand_amble (text, tlen, flags)
 	result = partial;
       else
 	{
-	  register int lr, lp, j;
-
-	  lr = strvec_len (result);
-	  lp = strvec_len (partial);
+	  int lr = strvec_len (result);
+	  int lp = strvec_len (partial);
 
 	  tresult = strvec_mresize (result, lp + lr + 1);
 	  if (tresult == 0)
@@ -334,6 +318,7 @@ expand_amble (text, tlen, flags)
 	  else
 	    result = tresult;
 
+	  int j;
 	  for (j = 0; j < lp; j++)
 	    result[lr + j] = partial[j];
 
@@ -357,9 +342,7 @@ expand_amble (text, tlen, flags)
 #define ST_ZINT	3
 
 static char **
-mkseq (start, end, incr, type, width)
-     intmax_t start, end, incr;
-     int type, width;
+mkseq (intmax_t start, intmax_t end, intmax_t incr, int type, int width)
 {
   intmax_t n, prevn;
   int i, nelem;
@@ -469,9 +452,7 @@ mkseq (start, end, incr, type, width)
 }
 
 static char **
-expand_seqterm (text, tlen)
-     char *text;
-     size_t tlen;
+expand_seqterm (char *text, size_t tlen)
 {
   char *t, *lhs, *rhs;
   int lhs_t, rhs_t, lhs_l, rhs_l, width;
@@ -543,7 +524,7 @@ expand_seqterm (text, tlen)
   /* OK, we have something.  It's either a sequence of integers, ascending
      or descending, or a sequence or letters, ditto.  Generate the sequence,
      put it into a string vector, and return it. */
-  
+
   if (lhs_t == ST_CHAR)
     {
       lhs_v = (unsigned char)lhs[0];
@@ -588,16 +569,12 @@ expand_seqterm (text, tlen)
 /* If SATISFY is `}', we are looking for a brace expression, so we
    should enforce the rules that govern valid brace expansions:
 	1) to count as an arg separator, a comma or `..' has to be outside
-	   an inner set of braces.	 
+	   an inner set of braces.
 */
 static int
-brace_gobbler (text, tlen, indx, satisfy)
-     char *text;
-     size_t tlen;
-     int *indx;
-     int satisfy;
+brace_gobbler (char *text, size_t tlen, int *indx, int satisfy)
 {
-  register int i, c, quoted, level, commas, pass_next;
+  int i, c, quoted, level, commas, pass_next;
 #if defined (SHELL)
   int si;
   char *t;
@@ -729,12 +706,8 @@ comsub:
    are free ()'ed.  ARR1 can be NULL, in that case, a new version of ARR2
    is returned. */
 static char **
-array_concat (arr1, arr2)
-     char **arr1, **arr2;
+array_concat (char **arr1, char **arr2)
 {
-  register int i, j, len, len1, len2;
-  register char **result;
-
   if (arr1 == 0)
     return (arr2);		/* XXX - see if we can get away without copying? */
 
@@ -753,19 +726,19 @@ array_concat (arr1, arr2)
   if (arr2[0] && arr2[0][0] == 0 && arr2[1] == 0)
     return (arr1);		/* XXX - rather than copying and freeing it */
 
-  len1 = strvec_len (arr1);
-  len2 = strvec_len (arr2);
+  int len1 = strvec_len (arr1);
+  int len2 = strvec_len (arr2);
 
-  result = (char **)malloc ((1 + (len1 * len2)) * sizeof (char *));
+  char **result = (char **)malloc ((1 + (len1 * len2)) * sizeof (char *));
   if (result == 0)
     return (result);
 
-  len = 0;
-  for (i = 0; i < len1; i++)
+  int len = 0;
+  for (int i = 0; i < len1; i++)
     {
       int strlen_1 = strlen (arr1[i]);
 
-      for (j = 0; j < len2; j++)
+      for (int j = 0; j < len2; j++)
 	{
 	  result[len] = (char *)xmalloc (1 + strlen_1 + strlen (arr2[j]));
 	  strcpy (result[len], arr1[i]);
@@ -784,28 +757,24 @@ array_concat (arr1, arr2)
 #include <stdio.h>
 
 void *
-xmalloc(n)
-     size_t n;
+xmalloc(size_t n)
 {
   return (malloc (n));
 }
 
 void *
-xrealloc(p, n)
-     void *p;
-     size_t n;
+xrealloc(void *p, size_t n)
 {
   return (realloc (p, n));
 }
 
 int
-internal_error (format, arg1, arg2)
-     char *format, *arg1, *arg2;
+internal_error (char *format, char *arg1, char *arg2)
 {
   fprintf (stderr, format, arg1, arg2);
   fprintf (stderr, "\n");
 }
-      
+
 main ()
 {
   char example[256];
@@ -832,7 +801,7 @@ main ()
       strvec_dispose (result);
     }
 }
-
+
 /*
  * Local variables:
  * compile-command: "gcc -g -Bstatic -DTEST -o brace_expand braces.c general.o"

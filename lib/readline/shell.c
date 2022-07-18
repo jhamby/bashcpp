@@ -4,7 +4,7 @@
 /* Copyright (C) 1997-2009,2017 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -90,9 +90,11 @@ extern struct passwd *getpwuid PARAMS((uid_t));
 /* All of these functions are resolved from bash if we are linking readline
    as part of bash. */
 
+#ifndef SHELL
+
 /* Does shell-like quoting using single quotes. */
 char *
-sh_single_quote (char *string)
+sh_single_quote (const char *string)
 {
   register int c;
   char *result, *r, *s;
@@ -212,3 +214,5 @@ sh_unset_nodelay_mode (int fd)
 
   return 0;
 }
+
+#endif	/* !SHELL */

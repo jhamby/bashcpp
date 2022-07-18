@@ -1,4 +1,4 @@
-/*   
+/*
  * netopen.c -- functions to make tcp/udp connections
  *
  * Chet Ramey
@@ -31,7 +31,7 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h> 
+#include <stdio.h>
 #include <sys/types.h>
 
 #if defined (HAVE_SYS_SOCKET_H)
@@ -63,27 +63,25 @@ extern int errno;
 #endif
 
 #if !defined (HAVE_INET_ATON)
-extern int inet_aton PARAMS((const char *, struct in_addr *));
+extern int inet_aton (const char *, struct in_addr *);
 #endif
 
 #ifndef HAVE_GETADDRINFO
-static int _getaddr PARAMS((char *, struct in_addr *));
-static int _getserv PARAMS((char *, int, unsigned short *));
-static int _netopen4 PARAMS((char *, char *, int));
+static int _getaddr (char *, struct in_addr *);
+static int _getserv (char *, int, unsigned short *);
+static int _netopen4 (const char *, const char *, int);
 #else /* HAVE_GETADDRINFO */
-static int _netopen6 PARAMS((char *, char *, int));
+static int _netopen6 (const char *, const char *, int);
 #endif
 
-static int _netopen PARAMS((char *, char *, int));
+static int _netopen (const char *, const char *, int);
 
 #ifndef HAVE_GETADDRINFO
 /* Stuff the internet address corresponding to HOST into AP, in network
    byte order.  Return 1 on success, 0 on failure. */
 
 static int
-_getaddr (host, ap)
-     char *host;
-     struct in_addr *ap;
+_getaddr (char *host, struct in_addr *ap)
 {
   struct hostent *h;
   int r;
@@ -108,16 +106,13 @@ _getaddr (host, ap)
     }
 #endif
   return 0;
-  
+
 }
 
 /* Return 1 if SERV is a valid port number and stuff the converted value into
-   PP in network byte order. */   
+   PP in network byte order. */
 static int
-_getserv (serv, proto, pp)
-     char *serv;
-     int proto;
-     unsigned short *pp;
+_getserv (char *serv, int proto, unsigned short *pp)
 {
   intmax_t l;
   unsigned short s;
@@ -153,10 +148,8 @@ _getserv (serv, proto, pp)
  * Open a TCP or UDP connection to HOST on port SERV.  Uses the
  * traditional BSD mechanisms.  Returns the connected socket or -1 on error.
  */
-static int 
-_netopen4(host, serv, typ)
-     char *host, *serv;
-     int typ;
+static int
+_netopen4(const char *host, const char *serv, int typ)
 {
   struct in_addr ina;
   struct sockaddr_in sin;
@@ -176,7 +169,7 @@ _netopen4(host, serv, typ)
       errno = EINVAL;
       return -1;
     }
-	
+
   memset ((char *)&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
   sin.sin_port = p;
@@ -209,9 +202,7 @@ _netopen4(host, serv, typ)
  * on error.
  */
 static int
-_netopen6 (host, serv, typ)
-     char *host, *serv;
-     int typ;
+_netopen6 (const char *host, const char *serv, int typ)
 {
   int s, e;
   struct addrinfo hints, *res, *res0;
@@ -273,10 +264,8 @@ _netopen6 (host, serv, typ)
  * if available, falling back to the traditional BSD mechanisms otherwise.
  * Returns the connected socket or -1 on error.
  */
-static int 
-_netopen(host, serv, typ)
-     char *host, *serv;
-     int typ;
+static int
+_netopen(const char *host, const char *serv, int typ)
 {
 #ifdef HAVE_GETADDRINFO
   return (_netopen6 (host, serv, typ));
@@ -290,8 +279,7 @@ _netopen(host, serv, typ)
  * host `host' on port `port' and return the connected socket.
  */
 int
-netopen (path)
-     char *path;
+netopen (const char *path)
 {
   char *np, *s, *t;
   int fd;
@@ -320,8 +308,7 @@ netopen (path)
  * `serv' and return the connected socket.
  */
 int
-tcpopen (host, serv)
-     char *host, *serv;
+tcpopen (const char *host, const char *serv)
 {
   return (_netopen (host, serv, 't'));
 }
@@ -331,8 +318,7 @@ tcpopen (host, serv)
  * `serv' and return the connected socket.
  */
 int
-udpopen (host, serv)
-     char *host, *serv;
+udpopen (const char *host, const char *serv)
 {
   return _netopen (host, serv, 'u');
 }
@@ -341,8 +327,7 @@ udpopen (host, serv)
 #else /* !HAVE_NETWORK */
 
 int
-netopen (path)
-     char *path;
+netopen (const char *path)
 {
   internal_error (_("network operations not supported"));
   return -1;

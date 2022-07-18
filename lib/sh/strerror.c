@@ -17,7 +17,7 @@
    You should have received a copy of the GNU General Public License
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
-   
+
 #include <config.h>
 
 #if !defined (HAVE_STRERROR)
@@ -49,8 +49,7 @@ extern int errno;
 static char *errbase = "Unknown system error ";
 
 char *
-strerror (e)
-     int e;
+strerror (int e)
 {
   static char emsg[40];
 #if defined (HAVE_SYS_ERRLIST)

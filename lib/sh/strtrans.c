@@ -48,12 +48,11 @@
    quote CTLESC and CTLNUL with CTLESC.  If (flags&4) is non-zero, we want
    to remove the backslash before any unrecognized escape sequence. */
 char *
-ansicstr (string, len, flags, sawc, rlen)
-     char *string;
-     int len, flags, *sawc, *rlen;
+ansicstr (const char *string, int len, int flags, int *sawc, int *rlen)
 {
   int c, temp;
-  char *ret, *r, *s;
+  char *ret, *r;
+  const char *s;
   unsigned long v;
   size_t clen;
   int b, mb_cur_max;
@@ -227,11 +226,9 @@ ansicstr (string, len, flags, sawc, rlen)
 /* Take a string STR, possibly containing non-printing characters, and turn it
    into a $'...' ANSI-C style quoted string.  Returns a new string. */
 char *
-ansic_quote (str, flags, rlen)
-     char *str;
-     int flags, *rlen;
+ansic_quote (const char *str, int flags, int *rlen)
 {
-  char *r, *ret, *s;
+  char *r, *ret;
   int l, rsize;
   unsigned char c;
   size_t clen;
@@ -250,7 +247,7 @@ ansic_quote (str, flags, rlen)
   *r++ = '$';
   *r++ = '\'';
 
-  for (s = str; c = *s; s++)
+  for (const char *s = str; c = *s; s++)
     {
       b = l = 1;		/* 1 == add backslash; 0 == no backslash */
       clen = 1;
@@ -317,9 +314,8 @@ ansic_quote (str, flags, rlen)
 }
 
 #if defined (HANDLE_MULTIBYTE)
-int
-ansic_wshouldquote (string)
-     const char *string;
+bool
+ansic_wshouldquote (const char *string)
 {
   const wchar_t *wcs;
   wchar_t wcc;
@@ -329,7 +325,7 @@ ansic_wshouldquote (string)
   slen = mbstowcs (wcstr, string, 0);
 
   if (slen == (size_t)-1)
-    return 1;
+    return true;
 
   wcstr = (wchar_t *)xmalloc (sizeof (wchar_t) * (slen + 1));
   mbstowcs (wcstr, string, slen + 1);
@@ -338,24 +334,23 @@ ansic_wshouldquote (string)
     if (iswprint(wcc) == 0)
       {
 	free (wcstr);
-	return 1;
+	return true;
       }
 
   free (wcstr);
-  return 0;
+  return false;
 }
 #endif
 
 /* return 1 if we need to quote with $'...' because of non-printing chars. */
-int
-ansic_shouldquote (string)
-     const char *string;
+bool
+ansic_shouldquote (const char *string)
 {
   const char *s;
   unsigned char c;
 
   if (string == 0)
-    return 0;
+    return false;
 
   for (s = string; c = *s; s++)
     {
@@ -364,18 +359,16 @@ ansic_shouldquote (string)
 	return (ansic_wshouldquote (s));
 #endif
       if (ISPRINT (c) == 0)
-	return 1;
+	return true;
     }
 
-  return 0;
+  return false;
 }
 
 /* $'...' ANSI-C expand the portion of STRING between START and END and
    return the result.  The result cannot be longer than the input string. */
 char *
-ansiexpand (string, start, end, lenp)
-     char *string;
-     int start, end, *lenp;
+ansiexpand (const char *string, int start, int end, int *lenp)
 {
   char *temp, *t;
   int len, tlen;

@@ -35,7 +35,7 @@
 #endif
 
 #ifndef savestring
-#define savestring(x) strcpy (xmalloc (1 + strlen (x)), (x))
+#define savestring(x) strcpy ((char *)xmalloc (1 + strlen (x)), (x))
 #endif
 
 #ifndef whitespace
@@ -80,6 +80,6 @@ extern char *strchr ();
 /* internal extern function declarations used by other parts of the library */
 
 /* histsearch.c */
-extern int _hs_history_patsearch PARAMS((const char *, int, int));
+extern int _hs_history_patsearch (const char *, int, int);
 
 #endif /* !_HISTLIB_H_ */

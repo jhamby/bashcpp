@@ -67,14 +67,13 @@ $END
 /*                                                                  */
 /* **************************************************************** */
 
-static void print_symbolic_umask PARAMS((mode_t));
-static int symbolic_umask PARAMS((WORD_LIST *));
+static void print_symbolic_umask (mode_t);
+static int symbolic_umask (WORD_LIST *);
 
 /* Set or display the mask used by the system when creating files.  Flag
    of -S means display the umask in a symbolic mode. */
 int
-umask_builtin (list)
-     WORD_LIST *list;
+umask_builtin (WORD_LIST *list)
 {
   int print_symbolically, opt, umask_value, pflag;
   mode_t umask_arg;
@@ -146,12 +145,7 @@ umask_builtin (list)
 /* Print the umask in a symbolic form.  In the output, a letter is
    printed if the corresponding bit is clear in the umask. */
 static void
-#if defined (__STDC__)
 print_symbolic_umask (mode_t um)
-#else
-print_symbolic_umask (um)
-     mode_t um;
-#endif
 {
   char ubits[4], gbits[4], obits[4];		/* u=rwx,g=rwx,o=rwx */
   int i;
@@ -187,9 +181,7 @@ print_symbolic_umask (um)
 }
 
 int
-parse_symbolic_mode (mode, initial_bits)
-     char *mode;
-     int initial_bits;
+parse_symbolic_mode (char *mode, int initial_bits)
 {
   int who, op, perm, bits, c;
   char *s;
@@ -296,8 +288,7 @@ parse_symbolic_mode (mode, initial_bits)
    by chmod.  If the -S argument is given, then print the umask in a
    symbolic form. */
 static int
-symbolic_umask (list)
-     WORD_LIST *list;
+symbolic_umask (WORD_LIST *list)
 {
   int um, bits;
 

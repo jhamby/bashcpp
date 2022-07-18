@@ -71,7 +71,7 @@
 #if defined (JOB_CONTROL)
 #  include "jobs.h"
 #else
-extern int cleanup_dead_jobs PARAMS((void));
+extern int cleanup_dead_jobs (void);
 #endif /* JOB_CONTROL */
 
 #if defined (ALIAS)
@@ -131,123 +131,123 @@ extern int errno;
 /* **************************************************************** */
 
 #ifdef DEBUG
-static void debug_parser PARAMS((int));
+static void debug_parser (int);
 #endif
 
-static int yy_getc PARAMS((void));
-static int yy_ungetc PARAMS((int));
+static int yy_getc (void);
+static int yy_ungetc (int);
 
 #if defined (READLINE)
-static int yy_readline_get PARAMS((void));
-static int yy_readline_unget PARAMS((int));
+static int yy_readline_get (void);
+static int yy_readline_unget (int);
 #endif
 
-static int yy_string_get PARAMS((void));
-static int yy_string_unget PARAMS((int));
-static void rewind_input_string PARAMS((void));
-static int yy_stream_get PARAMS((void));
-static int yy_stream_unget PARAMS((int));
+static int yy_string_get (void);
+static int yy_string_unget (int);
+static void rewind_input_string (void);
+static int yy_stream_get (void);
+static int yy_stream_unget (int);
 
-static int shell_getc PARAMS((int));
-static void shell_ungetc PARAMS((int));
-static void discard_until PARAMS((int));
+static int shell_getc (int);
+static void shell_ungetc (int);
+static void discard_until (int);
 
 #if defined (ALIAS) || defined (DPAREN_ARITHMETIC)
-static void push_string PARAMS((char *, int, alias_t *));
-static void pop_string PARAMS((void));
-static void free_string_list PARAMS((void));
+static void push_string (char *, int, alias_t *);
+static void pop_string (void);
+static void free_string_list (void);
 #endif
 
-static char *read_a_line PARAMS((int));
+static char *read_a_line (int);
 
-static int reserved_word_acceptable PARAMS((int));
-static int yylex PARAMS((void));
+static int reserved_word_acceptable (int);
+static int yylex (void);
 
-static void push_heredoc PARAMS((REDIRECT *));
-static char *mk_alexpansion PARAMS((char *));
-static int alias_expand_token PARAMS((char *));
-static int time_command_acceptable PARAMS((void));
-static int special_case_tokens PARAMS((char *));
-static int read_token PARAMS((int));
-static char *parse_matched_pair PARAMS((int, int, int, int *, int));
-static char *parse_comsub PARAMS((int, int, int, int *, int));
+static void push_heredoc (REDIRECT *);
+static char *mk_alexpansion (char *);
+static int alias_expand_token (char *);
+static int time_command_acceptable (void);
+static int special_case_tokens (char *);
+static int read_token (int);
+static char *parse_matched_pair (int, int, int, int *, int);
+static char *parse_comsub (int, int, int, int *, int);
 #if defined (ARRAY_VARS)
-static char *parse_compound_assignment PARAMS((int *));
+static char *parse_compound_assignment (int *);
 #endif
 #if defined (DPAREN_ARITHMETIC) || defined (ARITH_FOR_COMMAND)
-static int parse_dparen PARAMS((int));
-static int parse_arith_cmd PARAMS((char **, int));
+static int parse_dparen (int);
+static int parse_arith_cmd (char **, int);
 #endif
 #if defined (COND_COMMAND)
-static void cond_error PARAMS((void));
-static COND_COM *cond_expr PARAMS((void));
-static COND_COM *cond_or PARAMS((void));
-static COND_COM *cond_and PARAMS((void));
-static COND_COM *cond_term PARAMS((void));
-static int cond_skip_newlines PARAMS((void));
-static COMMAND *parse_cond_command PARAMS((void));
+static void cond_error (void);
+static COND_COM *cond_expr (void);
+static COND_COM *cond_or (void);
+static COND_COM *cond_and (void);
+static COND_COM *cond_term (void);
+static int cond_skip_newlines (void);
+static COMMAND *parse_cond_command (void);
 #endif
 #if defined (ARRAY_VARS)
-static int token_is_assignment PARAMS((char *, int));
-static int token_is_ident PARAMS((char *, int));
+static int token_is_assignment (char *, int);
+static int token_is_ident (char *, int);
 #endif
-static int read_token_word PARAMS((int));
-static void discard_parser_constructs PARAMS((int));
+static int read_token_word (int);
+static void discard_parser_constructs (int);
 
-static char *error_token_from_token PARAMS((int));
-static char *error_token_from_text PARAMS((void));
-static void print_offending_line PARAMS((void));
-static void report_syntax_error PARAMS((char *));
+static char *error_token_from_token (int);
+static char *error_token_from_text (void);
+static void print_offending_line (void);
+static void report_syntax_error (const char *);
 
-static void handle_eof_input_unit PARAMS((void));
-static void prompt_again PARAMS((void));
+static void handle_eof_input_unit (void);
+static void prompt_again (void);
 #if 0
-static void reset_readline_prompt PARAMS((void));
+static void reset_readline_prompt (void);
 #endif
-static void print_prompt PARAMS((void));
+static void print_prompt (void);
 
 #if defined (HANDLE_MULTIBYTE)
-static void set_line_mbstate PARAMS((void));
+static void set_line_mbstate (void);
 static char *shell_input_line_property = NULL;
 static size_t shell_input_line_propsize = 0;
 #else
 #  define set_line_mbstate()
 #endif
 
-extern int yyerror PARAMS((const char *));
+extern int yyerror (const char *);
 
 #ifdef DEBUG
 extern int yydebug;
 #endif
 
 /* Default prompt strings */
-char *primary_prompt = PPROMPT;
-char *secondary_prompt = SPROMPT;
+const char *primary_prompt = PPROMPT;
+const char *secondary_prompt = SPROMPT;
 
 /* PROMPT_STRING_POINTER points to one of these, never to an actual string. */
-char *ps1_prompt, *ps2_prompt;
+const char *ps1_prompt, *ps2_prompt;
 
 /* Displayed after reading a command but before executing it in an interactive shell */
-char *ps0_prompt;
+const char *ps0_prompt;
 
 /* Handle on the current prompt string.  Indirectly points through
    ps1_ or ps2_prompt. */
-char **prompt_string_pointer = (char **)NULL;
-char *current_prompt_string;
+const char **prompt_string_pointer = NULL;
+const char *current_prompt_string;
 
 /* Non-zero means we expand aliases in commands. */
-int expand_aliases = 0;
+char expand_aliases = 0;
 
 /* If non-zero, the decoded prompt string undergoes parameter and
    variable substitution, command substitution, arithmetic substitution,
    string expansion, process substitution, and quote removal in
    decode_prompt_string. */
-int promptvars = 1;
+bool promptvars = true;
 
 /* If non-zero, $'...' and $"..." are expanded when they appear within
    a ${...} expansion, even when the expansion appears within double
    quotes. */
-int extended_quote = 1;
+bool extended_quote = true;
 
 /* The number of lines read from input while creating the current command. */
 int current_command_line_count;
@@ -732,7 +732,7 @@ redirection_list: redirection
 			}
 	|	redirection_list redirection
 			{
-			  register REDIRECT *t;
+			  REDIRECT *t;
 
 			  for (t = $1; t->next; t = t->next)
 			    ;
@@ -758,7 +758,7 @@ command:	simple_command
 			  tc = $1;
 			  if (tc && tc->redirects)
 			    {
-			      register REDIRECT *t;
+			      REDIRECT *t;
 			      for (t = tc->redirects; t->next; t = t->next)
 				;
 			      t->next = $2;
@@ -956,7 +956,7 @@ function_body:	shell_command
 			     command printing code displays the redirections. */
 			  if (tc && tc->redirects)
 			    {
-			      register REDIRECT *t;
+			      REDIRECT *t;
 			      for (t = tc->redirects; t->next; t = t->next)
 				;
 			      t->next = $2;
@@ -986,7 +986,7 @@ coproc:		COPROC shell_command
 			  tc = $2;
 			  if (tc && tc->redirects)
 			    {
-			      register REDIRECT *t;
+			      REDIRECT *t;
 			      for (t = tc->redirects; t->next; t = t->next)
 				;
 			      t->next = $3;
@@ -1008,7 +1008,7 @@ coproc:		COPROC shell_command
 			  tc = $3;
 			  if (tc && tc->redirects)
 			    {
-			      register REDIRECT *t;
+			      REDIRECT *t;
 			      for (t = tc->redirects; t->next; t = t->next)
 				;
 			      t->next = $4;
@@ -1044,7 +1044,7 @@ arith_command:	ARITH_CMD
 
 cond_command:	COND_START COND_CMD COND_END
 			{ $$ = $2; }
-	; 
+	;
 
 elif_clause:	ELIF compound_list THEN compound_list
 			{ $$ = make_if_command ($2, $4, (COMMAND *)NULL); }
@@ -1080,7 +1080,7 @@ case_clause_sequence:  pattern_list SEMI_SEMI
 	|	pattern_list SEMI_SEMI_AND
 			{ $1->flags |= CASEPAT_TESTNEXT; $$ = $1; }
 	|	case_clause_sequence pattern_list SEMI_SEMI_AND
-			{ $2->flags |= CASEPAT_TESTNEXT; $2->next = $1; $$ = $2; }	
+			{ $2->flags |= CASEPAT_TESTNEXT; $2->next = $1; $$ = $2; }
 	;
 
 pattern:	WORD
@@ -1225,7 +1225,7 @@ simple_list1:	simple_list1 AND_AND newline_list simple_list1
 	;
 
 pipeline_command: pipeline
-			{ $$ = $1; }			
+			{ $$ = $1; }
 	|	BANG pipeline_command
 			{
 			  if ($2)
@@ -1296,7 +1296,7 @@ pipeline:	pipeline '|' newline_list pipeline
 			  r = make_redirection (sd, r_duplicating_output, rd, 0);
 			  if (tc->redirects)
 			    {
-			      register REDIRECT *t;
+			      REDIRECT *t;
 			      for (t = tc->redirects; t->next; t = t->next)
 				;
 			      t->next = r;
@@ -1341,8 +1341,7 @@ int EOF_Reached = 0;
 
 #ifdef DEBUG
 static void
-debug_parser (i)
-     int i;
+debug_parser (int i)
 {
 #if YYDEBUG != 0
   yydebug = i;
@@ -1388,12 +1387,9 @@ initialize_bash_input ()
 /* Set the contents of the current bash input stream from
    GET, UNGET, TYPE, NAME, and LOCATION. */
 void
-init_yy_io (get, unget, type, name, location)
-     sh_cget_func_t *get;
-     sh_cunget_func_t *unget;
-     enum stream_type type;
-     const char *name;
-     INPUT_STREAM location;
+init_yy_io (sh_cget_func_t *get, sh_cunget_func_t *unget,
+            enum stream_type type, const char *name,
+            INPUT_STREAM location)
 {
   bash_input.type = type;
   FREE (bash_input.name);
@@ -1409,7 +1405,7 @@ init_yy_io (get, unget, type, name, location)
   bash_input.ungetter = unget;
 }
 
-char *
+const char *
 yy_input_name ()
 {
   return (bash_input.name ? bash_input.name : "stdin");
@@ -1425,8 +1421,7 @@ yy_getc ()
 /* Call this to unget C.  That is, to make C the next character
    to be read. */
 static int
-yy_ungetc (c)
-     int c;
+yy_ungetc (int c)
 {
   return (*(bash_input.ungetter)) (c);
 }
@@ -1525,8 +1520,7 @@ yy_readline_get ()
 }
 
 static int
-yy_readline_unget (c)
-     int c;
+yy_readline_unget (int c)
 {
   if (current_readline_line_index && current_readline_line)
     current_readline_line[--current_readline_line_index] = c;
@@ -1555,7 +1549,7 @@ parser_will_prompt ()
 {
   return (current_readline_line == 0 || current_readline_line[current_readline_line_index] == 0);
 }
-  
+
 #else  /* !READLINE */
 
 void
@@ -1574,8 +1568,8 @@ with_input_from_stdin ()
 static int
 yy_string_get ()
 {
-  register char *string;
-  register unsigned char c;
+  char *string;
+  unsigned char c;
 
   string = bash_input.location.string;
 
@@ -1591,17 +1585,14 @@ yy_string_get ()
 }
 
 static int
-yy_string_unget (c)
-     int c;
+yy_string_unget (int c)
 {
   *(--bash_input.location.string) = c;
   return (c);
 }
 
 void
-with_input_from_string (string, name)
-     char *string;
-     const char *name;
+with_input_from_string (char *string, const char *name)
 {
   INPUT_STREAM location;
 
@@ -1664,16 +1655,13 @@ yy_stream_get ()
 }
 
 static int
-yy_stream_unget (c)
-     int c;
+yy_stream_unget (int c)
 {
   return (ungetc_with_restart (c, bash_input.location.file));
 }
 
 void
-with_input_from_stream (stream, name)
-     FILE *stream;
-     const char *name;
+with_input_from_stream (FILE *stream, const char *name)
 {
   INPUT_STREAM location;
 
@@ -1704,8 +1692,7 @@ static int cond_token;
 STREAM_SAVER *stream_list = (STREAM_SAVER *)NULL;
 
 void
-push_stream (reset_lineno)
-     int reset_lineno;
+push_stream (int reset_lineno)
 {
   STREAM_SAVER *saver = (STREAM_SAVER *)xmalloc (sizeof (STREAM_SAVER));
 
@@ -1777,10 +1764,9 @@ pop_stream ()
 
 /* Return 1 if a stream of type TYPE is saved on the stack. */
 int
-stream_on_stack (type)
-     enum stream_type type;
+stream_on_stack (enum stream_type type)
 {
-  register STREAM_SAVER *s;
+  STREAM_SAVER *s;
 
   for (s = stream_list; s; s = s->next)
     if (s->bash_input.type == type)
@@ -1803,8 +1789,7 @@ save_token_state ()
 }
 
 void
-restore_token_state (ts)
-     int *ts;
+restore_token_state (int *ts)
 {
   if (ts == 0)
     return;
@@ -1864,10 +1849,7 @@ STRING_SAVER *pushed_string_list = (STRING_SAVER *)NULL;
  * into S; it is saved and used to prevent infinite recursive expansion.
  */
 static void
-push_string (s, expand, ap)
-     char *s;
-     int expand;
-     alias_t *ap;
+push_string (char *s, int expand, alias_t *ap)
 {
   STRING_SAVER *temp = (STRING_SAVER *)xmalloc (sizeof (STRING_SAVER));
 
@@ -1939,7 +1921,7 @@ pop_string ()
 static void
 free_string_list ()
 {
-  register STRING_SAVER *t, *t1;
+  STRING_SAVER *t, *t1;
 
   for (t = pushed_string_list; t; )
     {
@@ -1997,10 +1979,9 @@ parser_restore_alias ()
 /* Before freeing AP, make sure that there aren't any cases of pointer
    aliasing that could cause us to reference freed memory later on. */
 void
-clear_string_list_expander (ap)
-     alias_t *ap;
+clear_string_list_expander (alias_t *ap)
 {
-  register STRING_SAVER *t;
+  STRING_SAVER *t;
 
   for (t = pushed_string_list; t; t = t->next)
     {
@@ -2022,8 +2003,7 @@ clear_shell_input_line ()
    is non-zero, we remove unquoted \<newline> pairs.  This is used by
    read_secondary_line to read here documents. */
 static char *
-read_a_line (remove_quoted_newline)
-     int remove_quoted_newline;
+read_a_line (int remove_quoted_newline)
 {
   static char *line_buffer = (char *)NULL;
   static int buffer_size = 0;
@@ -2118,8 +2098,7 @@ read_a_line (remove_quoted_newline)
    newlines quoted with backslashes while reading the line.  It is
    non-zero unless the delimiter of the here document was quoted. */
 char *
-read_secondary_line (remove_quoted_newline)
-     int remove_quoted_newline;
+read_secondary_line (int remove_quoted_newline)
 {
   char *ret;
   int n, c;
@@ -2274,10 +2253,9 @@ static int eol_ungetc_lookahead = 0;
 static int unquoted_backslash = 0;
 
 static int
-shell_getc (remove_quoted_newline)
-     int remove_quoted_newline;
+shell_getc (int remove_quoted_newline)
 {
-  register int i;
+  int i;
   int c, truncating, last_was_backslash;
   unsigned char uc;
 
@@ -2289,7 +2267,7 @@ shell_getc (remove_quoted_newline)
       sigwinch_received = 0;
       get_new_window_size (0, (int *)0, (int *)0);
     }
-      
+
   if (eol_ungetc_lookahead)
     {
       c = eol_ungetc_lookahead;
@@ -2397,7 +2375,7 @@ shell_getc (remove_quoted_newline)
 	      if (shell_input_line_size < SIZE_MAX)
 		{
 		  shell_input_line_size = SIZE_MAX;
-		  shell_input_line = xrealloc (shell_input_line, shell_input_line_size);
+		  shell_input_line = (char *)xrealloc (shell_input_line, shell_input_line_size);
 		}
 	    }
 	  else
@@ -2484,7 +2462,7 @@ shell_getc (remove_quoted_newline)
 	    maybe_add_history (shell_input_line);
 	  else
 	    {
-	      char *hdcs;
+	      const char *hdcs;
 	      hdcs = history_delimiting_chars (shell_input_line);
 	      if (hdcs && hdcs[0] == ';')
 		maybe_add_history (shell_input_line);
@@ -2640,7 +2618,7 @@ pop_alias:
 	    goto next_alias_char;	/* and get next character */
 	  }
 	else
-#endif 
+#endif
 	  goto restart_read;
     }
 
@@ -2678,8 +2656,7 @@ pop_alias:
    to change when manipulating shell_input_line.  The define for
    last_shell_getc_is_singlebyte should take care of it, though. */
 static void
-shell_ungetc (c)
-     int c;
+shell_ungetc (int c)
 {
   if (shell_input_line && shell_input_line_index)
     shell_input_line[--shell_input_line_index] = c;
@@ -2687,7 +2664,7 @@ shell_ungetc (c)
     eol_ungetc_lookahead = c;
 }
 
-char *
+const char *
 parser_remaining_input ()
 {
   if (shell_input_line == 0)
@@ -2710,8 +2687,7 @@ shell_ungetchar ()
 /* Discard input until CHARACTER is seen, then push that character back
    onto the input stream. */
 static void
-discard_until (character)
-     int character;
+discard_until (int character)
 {
   int c;
 
@@ -2723,8 +2699,7 @@ discard_until (character)
 }
 
 void
-execute_variable_command (command, vname)
-     char *command, *vname;
+execute_variable_command (char *command, const char *vname)
 {
   char *last_lastarg;
   sh_parser_state_t ps;
@@ -2745,8 +2720,7 @@ execute_variable_command (command, vname)
 }
 
 void
-push_token (x)
-     int x;
+push_token (int x)
 {
   two_tokens_ago = token_before_that;
   token_before_that = last_read_token;
@@ -2816,8 +2790,7 @@ static int esacs_needed_count;
 static int expecting_in_token;
 
 static void
-push_heredoc (r)
-     REDIRECT *r;
+push_heredoc (REDIRECT *r)
 {
   if (need_here_doc >= HEREDOC_MAX)
     {
@@ -2926,14 +2899,13 @@ static int open_brace_count;
 	 In a pattern list in a case statement (parser_state & PST_CASEPAT). */
 
 static char *
-mk_alexpansion (s)
-     char *s;
+mk_alexpansion (char *s)
 {
   int l;
   char *r;
 
   l = strlen (s);
-  r = xmalloc (l + 2);
+  r = (char *)xmalloc (l + 2);
   strcpy (r, s);
 #ifdef OLD_ALIAS_HACK
   /* If the last character in the alias is a newline, don't add a trailing
@@ -2949,8 +2921,7 @@ mk_alexpansion (s)
 }
 
 static int
-alias_expand_token (tokstr)
-     char *tokstr;
+alias_expand_token (char *tokstr)
 {
   char *expanded;
   alias_t *ap;
@@ -3066,8 +3037,7 @@ time_command_acceptable ()
 */
 
 static int
-special_case_tokens (tokstr)
-     char *tokstr;
+special_case_tokens (char *tokstr)
 {
   /* Posix grammar rule 6 */
   if ((last_read_token == WORD) &&
@@ -3238,8 +3208,7 @@ reset_readahead_token ()
 /* Read the next token.  Command can be READ (normal operation) or
    RESET (to normalize state). */
 static int
-read_token (command)
-     int command;
+read_token (int command)
 {
   int character;		/* Current character. */
   int peek_char;		/* Temporary look-ahead character. */
@@ -3542,10 +3511,8 @@ tokword:
 static char matched_pair_error;
 
 static char *
-parse_matched_pair (qc, open, close, lenp, flags)
-     int qc;	/* `"' if this construct is within double quotes */
-     int open, close;
-     int *lenp, flags;
+parse_matched_pair (int qc,      /* `"' if this construct is within double quotes */
+     int open, int close, int *lenp, int flags)
 {
   int count, ch, prevch, tflags;
   int nestlen, ttranslen, start_lineno;
@@ -3824,8 +3791,7 @@ parse_dollar_word:
 
 #if defined (DEBUG)
 static void
-dump_tflags (flags)
-     int flags;
+dump_tflags (int flags)
 {
   int f;
 
@@ -3900,10 +3866,7 @@ dump_tflags (flags)
 /* Parse a $(...) command substitution.  This is messier than I'd like, and
    reproduces a lot more of the token-reading code than I'd like. */
 static char *
-parse_comsub (qc, open, close, lenp, flags)
-     int qc;	/* `"' if this construct is within double quotes */
-     int open, close;
-     int *lenp, flags;
+parse_comsub (int qc, int open, int close, int *lenp, int flags)
 {
   int count, ch, peekc, tflags, lex_rwlen, lex_wlen, lex_firstind;
   int nestlen, ttranslen, start_lineno, orig_histexp;
@@ -4101,7 +4064,7 @@ eof_error:
 	    {
 	      lex_wlen++;
 /*itrace("parse_comsub:%d: lex_inword == 1 ch = `%c' lex_wlen = %d (%d)", line_number, ch, lex_wlen, __LINE__);*/
-	    }	      
+	    }
 	  else
 	    {
 /*itrace("parse_comsub:%d: lex_inword -> 1 ch = `%c' (%d)", line_number, ch, __LINE__);*/
@@ -4446,11 +4409,7 @@ eof_error:
 
 /* Recursively call the parser to parse a $(...) command substitution. */
 char *
-xparse_dolparen (base, string, indp, flags)
-     char *base;
-     char *string;
-     int *indp;
-     int flags;
+xparse_dolparen (const char *base, char *string, int *indp, int flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
@@ -4467,10 +4426,10 @@ xparse_dolparen (base, string, indp, flags)
 
   if (*string == 0)
     {
-      if (flags & SX_NOALLOC) 
+      if (flags & SX_NOALLOC)
 	return (char *)NULL;
 
-      ret = xmalloc (1);
+      ret = (char *)xmalloc (1);
       ret[0] = '\0';
       return ret;
     }
@@ -4557,12 +4516,12 @@ xparse_dolparen (base, string, indp, flags)
       jump_to_top_level (DISCARD);
     }
 
-  if (flags & SX_NOALLOC) 
+  if (flags & SX_NOALLOC)
     return (char *)NULL;
 
   if (nc == 0)
     {
-      ret = xmalloc (1);
+      ret = (char *)xmalloc (1);
       ret[0] = '\0';
     }
   else
@@ -4577,8 +4536,7 @@ xparse_dolparen (base, string, indp, flags)
    the parsed token, -1 on error, or -2 if we didn't do anything and
    should just go on. */
 static int
-parse_dparen (c)
-     int c;
+parse_dparen (int c)
 {
   int cmdtyp, sline;
   char *wval;
@@ -4637,9 +4595,7 @@ parse_dparen (c)
    allocated buffer and make *ep point to that buffer.  Return -1 on an
    error, for example EOF. */
 static int
-parse_arith_cmd (ep, adddq)
-     char **ep;
-     int adddq;
+parse_arith_cmd (char **ep, int adddq)
 {
   int exp_lineno, rval, c;
   char *ttok, *tokstr;
@@ -4709,7 +4665,7 @@ cond_error ()
 static COND_COM *
 cond_expr ()
 {
-  return (cond_or ());  
+  return (cond_or ());
 }
 
 static COND_COM *
@@ -4914,7 +4870,7 @@ cond_term ()
       COND_RETURN_ERROR ();
     }
   return (term);
-}      
+}
 
 /* This is kind of bogus -- we slip a mini recursive-descent parser in
    here to handle the conditional statement syntax. */
@@ -4936,14 +4892,12 @@ parse_cond_command ()
    substitution that will reallocate atoken.  We don't want to write beyond
    the end of an allocated buffer. */
 static int
-token_is_assignment (t, i)
-     char *t;
-     int i;
+token_is_assignment (char *t, int i)
 {
   int r;
   char *atoken;
 
-  atoken = xmalloc (i + 3);
+  atoken = (char *)xmalloc (i + 3);
   memcpy (atoken, t, i);
   atoken[i] = '=';
   atoken[i+1] = '\0';
@@ -4959,9 +4913,7 @@ token_is_assignment (t, i)
 
 /* XXX - possible changes here for `+=' */
 static int
-token_is_ident (t, i)
-     char *t;
-     int i;
+token_is_ident (char *t, int i)
 {
   unsigned char c;
   int r;
@@ -4975,8 +4927,7 @@ token_is_ident (t, i)
 #endif
 
 static int
-read_token_word (character)
-     int character;
+read_token_word (int character)
 {
   /* The value for YYLVAL when a WORD is read. */
   WORD_DESC *the_word;
@@ -5459,8 +5410,7 @@ got_token:
 /* Return 1 if TOKSYM is a token that after being read would allow
    a reserved word to be seen, else 0. */
 static int
-reserved_word_acceptable (toksym)
-     int toksym;
+reserved_word_acceptable (int toksym)
 {
   switch (toksym)
     {
@@ -5505,12 +5455,11 @@ reserved_word_acceptable (toksym)
       return 0;
     }
 }
-    
+
 /* Return the index of TOKEN in the alist of reserved words, or -1 if
    TOKEN is not a shell reserved word. */
 int
-find_reserved_word (tokstr)
-     char *tokstr;
+find_reserved_word (const char *tokstr)
 {
   int i;
   for (i = 0; word_token_alist[i].word; i++)
@@ -5572,12 +5521,11 @@ static const int no_semi_successors[] = {
    newlines.  Returns the string that should be added into the
    history entry.  LINE is the line we're about to add; it helps
    make some more intelligent decisions in certain cases. */
-char *
-history_delimiting_chars (line)
-     const char *line;
+const char *
+history_delimiting_chars (const char *line)
 {
   static int last_was_heredoc = 0;	/* was the last entry the start of a here document? */
-  register int i;
+  int i;
 
   if ((parser_state & PST_HEREDOC) == 0)
     last_was_heredoc = 0;
@@ -5711,14 +5659,14 @@ get_current_prompt_level ()
   return ((current_prompt_string && current_prompt_string == ps2_prompt) ? 2 : 1);
 }
 
-void
-set_current_prompt_level (x)
-     int x;
+int
+set_current_prompt_level (int x)
 {
   prompt_string_pointer = (x == 2) ? &ps2_prompt : &ps1_prompt;
   current_prompt_string = *prompt_string_pointer;
+  return 0;
 }
-      
+
 static void
 print_prompt ()
 {
@@ -5731,8 +5679,7 @@ print_prompt ()
      the first line of a potentially multi-line command, so we compensate
      here by returning one fewer when appropriate. */
 static int
-prompt_history_number (pmt)
-     char *pmt;
+prompt_history_number (const char *pmt)
 {
   int ret;
 
@@ -5784,11 +5731,10 @@ prompt_history_number (pmt)
 */
 #define PROMPT_GROWTH 48
 char *
-decode_prompt_string (string)
-     char *string;
+decode_prompt_string (const char *string)
 {
   WORD_LIST *list;
-  char *result, *t, *orig_string;
+  char *result, *t;
   struct dstack save_dstack;
   int last_exit_value, last_comsub_pid;
 #if defined (PROMPT_STRING_DECODE)
@@ -5796,7 +5742,7 @@ decode_prompt_string (string)
   int result_index;
   int c, n, i;
   char *temp, *t_host, octal_string[4];
-  struct tm *tm;  
+  struct tm *tm;
   time_t the_time;
   char timebuf[128];
   char *timefmt;
@@ -5804,7 +5750,7 @@ decode_prompt_string (string)
   result = (char *)xmalloc (result_size = PROMPT_GROWTH);
   result[result_index = 0] = 0;
   temp = (char *)NULL;
-  orig_string = string;
+  const char *orig_string = string;
 
   while (c = *string++)
     {
@@ -5907,7 +5853,7 @@ decode_prompt_string (string)
 	      (void) time (&the_time);
 	      tm = localtime (&the_time);
 	      string += 2;			/* skip { */
-	      timefmt = xmalloc (strlen (string) + 3);
+	      timefmt = (char *)xmalloc (strlen (string) + 3);
 	      for (t = timefmt; *string && *string != '}'; )
 		*t++ = *string++;
 	      *t = '\0';
@@ -5934,7 +5880,7 @@ decode_prompt_string (string)
 	      else
 		temp = savestring (timebuf);
 	      goto add_string;
-	      
+
 	    case 'n':
 	      temp = (char *)xmalloc (3);
 	      temp[0] = no_line_editing ? '\n' : '\r';
@@ -5943,7 +5889,7 @@ decode_prompt_string (string)
 	      goto add_string;
 
 	    case 's':
-	      temp = base_pathname (shell_name);
+	      temp = (char *)base_pathname (shell_name);
 	      /* Try to quote anything the user can set in the file system */
 	      if (promptvars || posixly_correct)
 		temp = sh_backslash_quote_for_double_quotes (temp);
@@ -6011,7 +5957,7 @@ decode_prompt_string (string)
 		  {
 		    /* polite_directory_format is guaranteed to return a string
 		       no longer than PATH_MAX - 1 characters. */
-		    temp = polite_directory_format (t_string);
+		    temp = savestring (polite_directory_format (t_string));
 		    if (temp != t_string)
 		      strcpy (t_string, temp);
 		  }
@@ -6083,7 +6029,7 @@ decode_prompt_string (string)
 	    case 'l':
 #if defined (HAVE_TTYNAME)
 	      temp = (char *)ttyname (fileno (stdin));
-	      t = temp ? base_pathname (temp) : "tty";
+	      t = temp ? (char *)base_pathname (temp) : (char *)"tty";
 	      temp = savestring (t);
 #else
 	      temp = savestring ("tty");
@@ -6197,8 +6143,7 @@ not_escape:
 /* Report a syntax error, and restart the parser.  Call here for fatal
    errors. */
 int
-yyerror (msg)
-     const char *msg;
+yyerror (const char *msg)
 {
   report_syntax_error ((char *)NULL);
   reset_parser ();
@@ -6206,8 +6151,7 @@ yyerror (msg)
 }
 
 static char *
-error_token_from_token (tok)
-     int tok;
+error_token_from_token (int tok)
 {
   char *t;
 
@@ -6307,8 +6251,7 @@ print_offending_line ()
    then place it in MESSAGE, otherwise pass NULL and this will figure
    out an appropriate message for you. */
 static void
-report_syntax_error (message)
-     char *message;
+report_syntax_error (const char *message)
 {
   char *msg, *p;
 
@@ -6381,8 +6324,7 @@ report_syntax_error (message)
    to throw away the information about where the allocated objects live.
    (dispose_command () will actually free the command.) */
 static void
-discard_parser_constructs (error_p)
-     int error_p;
+discard_parser_constructs (int error_p)
 {
 }
 
@@ -6395,7 +6337,7 @@ discard_parser_constructs (error_p)
 /* Do that silly `type "bye" to exit' stuff.  You know, "ignoreeof". */
 
 /* A flag denoting whether or not ignoreeof is set. */
-int ignoreeof = 0;
+char ignoreeof = 0;
 
 /* The number of times that we have encountered an EOF character without
    another character intervening.  When this gets above the limit, the
@@ -6431,7 +6373,7 @@ handle_eof_input_unit ()
 	      /* Reset the parsing state. */
 	      last_read_token = current_token = '\n';
 	      /* Reset the prompt string to be $PS1. */
-	      prompt_string_pointer = (char **)NULL;
+	      prompt_string_pointer = NULL;
 	      prompt_again ();
 	      return;
 	    }
@@ -6465,10 +6407,7 @@ static WORD_LIST parse_string_error;
 /* Take a string and run it through the shell parser, returning the
    resultant word list.  Used by compound array assignment. */
 WORD_LIST *
-parse_string_to_word_list (s, flags, whom)
-     char *s;
-     int flags;
-     const char *whom;
+parse_string_to_word_list (char *s, int flags, const char *whom)
 {
   WORD_LIST *wl;
   int tok, orig_current_token, orig_line_number, orig_input_terminator;
@@ -6525,7 +6464,7 @@ parse_string_to_word_list (s, flags, whom)
 	}
       wl = make_word_list (yylval.word, wl);
     }
-  
+
   last_read_token = '\n';
   pop_stream ();
 
@@ -6561,8 +6500,7 @@ parse_string_to_word_list (s, flags, whom)
 }
 
 static char *
-parse_compound_assignment (retlenp)
-     int *retlenp;
+parse_compound_assignment (int *retlenp)
 {
   WORD_LIST *wl, *rl;
   int tok, orig_line_number, orig_token_size, orig_last_token, assignok;
@@ -6649,8 +6587,7 @@ parse_compound_assignment (retlenp)
  ************************************************/
 
 sh_parser_state_t *
-save_parser_state (ps)
-     sh_parser_state_t *ps;
+save_parser_state (sh_parser_state_t *ps)
 {
   if (ps == 0)
     ps = (sh_parser_state_t *)xmalloc (sizeof (sh_parser_state_t));
@@ -6678,7 +6615,7 @@ save_parser_state (ps)
 #if defined (ARRAY_VARS)
   ps->pipestatus = save_pipestatus_array ();
 #endif
-    
+
   ps->last_shell_builtin = last_shell_builtin;
   ps->this_shell_builtin = this_shell_builtin;
 
@@ -6702,8 +6639,7 @@ save_parser_state (ps)
 }
 
 void
-restore_parser_state (ps)
-     sh_parser_state_t *ps;
+restore_parser_state (sh_parser_state_t *ps)
 {
   int i;
 
@@ -6760,8 +6696,7 @@ restore_parser_state (ps)
 }
 
 sh_input_line_state_t *
-save_input_line_state (ls)
-     sh_input_line_state_t *ls;
+save_input_line_state (sh_input_line_state_t *ls)
 {
   if (ls == 0)
     ls = (sh_input_line_state_t *)xmalloc (sizeof (sh_input_line_state_t));
@@ -6791,8 +6726,7 @@ save_input_line_state (ls)
 }
 
 void
-restore_input_line_state (ls)
-     sh_input_line_state_t *ls;
+restore_input_line_state (sh_input_line_state_t *ls)
 {
   FREE (shell_input_line);
   shell_input_line = ls->input_line;

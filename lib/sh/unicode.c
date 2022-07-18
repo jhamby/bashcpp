@@ -50,9 +50,9 @@
 #endif /* !STREQ */
 
 #if defined (HAVE_LOCALE_CHARSET)
-extern const char *locale_charset PARAMS((void));
+extern "C" const char *locale_charset (void);
 #else
-extern char *get_locale_var PARAMS((char *));
+extern char *get_locale_var (const char *);
 #endif
 
 extern int locale_utf8locale;
@@ -69,7 +69,7 @@ static char charsetbuf[40];
 static char *
 stub_charset ()
 {
-  char *locale, *s, *t;
+  const char *locale, *s;
 
   locale = get_locale_var ("LC_CTYPE");
   if (locale == 0 || *locale == 0)
@@ -82,7 +82,7 @@ stub_charset ()
     {
       strncpy (charsetbuf, s+1, sizeof (charsetbuf) - 1);
       charsetbuf[sizeof (charsetbuf) - 1] = '\0';
-      t = strchr (charsetbuf, '@');
+      char *t = strchr (charsetbuf, '@');
       if (t)
 	*t = 0;
       return charsetbuf;
@@ -109,9 +109,7 @@ u32reset ()
 
 /* u32toascii ? */
 int
-u32tochar (x, s)
-     unsigned long x;
-     char *s;
+u32tochar (unsigned long x, char *s)
 {
   int l;
 
@@ -132,13 +130,11 @@ u32tochar (x, s)
       s[3] = x & 0xFF;
     }
   s[l] = '\0';
-  return l;  
+  return l;
 }
 
 int
-u32tocesc (wc, s)
-     u_bits32_t wc;
-     char *s;
+u32tocesc (u_bits32_t wc, char *s)
 {
   int l;
 
@@ -151,9 +147,7 @@ u32tocesc (wc, s)
 
 /* Convert unsigned 32-bit int to utf-8 character string */
 int
-u32toutf8 (wc, s)
-     u_bits32_t wc;
-     char *s;
+u32toutf8 (u_bits32_t wc, char *s)
 {
   int l;
 
@@ -214,9 +208,7 @@ u32toutf8 (wc, s)
 /* Convert a 32-bit unsigned int (unicode) to a UTF-16 string.  Rarely used,
    only if sizeof(wchar_t) == 2. */
 int
-u32toutf16 (c, s)
-     u_bits32_t c;
-     wchar_t *s;
+u32toutf16 (u_bits32_t c, wchar_t *s)
 {
   int l;
 
@@ -240,9 +232,7 @@ u32toutf16 (c, s)
 /* convert a single unicode-32 character into a multibyte string and put the
    result in S, which must be large enough (at least max(10,MB_LEN_MAX) bytes) */
 int
-u32cconv (c, s)
-     unsigned long c;
-     char *s;
+u32cconv (unsigned long c, char *s)
 {
   wchar_t wc;
   wchar_t ws[3];
@@ -291,7 +281,7 @@ u32cconv (c, s)
     }
 
   /* NL_LANGINFO and locale_charset used when setting locale_utf8locale */
-  
+
   /* If we have a UTF-8 locale, convert to UTF-8 and return converted value. */
   n = u32toutf8 (c, s);
   if (utf8locale)
@@ -302,7 +292,7 @@ u32cconv (c, s)
      u32tocesc(). */
   if (localconv == (iconv_t)-1)
     return n;
-    
+
   optr = obuf;
   obytesleft = sizeof (obuf);
   iptr = s;
@@ -312,7 +302,7 @@ u32cconv (c, s)
 
   if (iconv (localconv, (ICONV_CONST char **)&iptr, &sn, &optr, &obytesleft) == (size_t)-1)
     {
-      /* You get ISO C99 escape sequences if iconv fails */      
+      /* You get ISO C99 escape sequences if iconv fails */
       n = u32tocesc (c, s);
       return n;
     }

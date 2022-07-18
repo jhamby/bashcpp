@@ -46,8 +46,7 @@ extern int errno;
 #include <sys/cygwin.h>
 
 static int
-_is_cygdrive (path)
-     char *path;
+_is_cygdrive (const char *path)
 {
   static char user[MAXPATHLEN];
   static char system[MAXPATHLEN];
@@ -56,7 +55,7 @@ _is_cygdrive (path)
   /* If the path is the first part of a network path, treat it as
      existing. */
   if (path[0] == '/' && path[1] == '/' && !strchr (path + 2, '/'))
-    return 1; 
+    return 1;
   /* Otherwise check for /cygdrive prefix. */
   if (first_time)
     {
@@ -68,12 +67,11 @@ _is_cygdrive (path)
     }
   return !strcasecmp (path, user) || !strcasecmp (path, system);
 }
-#endif /* __CYGWIN__ */	
+#endif /* __CYGWIN__ */
 
 /* Return 1 if PATH corresponds to a directory.  A function for debugging. */
 static int
-_path_isdir (path)
-     char *path;
+_path_isdir (const char *path)
 {
   int l;
   struct stat sb;
@@ -101,16 +99,14 @@ _path_isdir (path)
 #define DOUBLE_SLASH(p)	((p[0] == '/') && (p[1] == '/') && p[2] != '/')
 
 char *
-sh_canonpath (path, flags)
-     char *path;
-     int flags;
+sh_canonpath (const char *path, int flags)
 {
   char stub_char;
   char *result, *p, *q, *base, *dotdot;
   int rooted, double_slash_path;
 
   /* The result cannot be larger than the input PATH. */
-  result = (flags & PATH_NOALLOC) ? path : savestring (path);
+  result = (flags & PATH_NOALLOC) ? (char *)path : savestring (path);
 
   /* POSIX.2 says to leave a leading `//' alone.  On cygwin, we skip over any
      leading `x:' (dos drive name). */

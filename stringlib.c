@@ -48,12 +48,9 @@
 /* Find STRING in ALIST, a list of string key/int value pairs.  If FLAGS
    is 1, STRING is treated as a pattern and matched using strmatch. */
 int
-find_string_in_alist (string, alist, flags)
-     char *string;
-     STRING_INT_ALIST *alist;
-     int flags;
+find_string_in_alist (char *string, STRING_INT_ALIST *alist, int flags)
 {
-  register int i;
+  int i;
   int r;
 
   for (i = r = 0; alist[i].word; i++)
@@ -75,12 +72,9 @@ find_string_in_alist (string, alist, flags)
    corresponding string.  Allocates memory for the returned
    string.  FLAGS is currently ignored, but reserved. */
 char *
-find_token_in_alist (token, alist, flags)
-     int token;
-     STRING_INT_ALIST *alist;
-     int flags;
+find_token_in_alist (int token, STRING_INT_ALIST *alist, int flags)
 {
-  register int i;
+  int i;
 
   for (i = 0; alist[i].word; i++)
     {
@@ -91,12 +85,9 @@ find_token_in_alist (token, alist, flags)
 }
 
 int
-find_index_in_alist (string, alist, flags)
-     char *string;
-     STRING_INT_ALIST *alist;
-     int flags;
+find_index_in_alist (char *string, STRING_INT_ALIST *alist, int flags)
 {
-  register int i;
+  int i;
   int r;
 
   for (i = r = 0; alist[i].word; i++)
@@ -124,12 +115,10 @@ find_index_in_alist (string, alist, flags)
 /* Cons a new string from STRING starting at START and ending at END,
    not including END. */
 char *
-substring (string, start, end)
-     const char *string;
-     int start, end;
+substring (const char *string, int start, int end)
 {
-  register int len;
-  register char *result;
+  int len;
+  char *result;
 
   len = end - start;
   result = (char *)xmalloc (len + 1);
@@ -142,9 +131,7 @@ substring (string, start, end)
    replace all occurrences, otherwise replace only the first.
    This returns a new string; the caller should free it. */
 char *
-strsub (string, pat, rep, global)
-     char *string, *pat, *rep;
-     int global;
+strsub (char *string, char *pat, char *rep, int global)
 {
   int patlen, replen, templen, tempsize, repl, i;
   char *temp, *r;
@@ -181,30 +168,25 @@ strsub (string, pat, rep, global)
    NULL.  If DO_GLOB is non-zero, we quote the replacement text for
    globbing.  Backslash may be used to quote C. */
 char *
-strcreplace (string, c, text, do_glob)
-     char *string;
-     int c;
-     const char *text;
-     int do_glob;
+strcreplace (const char *string, int c, const char *text, int do_glob)
 {
-  char *ret, *p, *r, *t;
-  int len, rlen, ind, tlen;
+  int len = STRLEN (text);
+  int rlen = len + strlen (string) + 2;
+  char *ret = (char *)xmalloc (rlen);
 
-  len = STRLEN (text);
-  rlen = len + strlen (string) + 2;
-  ret = (char *)xmalloc (rlen);
-
+  const char *p;
+  char *r;
   for (p = string, r = ret; p && *p; )
     {
       if (*p == c)
 	{
 	  if (len)
 	    {
-	      ind = r - ret;
+	      int ind = r - ret;
 	      if (do_glob && (glob_pattern_p (text) || strchr (text, '\\')))
 		{
-		  t = quote_globbing_chars (text);
-		  tlen = strlen (t);
+		  char *t = quote_globbing_chars (text);
+		  int tlen = strlen (t);
 		  RESIZE_MALLOCED_BUFFER (ret, ind, tlen, rlen, rlen);
 		  r = ret + ind;	/* in case reallocated */
 		  strcpy (r, t);
@@ -226,7 +208,7 @@ strcreplace (string, c, text, do_glob)
       if (*p == '\\' && p[1] == c)
 	p++;
 
-      ind = r - ret;
+      int ind = r - ret;
       RESIZE_MALLOCED_BUFFER (ret, ind, 2, rlen, rlen);
       r = ret + ind;			/* in case reallocated */
       *r++ = *p++;
@@ -240,8 +222,7 @@ strcreplace (string, c, text, do_glob)
 /* Remove all leading whitespace from STRING.  This includes
    newlines.  STRING should be terminated with a zero. */
 void
-strip_leading (string)
-     char *string;
+strip_leading (char *string)
 {
   char *start = string;
 
@@ -261,10 +242,7 @@ strip_leading (string)
    newlines.  If NEWLINES_ONLY is non-zero, only trailing newlines
    are removed.  STRING should be terminated with a zero. */
 void
-strip_trailing (string, len, newlines_only)
-     char *string;
-     int len;
-     int newlines_only;
+strip_trailing (char *string, int len, int newlines_only)
 {
   while (len >= 0)
     {
@@ -279,9 +257,7 @@ strip_trailing (string, len, newlines_only)
 
 /* A wrapper for bcopy that can be prototyped in general.h */
 void
-xbcopy (s, d, n)
-     char *s, *d;
-     int n;
+xbcopy (const char *s, char *d, int n)
 {
   FASTCOPY (s, d, n);
 }

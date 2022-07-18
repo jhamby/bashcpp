@@ -68,51 +68,54 @@ $END
 #include "common.h"
 #include "bashgetopt.h"
 
-extern int dot_found_in_search;
+extern bool dot_found_in_search;
 
-static int add_hashed_command PARAMS((char *, int));
-static int print_hash_info PARAMS((BUCKET_CONTENTS *));
-static int print_portable_hash_info PARAMS((BUCKET_CONTENTS *));
-static int print_hashed_commands PARAMS((int));
-static int list_hashed_filename_targets PARAMS((WORD_LIST *, int));
+static int add_hashed_command (char *, int);
+static int print_hash_info (BUCKET_CONTENTS *);
+static int print_portable_hash_info (BUCKET_CONTENTS *);
+static bool print_hashed_commands (bool);
+static int list_hashed_filename_targets (WORD_LIST *, bool);
 
 /* Print statistics on the current state of hashed commands.  If LIST is
    not empty, then rehash (or hash in the first place) the specified
    commands. */
 int
-hash_builtin (list)
-     WORD_LIST *list;
+hash_builtin (WORD_LIST *list)
 {
-  int expunge_hash_table, list_targets, list_portably, delete, opt;
-  char *w, *pathname;
+//   int expunge_hash_table, list_targets, list_portably, delete, opt;
+//   char *w, *pathname;
 
-  if (hashing_enabled == 0)
+  if (!hashing_enabled)
     {
       builtin_error (_("hashing disabled"));
       return (EXECUTION_FAILURE);
     }
 
-  expunge_hash_table = list_targets = list_portably = delete = 0;
-  pathname = (char *)NULL;
+  bool expunge_hash_table = false;
+  bool list_targets = false;
+  bool list_portably = false;
+  bool delete_ = false;
+  char *pathname = (char *)NULL;
   reset_internal_getopt ();
+  int opt;
   while ((opt = internal_getopt (list, "dlp:rt")) != -1)
     {
       switch (opt)
 	{
 	case 'd':
-	  delete = 1;
+	  delete_ = true;
 	  break;
 	case 'l':
-	  list_portably = 1;
+	  list_portably = true;
 	  break;
 	case 'p':
 	  pathname = list_optarg;
 	  break;
 	case 'r':
-	  expunge_hash_table = 1;
+	  expunge_hash_table = true;
 	  break;
 	case 't':
-	  list_targets = 1;
+	  list_targets = true;
 	  break;
 	CASE_HELPOPT;
 	default:
@@ -123,15 +126,15 @@ hash_builtin (list)
   list = loptend;
 
   /* hash -t requires at least one argument. */
-  if (list == 0 && (delete || list_targets))
+  if (list == 0 && (delete_ || list_targets))
     {
-      sh_needarg (delete ? "-d" : "-t");
+      sh_needarg (delete_ ? "-d" : "-t");
       return (EXECUTION_FAILURE);
     }
 
   /* We want hash -r to be silent, but hash -- to print hashing info, so
      we test expunge_hash_table. */
-  if (list == 0 && expunge_hash_table == 0)
+  if (list == 0 && !expunge_hash_table)
     {
       opt = print_hashed_commands (list_portably);
       if (opt == 0 && posixly_correct == 0 &&
@@ -147,7 +150,7 @@ hash_builtin (list)
   /* If someone runs `hash -r -t xyz' he will be disappointed. */
   if (list_targets)
     return (list_hashed_filename_targets (list, list_portably));
-      
+
 #if defined (RESTRICTED_SHELL)
   if (restricted && pathname)
     {
@@ -158,7 +161,7 @@ hash_builtin (list)
 	}
       /* If we are changing the hash table in a restricted shell, make sure the
 	 target pathname can be found using a $PATH search. */
-      w = find_user_command (pathname);
+      char *w = find_user_command (pathname);
       if (w == 0 || *w == 0 || executable_file (w) == 0)
 	{
 	  sh_notfound (pathname);
@@ -169,10 +172,10 @@ hash_builtin (list)
     }
 #endif
 
-  for (opt = EXECUTION_SUCCESS; list; list = list->next)
+  for (opt = EXECUTION_SUCCESS; list; list = (WORD_LIST *)list->next)
     {
       /* Add, remove or rehash the specified commands. */
-      w = list->word->word;
+      char *w = list->word->word;
       if (absolute_program (w))
 	continue;
       else if (pathname)
@@ -189,7 +192,7 @@ hash_builtin (list)
 	  else
 	    phash_insert (w, pathname, 0, 0);
 	}
-      else if (delete)
+      else if (delete_)
 	{
 	  if (phash_remove (w))
 	    {
@@ -206,9 +209,7 @@ hash_builtin (list)
 }
 
 static int
-add_hashed_command (w, quiet)
-     char *w;
-     int quiet;
+add_hashed_command (char *w, int quiet)
 {
   int rv;
   char *full_path;
@@ -233,16 +234,14 @@ add_hashed_command (w, quiet)
 
 /* Print information about current hashed info. */
 static int
-print_hash_info (item)
-     BUCKET_CONTENTS *item;
+print_hash_info (BUCKET_CONTENTS *item)
 {
   printf ("%4d\t%s\n", item->times_found, pathdata(item)->path);
   return 0;
 }
 
 static int
-print_portable_hash_info (item)
-     BUCKET_CONTENTS *item;
+print_portable_hash_info (BUCKET_CONTENTS *item)
 {
   char *fp, *fn;
 
@@ -256,37 +255,30 @@ print_portable_hash_info (item)
   return 0;
 }
 
-static int
-print_hashed_commands (fmt)
-     int fmt;
+static bool
+print_hashed_commands (bool fmt)
 {
   if (hashed_filenames == 0 || HASH_ENTRIES (hashed_filenames) == 0)
-    return (0);
+    return false;
 
-  if (fmt == 0)
+  if (!fmt)
     printf (_("hits\tcommand\n"));
   hash_walk (hashed_filenames, fmt ? print_portable_hash_info : print_hash_info);
-  return (1);
+  return true;
 }
 
 static int
-list_hashed_filename_targets (list, fmt)
-     WORD_LIST *list;
-     int fmt;
+list_hashed_filename_targets (WORD_LIST *list, bool fmt)
 {
-  int all_found, multiple;
-  char *target;
-  WORD_LIST *l;
+  bool all_found = true;
+  bool multiple = list->next != 0;
 
-  all_found = 1;
-  multiple = list->next != 0;
-
-  for (l = list; l; l = l->next)
+  for (WORD_LIST *l = list; l; l = (WORD_LIST *)l->next)
     {
-      target = phash_search (l->word->word);
+      char *target = phash_search (l->word->word);
       if (target == 0)
 	{
-	  all_found = 0;
+	  all_found = false;
 	  sh_notfound (l->word->word);
 	  continue;
 	}

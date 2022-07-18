@@ -63,7 +63,7 @@ extern int errno;
 
 int parse_and_execute_level = 0;
 
-static int cat_file PARAMS((REDIRECT *));
+static int cat_file (REDIRECT *);
 
 #define PE_TAG "parse_and_execute top"
 #define PS_TAG "parse_string top"
@@ -77,16 +77,14 @@ set_history_remembering ()
 #endif
 
 static void
-restore_lastcom (x)
-     char *x;
+restore_lastcom (void *x)
 {
   FREE (the_printed_command_except_trap);
-  the_printed_command_except_trap = x;
+  the_printed_command_except_trap = (char *)x;
 }
 
 int
-should_suppress_fork (command)
-     COMMAND *command;
+should_suppress_fork (COMMAND *command)
 {
 #if 0 /* TAG: bash-5.2 */
   int subshell;
@@ -111,8 +109,7 @@ should_suppress_fork (command)
 }
 
 int
-can_optimize_connection (command)
-     COMMAND *command;
+can_optimize_connection (COMMAND *command)
 {
   return (*bash_input.location.string == '\0' &&
 	  parser_expanding_alias () == 0 &&
@@ -121,8 +118,7 @@ can_optimize_connection (command)
 }
 
 void
-optimize_fork (command)
-     COMMAND *command;
+optimize_fork (COMMAND *command)
 {
   if (command->type == cm_connection &&
       (command->value.Connection->connector == AND_AND || command->value.Connection->connector == OR_OR || command->value.Connection->connector == ';') &&
@@ -135,8 +131,7 @@ optimize_fork (command)
 }
 
 void
-optimize_subshell_command (command)
-     COMMAND *command;
+optimize_subshell_command (COMMAND *command)
 {
   if (running_trap == 0 &&
       command->type == cm_simple &&
@@ -156,8 +151,7 @@ optimize_subshell_command (command)
 }
 
 void
-optimize_shell_function (command)
-     COMMAND *command;
+optimize_shell_function (COMMAND *command)
 {
   COMMAND *fc;
 
@@ -172,13 +166,12 @@ optimize_shell_function (command)
     {
       fc->value.Connection->second->flags |= CMD_NO_FORK;
       fc->value.Connection->second->value.Simple->flags |= CMD_NO_FORK;
-    }  
+    }
 }
 
 /* How to force parse_and_execute () to clean up after itself. */
 void
-parse_and_execute_cleanup (old_running_trap)
-     int old_running_trap;
+parse_and_execute_cleanup (int old_running_trap)
 {
   if (running_trap > 0)
     {
@@ -198,10 +191,7 @@ parse_and_execute_cleanup (old_running_trap)
 }
 
 static void
-parse_prologue (string, flags, tag)
-     char *string;
-     int flags;
-     char *tag;
+parse_prologue (char *string, int flags, const char *tag)
 {
   char *orig_string, *lastcom;
   int x;
@@ -209,45 +199,45 @@ parse_prologue (string, flags, tag)
   orig_string = string;
   /* Unwind protect this invocation of parse_and_execute (). */
   begin_unwind_frame (tag);
-  unwind_protect_int (parse_and_execute_level);
-  unwind_protect_jmp_buf (top_level);
-  unwind_protect_int (indirection_level);
-  unwind_protect_int (line_number);
-  unwind_protect_int (line_number_for_err_trap);
-  unwind_protect_int (loop_level);
-  unwind_protect_int (executing_list);
-  unwind_protect_int (comsub_ignore_return);
+  unwind_protect_var (parse_and_execute_level);
+  unwind_protect_var (top_level);
+  unwind_protect_var (indirection_level);
+  unwind_protect_var (line_number);
+  unwind_protect_var (line_number_for_err_trap);
+  unwind_protect_var (loop_level);
+  unwind_protect_var (executing_list);
+  unwind_protect_var (comsub_ignore_return);
   if (flags & (SEVAL_NONINT|SEVAL_INTERACT))
-    unwind_protect_int (interactive);
+    unwind_protect_var (interactive);
 
 #if defined (HISTORY)
   if (parse_and_execute_level == 0)
-    add_unwind_protect (set_history_remembering, (char *)NULL);
+    add_unwind_protect (set_history_remembering);
   else
-    unwind_protect_int (remember_on_history);	/* can be used in scripts */
+    unwind_protect_var (remember_on_history);	/* can be used in scripts */
 #  if defined (BANG_HISTORY)
-  unwind_protect_int (history_expansion_inhibited);
+  unwind_protect_var (history_expansion_inhibited);
 #  endif /* BANG_HISTORY */
 #endif /* HISTORY */
 
   if (interactive_shell)
     {
       x = get_current_prompt_level ();
-      add_unwind_protect (set_current_prompt_level, x);
+      add_unwind_protect_int (set_current_prompt_level, x);
     }
 
   if (the_printed_command_except_trap)
     {
       lastcom = savestring (the_printed_command_except_trap);
-      add_unwind_protect (restore_lastcom, lastcom);
+      add_unwind_protect_ptr (restore_lastcom, lastcom);
     }
 
-  add_unwind_protect (pop_stream, (char *)NULL);
+  add_unwind_protect (pop_stream);
   if (parser_expanding_alias ())
-    add_unwind_protect (parser_restore_alias, (char *)NULL);
+    add_unwind_protect (parser_restore_alias);
 
   if (orig_string && ((flags & SEVAL_NOFREE) == 0))
-    add_unwind_protect (xfree, orig_string);
+    add_unwind_protect_ptr (xfree, orig_string);
   end_unwind_frame ();
 
   if (flags & (SEVAL_NONINT|SEVAL_INTERACT))
@@ -276,10 +266,7 @@ parse_prologue (string, flags, tag)
 */
 
 int
-parse_and_execute (string, from_file, flags)
-     char *string;
-     const char *from_file;
-     int flags;
+parse_and_execute (char *string, const char *from_file, int flags)
 {
   int code, lreset;
   volatile int should_jump_to_top_level, last_result;
@@ -306,10 +293,10 @@ parse_and_execute (string, from_file, flags)
   if (parser_expanding_alias ())
     /* push current shell_input_line */
     parser_save_alias ();
-  
+
   if (lreset == 0)
     line_number--;
-    
+
   indirection_level++;
 
   code = should_jump_to_top_level = 0;
@@ -355,7 +342,7 @@ parse_and_execute (string, from_file, flags)
 	        }
 	      should_jump_to_top_level = 1;
 	      goto out;
-	    case FORCE_EOF:	      
+	    case FORCE_EOF:
 	    case EXITPROG:
 	      if (command)
 		run_unwind_frame ("pe_dispose");
@@ -390,7 +377,7 @@ parse_and_execute (string, from_file, flags)
 	      break;
 	    }
 	}
-	  
+
       if (parse_command () == 0)
 	{
 	  if ((flags & SEVAL_PARSEONLY) || (interactive_shell == 0 && read_but_dont_execute))
@@ -405,7 +392,7 @@ parse_and_execute (string, from_file, flags)
 
 	      if (flags & SEVAL_FUNCDEF)
 		{
-		  char *x;
+		  const char *x;
 
 		  /* If the command parses to something other than a straight
 		     function definition, or if we have not consumed the entire
@@ -427,8 +414,8 @@ parse_and_execute (string, from_file, flags)
 
 	      bitmap = new_fd_bitmap (FD_BITMAP_SIZE);
 	      begin_unwind_frame ("pe_dispose");
-	      add_unwind_protect (dispose_fd_bitmap, bitmap);
-	      add_unwind_protect (dispose_command, command);	/* XXX */
+	      add_unwind_protect_ptr (dispose_fd_bitmap, bitmap);
+	      add_unwind_protect_ptr (dispose_command, command);	/* XXX */
 
 	      global_command = (COMMAND *)NULL;
 
@@ -543,11 +530,7 @@ parse_and_execute (string, from_file, flags)
    command substitutions during parsing to obey Posix rules about finding
    the end of the command and balancing parens. */
 int
-parse_string (string, from_file, flags, endp)
-     char *string;
-     const char *from_file;
-     int flags;
-     char **endp;
+parse_string (char *string, const char *from_file, int flags, char **endp)
 {
   int code, nc;
   volatile int should_jump_to_top_level;
@@ -618,7 +601,7 @@ itrace("parse_string: longjmp executed: code = %d", code);
 	      break;
 	    }
 	}
-	  
+
       if (parse_command () == 0)
 	{
 	  dispose_command (global_command);
@@ -667,8 +650,7 @@ out:
    returning errors as appropriate, then just cats the file to the standard
    output. */
 static int
-cat_file (r)
-     REDIRECT *r;
+cat_file (REDIRECT *r)
 {
   char *fn;
   int fd, rval;
@@ -677,11 +659,12 @@ cat_file (r)
     return -1;
 
   /* Get the filename. */
+  bool old_disallow_globbing = disallow_filename_globbing;
   if (posixly_correct && !interactive_shell)
-    disallow_filename_globbing++;
+    disallow_filename_globbing = true;
   fn = redirection_expand (r->redirectee.filename);
   if (posixly_correct && !interactive_shell)
-    disallow_filename_globbing--;
+    disallow_filename_globbing = old_disallow_globbing;
 
   if (fn == 0)
     {
@@ -706,10 +689,7 @@ cat_file (r)
 }
 
 int
-evalstring (string, from_file, flags)
-     char *string;
-     const char *from_file;
-     int flags;
+evalstring (char *string, const char *from_file, int flags)
 {
   volatile int r, rflag, rcatch;
   volatile int was_trap;
@@ -726,8 +706,8 @@ evalstring (string, from_file, flags)
     {
       begin_unwind_frame ("evalstring");
 
-      unwind_protect_int (return_catch_flag);
-      unwind_protect_jmp_buf (return_catch);
+      unwind_protect_var (return_catch_flag);
+      unwind_protect_var (return_catch);
 
       return_catch_flag++;	/* increment so we have a counter */
       rcatch = setjmp_nosigs (return_catch);
@@ -753,6 +733,6 @@ evalstring (string, from_file, flags)
 	  sh_longjmp (return_catch, 1);
 	}
     }
-    
+
   return (r);
 }

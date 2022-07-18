@@ -53,10 +53,10 @@
 /* @@ end of prolog @@ */
 
 /* Name of the default text domain.  */
-extern const char _nl_default_default_domain[] attribute_hidden;
+extern const char _nl_default_default_domain[];
 
 /* Default text domain in which entries for gettext(3) are to be found.  */
-extern const char *_nl_current_default_domain attribute_hidden;
+extern const char *_nl_current_default_domain;
 
 
 /* Names for the libintl functions are a problem.  They must not clash
@@ -78,9 +78,8 @@ __libc_rwlock_define (extern, _nl_state_lock attribute_hidden)
 /* Set the current default message catalog to DOMAINNAME.
    If DOMAINNAME is null, return the current default.
    If DOMAINNAME is "", reset to the default of "messages".  */
-char *
-TEXTDOMAIN (domainname)
-     const char *domainname;
+extern "C" char *
+TEXTDOMAIN (const char *domainname)
 {
   char *new_domain;
   char *old_domain;

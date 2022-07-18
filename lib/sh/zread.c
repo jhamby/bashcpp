@@ -50,10 +50,7 @@ extern int signal_is_trapped (int);
 /* Read LEN bytes from FD into BUF.  Retry the read on EINTR.  Any other
    error causes the loop to break. */
 ssize_t
-zread (fd, buf, len)
-     int fd;
-     char *buf;
-     size_t len;
+zread (int fd, char *buf, size_t len)
 {
   ssize_t r;
 
@@ -83,10 +80,7 @@ zread (fd, buf, len)
 #define NUM_INTR 3
 
 ssize_t
-zreadretry (fd, buf, len)
-     int fd;
-     char *buf;
-     size_t len;
+zreadretry (int fd, char *buf, size_t len)
 {
   ssize_t r;
   int nintr;
@@ -108,10 +102,7 @@ zreadretry (fd, buf, len)
 
 /* Call read(2) and allow it to be interrupted.  Just a stub for now. */
 ssize_t
-zreadintr (fd, buf, len)
-     int fd;
-     char *buf;
-     size_t len;
+zreadintr (int fd, char *buf, size_t len)
 {
   check_signals ();
   return (read (fd, buf, len));
@@ -125,9 +116,7 @@ static char lbuf[ZBUFSIZ];
 static size_t lind, lused;
 
 ssize_t
-zreadc (fd, cp)
-     int fd;
-     char *cp;
+zreadc (int fd, char *cp)
 {
   ssize_t nr;
 
@@ -150,9 +139,7 @@ zreadc (fd, cp)
 /* Don't mix calls to zreadc and zreadcintr in the same function, since they
    use the same local buffer. */
 ssize_t
-zreadcintr (fd, cp)
-     int fd;
-     char *cp;
+zreadcintr (int fd, char *cp)
 {
   ssize_t nr;
 
@@ -175,10 +162,7 @@ zreadcintr (fd, cp)
 /* Like zreadc, but read a specified number of characters at a time.  Used
    for `read -N'. */
 ssize_t
-zreadn (fd, cp, len)
-     int fd;
-     char *cp;
-     size_t len;
+zreadn (int fd, char *cp, size_t len)
 {
   ssize_t nr;
 
@@ -209,8 +193,7 @@ zreset ()
 /* Sync the seek pointer for FD so that the kernel's idea of the last char
    read is the last char returned by zreadc. */
 void
-zsyncfd (fd)
-     int fd;
+zsyncfd (int fd)
 {
   off_t off, r;
 

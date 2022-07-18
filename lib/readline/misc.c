@@ -3,7 +3,7 @@
 /* Copyright (C) 1987-2019 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -53,15 +53,15 @@
 #include "rlshell.h"
 #include "xmalloc.h"
 
-static int rl_digit_loop PARAMS((void));
-static void _rl_history_set_point PARAMS((void));
+static int rl_digit_loop (void);
+static void _rl_history_set_point (void);
 
 /* Forward declarations used in this file */
-void _rl_free_history_entry PARAMS((HIST_ENTRY *));
+void _rl_free_history_entry (HIST_ENTRY *);
 
 /* If non-zero, rl_get_previous_history and rl_get_next_history attempt
    to preserve the value of rl_point from line to line. */
-int _rl_history_preserve_point = 0;
+bool _rl_history_preserve_point = false;
 
 _rl_arg_cxt _rl_argcxt;
 
@@ -152,7 +152,7 @@ _rl_arg_dispatch (_rl_arg_cxt cxt, int c)
 
   if (_rl_digit_p (c))
     {
-      r = _rl_digit_value (c);    	
+      r = _rl_digit_value (c);
       rl_numeric_arg = rl_explicit_arg ? (rl_numeric_arg * 10) +  r : r;
       rl_explicit_arg = 1;
       _rl_argcxt |= NUM_SAWDIGITS;
@@ -428,7 +428,7 @@ rl_replace_from_history (HIST_ENTRY *entry, int flags)
 }
 
 /* Process and free undo lists attached to each history entry prior to the
-   current entry, inclusive, reverting each line to its saved state.  This 
+   current entry, inclusive, reverting each line to its saved state.  This
    is destructive, and state about the current line is lost.  This is not
    intended to be called while actively editing, and the current line is
    not assumed to have been added to the history list. */
@@ -468,14 +468,14 @@ _rl_revert_previous_lines (void)
   /* Restore history state */
   rl_undo_list = saved_undo_list;	/* may have been set to null */
   history_set_pos (hpos);
-  
+
   /* reset the line buffer */
   rl_replace_line (lbuf, 0);
   _rl_set_the_line ();
 
   /* and clean up */
   xfree (lbuf);
-}  
+}
 
 /* Revert all lines in the history by making sure we are at the end of the
    history before calling _rl_revert_previous_lines() */
@@ -498,13 +498,12 @@ void
 rl_clear_history (void)
 {
   HIST_ENTRY **hlist, *hent;
-  register int i;
   UNDO_LIST *ul, *saved_undo_list;
 
   saved_undo_list = rl_undo_list;
   hlist = history_list ();		/* direct pointer, not copy */
 
-  for (i = 0; i < history_length; i++)
+  for (int i = 0; i < history_length; i++)
     {
       hent = hlist[i];
       if (ul = (UNDO_LIST *)hent->data)
@@ -664,8 +663,7 @@ set_saved_history ()
 }
 
 int
-rl_operate_and_get_next (count, c)
-     int count, c;
+rl_operate_and_get_next (int count, int c)
 {
   /* Accept the current line. */
   rl_newline (1, c);

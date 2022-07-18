@@ -34,11 +34,9 @@
 extern char **environ;
 
 int
-main (argc, argv) 
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
-  register char **envp, *eval;
+  char **envp, *eval;
   int len;
 
   argv++;
@@ -69,4 +67,4 @@ main (argc, argv)
     }
   exit (1);
 }
-  
+

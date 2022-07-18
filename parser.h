@@ -74,16 +74,16 @@ struct dstack {
 /* variable declarations from parse.y */
 extern struct dstack dstack;
 
-extern char *primary_prompt;
-extern char *secondary_prompt;
+extern const char *primary_prompt;
+extern const char *secondary_prompt;
 
-extern char *current_prompt_string;
+extern const char *current_prompt_string;
 
-extern char *ps1_prompt;
-extern char *ps2_prompt;
-extern char *ps0_prompt;
+extern const char *ps1_prompt;
+extern const char *ps2_prompt;
+extern const char *ps0_prompt;
 
-extern int expand_aliases;
+extern char expand_aliases;
 extern int current_command_line_count;
 extern int saved_command_line_count;
 extern int shell_eof_token;
@@ -91,7 +91,7 @@ extern int current_token;
 extern int parser_state;
 extern int need_here_doc;
 
-extern int ignoreeof;
+extern char ignoreeof;
 extern int eof_encountered;
 extern int eof_encountered_limit;
 

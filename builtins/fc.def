@@ -94,11 +94,11 @@ extern int errno;
 #define HN_LISTING	0x01
 #define HN_FIRST	0x02
 
-extern int unlink PARAMS((const char *));
+extern int unlink (const char *);
 
-extern FILE *sh_mktmpfp PARAMS((char *, int, char **));
+extern FILE *sh_mktmpfp (const char *, int, char **);
 
-extern int suppress_debug_trap_verbose;
+extern bool suppress_debug_trap_verbose;
 
 /* **************************************************************** */
 /*								    */
@@ -154,14 +154,14 @@ typedef struct repl {
 		} \
 	} while (0)
 
-static char *fc_dosubs PARAMS((char *, REPL *));
-static char *fc_gethist PARAMS((char *, HIST_ENTRY **, int));
-static int fc_gethnum PARAMS((char *, HIST_ENTRY **, int));
-static int fc_number PARAMS((WORD_LIST *));
-static void fc_replhist PARAMS((char *));
+static char *fc_dosubs (char *, REPL *);
+static char *fc_gethist (char *, HIST_ENTRY **, int);
+static int fc_gethnum (char *, HIST_ENTRY **, int);
+static int fc_number (WORD_LIST *);
+static void fc_replhist (char *);
 #ifdef INCLUDE_UNUSED
-static char *fc_readline PARAMS((FILE *));
-static void fc_addhist PARAMS((char *));
+static char *fc_readline (FILE *);
+static void fc_addhist (char *);
 #endif
 
 static void
@@ -178,27 +178,27 @@ set_verbose_flag ()
 #  define POSIX_FC_EDIT_COMMAND "${FCEDIT:-${EDITOR:-ed}}"
 #endif
 
-int
-fc_builtin (list)
-     WORD_LIST *list;
+static void
+unlink_and_free (void *arg)
 {
-  register int i;
-  register char *sep;
+  char *fn = (char *)arg;
+  unlink(fn);
+  xfree(fn);
+}
+
+int
+fc_builtin (WORD_LIST *list)
+{
   int numbering, reverse, listing, execute;
-  int histbeg, histend, last_hist, retval, opt, rh, real_last;
-  FILE *stream;
-  REPL *rlist, *rl;
-  char *ename, *command, *newcom, *fcedit;
-  HIST_ENTRY **hlist;
-  char *fn;
 
   numbering = 1;
   reverse = listing = execute = 0;
-  ename = (char *)NULL;
+  char *ename = (char *)NULL;
 
   /* Parse out the options and set which of the two forms we're in. */
   reset_internal_getopt ();
   lcurrent = list;		/* XXX */
+  int opt;
   while (fc_number (loptend = lcurrent) == 0 &&
 	 (opt = internal_getopt (list, ":e:lnrs")) != -1)
     {
@@ -240,7 +240,9 @@ fc_builtin (list)
      substitutions). */
   if (execute)
     {
-      rlist = (REPL *)NULL;
+      REPL *rlist = (REPL *)NULL;
+      REPL *rl;
+      char *sep;
       while (list && ((sep = (char *)strchr (list->word->word, '=')) != NULL))
 	{
 	  *sep++ = '\0';
@@ -256,7 +258,7 @@ fc_builtin (list)
 	      rl->next = rlist;
 	      rlist = rl;
 	    }
-	  list = list->next;
+	  list = (WORD_LIST *)list->next;
 	}
 
       /* If we have a list of substitutions to do, then reverse it
@@ -264,11 +266,11 @@ fc_builtin (list)
 
       rlist = REVERSE_LIST (rlist, REPL *);
 
-      hlist = history_list ();
+      HIST_ENTRY **hlist = history_list ();
 
       /* If we still have something in list, it is a command spec.
 	 Otherwise, we use the most recent command in time. */
-      command = fc_gethist (list ? list->word->word : (char *)NULL, hlist, 0);
+      char *command = fc_gethist (list ? list->word->word : (char *)NULL, hlist, 0);
 
       if (command == NULL)
 	{
@@ -281,7 +283,7 @@ fc_builtin (list)
 
       if (rlist)
 	{
-	  newcom = fc_dosubs (command, rlist);
+	  char *newcom = fc_dosubs (command, rlist);
 	  free (command);
 	  FREE_RLIST ();
 	  command = newcom;
@@ -296,9 +298,11 @@ fc_builtin (list)
 
   /* This is the second form of the command (the list-or-edit-and-rerun
      form). */
-  hlist = history_list ();
+  HIST_ENTRY **hlist = history_list ();
   if (hlist == 0)
     return (EXECUTION_SUCCESS);
+
+  int i;
   for (i = 0; hlist[i]; i++);
 
   /* With the Bash implementation of history, the current command line
@@ -313,13 +317,13 @@ fc_builtin (list)
      remember_on_history, command substitution in a shell when set -o history
      has been enabled (interactive or not) should use it in the last_hist
      calculation as if it were on. */
-  rh = remember_on_history || ((subshell_environment & SUBSHELL_COMSUB) && enable_history_list);
-  last_hist = i - rh - hist_last_line_added;
+  int rh = remember_on_history || ((subshell_environment & SUBSHELL_COMSUB) && enable_history_list);
+  int last_hist = i - rh - hist_last_line_added;
 
   /* Make sure that real_last is calculated the same way here and in
      fc_gethnum.  The return value from fc_gethnum is treated specially if
      it is == real_last and we are listing commands. */
-  real_last = i;
+  int real_last = i;
   /* back up from the end to the last non-null history entry */
   while (hlist[real_last] == 0 && real_last > 0)
     real_last--;
@@ -331,10 +335,11 @@ fc_builtin (list)
   if (last_hist < 0)
     last_hist = 0;		/* per POSIX */
 
+  int histbeg, histend;
   if (list)
     {
       histbeg = fc_gethnum (list->word->word, hlist, listing|HN_FIRST);
-      list = list->next;
+      list = (WORD_LIST *)list->next;
 
       if (list)
 	histend = fc_gethnum (list->word->word, hlist, listing);
@@ -360,7 +365,7 @@ fc_builtin (list)
 
   if (histbeg == HIST_INVALID || histend == HIST_INVALID)
     {
-      sh_erange ((char *)NULL, _("history specification")); 
+      sh_erange ((char *)NULL, _("history specification"));
       return (EXECUTION_FAILURE);
     }
   else if (histbeg == HIST_ERANGE || histend == HIST_ERANGE)
@@ -404,7 +409,7 @@ fc_builtin (list)
 
   if (histbeg == HIST_INVALID || histend == HIST_INVALID)
     {
-      sh_erange ((char *)NULL, _("history specification")); 
+      sh_erange ((char *)NULL, _("history specification"));
       return (EXECUTION_FAILURE);
     }
   else if (histbeg == HIST_ERANGE || histend == HIST_ERANGE)
@@ -433,6 +438,8 @@ fc_builtin (list)
       reverse = 1;
     }
 
+  FILE *stream;
+  char *fn;
   if (listing)
     stream = stdout;
   else
@@ -476,6 +483,7 @@ fc_builtin (list)
   fclose (stream);
 
   /* Now edit the file of commands. */
+  char *command;
   if (ename)
     {
       command = (char *)xmalloc (strlen (ename) + strlen (fn) + 2);
@@ -483,11 +491,11 @@ fc_builtin (list)
     }
   else
     {
-      fcedit = posixly_correct ? POSIX_FC_EDIT_COMMAND : FC_EDIT_COMMAND;
+      const char *fcedit = posixly_correct ? POSIX_FC_EDIT_COMMAND : FC_EDIT_COMMAND;
       command = (char *)xmalloc (3 + strlen (fcedit) + strlen (fn));
       sprintf (command, "%s %s", fcedit, fn);
     }
-  retval = parse_and_execute (command, "fc", SEVAL_NOHIST);
+  int retval = parse_and_execute (command, "fc", SEVAL_NOHIST);
   if (retval != EXECUTION_SUCCESS)
     {
       unlink (fn);
@@ -506,17 +514,16 @@ fc_builtin (list)
      call to parse_and_execute farther up the function call stack (e.g.,
      if this is called by vi_edit_and_execute_command) may have already
      called bash_history_disable. */
-  remember_on_history = 1;
+  remember_on_history = true;
 
   /* Turn on the `v' flag while fc_execute_file runs so the commands
      will be echoed as they are read by the parser. */
   begin_unwind_frame ("fc builtin");
-  add_unwind_protect (xfree, fn);
-  add_unwind_protect (unlink, fn);
-  add_unwind_protect (set_verbose_flag, (char *)NULL);
-  unwind_protect_int (suppress_debug_trap_verbose);
-  echo_input_at_read = 1;
-  suppress_debug_trap_verbose = 1;
+  add_unwind_protect_ptr (unlink_and_free, fn);
+  add_unwind_protect (set_verbose_flag);
+  unwind_protect_var (suppress_debug_trap_verbose);
+  echo_input_at_read = true;
+  suppress_debug_trap_verbose = true;
 
   retval = fc_execute_file (fn);
   run_unwind_frame ("fc builtin");
@@ -526,8 +533,7 @@ fc_builtin (list)
 
 /* Return 1 if LIST->word->word is a legal number for fc's use. */
 static int
-fc_number (list)
-     WORD_LIST *list;
+fc_number (WORD_LIST *list)
 {
   char *s;
 
@@ -546,18 +552,12 @@ fc_number (list)
    are executing them. If MODE includes HN_FIRST we are looking for the
    first history number specification. */
 static int
-fc_gethnum (command, hlist, mode)
-     char *command;
-     HIST_ENTRY **hlist;
-     int mode;
+fc_gethnum (char *command, HIST_ENTRY **hlist, int mode)
 {
-  int sign, n, clen, rh;
-  register int i, j, last_hist, real_last, listing;
-  register char *s;
-
-  listing = mode & HN_LISTING;
-  sign = 1;
+  int listing = mode & HN_LISTING;
+  int sign = 1;
   /* Count history elements. */
+  int i;
   for (i = 0; hlist[i]; i++);
 
   /* With the Bash implementation of history, the current command line
@@ -572,8 +572,8 @@ fc_gethnum (command, hlist, mode)
      remember_on_history, command substitution in a shell when set -o history
      has been enabled (interactive or not) should use it in the last_hist
      calculation as if it were on. */
-  rh = remember_on_history || ((subshell_environment & SUBSHELL_COMSUB) && enable_history_list);
-  last_hist = i - rh - hist_last_line_added;
+  int rh = remember_on_history || ((subshell_environment & SUBSHELL_COMSUB) && enable_history_list);
+  int last_hist = i - rh - hist_last_line_added;
 
   if (i == last_hist && hlist[last_hist] == 0)
     while (last_hist >= 0 && hlist[last_hist] == 0)
@@ -581,7 +581,7 @@ fc_gethnum (command, hlist, mode)
   if (last_hist < 0)
     return (-1);
 
-  real_last = i;
+  int real_last = i;
   i = last_hist;
 
   /* No specification defaults to most recent command. */
@@ -594,7 +594,7 @@ fc_gethnum (command, hlist, mode)
 
   /* Otherwise, there is a specification.  It can be a number relative to
      the current position, or an absolute history number. */
-  s = command;
+  char *s = command;
 
   /* Handle possible leading minus sign. */
   if (s && (*s == '-'))
@@ -605,7 +605,7 @@ fc_gethnum (command, hlist, mode)
 
   if (s && DIGIT(*s))
     {
-      n = atoi (s);
+      int n = atoi (s);
       n *= sign;
 
       /* We want to return something that is an offset to HISTORY_BASE. */
@@ -638,8 +638,8 @@ fc_gethnum (command, hlist, mode)
 	}
     }
 
-  clen = strlen (command);
-  for (j = i; j >= 0; j--)
+  int clen = strlen (command);
+  for (int j = i; j >= 0; j--)
     {
       if (STREQN (command, histline (j), clen))
 	return (j);
@@ -651,17 +651,12 @@ fc_gethnum (command, hlist, mode)
    COMMAND in HLIST, and return a malloc()'ed copy of it.
    MODE is 1 if we are listing commands, 0 if we are executing them. */
 static char *
-fc_gethist (command, hlist, mode)
-     char *command;
-     HIST_ENTRY **hlist;
-     int mode;
+fc_gethist (char *command, HIST_ENTRY **hlist, int mode)
 {
-  int i;
-
   if (hlist == 0)
     return ((char *)NULL);
 
-  i = fc_gethnum (command, hlist, mode);
+  int i = fc_gethnum (command, hlist, mode);
 
   if (i >= 0)
     return (savestring (histline (i)));
@@ -674,10 +669,9 @@ fc_gethist (command, hlist, mode)
    one at a time.  This can read unlimited length lines.  The
    caller should free the storage. */
 static char *
-fc_readline (stream)
-     FILE *stream;
+fc_readline (FILE *stream)
 {
-  register int c;
+  int c;
   int line_len = 0, lindex = 0;
   char *line = (char *)NULL;
 
@@ -718,20 +712,18 @@ fc_readline (stream)
    Return a pointer to a malloc'ed string which contains the substituted
    command. */
 static char *
-fc_dosubs (command, subs)
-     char *command;
-     REPL *subs;
+fc_dosubs (char *command, REPL *subs)
 {
-  register char *new, *t;
-  register REPL *r;
+  char *new_;
+  REPL *r;
 
-  for (new = savestring (command), r = subs; r; r = r->next)
+  for (new_ = savestring (command), r = subs; r; r = r->next)
     {
-      t = strsub (new, r->pat, r->rep, 1);
-      free (new);
-      new = t;
+      char *t = strsub (new_, r->pat, r->rep, 1);
+      free (new_);
+      new_ = t;
     }
-  return (new);
+  return (new_);
 }
 
 /* Use `command' to replace the last entry in the history list, which,
@@ -739,15 +731,12 @@ fc_dosubs (command, subs)
    become the history entry, and that `fc' should never appear in the
    history list.  This way you can do `r' to your heart's content. */
 static void
-fc_replhist (command)
-     char *command;
+fc_replhist (char *command)
 {
-  int n;
-
   if (command == 0 || *command == '\0')
     return;
 
-  n = strlen (command);
+  int n = strlen (command);
   if (command[n - 1] == '\n')
     command[n - 1] = '\0';
 
@@ -761,10 +750,9 @@ fc_replhist (command)
 #ifdef INCLUDE_UNUSED
 /* Add LINE to the history, after removing a single trailing newline. */
 static void
-fc_addhist (line)
-     char *line;
+fc_addhist (char *line)
 {
-  register int n;
+  int n;
 
   if (line == 0 || *line == 0)
     return;

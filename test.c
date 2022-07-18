@@ -103,35 +103,34 @@ static int test_error_return;
 #define test_exit(val) \
 	do { test_error_return = val; sh_longjmp (test_exit_buf, 1); } while (0)
 
-extern int sh_stat PARAMS((const char *, struct stat *));
+extern int sh_stat (const char *, struct stat *);
 
 static int pos;		/* The offset of the current argument in ARGV. */
 static int argc;	/* The number of arguments present in ARGV. */
 static char **argv;	/* The argument list. */
 static int noeval;
 
-static void test_syntax_error PARAMS((char *, char *)) __attribute__((__noreturn__));
-static void beyond PARAMS((void)) __attribute__((__noreturn__));
-static void integer_expected_error PARAMS((char *)) __attribute__((__noreturn__));
+static void test_syntax_error (const char *, const char *) __attribute__((__noreturn__));
+static void beyond (void) __attribute__((__noreturn__));
+static void integer_expected_error (const char *) __attribute__((__noreturn__));
 
-static int unary_operator PARAMS((void));
-static int binary_operator PARAMS((void));
-static int two_arguments PARAMS((void));
-static int three_arguments PARAMS((void));
-static int posixtest PARAMS((void));
+static int unary_operator (void);
+static int binary_operator (void);
+static int two_arguments (void);
+static int three_arguments (void);
+static int posixtest (void);
 
-static int expr PARAMS((void));
-static int term PARAMS((void));
-static int and PARAMS((void));
-static int or PARAMS((void));
+static int expr (void);
+static int term (void);
+static int and_ (void);
+static int or_ (void);
 
-static int filecomp PARAMS((char *, char *, int));
-static int arithcomp PARAMS((char *, char *, int, int));
-static int patcomp PARAMS((char *, char *, int));
+static int filecomp (const char *, const char *, int);
+static int arithcomp (const char *, const char *, int, int);
+static int patcomp (const char *, const char *, int);
 
 static void
-test_syntax_error (format, arg)
-     char *format, *arg;
+test_syntax_error (const char *format, const char *arg)
 {
   builtin_error (format, arg);
   test_exit (TEST_ERREXIT_STATUS);
@@ -150,8 +149,7 @@ beyond ()
 /* Syntax error for when an integer argument was expected, but
    something else was found. */
 static void
-integer_expected_error (pch)
-     char *pch;
+integer_expected_error (const char *pch)
 {
   test_syntax_error (_("%s: integer expression expected"), pch);
 }
@@ -172,7 +170,7 @@ expr ()
   if (pos >= argc)
     beyond ();
 
-  return (FALSE ^ or ());		/* Same with this. */
+  return (FALSE ^ or_ ());		/* Same with this. */
 }
 
 /*
@@ -181,15 +179,15 @@ expr ()
  *	and '-o' or
  */
 static int
-or ()
+or_ ()
 {
   int value, v2;
 
-  value = and ();
+  value = and_ ();
   if (pos < argc && argv[pos][0] == '-' && argv[pos][1] == 'o' && !argv[pos][2])
     {
       advance (0);
-      v2 = or ();
+      v2 = or_ ();
       return (value || v2);
     }
 
@@ -202,7 +200,7 @@ or ()
  *	term '-a' and
  */
 static int
-and ()
+and_ ()
 {
   int value, v2;
 
@@ -210,7 +208,7 @@ and ()
   if (pos < argc && argv[pos][0] == '-' && argv[pos][1] == 'a' && !argv[pos][2])
     {
       advance (0);
-      v2 = and ();
+      v2 = and_ ();
       return (value && v2);
     }
   return (value);
@@ -288,10 +286,7 @@ term ()
 }
 
 static int
-stat_mtime (fn, st, ts)
-     char *fn;
-     struct stat *st;
-     struct timespec *ts;
+stat_mtime (const char *fn, struct stat *st, struct timespec *ts)
 {
   int r;
 
@@ -303,9 +298,7 @@ stat_mtime (fn, st, ts)
 }
 
 static int
-filecomp (s, t, op)
-     char *s, *t;
-     int op;
+filecomp (const char *s, const char *t, int op)
 {
   struct stat st1, st2;
   struct timespec ts1, ts2;
@@ -321,7 +314,7 @@ filecomp (s, t, op)
       if (op == EF)
 	return (FALSE);
     }
-  
+
   switch (op)
     {
     case OT: return (r1 < r2 || (r2 == 0 && timespec_cmp (ts1, ts2) < 0));
@@ -332,15 +325,13 @@ filecomp (s, t, op)
 }
 
 static int
-arithcomp (s, t, op, flags)
-     char *s, *t;
-     int op, flags;
+arithcomp (const char *s, const char *t, int op, int flags)
 {
   intmax_t l, r;
-  int expok;
 
   if (flags & TEST_ARITHEXP)
     {
+      bool expok;
       l = evalexp (s, EXP_EXPANDED, &expok);
       if (expok == 0)
 	return (FALSE);		/* should probably longjmp here */
@@ -370,9 +361,7 @@ arithcomp (s, t, op, flags)
 }
 
 static int
-patcomp (string, pat, op)
-     char *string, *pat;
-     int op;
+patcomp (const char *string, const char *pat, int op)
 {
   int m;
 
@@ -381,9 +370,7 @@ patcomp (string, pat, op)
 }
 
 int
-binary_test (op, arg1, arg2, flags)
-     char *op, *arg1, *arg2;
-     int flags;
+binary_test (const char *op, const char *arg1, const char *arg2, int flags)
 {
   int patmatch;
 
@@ -402,7 +389,7 @@ binary_test (op, arg1, arg2, flags)
     }
   else if (op[0] == '!' && op[1] == '=' && op[2] == '\0')
     return (patmatch ? patcomp (arg1, arg2, NE) : (STREQ (arg1, arg2) == 0));
-    
+
 
   else if (op[2] == 't')
     {
@@ -510,14 +497,13 @@ unary_operator ()
 }
 
 int
-unary_test (op, arg)
-     char *op, *arg;
+unary_test (const char *op, const char *arg)
 {
   intmax_t r;
   struct stat stat_buf;
   struct timespec mtime, atime;
   SHELL_VAR *v;
-     
+
   switch (op[1])
     {
     case 'a':			/* file exists in the file system? */
@@ -669,8 +655,7 @@ unary_test (op, arg)
 
 /* Return TRUE if OP is one of the test command's binary operators. */
 int
-test_binop (op)
-     char *op;
+test_binop (const char *op)
 {
   if (op[0] == '=' && op[1] == '\0')
     return (1);		/* '=' */
@@ -723,8 +708,7 @@ test_binop (op)
 
 /* Return non-zero if OP is one of the test command's unary operators. */
 int
-test_unop (op)
-     char *op;
+test_unop (const char *op)
 {
   if (op[0] != '-' || (op[1] && op[2] != 0))
     return (0);
@@ -857,9 +841,7 @@ posixtest ()
  *	test expr
  */
 int
-test_command (margc, margv)
-     int margc;
-     char **margv;
+test_command (int margc, char **margv)
 {
   int value;
   int code;

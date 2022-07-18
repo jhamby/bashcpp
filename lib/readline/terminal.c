@@ -3,7 +3,7 @@
 /* Copyright (C) 1996-2017 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -73,11 +73,11 @@
 #  include <windows.h>
 #  include <wincon.h>
 
-static void _win_get_screensize PARAMS((int *, int *));
+static void _win_get_screensize (int *, int *);
 #endif
 
 #if defined (__EMX__)
-static void _emx_get_screensize PARAMS((int *, int *));
+static void _emx_get_screensize (int *, int *);
 #endif
 
 /* If the calling application sets this to a non-zero value, readline will
@@ -100,86 +100,86 @@ static char *term_buffer = (char *)NULL;
 static char *term_string_buffer = (char *)NULL;
 #endif
 
-static int tcap_initialized;
+static bool tcap_initialized;
 
 #if !defined (__linux__) && !defined (NCURSES_VERSION)
 #  if defined (__EMX__) || defined (NEED_EXTERN_PC)
-extern 
+extern
 #  endif /* __EMX__ || NEED_EXTERN_PC */
 char PC, *BC, *UP;
 #endif /* !__linux__ && !NCURSES_VERSION */
 
 /* Some strings to control terminal actions.  These are output by tputs (). */
-char *_rl_term_clreol;
-char *_rl_term_clrpag;
-char *_rl_term_clrscroll;
-char *_rl_term_cr;
-char *_rl_term_backspace;
-char *_rl_term_goto;
-char *_rl_term_pc;
+const char *_rl_term_clreol;
+const char *_rl_term_clrpag;
+const char *_rl_term_clrscroll;
+const char *_rl_term_cr;
+const char *_rl_term_backspace;
+const char *_rl_term_goto;
+const char *_rl_term_pc;
 
 /* Non-zero if we determine that the terminal can do character insertion. */
-int _rl_terminal_can_insert = 0;
+bool _rl_terminal_can_insert = false;
 
 /* How to insert characters. */
-char *_rl_term_im;
-char *_rl_term_ei;
-char *_rl_term_ic;
-char *_rl_term_ip;
-char *_rl_term_IC;
+const char *_rl_term_im;
+const char *_rl_term_ei;
+const char *_rl_term_ic;
+const char *_rl_term_ip;
+const char *_rl_term_IC;
 
 /* How to delete characters. */
-char *_rl_term_dc;
-char *_rl_term_DC;
+const char *_rl_term_dc;
+const char *_rl_term_DC;
 
 /* How to move forward a char, non-destructively */
-char *_rl_term_forward_char;
+const char *_rl_term_forward_char;
 
 /* How to go up a line. */
-char *_rl_term_up;
+const char *_rl_term_up;
 
 /* A visible bell; char if the terminal can be made to flash the screen. */
-static char *_rl_visible_bell;
+static const char *_rl_visible_bell;
 
 /* Non-zero means the terminal can auto-wrap lines. */
 int _rl_term_autowrap = -1;
 
 /* Non-zero means that this terminal has a meta key. */
-static int term_has_meta;
+static bool term_has_meta;
 
 /* The sequences to write to turn on and off the meta key, if this
    terminal has one. */
-static char *_rl_term_mm;
-static char *_rl_term_mo;
+static const char *_rl_term_mm;
+static const char *_rl_term_mo;
 
 /* The sequences to enter and exit standout mode. */
-static char *_rl_term_so;
-static char *_rl_term_se;
+static const char *_rl_term_so;
+static const char *_rl_term_se;
 
 /* The key sequences output by the arrow keys, if this terminal has any. */
-static char *_rl_term_ku;
-static char *_rl_term_kd;
-static char *_rl_term_kr;
-static char *_rl_term_kl;
+static const char *_rl_term_ku;
+static const char *_rl_term_kd;
+static const char *_rl_term_kr;
+static const char *_rl_term_kl;
 
 /* How to initialize and reset the arrow keys, if this terminal has any. */
-static char *_rl_term_ks;
-static char *_rl_term_ke;
+static const char *_rl_term_ks;
+static const char *_rl_term_ke;
 
 /* The key sequences sent by the Home and End keys, if any. */
-static char *_rl_term_kh;
-static char *_rl_term_kH;
-static char *_rl_term_at7;	/* @7 */
+static const char *_rl_term_kh;
+static const char *_rl_term_kH;
+static const char *_rl_term_at7;	/* @7 */
 
 /* Delete key */
-static char *_rl_term_kD;
+static const char *_rl_term_kD;
 
 /* Insert key */
-static char *_rl_term_kI;
+static const char *_rl_term_kI;
 
 /* Cursor control */
-static char *_rl_term_vs;	/* very visible */
-static char *_rl_term_ve;	/* normal */
+static const char *_rl_term_vs;	/* very visible */
+static const char *_rl_term_ve;	/* normal */
 
 /* It's not clear how HPUX is so broken here. */
 #ifdef TGETENT_BROKEN
@@ -194,16 +194,16 @@ static char *_rl_term_ve;	/* normal */
 #endif
 #define TGETFLAG(cap)	(tgetflag (cap) == TGETFLAG_SUCCESS)
 
-static void bind_termcap_arrow_keys PARAMS((Keymap));
+static void bind_termcap_arrow_keys (Keymap);
 
 /* Variables that hold the screen dimensions, used by the display code. */
 int _rl_screenwidth, _rl_screenheight, _rl_screenchars;
 
 /* Non-zero means the user wants to enable the keypad. */
-int _rl_enable_keypad;
+bool _rl_enable_keypad;
 
 /* Non-zero means the user wants to enable a meta key. */
-int _rl_enable_meta = 1;
+bool _rl_enable_meta = true;
 
 #if defined (__EMX__)
 static void
@@ -378,7 +378,7 @@ _rl_sigwinch_resize_terminal (void)
 {
   _rl_get_screen_size (fileno (rl_instream), 1);
 }
-	
+
 void
 rl_resize_terminal (void)
 {
@@ -394,7 +394,7 @@ rl_resize_terminal (void)
 
 struct _tc_string {
      const char * const tc_var;
-     char **tc_value;
+     const char **tc_value;
 };
 
 /* This should be kept sorted, just in case we decide to change the
@@ -443,12 +443,10 @@ static void
 get_term_capabilities (char **bp)
 {
 #if !defined (__DJGPP__)	/* XXX - doesn't DJGPP have a termcap library? */
-  register int i;
-
-  for (i = 0; i < NUM_TC_STRINGS; i++)
+  for (int i = 0; i < NUM_TC_STRINGS; i++)
     *(tc_strings[i].tc_value) = tgetstr ((char *)tc_strings[i].tc_var, bp);
 #endif
-  tcap_initialized = 1;
+  tcap_initialized = true;
 }
 
 int
@@ -554,8 +552,8 @@ _rl_init_terminal_io (const char *terminal_name)
          tgoto if _rl_term_IC or _rl_term_DC is defined, but just in case we
          change that later... */
       PC = '\0';
-      BC = _rl_term_backspace = "\b";
-      UP = _rl_term_up;
+      BC = (char *)(_rl_term_backspace = "\b");
+      UP = (char *)_rl_term_up;
 
       return 0;
     }
@@ -565,8 +563,8 @@ _rl_init_terminal_io (const char *terminal_name)
   /* Set up the variables that the termcap library expects the application
      to provide. */
   PC = _rl_term_pc ? *_rl_term_pc : 0;
-  BC = _rl_term_backspace;
-  UP = _rl_term_up;
+  BC = (char *)_rl_term_backspace;
+  UP = (char *)_rl_term_up;
 
   if (_rl_term_cr == 0)
     _rl_term_cr = "\r";
@@ -605,7 +603,7 @@ _rl_init_terminal_io (const char *terminal_name)
      bracketed paste mode, so we assume a terminal named "dumb" does not. */
   if (dumbterm)
     _rl_enable_bracketed_paste = 0;
-    
+
   return 0;
 }
 
@@ -632,14 +630,13 @@ bind_termcap_arrow_keys (Keymap map)
   _rl_keymap = xkeymap;
 }
 
-char *
+const char *
 rl_get_termcap (const char *cap)
 {
-  register int i;
-
-  if (tcap_initialized == 0)
+  if (!tcap_initialized)
     return ((char *)NULL);
-  for (i = 0; i < NUM_TC_STRINGS; i++)
+
+  for (int i = 0; i < NUM_TC_STRINGS; i++)
     {
       if (tc_strings[i].tc_var[0] == cap[0] && strcmp (tc_strings[i].tc_var, cap) == 0)
         return *(tc_strings[i].tc_value);
@@ -683,15 +680,13 @@ _rl_output_some_chars (const char *string, int count)
 int
 _rl_backspace (int count)
 {
-  register int i;
-
 #ifndef __MSDOS__
   if (_rl_term_backspace)
-    for (i = 0; i < count; i++)
+    for (int i = 0; i < count; i++)
       tputs (_rl_term_backspace, 1, _rl_output_character_function);
   else
 #endif
-    for (i = 0; i < count; i++)
+    for (int i = 0; i < count; i++)
       putc ('\b', _rl_out_stream);
   return 0;
 }

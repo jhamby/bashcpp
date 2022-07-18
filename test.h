@@ -28,12 +28,12 @@
 #define TEST_ARITHEXP	0x02
 #define TEST_LOCALE	0x04
 
-extern int test_unop PARAMS((char *));
-extern int test_binop PARAMS((char *));
+extern int test_unop (const char *);
+extern int test_binop (const char *);
 
-extern int unary_test PARAMS((char *, char *));
-extern int binary_test PARAMS((char *, char *, char *, int));
+extern int unary_test (const char *, const char *);
+extern int binary_test (const char *, const char *, const char *, int);
 
-extern int test_command PARAMS((int, char **));
+extern int test_command (int, char **);
 
 #endif /* _TEST_H_ */

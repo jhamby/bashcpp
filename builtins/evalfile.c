@@ -73,9 +73,7 @@ extern int errno;
 int sourcelevel = 0;
 
 static int
-_evalfile (filename, flags)
-     const char *filename;
-     int flags;
+_evalfile (const char *filename, int flags)
 {
   volatile int old_interactive;
   procenv_t old_return_catch;
@@ -153,7 +151,7 @@ file_error_and_exit:
       (*errfunc) (_("%s: file is too large"), filename);
       close (fd);
       return ((flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE : -1);
-    }      
+    }
 
   if (S_ISREG (finfo.st_mode) && file_size <= SSIZE_MAX)
     {
@@ -180,8 +178,8 @@ file_error_and_exit:
       free (string);
       return ((flags & FEVAL_BUILTIN) ? EXECUTION_SUCCESS : 1);
     }
-      
-  if ((flags & FEVAL_CHECKBINARY) && 
+
+  if ((flags & FEVAL_CHECKBINARY) &&
       check_binary_file (string, (nr > 80) ? 80 : nr))
     {
       free (string);
@@ -213,11 +211,11 @@ file_error_and_exit:
     {
       begin_unwind_frame ("_evalfile");
 
-      unwind_protect_int (return_catch_flag);
-      unwind_protect_jmp_buf (return_catch);
+      unwind_protect_var (return_catch_flag);
+      unwind_protect_var (return_catch);
       if (flags & FEVAL_NONINT)
-	unwind_protect_int (interactive);
-      unwind_protect_int (sourcelevel);
+	unwind_protect_var (interactive);
+      unwind_protect_var (sourcelevel);
     }
   else
     {
@@ -237,7 +235,7 @@ file_error_and_exit:
   t = itos (executing_line_number ());
   array_push (bash_lineno_a, t);
   free (t);
-  array_push (funcname_a, "source");	/* not exactly right */
+  array_push (funcname_a, (char *)"source");	/* not exactly right */
 
   fa = (struct func_array_state *)xmalloc (sizeof (struct func_array_state));
   fa->source_a = bash_source_a;
@@ -247,7 +245,7 @@ file_error_and_exit:
   fa->funcname_a = funcname_a;
   fa->funcname_v = funcname_v;
   if (flags & FEVAL_UNWINDPROT)
-    add_unwind_protect (restore_funcarray_state, fa);
+    add_unwind_protect_ptr (restore_funcarray_state, fa);
 
 #  if defined (DEBUGGER)
   /* Have to figure out a better way to do this when `source' is supplied
@@ -260,7 +258,7 @@ file_error_and_exit:
       tt[0] = '1'; tt[1] = '\0';
       array_push (bash_argc_a, tt);
       if (flags & FEVAL_UNWINDPROT)
-	add_unwind_protect (pop_args, 0);
+	add_unwind_protect (pop_args);
     }
 #  endif
 #endif
@@ -316,9 +314,7 @@ file_error_and_exit:
 }
 
 int
-maybe_execute_file (fname, force_noninteractive)
-     const char *fname;
-     int force_noninteractive;
+maybe_execute_file (const char *fname, bool force_noninteractive)
 {
   char *filename;
   int result, flags;
@@ -333,9 +329,7 @@ maybe_execute_file (fname, force_noninteractive)
 }
 
 int
-force_execute_file (fname, force_noninteractive)
-     const char *fname;
-     int force_noninteractive;
+force_execute_file (const char *fname, bool force_noninteractive)
 {
   char *filename;
   int result, flags;
@@ -351,8 +345,7 @@ force_execute_file (fname, force_noninteractive)
 
 #if defined (HISTORY)
 int
-fc_execute_file (filename)
-     const char *filename;
+fc_execute_file (const char *filename)
 {
   int flags;
 
@@ -365,9 +358,7 @@ fc_execute_file (filename)
 #endif /* HISTORY */
 
 int
-source_file (filename, sflags)
-     const char *filename;
-     int sflags;
+source_file (const char *filename, int sflags)
 {
   int flags, rval;
 

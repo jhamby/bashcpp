@@ -3,7 +3,7 @@
 /* Copyright 1999-2020 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
-   
+
    Bash is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -45,14 +45,14 @@
 "this configure-time declaration test was not run"
 #endif
 #if !HAVE_DECL_STRTOL
-extern long strtol PARAMS((const char *, char **, int));
+extern long strtol (const char *, char **, int);
 #endif
 
 #ifndef HAVE_DECL_STRTOLL
 "this configure-time declaration test was not run"
 #endif
 #if !HAVE_DECL_STRTOLL && HAVE_LONG_LONG
-extern long long strtoll PARAMS((const char *, char **, int));
+extern long long strtoll (const char *, char **, int);
 #endif
 
 #ifdef strtoimax
@@ -60,10 +60,7 @@ extern long long strtoll PARAMS((const char *, char **, int));
 #endif
 
 intmax_t
-strtoimax (ptr, endptr, base)
-     const char *ptr;
-     char **endptr;
-     int base;
+strtoimax (const char *ptr, char **endptr, int base)
 {
 #if HAVE_LONG_LONG
   verify(size_is_that_of_long_or_long_long,
@@ -90,7 +87,7 @@ main ()
   long long y;
 #endif
   long z;
-  
+
   printf ("sizeof intmax_t: %d\n", sizeof (intmax_t));
 
 #if HAVE_LONG_LONG

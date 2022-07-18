@@ -57,14 +57,13 @@ $END
 #include "common.h"
 
 #if defined (_CS_PATH) && defined (HAVE_CONFSTR) && !HAVE_DECL_CONFSTR
-extern size_t confstr PARAMS((int, char *, size_t));
+extern size_t confstr (int, char *, size_t);
 #endif
 
 /* Run the commands mentioned in LIST without paying attention to shell
    functions. */
 int
-command_builtin (list)
-     WORD_LIST *list;
+command_builtin (WORD_LIST *list)
 {
   int result, verbose, use_standard_path, opt;
   COMMAND *command;
@@ -107,7 +106,7 @@ command_builtin (list)
     {
       int found, any_found;
 
-      for (any_found = 0; list; list = list->next)
+      for (any_found = 0; list; list = (WORD_LIST *)list->next)
 	{
 	  found = describe_command (list->word->word, verbose|use_standard_path);
 
@@ -136,7 +135,7 @@ command_builtin (list)
   command->flags |= COMMAND_BUILTIN_FLAGS;
   command->value.Simple->flags |= COMMAND_BUILTIN_FLAGS;
 
-  add_unwind_protect ((char *)dispose_command, command);
+  add_unwind_protect_ptr (dispose_command, command);
   result = execute_command (command);
 
   run_unwind_frame ("command_builtin");

@@ -63,12 +63,11 @@ $END
 /* Flags for print_alias */
 #define AL_REUSABLE	0x01
 
-static void print_alias PARAMS((alias_t *, int));
+static void print_alias (alias_t *, int);
 
 /* Hack the alias command in a Korn shell way. */
 int
-alias_builtin (list)
-     WORD_LIST *list;
+alias_builtin (WORD_LIST *list)
 {
   int any_failed, offset, pflag, dflags;
   alias_t **alias_list, *t;
@@ -145,7 +144,7 @@ alias_builtin (list)
 	      any_failed++;
 	    }
 	}
-      list = list->next;
+      list = (WORD_LIST *)list->next;
     }
 
   return (any_failed ? EXECUTION_FAILURE : EXECUTION_SUCCESS);
@@ -167,10 +166,8 @@ $END
 #if defined (ALIAS)
 /* Remove aliases named in LIST from the aliases database. */
 int
-unalias_builtin (list)
-     register WORD_LIST *list;
+unalias_builtin (WORD_LIST *list)
 {
-  register alias_t *alias;
   int opt, aflag;
 
   aflag = 0;
@@ -206,7 +203,7 @@ unalias_builtin (list)
   aflag = 0;
   while (list)
     {
-      alias = find_alias (list->word->word);
+      alias_t *alias = find_alias (list->word->word);
 
       if (alias)
 	remove_alias (alias->name);
@@ -216,7 +213,7 @@ unalias_builtin (list)
 	  aflag++;
 	}
 
-      list = list->next;
+      list = (WORD_LIST *)list->next;
     }
 
   return (aflag ? EXECUTION_FAILURE : EXECUTION_SUCCESS);
@@ -224,9 +221,7 @@ unalias_builtin (list)
 
 /* Output ALIAS in such a way as to allow it to be read back in. */
 static void
-print_alias (alias, flags)
-     alias_t *alias;
-     int flags;
+print_alias (alias_t *alias, int flags)
 {
   char *value;
 

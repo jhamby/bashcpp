@@ -32,20 +32,14 @@ extern int locale_utf8locale;
 
 #undef mbschr
 
-extern char *utf8_mbschr (const char *, int);	/* XXX */
+extern const char *utf8_mbschr (const char *, int);	/* XXX */
 
 /* In some locales, the non-first byte of some multibyte characters have
    the same value as some ascii character.  Faced with these strings, a
    legacy strchr() might return the wrong value. */
 
-char *
-#if defined (PROTOTYPES)
+const char *
 mbschr (const char *s, int c)
-#else
-mbschr (s, c)
-     const char *s;
-     int c;
-#endif
 {
 #if HANDLE_MULTIBYTE
   char *pos;

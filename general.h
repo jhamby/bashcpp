@@ -57,16 +57,12 @@
 /* Hardly used anymore */
 #define pointer_to_int(x)	(int)((char *)x - (char *)0)
 
-#if defined (alpha) && defined (__GNUC__) && !defined (strchr) && !defined (__STDC__)
-extern char *strchr (), *strrchr ();
-#endif
-
 #if !defined (strcpy) && (defined (HAVE_DECL_STRCPY) && !HAVE_DECL_STRCPY)
-extern char *strcpy PARAMS((char *, const char *));
+extern char *strcpy (char *, const char *);
 #endif
 
 #if !defined (savestring)
-#  define savestring(x) (char *)strcpy (xmalloc (1 + strlen (x)), (x))
+#  define savestring(x) (char *)strcpy ((char *)xmalloc (1 + strlen (x)), (x))
 #endif
 
 #ifndef member
@@ -129,17 +125,10 @@ extern char *strcpy PARAMS((char *, const char *));
    splitting. */
 #define spctabnl(c)	((c) == ' ' || (c) == '\t' || (c) == '\n')
 
-/* All structs which contain a `next' field should have that field
-   as the first field in the struct.  This means that functions
-   can be written to handle the general case for linked lists. */
-typedef struct g_list {
-  struct g_list *next;
-} GENERIC_LIST;
-
 /* Here is a generic structure for associating character strings
    with integers.  It is used in the parser for shell tokenization. */
 typedef struct {
-  char *word;
+  const char *word;
   int token;
 } STRING_INT_ALIST;
 
@@ -186,7 +175,7 @@ typedef struct {
       { \
 	while ((cind) + (room) >= csize) \
 	  csize += (sincr); \
-	str = xrealloc (str, csize); \
+	str = (char *) xrealloc (str, csize); \
       } \
   } while (0)
 
@@ -205,43 +194,43 @@ typedef char **CPPFunction ();		/* no longer used */
 /* Shell function typedefs with prototypes */
 /* `Generic' function pointer typedefs */
 
-typedef int sh_intfunc_t PARAMS((int));
-typedef int sh_ivoidfunc_t PARAMS((void));
-typedef int sh_icpfunc_t PARAMS((char *));
-typedef int sh_icppfunc_t PARAMS((char **));
-typedef int sh_iptrfunc_t PARAMS((PTR_T));
+typedef int sh_intfunc_t (int);
+typedef int sh_ivoidfunc_t ();
+typedef int sh_icpfunc_t (char *);
+typedef int sh_icppfunc_t (char **);
+typedef int sh_iptrfunc_t (PTR_T);
 
-typedef void sh_voidfunc_t PARAMS((void));
-typedef void sh_vintfunc_t PARAMS((int));
-typedef void sh_vcpfunc_t PARAMS((char *));
-typedef void sh_vcppfunc_t PARAMS((char **));
-typedef void sh_vptrfunc_t PARAMS((PTR_T));
+typedef void sh_voidfunc_t ();
+typedef void sh_vintfunc_t (int);
+typedef void sh_vcpfunc_t (char *);
+typedef void sh_vcppfunc_t (char **);
+typedef void sh_vptrfunc_t (PTR_T);
 
-typedef int sh_wdesc_func_t PARAMS((WORD_DESC *));
-typedef int sh_wlist_func_t PARAMS((WORD_LIST *));
+typedef int sh_wdesc_func_t (WORD_DESC *);
+typedef int sh_wlist_func_t (WORD_LIST *);
 
-typedef int sh_glist_func_t PARAMS((GENERIC_LIST *));
+typedef int sh_glist_func_t (GENERIC_LIST *);
 
-typedef char *sh_string_func_t PARAMS((char *));	/* like savestring, et al. */
+typedef char *sh_string_func_t (const char *);	/* like savestring, et al. */
 
-typedef int sh_msg_func_t PARAMS((const char *, ...));	/* printf(3)-like */
-typedef void sh_vmsg_func_t PARAMS((const char *, ...));	/* printf(3)-like */
+typedef int sh_msg_func_t (const char *, ...);		/* printf(3)-like */
+typedef void sh_vmsg_func_t (const char *, ...);	/* printf(3)-like */
 
 /* Specific function pointer typedefs.  Most of these could be done
    with #defines. */
-typedef void sh_sv_func_t PARAMS((char *));	/* sh_vcpfunc_t */
-typedef void sh_free_func_t PARAMS((PTR_T));	/* sh_vptrfunc_t */
-typedef void sh_resetsig_func_t PARAMS((int));	/* sh_vintfunc_t */
+typedef void sh_sv_func_t (const char *);	/* sh_vcpfunc_t */
+typedef void sh_free_func_t (PTR_T);		/* sh_vptrfunc_t */
+typedef void sh_resetsig_func_t (int);		/* sh_vintfunc_t */
 
-typedef int sh_ignore_func_t PARAMS((const char *));	/* sh_icpfunc_t */
+typedef bool sh_ignore_func_t (const char *);	/* sh_icpfunc_t */
 
-typedef int sh_assign_func_t PARAMS((const char *));
-typedef int sh_wassign_func_t PARAMS((WORD_DESC *, int));
+typedef int sh_assign_func_t (const char *);
+typedef int sh_wassign_func_t (WORD_DESC *, int);
 
-typedef int sh_load_func_t PARAMS((char *));
-typedef void sh_unload_func_t PARAMS((char *));
+typedef int sh_load_func_t (const char *);
+typedef void sh_unload_func_t (const char *);
 
-typedef int sh_builtin_func_t PARAMS((WORD_LIST *)); /* sh_wlist_func_t */
+typedef int sh_builtin_func_t (WORD_LIST *); /* sh_wlist_func_t */
 
 #endif /* SH_FUNCTION_TYPEDEF */
 
@@ -265,7 +254,7 @@ typedef int sh_builtin_func_t PARAMS((WORD_LIST *)); /* sh_wlist_func_t */
 typedef int QSFUNC (const void *, const void *);
 #else
 typedef int QSFUNC ();
-#endif 
+#endif
 
 /* Some useful definitions for Unix pathnames.  Argument convention:
    x == string, c == character */
@@ -295,77 +284,79 @@ typedef int QSFUNC ();
 
 #if 0
 /* Declarations for functions defined in xmalloc.c */
-extern PTR_T xmalloc PARAMS((size_t));
-extern PTR_T xrealloc PARAMS((void *, size_t));
-extern void xfree PARAMS((void *));
+extern PTR_T xmalloc (size_t);
+extern PTR_T xrealloc (void *, size_t);
+extern void xfree (void *);
 #endif
 
 /* Declarations for functions defined in general.c */
-extern void posix_initialize PARAMS((int));
+extern void posix_initialize (bool);
 
-extern int num_posix_options PARAMS((void));
-extern char *get_posix_options PARAMS((char *));
-extern void set_posix_options PARAMS((const char *));
+extern int num_posix_options ();
+extern char *get_posix_options (char *);
+extern void set_posix_options (const char *);
 
-extern void save_posix_options PARAMS((void));
+extern void save_posix_options ();
 
 #if defined (RLIMTYPE)
-extern RLIMTYPE string_to_rlimtype PARAMS((char *));
-extern void print_rlimtype PARAMS((RLIMTYPE, int));
+extern RLIMTYPE string_to_rlimtype (char *);
+extern void print_rlimtype (RLIMTYPE, int);
 #endif
 
-extern int all_digits PARAMS((const char *));
-extern int legal_number PARAMS((const char *, intmax_t *));
-extern int legal_identifier PARAMS((const char *));
-extern int importable_function_name PARAMS((const char *, size_t));
-extern int exportable_function_name PARAMS((const char *));
-extern int check_identifier PARAMS((WORD_DESC *, int));
-extern int valid_nameref_value PARAMS((const char *, int));
-extern int check_selfref PARAMS((const char *, char *, int));
-extern int legal_alias_name PARAMS((const char *, int));
-extern int line_isblank PARAMS((const char *));
-extern int assignment PARAMS((const char *, int));
+extern bool all_digits (const char *);
+extern bool legal_number (const char *, intmax_t *);
+extern bool legal_identifier (const char *);
+extern bool importable_function_name (const char *, size_t);
+extern bool exportable_function_name (const char *);
+extern bool check_identifier (WORD_DESC *, int);
+extern bool valid_nameref_value (const char *, int);
+extern bool check_selfref (const char *, const char *, int);
+extern bool legal_alias_name (const char *, int);
+extern bool line_isblank (const char *);
+extern int assignment (const char *, int);
 
-extern int sh_unset_nodelay_mode PARAMS((int));
-extern int sh_setclexec PARAMS((int));
-extern int sh_validfd PARAMS((int));
-extern int fd_ispipe PARAMS((int));
-extern void check_dev_tty PARAMS((void));
-extern int move_to_high_fd PARAMS((int, int, int));
-extern int check_binary_file PARAMS((const char *, int));
+extern int sh_unset_nodelay_mode (int);
+extern int sh_setclexec (int);
+extern int sh_validfd (int);
+extern int fd_ispipe (int);
+#if 0
+extern void check_dev_tty ();
+#endif
+extern int move_to_high_fd (int, int, int);
+extern int check_binary_file (const char *, int);
 
 #ifdef _POSIXSTAT_H_
-extern int same_file PARAMS((const char *, const char *, struct stat *, struct stat *));
+extern int same_file (const char *, const char *, struct stat *, struct stat *);
 #endif
 
-extern int sh_openpipe PARAMS((int *));
-extern int sh_closepipe PARAMS((int *));
+extern int sh_openpipe (int *);
+extern int sh_closepipe (int *);
 
-extern int file_exists PARAMS((const char *));
-extern int file_isdir PARAMS((const char  *));
-extern int file_iswdir PARAMS((const char  *));
-extern int path_dot_or_dotdot PARAMS((const char *));
-extern int absolute_pathname PARAMS((const char *));
-extern int absolute_program PARAMS((const char *));
+extern int file_exists (const char *);
+extern int file_isdir (const char  *);
+extern int file_iswdir (const char  *);
+extern int path_dot_or_dotdot (const char *);
+extern int absolute_pathname (const char *);
+extern int absolute_program (const char *);
 
-extern char *make_absolute PARAMS((const char *, const char *));
-extern char *base_pathname PARAMS((char *));
-extern char *full_pathname PARAMS((char *));
-extern char *polite_directory_format PARAMS((char *));
-extern char *trim_pathname PARAMS((char *, int));
-extern char *printable_filename PARAMS((char *, int));
+extern char *make_absolute (const char *, const char *);
+extern const char *base_pathname (const char *);
+extern char *full_pathname (char *);
+extern const char *polite_directory_format (const char *);
+extern char *trim_pathname (char *, int);
+extern char *printable_filename (const char *, int);
 
-extern char *extract_colon_unit PARAMS((char *, int *));
+extern char *extract_colon_unit (char *, int *);
 
-extern void tilde_initialize PARAMS((void));
-extern char *bash_tilde_find_word PARAMS((const char *, int, int *));
-extern char *bash_tilde_expand PARAMS((const char *, int));
+extern void tilde_initialize ();
+extern char *bash_tilde_find_word (const char *, int, int *);
+extern char *bash_tilde_expand (const char *, int);
 
-extern int group_member PARAMS((gid_t));
-extern char **get_group_list PARAMS((int *));
-extern int *get_group_array PARAMS((int *));
+/* extern int group_member (gid_t); */
+extern char **get_group_list (int *);
+extern int *get_group_array (int *);
 
-extern char *conf_standard_path PARAMS((void));
-extern int default_columns PARAMS((void));
+extern char *conf_standard_path ();
+extern int default_columns ();
 
 #endif	/* _GENERAL_H_ */

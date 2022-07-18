@@ -43,8 +43,8 @@ typedef unsigned chartype;
 char *
 strstr (const char *phaystack, const char *pneedle)
 {
-  register const unsigned char *haystack, *needle;
-  register chartype b, c;
+  const unsigned char *haystack, *needle;
+  chartype b, c;
 
   haystack = (const unsigned char *) phaystack;
   needle = (const unsigned char *) pneedle;
@@ -69,8 +69,8 @@ strstr (const char *phaystack, const char *pneedle)
 
       for (;;)
         {
-          register chartype a;
-	  register const unsigned char *rhaystack, *rneedle;
+          chartype a;
+	  const unsigned char *rhaystack, *rneedle;
 
 	  do
 	    {

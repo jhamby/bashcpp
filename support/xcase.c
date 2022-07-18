@@ -42,9 +42,7 @@ extern int optind;
 #define UPPER	2
 
 int
-main(ac, av)
-int	ac;
-char	**av;
+main(int ac, char **av)
 {
 	int	c, x;
 	int	op;
@@ -93,6 +91,6 @@ char	**av;
 		}
 		putchar(x);
 	}
-			
+
 	exit(0);
 }

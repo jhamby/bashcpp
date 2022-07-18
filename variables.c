@@ -127,12 +127,12 @@ int variable_context = 0;
 
 /* If non-zero, local variables inherit values and attributes from a variable
    with the same name at a previous scope. */
-int localvar_inherit = 0;
+char localvar_inherit = 0;
 
 /* If non-zero, calling `unset' on local variables in previous scopes marks
    them as invisible so lookups find them unset. This is the same behavior
    as local variables in the current local scope. */
-int localvar_unset = 0;
+bool localvar_unset = false;
 
 /* The set of shell assignments which are made only in the environment
    for a single command. */
@@ -140,7 +140,7 @@ HASH_TABLE *temporary_env = (HASH_TABLE *)NULL;
 
 /* Set to non-zero if an assignment error occurs while putting variables
    into the temporary environment. */
-int tempenv_assign_error;
+bool tempenv_assign_error;
 
 /* Some funky variables which are known about specially.  Here is where
    "$*", "$1", and all the cruft is kept. */
@@ -152,7 +152,7 @@ int posparam_count = 0;
 pid_t dollar_dollar_pid;
 
 /* Non-zero means that we have to remake EXPORT_ENV. */
-int array_needs_making = 1;
+bool array_needs_making = true;
 
 /* The number of times BASH has been executed.  This is set
    by initialize_variables (). */
@@ -176,149 +176,149 @@ static HASH_TABLE *last_table_searched;	/* hash_lookup sets this */
 static VAR_CONTEXT *last_context_searched;
 
 /* Some forward declarations. */
-static void create_variable_tables PARAMS((void));
+static void create_variable_tables (void);
 
-static void set_machine_vars PARAMS((void));
-static void set_home_var PARAMS((void));
-static void set_shell_var PARAMS((void));
-static char *get_bash_name PARAMS((void));
-static void initialize_shell_level PARAMS((void));
-static void uidset PARAMS((void));
+static void set_machine_vars (void);
+static void set_home_var (void);
+static void set_shell_var (void);
+static char *get_bash_name (void);
+static void initialize_shell_level (void);
+static void uidset (void);
 #if defined (ARRAY_VARS)
-static void make_vers_array PARAMS((void));
+static void make_vers_array (void);
 #endif
 
-static SHELL_VAR *null_assign PARAMS((SHELL_VAR *, char *, arrayind_t, char *));
+static SHELL_VAR *null_assign (SHELL_VAR *, char *, arrayind_t, char *);
 #if defined (ARRAY_VARS)
-static SHELL_VAR *null_array_assign PARAMS((SHELL_VAR *, char *, arrayind_t, char *));
+static SHELL_VAR *null_array_assign (SHELL_VAR *, char *, arrayind_t, char *);
 #endif
-static SHELL_VAR *get_self PARAMS((SHELL_VAR *));
+static SHELL_VAR *get_self (SHELL_VAR *);
 
 #if defined (ARRAY_VARS)
-static SHELL_VAR *init_dynamic_array_var PARAMS((char *, sh_var_value_func_t *, sh_var_assign_func_t *, int));
-static SHELL_VAR *init_dynamic_assoc_var PARAMS((char *, sh_var_value_func_t *, sh_var_assign_func_t *, int));
+static SHELL_VAR *init_dynamic_array_var (char *, sh_var_value_func_t *, sh_var_assign_func_t *, int);
+static SHELL_VAR *init_dynamic_assoc_var (char *, sh_var_value_func_t *, sh_var_assign_func_t *, int);
 #endif
 
-static SHELL_VAR *assign_seconds PARAMS((SHELL_VAR *, char *, arrayind_t, char *));
-static SHELL_VAR *get_seconds PARAMS((SHELL_VAR *));
-static SHELL_VAR *init_seconds_var PARAMS((void));
+static SHELL_VAR *assign_seconds (SHELL_VAR *, char *, arrayind_t, char *);
+static SHELL_VAR *get_seconds (SHELL_VAR *);
+static SHELL_VAR *init_seconds_var (void);
 
-static SHELL_VAR *assign_random PARAMS((SHELL_VAR *, char *, arrayind_t, char *));
-static SHELL_VAR *get_random PARAMS((SHELL_VAR *));
+static SHELL_VAR *assign_random (SHELL_VAR *, char *, arrayind_t, char *);
+static SHELL_VAR *get_random (SHELL_VAR *);
 
-static SHELL_VAR *get_urandom PARAMS((SHELL_VAR *));
+static SHELL_VAR *get_urandom (SHELL_VAR *);
 
-static SHELL_VAR *assign_lineno PARAMS((SHELL_VAR *, char *, arrayind_t, char *));
-static SHELL_VAR *get_lineno PARAMS((SHELL_VAR *));
+static SHELL_VAR *assign_lineno (SHELL_VAR *, char *, arrayind_t, char *);
+static SHELL_VAR *get_lineno (SHELL_VAR *);
 
-static SHELL_VAR *assign_subshell PARAMS((SHELL_VAR *, char *, arrayind_t, char *));
-static SHELL_VAR *get_subshell PARAMS((SHELL_VAR *));
+static SHELL_VAR *assign_subshell (SHELL_VAR *, char *, arrayind_t, char *);
+static SHELL_VAR *get_subshell (SHELL_VAR *);
 
-static SHELL_VAR *get_epochseconds PARAMS((SHELL_VAR *));
-static SHELL_VAR *get_epochrealtime PARAMS((SHELL_VAR *));
+static SHELL_VAR *get_epochseconds (SHELL_VAR *);
+static SHELL_VAR *get_epochrealtime (SHELL_VAR *);
 
-static SHELL_VAR *get_bashpid PARAMS((SHELL_VAR *));
+static SHELL_VAR *get_bashpid (SHELL_VAR *);
 
-static SHELL_VAR *get_bash_argv0 PARAMS((SHELL_VAR *));
-static SHELL_VAR *assign_bash_argv0 PARAMS((SHELL_VAR *, char *, arrayind_t, char *));
-static void set_argv0 PARAMS((void));
+static SHELL_VAR *get_bash_argv0 (SHELL_VAR *);
+static SHELL_VAR *assign_bash_argv0 (SHELL_VAR *, char *, arrayind_t, char *);
+static void set_argv0 (void);
 
 #if defined (HISTORY)
-static SHELL_VAR *get_histcmd PARAMS((SHELL_VAR *));
+static SHELL_VAR *get_histcmd (SHELL_VAR *);
 #endif
 
 #if defined (READLINE)
-static SHELL_VAR *get_comp_wordbreaks PARAMS((SHELL_VAR *));
-static SHELL_VAR *assign_comp_wordbreaks PARAMS((SHELL_VAR *, char *, arrayind_t, char *));
+static SHELL_VAR *get_comp_wordbreaks (SHELL_VAR *);
+static SHELL_VAR *assign_comp_wordbreaks (SHELL_VAR *, char *, arrayind_t, char *);
 #endif
 
 #if defined (PUSHD_AND_POPD) && defined (ARRAY_VARS)
-static SHELL_VAR *assign_dirstack PARAMS((SHELL_VAR *, char *, arrayind_t, char *));
-static SHELL_VAR *get_dirstack PARAMS((SHELL_VAR *));
+static SHELL_VAR *assign_dirstack (SHELL_VAR *, char *, arrayind_t, char *);
+static SHELL_VAR *get_dirstack (SHELL_VAR *);
 #endif
 
 #if defined (ARRAY_VARS)
-static SHELL_VAR *get_groupset PARAMS((SHELL_VAR *));
+static SHELL_VAR *get_groupset (SHELL_VAR *);
 #  if defined (DEBUGGER)
-static SHELL_VAR *get_bashargcv PARAMS((SHELL_VAR *));
+static SHELL_VAR *get_bashargcv (SHELL_VAR *);
 #  endif
-static SHELL_VAR *build_hashcmd PARAMS((SHELL_VAR *));
-static SHELL_VAR *get_hashcmd PARAMS((SHELL_VAR *));
-static SHELL_VAR *assign_hashcmd PARAMS((SHELL_VAR *,  char *, arrayind_t, char *));
+static SHELL_VAR *build_hashcmd (SHELL_VAR *);
+static SHELL_VAR *get_hashcmd (SHELL_VAR *);
+static SHELL_VAR *assign_hashcmd (SHELL_VAR *, char *, arrayind_t, char *);
 #  if defined (ALIAS)
-static SHELL_VAR *build_aliasvar PARAMS((SHELL_VAR *));
-static SHELL_VAR *get_aliasvar PARAMS((SHELL_VAR *));
-static SHELL_VAR *assign_aliasvar PARAMS((SHELL_VAR *,  char *, arrayind_t, char *));
+static SHELL_VAR *build_aliasvar (SHELL_VAR *);
+static SHELL_VAR *get_aliasvar (SHELL_VAR *);
+static SHELL_VAR *assign_aliasvar (SHELL_VAR *, char *, arrayind_t, char *);
 #  endif
 #endif
 
-static SHELL_VAR *get_funcname PARAMS((SHELL_VAR *));
-static SHELL_VAR *init_funcname_var PARAMS((void));
+static SHELL_VAR *get_funcname (SHELL_VAR *);
+static SHELL_VAR *init_funcname_var (void);
 
-static void initialize_dynamic_variables PARAMS((void));
+static void initialize_dynamic_variables (void);
 
-static SHELL_VAR *bind_invalid_envvar PARAMS((const char *, char *, int));
+static SHELL_VAR *bind_invalid_envvar (const char *, char *, int);
 
-static int var_sametype PARAMS((SHELL_VAR *, SHELL_VAR *));
+static int var_sametype (SHELL_VAR *, SHELL_VAR *);
 
-static SHELL_VAR *hash_lookup PARAMS((const char *, HASH_TABLE *));
-static SHELL_VAR *new_shell_variable PARAMS((const char *));
-static SHELL_VAR *make_new_variable PARAMS((const char *, HASH_TABLE *));
-static SHELL_VAR *bind_variable_internal PARAMS((const char *, char *, HASH_TABLE *, int, int));
+static SHELL_VAR *hash_lookup (const char *, HASH_TABLE *);
+static SHELL_VAR *new_shell_variable (const char *);
+static SHELL_VAR *make_new_variable (const char *, HASH_TABLE *);
+static SHELL_VAR *bind_variable_internal (const char *, char *, HASH_TABLE *, int, int);
 
-static void dispose_variable_value PARAMS((SHELL_VAR *));
-static void free_variable_hash_data PARAMS((PTR_T));
+static void dispose_variable_value (SHELL_VAR *);
+static void free_variable_hash_data (PTR_T);
 
-static VARLIST *vlist_alloc PARAMS((int));
-static VARLIST *vlist_realloc PARAMS((VARLIST *, int));
-static void vlist_add PARAMS((VARLIST *, SHELL_VAR *, int));
+static VARLIST *vlist_alloc (int);
+static VARLIST *vlist_realloc (VARLIST *, int);
+static void vlist_add (VARLIST *, SHELL_VAR *, int);
 
-static void flatten PARAMS((HASH_TABLE *, sh_var_map_func_t *, VARLIST *, int));
+static void flatten (HASH_TABLE *, sh_var_map_func_t *, VARLIST *, int);
 
-static int qsort_var_comp PARAMS((SHELL_VAR **, SHELL_VAR **));
+static int qsort_var_comp (const SHELL_VAR **, const SHELL_VAR **);
 
-static SHELL_VAR **vapply PARAMS((sh_var_map_func_t *));
-static SHELL_VAR **fapply PARAMS((sh_var_map_func_t *));
+static SHELL_VAR **vapply (sh_var_map_func_t *);
+static SHELL_VAR **fapply (sh_var_map_func_t *);
 
-static int visible_var PARAMS((SHELL_VAR *));
-static int visible_and_exported PARAMS((SHELL_VAR *));
-static int export_environment_candidate PARAMS((SHELL_VAR *));
-static int local_and_exported PARAMS((SHELL_VAR *));
-static int visible_variable_in_context PARAMS((SHELL_VAR *));
-static int variable_in_context PARAMS((SHELL_VAR *));
+static int visible_var (SHELL_VAR *);
+static int visible_and_exported (SHELL_VAR *);
+static int export_environment_candidate (SHELL_VAR *);
+static int local_and_exported (SHELL_VAR *);
+static int visible_variable_in_context (SHELL_VAR *);
+static int variable_in_context (SHELL_VAR *);
 #if defined (ARRAY_VARS)
-static int visible_array_vars PARAMS((SHELL_VAR *));
+static int visible_array_vars (SHELL_VAR *);
 #endif
 
-static SHELL_VAR *find_variable_internal PARAMS((const char *, int));
+static SHELL_VAR *find_variable_internal (const char *, int);
 
-static SHELL_VAR *find_nameref_at_context PARAMS((SHELL_VAR *, VAR_CONTEXT *));
-static SHELL_VAR *find_variable_nameref_context PARAMS((SHELL_VAR *, VAR_CONTEXT *, VAR_CONTEXT **));
-static SHELL_VAR *find_variable_last_nameref_context PARAMS((SHELL_VAR *, VAR_CONTEXT *, VAR_CONTEXT **));
+static SHELL_VAR *find_nameref_at_context (SHELL_VAR *, VAR_CONTEXT *);
+static SHELL_VAR *find_variable_nameref_context (SHELL_VAR *, VAR_CONTEXT *, VAR_CONTEXT **);
+static SHELL_VAR *find_variable_last_nameref_context (SHELL_VAR *, VAR_CONTEXT *, VAR_CONTEXT **);
 
-static SHELL_VAR *bind_tempenv_variable PARAMS((const char *, char *));
-static void push_posix_temp_var PARAMS((PTR_T));
-static void push_temp_var PARAMS((PTR_T));
-static void propagate_temp_var PARAMS((PTR_T));
-static void dispose_temporary_env PARAMS((sh_free_func_t *));     
+static SHELL_VAR *bind_tempenv_variable (const char *, const char *);
+static void push_posix_temp_var (PTR_T);
+static void push_temp_var (PTR_T);
+static void propagate_temp_var (PTR_T);
+static void dispose_temporary_env (sh_free_func_t *);
 
-static inline char *mk_env_string PARAMS((const char *, const char *, int));
-static char **make_env_array_from_var_list PARAMS((SHELL_VAR **));
-static char **make_var_export_array PARAMS((VAR_CONTEXT *));
-static char **make_func_export_array PARAMS((void));
-static void add_temp_array_to_env PARAMS((char **, int, int));
+static inline char *mk_env_string (const char *, const char *, int);
+static char **make_env_array_from_var_list (SHELL_VAR **);
+static char **make_var_export_array (VAR_CONTEXT *);
+static char **make_func_export_array (void);
+static void add_temp_array_to_env (char **, int, int);
 
-static int n_shell_variables PARAMS((void));
-static int set_context PARAMS((SHELL_VAR *));
+static int n_shell_variables (void);
+static int set_context (SHELL_VAR *);
 
-static void push_func_var PARAMS((PTR_T));
-static void push_builtin_var PARAMS((PTR_T));
-static void push_exported_var PARAMS((PTR_T));
+static void push_func_var (PTR_T);
+static void push_builtin_var (PTR_T);
+static void push_exported_var (PTR_T);
 
 /* This needs to be looked at again. */
-static inline void push_posix_tempvar_internal PARAMS((SHELL_VAR *, int));
+static inline void push_posix_tempvar_internal (SHELL_VAR *, int);
 
-static inline int find_special_var PARAMS((const char *));
+static inline int find_special_var (const char *);
 
 static void
 create_variable_tables ()
@@ -343,9 +343,7 @@ create_variable_tables ()
    If PRIVMODE is nonzero, don't import functions from ENV or
    parse $SHELLOPTS. */
 void
-initialize_shell_variables (env, privmode)
-     char **env;
-     int privmode;
+initialize_shell_variables (char **env, int privmode)
 {
   char *name, *string, *temp_string;
   int c, char_index, string_index, string_length, ro;
@@ -377,7 +375,7 @@ initialize_shell_variables (env, privmode)
 #if defined (FUNCTION_IMPORT)
       /* If exported function, define it now.  Don't import functions from
 	 the environment in privileged mode. */
-      if (privmode == 0 && read_but_dont_execute == 0 && 
+      if (privmode == 0 && read_but_dont_execute == 0 &&
           STREQN (BASHFUNC_PREFIX, name, BASHFUNC_PREFLEN) &&
           STREQ (BASHFUNC_SUFFIX, name + char_index - BASHFUNC_SUFFLEN) &&
 	  STREQN ("() {", string, 4))
@@ -408,14 +406,14 @@ initialize_shell_variables (env, privmode)
 	  if (temp_var = find_function (tname))
 	    {
 	      VSETATTR (temp_var, (att_exported|att_imported));
-	      array_needs_making = 1;
+	      array_needs_making = true;
 	    }
 	  else
 	    {
 	      if (temp_var = bind_invalid_envvar (name, string, 0))
 		{
 		  VSETATTR (temp_var, (att_exported | att_imported | att_invisible));
-		  array_needs_making = 1;
+		  array_needs_making = true;
 		}
 	      last_command_exit_value = EXECUTION_FAILURE;
 	      report_error (_("error importing function definition for `%s'"), tname);
@@ -436,7 +434,7 @@ initialize_shell_variables (env, privmode)
 	  temp_var = assign_array_from_string (name, temp_string, 0);
 	  FREE (temp_string);
 	  VSETATTR (temp_var, (att_exported | att_imported));
-	  array_needs_making = 1;
+	  array_needs_making = true;
 	}
       else
 #  endif /* ARRAY_EXPORT */
@@ -470,7 +468,7 @@ initialize_shell_variables (env, privmode)
 		VSETATTR (temp_var, (att_exported | att_imported | att_invisible));
 	    }
 	  if (temp_var)
-	    array_needs_making = 1;
+	    array_needs_making = true;
 	}
 
       name[char_index] = '=';
@@ -514,13 +512,13 @@ initialize_shell_variables (env, privmode)
   if (interactive_shell)
     {
 #if defined (PROMPT_STRING_DECODE)
-      set_if_not ("PS1", primary_prompt);
+      set_if_not ("PS1", (char *)primary_prompt);
 #else
       if (current_user.uid == -1)
 	get_current_user_info ();
       set_if_not ("PS1", current_user.euid == 0 ? "# " : primary_prompt);
 #endif
-      set_if_not ("PS2", secondary_prompt);
+      set_if_not ("PS2", (char *)secondary_prompt);
     }
 
   if (current_user.euid == 0)
@@ -541,7 +539,7 @@ initialize_shell_variables (env, privmode)
      default only if neither is set. */
   if (interactive_shell)
     {
-      temp_var = set_if_not ("MAILCHECK", posixly_correct ? "600" : "60");
+      temp_var = set_if_not ("MAILCHECK", (char *)(posixly_correct ? "600" : "60"));
       VSETATTR (temp_var, att_integer);
     }
 
@@ -581,7 +579,7 @@ initialize_shell_variables (env, privmode)
 #endif
 
   if (command_execution_string)
-    bind_variable ("BASH_EXECUTION_STRING", command_execution_string, 0);
+    bind_variable ("BASH_EXECUTION_STRING", (char *)command_execution_string, 0);
 
   /* Find out if we're supposed to be in Posix.2 mode via an
      environment variable. */
@@ -651,13 +649,13 @@ initialize_shell_variables (env, privmode)
   if (temp_var && imported_p (temp_var))
     {
       VUNSETATTR (temp_var, att_exported);
-      array_needs_making = 1;
+      array_needs_making = true;
     }
   temp_var = find_variable ("SSH2_CLIENT");
   if (temp_var && imported_p (temp_var))
     {
       VUNSETATTR (temp_var, att_exported);
-      array_needs_making = 1;
+      array_needs_making = true;
     }
 #endif
 
@@ -692,7 +690,7 @@ set_machine_vars ()
   temp_var = set_if_not ("OSTYPE", OSTYPE);
   temp_var = set_if_not ("MACHTYPE", MACHTYPE);
 
-  temp_var = set_if_not ("HOSTNAME", current_host_name);
+  temp_var = set_if_not ("HOSTNAME", (char *)current_host_name);
 }
 
 /* Set $HOME to the information in the password file if we didn't get
@@ -814,8 +812,7 @@ get_bash_name ()
 }
 
 void
-adjust_shell_level (change)
-     int change;
+adjust_shell_level (int change)
 {
   char new_level[5], *old_SHLVL;
   intmax_t old_level;
@@ -897,7 +894,7 @@ set_pwd ()
 	{
 	  temp_var = bind_variable ("PWD", current_dir, 0);
 	  set_auto_export (temp_var);
-	}  
+	}
       free (current_dir);
     }
   else if (home_string && interactive_shell && login_shell &&
@@ -953,7 +950,7 @@ static void
 uidset ()
 {
   char buff[INT_STRLEN_BOUND(uid_t) + 1], *b;
-  register SHELL_VAR *v;
+  SHELL_VAR *v;
 
   b = inttostr (current_user.uid, buff, sizeof (buff));
   v = find_variable ("UID");
@@ -984,7 +981,7 @@ make_vers_array ()
 
   unbind_variable_noref ("BASH_VERSINFO");
 
-  vv = make_new_array_variable ("BASH_VERSINFO");
+  vv = make_new_array_variable ((char *)"BASH_VERSINFO");
   av = array_cell (vv);
   strcpy (d, dist_version);
   s = strchr (d, '.');
@@ -997,7 +994,7 @@ make_vers_array ()
   s = inttostr (build_version, b, sizeof (b));
   array_insert (av, 3, s);
   array_insert (av, 4, release_status);
-  array_insert (av, 5, MACHTYPE);
+  array_insert (av, 5, savestring (MACHTYPE));
 
   VSETATTR (vv, att_readonly);
 }
@@ -1006,8 +1003,7 @@ make_vers_array ()
 /* Set the environment variables $LINES and $COLUMNS in response to
    a window size change. */
 void
-sh_set_lines_and_columns (lines, cols)
-     int lines, cols;
+sh_set_lines_and_columns (int lines, int cols)
 {
   char val[INT_STRLEN_BOUND(int) + 1], *v;
 
@@ -1033,11 +1029,10 @@ sh_set_lines_and_columns (lines, cols)
 /* Print LIST (a list of shell variables) to stdout in such a way that
    they can be read back in. */
 void
-print_var_list (list)
-     register SHELL_VAR **list;
+print_var_list (SHELL_VAR **list)
 {
-  register int i;
-  register SHELL_VAR *var;
+  int i;
+  SHELL_VAR *var;
 
   for (i = 0; list && (var = list[i]); i++)
     if (invisible_p (var) == 0)
@@ -1047,11 +1042,10 @@ print_var_list (list)
 /* Print LIST (a list of shell functions) to stdout in such a way that
    they can be read back in. */
 void
-print_func_list (list)
-     register SHELL_VAR **list;
+print_func_list (SHELL_VAR **list)
 {
-  register int i;
-  register SHELL_VAR *var;
+  int i;
+  SHELL_VAR *var;
 
   for (i = 0; list && (var = list[i]); i++)
     {
@@ -1060,13 +1054,12 @@ print_func_list (list)
       printf ("\n");
     }
 }
-      
+
 /* Print the value of a single SHELL_VAR.  No newline is
    output, but the variable is printed in such a way that
    it can be read back in. */
 void
-print_assignment (var)
-     SHELL_VAR *var;
+print_assignment (SHELL_VAR *var)
 {
   if (var_isset (var) == 0)
     return;
@@ -1096,9 +1089,7 @@ print_assignment (var)
    and the value contains shell metacharacters, quote the value
    in such a way that it can be read back in. */
 void
-print_var_value (var, quote)
-     SHELL_VAR *var;
-     int quote;
+print_var_value (SHELL_VAR *var, int quote)
 {
   char *t;
 
@@ -1124,8 +1115,7 @@ print_var_value (var, quote)
 /* Print the function cell of VAR, a shell variable.  Do not
    print the name, nor leading/trailing newline. */
 void
-print_var_function (var)
-     SHELL_VAR *var;
+print_var_function (SHELL_VAR *var)
 {
   char *x;
 
@@ -1203,22 +1193,14 @@ print_var_function (var)
   while (0)
 
 static SHELL_VAR *
-null_assign (self, value, unused, key)
-     SHELL_VAR *self;
-     char *value;
-     arrayind_t unused;
-     char *key;
+null_assign (SHELL_VAR *self, char *value, arrayind_t unused, char *key)
 {
   return (self);
 }
 
 #if defined (ARRAY_VARS)
 static SHELL_VAR *
-null_array_assign (self, value, ind, key)
-     SHELL_VAR *self;
-     char *value;
-     arrayind_t ind;
-     char *key;
+null_array_assign (SHELL_VAR *self, char *value, arrayind_t ind, char *key)
 {
   return (self);
 }
@@ -1227,8 +1209,7 @@ null_array_assign (self, value, ind, key)
 /* Degenerate `dynamic_value' function; just returns what's passed without
    manipulation. */
 static SHELL_VAR *
-get_self (self)
-     SHELL_VAR *self;
+get_self (SHELL_VAR *self)
 {
   return (self);
 }
@@ -1237,11 +1218,10 @@ get_self (self)
 /* A generic dynamic array variable initializer.  Initialize array variable
    NAME with dynamic value function GETFUNC and assignment function SETFUNC. */
 static SHELL_VAR *
-init_dynamic_array_var (name, getfunc, setfunc, attrs)
-     char *name;
-     sh_var_value_func_t *getfunc;
-     sh_var_assign_func_t *setfunc;
-     int attrs;
+init_dynamic_array_var (char *name,
+     sh_var_value_func_t *getfunc,
+     sh_var_assign_func_t *setfunc,
+     int attrs)
 {
   SHELL_VAR *v;
 
@@ -1255,11 +1235,10 @@ init_dynamic_array_var (name, getfunc, setfunc, attrs)
 }
 
 static SHELL_VAR *
-init_dynamic_assoc_var (name, getfunc, setfunc, attrs)
-     char *name;
-     sh_var_value_func_t *getfunc;
-     sh_var_assign_func_t *setfunc;
-     int attrs;
+init_dynamic_assoc_var (char *name,
+     sh_var_value_func_t *getfunc,
+     sh_var_assign_func_t *setfunc,
+     int attrs)
 {
   SHELL_VAR *v;
 
@@ -1279,14 +1258,10 @@ init_dynamic_assoc_var (name, getfunc, setfunc, attrs)
 static intmax_t seconds_value_assigned;
 
 static SHELL_VAR *
-assign_seconds (self, value, unused, key)
-     SHELL_VAR *self;
-     char *value;
-     arrayind_t unused;
-     char *key;
+assign_seconds (SHELL_VAR *self, char *value, arrayind_t unused, char *key)
 {
   intmax_t nval;
-  int expok;
+  bool expok;
 
   if (integer_p (self))
     nval = evalexp (value, 0, &expok);
@@ -1299,8 +1274,7 @@ assign_seconds (self, value, unused, key)
 }
 
 static SHELL_VAR *
-get_seconds (var)
-     SHELL_VAR *var;
+get_seconds (SHELL_VAR *var)
 {
   time_t time_since_start;
   char *p;
@@ -1329,7 +1303,7 @@ init_seconds_var ()
 	seconds_value_assigned = 0;
     }
   INIT_DYNAMIC_VAR ("SECONDS", (v ? value_cell (v) : (char *)NULL), get_seconds, assign_seconds);
-  return v;      
+  return v;
 }
 
 /* Functions for $RANDOM and $SRANDOM */
@@ -1338,20 +1312,16 @@ int last_random_value;
 static int seeded_subshell = 0;
 
 static SHELL_VAR *
-assign_random (self, value, unused, key)
-     SHELL_VAR *self;
-     char *value;
-     arrayind_t unused;
-     char *key;
+assign_random (SHELL_VAR *self, char *value, arrayind_t unused, char *key)
 {
   intmax_t seedval;
-  int expok;
+  bool expok;
 
   if (integer_p (self))
     seedval = evalexp (value, 0, &expok);
   else
     expok = legal_number (value, &seedval);
-  if (expok == 0)
+  if (!expok)
     return (self);
   sbrand (seedval);
   if (subshell_environment)
@@ -1380,8 +1350,7 @@ get_random_number ()
 }
 
 static SHELL_VAR *
-get_random (var)
-     SHELL_VAR *var;
+get_random (SHELL_VAR *var)
 {
   int rv;
   char *p;
@@ -1397,8 +1366,7 @@ get_random (var)
 }
 
 static SHELL_VAR *
-get_urandom (var)
-     SHELL_VAR *var;
+get_urandom (SHELL_VAR *var)
 {
   u_bits32_t rv;
   char *p;
@@ -1414,11 +1382,7 @@ get_urandom (var)
 }
 
 static SHELL_VAR *
-assign_lineno (var, value, unused, key)
-     SHELL_VAR *var;
-     char *value;
-     arrayind_t unused;
-     char *key;
+assign_lineno (SHELL_VAR *var, char *value, arrayind_t unused, char *key)
 {
   intmax_t new_value;
 
@@ -1430,8 +1394,7 @@ assign_lineno (var, value, unused, key)
 
 /* Function which returns the current line number. */
 static SHELL_VAR *
-get_lineno (var)
-     SHELL_VAR *var;
+get_lineno (SHELL_VAR *var)
 {
   char *p;
   int ln;
@@ -1444,11 +1407,7 @@ get_lineno (var)
 }
 
 static SHELL_VAR *
-assign_subshell (var, value, unused, key)
-     SHELL_VAR *var;
-     char *value;
-     arrayind_t unused;
-     char *key;
+assign_subshell (SHELL_VAR *var, char *value, arrayind_t unused, char *key)
 {
   intmax_t new_value;
 
@@ -1459,8 +1418,7 @@ assign_subshell (var, value, unused, key)
 }
 
 static SHELL_VAR *
-get_subshell (var)
-     SHELL_VAR *var;
+get_subshell (SHELL_VAR *var)
 {
   char *p;
 
@@ -1471,8 +1429,7 @@ get_subshell (var)
 }
 
 static SHELL_VAR *
-get_epochseconds (var)
-     SHELL_VAR *var;
+get_epochseconds (SHELL_VAR *var)
 {
   intmax_t now;
   char *p;
@@ -1486,8 +1443,7 @@ get_epochseconds (var)
 }
 
 static SHELL_VAR *
-get_epochrealtime (var)
-     SHELL_VAR *var;
+get_epochrealtime (SHELL_VAR *var)
 {
   char buf[32];
   char *p;
@@ -1505,8 +1461,7 @@ get_epochrealtime (var)
 }
 
 static SHELL_VAR *
-get_bashpid (var)
-     SHELL_VAR *var;
+get_bashpid (SHELL_VAR *var)
 {
   int pid;
   char *p;
@@ -1521,8 +1476,7 @@ get_bashpid (var)
 }
 
 static SHELL_VAR *
-get_bash_argv0 (var)
-     SHELL_VAR *var;
+get_bash_argv0 (SHELL_VAR *var)
 {
   char *p;
 
@@ -1535,11 +1489,7 @@ get_bash_argv0 (var)
 static char *static_shell_name = 0;
 
 static SHELL_VAR *
-assign_bash_argv0 (var, value, unused, key)
-     SHELL_VAR *var;
-     char *value;
-     arrayind_t unused;
-     char *key;
+assign_bash_argv0 (SHELL_VAR *var, char *value, arrayind_t unused, char *key)
 {
   size_t vlen;
 
@@ -1551,9 +1501,9 @@ assign_bash_argv0 (var, value, unused, key)
 
   /* Need these gyrations because shell_name isn't dynamically allocated */
   vlen = STRLEN (value);
-  static_shell_name = xrealloc (static_shell_name, vlen + 1);
+  static_shell_name = (char *)xrealloc (static_shell_name, vlen + 1);
   strcpy (static_shell_name, value);
-  
+
   shell_name = static_shell_name;
   return var;
 }
@@ -1567,10 +1517,9 @@ set_argv0 ()
   if (v && imported_p (v))
     assign_bash_argv0 (v, value_cell (v), 0, 0);
 }
-  
+
 static SHELL_VAR *
-get_bash_command (var)
-     SHELL_VAR *var;
+get_bash_command (SHELL_VAR *var)
 {
   char *p;
 
@@ -1588,8 +1537,7 @@ get_bash_command (var)
 
 #if defined (HISTORY)
 static SHELL_VAR *
-get_histcmd (var)
-     SHELL_VAR *var;
+get_histcmd (SHELL_VAR *var)
 {
   char *p;
   int n;
@@ -1612,8 +1560,7 @@ get_histcmd (var)
 #if defined (READLINE)
 /* When this function returns, VAR->value points to malloced memory. */
 static SHELL_VAR *
-get_comp_wordbreaks (var)
-     SHELL_VAR *var;
+get_comp_wordbreaks (SHELL_VAR *var)
 {
   /* If we don't have anything yet, assign a default value. */
   if (rl_completer_word_break_characters == 0 && bash_readline_initialized == 0)
@@ -1628,11 +1575,7 @@ get_comp_wordbreaks (var)
 /* When this function returns, rl_completer_word_break_characters points to
    malloced memory. */
 static SHELL_VAR *
-assign_comp_wordbreaks (self, value, unused, key)
-     SHELL_VAR *self;
-     char *value;
-     arrayind_t unused;
-     char *key;
+assign_comp_wordbreaks (SHELL_VAR *self, char *value, arrayind_t unused, char *key)
 {
   if (rl_completer_word_break_characters &&
       rl_completer_word_break_characters != rl_basic_word_break_characters)
@@ -1645,19 +1588,14 @@ assign_comp_wordbreaks (self, value, unused, key)
 
 #if defined (PUSHD_AND_POPD) && defined (ARRAY_VARS)
 static SHELL_VAR *
-assign_dirstack (self, value, ind, key)
-     SHELL_VAR *self;
-     char *value;
-     arrayind_t ind;
-     char *key;
+assign_dirstack (SHELL_VAR *self, char *value, arrayind_t ind, char *key)
 {
   set_dirstack_element (ind, 1, value);
   return self;
 }
 
 static SHELL_VAR *
-get_dirstack (self)
-     SHELL_VAR *self;
+get_dirstack (SHELL_VAR *self)
 {
   ARRAY *a;
   WORD_LIST *l;
@@ -1675,10 +1613,9 @@ get_dirstack (self)
 /* We don't want to initialize the group set with a call to getgroups()
    unless we're asked to, but we only want to do it once. */
 static SHELL_VAR *
-get_groupset (self)
-     SHELL_VAR *self;
+get_groupset (SHELL_VAR *self)
 {
-  register int i;
+  int i;
   int ng;
   ARRAY *a;
   static char **group_set = (char **)NULL;
@@ -1695,8 +1632,7 @@ get_groupset (self)
 
 #  if defined (DEBUGGER)
 static SHELL_VAR *
-get_bashargcv (self)
-     SHELL_VAR *self;
+get_bashargcv (SHELL_VAR *self)
 {
   static int self_semaphore = 0;
 
@@ -1715,8 +1651,7 @@ get_bashargcv (self)
 #  endif
 
 static SHELL_VAR *
-build_hashcmd (self)
-     SHELL_VAR *self;
+build_hashcmd (SHELL_VAR *self)
 {
   HASH_TABLE *h;
   int i;
@@ -1749,19 +1684,14 @@ build_hashcmd (self)
 }
 
 static SHELL_VAR *
-get_hashcmd (self)
-     SHELL_VAR *self;
+get_hashcmd (SHELL_VAR *self)
 {
   build_hashcmd (self);
   return (self);
 }
 
 static SHELL_VAR *
-assign_hashcmd (self, value, ind, key)
-     SHELL_VAR *self;
-     char *value;
-     arrayind_t ind;
-     char *key;
+assign_hashcmd (SHELL_VAR *self, char *value, arrayind_t ind, char *key)
 {
 #if defined (RESTRICTED_SHELL)
   char *full_path;
@@ -1791,8 +1721,7 @@ assign_hashcmd (self, value, ind, key)
 
 #if defined (ALIAS)
 static SHELL_VAR *
-build_aliasvar (self)
-     SHELL_VAR *self;
+build_aliasvar (SHELL_VAR *self)
 {
   HASH_TABLE *h;
   int i;
@@ -1825,19 +1754,14 @@ build_aliasvar (self)
 }
 
 static SHELL_VAR *
-get_aliasvar (self)
-     SHELL_VAR *self;
+get_aliasvar (SHELL_VAR *self)
 {
   build_aliasvar (self);
   return (self);
 }
 
 static SHELL_VAR *
-assign_aliasvar (self, value, ind, key)
-     SHELL_VAR *self;
-     char *value;
-     arrayind_t ind;
-     char *key;
+assign_aliasvar (SHELL_VAR *self, char *value, arrayind_t ind, char *key)
 {
   if (legal_alias_name (key, 0) == 0)
     {
@@ -1854,8 +1778,7 @@ assign_aliasvar (self, value, ind, key)
 /* If ARRAY_VARS is not defined, this just returns the name of any
    currently-executing function.  If we have arrays, it's a call stack. */
 static SHELL_VAR *
-get_funcname (self)
-     SHELL_VAR *self;
+get_funcname (SHELL_VAR *self)
 {
 #if ! defined (ARRAY_VARS)
   char *t;
@@ -1870,8 +1793,7 @@ get_funcname (self)
 }
 
 void
-make_funcname_visible (on_or_off)
-     int on_or_off;
+make_funcname_visible (int on_or_off)
 {
   SHELL_VAR *v;
 
@@ -1894,7 +1816,7 @@ init_funcname_var ()
   if (v)
     return v;
 #if defined (ARRAY_VARS)
-  INIT_DYNAMIC_ARRAY_VAR ("FUNCNAME", get_funcname, null_array_assign);
+  INIT_DYNAMIC_ARRAY_VAR ((char *)"FUNCNAME", get_funcname, null_array_assign);
 #else
   INIT_DYNAMIC_VAR ("FUNCNAME", (char *)NULL, get_funcname, null_assign);
 #endif
@@ -1917,7 +1839,7 @@ initialize_dynamic_variables ()
   INIT_DYNAMIC_VAR ("RANDOM", (char *)NULL, get_random, assign_random);
   VSETATTR (v, att_integer);
   INIT_DYNAMIC_VAR ("SRANDOM", (char *)NULL, get_urandom, (sh_var_assign_func_t *)NULL);
-  VSETATTR (v, att_integer);  
+  VSETATTR (v, att_integer);
   INIT_DYNAMIC_VAR ("LINENO", (char *)NULL, get_lineno, assign_lineno);
   VSETATTR (v, att_regenerate);
 
@@ -1969,15 +1891,13 @@ initialize_dynamic_variables ()
 
 #if 0	/* not yet */
 int
-var_isset (var)
-     SHELL_VAR *var;
+var_isset (SHELL_VAR *var)
 {
   return (var->value != 0);
 }
 
 int
-var_isunset (var)
-     SHELL_VAR *var;
+var_isunset (SHELL_VAR *var)
 {
   return (var->value == 0);
 }
@@ -1988,9 +1908,7 @@ var_isunset (var)
    of interest (either variables or functions). */
 
 static SHELL_VAR *
-hash_lookup (name, hashed_vars)
-     const char *name;
-     HASH_TABLE *hashed_vars;
+hash_lookup (const char *name, HASH_TABLE *hashed_vars)
 {
   BUCKET_CONTENTS *bucket;
 
@@ -2003,9 +1921,7 @@ hash_lookup (name, hashed_vars)
 }
 
 SHELL_VAR *
-var_lookup (name, vcontext)
-     const char *name;
-     VAR_CONTEXT *vcontext;
+var_lookup (const char *name, VAR_CONTEXT *vcontext)
 {
   VAR_CONTEXT *vc;
   SHELL_VAR *v;
@@ -2026,9 +1942,7 @@ var_lookup (name, vcontext)
 */
 
 SHELL_VAR *
-find_variable_internal (name, flags)
-     const char *name;
-     int flags;
+find_variable_internal (const char *name, int flags)
 {
   SHELL_VAR *var;
   int search_tempenv, force_tempenv;
@@ -2045,7 +1959,7 @@ find_variable_internal (name, flags)
      "subshell environment". */
   search_tempenv = force_tempenv || (expanding_redir == 0 && subshell_environment);
 
-  if (search_tempenv && temporary_env)		
+  if (search_tempenv && temporary_env)
     var = hash_lookup (name, temporary_env);
 
   if (var == 0)
@@ -2076,8 +1990,7 @@ find_variable_internal (name, flags)
 /* Look up and resolve the chain of nameref variables starting at V all the
    way to NULL or non-nameref. */
 SHELL_VAR *
-find_variable_nameref (v)
-     SHELL_VAR *v;
+find_variable_nameref (SHELL_VAR *v)
 {
   int level, flags;
   char *newname;
@@ -2117,9 +2030,7 @@ find_variable_nameref (v)
 
 /* Resolve the chain of nameref variables for NAME.  XXX - could change later */
 SHELL_VAR *
-find_variable_last_nameref (name, vflags)
-     const char *name;
-     int vflags;
+find_variable_last_nameref (const char *name, int vflags)
 {
   SHELL_VAR *v, *nv;
   char *newname;
@@ -2147,9 +2058,7 @@ find_variable_last_nameref (name, vflags)
 
 /* Resolve the chain of nameref variables for NAME.  XXX - could change later */
 SHELL_VAR *
-find_global_variable_last_nameref (name, vflags)
-     const char *name;
-     int vflags;
+find_global_variable_last_nameref (const char *name, int vflags)
 {
   SHELL_VAR *v, *nv;
   char *newname;
@@ -2173,9 +2082,7 @@ find_global_variable_last_nameref (name, vflags)
 }
 
 static SHELL_VAR *
-find_nameref_at_context (v, vc)
-     SHELL_VAR *v;
-     VAR_CONTEXT *vc;
+find_nameref_at_context (SHELL_VAR *v, VAR_CONTEXT *vc)
 {
   SHELL_VAR *nv, *nv2;
   char *newname;
@@ -2190,7 +2097,7 @@ find_nameref_at_context (v, vc)
         return (&nameref_maxloop_value);
       newname = nameref_cell (nv);
       if (newname == 0 || *newname == '\0')
-        return ((SHELL_VAR *)NULL);      
+        return ((SHELL_VAR *)NULL);
       nv2 = hash_lookup (newname, vc->table);
       if (nv2 == 0)
         break;
@@ -2205,10 +2112,8 @@ find_nameref_at_context (v, vc)
    nameref resolution (so the bind_variable_internal can use the correct
    variable context and hash table). */
 static SHELL_VAR *
-find_variable_nameref_context (v, vc, nvcp)
-     SHELL_VAR *v;
-     VAR_CONTEXT *vc;
-     VAR_CONTEXT **nvcp;
+find_variable_nameref_context (SHELL_VAR *v, VAR_CONTEXT *vc,
+			       VAR_CONTEXT **nvcp)
 {
   SHELL_VAR *nv, *nv2;
   VAR_CONTEXT *nvc;
@@ -2236,10 +2141,8 @@ find_variable_nameref_context (v, vc, nvcp)
    nameref resolution (so the bind_variable_internal can use the correct
    variable context and hash table). */
 static SHELL_VAR *
-find_variable_last_nameref_context (v, vc, nvcp)
-     SHELL_VAR *v;
-     VAR_CONTEXT *vc;
-     VAR_CONTEXT **nvcp;
+find_variable_last_nameref_context (SHELL_VAR *v, VAR_CONTEXT *vc,
+				    VAR_CONTEXT **nvcp)
 {
   SHELL_VAR *nv, *nv2;
   VAR_CONTEXT *nvc;
@@ -2260,9 +2163,7 @@ find_variable_last_nameref_context (v, vc, nvcp)
 }
 
 SHELL_VAR *
-find_variable_nameref_for_create (name, flags)
-     const char *name;
-     int flags;
+find_variable_nameref_for_create (const char *name, int flags)
 {
   SHELL_VAR *var;
 
@@ -2286,9 +2187,7 @@ find_variable_nameref_for_create (name, flags)
 }
 
 SHELL_VAR *
-find_variable_nameref_for_assignment (name, flags)
-     const char *name;
-     int flags;
+find_variable_nameref_for_assignment (const char *name, int flags)
 {
   SHELL_VAR *var;
 
@@ -2317,9 +2216,7 @@ find_variable_nameref_for_assignment (name, flags)
    function, but dealing strictly with names. This takes assignment flags
    so it can deal with the various assignment modes used by `declare'. */
 char *
-nameref_transform_name (name, flags)
-     char *name;
-     int flags;
+nameref_transform_name (char *name, int flags)
 {
   SHELL_VAR *v;
   char *newname;
@@ -2343,8 +2240,7 @@ nameref_transform_name (name, flags)
 
 /* Find a variable, forcing a search of the temporary environment first */
 SHELL_VAR *
-find_variable_tempenv (name)
-     const char *name;
+find_variable_tempenv (const char *name)
 {
   SHELL_VAR *var;
 
@@ -2356,8 +2252,7 @@ find_variable_tempenv (name)
 
 /* Find a variable, not forcing a search of the temporary environment first */
 SHELL_VAR *
-find_variable_notempenv (name)
-     const char *name;
+find_variable_notempenv (const char *name)
 {
   SHELL_VAR *var;
 
@@ -2368,8 +2263,7 @@ find_variable_notempenv (name)
 }
 
 SHELL_VAR *
-find_global_variable (name)
-     const char *name;
+find_global_variable (const char *name)
 {
   SHELL_VAR *var;
 
@@ -2384,8 +2278,7 @@ find_global_variable (name)
 }
 
 SHELL_VAR *
-find_global_variable_noref (name)
-     const char *name;
+find_global_variable_noref (const char *name)
 {
   SHELL_VAR *var;
 
@@ -2398,8 +2291,7 @@ find_global_variable_noref (name)
 }
 
 SHELL_VAR *
-find_shell_variable (name)
-     const char *name;
+find_shell_variable (const char *name)
 {
   SHELL_VAR *var;
 
@@ -2415,8 +2307,7 @@ find_shell_variable (name)
 
 /* Look up the variable entry named NAME.  Returns the entry or NULL. */
 SHELL_VAR *
-find_variable (name)
-     const char *name;
+find_variable (const char *name)
 {
   SHELL_VAR *v;
   int flags;
@@ -2435,8 +2326,7 @@ find_variable (name)
    one found without att_invisible set; return 0 if no non-invisible instances
    found. */
 SHELL_VAR *
-find_variable_no_invisible (name)
-     const char *name;
+find_variable_no_invisible (const char *name)
 {
   SHELL_VAR *v;
   int flags;
@@ -2454,8 +2344,7 @@ find_variable_no_invisible (name)
 /* Find the first instance of NAME in the variable context chain; return first
    one found even if att_invisible set. */
 SHELL_VAR *
-find_variable_for_assignment (name)
-     const char *name;
+find_variable_for_assignment (const char *name)
 {
   SHELL_VAR *v;
   int flags;
@@ -2471,8 +2360,7 @@ find_variable_for_assignment (name)
 }
 
 SHELL_VAR *
-find_variable_noref (name)
-     const char *name;
+find_variable_noref (const char *name)
 {
   SHELL_VAR *v;
   int flags;
@@ -2487,8 +2375,7 @@ find_variable_noref (name)
 /* Look up the function entry whose name matches STRING.
    Returns the entry or NULL. */
 SHELL_VAR *
-find_function (name)
-     const char *name;
+find_function (const char *name)
 {
   return (hash_lookup (name, shell_functions));
 }
@@ -2496,8 +2383,7 @@ find_function (name)
 /* Find the function definition for the shell function named NAME.  Returns
    the entry or NULL. */
 FUNCTION_DEF *
-find_function_def (name)
-     const char *name;
+find_function_def (const char *name)
 {
 #if defined (DEBUGGER)
   return ((FUNCTION_DEF *)hash_lookup (name, shell_function_defs));
@@ -2509,8 +2395,7 @@ find_function_def (name)
 /* Return the value of VAR.  VAR is assumed to have been the result of a
    lookup without any subscript, if arrays are compiled into the shell. */
 char *
-get_variable_value (var)
-     SHELL_VAR *var;
+get_variable_value (SHELL_VAR *var)
 {
   if (var == 0)
     return ((char *)NULL);
@@ -2530,8 +2415,7 @@ get_variable_value (var)
    leak in practice.  Since    functions and variables have separate name
    spaces, returns NULL if var_name is a shell function only. */
 char *
-get_string_value (var_name)
-     const char *var_name;
+get_string_value (const char *var_name)
 {
   SHELL_VAR *var;
 
@@ -2541,8 +2425,7 @@ get_string_value (var_name)
 
 /* This is present for use by the tilde and readline libraries. */
 char *
-sh_get_env_value (v)
-     const char *v;
+sh_get_env_value (const char *v)
 {
   return get_string_value (v);
 }
@@ -2554,9 +2437,7 @@ sh_get_env_value (v)
 /* **************************************************************** */
 
 static int
-var_sametype (v1, v2)
-     SHELL_VAR *v1;
-     SHELL_VAR *v2;
+var_sametype (SHELL_VAR *v1, SHELL_VAR *v2)
 {
   if (v1 == 0 || v2 == 0)
     return 0;
@@ -2575,9 +2456,7 @@ var_sametype (v1, v2)
 }
 
 int
-validate_inherited_value (var, type)
-     SHELL_VAR *var;
-     int type;
+validate_inherited_value (SHELL_VAR *var, int type)
 {
 #if defined (ARRAY_VARS)
   if (type == att_array && assoc_p (var))
@@ -2591,8 +2470,7 @@ validate_inherited_value (var, type)
 
 /* Set NAME to VALUE if NAME has no value. */
 SHELL_VAR *
-set_if_not (name, value)
-     char *name, *value;
+set_if_not (const char *name, char *value)
 {
   SHELL_VAR *v;
 
@@ -2607,9 +2485,7 @@ set_if_not (name, value)
 
 /* Create a local variable referenced by NAME. */
 SHELL_VAR *
-make_local_variable (name, flags)
-     const char *name;
-     int flags;
+make_local_variable (const char *name, int flags)
 {
   SHELL_VAR *new_var, *old_var, *old_ref;
   VAR_CONTEXT *vc;
@@ -2763,8 +2639,7 @@ set_local_var_flags:
 
 /* Create a new shell variable with name NAME. */
 static SHELL_VAR *
-new_shell_variable (name)
-     const char *name;
+new_shell_variable (const char *name)
 {
   SHELL_VAR *entry;
 
@@ -2790,9 +2665,7 @@ new_shell_variable (name)
 /* Create a new shell variable with name NAME and add it to the hash table
    TABLE. */
 static SHELL_VAR *
-make_new_variable (name, table)
-     const char *name;
-     HASH_TABLE *table;
+make_new_variable (const char *name, HASH_TABLE *table)
 {
   SHELL_VAR *entry;
   BUCKET_CONTENTS *elt;
@@ -2811,8 +2684,7 @@ make_new_variable (name, table)
 
 #if defined (ARRAY_VARS)
 SHELL_VAR *
-make_new_array_variable (name)
-     char *name;
+make_new_array_variable (const char *name)
 {
   SHELL_VAR *entry;
   ARRAY *array;
@@ -2826,9 +2698,7 @@ make_new_array_variable (name)
 }
 
 SHELL_VAR *
-make_local_array_variable (name, flags)
-     char *name;
-     int flags;
+make_local_array_variable (const char *name, int flags)
 {
   SHELL_VAR *var;
   ARRAY *array;
@@ -2867,8 +2737,7 @@ make_local_array_variable (name, flags)
 }
 
 SHELL_VAR *
-make_new_assoc_variable (name)
-     char *name;
+make_new_assoc_variable (const char *name)
 {
   SHELL_VAR *entry;
   HASH_TABLE *hash;
@@ -2882,9 +2751,7 @@ make_new_assoc_variable (name)
 }
 
 SHELL_VAR *
-make_local_assoc_variable (name, flags)
-     char *name;
-     int flags;
+make_local_assoc_variable (const char *name, int flags)
 {
   SHELL_VAR *var;
   HASH_TABLE *hash;
@@ -2924,14 +2791,9 @@ make_local_assoc_variable (name, flags)
 #endif
 
 char *
-make_variable_value (var, value, flags)
-     SHELL_VAR *var;
-     char *value;
-     int flags;
+make_variable_value (SHELL_VAR *var, char *value, int flags)
 {
-  char *retval, *oval;
-  intmax_t lval, rval;
-  int expok, olen, op;
+  char *retval;
 
   /* If this variable has had its type set to integer (via `declare -i'),
      then do expression evaluation on it and store the result.  The
@@ -2943,9 +2805,11 @@ make_variable_value (var, value, flags)
      top_level. */
   if ((flags & ASS_NOEVAL) == 0 && integer_p (var))
     {
+      intmax_t lval = 0;
+      bool expok;
       if (flags & ASS_APPEND)
 	{
-	  oval = value_cell (var);
+	  const char *oval = value_cell (var);
 	  lval = evalexp (oval, 0, &expok);	/* ksh93 seems to do this */
 	  if (expok == 0)
 	    {
@@ -2958,7 +2822,7 @@ make_variable_value (var, value, flags)
 		}
 	    }
 	}
-      rval = evalexp (value, 0, &expok);
+      intmax_t rval = evalexp (value, 0, &expok);
       if (expok == 0)
 	{
 	  if (flags & ASS_NOLONGJMP)
@@ -2980,10 +2844,10 @@ make_variable_value (var, value, flags)
     {
       if (flags & ASS_APPEND)
 	{
-	  oval = get_variable_value (var);
+	  const char *oval = get_variable_value (var);
 	  if (oval == 0)	/* paranoia */
 	    oval = "";
-	  olen = STRLEN (oval);
+	  int olen = STRLEN (oval);
 	  retval = (char *)xmalloc (olen + (value ? STRLEN (value) : 0) + 1);
 	  strcpy (retval, oval);
 	  if (value)
@@ -2996,11 +2860,11 @@ make_variable_value (var, value, flags)
 	  retval = (char *)xmalloc (1);
 	  retval[0] = '\0';
 	}
-      op = capcase_p (var) ? CASE_CAPITALIZE
+      int op = capcase_p (var) ? CASE_CAPITALIZE
 			 : (uppercase_p (var) ? CASE_UPPER : CASE_LOWER);
-      oval = sh_modcase (retval, (char *)0, op);
+      char *newval = sh_modcase (retval, (char *)0, op);
       free (retval);
-      retval = oval;
+      retval = newval;
     }
 #endif /* CASEMOD_ATTRS */
   else if (value)
@@ -3008,10 +2872,10 @@ make_variable_value (var, value, flags)
 make_value:
       if (flags & ASS_APPEND)
 	{
-	  oval = get_variable_value (var);
+	  const char *oval = get_variable_value (var);
 	  if (oval == 0)	/* paranoia */
 	    oval = "";
-	  olen = STRLEN (oval);
+	  int olen = STRLEN (oval);
 	  retval = (char *)xmalloc (olen + (value ? STRLEN (value) : 0) + 1);
 	  strcpy (retval, oval);
 	  if (value)
@@ -3032,48 +2896,42 @@ make_value:
 }
 
 /* If we can optimize appending to string variables, say so */
-static int
-can_optimize_assignment (entry, value, aflags)
-     SHELL_VAR *entry;
-     char *value;
-     int aflags;
+static bool
+can_optimize_assignment (SHELL_VAR *entry, const char *value, int aflags)
 {
   if ((aflags & ASS_APPEND) == 0)
-    return 0;
+    return false;
 #if defined (ARRAY_VARS)
   if (array_p (entry) || assoc_p (entry))
-    return 0;
+    return false;
 #endif
   if (integer_p (entry) || uppercase_p (entry) || lowercase_p (entry) || capcase_p (entry))
-    return 0;
+    return false;
   if (readonly_p (entry) || noassign_p (entry))
-    return 0;
-  return 1;
+    return false;
+  return true;
 }
 
 /* right now we optimize appends to string variables */
 static SHELL_VAR *
-optimized_assignment (entry, value, aflags)
-     SHELL_VAR *entry;
-     char *value;
-     int aflags;
+optimized_assignment (SHELL_VAR *entry, const char *value, int aflags)
 {
   size_t len, vlen;
-  char *v, *new;
+  char *v, *new_;
 
   v = value_cell (entry);
   len = STRLEN (v);
   vlen = STRLEN (value);
 
-  new = (char *)xrealloc (v, len + vlen + 8);	/* for now */
+  new_ = (char *)xrealloc (v, len + vlen + 8);	/* for now */
   if (vlen == 1)
     {
-      new[len] = *value;
-      new[len+1] = '\0';
+      new_[len] = *value;
+      new_[len+1] = '\0';
     }
   else
-    strcpy (new + len, value);
-  var_setvalue (entry, new);
+    strcpy (new_ + len, value);
+  var_setvalue (entry, new_);
   return entry;
 }
 
@@ -3081,11 +2939,8 @@ optimized_assignment (entry, value, aflags)
    temporary environment (but usually is not).  HFLAGS controls how NAME
    is looked up in TABLE; AFLAGS controls how VALUE is assigned */
 static SHELL_VAR *
-bind_variable_internal (name, value, table, hflags, aflags)
-     const char *name;
-     char *value;
-     HASH_TABLE *table;
-     int hflags, aflags;
+bind_variable_internal (const char *name, char *value, HASH_TABLE *table,
+			int hflags, int aflags)
 {
   char *newval, *tname;
   SHELL_VAR *entry, *tentry;
@@ -3163,7 +3018,7 @@ bind_variable_internal (name, value, table, hflags, aflags)
 	}
 
       INVALIDATE_EXPORTSTR (entry);
-      newval = (aflags & ASS_APPEND) ? make_variable_value (entry, value, aflags) : value;
+      newval = (aflags & ASS_APPEND) ? make_variable_value (entry, value, aflags) : (char *)value;
       if (assoc_p (entry))
 	entry = (*(entry->assign_func)) (entry, newval, -1, savestring ("0"));
       else if (array_p (entry))
@@ -3198,7 +3053,7 @@ assign_value:
 	    VSETATTR (entry, att_exported);
 
 	  if (exported_p (entry))
-	    array_needs_making = 1;
+	    array_needs_making = true;
 
 	  return (entry);
 	}
@@ -3240,20 +3095,17 @@ assign_value:
     VSETATTR (entry, att_exported);
 
   if (exported_p (entry))
-    array_needs_making = 1;
+    array_needs_making = true;
 
   return (entry);
 }
-	
+
 /* Bind a variable NAME to VALUE.  This conses up the name
    and value strings.  If we have a temporary environment, we bind there
    first, then we bind into shell_variables. */
 
 SHELL_VAR *
-bind_variable (name, value, flags)
-     const char *name;
-     char *value;
-     int flags;
+bind_variable (const char *name, char *value, int flags)
 {
   SHELL_VAR *v, *nv;
   VAR_CONTEXT *vc, *nvc;
@@ -3324,10 +3176,7 @@ bind_variable (name, value, flags)
 }
 
 SHELL_VAR *
-bind_global_variable (name, value, flags)
-     const char *name;
-     char *value;
-     int flags;
+bind_global_variable (const char *name, char *value, int flags)
 {
   if (shell_variables == 0)
     create_variable_tables ();
@@ -3337,10 +3186,7 @@ bind_global_variable (name, value, flags)
 }
 
 static SHELL_VAR *
-bind_invalid_envvar (name, value, flags)
-     const char *name;
-     char *value;
-     int flags;
+bind_invalid_envvar (const char *name, char *value, int flags)
 {
   if (invalid_env == 0)
     invalid_env = hash_create (64);	/* XXX */
@@ -3353,10 +3199,7 @@ bind_invalid_envvar (name, value, flags)
    all modified variables should be exported, mark the variable for export
    and note that the export environment needs to be recreated. */
 SHELL_VAR *
-bind_variable_value (var, value, aflags)
-     SHELL_VAR *var;
-     char *value;
-     int aflags;
+bind_variable_value (SHELL_VAR *var, char *value, int aflags)
 {
   char *t;
   int invis;
@@ -3371,7 +3214,7 @@ bind_variable_value (var, value, aflags)
       t = (aflags & ASS_APPEND) ? make_variable_value (var, value, aflags) : value;
       (*(var->assign_func)) (var, t, -1, 0);
       if (t != value && t)
-	free (t);      
+	free (t);
     }
   else
     {
@@ -3406,7 +3249,7 @@ bind_variable_value (var, value, aflags)
     VSETATTR (var, att_exported);
 
   if (exported_p (var))
-    array_needs_making = 1;
+    array_needs_making = true;
 
   return (var);
 }
@@ -3422,11 +3265,9 @@ bind_variable_value (var, value, aflags)
    variable we set here, then turn it back on after binding as necessary. */
 
 SHELL_VAR *
-bind_int_variable (lhs, rhs, flags)
-     char *lhs, *rhs;
-     int flags;
+bind_int_variable (char *lhs, char *rhs, int flags)
 {
-  register SHELL_VAR *v;
+  SHELL_VAR *v;
   int isint, isarr, implicitarray;
 
   isint = isarr = implicitarray = 0;
@@ -3439,7 +3280,7 @@ bind_int_variable (lhs, rhs, flags)
   else if (legal_identifier (lhs) == 0)
     {
       sh_invalidid (lhs);
-      return ((SHELL_VAR *)NULL);      
+      return ((SHELL_VAR *)NULL);
     }
   else
 #endif
@@ -3473,14 +3314,12 @@ bind_int_variable (lhs, rhs, flags)
 
   if (v && nameref_p (v))
     internal_warning (_("%s: assigning integer to name reference"), lhs);
-     
+
   return (v);
 }
 
 SHELL_VAR *
-bind_var_to_int (var, val)
-     char *var;
-     intmax_t val;
+bind_var_to_int (char *var, intmax_t val)
 {
   char ibuf[INT_STRLEN_BOUND (intmax_t) + 1], *p;
 
@@ -3491,9 +3330,7 @@ bind_var_to_int (var, val)
 /* Do a function binding to a variable.  You pass the name and
    the command to bind to.  This conses the name and command. */
 SHELL_VAR *
-bind_function (name, value)
-     const char *name;
-     COMMAND *value;
+bind_function (const char *name, COMMAND *value)
 {
   SHELL_VAR *entry;
 
@@ -3525,7 +3362,7 @@ bind_function (name, value)
   VUNSETATTR (entry, att_invisible);		/* Just to be sure */
 
   if (exported_p (entry))
-    array_needs_making = 1;
+    array_needs_making = true;
 
 #if defined (PROGRAMMABLE_COMPLETION)
   set_itemlist_dirty (&it_functions);
@@ -3540,10 +3377,7 @@ bind_function (name, value)
    If (FLAGS & 1), overwrite any existing definition. If FLAGS == 0, leave
    any existing definition alone. */
 void
-bind_function_def (name, value, flags)
-     const char *name;
-     FUNCTION_DEF *value;
-     int flags;
+bind_function_def (const char *name, FUNCTION_DEF *value, int flags)
 {
   FUNCTION_DEF *entry;
   BUCKET_CONTENTS *elt;
@@ -3575,9 +3409,7 @@ bind_function_def (name, value, flags)
    responsible for moving the main temporary env to one of the other
    temporary environments.  The expansion code in subst.c calls this. */
 int
-assign_in_env (word, flags)
-     WORD_DESC *word;
-     int flags;
+assign_in_env (WORD_DESC *word, int flags)
 {
   int offset, aflags;
   char *name, *temp, *value, *newname;
@@ -3607,7 +3439,7 @@ assign_in_env (word, flags)
 	  sh_invalidid (name);
 	  return (0);
 	}
-  
+
       var = find_variable (name);
       if (var == 0)
 	{
@@ -3628,7 +3460,7 @@ assign_in_env (word, flags)
 	}
       else
         newname = name_cell (var);	/* no-op if not nameref */
-	  
+
       if (var && (readonly_p (var) || noassign_p (var)))
 	{
 	  if (readonly_p (var))
@@ -3675,7 +3507,7 @@ assign_in_env (word, flags)
   INVALIDATE_EXPORTSTR (var);
   var->exportstr = mk_env_string (newname, value, 0);
 
-  array_needs_making = 1;
+  array_needs_making = true;
 
   if (flags)
     {
@@ -3702,8 +3534,7 @@ assign_in_env (word, flags)
 #ifdef INCLUDE_UNUSED
 /* Copy VAR to a new data structure and return that structure. */
 SHELL_VAR *
-copy_variable (var)
-     SHELL_VAR *var;
+copy_variable (SHELL_VAR *var)
 {
   SHELL_VAR *copy = (SHELL_VAR *)NULL;
 
@@ -3748,8 +3579,7 @@ copy_variable (var)
 
 /* Dispose of the information attached to VAR. */
 static void
-dispose_variable_value (var)
-     SHELL_VAR *var;
+dispose_variable_value (SHELL_VAR *var)
 {
   if (function_p (var))
     dispose_command (function_cell (var));
@@ -3766,12 +3596,12 @@ dispose_variable_value (var)
 }
 
 void
-dispose_variable (var)
-     SHELL_VAR *var;
+dispose_variable (void *arg)
 {
-  if (var == 0)
+  if (arg == 0)
     return;
 
+  SHELL_VAR *var = (SHELL_VAR *)arg;
   if (nofree_p (var) == 0)
     dispose_variable_value (var);
 
@@ -3780,7 +3610,7 @@ dispose_variable (var)
   free (var->name);
 
   if (exported_p (var))
-    array_needs_making = 1;
+    array_needs_making = true;
 
   free (var);
 }
@@ -3788,8 +3618,7 @@ dispose_variable (var)
 /* Unset the shell variable referenced by NAME.  Unsetting a nameref variable
    unsets the variable it resolves to but leaves the nameref alone. */
 int
-unbind_variable (name)
-     const char *name;
+unbind_variable (const char *name)
 {
   SHELL_VAR *v, *nv;
   int r;
@@ -3803,8 +3632,7 @@ unbind_variable (name)
 
 /* Unbind NAME, where NAME is assumed to be a nameref variable */
 int
-unbind_nameref (name)
-     const char *name;
+unbind_nameref (const char *name)
 {
   SHELL_VAR *v;
 
@@ -3816,8 +3644,7 @@ unbind_nameref (name)
 
 /* Unbind the first instance of NAME, whether it's a nameref or not */
 int
-unbind_variable_noref (name)
-     const char *name;
+unbind_variable_noref (const char *name)
 {
   SHELL_VAR *v;
 
@@ -3828,8 +3655,7 @@ unbind_variable_noref (name)
 }
 
 int
-check_unbind_variable (name)
-     const char *name;
+check_unbind_variable (const char *name)
 {
   SHELL_VAR *v;
 
@@ -3849,8 +3675,7 @@ check_unbind_variable (name)
 
 /* Unset the shell function named NAME. */
 int
-unbind_func (name)
-     const char *name;
+unbind_func (const char *name)
 {
   BUCKET_CONTENTS *elt;
   SHELL_VAR *func;
@@ -3868,20 +3693,19 @@ unbind_func (name)
   if (func)
     {
       if (exported_p (func))
-	array_needs_making++;
+	array_needs_making = true;
       dispose_variable (func);
     }
 
   free (elt->key);
   free (elt);
 
-  return 0;  
+  return 0;
 }
 
 #if defined (DEBUGGER)
 int
-unbind_function_def (name)
-     const char *name;
+unbind_function_def (const char *name)
 {
   BUCKET_CONTENTS *elt;
   FUNCTION_DEF *funcdef;
@@ -3898,14 +3722,12 @@ unbind_function_def (name)
   free (elt->key);
   free (elt);
 
-  return 0;  
+  return 0;
 }
 #endif /* DEBUGGER */
 
 int
-delete_var (name, vc)
-     const char *name;
-     VAR_CONTEXT *vc;
+delete_var (const char *name, VAR_CONTEXT *vc)
 {
   BUCKET_CONTENTS *elt;
   SHELL_VAR *old_var;
@@ -3931,9 +3753,7 @@ delete_var (name, vc)
    shell_variables or shell_functions).
    Returns non-zero if the variable couldn't be found. */
 int
-makunbound (name, vc)
-     const char *name;
-     VAR_CONTEXT *vc;
+makunbound (const char *name, VAR_CONTEXT *vc)
 {
   BUCKET_CONTENTS *elt, *new_elt;
   SHELL_VAR *old_var;
@@ -3950,7 +3770,7 @@ makunbound (name, vc)
   old_var = (SHELL_VAR *)elt->data;
 
   if (old_var && exported_p (old_var))
-    array_needs_making++;
+    array_needs_making = true;
 
   /* If we're unsetting a local variable and we're still executing inside
      the function, just mark the variable as invisible.  The function
@@ -3975,7 +3795,7 @@ makunbound (name, vc)
 	FREE (value_cell (old_var));
       /* Reset the attributes.  Preserve the export attribute if the variable
 	 came from a temporary environment.  Make sure it stays local, and
-	 make it invisible. */ 
+	 make it invisible. */
       old_var->attributes = (exported_p (old_var) && tempvar_p (old_var)) ? att_exported : 0;
       VSETATTR (old_var, att_local);
       VSETATTR (old_var, att_invisible);
@@ -4027,8 +3847,7 @@ kill_all_local_variables ()
 }
 
 static void
-free_variable_hash_data (data)
-     PTR_T data;
+free_variable_hash_data (PTR_T data)
 {
   SHELL_VAR *var;
 
@@ -4038,8 +3857,7 @@ free_variable_hash_data (data)
 
 /* Delete the entire contents of the hash table. */
 void
-delete_all_variables (hashed_vars)
-     HASH_TABLE *hashed_vars;
+delete_all_variables (HASH_TABLE *hashed_vars)
 {
   hash_flush (hashed_vars, free_variable_hash_data);
 }
@@ -4065,8 +3883,7 @@ delete_all_variables (hashed_vars)
 /* Make the variable associated with NAME be readonly.
    If NAME does not exist yet, create it. */
 void
-set_var_read_only (name)
-     char *name;
+set_var_read_only (const char *name)
 {
   SHELL_VAR *entry;
 
@@ -4078,8 +3895,7 @@ set_var_read_only (name)
 /* Make the function associated with NAME be readonly.
    If NAME does not exist, we just punt, like auto_export code below. */
 void
-set_func_read_only (name)
-     const char *name;
+set_func_read_only (const char *name)
 {
   SHELL_VAR *entry;
 
@@ -4091,8 +3907,7 @@ set_func_read_only (name)
 /* Make the variable associated with NAME be auto-exported.
    If NAME does not exist yet, create it. */
 void
-set_var_auto_export (name)
-     char *name;
+set_var_auto_export (char *name)
 {
   SHELL_VAR *entry;
 
@@ -4102,8 +3917,7 @@ set_var_auto_export (name)
 
 /* Make the function associated with NAME be auto-exported. */
 void
-set_func_auto_export (name)
-     const char *name;
+set_func_auto_export (const char *name)
 {
   SHELL_VAR *entry;
 
@@ -4120,8 +3934,7 @@ set_func_auto_export (name)
 /* **************************************************************** */
 
 static VARLIST *
-vlist_alloc (nentries)
-     int nentries;
+vlist_alloc (int nentries)
 {
   VARLIST  *vlist;
 
@@ -4135,9 +3948,7 @@ vlist_alloc (nentries)
 }
 
 static VARLIST *
-vlist_realloc (vlist, n)
-     VARLIST *vlist;
-     int n;
+vlist_realloc (VARLIST *vlist, int n)
 {
   if (vlist == 0)
     return (vlist = vlist_alloc (n));
@@ -4150,12 +3961,9 @@ vlist_realloc (vlist, n)
 }
 
 static void
-vlist_add (vlist, var, flags)
-     VARLIST *vlist;
-     SHELL_VAR *var;
-     int flags;
+vlist_add (VARLIST *vlist, SHELL_VAR *var, int flags)
 {
-  register int i;
+  int i;
 
   for (i = 0; i < vlist->list_len; i++)
     if (STREQ (var->name, vlist->list[i]->name))
@@ -4174,9 +3982,7 @@ vlist_add (vlist, var, flags)
    variables for which FUNCTION returns a non-zero value.  A NULL value
    for FUNCTION means to use all variables. */
 SHELL_VAR **
-map_over (function, vc)
-     sh_var_map_func_t *function;
-     VAR_CONTEXT *vc;
+map_over (sh_var_map_func_t *function, VAR_CONTEXT *vc)
 {
   VAR_CONTEXT *v;
   VARLIST *vlist;
@@ -4200,8 +4006,7 @@ map_over (function, vc)
 }
 
 SHELL_VAR **
-map_over_funcs (function)
-     sh_var_map_func_t *function;
+map_over_funcs (sh_var_map_func_t *function)
 {
   VARLIST *vlist;
   SHELL_VAR **ret;
@@ -4225,14 +4030,11 @@ map_over_funcs (function)
    NULL, FUNC is applied to each SHELL_VAR in VAR_HASH_TABLE.  If VLIST
    and FUNC are both NULL, nothing happens. */
 static void
-flatten (var_hash_table, func, vlist, flags)
-     HASH_TABLE *var_hash_table;
-     sh_var_map_func_t *func;
-     VARLIST *vlist;
-     int flags;
+flatten (HASH_TABLE *var_hash_table, sh_var_map_func_t *func,
+	 VARLIST *vlist, int flags)
 {
-  register int i;
-  register BUCKET_CONTENTS *tlist;
+  int i;
+  BUCKET_CONTENTS *tlist;
   int r;
   SHELL_VAR *var;
 
@@ -4253,15 +4055,13 @@ flatten (var_hash_table, func, vlist, flags)
 }
 
 void
-sort_variables (array)
-     SHELL_VAR **array;
+sort_variables (SHELL_VAR **array)
 {
   qsort (array, strvec_len ((char **)array), sizeof (SHELL_VAR *), (QSFUNC *)qsort_var_comp);
 }
 
 static int
-qsort_var_comp (var1, var2)
-     SHELL_VAR **var1, **var2;
+qsort_var_comp (const SHELL_VAR **var1, const SHELL_VAR **var2)
 {
   int result;
 
@@ -4274,8 +4074,7 @@ qsort_var_comp (var1, var2)
 /* Apply FUNC to each variable in SHELL_VARIABLES, adding each one for
    which FUNC succeeds to an array of SHELL_VAR *s.  Returns the array. */
 static SHELL_VAR **
-vapply (func)
-     sh_var_map_func_t *func;
+vapply (sh_var_map_func_t *func)
 {
   SHELL_VAR **list;
 
@@ -4288,8 +4087,7 @@ vapply (func)
 /* Apply FUNC to each variable in SHELL_FUNCTIONS, adding each one for
    which FUNC succeeds to an array of SHELL_VAR *s.  Returns the array. */
 static SHELL_VAR **
-fapply (func)
-     sh_var_map_func_t *func;
+fapply (sh_var_map_func_t *func)
 {
   SHELL_VAR **list;
 
@@ -4314,8 +4112,7 @@ all_shell_functions ()
 }
 
 static int
-visible_var (var)
-     SHELL_VAR *var;
+visible_var (SHELL_VAR *var)
 {
   return (invisible_p (var) == 0);
 }
@@ -4335,8 +4132,7 @@ all_visible_variables ()
 /* Return non-zero if the variable VAR is visible and exported.  Array
    variables cannot be exported. */
 static int
-visible_and_exported (var)
-     SHELL_VAR *var;
+visible_and_exported (SHELL_VAR *var)
 {
   return (invisible_p (var) == 0 && exported_p (var));
 }
@@ -4345,8 +4141,7 @@ visible_and_exported (var)
    with the export attribute or invalid variables inherited from the initial
    environment and simply passed through. */
 static int
-export_environment_candidate (var)
-     SHELL_VAR *var;
+export_environment_candidate (SHELL_VAR *var)
 {
   return (exported_p (var) && (invisible_p (var) == 0 || imported_p (var)));
 }
@@ -4354,8 +4149,7 @@ export_environment_candidate (var)
 /* Return non-zero if VAR is a local variable in the current context and
    is exported. */
 static int
-local_and_exported (var)
-     SHELL_VAR *var;
+local_and_exported (SHELL_VAR *var)
 {
   return (invisible_p (var) == 0 && local_p (var) && var->context == variable_context && exported_p (var));
 }
@@ -4373,22 +4167,19 @@ local_exported_variables ()
 }
 
 static int
-variable_in_context (var)
-     SHELL_VAR *var;
+variable_in_context (SHELL_VAR *var)
 {
   return (local_p (var) && var->context == variable_context);
 }
 
 static int
-visible_variable_in_context (var)
-     SHELL_VAR *var;
+visible_variable_in_context (SHELL_VAR *var)
 {
   return (invisible_p (var) == 0 && local_p (var) && var->context == variable_context);
 }
 
 SHELL_VAR **
-all_local_variables (visible_only)
-     int visible_only;
+all_local_variables (int visible_only)
 {
   VARLIST *vlist;
   SHELL_VAR **ret;
@@ -4406,7 +4197,7 @@ all_local_variables (visible_only)
     }
   if (vc->table == 0 || HASH_ENTRIES (vc->table) == 0 || vc_haslocals (vc) == 0)
     return (SHELL_VAR **)NULL;
-    
+
   vlist = vlist_alloc (HASH_ENTRIES (vc->table));
 
   if (visible_only)
@@ -4424,8 +4215,7 @@ all_local_variables (visible_only)
 #if defined (ARRAY_VARS)
 /* Return non-zero if the variable VAR is visible and an array. */
 static int
-visible_array_vars (var)
-     SHELL_VAR *var;
+visible_array_vars (SHELL_VAR *var)
 {
   return (invisible_p (var) == 0 && (array_p (var) || assoc_p (var)));
 }
@@ -4438,8 +4228,7 @@ all_array_variables ()
 #endif /* ARRAY_VARS */
 
 char **
-all_variables_matching_prefix (prefix)
-     const char *prefix;
+all_variables_matching_prefix (const char *prefix)
 {
   SHELL_VAR **varlist;
   char **rlist;
@@ -4471,9 +4260,7 @@ all_variables_matching_prefix (prefix)
 
 /* Make variable NAME have VALUE in the temporary environment. */
 static SHELL_VAR *
-bind_tempenv_variable (name, value)
-     const char *name;
-     char *value;
+bind_tempenv_variable (const char *name, const char *value)
 {
   SHELL_VAR *var;
 
@@ -4492,8 +4279,7 @@ bind_tempenv_variable (name, value)
 /* Find a variable in the temporary environment that is named NAME.
    Return the SHELL_VAR *, or NULL if not found. */
 SHELL_VAR *
-find_tempenv_variable (name)
-     const char *name;
+find_tempenv_variable (const char *name)
 {
   return (temporary_env ? hash_lookup (name, temporary_env) : (SHELL_VAR *)NULL);
 }
@@ -4506,8 +4292,7 @@ int tvlist_ind;
    is called from merge_temporary_env, which is only called when in posix
    mode. */
 static void
-push_posix_temp_var (data)
-     PTR_T data;
+push_posix_temp_var (PTR_T data)
 {
   SHELL_VAR *var, *v;
   HASH_TABLE *binding_table;
@@ -4561,8 +4346,7 @@ push_posix_temp_var (data)
   we can create variables in the current scope.
 */
 static void
-push_temp_var (data)
-     PTR_T data;
+push_temp_var (PTR_T data)
 {
   SHELL_VAR *var, *v;
   HASH_TABLE *binding_table;
@@ -4608,8 +4392,7 @@ push_temp_var (data)
    taking a variable like `var=value declare -x var' and propagating it to
    the enclosing scope. */
 static void
-propagate_temp_var (data)
-     PTR_T data;
+propagate_temp_var (PTR_T data)
 {
   SHELL_VAR *var;
 
@@ -4632,8 +4415,7 @@ propagate_temp_var (data)
    function can call stupidly_hack_special_variables on all the
    variables in the list when the temporary hash table is destroyed. */
 static void
-dispose_temporary_env (pushf)
-     sh_free_func_t *pushf;
+dispose_temporary_env (sh_free_func_t *pushf)
 {
   int i;
   HASH_TABLE *disposer;
@@ -4649,7 +4431,7 @@ dispose_temporary_env (pushf)
 
   tempvar_list[tvlist_ind] = 0;
 
-  array_needs_making = 1;
+  array_needs_making = true;
 
   for (i = 0; i < tvlist_ind; i++)
     stupidly_hack_special_variables (tempvar_list[i]);
@@ -4708,9 +4490,7 @@ flush_temporary_env ()
 /* **************************************************************** */
 
 static inline char *
-mk_env_string (name, value, isfunc)
-     const char *name, *value;
-     int isfunc;
+mk_env_string (const char *name, const char *value, int isfunc)
 {
   size_t name_len, value_len;
   char	*p, *q, *t;
@@ -4760,8 +4540,7 @@ mk_env_string (name, value, isfunc)
 #ifdef DEBUG
 /* Debugging */
 static int
-valid_exportstr (v)
-     SHELL_VAR *v;
+valid_exportstr (SHELL_VAR *v)
 {
   char *s;
 
@@ -4796,11 +4575,10 @@ valid_exportstr (v)
 #endif
 
 static char **
-make_env_array_from_var_list (vars)
-     SHELL_VAR **vars;
+make_env_array_from_var_list (SHELL_VAR **vars)
 {
-  register int i, list_index;
-  register SHELL_VAR *var;
+  int i, list_index;
+  SHELL_VAR *var;
   char **list, *value;
 
   list = strvec_create ((1 + strvec_len ((char **)vars)));
@@ -4871,8 +4649,7 @@ make_env_array_from_var_list (vars)
    HASHED_VARS which contains SHELL_VARs.  Only visible, exported
    variables are eligible. */
 static char **
-make_var_export_array (vcxt)
-     VAR_CONTEXT *vcxt;
+make_var_export_array (VAR_CONTEXT *vcxt)
 {
   char **list;
   SHELL_VAR **vars;
@@ -4925,11 +4702,9 @@ do \
 /* Add ASSIGN to EXPORT_ENV, or supersede a previous assignment in the
    array with the same left-hand side.  Return the new EXPORT_ENV. */
 char **
-add_or_supercede_exported_var (assign, do_alloc)
-     char *assign;
-     int do_alloc;
+add_or_supercede_exported_var (char *assign, int do_alloc)
 {
-  register int i;
+  int i;
   int equal_offset;
 
   equal_offset = assignment (assign, 0);
@@ -4957,11 +4732,9 @@ add_or_supercede_exported_var (assign, do_alloc)
 }
 
 static void
-add_temp_array_to_env (temp_array, do_alloc, do_supercede)
-     char **temp_array;
-     int do_alloc, do_supercede;
+add_temp_array_to_env (char **temp_array, int do_alloc, int do_supercede)
 {
-  register int i;
+  int i;
 
   if (temp_array == 0)
     return;
@@ -5005,15 +4778,14 @@ n_shell_variables ()
 }
 
 int
-chkexport (name)
-     char *name;
+chkexport (const char *name)
 {
   SHELL_VAR *v;
 
   v = find_variable (name);
   if (v && exported_p (v))
     {
-      array_needs_making = 1;
+      array_needs_making = true;
       maybe_make_export_env ();
       return 1;
     }
@@ -5023,7 +4795,7 @@ chkexport (name)
 void
 maybe_make_export_env ()
 {
-  register char **temp_array;
+  char **temp_array;
   int new_size;
   VAR_CONTEXT *tcxt, *icxt;
 
@@ -5067,7 +4839,7 @@ maybe_make_export_env ()
 	}
       else
 	icxt = tcxt;
-      
+
       temp_array = make_var_export_array (icxt);
       if (temp_array)
 	add_temp_array_to_env (temp_array, 0, 0);
@@ -5087,7 +4859,7 @@ maybe_make_export_env ()
       if (temp_array)
 	add_temp_array_to_env (temp_array, 0, 0);
 
-      array_needs_making = 0;
+      array_needs_making = false;
     }
 }
 
@@ -5101,10 +4873,8 @@ maybe_make_export_env ()
    just update the variables in place and mark the exported environment
    as no longer needing a remake. */
 void
-update_export_env_inplace (env_prefix, preflen, value)
-     char *env_prefix;
-     int preflen;
-     char *value;
+update_export_env_inplace (const char *env_prefix, int preflen,
+			   const char *value)
 {
   char *evar;
 
@@ -5117,8 +4887,7 @@ update_export_env_inplace (env_prefix, preflen, value)
 
 /* We always put _ in the environment as the name of this command. */
 void
-put_command_name_into_env (command_name)
-     char *command_name;
+put_command_name_into_env (const char *command_name)
 {
   update_export_env_inplace ("_=", 2, command_name);
 }
@@ -5133,9 +4902,7 @@ put_command_name_into_env (command_name)
    NAME can be NULL. */
 
 VAR_CONTEXT *
-new_var_context (name, flags)
-     char *name;
-     int flags;
+new_var_context (const char *name, int flags)
 {
   VAR_CONTEXT *vc;
 
@@ -5153,8 +4920,7 @@ new_var_context (name, flags)
 /* Free a variable context and its data, including the hash table.  Dispose
    all of the variables. */
 void
-dispose_var_context (vc)
-     VAR_CONTEXT *vc;
+dispose_var_context (VAR_CONTEXT *vc)
 {
   FREE (vc->name);
 
@@ -5169,8 +4935,7 @@ dispose_var_context (vc)
 
 /* Set VAR's scope level to the current variable context. */
 static int
-set_context (var)
-     SHELL_VAR *var;
+set_context (SHELL_VAR *var)
 {
   return (var->context = variable_context);
 }
@@ -5179,10 +4944,7 @@ set_context (var)
    temporary variables, and push it onto shell_variables.  This is
    for shell functions. */
 VAR_CONTEXT *
-push_var_context (name, flags, tempvars)
-     char *name;
-     int flags;
-     HASH_TABLE *tempvars;
+push_var_context (const char *name, int flags, HASH_TABLE *tempvars)
 {
   VAR_CONTEXT *vc;
   int posix_func_behavior;
@@ -5226,9 +4988,7 @@ push_var_context (name, flags, tempvars)
 */
 
 static inline void
-push_posix_tempvar_internal (var, isbltin)
-     SHELL_VAR *var;
-     int isbltin;
+push_posix_tempvar_internal (SHELL_VAR *var, int isbltin)
 {
   SHELL_VAR *v;
   int posix_var_behavior;
@@ -5293,14 +5053,13 @@ push_posix_tempvar_internal (var, isbltin)
       else
 	var_setassoc (v, assoc_copy (assoc_cell (var)));
     }
-#endif	  
+#endif
 
   dispose_variable (var);
 }
 
 static void
-push_func_var (data)
-     PTR_T data;
+push_func_var (PTR_T data)
 {
   SHELL_VAR *var;
 
@@ -5309,8 +5068,7 @@ push_func_var (data)
 }
 
 static void
-push_builtin_var (data)
-     PTR_T data;
+push_builtin_var (PTR_T data)
 {
   SHELL_VAR *var;
 
@@ -5347,8 +5105,7 @@ pop_var_context ()
 /* Delete the HASH_TABLEs for all variable contexts beginning at VCXT, and
    all of the VAR_CONTEXTs except GLOBAL_VARIABLES. */
 void
-delete_all_contexts (vcxt)
-     VAR_CONTEXT *vcxt;
+delete_all_contexts (VAR_CONTEXT *vcxt)
 {
   VAR_CONTEXT *v, *t;
 
@@ -5356,7 +5113,7 @@ delete_all_contexts (vcxt)
     {
       t = v->down;
       dispose_var_context (v);
-    }    
+    }
 
   delete_all_variables (global_variables->table);
   shell_variables = global_variables;
@@ -5369,16 +5126,13 @@ delete_all_contexts (vcxt)
 /* **************************************************************** */
 
 VAR_CONTEXT *
-push_scope (flags, tmpvars)
-     int flags;
-     HASH_TABLE *tmpvars;
+push_scope (int flags, HASH_TABLE *tmpvars)
 {
   return (push_var_context ((char *)NULL, flags, tmpvars));
 }
 
 static void
-push_exported_var (data)
-     PTR_T data;
+push_exported_var (PTR_T data)
 {
   SHELL_VAR *var, *v;
 
@@ -5411,9 +5165,8 @@ push_exported_var (data)
    result of a builtin like `source' or `command' that can operate on the
    variables in its temporary environment. In the first case, we call
    push_builtin_var, which does the right thing. */
-void
-pop_scope (is_special)
-     int is_special;
+int
+pop_scope (int is_special)
 {
   VAR_CONTEXT *vcxt, *ret;
   int is_bltinenv;
@@ -5422,7 +5175,7 @@ pop_scope (is_special)
   if (vc_istempscope (vcxt) == 0)
     {
       internal_error (_("pop_scope: head of shell_variables not a temporary environment scope"));
-      return;
+      return 0;		// unused
     }
   is_bltinenv = vc_isbltnenv (vcxt);	/* XXX - for later */
 
@@ -5446,6 +5199,7 @@ pop_scope (is_special)
   free (vcxt);
 
   sv_ifs ("IFS");	/* XXX here for now */
+  return 0;		// unused
 }
 
 /* **************************************************************** */
@@ -5482,8 +5236,7 @@ save_dollar_vars ()
 }
 
 static void
-restore_dollar_vars (args)
-     char **args;
+restore_dollar_vars (char **args)
 {
   int i;
 
@@ -5504,8 +5257,7 @@ free_dollar_vars ()
 }
 
 static void
-free_saved_dollar_vars (args)
-     char **args;
+free_saved_dollar_vars (char **args)
 {
   int i;
 
@@ -5526,10 +5278,7 @@ clear_dollar_vars ()
 
 /* XXX - should always be followed by remember_args () */
 void
-push_context (name, is_subshell, tempvars)
-     char *name;	/* function name */
-     int is_subshell;
-     HASH_TABLE *tempvars;
+push_context (const char *name, int is_subshell, HASH_TABLE *tempvars)
 {
   if (is_subshell == 0)
     push_dollar_vars ();
@@ -5565,9 +5314,9 @@ push_dollar_vars ()
   dollar_arg_stack[dollar_arg_stack_index++].rest = rest_of_args;
   rest_of_args = (WORD_LIST *)NULL;
   posparam_count = 0;
-  
+
   dollar_arg_stack[dollar_arg_stack_index].first_ten = (char **)NULL;
-  dollar_arg_stack[dollar_arg_stack_index].rest = (WORD_LIST *)NULL;  
+  dollar_arg_stack[dollar_arg_stack_index].rest = (WORD_LIST *)NULL;
 }
 
 /* Restore the positional parameters from our stack. */
@@ -5599,11 +5348,11 @@ dispose_saved_dollar_vars ()
   if (dollar_arg_stack == 0 || dollar_arg_stack_index == 0)
     return;
 
-  dispose_words (dollar_arg_stack[--dollar_arg_stack_index].rest);    
-  free_saved_dollar_vars (dollar_arg_stack[dollar_arg_stack_index].first_ten);	
+  dispose_words (dollar_arg_stack[--dollar_arg_stack_index].rest);
+  free_saved_dollar_vars (dollar_arg_stack[dollar_arg_stack_index].first_ten);
   free (dollar_arg_stack[dollar_arg_stack_index].first_ten);
 
-  dollar_arg_stack[dollar_arg_stack_index].first_ten = (char **)NULL;  
+  dollar_arg_stack[dollar_arg_stack_index].first_ten = (char **)NULL;
   dollar_arg_stack[dollar_arg_stack_index].rest = (WORD_LIST *)NULL;
   dollar_arg_stack[dollar_arg_stack_index].count = 0;
 }
@@ -5633,8 +5382,7 @@ save_bash_argv ()
 /* Manipulate the special BASH_ARGV and BASH_ARGC variables. */
 
 void
-push_args (list)
-     WORD_LIST *list;
+push_args (WORD_LIST *list)
 {
 #if defined (ARRAY_VARS) && defined (DEBUGGER)
   SHELL_VAR *bash_argv_v, *bash_argc_v;
@@ -5646,7 +5394,7 @@ push_args (list)
   GET_ARRAY_FROM_VAR ("BASH_ARGV", bash_argv_v, bash_argv_a);
   GET_ARRAY_FROM_VAR ("BASH_ARGC", bash_argc_v, bash_argc_a);
 
-  for (l = list, i = 0; l; l = l->next, i++)
+  for (l = list, i = 0; l; l = (WORD_LIST *)(l->next), i++)
     array_push (bash_argv_a, l->word->word);
 
   t = itos (i);
@@ -5697,7 +5445,7 @@ pop_args ()
 
 /* This table will be sorted with qsort() the first time it's accessed. */
 struct name_and_function {
-  char *name;
+  const char *name;
   sh_sv_func_t *function;
 };
 
@@ -5788,8 +5536,7 @@ static struct name_and_function special_vars[] = {
 #define N_SPECIAL_VARS	(sizeof (special_vars) / sizeof (special_vars[0]) - 1)
 
 static int
-sv_compare (sv1, sv2)
-     struct name_and_function *sv1, *sv2;
+sv_compare (struct name_and_function *sv1, struct name_and_function *sv2)
 {
   int r;
 
@@ -5799,10 +5546,9 @@ sv_compare (sv1, sv2)
 }
 
 static inline int
-find_special_var (name)
-     const char *name;
+find_special_var (const char *name)
 {
-  register int i, r;
+  int i, r;
 
   for (i = 0; special_vars[i].name; i++)
     {
@@ -5822,8 +5568,7 @@ find_special_var (name)
 /* The variable in NAME has just had its state changed.  Check to see if it
    is one of the special ones where something special happens. */
 void
-stupidly_hack_special_variables (name)
-     char *name;
+stupidly_hack_special_variables (const char *name)
 {
   static int sv_sorted = 0;
   int i;
@@ -5853,8 +5598,7 @@ reinit_special_variables ()
 }
 
 void
-sv_ifs (name)
-     char *name;
+sv_ifs (const char *ignored)
 {
   SHELL_VAR *v;
 
@@ -5864,8 +5608,7 @@ sv_ifs (name)
 
 /* What to do just after the PATH variable has changed. */
 void
-sv_path (name)
-     char *name;
+sv_path (const char *ignored)
 {
   /* hash -r */
   phash_flush ();
@@ -5875,8 +5618,7 @@ sv_path (name)
    is the name of the variable.  This is called with NAME set to one of
    MAIL, MAILCHECK, or MAILPATH.  */
 void
-sv_mail (name)
-     char *name;
+sv_mail (const char *name)
 {
   /* If the time interval for checking the files has changed, then
      reset the mail timer.  Otherwise, one of the pathname vars
@@ -5892,8 +5634,7 @@ sv_mail (name)
 }
 
 void
-sv_funcnest (name)
-     char *name;
+sv_funcnest (const char *name)
 {
   SHELL_VAR *v;
   intmax_t num;
@@ -5909,16 +5650,14 @@ sv_funcnest (name)
 
 /* What to do when EXECIGNORE changes. */
 void
-sv_execignore (name)
-     char *name;
+sv_execignore (const char *name)
 {
-  setup_exec_ignore (name);
+  setup_exec_ignore ();
 }
 
 /* What to do when GLOBIGNORE changes. */
 void
-sv_globignore (name)
-     char *name;
+sv_globignore (const char *name)
 {
   if (privileged_mode == 0)
     setup_glob_ignore (name);
@@ -5926,8 +5665,7 @@ sv_globignore (name)
 
 #if defined (READLINE)
 void
-sv_comp_wordbreaks (name)
-     char *name;
+sv_comp_wordbreaks (const char *name)
 {
   SHELL_VAR *sv;
 
@@ -5940,16 +5678,14 @@ sv_comp_wordbreaks (name)
    If we are an interactive shell, then try to reset the terminal
    information in readline. */
 void
-sv_terminal (name)
-     char *name;
+sv_terminal (const char *name)
 {
   if (interactive_shell && no_line_editing == 0)
     rl_reset_terminal (get_string_value ("TERM"));
 }
 
 void
-sv_hostfile (name)
-     char *name;
+sv_hostfile (const char *name)
 {
   SHELL_VAR *v;
 
@@ -5965,8 +5701,7 @@ sv_hostfile (name)
    found in the initial environment) to override the terminal size reported by
    the kernel. */
 void
-sv_winsize (name)
-     char *name;
+sv_winsize (const char *name)
 {
   SHELL_VAR *v;
   intmax_t xd;
@@ -5997,10 +5732,9 @@ sv_winsize (name)
 /* Update the value of HOME in the export environment so tilde expansion will
    work on cygwin. */
 #if defined (__CYGWIN__)
-sv_home (name)
-     char *name;
+sv_home (const char *name)
 {
-  array_needs_making = 1;
+  array_needs_making = true;
   maybe_make_export_env ();
 }
 #endif
@@ -6013,8 +5747,7 @@ sv_home (name)
    numeric, truncate the history file to hold no more than that many
    lines. */
 void
-sv_histsize (name)
-     char *name;
+sv_histsize (const char *name)
 {
   char *temp;
   intmax_t num;
@@ -6053,16 +5786,14 @@ sv_histsize (name)
 
 /* What to do after the HISTIGNORE variable changes. */
 void
-sv_histignore (name)
-     char *name;
+sv_histignore (const char *name)
 {
-  setup_history_ignore (name);
+  setup_history_ignore ();
 }
 
 /* What to do after the HISTCONTROL variable changes. */
 void
-sv_history_control (name)
-     char *name;
+sv_history_control (const char *name)
 {
   char *temp;
   char *val;
@@ -6093,8 +5824,7 @@ sv_history_control (name)
 #if defined (BANG_HISTORY)
 /* Setting/unsetting of the history expansion character. */
 void
-sv_histchars (name)
-     char *name;
+sv_histchars (const char *name)
 {
   char *temp;
 
@@ -6119,8 +5849,7 @@ sv_histchars (name)
 #endif /* BANG_HISTORY */
 
 void
-sv_histtimefmt (name)
-     char *name;
+sv_histtimefmt (const char *name)
 {
   SHELL_VAR *v;
 
@@ -6135,20 +5864,19 @@ sv_histtimefmt (name)
 
 #if defined (HAVE_TZSET)
 void
-sv_tz (name)
-     char *name;
+sv_tz (const char *name)
 {
   SHELL_VAR *v;
 
   v = find_variable (name);
   if (v && exported_p (v))
-    array_needs_making = 1;
+    array_needs_making = true;
   else if (v == 0)
-    array_needs_making = 1;
+    array_needs_making = true;
 
   if (array_needs_making)
     {
-      maybe_make_export_env ();  
+      maybe_make_export_env ();
       tzset ();
     }
 }
@@ -6158,8 +5886,7 @@ sv_tz (name)
    of times we actually ignore the EOF.  The default is small,
    (smaller than csh, anyway). */
 void
-sv_ignoreeof (name)
-     char *name;
+sv_ignoreeof (const char *name)
 {
   SHELL_VAR *tmp_var;
   char *temp;
@@ -6175,8 +5902,7 @@ sv_ignoreeof (name)
 }
 
 void
-sv_optind (name)
-     char *name;
+sv_optind (const char *name)
 {
   SHELL_VAR *var;
   char *tt;
@@ -6203,8 +5929,7 @@ sv_optind (name)
 }
 
 void
-sv_opterr (name)
-     char *name;
+sv_opterr (const char *name)
 {
   char *tt;
 
@@ -6213,8 +5938,7 @@ sv_opterr (name)
 }
 
 void
-sv_strict_posix (name)
-     char *name;
+sv_strict_posix (const char *name)
 {
   SHELL_VAR *var;
 
@@ -6229,8 +5953,7 @@ sv_strict_posix (name)
 }
 
 void
-sv_locale (name)
-     char *name;
+sv_locale (const char *name)
 {
   char *v;
   int r;
@@ -6249,19 +5972,17 @@ sv_locale (name)
 
 #if defined (ARRAY_VARS)
 void
-set_pipestatus_array (ps, nproc)
-     int *ps;
-     int nproc;
+set_pipestatus_array (int *ps, int nproc)
 {
   SHELL_VAR *v;
   ARRAY *a;
   ARRAY_ELEMENT *ae;
-  register int i;
+  int i;
   char *t, tbuf[INT_STRLEN_BOUND(int) + 1];
 
   v = find_variable ("PIPESTATUS");
   if (v == 0)
-    v = make_new_array_variable ("PIPESTATUS");
+    v = make_new_array_variable ((char *)"PIPESTATUS");	/* XXX can this be freed? */
   if (array_p (v) == 0)
     return;		/* Do nothing if not an array variable. */
   a = array_cell (v);
@@ -6302,7 +6023,7 @@ set_pipestatus_array (ps, nproc)
     }
   else
     {
-      /* deleting elements.  it's faster to rebuild the array. */	  
+      /* deleting elements.  it's faster to rebuild the array. */
       array_flush (a);
       for (i = 0; ps[i] != -1; i++)
 	{
@@ -6321,15 +6042,14 @@ save_pipestatus_array ()
   v = find_variable ("PIPESTATUS");
   if (v == 0 || array_p (v) == 0 || array_cell (v) == 0)
     return ((ARRAY *)NULL);
-    
+
   a = array_copy (array_cell (v));
 
   return a;
 }
 
 void
-restore_pipestatus_array (a)
-     ARRAY *a;
+restore_pipestatus_array (ARRAY *a)
 {
   SHELL_VAR *v;
   ARRAY *a2;
@@ -6340,15 +6060,14 @@ restore_pipestatus_array (a)
     return;
 
   a2 = array_cell (v);
-  var_setarray (v, a); 
+  var_setarray (v, a);
 
   array_dispose (a2);
 }
 #endif
 
 void
-set_pipestatus_from_exit (s)
-     int s;
+set_pipestatus_from_exit (int s)
 {
 #if defined (ARRAY_VARS)
   static int v[2] = { 0, -1 };
@@ -6359,8 +6078,7 @@ set_pipestatus_from_exit (s)
 }
 
 void
-sv_xtracefd (name)
-     char *name;
+sv_xtracefd (const char *name)
 {
   SHELL_VAR *v;
   char *t, *e;
@@ -6396,8 +6114,7 @@ sv_xtracefd (name)
 #define MIN_COMPAT_LEVEL 31
 
 void
-sv_shcompat (name)
-     char *name;
+sv_shcompat (const char *name)
 {
   SHELL_VAR *v;
   char *val;
@@ -6449,8 +6166,7 @@ compat_error:
 
 #if defined (JOB_CONTROL)
 void
-sv_childmax (name)
-     char *name;
+sv_childmax (const char *name)
 {
   char *tt;
   int s;

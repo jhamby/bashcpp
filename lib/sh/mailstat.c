@@ -19,7 +19,7 @@
 */
 
 #include <config.h>
- 
+
 #include <stdio.h>
 #include <errno.h>
 
@@ -52,9 +52,7 @@
  */
 
 int
-mailstat(path, st)
-     const char *path;
-     struct stat *st;
+mailstat(const char *path, struct stat *st)
 {
   static struct stat st_new_last, st_ret_last;
   struct stat st_ret, st_tmp;

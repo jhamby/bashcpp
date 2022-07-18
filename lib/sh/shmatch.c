@@ -42,10 +42,7 @@
 extern int glob_ignore_case, match_ignore_case;
 
 int
-sh_regmatch (string, pattern, flags)
-     const char *string;
-     const char *pattern;
-     int flags;
+sh_regmatch (const char *string, const char *pattern, int flags)
 {
   regex_t regex = { 0 };
   regmatch_t *matches;
@@ -87,7 +84,7 @@ sh_regmatch (string, pattern, flags)
 
 #if defined (ARRAY_VARS)
   subexp_len = strlen (string) + 10;
-  subexp_str = malloc (subexp_len + 1);
+  subexp_str = (char *)malloc (subexp_len + 1);
 
   /* Store the parenthesized subexpressions in the array BASH_REMATCH.
      Element 0 is the portion that matched the entire regexp.  Element 1

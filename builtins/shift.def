@@ -47,15 +47,14 @@ Exit Status:
 Returns success unless N is negative or greater than $#.
 $END
 
-int print_shift_error;
+char print_shift_error;
 
 /* Shift the arguments ``left''.  Shift DOLLAR_VARS down then take one
    off of REST_OF_ARGS and place it into DOLLAR_VARS[9].  If LIST has
    anything in it, it is a number which says where to start the
    shifting.  Return > 0 if `times' > $#, otherwise 0. */
 int
-shift_builtin (list)
-     WORD_LIST *list;
+shift_builtin (WORD_LIST *list)
 {
   intmax_t times;
   int itimes, nargs;

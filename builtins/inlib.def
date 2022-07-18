@@ -46,8 +46,7 @@ $END
 #include <apollo/base.h>
 #include <apollo/loader.h>
 
-inlib_builtin (list)
-     WORD_LIST *list;
+inlib_builtin (WORD_LIST *list)
 {
   status_$t status;
   int return_value;

@@ -40,20 +40,19 @@ extern time_t shell_start_time;
 
 extern int last_random_value;
 
-static u_bits32_t intrand32 PARAMS((u_bits32_t));
-static u_bits32_t genseed PARAMS((void));
+static u_bits32_t intrand32 (u_bits32_t);
+static u_bits32_t genseed (void);
 
-static u_bits32_t brand32 PARAMS((void));
-static void sbrand32 PARAMS((u_bits32_t));
-static void perturb_rand32 PARAMS((void));
+static u_bits32_t brand32 (void);
+static void sbrand32 (u_bits32_t);
+static void perturb_rand32 (void);
 
 /* The random number seed.  You can change this by setting RANDOM. */
 static u_bits32_t rseed = 1;
 
 /* Returns a 32-bit pseudo-random number. */
 static u_bits32_t
-intrand32 (last)
-     u_bits32_t last;
+intrand32 (u_bits32_t last)
 {
   /* Minimal Standard generator from
      "Random number generators: good ones are hard to find",
@@ -90,7 +89,7 @@ genseed ()
   u_bits32_t iv;
 
   gettimeofday (&tv, NULL);
-  iv = (u_bits32_t)seedrand;		/* let the compiler truncate */
+  iv = (u_bits32_t)((uintptr_t)seedrand);		/* let the compiler truncate */
   iv = tv.tv_sec ^ tv.tv_usec ^ getpid () ^ getppid () ^ current_user.uid ^ iv;
   return (iv);
 }
@@ -113,8 +112,7 @@ brand ()
 
 /* Set the random number generator seed to SEED. */
 void
-sbrand (seed)
-     unsigned long seed;
+sbrand (unsigned long seed)
 {
   rseed = seed;
   last_random_value = 0;
@@ -147,8 +145,7 @@ brand32 ()
 }
 
 static void
-sbrand32 (seed)
-     u_bits32_t seed;
+sbrand32 (u_bits32_t seed)
 {
   last_rand32 = rseed32 = seed;
 }
@@ -185,10 +182,7 @@ urandom_close ()
 #endif
 
 static ssize_t
-getrandom (buf, len, flags)
-     void *buf;
-     size_t len;
-     unsigned int flags;
+getrandom (void *buf, size_t len, unsigned int flags)
 {
   int oflags;
   ssize_t r;
@@ -218,7 +212,7 @@ getrandom (buf, len, flags)
   return -1;
 }
 #endif
-      
+
 u_bits32_t
 get_urandom32 ()
 {

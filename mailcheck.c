@@ -43,7 +43,7 @@
 
 extern time_t shell_start_time;
 
-extern int mailstat PARAMS((const char *, struct stat *));
+extern int mailstat (const char *, struct stat *);
 
 typedef struct _fileinfo {
   char *name;
@@ -66,19 +66,19 @@ static time_t last_time_mail_checked = 0;
 /* Non-zero means warn if a mail file has been read since last checked. */
 int mail_warning;
 
-static int find_mail_file PARAMS((char *));
-static void init_mail_file PARAMS((int));
-static void update_mail_file PARAMS((int));
-static int add_mail_file PARAMS((char *, char *));
+static int find_mail_file (char *);
+static void init_mail_file (int);
+static void update_mail_file (int);
+static int add_mail_file (char *, char *);
 
-static FILEINFO *alloc_mail_file PARAMS((char *, char *));
-static void dispose_mail_file PARAMS((FILEINFO *));
+static FILEINFO *alloc_mail_file (char *, char *);
+static void dispose_mail_file (FILEINFO *);
 
-static int file_mod_date_changed PARAMS((int));
-static int file_access_date_changed PARAMS((int));
-static int file_has_grown PARAMS((int));
+static int file_mod_date_changed (int);
+static int file_access_date_changed (int);
+static int file_has_grown (int);
 
-static char *parse_mailpath_spec PARAMS((char *));
+static char *parse_mailpath_spec (char *);
 
 /* Returns non-zero if it is time to check mail. */
 int
@@ -112,10 +112,9 @@ reset_mail_timer ()
 /* Locate a file in the list.  Return index of
    entry, or -1 if not found. */
 static int
-find_mail_file (file)
-     char *file;
+find_mail_file (char *file)
 {
-  register int i;
+  int i;
 
   for (i = 0; i < mailfiles_count; i++)
     if (STREQ (mailfiles[i]->name, file))
@@ -144,8 +143,7 @@ find_mail_file (file)
   while (0)
 
 static void
-init_mail_file (i)
-     int i;
+init_mail_file (int i)
 {
   mailfiles[i]->access_time = mailfiles[i]->mod_time = last_time_mail_checked ? last_time_mail_checked : shell_start_time;
   mailfiles[i]->file_size = 0;
@@ -153,8 +151,7 @@ init_mail_file (i)
 }
 
 static void
-update_mail_file (i)
-     int i;
+update_mail_file (int i)
 {
   char *file;
   struct stat finfo;
@@ -169,8 +166,7 @@ update_mail_file (i)
 /* Add this file to the list of remembered files and return its index
    in the list of mail files. */
 static int
-add_mail_file (file, msg)
-     char *file, *msg;
+add_mail_file (char *file, char *msg)
 {
   struct stat finfo;
   char *filename;
@@ -201,15 +197,14 @@ add_mail_file (file, msg)
 void
 reset_mail_files ()
 {
-  register int i;
+  int i;
 
   for (i = 0; i < mailfiles_count; i++)
     RESET_MAIL_FILE (i);
 }
 
 static FILEINFO *
-alloc_mail_file (filename, msg)
-     char *filename, *msg;
+alloc_mail_file (char *filename, char *msg)
 {
   FILEINFO *mf;
 
@@ -222,8 +217,7 @@ alloc_mail_file (filename, msg)
 }
 
 static void
-dispose_mail_file (mf)
-     FILEINFO *mf;
+dispose_mail_file (FILEINFO *mf)
 {
   free (mf->name);
   FREE (mf->msg);
@@ -234,7 +228,7 @@ dispose_mail_file (mf)
 void
 free_mail_files ()
 {
-  register int i;
+  int i;
 
   for (i = 0; i < mailfiles_count; i++)
     dispose_mail_file (mailfiles[i]);
@@ -257,8 +251,7 @@ init_mail_dates ()
    accessed since modified.  If the size has dropped to zero, reset
    the cached mail file info. */
 static int
-file_mod_date_changed (i)
-     int i;
+file_mod_date_changed (int i)
 {
   time_t mtime;
   struct stat finfo;
@@ -281,8 +274,7 @@ file_mod_date_changed (i)
 
 /* Return non-zero if FILE's access date has changed. */
 static int
-file_access_date_changed (i)
-     int i;
+file_access_date_changed (int i)
 {
   time_t atime;
   struct stat finfo;
@@ -302,8 +294,7 @@ file_access_date_changed (i)
 
 /* Return non-zero if FILE's size has increased. */
 static int
-file_has_grown (i)
-     int i;
+file_has_grown (int i)
 {
   off_t size;
   struct stat finfo;
@@ -319,8 +310,7 @@ file_has_grown (i)
    the first unquoted `?' or `%' to the end of the string.  This is the
    message to be printed when the file contents change. */
 static char *
-parse_mailpath_spec (str)
-     char *str;
+parse_mailpath_spec (char *str)
 {
   char *s;
   int pass_next;

@@ -36,10 +36,7 @@ extern int errno;
    it is interrupted.  We retry three times if we get a zero-length
    write.  Any other signal causes this function to return prematurely. */
 int
-zwrite (fd, buf, nb)
-     int fd;
-     char *buf;
-     size_t nb;
+zwrite (int fd, char *buf, size_t nb)
 {
   int n, i, nt;
 

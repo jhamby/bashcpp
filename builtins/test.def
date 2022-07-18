@@ -131,8 +131,7 @@ $END
 
 /* TEST/[ builtin. */
 int
-test_builtin (list)
-     WORD_LIST *list;
+test_builtin (WORD_LIST *list)
 {
   char **argv;
   int argc, result;

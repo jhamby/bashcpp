@@ -48,8 +48,8 @@
 #  include "bashhist.h"
 #endif
 
-static void send_pwd_to_eterm PARAMS((void));
-static sighandler alrm_catcher PARAMS((int));
+static void send_pwd_to_eterm (void);
+static sighandler alrm_catcher (int);
 
 /* Read and execute commands until EOF is reached.  This assumes that
    the input source has already been initialized. */
@@ -229,18 +229,17 @@ pretty_print_loop ()
       else
 	return (EXECUTION_FAILURE);
     }
-    
+
   return (EXECUTION_SUCCESS);
 }
 
 static sighandler
-alrm_catcher(i)
-     int i;
+alrm_catcher(int i)
 {
   char *msg;
 
   msg = _("\007timed out waiting for input: auto-logout\n");
-  write (1, msg, strlen (msg));
+  ssize_t ignored = write (1, msg, strlen (msg));
 
   bash_logout ();	/* run ~/.bash_logout if this is a login shell */
   jump_to_top_level (EXITPROG);
@@ -265,15 +264,13 @@ send_pwd_to_eterm ()
 #if defined (ARRAY_VARS)
 /* Caller ensures that A has a non-zero number of elements */
 int
-execute_array_command (a, v)
-     ARRAY *a;
-     void *v;
+execute_array_command (ARRAY *a, const void *v)
 {
-  char *tag;
+  const char *tag;
   char **argv;
   int argc, i;
 
-  tag = (char *)v;
+  tag = (const char *)v;
   argc = 0;
   argv = array_to_argv (a, &argc);
   for (i = 0; i < argc; i++)
@@ -285,7 +282,7 @@ execute_array_command (a, v)
   return 0;
 }
 #endif
-  
+
 static void
 execute_prompt_command ()
 {
@@ -329,7 +326,7 @@ parse_command ()
   /* Allow the execution of a random command just before the printing
      of each primary prompt.  If the shell variable PROMPT_COMMAND
      is set then its value (array or string) is the command(s) to execute. */
-  /* The tests are a combination of SHOULD_PROMPT() and prompt_again() 
+  /* The tests are a combination of SHOULD_PROMPT() and prompt_again()
      from parse.y, which are the conditions under which the prompt is
      actually printed. */
   if (interactive && bash_input.type != st_string && parser_expanding_alias() == 0)
