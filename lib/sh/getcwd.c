@@ -154,25 +154,25 @@ getcwd (char *buf, size_t size)
       if (dotp == dotlist)
 	{
 	  /* My, what a deep directory tree you have, Grandma.  */
-	  char *new;
+	  char *new_;
 	  if (dotlist == dots)
 	    {
-	      new = (char *)malloc (dotsize * 2 + 1);
-	      if (new == NULL)
+	      new_ = (char *)malloc (dotsize * 2 + 1);
+	      if (new_ == NULL)
 		goto lose;
-	      memcpy (new, dots, dotsize);
+	      memcpy (new_, dots, dotsize);
 	    }
 	  else
 	    {
-	      new = (char *)realloc ((PTR_T) dotlist, dotsize * 2 + 1);
-	      if (new == NULL)
+	      new_ = (char *)realloc ((PTR_T) dotlist, dotsize * 2 + 1);
+	      if (new_ == NULL)
 		goto lose;
 	    }
-	  memcpy (&new[dotsize], new, dotsize);
-	  dotp = &new[dotsize];
+	  memcpy (&new_[dotsize], new_, dotsize);
+	  dotp = &new_[dotsize];
 	  dotsize *= 2;
-	  new[dotsize] = '\0';
-	  dotlist = new;
+	  new_[dotsize] = '\0';
+	  dotlist = new_;
 	}
 
       dotp -= 3;
@@ -242,24 +242,24 @@ getcwd (char *buf, size_t size)
 
 	  while ((space = pathp - pathbuf) <= namlen)
 	    {
-	      char *new;
+	      char *new_;
 
 	      if (pathbuf == path)
 		{
-		  new = (char *)malloc (pathsize * 2);
-		  if (!new)
+		  new_ = (char *)malloc (pathsize * 2);
+		  if (!new_)
 		    goto lose;
 		}
 	      else
 		{
-		  new = (char *)realloc ((PTR_T) pathbuf, (pathsize * 2));
-		  if (!new)
+		  new_ = (char *)realloc ((PTR_T) pathbuf, (pathsize * 2));
+		  if (!new_)
 		    goto lose;
-		  pathp = new + space;
+		  pathp = new_ + space;
 		}
-	      (void) memcpy (new + pathsize + space, pathp, pathsize - space);
-	      pathp = new + pathsize + space;
-	      pathbuf = new;
+	      (void) memcpy (new_ + pathsize + space, pathp, pathsize - space);
+	      pathp = new_ + pathsize + space;
+	      pathbuf = new_;
 	      pathsize *= 2;
 	    }
 
