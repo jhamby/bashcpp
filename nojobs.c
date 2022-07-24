@@ -90,7 +90,7 @@ int shell_tty = -1;
 
 /* If this is non-zero, $LINES and $COLUMNS are reset after every process
    exits from get_tty_state(). */
-int check_window_size = CHECKWINSIZE_DEFAULT;
+char check_window_size = CHECKWINSIZE_DEFAULT;
 
 /* We don't have job control. */
 bool job_control = false;
@@ -470,10 +470,6 @@ siginterrupt (int sig, int flag)
 pid_t
 make_child (char *command, int flags)
 {
-  pid_t pid;
-  int async_p, forksleep;
-  sigset_t set, oset;
-
   /* Discard saved memory. */
   if (command)
     free (command);
@@ -490,6 +486,8 @@ make_child (char *command, int flags)
     sync_buffered_stream (default_buffered_input);
 #endif /* BUFFERED_INPUT */
 
+  sigset_t set, oset;
+
   /* Block SIGTERM here and unblock in child after fork resets the
      set of pending signals */
   if (interactive_shell)
@@ -501,8 +499,10 @@ make_child (char *command, int flags)
       set_signal_handler (SIGTERM, SIG_DFL);
     }
 
-  /* Create the child, handle severe errors.  Retry on EAGAIN. */
   int forksleep = 1;
+  pid_t pid;
+
+  /* Create the child, handle severe errors.  Retry on EAGAIN. */
   while ((pid = fork ()) < 0 && errno == EAGAIN && forksleep < FORKSLEEP_MAX)
     {
       sys_error ("fork: retry");
@@ -965,22 +965,22 @@ give_terminal_to (pid_t pgrp, int force)
 
 /* Stop a pipeline. */
 int
-stop_pipeline (int async, COMMAND *ignore)
+stop_pipeline (bool async, COMMAND *ignore)
 {
-  already_making_children = 0;
+  already_making_children = false;
   return 0;
 }
 
 void
 start_pipeline ()
 {
-  already_making_children = 1;
+  already_making_children = true;
 }
 
 void
 stop_making_children ()
 {
-  already_making_children = 0;
+  already_making_children = false;
 }
 
 /* The name is kind of a misnomer, but it's what the job control code uses. */

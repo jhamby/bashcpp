@@ -68,11 +68,11 @@
 #  include <readline/history.h>
 #endif /* HISTORY */
 
-#if defined (JOB_CONTROL)
-#  include "jobs.h"
-#else
+#include "jobs.h"
+
+#if !defined (JOB_CONTROL)
 extern int cleanup_dead_jobs (void);
-#endif /* JOB_CONTROL */
+#endif /* !JOB_CONTROL */
 
 #if defined (ALIAS)
 #  include "alias.h"

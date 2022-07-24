@@ -58,13 +58,7 @@
 #include "builtins.h"
 #include "builtins/common.h"
 
-#if defined (JOB_CONTROL)
 #include "jobs.h"
-#else
-extern int running_in_background;
-extern int initialize_job_control (int);
-extern int get_tty_state (void);
-#endif /* JOB_CONTROL */
 
 #include "input.h"
 #include "execute_cmd.h"
