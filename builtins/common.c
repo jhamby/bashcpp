@@ -334,7 +334,7 @@ make_builtin_argv (WORD_LIST *list, int *ip)
   char **argv;
 
   argv = strvec_from_word_list (list, 0, 1, ip);
-  argv[0] = savestring(this_command_name);
+  argv[0] = (char *)this_command_name;
   return argv;
 }
 
@@ -343,7 +343,7 @@ make_builtin_argv (WORD_LIST *list, int *ip)
    only discard the ones that are to be replaced.  Set POSPARAM_COUNT
    to the number of args assigned (length of LIST). */
 void
-remember_args (WORD_LIST *list, int destructive)
+remember_args (WORD_LIST *list, bool destructive)
 {
   posparam_count = 0;
 

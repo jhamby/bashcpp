@@ -80,10 +80,10 @@ volatile pid_t last_made_pid = NO_PID;
 volatile pid_t last_asynchronous_pid = NO_PID;
 
 static int queue_sigchld;		/* dummy declaration */
-int waiting_for_child;
+bool waiting_for_child;
 
 /* Call this when you start making children. */
-int already_making_children = 0;
+bool already_making_children = false;
 
 /* The controlling tty for this shell. */
 int shell_tty = -1;
@@ -93,9 +93,9 @@ int shell_tty = -1;
 int check_window_size = CHECKWINSIZE_DEFAULT;
 
 /* We don't have job control. */
-int job_control = 0;
+bool job_control = false;
 
-int running_in_background = 0;	/* can't tell without job control */
+bool running_in_background = false;	/* can't tell without job control */
 
 /* STATUS and FLAGS are only valid if pid != NO_PID
    STATUS is only valid if (flags & PROC_RUNNING) == 0 */
@@ -132,8 +132,8 @@ static void set_pid_status (pid_t, WAIT);
 static void set_pid_flags (pid_t, int);
 static void unset_pid_flags (pid_t, int);
 static int get_pid_flags (pid_t);
-static void add_pid (pid_t, int);
-static void mark_dead_jobs_as_notified (int);
+static void add_pid (pid_t, bool);
+static void mark_dead_jobs_as_notified (bool);
 
 static sighandler wait_sigint_handler (int);
 static char *j_strsignal (int);
@@ -318,7 +318,7 @@ get_pid_flags (pid_t pid)
 }
 
 static void
-add_pid (pid_t pid, int async)
+add_pid (pid_t pid, bool async)
 {
   int slot;
 
@@ -332,7 +332,7 @@ add_pid (pid_t pid, int async)
 }
 
 static void
-mark_dead_jobs_as_notified (int force)
+mark_dead_jobs_as_notified (bool force)
 {
   int i, ndead;
 
@@ -351,7 +351,7 @@ mark_dead_jobs_as_notified (int force)
   if (child_max < 0)
     child_max = DEFAULT_CHILD_MAX;
 
-  if (force == 0 && ndead <= child_max)
+  if (!force && ndead <= child_max)
     return;
 
   /* If FORCE == 0, we just mark as many non-running async jobs as notified
@@ -364,23 +364,21 @@ mark_dead_jobs_as_notified (int force)
 	   pid_list[i].pid != last_asynchronous_pid)
 	{
 	  pid_list[i].flags |= PROC_NOTIFIED;
-	  if (force == 0 && (pid_list[i].flags & PROC_ASYNC) && --ndead <= child_max)
+	  if (!force && (pid_list[i].flags & PROC_ASYNC) && --ndead <= child_max)
 	    break;
 	}
     }
 }
 
 /* Remove all dead, notified jobs from the pid_list. */
-int
+void
 cleanup_dead_jobs ()
 {
-  int i;
-
 #if defined (HAVE_WAITPID)
   reap_zombie_children ();
 #endif
 
-  for (i = 0; i < pid_list_size; i++)
+  for (int i = 0; i < pid_list_size; i++)
     {
       if (pid_list[i].pid != NO_PID &&
 	    (pid_list[i].flags & PROC_RUNNING) == 0 &&
@@ -391,20 +389,18 @@ cleanup_dead_jobs ()
 #if defined (COPROCESS_SUPPORT)
   coproc_reap ();
 #endif
-
-  return 0;
 }
 
 void
 reap_dead_jobs ()
 {
-  mark_dead_jobs_as_notified (0);
+  mark_dead_jobs_as_notified (false);
   cleanup_dead_jobs ();
 }
 
 /* Initialize the job control mechanism, and set up the tty stuff. */
-int
-initialize_job_control (int force)
+bool
+initialize_job_control (bool force)
 {
   shell_tty = fileno (stderr);
 
@@ -482,7 +478,7 @@ make_child (char *command, int flags)
   if (command)
     free (command);
 
-  async_p = (flags & FORK_ASYNC);
+  bool async_p = (flags & FORK_ASYNC);
   start_pipeline ();
 
 #if defined (BUFFERED_INPUT)
@@ -506,7 +502,7 @@ make_child (char *command, int flags)
     }
 
   /* Create the child, handle severe errors.  Retry on EAGAIN. */
-  forksleep = 1;
+  int forksleep = 1;
   while ((pid = fork ()) < 0 && errno == EAGAIN && forksleep < FORKSLEEP_MAX)
     {
       sys_error ("fork: retry");
@@ -606,9 +602,9 @@ default_tty_job_signals ()
 void
 get_original_tty_job_signals ()
 {
-  static int fetched = 0;
+  static bool fetched = false;
 
-  if (fetched == 0)
+  if (!fetched)
     {
 #if defined (SIGTSTP)
       if (interactive_shell)
@@ -624,7 +620,7 @@ get_original_tty_job_signals ()
 	  get_original_signal (SIGTTOU);
 	}
 #endif
-      fetched = 1;
+      fetched = true;
     }
 }
 
@@ -699,20 +695,20 @@ wait_for_background_pids (struct procstat *ps)
   siginterrupt (SIGINT, 1);
 
   /* Wait for ECHILD */
-  waiting_for_child = 1;
+  waiting_for_child = true;
   while ((got_pid = WAITPID (-1, &status, 0)) != -1)
     {
-      waiting_for_child = 0;
+      waiting_for_child = false;
       set_pid_status (got_pid, status);
       if (ps)
 	{
 	  ps->pid = got_pid;
 	  ps->status = process_exit_status (status);
 	}
-      waiting_for_child = 1;
+      waiting_for_child = true;
       CHECK_WAIT_INTR;
     }
-  waiting_for_child = 0;
+  waiting_for_child = false;
 
   if (errno != EINTR && errno != ECHILD)
     {
@@ -724,7 +720,7 @@ wait_for_background_pids (struct procstat *ps)
   QUIT;
   CHECK_WAIT_INTR;
 
-  mark_dead_jobs_as_notified (1);
+  mark_dead_jobs_as_notified (true);
   cleanup_dead_jobs ();
 }
 

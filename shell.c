@@ -1484,23 +1484,23 @@ bind_args (char **argv, int arg_start, int arg_end, int start_index)
 	  shell_name = savestring (args->word->word);
 	  FREE (dollar_vars[0]);
 	  dollar_vars[0] = savestring (args->word->word);
-	  remember_args ((WORD_LIST *)(args->next), 1);
+	  remember_args ((WORD_LIST *)(args->next), true);
 	  if (debugging_mode)
 	    {
 	      push_args ((WORD_LIST *)(args->next));	/* BASH_ARGV and BASH_ARGC */
-	      bash_argv_initialized = 1;
+	      bash_argv_initialized = true;
 	    }
 	}
       else			/* bind to $1...$n for shell script */
         {
-	  remember_args (args, 1);
+	  remember_args (args, true);
 	  /* We do this unconditionally so something like -O extdebug doesn't
 	     do it first.  We're setting the definitive positional params
 	     here. */
 	  if (debugging_mode)
 	    {
 	      push_args (args);		/* BASH_ARGV and BASH_ARGC */
-	      bash_argv_initialized = 1;
+	      bash_argv_initialized = true;
 	    }
         }
 
@@ -1513,7 +1513,7 @@ bind_args (char **argv, int arg_start, int arg_end, int start_index)
 void
 unbind_args ()
 {
-  remember_args ((WORD_LIST *)NULL, 1);
+  remember_args ((WORD_LIST *)NULL, true);
   pop_args ();				/* Reset BASH_ARGV and BASH_ARGC */
 }
 
@@ -1618,7 +1618,7 @@ open_shell_script (const char *script_name)
       array_push (bash_lineno_a, t);
       free (t);
     }
-  array_push (funcname_a, savestring("main"));  /* XXX leak? */
+  array_push (funcname_a, "main");
 #endif
 
 #ifdef HAVE_DEV_FD

@@ -264,7 +264,7 @@ extern SHELL_VAR *set_if_not (const char *, char *);
 extern void sh_set_lines_and_columns (int, int);
 extern void set_pwd (void);
 extern void set_ppid (void);
-extern void make_funcname_visible (int);
+extern void make_funcname_visible (bool);
 
 extern SHELL_VAR *var_lookup (const char *, VAR_CONTEXT *);
 
@@ -345,7 +345,7 @@ extern int pop_scope (int);
 
 extern void clear_dollar_vars (void);
 
-extern void push_context (const char *, int, HASH_TABLE *);
+extern void push_context (const char *, bool, HASH_TABLE *);
 extern void pop_context (void);
 extern void push_dollar_vars (void);
 extern void pop_dollar_vars (void);

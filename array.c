@@ -250,7 +250,7 @@ array_shift(ARRAY *a, int n, int flags)
  * shift.
  */
 int
-array_rshift (ARRAY *a, int n, char *s)
+array_rshift (ARRAY *a, int n, const char *s)
 {
 	if (a == 0 || (array_empty(a) && s == 0))
 		return 0;
@@ -481,7 +481,7 @@ array_modcase (ARRAY *a, char *pat, int modop, int mflags)
  * VALUE.
  */
 ARRAY_ELEMENT *
-array_create_element(arrayind_t indx, char *value)
+array_create_element(arrayind_t indx, const char *value)
 {
 	ARRAY_ELEMENT *r;
 

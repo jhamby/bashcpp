@@ -107,7 +107,7 @@ extern void sh_ttyerror (int);
 extern int sh_chkwrite (int);
 
 extern char **make_builtin_argv (WORD_LIST *, int *);
-extern void remember_args (WORD_LIST *, int);
+extern void remember_args (WORD_LIST *, bool);
 extern void shift_args (int);
 extern int number_of_args (void);
 

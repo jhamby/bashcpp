@@ -834,6 +834,8 @@ quote_compound_array_word (char *w, int type)
   nword[0] = LBRACK;
   i = STRLEN (sub);
   memcpy (nword+1, sub, i);
+  free (sub);
+
   i++;				/* accommodate the opening LBRACK */
   nword[i++] = w[ind++];	/* RBRACK */
   if (w[ind] == '+')

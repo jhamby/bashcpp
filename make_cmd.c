@@ -743,7 +743,7 @@ make_function_def (WORD_DESC *name, COMMAND *command, int lineno, int lstart)
      initialized come from the environment.  Otherwise default to "main"
      (usually functions being defined interactively) */
   if (temp->source_file == 0)
-    temp->source_file = savestring (shell_initialized ? "main" : "environment");
+    temp->source_file = (char *)(shell_initialized ? "main" : "environment");
 
 #if defined (DEBUGGER)
   bind_function_def (name->word, temp, 0);

@@ -173,7 +173,7 @@ source_builtin (WORD_LIST *list)
       add_unwind_protect (maybe_pop_dollar_vars);
       if (debugging_mode || shell_compatibility_level <= 44)
 	init_bash_argv ();	/* Initialize BASH_ARGV and BASH_ARGC */
-      remember_args ((WORD_LIST *)list->next, 1);
+      remember_args ((WORD_LIST *)list->next, true);
       if (debugging_mode)
 	push_args ((WORD_LIST *)list->next);	/* Update BASH_ARGV and BASH_ARGC */
     }

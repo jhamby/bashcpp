@@ -994,7 +994,7 @@ make_vers_array ()
   s = inttostr (build_version, b, sizeof (b));
   array_insert (av, 3, s);
   array_insert (av, 4, release_status);
-  array_insert (av, 5, savestring (MACHTYPE));
+  array_insert (av, 5, MACHTYPE);
 
   VSETATTR (vv, att_readonly);
 }
@@ -1793,7 +1793,7 @@ get_funcname (SHELL_VAR *self)
 }
 
 void
-make_funcname_visible (int on_or_off)
+make_funcname_visible (bool on_or_off)
 {
   SHELL_VAR *v;
 
@@ -3414,7 +3414,7 @@ assign_in_env (WORD_DESC *word, int flags)
   int offset, aflags;
   char *name, *temp, *value, *newname;
   SHELL_VAR *var;
-  const char *string;
+  char *string;
 
   string = word->word;
 
@@ -5278,9 +5278,9 @@ clear_dollar_vars ()
 
 /* XXX - should always be followed by remember_args () */
 void
-push_context (const char *name, int is_subshell, HASH_TABLE *tempvars)
+push_context (const char *name, bool is_subshell, HASH_TABLE *tempvars)
 {
-  if (is_subshell == 0)
+  if (!is_subshell)
     push_dollar_vars ();
   variable_context++;
   push_var_context (name, VC_FUNCENV, tempvars);

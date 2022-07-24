@@ -475,7 +475,7 @@ alloc_pipeline_saver ()
 }
 
 void
-save_pipeline (int clear)
+save_pipeline (bool clear)
 {
   sigset_t set, oset;
   struct pipeline_saver *saver;
@@ -492,7 +492,7 @@ save_pipeline (int clear)
 }
 
 PROCESS *
-restore_pipeline (int discard)
+restore_pipeline (bool discard)
 {
   PROCESS *old_pipeline;
   sigset_t set, oset;
@@ -547,7 +547,7 @@ start_pipeline ()
    DEFERRED is a command structure to be executed upon satisfactory
    execution exit of this pipeline. */
 int
-stop_pipeline (int async, COMMAND *deferred)
+stop_pipeline (bool async, COMMAND *deferred)
 {
   JOB *newjob;
   sigset_t set, oset;
@@ -2653,10 +2653,10 @@ wait_for_background_pids (struct procstat *ps)
 #define INVALID_SIGNAL_HANDLER (SigHandler *)wait_for_background_pids
 static SigHandler *old_sigint_handler = INVALID_SIGNAL_HANDLER;
 
-static int wait_sigint_received;
-static int child_caught_sigint;
+static bool wait_sigint_received;
+static bool child_caught_sigint;
 
-int waiting_for_child;
+bool waiting_for_child;
 
 /* Clean up state after longjmp to wait_intr_buf */
 void
@@ -3457,12 +3457,9 @@ set_job_running (int job)
    JOBS.  Returns -1 if it is unable to start a job, and the return
    status of the job otherwise. */
 int
-start_job (int job, int foreground)
+start_job (int job, bool foreground)
 {
-  PROCESS *p;
-  int already_running;
   sigset_t set, oset;
-  const char *wd, *s;
   static TTYSTRUCT save_stty;
 
   BLOCK_CHILD (set, oset);
@@ -3481,16 +3478,16 @@ start_job (int job, int foreground)
       return (-1);
     }
 
-  already_running = RUNNING (job);
+  bool already_running = RUNNING (job);
 
-  if (foreground == 0 && already_running)
+  if (!foreground && already_running)
     {
       internal_error (_("%s: job %d already in background"), this_command_name, job + 1);
       UNBLOCK_CHILD (oset);
       return (0);		/* XPG6/SUSv3 says this is not an error */
     }
 
-  wd = current_working_directory ();
+  const char *wd = current_working_directory ();
 
   /* You don't know about the state of this job.  Do you? */
   jobs[job]->flags &= ~J_NOTIFIED;
@@ -3502,9 +3499,10 @@ start_job (int job, int foreground)
     }
 
   /* Tell the outside world what we're doing. */
-  p = jobs[job]->pipe;
+  PROCESS *p = jobs[job]->pipe;
+  const char *s;
 
-  if (foreground == 0)
+  if (!foreground)
     {
       /* POSIX.2 says `bg' doesn't give any indication about current or
 	 previous job. */
@@ -3524,7 +3522,7 @@ start_job (int job, int foreground)
     }
   while (p != jobs[job]->pipe);
 
-  if (foreground == 0)
+  if (!foreground)
     printf (" &");
 
   if (strcmp (wd, jobs[job]->wd) != 0)
@@ -4276,8 +4274,8 @@ notify_of_job_status ()
 }
 
 /* Initialize the job control mechanism, and set up the tty stuff. */
-int
-initialize_job_control (int force)
+bool
+initialize_job_control (bool force)
 {
   pid_t t;
   int t_errno, tty_sigs;
@@ -4292,9 +4290,9 @@ initialize_job_control (int force)
     }
 
   /* We can only have job control if we are interactive unless we force it. */
-  if (interactive == 0 && force == 0)
+  if (!interactive && !force)
     {
-      job_control = 0;
+      job_control = false;
       original_pgrp = NO_PID;
       shell_tty = fileno (stderr);
       terminal_pgrp = tcgetpgrp (shell_tty);	/* for checking later */
@@ -4344,7 +4342,7 @@ initialize_job_control (int force)
 	      if (tty_sigs++ > 16)
 		{
 		  sys_error (_("initialize_job_control: no job control in background"));
-		  job_control = 0;
+		  job_control = false;
 		  original_pgrp = terminal_pgrp;	/* for eventual give_terminal_to */
 		  goto just_bail;
 		}
@@ -4360,7 +4358,7 @@ initialize_job_control (int force)
       if (set_new_line_discipline (shell_tty) < 0)
 	{
 	  sys_error (_("initialize_job_control: line discipline"));
-	  job_control = 0;
+	  job_control = false;
 	}
       else
 	{
@@ -4373,7 +4371,7 @@ initialize_job_control (int force)
 	      shell_pgrp = original_pgrp;
 	    }
 
-	  job_control = 1;
+	  job_control = true;
 
 	  /* If (and only if) we just set our process group to our pid,
 	     thereby becoming a process group leader, and the terminal
@@ -4391,7 +4389,7 @@ initialize_job_control (int force)
 		  shell_pgrp = original_pgrp;
 		  errno = t_errno;
 		  sys_error (_("cannot set terminal process group (%d)"), shell_pgrp);
-		  job_control = 0;
+		  job_control = false;
 		}
 	    }
 
@@ -4400,10 +4398,10 @@ initialize_job_control (int force)
 	      if (t_errno != -1)
 		errno = t_errno;
 	      sys_error (_("cannot set terminal process group (%d)"), t);
-	      job_control = 0;
+	      job_control = false;
 	    }
 	}
-      if (job_control == 0)
+      if (!job_control)
 	internal_error (_("no job control in this shell"));
     }
 

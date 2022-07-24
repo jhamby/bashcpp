@@ -52,14 +52,12 @@ $END
 #include "bashgetopt.h"
 
 #if defined (JOB_CONTROL)
-static int fg_bg (WORD_LIST *, int);
+static int fg_bg (WORD_LIST *, bool);
 
 /* How to bring a job into the foreground. */
 int
 fg_builtin (WORD_LIST *list)
 {
-  int fg_bit;
-
   CHECK_HELPOPT (list);
 
   if (job_control == 0)
@@ -77,7 +75,8 @@ fg_builtin (WORD_LIST *list)
   WORD_LIST *t;
   for (t = list; t && t->next; t = (WORD_LIST *)t->next)
     ;
-  fg_bit = (t && t->word->word[0] == '&' && t->word->word[1] == '\0') == 0;
+
+  bool fg_bit = (t && t->word->word[0] == '&' && t->word->word[1] == '\0') == 0;
 
   return (fg_bg (list, fg_bit));
 }
@@ -131,7 +130,7 @@ bg_builtin (WORD_LIST *list)
 
 /* How to put a job into the foreground/background. */
 static int
-fg_bg (WORD_LIST *list, int foreground)
+fg_bg (WORD_LIST *list, bool foreground)
 {
   sigset_t set, oset;
   int job, status, old_async_pid;

@@ -772,7 +772,7 @@ set_builtin (WORD_LIST *list)
 
   /* Assigning $1 ... $n */
   if (list || force_assignment)
-    remember_args (list, 1);
+    remember_args (list, true);
   /* Set up new value of $SHELLOPTS */
   if (opts_changed)
     set_shellopts ();

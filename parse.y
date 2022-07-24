@@ -5957,9 +5957,9 @@ decode_prompt_string (const char *string)
 		  {
 		    /* polite_directory_format is guaranteed to return a string
 		       no longer than PATH_MAX - 1 characters. */
-		    temp = savestring (polite_directory_format (t_string));
-		    if (temp != t_string)
-		      strcpy (t_string, temp);
+		    const char *t2 = polite_directory_format (t_string);
+		    if (t2 != t_string)
+		      strcpy (t_string, t2);
 		  }
 
 		temp = trim_pathname (t_string, PATH_MAX - 1);

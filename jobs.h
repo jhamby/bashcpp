@@ -228,10 +228,10 @@ extern void making_children (void);
 extern void stop_making_children (void);
 extern void cleanup_the_pipeline (void);
 extern void discard_last_procsub_child (void);
-extern void save_pipeline (int);
-extern PROCESS *restore_pipeline (int);
+extern void save_pipeline (bool);
+extern PROCESS *restore_pipeline (bool);
 extern void start_pipeline (void);
-extern int stop_pipeline (int, COMMAND *);
+extern int stop_pipeline (bool, COMMAND *);
 extern int discard_pipeline (PROCESS *);
 extern void append_process (char *, pid_t, int, int);
 
@@ -288,9 +288,9 @@ extern void wait_sigint_cleanup (void);
 
 extern void notify_and_cleanup (void);
 extern void reap_dead_jobs (void);
-extern int start_job (int, int);
+extern int start_job (int, bool);
 extern int kill_pid (pid_t, int, int);
-extern int initialize_job_control (int);
+extern bool initialize_job_control (bool);
 extern void initialize_job_signals (void);
 extern int give_terminal_to (pid_t, int);
 

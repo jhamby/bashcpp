@@ -54,7 +54,7 @@ extern ARRAY	*array_slice (ARRAY *, ARRAY_ELEMENT *, ARRAY_ELEMENT *);
 extern void	array_walk (ARRAY   *, sh_ae_map_func_t *, void *);
 
 extern ARRAY_ELEMENT *array_shift (ARRAY *, int, int);
-extern int	array_rshift (ARRAY *, int, char *);
+extern int	array_rshift (ARRAY *, int, const char *);
 extern ARRAY_ELEMENT *array_unshift_element (ARRAY *);
 extern int	array_shift_element (ARRAY *, char *);
 
@@ -69,7 +69,7 @@ extern char	*array_patsub (ARRAY *, char *, char *, int);
 extern char	*array_modcase (ARRAY *, char *, int, int);
 
 /* Basic operations on array elements. */
-extern ARRAY_ELEMENT *array_create_element (arrayind_t, char *);
+extern ARRAY_ELEMENT *array_create_element (arrayind_t, const char *);
 extern ARRAY_ELEMENT *array_copy_element (ARRAY_ELEMENT *);
 extern void	array_dispose_element (ARRAY_ELEMENT *);
 

@@ -89,8 +89,8 @@ static void trap_if_untrapped (int, char *);
 /* Variables used here but defined in other files. */
 extern procenv_t alrmbuf;
 
-extern volatile int from_return_trap;
-extern int waiting_for_child;
+extern volatile bool from_return_trap;
+extern bool waiting_for_child;
 
 extern WORD_LIST *subst_assign_varlist;
 

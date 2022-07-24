@@ -289,7 +289,7 @@ int evalnest_max = EVALNEST_MAX;
 int sourcenest = 0;
 int sourcenest_max = SOURCENEST_MAX;
 
-volatile int from_return_trap = 0;
+volatile bool from_return_trap = false;
 
 int lastpipe_opt = 0;
 
@@ -4134,19 +4134,6 @@ static int
 execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
                         bool async, struct fd_bitmap *fds_to_close)
 {
-  WORD_LIST *words, *lastword;
-  char *command_line, *lastarg, *temp;
-  int first_word_quoted, result, builtin_is_special, already_forked, dofork;
-  int fork_flags, cmdflags;
-  pid_t old_last_async_pid;
-  sh_builtin_func_t *builtin;
-  SHELL_VAR *func;
-  volatile int old_builtin, old_command_builtin;
-
-  result = EXECUTION_SUCCESS;
-  special_builtin_failed = builtin_is_special = 0;
-  command_line = (char *)0;
-
   QUIT;
 
   /* If we're in a function, update the line number information. */
@@ -4174,7 +4161,7 @@ execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
 
   /* Run the debug trap before each simple command, but do it after we
      update the line number information. */
-  result = run_debug_trap ();
+  int result = run_debug_trap ();
 #if defined (DEBUGGER)
   /* In debugging mode, if the DEBUG trap returns a non-zero status, we
      skip the command. */
@@ -4182,21 +4169,21 @@ execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
     return (EXECUTION_SUCCESS);
 #endif
 
-  cmdflags = simple_command->flags;
+  int cmdflags = simple_command->flags;
 
-  first_word_quoted =
-    simple_command->words ? (simple_command->words->word->flags & W_QUOTED) : 0;
+  bool first_word_quoted =
+    simple_command->words ? (simple_command->words->word->flags & W_QUOTED) : false;
 
   last_command_subst_pid = NO_PID;
-  old_last_async_pid = last_asynchronous_pid;
+  pid_t old_last_async_pid = last_asynchronous_pid;
 
-  already_forked = 0;
+  bool already_forked = false;
 
   /* If we're in a pipeline or run in the background, set DOFORK so we
      make the child early, before word expansion.  This keeps assignment
      statements from affecting the parent shell's environment when they
      should not. */
-  dofork = pipe_in != NO_PIPE || pipe_out != NO_PIPE || async;
+  bool dofork = pipe_in != NO_PIPE || pipe_out != NO_PIPE || async;
 
   /* Something like `%2 &' should restart job 2 in the background, not cause
      the shell to fork here. */
@@ -4216,7 +4203,7 @@ execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
 
       /* Don't let a DEBUG trap overwrite the command string to be saved with
 	 the process/job associated with this child. */
-      fork_flags = async ? FORK_ASYNC : 0;
+      int fork_flags = async ? FORK_ASYNC : 0;
       if (make_child (p = savestring (the_printed_command_except_trap), fork_flags) == 0)
 	{
 	  already_forked = 1;
@@ -4261,12 +4248,13 @@ execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
 	  if (pipe_out != NO_PIPE)
 	    result = last_command_exit_value;
 	  close_pipes (pipe_in, pipe_out);
-	  command_line = (char *)NULL;      /* don't free this. */
 	  return (result);
 	}
     }
 
   QUIT;		/* XXX */
+
+  WORD_LIST *words;
 
   /* If we are re-running this as the result of executing the `command'
      builtin, do not expand the command words a second time. */
@@ -4304,15 +4292,16 @@ execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
 	}
     }
 
-  lastarg = (char *)NULL;
+  char *lastarg = (char *)NULL;
 
   begin_unwind_frame ("simple-command");
 
   if (echo_command_at_execute && (cmdflags & CMD_COMMAND_BUILTIN) == 0)
     xtrace_print_word_list (words, 1);
 
-  builtin = (sh_builtin_func_t *)NULL;
-  func = (SHELL_VAR *)NULL;
+  sh_builtin_func_t *builtin = (sh_builtin_func_t *)NULL;
+  SHELL_VAR *func = (SHELL_VAR *)NULL;
+  bool builtin_is_special = false;
 
   /* This test is still here in case we want to change the command builtin
      handler code below to recursively call execute_simple_command (after
@@ -4329,7 +4318,7 @@ execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
 	{
 	  builtin = find_special_builtin (words->word->word);
 	  if (builtin)
-	    builtin_is_special = 1;
+	    builtin_is_special = true;
 	}
       if (builtin == 0)
 	func = find_function (words->word->word);
@@ -4351,7 +4340,7 @@ execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
 
   /* This is where we handle the command builtin as a pseudo-reserved word
      prefix. This allows us to optimize away forks if we can. */
-  old_command_builtin = -1;
+  volatile int old_command_builtin = -1;
   if (builtin == 0 && func == 0)
     {
       WORD_LIST *disposer, *l;
@@ -4390,9 +4379,15 @@ execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
   QUIT;
 
   /* Bind the last word in this command to "$_" after execution. */
+  WORD_LIST *lastword;
   for (lastword = words; lastword->next; lastword = (WORD_LIST *)(lastword->next))
     ;
   lastarg = lastword->word->word;
+
+  /* Initialize variables here so goto doesn't skip over construction. */
+  char *command_line = 0;
+  char *temp;
+  volatile int old_builtin;
 
 #if defined (JOB_CONTROL)
   /* Is this command a job control related thing? */
@@ -4408,7 +4403,7 @@ execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
   /* One other possibililty.  The user may want to resume an existing job.
      If they do, find out whether this word is a candidate for a running
      job. */
-  if (job_control && already_forked == 0 && async == 0 &&
+  if (job_control && !already_forked && !async &&
 	!first_word_quoted &&
 	!words->next &&
 	words->word->word[0] &&
@@ -4434,7 +4429,7 @@ execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
 	  last_shell_builtin = this_shell_builtin;
 	  this_shell_builtin = builtin_address ("fg");
 
-	  started_status = start_job (job, 1);
+	  started_status = start_job (job, true);
 	  return ((started_status < 0) ? EXECUTION_FAILURE : started_status);
 	}
     }
@@ -4559,6 +4554,7 @@ run_builtin:
     }
 
 execute_from_filesystem:
+
   if (command_line == 0)
     command_line = savestring (the_printed_command_except_trap ? the_printed_command_except_trap : "");
 
@@ -4789,22 +4785,12 @@ static int
 execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
                   struct fd_bitmap *fds_to_close, bool async, bool subshell)
 {
-  int return_val, result;
-  COMMAND *tc, *fc, *save_current;
-  char *debug_trap, *error_trap, *return_trap;
 #if defined (ARRAY_VARS)
   SHELL_VAR *funcname_v, *bash_source_v, *bash_lineno_v;
   ARRAY *funcname_a;
   volatile ARRAY *bash_source_a;
   volatile ARRAY *bash_lineno_a;
-  struct func_array_state *fa;
 #endif
-  FUNCTION_DEF *shell_fn;
-  char *sfile, *t;
-  sh_getopt_state_t *gs;
-  SHELL_VAR *gv;
-
-  USE_VAR(fc);
 
   if (funcnest_max > 0 && funcnest >= funcnest_max)
     {
@@ -4819,7 +4805,8 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   GET_ARRAY_FROM_VAR ("BASH_LINENO", bash_lineno_v, bash_lineno_a);
 #endif
 
-  tc = (COMMAND *)copy_command (function_cell (var));
+  /* Be sure to free this copy. */
+  COMMAND *tc = (COMMAND *)copy_command (function_cell (var));
   if (tc && (flags & CMD_IGNORE_RETURN))
     tc->flags |= CMD_IGNORE_RETURN;
 
@@ -4828,8 +4815,8 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   if (tc && (flags & CMD_NO_FORK) && (subshell_environment & SUBSHELL_COMSUB))
     optimize_shell_function (tc);
 
-  gs = sh_getopt_save_istate ();
-  if (subshell == 0)
+  sh_getopt_state_t *gs = sh_getopt_save_istate ();
+  if (!subshell)
     {
       begin_unwind_frame ("function_calling");
       /* If the shell is in posix mode, this will push the variables in
@@ -4862,9 +4849,12 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   this_shell_function = var;
   make_funcname_visible (1);
 
-  debug_trap = TRAP_STRING(DEBUG_TRAP);
-  error_trap = TRAP_STRING(ERROR_TRAP);
-  return_trap = TRAP_STRING(RETURN_TRAP);
+  const char *debug_trap = TRAP_STRING(DEBUG_TRAP);
+  const char *error_trap = TRAP_STRING(ERROR_TRAP);
+  const char *return_trap = TRAP_STRING(RETURN_TRAP);
+
+  /* Be sure to free these copies, if created. */
+  char *debug_trap_copy = 0, *error_trap_copy = 0, *return_trap_copy = 0;
 
   /* The order of the unwind protects for debug_trap, error_trap and
      return_trap is important here!  unwind-protect commands are run
@@ -4875,11 +4865,11 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
      if the function has the trace attribute set, it inherits the DEBUG trap */
   if (debug_trap && ((trace_p (var) == 0) && function_trace_mode == 0))
     {
-      if (subshell == 0)
+      if (!subshell)
 	{
-	  debug_trap = savestring (debug_trap);
-	  add_unwind_protect_ptr (xfree, debug_trap);
-	  add_unwind_protect_ptr (maybe_set_debug_trap, debug_trap);
+	  debug_trap_copy = savestring (debug_trap);
+	  add_unwind_protect_ptr (xfree, debug_trap_copy);
+	  add_unwind_protect_ptr (maybe_set_debug_trap, debug_trap_copy);
 	}
       restore_default_signal (DEBUG_TRAP);
     }
@@ -4887,11 +4877,11 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   /* error_trace_mode != 0 means that functions inherit the ERR trap. */
   if (error_trap && error_trace_mode == 0)
     {
-      if (subshell == 0)
+      if (!subshell)
 	{
-	  error_trap = savestring (error_trap);
-	  add_unwind_protect_ptr (xfree, error_trap);
-	  add_unwind_protect_ptr (maybe_set_error_trap, error_trap);
+	  error_trap_copy = savestring (error_trap);
+	  add_unwind_protect_ptr (xfree, error_trap_copy);
+	  add_unwind_protect_ptr (maybe_set_error_trap, error_trap_copy);
 	}
       restore_default_signal (ERROR_TRAP);
     }
@@ -4900,11 +4890,11 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
      globally or on individually for this function. */
   if (return_trap && (signal_in_progress (DEBUG_TRAP) || ((trace_p (var) == 0) && function_trace_mode == 0)))
     {
-      if (subshell == 0)
+      if (!subshell)
 	{
-	  return_trap = savestring (return_trap);
-	  add_unwind_protect_ptr (xfree, return_trap);
-	  add_unwind_protect_ptr (maybe_set_return_trap, return_trap);
+	  return_trap_copy = savestring (return_trap);
+	  add_unwind_protect_ptr (xfree, return_trap_copy);
+	  add_unwind_protect_ptr (maybe_set_return_trap, return_trap_copy);
 	}
       restore_default_signal (RETURN_TRAP);
     }
@@ -4912,25 +4902,24 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   funcnest++;
 #if defined (ARRAY_VARS)
   /* This is quite similar to the code in shell.c and elsewhere. */
-  shell_fn = find_function_def (this_shell_function->name);
-  sfile = shell_fn ? shell_fn->source_file : (char *) "";
+  FUNCTION_DEF *shell_fn = find_function_def (this_shell_function->name);
+  const char *sfile = shell_fn ? shell_fn->source_file : (char *) "";
   array_push ((ARRAY *)funcname_a, this_shell_function->name);
 
   array_push ((ARRAY *)bash_source_a, sfile);
-  t = itos (executing_line_number ());
+  char *t = itos (executing_line_number ());
   array_push ((ARRAY *)bash_lineno_a, t);
   free (t);
-#endif
 
-#if defined (ARRAY_VARS)
-  fa = (struct func_array_state *)xmalloc (sizeof (struct func_array_state));
+  /* restore_funcarray_state() will free this. */
+  struct func_array_state *fa = (struct func_array_state *)xmalloc (sizeof (struct func_array_state));
   fa->source_a = (ARRAY *)bash_source_a;
   fa->source_v = bash_source_v;
   fa->lineno_a = (ARRAY *)bash_lineno_a;
   fa->lineno_v = bash_lineno_v;
   fa->funcname_a = (ARRAY *)funcname_a;
   fa->funcname_v = funcname_v;
-  if (subshell == 0)
+  if (!subshell)
     add_unwind_protect_ptr (restore_funcarray_state, fa);
 #endif
 
@@ -4942,13 +4931,13 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   if (debugging_mode || shell_compatibility_level <= 44)
     init_bash_argv ();
 
-  remember_args ((WORD_LIST *)(words->next), 1);
+  remember_args ((WORD_LIST *)(words->next), true);
 
   /* Update BASH_ARGV and BASH_ARGC */
   if (debugging_mode)
     {
       push_args ((WORD_LIST *)(words->next));
-      if (subshell == 0)
+      if (!subshell)
 	add_unwind_protect (pop_args);
     }
 
@@ -4963,19 +4952,18 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   if (shell_compatibility_level > 43)
     loop_level = 0;
 
-  fc = tc;
-
-  from_return_trap = 0;
+  from_return_trap = false;
 
   return_catch_flag++;
-  return_val = setjmp_nosigs (return_catch);
+  int return_val = setjmp_nosigs (return_catch);
+  int result;
 
   if (return_val)
     {
       result = return_catch_value;
       /* Run the RETURN trap in the function's context. */
-      save_current = currently_executing_command;
-      if (from_return_trap == 0)
+      COMMAND *save_current = currently_executing_command;
+      if (!from_return_trap)
 	run_return_trap ();
       currently_executing_command = save_current;
     }
@@ -4983,17 +4971,17 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
     {
       /* Run the debug trap here so we can trap at the start of a function's
 	 execution rather than the execution of the body's first command. */
-      showing_function_line = 1;
-      save_current = currently_executing_command;
+      showing_function_line = true;
+      COMMAND *save_current = currently_executing_command;
       result = run_debug_trap ();
 #if defined (DEBUGGER)
       /* In debugging mode, if the DEBUG trap returns a non-zero status, we
 	 skip the command. */
       if (debugging_mode == 0 || result == EXECUTION_SUCCESS)
 	{
-	  showing_function_line = 0;
+	  showing_function_line = false;
 	  currently_executing_command = save_current;
-	  result = execute_command_internal (fc, 0, NO_PIPE, NO_PIPE, fds_to_close);
+	  result = execute_command_internal (tc, false, NO_PIPE, NO_PIPE, fds_to_close);
 
 	  /* Run the RETURN trap in the function's context */
 	  save_current = currently_executing_command;
@@ -5001,35 +4989,37 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
 	  currently_executing_command = save_current;
 	}
 #else
-      result = execute_command_internal (fc, 0, NO_PIPE, NO_PIPE, fds_to_close);
+      result = execute_command_internal (tc, false, NO_PIPE, NO_PIPE, fds_to_close);
 
       save_current = currently_executing_command;
       run_return_trap ();
       currently_executing_command = save_current;
 #endif
-      showing_function_line = 0;
+      showing_function_line = false;
     }
 
   /* If we have a local copy of OPTIND, note it in the saved getopts state. */
-  gv = find_variable ("OPTIND");
+  SHELL_VAR *gv = find_variable ("OPTIND");
   if (gv && gv->context == variable_context)
     gs->gs_flags |= 1;
 
-  if (subshell == 0)
+  if (!subshell)
     run_unwind_frame ("function_calling");
-#if defined (ARRAY_VARS)
   else
     {
+#if defined (ARRAY_VARS)
       restore_funcarray_state (fa);
+#endif
       /* Restore BASH_ARGC and BASH_ARGV */
       if (debugging_mode)
 	pop_args ();
+      /* Fix memory leak. */
+      dispose_command (tc);
     }
-#endif
 
   if (variable_context == 0 || this_shell_function == 0)
     {
-      make_funcname_visible (0);
+      make_funcname_visible (false);
 #if defined (PROCESS_SUBSTITUTION)
       unlink_fifo_list ();
 #endif
