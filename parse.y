@@ -115,7 +115,7 @@ typedef void *alias_t;
 #endif
 
 #if defined (EXTENDED_GLOB)
-extern int extended_glob;
+extern bool extended_glob;
 #endif
 
 extern int dump_translatable_strings, dump_po_strings;

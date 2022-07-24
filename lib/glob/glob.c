@@ -82,7 +82,7 @@ extern char *sh_makepath (const char *, const char *, int);
 extern int signal_is_pending (int);
 extern void run_pending_traps (void);
 
-extern int extended_glob;
+extern bool extended_glob;
 
 /* Global variable which controls whether or not * matches .*.
    Non-zero means don't match .*.  */
