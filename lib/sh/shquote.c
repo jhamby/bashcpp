@@ -216,24 +216,24 @@ sh_mkdoublequoted (const char *s, int slen, int flags)
    double quotes.  Return a new string.  XXX - should this handle CTLESC
    and CTLNUL? */
 char *
-sh_un_double_quote (char *string)
+sh_un_double_quote (const char *string)
 {
-  int c, pass_next;
-  char *result, *r, *s;
+  char *result = (char *)xmalloc (strlen (string) + 1);
+  char *r = result;
 
-  r = result = (char *)xmalloc (strlen (string) + 1);
-
-  for (pass_next = 0, s = string; s && (c = *s); s++)
+  bool pass_next = false;
+  char c;
+  for (const char *s = string; s && (c = *s); s++)
     {
       if (pass_next)
 	{
 	  *r++ = c;
-	  pass_next = 0;
+	  pass_next = false;
 	  continue;
 	}
       if (c == '\\' && (sh_syntaxtab[(unsigned char) s[1]] & CBSDQUOTE))
 	{
-	  pass_next = 1;
+	  pass_next = true;
 	  continue;
 	}
       *r++ = c;
@@ -254,21 +254,20 @@ sh_un_double_quote (char *string)
    other shell blank characters. */
 
 char *
-sh_backslash_quote (char *string, const char *table, int flags)
+sh_backslash_quote (const char *string, const char *table, int flags)
 {
-  int c, mb_cur_max;
-  size_t slen;
-  char *result, *r, *s, *send;
   DECLARE_MBSTATE;
 
-  slen = strlen (string);
-  send = string + slen;
-  result = (char *)xmalloc (2 * slen + 1);
+  size_t slen = strlen (string);
+  const char *send = string + slen;
+  char *result = (char *)xmalloc (2 * slen + 1);
 
-  const char *backslash_table = table ? table : (char *)bstab;
-  mb_cur_max = MB_CUR_MAX;
+  const char *backslash_table = table ? table : bstab;
+  int mb_cur_max = MB_CUR_MAX;
 
-  for (r = result, s = string; s && (c = *s); s++)
+  char *r = result;
+  char c;
+  for (const char *s = string; s && (c = *s); s++)
     {
 #if defined (HANDLE_MULTIBYTE)
       /* XXX - isascii, even if is_basic(c) == 0 - works in most cases. */
@@ -307,23 +306,22 @@ sh_backslash_quote (char *string, const char *table, int flags)
 /* Quote characters that get special treatment when in double quotes in STRING
    using backslashes.  Return a new string. */
 char *
-sh_backslash_quote_for_double_quotes (char *string)
+sh_backslash_quote_for_double_quotes (const char *string)
 {
-  unsigned char c;
-  char *result, *r, *s, *send;
-  size_t slen;
   int mb_cur_max;
   DECLARE_MBSTATE;
 
-  slen = strlen (string);
-  send = string + slen;
+  size_t slen = strlen (string);
+  const char *send = string + slen;
   mb_cur_max = MB_CUR_MAX;
-  result = (char *)xmalloc (2 * slen + 1);
+  char *result = (char *)xmalloc (2 * slen + 1);
 
-  for (r = result, s = string; s && (c = *s); s++)
+  char *r = result;
+  char c;
+  for (const char *s = string; s && (c = *s); s++)
     {
       /* Backslash-newline disappears within double quotes, so don't add one. */
-      if ((sh_syntaxtab[c] & CBSDQUOTE) && c != '\n')
+      if ((sh_syntaxtab[(unsigned char) c] & CBSDQUOTE) && c != '\n')
 	*r++ = '\\';
       /* I should probably use the CSPECL flag for these in sh_syntaxtab[] */
       else if (c == CTLESC || c == CTLNUL)
@@ -348,12 +346,13 @@ sh_backslash_quote_for_double_quotes (char *string)
 #endif /* PROMPT_STRING_DECODE */
 
 char *
-sh_quote_reusable (char *s, int flags)
+sh_quote_reusable (const char *s, int flags)
 {
   char *ret;
 
   if (s == 0)
-    return s;
+    return 0;
+
   else if (*s == 0)
     {
       ret = (char *)xmalloc (3);

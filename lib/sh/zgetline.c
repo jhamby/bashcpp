@@ -61,7 +61,7 @@ typedef ssize_t creadfunc_t (int, char *);
    Returns number of bytes read or -1 on error. */
 
 ssize_t
-zgetline (int fd, char **lineptr, size_t *n, int delim, int unbuffered_read)
+zgetline (int fd, char **lineptr, size_t *n, int delim, bool unbuffered_read)
 {
   int nr, retval;
   char *line, c;

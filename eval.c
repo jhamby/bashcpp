@@ -143,7 +143,7 @@ reader_loop ()
 	      dispose_command (global_command);
 	      global_command = (COMMAND *)NULL;
 	    }
-	  else if (current_command = global_command)
+	  else if ((current_command = global_command))
 	    {
 	      global_command = (COMMAND *)NULL;
 

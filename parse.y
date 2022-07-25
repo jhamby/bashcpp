@@ -118,7 +118,7 @@ typedef void *alias_t;
 extern bool extended_glob;
 #endif
 
-extern int dump_translatable_strings, dump_po_strings;
+extern bool dump_translatable_strings, dump_po_strings;
 
 #if !defined (errno)
 extern int errno;
@@ -977,7 +977,7 @@ subshell:	'(' compound_list ')'
 coproc:		COPROC shell_command
 			{
 			  $$ = make_coproc_command ("COPROC", $2);
-			  $$->flags |= CMD_WANT_SUBSHELL|CMD_COPROC_SUBSHELL;
+			  $$->flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
 			}
 	|	COPROC shell_command redirection_list
 			{
@@ -994,12 +994,12 @@ coproc:		COPROC shell_command
 			  else if (tc)
 			    tc->redirects = $3;
 			  $$ = make_coproc_command ("COPROC", $2);
-			  $$->flags |= CMD_WANT_SUBSHELL|CMD_COPROC_SUBSHELL;
+			  $$->flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
 			}
 	|	COPROC WORD shell_command
 			{
 			  $$ = make_coproc_command ($2->word, $3);
-			  $$->flags |= CMD_WANT_SUBSHELL|CMD_COPROC_SUBSHELL;
+			  $$->flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
 			}
 	|	COPROC WORD shell_command redirection_list
 			{
@@ -1016,12 +1016,12 @@ coproc:		COPROC shell_command
 			  else if (tc)
 			    tc->redirects = $4;
 			  $$ = make_coproc_command ($2->word, $3);
-			  $$->flags |= CMD_WANT_SUBSHELL|CMD_COPROC_SUBSHELL;
+			  $$->flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
 			}
 	|	COPROC simple_command
 			{
 			  $$ = make_coproc_command ("COPROC", clean_simple_command ($2));
-			  $$->flags |= CMD_WANT_SUBSHELL|CMD_COPROC_SUBSHELL;
+			  $$->flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
 			}
 	;
 
@@ -1313,11 +1313,11 @@ pipeline:	pipeline '|' newline_list pipeline
 timespec:	TIME
 			{ $$ = CMD_TIME_PIPELINE; }
 	|	TIME TIMEOPT
-			{ $$ = CMD_TIME_PIPELINE|CMD_TIME_POSIX; }
+			{ $$ = (CMD_TIME_PIPELINE | CMD_TIME_POSIX); }
 	|	TIME TIMEIGN
-			{ $$ = CMD_TIME_PIPELINE|CMD_TIME_POSIX; }
+			{ $$ = (CMD_TIME_PIPELINE | CMD_TIME_POSIX); }
 	|	TIME TIMEOPT TIMEIGN
-			{ $$ = CMD_TIME_PIPELINE|CMD_TIME_POSIX; }
+			{ $$ = (CMD_TIME_PIPELINE | CMD_TIME_POSIX); }
 	;
 %%
 
@@ -1337,7 +1337,7 @@ timespec:	TIME
 #endif
 
 /* Global var is non-zero when end of file has been reached. */
-int EOF_Reached = 0;
+bool EOF_Reached = false;
 
 #ifdef DEBUG
 static void
@@ -1710,7 +1710,7 @@ push_stream (int reset_lineno)
   bash_input.name = (char *)NULL;
   saver->next = stream_list;
   stream_list = saver;
-  EOF_Reached = 0;
+  EOF_Reached = false;
   if (reset_lineno)
     line_number = 0;
 }
@@ -1719,12 +1719,12 @@ void
 pop_stream ()
 {
   if (!stream_list)
-    EOF_Reached = 1;
+    EOF_Reached = true;
   else
     {
       STREAM_SAVER *saver = stream_list;
 
-      EOF_Reached = 0;
+      EOF_Reached = false;
       stream_list = stream_list->next;
 
       init_yy_io (saver->bash_input.getter,
@@ -2709,7 +2709,7 @@ execute_variable_command (char *command, const char *vname)
   if (last_lastarg)
     last_lastarg = savestring (last_lastarg);
 
-  parse_and_execute (savestring (command), vname, SEVAL_NONINT|SEVAL_NOHIST);
+  parse_and_execute (savestring (command), vname, (SEVAL_NONINT | SEVAL_NOHIST));
 
   restore_parser_state (&ps);
   bind_variable ("_", last_lastarg, 0);
@@ -2867,11 +2867,11 @@ static int open_brace_count;
 	      if ((parser_state & PST_CASEPAT) && last_read_token == '|' && word_token_alist[i].token == ESAC) \
 		break; /* Posix grammar rule 4 */ \
 	      if (word_token_alist[i].token == ESAC) \
-		parser_state &= ~(PST_CASEPAT|PST_CASESTMT); \
+		parser_state &= ~(PST_CASEPAT | PST_CASESTMT); \
 	      else if (word_token_alist[i].token == CASE) \
 		parser_state |= PST_CASESTMT; \
 	      else if (word_token_alist[i].token == COND_END) \
-		parser_state &= ~(PST_CONDCMD|PST_CONDEXPR); \
+		parser_state &= ~(PST_CONDCMD | PST_CONDEXPR); \
 	      else if (word_token_alist[i].token == COND_START) \
 		parser_state |= PST_CONDCMD; \
 	      else if (word_token_alist[i].token == '{') \
@@ -3233,7 +3233,7 @@ read_token (int command)
     }
 
 #if defined (COND_COMMAND)
-  if ((parser_state & (PST_CONDCMD|PST_CONDEXPR)) == PST_CONDCMD)
+  if ((parser_state & (PST_CONDCMD | PST_CONDEXPR)) == PST_CONDCMD)
     {
       cond_lineno = line_number;
       parser_state |= PST_CONDEXPR;
@@ -3244,7 +3244,7 @@ read_token (int command)
 	  return (-1);
 	}
       token_to_read = COND_END;
-      parser_state &= ~(PST_CONDEXPR|PST_CONDCMD);
+      parser_state &= ~(PST_CONDEXPR | PST_CONDCMD);
       return (COND_CMD);
     }
 #endif
@@ -3261,7 +3261,7 @@ read_token (int command)
 
   if (character == EOF)
     {
-      EOF_Reached = 1;
+      EOF_Reached = true;
       return (yacc_EOF);
     }
 
@@ -3272,7 +3272,7 @@ read_token (int command)
 #if defined (DEBUG)
 itrace("shell_getc: bash_input.location.string = `%s'", bash_input.location.string);
 #endif
-      EOF_Reached = 1;
+      EOF_Reached = true;
       return (yacc_EOF);
     }
 
@@ -3546,7 +3546,7 @@ parse_matched_pair (int qc,      /* `"' if this construct is within double quote
 	{
 	  free (ret);
 	  parser_error (start_lineno, _("unexpected EOF while looking for matching `%c'"), close);
-	  EOF_Reached = 1;	/* XXX */
+	  EOF_Reached = true;	/* XXX */
 	  return (&matched_pair_error);
 	}
 
@@ -3680,7 +3680,7 @@ parse_matched_pair (int qc,      /* `"' if this construct is within double quote
 	      /* '', ``, or "" inside $(...) or other grouping construct. */
 	      push_delimiter (dstack, ch);
 	      if MBTEST((tflags & LEX_WASDOL) && ch == '\'')	/* $'...' inside group */
-		nestret = parse_matched_pair (ch, ch, ch, &nestlen, P_ALLOWESC|rflags);
+		nestret = parse_matched_pair (ch, ch, ch, &nestlen, (P_ALLOWESC | rflags));
 	      else
 		nestret = parse_matched_pair (ch, ch, ch, &nestlen, rflags);
 	      pop_delimiter (dstack);
@@ -3731,12 +3731,12 @@ parse_matched_pair (int qc,      /* `"' if this construct is within double quote
 	      APPEND_NESTRET ();
 	      FREE (nestret);
 	    }
-	  else if ((flags & (P_ARRAYSUB|P_DOLBRACE)) && (tflags & LEX_WASDOL) && (ch == '(' || ch == '{' || ch == '['))	/* ) } ] */
+	  else if ((flags & (P_ARRAYSUB | P_DOLBRACE)) && (tflags & LEX_WASDOL) && (ch == '(' || ch == '{' || ch == '['))	/* ) } ] */
 	    goto parse_dollar_word;
 #if defined (PROCESS_SUBSTITUTION)
 	  /* XXX - technically this should only be recognized at the start of
 	     a word */
-	  else if ((flags & (P_ARRAYSUB|P_DOLBRACE)) && (tflags & LEX_GTLT) && (ch == '('))	/* ) */
+	  else if ((flags & (P_ARRAYSUB | P_DOLBRACE)) && (tflags & LEX_GTLT) && (ch == '('))	/* ) */
 	    goto parse_dollar_word;
 #endif
 	}
@@ -3759,9 +3759,9 @@ parse_dollar_word:
 	  if (open == ch)	/* undo previous increment */
 	    count--;
 	  if (ch == '(')		/* ) */
-	    nestret = parse_comsub (0, '(', ')', &nestlen, (rflags|P_COMMAND) & ~P_DQUOTE);
+	    nestret = parse_comsub (0, '(', ')', &nestlen, (rflags | P_COMMAND) & ~P_DQUOTE);
 	  else if (ch == '{')		/* } */
-	    nestret = parse_matched_pair (0, '{', '}', &nestlen, P_FIRSTCLOSE|P_DOLBRACE|rflags);
+	    nestret = parse_matched_pair (0, '{', '}', &nestlen, (P_FIRSTCLOSE | P_DOLBRACE | rflags));
 	  else if (ch == '[')		/* ] */
 	    nestret = parse_matched_pair (0, '[', ']', &nestlen, rflags);
 
@@ -3907,7 +3907,7 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
   while (count)
     {
 comsub_readchar:
-      ch = shell_getc (qc != '\'' && (tflags & (LEX_INCOMMENT|LEX_PASSNEXT|LEX_QUOTEDDOC)) == 0);
+      ch = shell_getc (qc != '\'' && (tflags & (LEX_INCOMMENT | LEX_PASSNEXT | LEX_QUOTEDDOC)) == 0);
 
       if (ch == EOF)
 	{
@@ -3918,7 +3918,7 @@ eof_error:
 	  free (ret);
 	  FREE (heredelim);
 	  parser_error (start_lineno, _("unexpected EOF while looking for matching `%c'"), close);
-	  EOF_Reached = 1;	/* XXX */
+	  EOF_Reached = true;	/* XXX */
 	  return (&matched_pair_error);
 	}
 
@@ -3946,7 +3946,7 @@ eof_error:
 		tind++;
 	      if (retind-tind == hdlen && STREQN (ret + tind, heredelim, hdlen))
 		{
-		  tflags &= ~(LEX_STRIPDOC|LEX_INHEREDOC|LEX_QUOTEDDOC);
+		  tflags &= ~(LEX_STRIPDOC | LEX_INHEREDOC | LEX_QUOTEDDOC);
 /*itrace("parse_comsub:%d: found here doc end `%s'", line_number, ret + tind);*/
 		  free (heredelim);
 		  heredelim = 0;
@@ -3983,7 +3983,7 @@ eof_error:
 	      posixly_correct == 0)
 #endif
 	    {
-	      tflags &= ~(LEX_STRIPDOC|LEX_INHEREDOC|LEX_QUOTEDDOC);
+	      tflags &= ~(LEX_STRIPDOC | LEX_INHEREDOC | LEX_QUOTEDDOC);
 /*itrace("parse_comsub:%d: found here doc end `%*s'", line_number, hdlen, ret + tind);*/
 	      free (heredelim);
 	      heredelim = 0;
@@ -4003,7 +4003,7 @@ eof_error:
 	 command substitution is parsed, because read_secondary_line doesn't know
 	 to recursively parse through command substitutions embedded in here-
 	 documents */
-      if (tflags & (LEX_INCOMMENT|LEX_INHEREDOC))
+      if (tflags & (LEX_INCOMMENT | LEX_INHEREDOC))
 	{
 	  /* Add this character. */
 	  RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
@@ -4333,7 +4333,7 @@ eof_error:
           /* '', ``, or "" inside $(...). */
           push_delimiter (dstack, ch);
           if MBTEST((tflags & LEX_WASDOL) && ch == '\'')	/* $'...' inside group */
-	    nestret = parse_matched_pair (ch, ch, ch, &nestlen, P_ALLOWESC|rflags);
+	    nestret = parse_matched_pair (ch, ch, ch, &nestlen, (P_ALLOWESC | rflags));
 	  else
 	    nestret = parse_matched_pair (ch, ch, ch, &nestlen, rflags);
 	  pop_delimiter (dstack);
@@ -4379,9 +4379,9 @@ eof_error:
 	  if ((tflags & LEX_INCASE) == 0 && open == ch)	/* undo previous increment */
 	    count--;
 	  if (ch == '(')		/* ) */
-	    nestret = parse_comsub (0, '(', ')', &nestlen, (rflags|P_COMMAND) & ~P_DQUOTE);
+	    nestret = parse_comsub (0, '(', ')', &nestlen, (rflags | P_COMMAND) & ~P_DQUOTE);
 	  else if (ch == '{')		/* } */
-	    nestret = parse_matched_pair (0, '{', '}', &nestlen, P_FIRSTCLOSE|P_DOLBRACE|rflags);
+	    nestret = parse_matched_pair (0, '{', '}', &nestlen, (P_FIRSTCLOSE | P_DOLBRACE | rflags));
 	  else if (ch == '[')		/* ] */
 	    nestret = parse_matched_pair (0, '[', ']', &nestlen, rflags);
 
@@ -4435,7 +4435,7 @@ xparse_dolparen (const char *base, char *string, int *indp, int flags)
     }
 
 /*itrace("xparse_dolparen: size = %d shell_input_line = `%s' string=`%s'", shell_input_line_size, shell_input_line, string);*/
-  sflags = SEVAL_NONINT|SEVAL_NOHIST|SEVAL_NOFREE;
+  sflags = SEVAL_NONINT | SEVAL_NOHIST | SEVAL_NOFREE;
   if (flags & SX_NOLONGJMP)
     sflags |= SEVAL_NOLONGJMP;
   save_parser_state (&ps);
@@ -4447,7 +4447,7 @@ xparse_dolparen (const char *base, char *string, int *indp, int flags)
 #endif
 
   /*(*/
-  parser_state |= PST_CMDSUBST|PST_EOFTOKEN;	/* allow instant ')' */ /*(*/
+  parser_state |= (PST_CMDSUBST | PST_EOFTOKEN);	/* allow instant ')' */ /*(*/
   shell_eof_token = ')';
 
   /* Should we save and restore the bison/yacc lookahead token (yychar) here?
@@ -4479,7 +4479,7 @@ xparse_dolparen (const char *base, char *string, int *indp, int flags)
     {
       clear_shell_input_line ();	/* XXX */
       if (bash_input.type != st_string)	/* paranoia */
-	parser_state &= ~(PST_CMDSUBST|PST_EOFTOKEN);
+	parser_state &= ~(PST_CMDSUBST | PST_EOFTOKEN);
       jump_to_top_level (-nc);	/* XXX */
     }
 
@@ -4569,7 +4569,7 @@ parse_dparen (int c)
 	{
 	  wd = alloc_word_desc ();
 	  wd->word = wval;
-	  wd->flags = W_QUOTED|W_NOSPLIT|W_NOGLOB|W_DQUOTE;
+	  wd->flags = W_QUOTED | W_NOSPLIT | W_NOGLOB | W_DQUOTE;
 	  yylval.word_list = make_word_list (wd, (WORD_LIST *)NULL);
 	  return (ARITH_CMD);
 	}
@@ -4652,7 +4652,7 @@ cond_error ()
     parser_error (cond_lineno, _("unexpected EOF while looking for `]]'"));
   else if (cond_token != COND_ERROR)
     {
-      if (etext = error_token_from_token (cond_token))
+      if ((etext = error_token_from_token (cond_token)))
 	{
 	  parser_error (cond_lineno, _("syntax error in conditional expression: unexpected token `%s'"), etext);
 	  free (etext);
@@ -4734,7 +4734,7 @@ cond_term ()
 	{
 	  if (term)
 	    dispose_cond_node (term);		/* ( */
-	  if (etext = error_token_from_token (cond_token))
+	  if ((etext = error_token_from_token (cond_token)))
 	    {
 	      parser_error (lineno, _("unexpected token `%s', expected `)'"), etext);
 	      free (etext);
@@ -4766,7 +4766,7 @@ cond_term ()
       else
 	{
 	  dispose_word (op);
-	  if (etext = error_token_from_token (tok))
+	  if ((etext = error_token_from_token (tok)))
 	    {
 	      parser_error (line_number, _("unexpected argument `%s' to conditional unary operator"), etext);
 	      free (etext);
@@ -4816,7 +4816,7 @@ cond_term ()
 	}
       else
 	{
-	  if (etext = error_token_from_token (tok))
+	  if ((etext = error_token_from_token (tok)))
 	    {
 	      parser_error (line_number, _("unexpected token `%s', conditional binary operator expected"), etext);
 	      free (etext);
@@ -4833,7 +4833,7 @@ cond_term ()
       tok = read_token (READ);
       if (parser_state & PST_EXTPAT)
 	extended_glob = global_extglob;
-      parser_state &= ~(PST_REGEXP|PST_EXTPAT);
+      parser_state &= ~(PST_REGEXP | PST_EXTPAT);
 
       if (tok == WORD)
 	{
@@ -4842,7 +4842,7 @@ cond_term ()
 	}
       else
 	{
-	  if (etext = error_token_from_token (tok))
+	  if ((etext = error_token_from_token (tok)))
 	    {
 	      parser_error (line_number, _("unexpected argument `%s' to conditional binary operator"), etext);
 	      free (etext);
@@ -4860,7 +4860,7 @@ cond_term ()
     {
       if (tok < 256)
 	parser_error (line_number, _("unexpected token `%c' in conditional command"), tok);
-      else if (etext = error_token_from_token (tok))
+      else if ((etext = error_token_from_token (tok)))
 	{
 	  parser_error (line_number, _("unexpected token `%s' in conditional command"), etext);
 	  free (etext);
@@ -5090,7 +5090,7 @@ read_token_word (int character)
 		((peek_char == '{' || peek_char == '[') && character == '$'))	/* ) ] } */
 	    {
 	      if (peek_char == '{')		/* } */
-		ttok = parse_matched_pair (cd, '{', '}', &ttoklen, P_FIRSTCLOSE|P_DOLBRACE);
+		ttok = parse_matched_pair (cd, '{', '}', &ttoklen, (P_FIRSTCLOSE | P_DOLBRACE));
 	      else if (peek_char == '(')		/* ) */
 		{
 		  /* XXX - push and pop the `(' as a delimiter for use by
@@ -5385,7 +5385,7 @@ got_token:
         yylval.word = the_word;
     }
 
-  result = ((the_word->flags & (W_ASSIGNMENT|W_NOSPLIT)) == (W_ASSIGNMENT|W_NOSPLIT))
+  result = ((the_word->flags & (W_ASSIGNMENT | W_NOSPLIT)) == (W_ASSIGNMENT | W_NOSPLIT))
 		? ASSIGNMENT_WORD : WORD;
 
   switch (last_read_token)
@@ -5752,7 +5752,7 @@ decode_prompt_string (const char *string)
   temp = (char *)NULL;
   const char *orig_string = string;
 
-  while (c = *string++)
+  while ((c = *string++))
     {
       if (posixly_correct && c == '!')
 	{
@@ -6155,10 +6155,10 @@ error_token_from_token (int tok)
 {
   char *t;
 
-  if (t = find_token_in_alist (tok, word_token_alist, 0))
+  if ((t = find_token_in_alist (tok, word_token_alist, 0)))
     return t;
 
-  if (t = find_token_in_alist (tok, other_token_alist, 0))
+  if ((t = find_token_in_alist (tok, other_token_alist, 0)))
     return t;
 
   t = (char *)NULL;
@@ -6259,7 +6259,7 @@ report_syntax_error (const char *message)
     {
       parser_error (line_number, "%s", message);
       if (interactive && EOF_Reached)
-	EOF_Reached = 0;
+	EOF_Reached = false;
       last_command_exit_value = (executing_builtin && parse_and_execute_level) ? EX_BADSYNTAX : EX_BADUSAGE;
       set_pipestatus_from_exit (last_command_exit_value);
       return;
@@ -6268,7 +6268,7 @@ report_syntax_error (const char *message)
   /* If the line of input we're reading is not null, try to find the
      objectionable token.  First, try to figure out what token the
      parser's complaining about by looking at current_token. */
-  if (current_token != 0 && EOF_Reached == 0 && (msg = error_token_from_token (current_token)))
+  if (current_token != 0 && !EOF_Reached && (msg = error_token_from_token (current_token)))
     {
       if (ansic_shouldquote (msg))
 	{
@@ -6311,7 +6311,7 @@ report_syntax_error (const char *message)
 	 only for error reporting.  Other mechanisms are used to
 	 decide whether or not to exit. */
       if (interactive && EOF_Reached)
-	EOF_Reached = 0;
+	EOF_Reached = false;
     }
 
   last_command_exit_value = (executing_builtin && parse_and_execute_level) ? EX_BADSYNTAX : EX_BADUSAGE;
@@ -6359,8 +6359,7 @@ handle_eof_input_unit ()
       /* shell.c may use this to decide whether or not to write out the
 	 history, among other things.  We use it only for error reporting
 	 in this file. */
-      if (EOF_Reached)
-	EOF_Reached = 0;
+      EOF_Reached = false;
 
       /* If the user wants to "ignore" eof, then let her do so, kind of. */
       if (ignoreeof)
@@ -6389,7 +6388,7 @@ handle_eof_input_unit ()
   else
     {
       /* We don't write history files, etc., for non-interactive shells. */
-      EOF_Reached = 1;
+      EOF_Reached = true;
     }
 }
 
@@ -6432,7 +6431,7 @@ parse_string_to_word_list (char *s, int flags, const char *whom)
   old_expand_aliases = expand_aliases;
 
   push_stream (1);
-  if (ea = expanding_alias ())
+  if ((ea = expanding_alias ()))
     parser_save_alias ();
   last_read_token = WORD;		/* WORD to allow reserved words here */
   current_command_line_count = 0;
@@ -6442,7 +6441,7 @@ parse_string_to_word_list (char *s, int flags, const char *whom)
   wl = (WORD_LIST *)NULL;
 
   if (flags & 1)
-    parser_state |= PST_COMPASSIGN|PST_REPARSE;
+    parser_state |= (PST_COMPASSIGN | PST_REPARSE);
 
   while ((tok = read_token (READ)) != yacc_EOF)
     {
@@ -6485,7 +6484,7 @@ parse_string_to_word_list (char *s, int flags, const char *whom)
   shell_input_line_terminator = orig_input_terminator;
 
   if (flags & 1)
-    parser_state &= ~(PST_COMPASSIGN|PST_REPARSE);
+    parser_state &= ~(PST_COMPASSIGN | PST_REPARSE);
 
   if (wl == &parse_string_error)
     {

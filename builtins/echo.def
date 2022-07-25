@@ -137,7 +137,7 @@ echo_builtin (WORD_LIST *list)
 
       /* All of the options in TEMP are valid options to ECHO.
 	 Handle them. */
-      while (i = *temp++)
+      while ((i = *temp++))
 	{
 	  switch (i)
 	    {

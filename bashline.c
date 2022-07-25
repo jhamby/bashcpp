@@ -785,7 +785,7 @@ snarf_hosts_from_file (const char *filename)
   if (file == 0)
     return;
 
-  while (temp = fgets (buffer, 255, file))
+  while ((temp = fgets (buffer, 255, file)))
     {
       /* Skip to first character. */
       int i;
@@ -1602,7 +1602,7 @@ attempt_shell_completion (const char *text, int start, int end)
 	  n = find_cmd_name (s, &s1, &e1);
 	  s = e1 + 1;
 	}
-      while (was_assignment = assignment (n, 0));
+      while ((was_assignment = assignment (n, 0))) ;
       s = s1;		/* reset to index where name begins */
 
       /* s == index of where command name begins (reset above)
@@ -2090,7 +2090,7 @@ globword:
 	    return ((char *)NULL);
 	}
 
-      while (val = glob_matches[local_index++])
+      while ((val = glob_matches[local_index++]))
         {
 	  if (executable_or_directory (val))
 	    {
@@ -2468,7 +2468,7 @@ bash_servicename_completion_function (const char *text, int state)
   static int snamelen;
   char *value;
   char **alist, *aentry;
-  int afound;
+  bool afound;
 
   if (state == 0)
     {
@@ -2479,9 +2479,9 @@ bash_servicename_completion_function (const char *text, int state)
       setservent (0);
     }
 
-  while (srvent = getservent ())
+  while ((srvent = getservent ()))
     {
-      afound = 0;
+      afound = false;
       if (snamelen == 0 || (STREQN (sname, srvent->s_name, snamelen)))
 	break;
       /* Not primary, check aliases */
@@ -2490,7 +2490,7 @@ bash_servicename_completion_function (const char *text, int state)
 	  aentry = *alist;
 	  if (STREQN (sname, aentry, snamelen))
 	    {
-	      afound = 1;
+	      afound = true;
 	      break;
 	    }
 	}
@@ -2533,7 +2533,7 @@ bash_groupname_completion_function (const char *text, int state)
       setgrent ();
     }
 
-  while (grent = getgrent ())
+  while ((grent = getgrent ()))
     {
       if (gnamelen == 0 || (STREQN (gname, grent->gr_name, gnamelen)))
         break;
@@ -3217,9 +3217,9 @@ bash_filename_stat_hook (char **dirname)
 
   local_dirname = *dirname;
   should_expand_dirname = return_value = 0;
-  if (t = mbschr (local_dirname, '$'))
+  if ((t = mbschr (local_dirname, '$')))
     should_expand_dirname = '$';
-  else if (t = mbschr (local_dirname, '`'))	/* XXX */
+  else if ((t = mbschr (local_dirname, '`')))	/* XXX */
     should_expand_dirname = '`';
 
   if (should_expand_dirname && directory_exists (local_dirname, 0))
@@ -3296,7 +3296,7 @@ bash_directory_completion_hook (char **dirname)
   return_value = should_expand_dirname = nextch = closer = 0;
   local_dirname = *dirname;
 
-  if (t = mbschr (local_dirname, '$'))
+  if ((t = mbschr (local_dirname, '$')))
     {
       should_expand_dirname = '$';
       nextch = t[1];
@@ -3351,10 +3351,11 @@ bash_directory_completion_hook (char **dirname)
 	     custom_filename_quote_characters is modified. */
 	  if (rl_filename_quote_characters && *rl_filename_quote_characters)
 	    {
-	      int i, j, c;
+	      int i, j;
+	      char c;
 	      i = strlen (default_filename_quote_characters);
 	      custom_filename_quote_characters = (char *)xrealloc (custom_filename_quote_characters, i+1);
-	      for (i = j = 0; c = default_filename_quote_characters[i]; i++)
+	      for (i = j = 0; (c = default_filename_quote_characters[i]); i++)
 		{
 		  if (c == should_expand_dirname || c == nextch || c == closer)
 		    continue;
@@ -4336,7 +4337,7 @@ isolate_sequence (const char *string, int ind, bool need_dquote, int *startp)
     *startp = delim ? ++i : i;
 
   int c, passc;
-  for (passc = 0; c = string[i]; i++)
+  for (passc = 0; (c = string[i]); i++)
     {
       if (passc)
 	{

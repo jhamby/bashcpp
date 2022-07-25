@@ -98,24 +98,16 @@ cval (const char *s, int i)
 /* Modify the case of characters in STRING matching PAT based on the value of
    FLAGS.  If PAT is null, modify the case of each character */
 char *
-sh_modcase (const char *string, char *pat, int flags)
+sh_modcase (const char *string, const char *pat, int flags)
 {
-  int start, next, end, retind;
-  int inword, c, nc, nop, match, usewords;
-  char *ret, *s;
-  wchar_t wc;
-  int mb_cur_max;
 #if defined (HANDLE_MULTIBYTE)
-  wchar_t nwc;
   char mb[MB_LEN_MAX+1];
-  int mlen;
-  size_t m;
   mbstate_t state;
 #endif
 
   if (string == 0 || *string == 0)
     {
-      ret = (char *)xmalloc (1);
+      char *ret = (char *)xmalloc (1);
       ret[0] = '\0';
       return ret;
     }
@@ -124,33 +116,33 @@ sh_modcase (const char *string, char *pat, int flags)
   memset (&state, 0, sizeof (mbstate_t));
 #endif
 
-  start = 0;
-  end = strlen (string);
-  mb_cur_max = MB_CUR_MAX;
+  size_t start = 0;
+  size_t end = strlen (string);
+  int mb_cur_max = MB_CUR_MAX;
 
-  ret = (char *)xmalloc (2*end + 1);
-  retind = 0;
+  char *ret = (char *)xmalloc (2*end + 1);
+  int retind = 0;
 
   /* See if we are supposed to split on alphanumerics and operate on each word */
-  usewords = (flags & CASE_USEWORDS);
+  int usewords = (flags & CASE_USEWORDS);
   flags &= ~CASE_USEWORDS;
 
-  inword = 0;
+  bool inword = false;
   while (start < end)
     {
-      wc = cval ((char *)string, start);
+      wchar_t wc = cval ((char *)string, start);
 
       if (iswalnum (wc) == 0)
-	inword = 0;
+	inword = false;
 
       if (pat)
 	{
-	  next = start;
+	  int next = start;
 	  ADVANCE_CHAR (string, end, next);
-	  s = substring ((char *)string, start, next);
-	  match = strmatch (pat, s, FNM_EXTMATCH) != FNM_NOMATCH;
+	  char *s = substring ((char *)string, start, next);
+	  bool match = (strmatch (pat, s, FNM_EXTMATCH) != FNM_NOMATCH);
 	  free (s);
-	  if (match == 0)
+	  if (!match)
             {
               /* copy unmatched portion */
               memcpy (ret + retind, string + start, next - start);
@@ -161,6 +153,8 @@ sh_modcase (const char *string, char *pat, int flags)
             }
 	}
 
+      int nop;
+
       /* XXX - for now, the toggling operators work on the individual
 	 words in the string, breaking on alphanumerics.  Should I
 	 leave the capitalization operators to do that also? */
@@ -170,7 +164,7 @@ sh_modcase (const char *string, char *pat, int flags)
 	    nop = inword ? CASE_LOWER : CASE_UPPER;
 	  else
 	    nop = (start > 0) ? CASE_LOWER : CASE_UPPER;
-	  inword = 1;
+	  inword = true;
 	}
       else if (flags == CASE_UNCAP)
 	{
@@ -178,7 +172,7 @@ sh_modcase (const char *string, char *pat, int flags)
 	    nop = inword ? CASE_UPPER : CASE_LOWER;
 	  else
 	    nop = (start > 0) ? CASE_UPPER : CASE_LOWER;
-	  inword = 1;
+	  inword = true;
 	}
       else if (flags == CASE_UPFIRST)
  	{
@@ -186,7 +180,7 @@ sh_modcase (const char *string, char *pat, int flags)
 	    nop = inword ? CASE_NOOP : CASE_UPPER;
 	  else
 	    nop = (start > 0) ? CASE_NOOP : CASE_UPPER;
- 	  inword = 1;
+	  inword = true;
  	}
       else if (flags == CASE_LOWFIRST)
  	{
@@ -194,12 +188,12 @@ sh_modcase (const char *string, char *pat, int flags)
 	    nop = inword ? CASE_NOOP : CASE_LOWER;
 	  else
 	    nop = (start > 0) ? CASE_NOOP : CASE_LOWER;
- 	  inword = 1;
+	  inword = true;
  	}
       else if (flags == CASE_TOGGLE)
 	{
 	  nop = inword ? CASE_NOOP : CASE_TOGGLE;
-	  inword = 1;
+	  inword = true;
 	}
       else
 	nop = flags;
@@ -209,6 +203,7 @@ sh_modcase (const char *string, char *pat, int flags)
       if (mb_cur_max == 1)
 	{
 singlebyte:
+	  wchar_t nc;
 	  switch (nop)
 	    {
 	    default:
@@ -223,7 +218,7 @@ singlebyte:
 #if defined (HANDLE_MULTIBYTE)
       else
 	{
-	  m = mbrtowc (&wc, string + start, end - start, &state);
+	  size_t m = mbrtowc (&wc, string + start, end - start, &state);
 	  /* Have to go through wide case conversion even for single-byte
 	     chars, to accommodate single-byte characters where the
 	     corresponding upper or lower case equivalent is multibyte. */
@@ -234,6 +229,8 @@ singlebyte:
 	    }
 	  else if (MB_NULLWCH (m))
 	    wc = L'\0';
+
+	  wchar_t nwc;
 	  switch (nop)
 	    {
 	    default:
@@ -250,7 +247,7 @@ singlebyte:
 	    ret[retind++] = nwc;
 	  else
 	    {
-	      mlen = wcrtomb (mb, nwc, &state);
+	      size_t mlen = wcrtomb (mb, nwc, &state);
 	      if (mlen > 0)
 		mb[mlen] = '\0';
 	      /* Don't assume the same width */

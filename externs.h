@@ -63,7 +63,7 @@ extern void xtrace_set (int, FILE *);
 extern void xtrace_fdchk (int);
 extern void xtrace_reset ();
 extern char *indirection_level_string ();
-extern void xtrace_print_assignment (const char *, const char *, int, int);
+extern void xtrace_print_assignment (const char *, const char *, bool, int);
 extern void xtrace_print_word_list (WORD_LIST *, int);
 extern void xtrace_print_for_command_head (FOR_COM *);
 #if defined (SELECT_COMMAND)
@@ -179,7 +179,7 @@ extern void show_shell_version (int);
    go into a separate include file. */
 
 /* declarations for functions defined in lib/sh/casemod.c */
-extern char *sh_modcase (const char *, char *, int);
+extern char *sh_modcase (const char *, const char *, int);
 
 /* Defines for flags argument to sh_modcase.  These need to agree with what's
    in lib/sh/casemode.c */
@@ -343,16 +343,16 @@ extern int sh_mbsnlen (const char *, size_t, int);
 extern char *sh_single_quote (const char *);
 extern char *sh_double_quote (const char *);
 extern char *sh_mkdoublequoted (const char *, int, int);
-extern char *sh_un_double_quote (char *);
-extern char *sh_backslash_quote (char *, const char *, int);
-extern char *sh_backslash_quote_for_double_quotes (char *);
-extern char *sh_quote_reusable (char *, int);
+extern char *sh_un_double_quote (const char *);
+extern char *sh_backslash_quote (const char *, const char *, int);
+extern char *sh_backslash_quote_for_double_quotes (const char *);
+extern char *sh_quote_reusable (const char *, int);
 extern int sh_contains_shell_metas (const char *);
 extern int sh_contains_quotes (const char *);
 
 /* declarations for functions defined in lib/sh/spell.c */
-extern int spname (char *, char *);
-extern char *dirspell (char *);
+extern int spname (const char *, char *);
+extern char *dirspell (const char *);
 
 /* declarations for functions defined in lib/sh/strcasecmp.c */
 #if !defined (HAVE_STRCASECMP)
@@ -517,10 +517,10 @@ extern int wcsnwidth (const wchar_t *, size_t, size_t);
 extern void get_new_window_size (int, int *, int *);
 
 /* declarations for functions defined in lib/sh/zcatfd.c */
-extern int zcatfd (int, int, char *);
+extern int zcatfd (int, int, const char *);
 
 /* declarations for functions defined in lib/sh/zgetline.c */
-extern ssize_t zgetline (int, char **, size_t *, int, int);
+extern ssize_t zgetline (int, char **, size_t *, int, bool);
 
 /* declarations for functions defined in lib/sh/zmapfd.c */
 extern int zmapfd (int, char **, char *);
@@ -539,11 +539,11 @@ extern void zsyncfd (int);
 extern int zwrite (int, char *, size_t);
 
 /* declarations for functions defined in lib/glob/gmisc.c */
-extern int match_pattern_char (const char *, const char *, int);
+extern bool match_pattern_char (const char *, const char *, int);
 extern int umatchlen (const char *, size_t);
 
 #if defined (HANDLE_MULTIBYTE)
-extern int match_pattern_wchar (const wchar_t *, const wchar_t *, int);
+extern bool match_pattern_wchar (const wchar_t *, const wchar_t *, int);
 extern int wmatchlen (const wchar_t *, size_t);
 #endif
 

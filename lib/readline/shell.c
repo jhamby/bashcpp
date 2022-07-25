@@ -96,14 +96,12 @@ extern struct passwd *getpwuid PARAMS((uid_t));
 char *
 sh_single_quote (const char *string)
 {
-  register int c;
-  char *result, *r, *s;
-
-  result = (char *)xmalloc (3 + (4 * strlen (string)));
-  r = result;
+  char *result = (char *)xmalloc (3 + (4 * strlen (string)));
+  char *r = result;
   *r++ = '\'';
 
-  for (s = string; s && (c = *s); s++)
+  char c;
+  for (const char *s = string; s && (c = *s); s++)
     {
       *r++ = c;
 

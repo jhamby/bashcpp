@@ -64,7 +64,7 @@ static int mailfiles_count;
 static time_t last_time_mail_checked = 0;
 
 /* Non-zero means warn if a mail file has been read since last checked. */
-int mail_warning;
+char mail_warning;
 
 static int find_mail_file (char *);
 static void init_mail_file (int);
@@ -74,9 +74,9 @@ static int add_mail_file (char *, char *);
 static FILEINFO *alloc_mail_file (char *, char *);
 static void dispose_mail_file (FILEINFO *);
 
-static int file_mod_date_changed (int);
-static int file_access_date_changed (int);
-static int file_has_grown (int);
+static bool file_mod_date_changed (int);
+static bool file_access_date_changed (int);
+static bool file_has_grown (int);
 
 static char *parse_mailpath_spec (char *);
 
@@ -250,7 +250,7 @@ init_mail_dates ()
 /* Return non-zero if FILE's mod date has changed and it has not been
    accessed since modified.  If the size has dropped to zero, reset
    the cached mail file info. */
-static int
+static bool
 file_mod_date_changed (int i)
 {
   time_t mtime;
@@ -261,7 +261,7 @@ file_mod_date_changed (int i)
   mtime = mailfiles[i]->mod_time;
 
   if (mailstat (file, &finfo) != 0)
-    return (0);
+    return false;
 
   if (finfo.st_size > 0)
     return (mtime < finfo.st_mtime);
@@ -269,11 +269,11 @@ file_mod_date_changed (int i)
   if (finfo.st_size == 0 && mailfiles[i]->file_size > 0)
     UPDATE_MAIL_FILE (i, finfo);
 
-  return (0);
+  return false;
 }
 
 /* Return non-zero if FILE's access date has changed. */
-static int
+static bool
 file_access_date_changed (int i)
 {
   time_t atime;
@@ -284,16 +284,16 @@ file_access_date_changed (int i)
   atime = mailfiles[i]->access_time;
 
   if (mailstat (file, &finfo) != 0)
-    return (0);
+    return false;
 
   if (finfo.st_size > 0)
     return (atime < finfo.st_atime);
 
-  return (0);
+  return false;
 }
 
 /* Return non-zero if FILE's size has increased. */
-static int
+static bool
 file_has_grown (int i)
 {
   off_t size;
@@ -357,11 +357,7 @@ make_default_mailpath ()
 void
 remember_mail_dates ()
 {
-  char *mailpaths;
-  char *mailfile, *mp;
-  int i = 0;
-
-  mailpaths = get_string_value ("MAILPATH");
+  char *mailpaths = get_string_value ("MAILPATH");
 
   /* If no $MAILPATH, but $MAIL, use that as a single filename to check. */
   if (mailpaths == 0 && (mailpaths = get_string_value ("MAIL")))
@@ -381,9 +377,11 @@ remember_mail_dates ()
       return;
     }
 
-  while (mailfile = extract_colon_unit (mailpaths, &i))
+  char *mailfile;
+  int i = 0;
+  while ((mailfile = extract_colon_unit (mailpaths, &i)))
     {
-      mp = parse_mailpath_spec (mailfile);
+      char *mp = parse_mailpath_spec (mailfile);
       if (mp && *mp)
 	*mp++ = '\0';
       add_mail_file (mailfile, mp);
@@ -406,27 +404,25 @@ remember_mail_dates ()
 void
 check_mail ()
 {
-  char *current_mail_file, *message;
-  int i, use_user_notification;
-  char *dollar_underscore, *temp;
+//   char *current_mail_file, *message;
+//   int i, use_user_notification;
+//   char *dollar_underscore, *temp;
 
-  dollar_underscore = get_string_value ("_");
+  char *dollar_underscore = get_string_value ("_");
   if (dollar_underscore)
     dollar_underscore = savestring (dollar_underscore);
 
-  for (i = 0; i < mailfiles_count; i++)
+  for (int i = 0; i < mailfiles_count; i++)
     {
-      current_mail_file = mailfiles[i]->name;
+      char *current_mail_file = mailfiles[i]->name;
 
       if (*current_mail_file == '\0')
 	continue;
 
       if (file_mod_date_changed (i))
 	{
-	  int file_is_bigger;
-
-	  use_user_notification = mailfiles[i]->msg != (char *)NULL;
-	  message = mailfiles[i]->msg ? mailfiles[i]->msg : _("You have mail in $_");
+	  bool use_user_notification = mailfiles[i]->msg != (char *)NULL;
+	  const char *message = mailfiles[i]->msg ? mailfiles[i]->msg : _("You have mail in $_");
 
 	  bind_variable ("_", current_mail_file, 0);
 
@@ -435,7 +431,7 @@ check_mail ()
 
 	  /* Have to compute this before the call to update_mail_file, which
 	     resets all the information. */
-	  file_is_bigger = file_has_grown (i);
+	  bool file_is_bigger = file_has_grown (i);
 
 	  update_mail_file (i);
 
@@ -455,7 +451,8 @@ check_mail ()
 #undef atime
 #undef mtime
 
-	  if (temp = expand_string_to_string (message, Q_DOUBLE_QUOTES))
+	  char *temp;
+	  if ((temp = expand_string_to_string (message, Q_DOUBLE_QUOTES)))
 	    {
 	      puts (temp);
 	      free (temp);

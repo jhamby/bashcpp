@@ -196,7 +196,7 @@ static int tescape (char *, char *, int *, int *);
 static char *bexpand (char *, int, int *, int *);
 static char *vbadd (char *, int);
 static int vbprintf (const char *, ...) __attribute__((__format__ (printf, 1, 2)));
-static char *mklong (char *, char *, size_t);
+static char *mklong (const char *, const char *, size_t);
 static int getchr (void);
 static char *getstr (void);
 static int  getint (void);
@@ -1055,7 +1055,7 @@ vbprintf (const char *format, ...)
 }
 
 static char *
-mklong (char *str, char *modifiers, size_t mlen)
+mklong (const char *str, const char *modifiers, size_t mlen)
 {
   size_t len, slen;
 
@@ -1095,7 +1095,7 @@ getstr ()
   char *ret;
 
   if (garglist == 0)
-    return ("");
+    return (char *)("");
 
   ret = garglist->word->word;
   garglist = (WORD_LIST *)garglist->next;

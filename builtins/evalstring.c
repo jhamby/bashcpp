@@ -386,7 +386,7 @@ parse_and_execute (char *string, const char *from_file, int flags)
 	      dispose_command (global_command);
 	      global_command = (COMMAND *)NULL;
 	    }
-	  else if (command = global_command)
+	  else if ((command = global_command))
 	    {
 	      struct fd_bitmap *bitmap;
 

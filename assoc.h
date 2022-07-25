@@ -39,15 +39,15 @@
 extern void assoc_dispose (HASH_TABLE *);
 extern void assoc_flush (HASH_TABLE *);
 
-extern int assoc_insert (HASH_TABLE *, char *, char *);
-extern PTR_T assoc_replace (HASH_TABLE *, char *, char *);
-extern void assoc_remove (HASH_TABLE *, char *);
+extern int assoc_insert (HASH_TABLE *, char *, const char *);
+extern PTR_T assoc_replace (HASH_TABLE *, char *, const char *);
+extern void assoc_remove (HASH_TABLE *, const char *);
 
 extern char *assoc_reference (HASH_TABLE *, const char *);
 
 extern char *assoc_subrange (HASH_TABLE *, arrayind_t, arrayind_t, int, int, int);
-extern char *assoc_patsub (HASH_TABLE *, char *, char *, int);
-extern char *assoc_modcase (HASH_TABLE *, char *, int, int);
+extern char *assoc_patsub (HASH_TABLE *, const char *, const char *, int);
+extern char *assoc_modcase (HASH_TABLE *, const char *, int, int);
 
 extern HASH_TABLE *assoc_quote (HASH_TABLE *);
 extern HASH_TABLE *assoc_quote_escapes (HASH_TABLE *);

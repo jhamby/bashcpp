@@ -562,7 +562,7 @@ extern int volatile _rl_caught_signal;
 extern _rl_sigcleanup_func_t *_rl_sigcleanup;
 extern void *_rl_sigcleanarg;
 
-extern int _rl_echoctl;
+extern bool _rl_echoctl;
 
 extern int _rl_intr_char;
 extern int _rl_quit_char;

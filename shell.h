@@ -41,7 +41,7 @@
 #include "pathnames.h"
 #include "externs.h"
 
-extern int EOF_Reached;
+extern bool EOF_Reached;
 
 #define NO_PIPE -1
 #define REDIRECT_BOTH -2
@@ -105,7 +105,7 @@ extern int subshell_environment;
 extern int current_command_number;
 extern int indirection_level;
 extern int shell_compatibility_level;
-extern bool running_under_emacs;
+extern int running_under_emacs;		/* == 2 for `eterm` */
 
 extern char posixly_correct;
 extern bool no_line_editing;

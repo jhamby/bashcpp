@@ -497,7 +497,7 @@ posix_cclass_only (const char *pattern)
   enum char_class valid;
 
   const char *p = pattern;
-  while (p = strchr (p, '['))
+  while ((p = strchr (p, '[')))
     {
       if (p[1] != ':')
 	{

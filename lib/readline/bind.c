@@ -1465,7 +1465,7 @@ _rl_skip_to_delim (char *string, int start, int delim)
 {
   int i, c, passc;
 
-  for (i = start,passc = 0; c = string[i]; i++)
+  for (i = start,passc = 0; (c = string[i]); i++)
     {
       if (passc)
 	{
@@ -2642,7 +2642,7 @@ rl_function_dumper (int print_readably)
 
   fprintf (rl_outstream, "\n");
 
-  for (int i = 0; name = names[i]; i++)
+  for (int i = 0; (name = names[i]); i++)
     {
       rl_command_func_t *function;
       char **invokers;

@@ -66,19 +66,13 @@ static int history_search_internal (const char *, int, int);
 static int
 history_search_internal (const char *string, int direction, int flags)
 {
-  register int i, reverse;
-  register char *line;
-  register int line_index;
-  int string_len, anchored, patsearch;
-  HIST_ENTRY **the_history; 	/* local */
-
-  i = history_offset;
-  reverse = (direction < 0);
-  anchored = (flags & ANCHORED_SEARCH);
+  int i = history_offset;
+  int reverse = (direction < 0);
+  int anchored = (flags & ANCHORED_SEARCH);
 #if defined (HAVE_FNMATCH)
-  patsearch = (flags & PATTERN_SEARCH);
+  bool patsearch = (flags & PATTERN_SEARCH);
 #else
-  patsearch = 0;
+  bool patsearch = false;
 #endif
 
   /* Take care of trivial cases first. */
@@ -93,8 +87,8 @@ history_search_internal (const char *string, int direction, int flags)
 
 #define NEXT_LINE() do { if (reverse) i--; else i++; } while (0)
 
-  the_history = history_list ();
-  string_len = strlen (string);
+  HIST_ENTRY **the_history = history_list ();
+  size_t string_len = strlen (string);
   while (1)
     {
       /* Search each line in the history list for STRING. */
@@ -103,11 +97,11 @@ history_search_internal (const char *string, int direction, int flags)
       if ((reverse && i < 0) || (!reverse && i == history_length))
 	return (-1);
 
-      line = the_history[i]->line;
-      line_index = strlen (line);
+      char *line = the_history[i]->line;
+      size_t line_index = strlen (line);
 
       /* If STRING is longer than line, no match. */
-      if (patsearch == 0 && (string_len > line_index))
+      if (!patsearch && (string_len > line_index))
 	{
 	  NEXT_LINE ();
 	  continue;
@@ -140,7 +134,7 @@ history_search_internal (const char *string, int direction, int flags)
       /* Do substring search. */
       if (reverse)
 	{
-	  line_index -= (patsearch == 0) ? string_len : 1;
+	  line_index -= (!patsearch) ? string_len : 1;
 
 	  while (line_index >= 0)
 	    {
@@ -165,7 +159,7 @@ history_search_internal (const char *string, int direction, int flags)
 	}
       else
 	{
-	  register int limit;
+	  int limit;
 
 	  limit = line_index - string_len + 1;
 	  line_index = 0;
@@ -200,7 +194,8 @@ _hs_history_patsearch (const char *string, int direction, int flags)
 {
   char *pat;
   size_t len, start;
-  int ret, unescaped_backslash;
+  int ret;
+  bool unescaped_backslash;
 
 #if defined (HAVE_FNMATCH)
   /* Assume that the string passed does not have a leading `^' and any
@@ -209,10 +204,10 @@ _hs_history_patsearch (const char *string, int direction, int flags)
   ret = len - 1;
   /* fnmatch is required to reject a pattern that ends with an unescaped
      backslash */
-  if (unescaped_backslash = (string[ret] == '\\'))
+  if ((unescaped_backslash = (string[ret] == '\\')))
     {
       while (ret > 0 && string[--ret] == '\\')
-	unescaped_backslash = 1 - unescaped_backslash;
+	unescaped_backslash = !unescaped_backslash;
     }
   if (unescaped_backslash)
     return -1;
@@ -242,7 +237,7 @@ _hs_history_patsearch (const char *string, int direction, int flags)
       pat[len+1] = '\0';
     }
 #else
-  pat = string;
+  pat = (char *)string;
 #endif
 
   ret = history_search_internal (pat, direction, flags|PATTERN_SEARCH);

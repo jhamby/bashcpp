@@ -73,7 +73,7 @@ typedef int rl_getc_func_t (FILE *);
 /* Generic function that takes a character buffer (which could be the readline
    line buffer) and an index into it (which could be rl_point) and returns
    an int. */
-typedef int rl_linebuf_func_t (const char *, int);
+typedef int rl_linebuf_func_t (char *, int);
 
 /* `Generic' function pointer typedefs */
 typedef int rl_intfunc_t (int);

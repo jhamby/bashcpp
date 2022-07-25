@@ -37,7 +37,7 @@ extern bool glob_pattern_p (const char *);
 extern char **glob_vector (const char *, const char *, int);
 extern char **glob_filename (const char *, int);
 
-extern int extglob_pattern_p (const char *);
+extern bool extglob_pattern_p (const char *);
 
 extern char *glob_error_return;
 extern bool noglob_dot_filenames;

@@ -415,7 +415,7 @@ mkseq (intmax_t start, intmax_t end, intmax_t incr, int type, int width)
 	}
       else
 	{
-	  if (t = (char *)malloc (2))
+	  if ((t = (char *)malloc (2)))
 	    {
 	      t[0] = n;
 	      t[1] = '\0';
@@ -589,7 +589,7 @@ brace_gobbler (char *text, size_t tlen, int *indx, int satisfy)
 #endif
 
   i = *indx;
-  while (c = text[i])
+  while ((c = text[i]))
     {
       if (pass_next)
 	{

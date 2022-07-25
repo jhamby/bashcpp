@@ -332,12 +332,12 @@ extern int same_file (const char *, const char *, struct stat *, struct stat *);
 extern int sh_openpipe (int *);
 extern int sh_closepipe (int *);
 
-extern int file_exists (const char *);
-extern int file_isdir (const char  *);
-extern int file_iswdir (const char  *);
-extern int path_dot_or_dotdot (const char *);
-extern int absolute_pathname (const char *);
-extern int absolute_program (const char *);
+extern bool file_exists (const char *);
+extern bool file_isdir (const char  *);
+extern bool file_iswdir (const char  *);
+extern bool path_dot_or_dotdot (const char *);
+extern bool absolute_pathname (const char *);
+extern bool absolute_program (const char *);
 
 extern char *make_absolute (const char *, const char *);
 extern const char *base_pathname (const char *);

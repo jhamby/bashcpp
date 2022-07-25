@@ -211,7 +211,7 @@ static int
 rl_gather_tyi (void)
 {
   int tty;
-  register int tem, result;
+  int result;
   int chars_avail, k;
   char input;
 #if defined(HAVE_SELECT)
@@ -247,7 +247,7 @@ rl_gather_tyi (void)
 #if defined (O_NDELAY)
   if (result == -1)
     {
-      tem = fcntl (tty, F_GETFL, 0);
+      int tem = fcntl (tty, F_GETFL, 0);
 
       fcntl (tty, F_SETFL, (tem | O_NDELAY));
       chars_avail = read (tty, &input, 1);
@@ -277,7 +277,7 @@ rl_gather_tyi (void)
   if (chars_avail <= 0)
     return 0;
 
-  tem = ibuffer_space ();
+  int tem = ibuffer_space ();
 
   if (chars_avail > tem)
     chars_avail = tem;
@@ -483,7 +483,7 @@ rl_read_key (void)
   else
     {
       /* If input is coming from a macro, then use that. */
-      if (c = _rl_next_macro_key ())
+      if ((c = _rl_next_macro_key ()))
 	return ((unsigned char)c);
 
       /* If the user has an event function, then call it periodically. */

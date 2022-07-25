@@ -125,7 +125,7 @@ static char *edit_line (const char *, char *);
 static void set_eol_delim (int);
 static void reset_eol_delim ();
 #endif
-static SHELL_VAR *bind_read_variable (const char *, char *);
+static SHELL_VAR *bind_read_variable (const char *, const char *);
 #if defined (HANDLE_MULTIBYTE)
 static int read_mbchar (int, char *, int, int, int);
 #endif
@@ -174,8 +174,8 @@ int
 read_builtin (WORD_LIST *list)
 {
   int size, nr, pass_next, saw_escape, eof, opt, retval, code, print_ps2, nflag;
-  volatile int i;
-  bool input_is_tty, input_is_pipe, unbuffered_read, skip_ctlesc, skip_ctlnul;
+  bool input_is_tty, input_is_pipe, skip_ctlesc, skip_ctlnul;
+  int unbuffered_read;
   int raw, edit, nchars, silent, have_timeout, ignore_delim, fd;
   int lastsig, t_errno;
   int mb_cur_max;
@@ -199,7 +199,6 @@ read_builtin (WORD_LIST *list)
 #endif
 
   USE_VAR(size);
-  USE_VAR(i);
   USE_VAR(pass_next);
   USE_VAR(print_ps2);
   USE_VAR(saw_escape);
@@ -223,7 +222,7 @@ read_builtin (WORD_LIST *list)
 
   sigalrm_seen = reading = tty_modified = 0;
 
-  i = 0;		/* Index into the string that we are reading. */
+  int i = 0;		/* Index into the string that we are reading. */
   raw = edit = 0;	/* Not reading raw input by default. */
   silent = 0;
   arrayname = prompt = (char *)NULL;
@@ -909,7 +908,7 @@ assign_vars:
 	      free (t1);
 	    }
 	  else
-	    var = bind_read_variable (varname, t ? t : (char *)"");
+	    var = bind_read_variable (varname, t ? t : "");
 	}
       else
 	{
@@ -987,7 +986,7 @@ assign_vars:
 }
 
 static SHELL_VAR *
-bind_read_variable (const char *name, char *value)
+bind_read_variable (const char *name, const char *value)
 {
   SHELL_VAR *v;
 

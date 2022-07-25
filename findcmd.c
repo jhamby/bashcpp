@@ -256,7 +256,7 @@ _find_user_command_internal (const char *name, int flags)
 
   /* Search for the value of PATH in both the temporary environments and
      in the regular list of variables. */
-  if (var = find_variable_tempenv ("PATH"))	/* XXX could be array? */
+  if ((var = find_variable_tempenv ("PATH")))	/* XXX could be array? */
     path_list = value_cell (var);
   else
     path_list = (char *)NULL;

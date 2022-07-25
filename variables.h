@@ -62,7 +62,7 @@ typedef struct var_context {
 /* What a shell variable looks like. */
 
 typedef struct variable *sh_var_value_func_t (struct variable *);
-typedef struct variable *sh_var_assign_func_t (struct variable *, char *, arrayind_t, char *);
+typedef struct variable *sh_var_assign_func_t (struct variable *, const char *, arrayind_t, const char *);
 
 /* For the future */
 union _value {
@@ -255,11 +255,11 @@ extern pid_t dollar_dollar_pid;
 
 extern char localvar_inherit;		/* declared in variables.c */
 
-extern void initialize_shell_variables (char **, int);
+extern void initialize_shell_variables (char **, bool);
 
 extern int validate_inherited_value (SHELL_VAR *, int);
 
-extern SHELL_VAR *set_if_not (const char *, char *);
+extern SHELL_VAR *set_if_not (const char *, const char *);
 
 extern void sh_set_lines_and_columns (int, int);
 extern void set_pwd (void);
@@ -286,11 +286,11 @@ extern SHELL_VAR *find_shell_variable (const char *);
 extern SHELL_VAR *find_tempenv_variable (const char *);
 extern SHELL_VAR *find_variable_no_invisible (const char *);
 extern SHELL_VAR *find_variable_for_assignment (const char *);
-extern char *nameref_transform_name (char *, int);
+extern char *nameref_transform_name (const char *, int);
 extern SHELL_VAR *copy_variable (SHELL_VAR *);
 extern SHELL_VAR *make_local_variable (const char *, int);
-extern SHELL_VAR *bind_variable (const char *, char *, int);
-extern SHELL_VAR *bind_global_variable (const char *, char *, int);
+extern SHELL_VAR *bind_variable (const char *, const char *, int);
+extern SHELL_VAR *bind_global_variable (const char *, const char *, int);
 extern SHELL_VAR *bind_function (const char *, COMMAND *);
 
 extern void bind_function_def (const char *, FUNCTION_DEF *, int);
@@ -316,11 +316,11 @@ extern char **add_or_supercede_exported_var (const char *, int);
 extern char *get_variable_value (SHELL_VAR *);
 extern char *get_string_value (const char *);
 extern char *sh_get_env_value (const char *);
-extern char *make_variable_value (SHELL_VAR *, char *, int);
+extern char *make_variable_value (SHELL_VAR *, const char *, int);
 
-extern SHELL_VAR *bind_variable_value (SHELL_VAR *, char *, int);
-extern SHELL_VAR *bind_int_variable (char *, char *, int);
-extern SHELL_VAR *bind_var_to_int (char *, intmax_t);
+extern SHELL_VAR *bind_variable_value (SHELL_VAR *, const char *, int);
+extern SHELL_VAR *bind_int_variable (const char *, const char *, int);
+extern SHELL_VAR *bind_var_to_int (const char *, intmax_t);
 
 extern int assign_in_env (WORD_DESC *, int);
 

@@ -204,7 +204,6 @@ static _rl_search_cxt *
 _rl_isearch_init (int direction)
 {
   _rl_search_cxt *cxt;
-  register int i;
   HIST_ENTRY **hlist;
 
   cxt = _rl_scxt_alloc (RL_SEARCH_ISEARCH, 0);
@@ -217,7 +216,7 @@ _rl_isearch_init (int direction)
   /* Create an array of pointers to the lines that we want to search. */
   hlist = history_list ();
   rl_maybe_replace_line ();
-  i = 0;
+  int i = 0;
   if (hlist)
     for (i = 0; hlist[i]; i++);
 

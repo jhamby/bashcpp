@@ -203,7 +203,7 @@ set_tty_settings (int tty, TIOTYPE *tiop)
       ioctl (tty, TIOCSETN, &(tiop->sgttyb));
       tiop->flags &= ~SGTTY_SET;
     }
-  _rl_echoing_p = 1;
+  _rl_echoing_p = true;
 
 #if defined (TIOCLSET)
   if (tiop->flags & LFLAG_SET)
@@ -583,7 +583,7 @@ prepare_terminal_settings (int meta_flag, TIOTYPE oldtio, TIOTYPE *tiop)
 void
 rl_prep_terminal (int meta_flag)
 {
-  _rl_echoing_p = 1;
+  _rl_echoing_p = true;
 }
 
 void
@@ -615,7 +615,7 @@ rl_prep_terminal (int meta_flag)
 #else
       if (errno == ENOTTY || errno == EINVAL)
 #endif
-	_rl_echoing_p = 1;		/* XXX */
+	_rl_echoing_p = true;		/* XXX */
 
       _rl_release_sigint ();
       return;

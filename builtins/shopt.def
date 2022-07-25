@@ -331,29 +331,29 @@ shopt_builtin (WORD_LIST *list)
 void
 reset_shopt_options ()
 {
-  autocd = cdable_vars = cdspelling = false;
+  autocd = cdable_vars = cdspelling = 0;
   check_hashed_filenames = CHECKHASH_DEFAULT;
   check_window_size = CHECKWINSIZE_DEFAULT;
-  allow_null_glob_expansion = glob_dot_filenames = false;
-  no_exit_on_failed_exec = false;
-  expand_aliases = false;
-  extended_quote = true;
-  fail_glob_expansion = false;
+  allow_null_glob_expansion = glob_dot_filenames = 0;
+  no_exit_on_failed_exec = 0;
+  expand_aliases = 0;
+  extended_quote = 1;
+  fail_glob_expansion = 0;
   glob_asciirange = GLOBASCII_DEFAULT;
-  glob_star = false;
-  gnu_error_format = false;
-  hup_on_exit = false;
-  inherit_errexit = false;
-  interactive_comments = true;
-  lastpipe_opt = false;
-  localvar_inherit = localvar_unset = false;
-  mail_warning = false;
-  glob_ignore_case = match_ignore_case = false;
-  print_shift_error = false;
-  source_uses_path = promptvars = true;
+  glob_star = 0;
+  gnu_error_format = 0;
+  hup_on_exit = 0;
+  inherit_errexit = 0;
+  interactive_comments = 1;
+  lastpipe_opt = 0;
+  localvar_inherit = localvar_unset = 0;
+  mail_warning = 0;
+  glob_ignore_case = match_ignore_case = 0;
+  print_shift_error = 0;
+  source_uses_path = promptvars = 1;
 
 #if defined (JOB_CONTROL)
-  check_jobs_at_exit = false;
+  check_jobs_at_exit = 0;
 #endif
 
 #if defined (EXTENDED_GLOB)
@@ -449,7 +449,7 @@ toggle_shopts (int mode, WORD_LIST *list, int quiet)
     }
 
   /* Don't set $BASHOPTS here if it hasn't already been initialized */
-  if (v = find_variable ("BASHOPTS"))
+  if ((v = find_variable ("BASHOPTS")))
     set_bashopts ();
   return (rval);
 }
@@ -823,7 +823,7 @@ parse_bashopts (char *value)
   int vptr, ind;
 
   vptr = 0;
-  while (vname = extract_colon_unit (value, &vptr))
+  while ((vname = extract_colon_unit (value, &vptr)))
     {
       ind = find_shopt (vname);
       if (ind >= 0)

@@ -86,7 +86,7 @@ extern char *extract_command_subst (const char *, int *, int);
 /* Extract the $[ construct in STRING, and return a new string.
    Start extracting at (SINDEX) as if we had just seen "$[".
    Make (SINDEX) get the position just after the matching "]". */
-extern char *extract_arithmetic_subst (char *, int *);
+extern char *extract_arithmetic_subst (const char *, int *);
 
 #if defined (PROCESS_SUBSTITUTION)
 /* Extract the <( or >( construct in STRING, and return a new string.
@@ -95,8 +95,10 @@ extern char *extract_arithmetic_subst (char *, int *);
 extern char *extract_process_subst (const char *, const char *, int *, int);
 #endif /* PROCESS_SUBSTITUTION */
 
+#if 0
 /* Extract the name of the variable to bind to from the assignment string. */
-extern char *assignment_name (char *);
+extern char *assignment_name (const char *);
+#endif
 
 /* Return a single string of all the words present in LIST, separating
    each word with SEP. */
@@ -116,7 +118,7 @@ extern char *string_list_dollar_at (WORD_LIST *, int, int);
    the various subtleties of using the first character of $IFS as the
    separator.  Calls string_list_dollar_at, string_list_dollar_star, and
    string_list as appropriate. */
-extern char *string_list_pos_params (int, WORD_LIST *, int, int);
+extern char *string_list_pos_params (char, WORD_LIST *, int, int);
 
 /* Perform quoted null character removal on each element of LIST.
    This modifies LIST. */
@@ -124,11 +126,11 @@ extern void word_list_remove_quoted_nulls (WORD_LIST *);
 
 /* This performs word splitting and quoted null character removal on
    STRING. */
-extern WORD_LIST *list_string (char *, const char *, int);
+extern WORD_LIST *list_string (const char *, const char *, int);
 
 extern char *ifs_firstchar  (int *);
 extern char *get_word_from_string (char **, const char *, char **);
-extern char *strip_trailing_ifs_whitespace (char *, const char *, int);
+extern char *strip_trailing_ifs_whitespace (char *, const char *, bool);
 
 /* Given STRING, an assignment string, get the value of the right side
    of the `=', and bind it to the left side.  If EXPAND is true, then
@@ -154,10 +156,12 @@ extern char *sub_append_number (intmax_t, char *, int *, int *);
 /* Return the word list that corresponds to `$*'. */
 extern WORD_LIST *list_rest_of_args ();
 
+#if 0
 /* Make a single large string out of the dollar digit variables,
    and the rest_of_args.  If DOLLAR_STAR is 1, then obey the special
    case of "$*" with respect to IFS. */
 extern char *string_rest_of_args (int);
+#endif
 
 /* Expand STRING by performing parameter expansion, command substitution,
    and arithmetic expansion.  Dequote the resulting WORD_LIST before
@@ -229,7 +233,7 @@ extern char *remove_quoted_nulls (char *);
 
 /* Perform quote removal on STRING.  If QUOTED > 0, assume we are obeying the
    backslash quoting rules for within double quotes. */
-extern char *string_quote_removal (const char *, bool);
+extern char *string_quote_removal (const char *, int);
 
 /* Perform quote removal on word WORD.  This allocates and returns a new
    WORD_DESC *. */
@@ -266,7 +270,7 @@ extern WORD_LIST *expand_words_no_vars (WORD_LIST *);
 extern WORD_LIST *expand_words_shellexp (WORD_LIST *);
 
 extern WORD_DESC *command_substitute (char *, int, int);
-extern char *pat_subst (char *, char *, char *, int);
+extern char *pat_subst (const char *, const char *, const char *, int);
 
 #if defined (PROCESS_SUBSTITUTION)
 extern int fifos_pending ();
@@ -287,14 +291,16 @@ extern void wait_procsubs ();
 extern void reap_procsubs ();
 #endif
 
+#if 0
 extern WORD_LIST *list_string_with_quotes (char *);
+#endif
 
 #if defined (ARRAY_VARS)
 extern char *extract_array_assignment_list (const char *, int *);
 #endif
 
 #if defined (COND_COMMAND)
-extern char *remove_backslashes (char *);
+extern char *remove_backslashes (const char *);
 extern char *cond_expand_word (WORD_DESC *, int);
 #endif
 
@@ -318,15 +324,15 @@ extern int skip_to_histexp (const char *, int, const char *, int);
 #endif
 
 #if defined (READLINE)
-extern int char_is_quoted (const char *, int);
-extern int unclosed_pair (const char *, int, const char *);
-extern WORD_LIST *split_at_delims (char *, int, char *, int, int, int *, int *);
+extern int char_is_quoted (char *, int);	/* rl_linebuf_func_t */
+extern bool unclosed_pair (const char *, int, const char *);
+extern WORD_LIST *split_at_delims (const char *, int, const char *, int, int, int *, int *);
 #endif
 
 /* Variables used to keep track of the characters in IFS. */
 extern SHELL_VAR *ifs_var;
 extern const char *ifs_value;
-extern unsigned char ifs_cmap[];
+extern bool ifs_cmap[];
 extern bool ifs_is_set, ifs_is_null;
 
 #if defined (HANDLE_MULTIBYTE)

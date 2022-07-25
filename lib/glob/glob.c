@@ -216,7 +216,7 @@ extglob_skipname (const char *pat, const char *dname, int flags)
 
   /* check every subpattern */
   char *t;
-  while (t = (char *)glob_patscan ((unsigned char *)pp, (unsigned char *)pe, '|'))
+  while ((t = (char *)glob_patscan ((unsigned char *)pp, (unsigned char *)pe, '|')))
     {
       int n = t[-1];	/* ( */
       if (extglob_pattern_p (pp) && n == ')')
@@ -327,7 +327,7 @@ wextglob_skipname (const wchar_t *pat, const wchar_t *dname, int flags)
 
   /* check every subpattern */
   wchar_t *t;
-  while (t = (wchar_t *)glob_patscan_wc (pp, pe, '|'))
+  while ((t = (wchar_t *)glob_patscan_wc (pp, pe, '|')))
     {
       wchar_t n = t[-1];	/* ( */
       if (wextglob_pattern_p (pp) && n == L')')

@@ -47,7 +47,7 @@
 
 extern char *get_working_directory (const char *);
 
-static char *nullpath = "";
+static const char *nullpath = "";
 
 /* Take PATH, an element from, e.g., $CDPATH, and DIR, a directory name,
    and paste them together into PATH/DIR.  Tilde expansion is performed on
@@ -94,7 +94,7 @@ sh_makepath (const char *path, const char *dir, int flags)
   else if ((flags & MP_IGNDOT) && path[0] == '.' && (path[1] == '\0' ||
 						     (path[1] == '/' && path[2] == '\0')))
     {
-      xpath = nullpath;
+      xpath = (char *)nullpath;
       pathlen = 0;
     }
   else
@@ -118,7 +118,7 @@ sh_makepath (const char *path, const char *dir, int flags)
   if (s > xpath && s[-1] != '/')
     *r++ = '/';
   s = xdir;
-  while (*r++ = *s++)
+  while ((*r++ = *s++))
     ;
   if (xpath != path && xpath != nullpath)
     free (xpath);

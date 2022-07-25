@@ -38,6 +38,6 @@ typedef struct _pathdata {
 extern void phash_create (void);
 extern void phash_flush (void);
 
-extern void phash_insert (char *, char *, int, int);
+extern void phash_insert (const char *, const char *, bool, int);
 extern int phash_remove (const char *);
 extern char *phash_search (const char *);

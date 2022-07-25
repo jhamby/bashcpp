@@ -65,7 +65,7 @@ bool glob_star = false;
 bool
 unquoted_glob_pattern_p (const char *string)
 {
-  int c;
+  char c;
   const char *send;
   bool open;
 
@@ -74,7 +74,7 @@ unquoted_glob_pattern_p (const char *string)
   open = false;
   send = string + strlen (string);
 
-  while (c = *string++)
+  while ((c = *string++))
     {
       switch (c)
 	{
@@ -141,7 +141,7 @@ unquoted_glob_pattern_p (const char *string)
 /* Return 1 if C is a character that is `special' in a POSIX ERE and needs to
    be quoted to match itself. */
 static inline bool
-ere_char (int c)
+ere_char (char c)
 {
   switch (c)
     {
@@ -647,9 +647,9 @@ setup_ignore_patterns (struct ignorevar *ivp)
   numitems = maxitems = ptr = 0;
 
 #if 0
-  while (colon_bit = extract_colon_unit (this_ignoreval, &ptr))
+  while ((colon_bit = extract_colon_unit (this_ignoreval, &ptr)))
 #else
-  while (colon_bit = split_ignorespec (this_ignoreval, &ptr))
+  while ((colon_bit = split_ignorespec (this_ignoreval, &ptr)))
 #endif
     {
       if (numitems + 1 >= maxitems)

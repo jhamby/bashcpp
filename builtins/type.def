@@ -321,7 +321,7 @@ describe_command (const char *command, int dflags)
      whether the file is present in our hash table. */
   if (!all || (dflags & CDESC_FORCE_PATH))
     {
-      if (full_path = phash_search (command))
+      if ((full_path = phash_search (command)))
 	{
 	  if (dflags & CDESC_TYPE)
 	    puts ("file");

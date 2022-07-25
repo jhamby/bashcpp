@@ -111,9 +111,8 @@ _rl_copy_to_kill_ring (char *text, int append)
 	  slot = rl_kill_ring_length;
 	  if (slot == rl_max_kills)
 	    {
-	      register int i;
 	      xfree (rl_kill_ring[0]);
-	      for (i = 0; i < slot; i++)
+	      for (int i = 0; i < slot; i++)
 		rl_kill_ring[i] = rl_kill_ring[i + 1];
 	    }
 	  else
@@ -569,7 +568,7 @@ rl_vi_yank_pop (int count, int key)
 static int
 rl_yank_nth_arg_internal (int count, int key, int history_skip)
 {
-  register HIST_ENTRY *entry;
+  HIST_ENTRY *entry;
   char *arg;
   int i, pos;
 

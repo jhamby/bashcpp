@@ -247,7 +247,7 @@ ansic_quote (const char *str, int flags, int *rlen)
   *r++ = '$';
   *r++ = '\'';
 
-  for (const char *s = str; c = *s; s++)
+  for (const char *s = str; (c = *s); s++)
     {
       b = l = 1;		/* 1 == add backslash; 0 == no backslash */
       clen = 1;
@@ -330,7 +330,7 @@ ansic_wshouldquote (const char *string)
   wcstr = (wchar_t *)xmalloc (sizeof (wchar_t) * (slen + 1));
   mbstowcs (wcstr, string, slen + 1);
 
-  for (wcs = wcstr; wcc = *wcs; wcs++)
+  for (wcs = wcstr; (wcc = *wcs); wcs++)
     if (iswprint(wcc) == 0)
       {
 	free (wcstr);
@@ -352,7 +352,7 @@ ansic_shouldquote (const char *string)
   if (string == 0)
     return false;
 
-  for (s = string; c = *s; s++)
+  for (s = string; (c = *s); s++)
     {
 #if defined (HANDLE_MULTIBYTE)
       if (is_basic (c) == 0)

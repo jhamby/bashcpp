@@ -447,7 +447,7 @@ _rl_revert_previous_lines (void)
   entry = (hpos == history_length) ? previous_history () : current_history ();
   while (entry)
     {
-      if (ul = (UNDO_LIST *)entry->data)
+      if ((ul = (UNDO_LIST *)entry->data))
 	{
 	  if (ul == saved_undo_list)
 	    saved_undo_list = 0;
@@ -506,7 +506,7 @@ rl_clear_history (void)
   for (int i = 0; i < history_length; i++)
     {
       hent = hlist[i];
-      if (ul = (UNDO_LIST *)hent->data)
+      if ((ul = (UNDO_LIST *)hent->data))
 	{
 	  if (ul == saved_undo_list)
 	    saved_undo_list = 0;

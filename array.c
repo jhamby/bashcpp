@@ -514,7 +514,7 @@ array_dispose_element(ARRAY_ELEMENT *ae)
  * Add a new element with index I and value V to array A (a[i] = v).
  */
 int
-array_insert(ARRAY *a, arrayind_t i, char *v)
+array_insert(ARRAY *a, arrayind_t i, const char *v)
 {
 	if (a == 0)
 		return(-1);

@@ -428,7 +428,7 @@ assignment (const char *string, int flags)
 #endif
     return (0);
 
-  while (c = string[indx])
+  while ((c = string[indx]))
     {
       /* The following is safe.  Note that '=' at the start of a word
 	 is not an assignment statement. */
@@ -701,7 +701,7 @@ sh_closepipe (int *pv)
 /*								    */
 /* **************************************************************** */
 
-int
+bool
 file_exists (const char *fn)
 {
   struct stat sb;
@@ -709,7 +709,7 @@ file_exists (const char *fn)
   return (stat (fn, &sb) == 0);
 }
 
-int
+bool
 file_isdir (const char *fn)
 {
   struct stat sb;
@@ -717,7 +717,7 @@ file_isdir (const char *fn)
   return ((stat (fn, &sb) == 0) && S_ISDIR (sb.st_mode));
 }
 
-int
+bool
 file_iswdir (const char *fn)
 {
   return (file_isdir (fn) && sh_eaccess (fn, W_OK) == 0);
@@ -725,43 +725,43 @@ file_iswdir (const char *fn)
 
 /* Return 1 if STRING is "." or "..", optionally followed by a directory
    separator */
-int
+bool
 path_dot_or_dotdot (const char *string)
 {
   if (string == 0 || *string == '\0' || *string != '.')
-    return (0);
+    return false;
 
   /* string[0] == '.' */
   if (PATHSEP(string[1]) || (string[1] == '.' && PATHSEP(string[2])))
-    return (1);
+    return true;
 
-  return (0);
+  return false;
 }
 
 /* Return 1 if STRING contains an absolute pathname, else 0.  Used by `cd'
    to decide whether or not to look up a directory name in $CDPATH. */
-int
+bool
 absolute_pathname (const char *string)
 {
   if (string == 0 || *string == '\0')
-    return (0);
+    return false;
 
   if (ABSPATH(string))
-    return (1);
+    return true;
 
   if (string[0] == '.' && PATHSEP(string[1]))	/* . and ./ */
-    return (1);
+    return true;
 
   if (string[0] == '.' && string[1] == '.' && PATHSEP(string[2]))	/* .. and ../ */
-    return (1);
+    return true;
 
-  return (0);
+  return false;
 }
 
 /* Return 1 if STRING is an absolute program name; it is absolute if it
    contains any slashes.  This is used to decide whether or not to look
    up through $PATH. */
-int
+bool
 absolute_program (const char *string)
 {
   return ((char *)mbschr (string, '/') != (char *)NULL);

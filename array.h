@@ -73,7 +73,7 @@ extern ARRAY_ELEMENT *array_create_element (arrayind_t, const char *);
 extern ARRAY_ELEMENT *array_copy_element (ARRAY_ELEMENT *);
 extern void	array_dispose_element (ARRAY_ELEMENT *);
 
-extern int	array_insert (ARRAY *, arrayind_t, char *);
+extern int	array_insert (ARRAY *, arrayind_t, const char *);
 extern ARRAY_ELEMENT *array_remove (ARRAY *, arrayind_t);
 extern char	*array_reference (ARRAY *, arrayind_t);
 

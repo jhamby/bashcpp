@@ -145,15 +145,12 @@ rl_tty_status (int count, int key)
 char *
 rl_copy_text (int from, int to)
 {
-  register int length;
-  char *copy;
-
   /* Fix it if the caller is confused. */
   if (from > to)
     SWAP (from, to);
 
-  length = to - from;
-  copy = (char *)xmalloc (1 + length);
+  int length = to - from;
+  char *copy = (char *)xmalloc (1 + length);
   strncpy (copy, rl_line_buffer + from, length);
   copy[length] = '\0';
   return (copy);
@@ -178,16 +175,12 @@ rl_extend_line_buffer (int len)
 int
 rl_tilde_expand (int ignore, int key)
 {
-  register int start, end;
-  char *homedir, *temp;
-  int len;
-
-  end = rl_point;
-  start = end - 1;
+  int end = rl_point;
+  int start = end - 1;
 
   if (rl_point == rl_end && rl_line_buffer[rl_point] == '~')
     {
-      homedir = tilde_expand ("~");
+      char *homedir = tilde_expand ("~");
       _rl_replace_text (homedir, start, end);
       xfree (homedir);
       return (0);
@@ -214,11 +207,11 @@ rl_tilde_expand (int ignore, int key)
      nothing. */
   if (rl_line_buffer[start] == '~')
     {
-      len = end - start + 1;
-      temp = (char *)xmalloc (len + 1);
+      int len = end - start + 1;
+      char *temp = (char *)xmalloc (len + 1);
       strncpy (temp, rl_line_buffer + start, len);
       temp[len] = '\0';
-      homedir = tilde_expand (temp);
+      char *homedir = tilde_expand (temp);
       xfree (temp);
 
       _rl_replace_text (homedir, start, end);
@@ -230,24 +223,11 @@ rl_tilde_expand (int ignore, int key)
 
 #if defined (USE_VARARGS)
 void
-#if defined (PREFER_STDARG)
 _rl_ttymsg (const char *format, ...)
-#else
-_rl_ttymsg (va_alist)
-     va_dcl
-#endif
 {
   va_list args;
-#if defined (PREFER_VARARGS)
-  char *format;
-#endif
 
-#if defined (PREFER_STDARG)
   va_start (args, format);
-#else
-  va_start (args);
-  format = va_arg (args, char *);
-#endif
 
   fprintf (stderr, "readline: ");
   vfprintf (stderr, format, args);
@@ -260,24 +240,11 @@ _rl_ttymsg (va_alist)
 }
 
 void
-#if defined (PREFER_STDARG)
 _rl_errmsg (const char *format, ...)
-#else
-_rl_errmsg (va_alist)
-     va_dcl
-#endif
 {
   va_list args;
-#if defined (PREFER_VARARGS)
-  char *format;
-#endif
 
-#if defined (PREFER_STDARG)
   va_start (args, format);
-#else
-  va_start (args);
-  format = va_arg (args, char *);
-#endif
 
   fprintf (stderr, "readline: ");
   vfprintf (stderr, format, args);
@@ -320,9 +287,7 @@ _rl_errmsg (format, arg1, arg2)
 char *
 _rl_strindex (const char *s1, const char *s2)
 {
-  register int i, l, len;
-
-  for (i = 0, l = strlen (s2), len = strlen (s1); (len - i) >= l; i++)
+  for (int i = 0, l = strlen (s2), len = strlen (s1); (len - i) >= l; i++)
     if (_rl_strnicmp (s1 + i, s2, l) == 0)
       return ((char *) (s1 + i));
   return ((char *)NULL);

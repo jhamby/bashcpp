@@ -52,9 +52,9 @@ char assoc_expand_once = 0;
 /* Ditto for indexed array subscripts -- currently unused */
 char array_expand_once = 0;
 
-static SHELL_VAR *bind_array_var_internal (SHELL_VAR *, arrayind_t, char *, char *, int);
+static SHELL_VAR *bind_array_var_internal (SHELL_VAR *, arrayind_t, char *, const char *, int);
 static SHELL_VAR *assign_array_element_internal (SHELL_VAR *, const char *,
-	char *, char *, int, char *, int);
+	char *, char *, int, const char *, int);
 
 static void assign_assoc_from_kvlist (SHELL_VAR *, WORD_LIST *, HASH_TABLE *, int);
 
@@ -148,7 +148,7 @@ convert_var_to_assoc (SHELL_VAR *var)
 
 char *
 make_array_variable_value (SHELL_VAR *entry, arrayind_t ind, const char *key,
-                           char *value, int flags)
+                           const char *value, int flags)
 {
   SHELL_VAR *dentry;
   char *newval;
@@ -191,7 +191,7 @@ make_array_variable_value (SHELL_VAR *entry, arrayind_t ind, const char *key,
    hash table on each assignment. BASH_CMDS and BASH_ALIASES already do this */
 static SHELL_VAR *
 bind_assoc_var_internal (SHELL_VAR *entry, HASH_TABLE *hash, char *key,
-                         char *value, int flags)
+                         const char *value, int flags)
 {
   char *newval;
 
@@ -215,7 +215,7 @@ bind_assoc_var_internal (SHELL_VAR *entry, HASH_TABLE *hash, char *key,
    assignment to an associative array; see assign_compound_array_list below. */
 static SHELL_VAR *
 bind_array_var_internal (SHELL_VAR *entry, arrayind_t ind, char *key,
-                         char *value, int flags)
+                         const char *value, int flags)
 {
   char *newval;
 
@@ -243,7 +243,7 @@ bind_array_var_internal (SHELL_VAR *entry, arrayind_t ind, char *key,
    If NAME does not exist, just create an array variable, no matter what
    IND's value may be. */
 SHELL_VAR *
-bind_array_variable (char *name, arrayind_t ind, char *value, int flags)
+bind_array_variable (const char *name, arrayind_t ind, const char *value, int flags)
 {
   SHELL_VAR *entry;
 
@@ -274,15 +274,16 @@ bind_array_variable (char *name, arrayind_t ind, char *value, int flags)
 }
 
 SHELL_VAR *
-bind_array_element (SHELL_VAR *entry, arrayind_t ind, char *value, int flags)
+bind_array_element (SHELL_VAR *entry, arrayind_t ind, const char *value, int flags)
 {
   return (bind_array_var_internal (entry, ind, 0, value, flags));
 }
 
 SHELL_VAR *
-bind_assoc_variable (SHELL_VAR *entry, const char *name, char *key, char *value, int flags)
+bind_assoc_variable (SHELL_VAR *entry, const char *name, char *key,
+		     const char *value, int flags)
 {
-  if ((readonly_p (entry) && (flags&ASS_FORCE) == 0) || noassign_p (entry))
+  if ((readonly_p (entry) && (flags & ASS_FORCE) == 0) || noassign_p (entry))
     {
       if (readonly_p (entry))
 	err_readonly (name);
@@ -296,7 +297,7 @@ bind_assoc_variable (SHELL_VAR *entry, const char *name, char *key, char *value,
    assign VALUE to that array element by calling bind_array_variable().
    Flags are ASS_ assignment flags */
 SHELL_VAR *
-assign_array_element (const char *name, char *value, int flags)
+assign_array_element (const char *name, const char *value, int flags)
 {
   char *sub;
   int sublen;
@@ -323,20 +324,14 @@ assign_array_element (const char *name, char *value, int flags)
 }
 
 static SHELL_VAR *
-assign_array_element_internal (SHELL_VAR *entry,
-     const char *name,		/* only used for error messages */
-     char *vname,
-     char *sub,
-     int sublen,
-     char *value,
-     int flags)
+assign_array_element_internal (SHELL_VAR *entry, const char *name,		/* only used for error messages */
+			       char *vname, char *sub, int sublen,
+			       const char *value, int flags)
 {
-  char *akey;
-  arrayind_t ind;
-
   if (entry && assoc_p (entry))
     {
       sub[sublen-1] = '\0';
+      char *akey;
       if ((flags & ASS_NOEXPAND) == 0)
 	akey = expand_assignment_string_to_string (sub, 0);	/* [ */
       else
@@ -352,7 +347,7 @@ assign_array_element_internal (SHELL_VAR *entry,
     }
   else
     {
-      ind = array_expand_index (entry, sub, sublen, 0);
+      arrayind_t ind = array_expand_index (entry, sub, sublen, 0);
       /* negative subscripts to indexed arrays count back from end */
       if (entry && ind < 0)
 	ind = (array_p (entry) ? array_max_index (array_cell (entry)) : 0) + 1 + ind;
@@ -1362,14 +1357,12 @@ get_array_value (const char *s, int flags, int *rtype, arrayind_t *indp)
 }
 
 char *
-array_keys (char *s, int quoted, int pflags)
+array_keys (const char *s, int quoted, int pflags)
 {
   int len;
-  char *retval, *t, *temp;
-  WORD_LIST *l;
-  SHELL_VAR *var;
+  char *t;
 
-  var = array_variable_part (s, 0, &t, &len);
+  SHELL_VAR *var = array_variable_part (s, 0, &t, &len);
 
   /* [ */
   if (var == 0 || ALL_ELEMENT_SUB (t[0]) == 0 || t[1] != ']')
@@ -1378,6 +1371,7 @@ array_keys (char *s, int quoted, int pflags)
   if (var_isset (var) == 0 || invisible_p (var))
     return (char *)NULL;
 
+  WORD_LIST *l;
   if (array_p (var) == 0 && assoc_p (var) == 0)
     l = add_string_to_list ("0", (WORD_LIST *)NULL);
   else if (assoc_p (var))
@@ -1387,7 +1381,7 @@ array_keys (char *s, int quoted, int pflags)
   if (l == (WORD_LIST *)NULL)
     return ((char *) NULL);
 
-  retval = string_list_pos_params (t[0], l, quoted, pflags);
+  char *retval = string_list_pos_params (t[0], l, quoted, pflags);
 
   dispose_words (l);
   return retval;

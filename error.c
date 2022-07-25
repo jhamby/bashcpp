@@ -73,7 +73,7 @@ static void error_prolog (int);
 
 const char * const the_current_maintainer = MAINTAINER;
 
-int gnu_error_format = 0;
+char gnu_error_format = 0;
 
 static void
 error_prolog (int print_lineno)

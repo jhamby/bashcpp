@@ -473,7 +473,7 @@ indirection_level_string ()
 
 void
 xtrace_print_assignment (const char *name, const char *value,
-                         int assign_list, int xflags)
+                         bool assign_list, int xflags)
 {
   char *nval;
 

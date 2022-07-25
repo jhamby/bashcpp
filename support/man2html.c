@@ -3024,7 +3024,7 @@ scan_request(char *c)
 				i = V(c[0], c[1]);
 				j = 2;
 				if (words == 1)
-					wordlist[1] = "..";
+					wordlist[1] = (char *)"..";
 				else {
 					wordlist[1]--;
 					wordlist[1][0] = '.';
@@ -3677,7 +3677,7 @@ scan_request(char *c)
 				for (i = words; i < 20; i++)
 					wordlist[i] = NULL;
 				deflen = strlen(owndef->st);
-				for (i = 0; ((char *)owndef->st)[deflen + 2 + i] = owndef->st[i]; i++);
+				for (i = 0; (((char *)owndef->st)[deflen + 2 + i] = owndef->st[i]); i++);
 				oldargument = argument;
 				argument = wordlist;
 				onff = newline_for_fun;

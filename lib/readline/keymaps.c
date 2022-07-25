@@ -3,7 +3,7 @@
 /* Copyright (C) 1988,1989-2009,2017 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -56,18 +56,17 @@
 Keymap
 rl_make_bare_keymap (void)
 {
-  register int i;
   Keymap keymap;
 
   keymap = (Keymap)xmalloc (KEYMAP_SIZE * sizeof (KEYMAP_ENTRY));
-  for (i = 0; i < KEYMAP_SIZE; i++)
+  for (int i = 0; i < KEYMAP_SIZE; i++)
     {
       keymap[i].type = ISFUNC;
       keymap[i].function = (rl_command_func_t *)NULL;
     }
 
 #if 0
-  for (i = 'A'; i < ('Z' + 1); i++)
+  for (int i = 'A'; i < ('Z' + 1); i++)
     {
       keymap[i].type = ISFUNC;
       keymap[i].function = rl_do_lowercase_version;
@@ -82,9 +81,7 @@ rl_make_bare_keymap (void)
 int
 rl_empty_keymap (Keymap keymap)
 {
-  int i;
-
-  for (i = 0; i < ANYOTHERKEY; i++)
+  for (int i = 0; i < ANYOTHERKEY; i++)
     {
       if (keymap[i].type != ISFUNC || keymap[i].function)
 	return 0;
@@ -97,11 +94,10 @@ rl_empty_keymap (Keymap keymap)
 Keymap
 rl_copy_keymap (Keymap map)
 {
-  register int i;
   Keymap temp;
 
   temp = rl_make_bare_keymap ();
-  for (i = 0; i < KEYMAP_SIZE; i++)
+  for (int i = 0; i < KEYMAP_SIZE; i++)
     {
       temp[i].type = map[i].type;
       temp[i].function = map[i].function;
@@ -115,13 +111,12 @@ rl_copy_keymap (Keymap map)
 Keymap
 rl_make_keymap (void)
 {
-  register int i;
   Keymap newmap;
 
   newmap = rl_make_bare_keymap ();
 
   /* All ASCII printing characters are self-inserting. */
-  for (i = ' '; i < 127; i++)
+  for (int i = ' '; i < 127; i++)
     newmap[i].function = rl_insert;
 
   newmap[TAB].function = rl_insert;
@@ -130,7 +125,7 @@ rl_make_keymap (void)
 
 #if KEYMAP_SIZE > 128
   /* Printing characters in ISO Latin-1 and some 8-bit character sets. */
-  for (i = 128; i < 256; i++)
+  for (int i = 128; i < 256; i++)
     newmap[i].function = rl_insert;
 #endif /* KEYMAP_SIZE > 128 */
 
@@ -141,12 +136,10 @@ rl_make_keymap (void)
 void
 rl_discard_keymap (Keymap map)
 {
-  int i;
-
   if (map == 0)
     return;
 
-  for (i = 0; i < KEYMAP_SIZE; i++)
+  for (int i = 0; i < KEYMAP_SIZE; i++)
     {
       switch (map[i].type)
 	{

@@ -58,9 +58,8 @@ int
 main (int argc, char **argv)
 {
   char buf[128];
-  register int i;
 
-  for (i = 0; i < 128; i++)
+  for (int i = 0; i < 128; i++)
     buf[i] = ' ';
 
   signal (SIGPIPE, sigpipe);

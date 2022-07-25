@@ -103,14 +103,14 @@ int volatile _rl_caught_signal = 0;	/* should be sig_atomic_t, but that requires
 
 /* If non-zero, print characters corresponding to received signals as long as
    the user has indicated his desire to do so (_rl_echo_control_chars). */
-int _rl_echoctl = 0;
+bool _rl_echoctl = false;
 
 int _rl_intr_char = 0;
 int _rl_quit_char = 0;
 int _rl_susp_char = 0;
 
-static int signals_set_flag;
-static int sigwinch_set_flag;
+static bool signals_set_flag;
+static bool sigwinch_set_flag;
 
 #if defined (HAVE_POSIX_SIGNALS)
 sigset_t _rl_orig_sigset;
@@ -468,7 +468,7 @@ rl_set_signals (void)
     }
 #endif /* HAVE_POSIX_SIGNALS */
 
-  if (rl_catch_signals && signals_set_flag == 0)
+  if (rl_catch_signals && !signals_set_flag)
     {
 #if defined (HAVE_POSIX_SIGNALS)
       sigemptyset (&_rl_orig_sigset);
@@ -510,7 +510,7 @@ rl_set_signals (void)
       rl_maybe_set_sighandler (SIGTTIN, rl_signal_handler, &old_ttin);
 #endif /* SIGTTIN */
 
-      signals_set_flag = 1;
+      signals_set_flag = true;
 
 #if defined (HAVE_POSIX_SIGNALS)
       sigprocmask (SIG_SETMASK, &_rl_orig_sigset, (sigset_t *)NULL);
@@ -525,10 +525,10 @@ rl_set_signals (void)
     }
 
 #if defined (SIGWINCH)
-  if (rl_catch_sigwinch && sigwinch_set_flag == 0)
+  if (rl_catch_sigwinch && !sigwinch_set_flag)
     {
       rl_maybe_set_sighandler (SIGWINCH, rl_sigwinch_handler, &old_winch);
-      sigwinch_set_flag = 1;
+      sigwinch_set_flag = true;
     }
 #endif /* SIGWINCH */
 
@@ -540,7 +540,7 @@ rl_clear_signals (void)
 {
   sighandler_cxt dummy;
 
-  if (rl_catch_signals && signals_set_flag == 1)
+  if (rl_catch_signals && signals_set_flag)
     {
       /* Since rl_maybe_set_sighandler doesn't override a SIG_IGN handler,
 	 we should in theory not have to restore a handler where
@@ -571,15 +571,15 @@ rl_clear_signals (void)
       rl_maybe_restore_sighandler (SIGTTIN, &old_ttin);
 #endif /* SIGTTIN */
 
-      signals_set_flag = 0;
+      signals_set_flag = false;
     }
 
 #if defined (SIGWINCH)
-  if (rl_catch_sigwinch && sigwinch_set_flag == 1)
+  if (rl_catch_sigwinch && sigwinch_set_flag)
     {
       sigemptyset (&dummy.sa_mask);
       rl_sigaction (SIGWINCH, &old_winch, &dummy);
-      sigwinch_set_flag = 0;
+      sigwinch_set_flag = false;
     }
 #endif
 
@@ -614,7 +614,7 @@ rl_reset_after_signal (void)
 void
 rl_free_line_state (void)
 {
-  register HIST_ENTRY *entry;
+  HIST_ENTRY *entry;
 
   rl_free_undo_list ();
 
@@ -748,7 +748,7 @@ rl_echo_signal_char (int sig)
   char cstr[3];
   int cslen, c;
 
-  if (_rl_echoctl == 0 || _rl_echo_control_chars == 0)
+  if (!_rl_echoctl || !_rl_echo_control_chars)
     return;
 
   switch (sig)

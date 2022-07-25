@@ -1438,7 +1438,7 @@ nohup_job (int job_index)
   if (js.j_jobslots == 0)
     return;
 
-  if (temp = jobs[job_index])
+  if ((temp = jobs[job_index]))
     temp->flags |= J_NOHUP;
 }
 

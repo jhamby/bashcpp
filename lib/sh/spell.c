@@ -40,8 +40,8 @@
 #include <maxpath.h>
 #include <stdc.h>
 
-static int mindist (char *, char *, char *);
-static int spdist (char *, char *);
+static int mindist (const char *, const char *, char *);
+static int spdist (const char *, const char *);
 
 /*
  * `spname' and its helpers are inspired by the code in "The UNIX
@@ -59,13 +59,12 @@ static int spdist (char *, char *);
  *	Stores corrected name in `newname'.
  */
 int
-spname(char *oldname, char *newname)
+spname(const char *oldname, char *newname)
 {
-  char *op, *np, *p;
   char guess[PATH_MAX + 1], best[PATH_MAX + 1];
 
-  op = oldname;
-  np = newname;
+  const char *op = oldname;
+  char *np = newname;
   for (;;)
     {
       while (*op == '/')    /* Skip slashes */
@@ -82,6 +81,7 @@ spname(char *oldname, char *newname)
 	}
 
       /* Copy next component into guess */
+      char *p;
       for (p = guess; *op != '/' && *op != '\0'; op++)
 	if (p < guess + PATH_MAX)
 	  *p++ = *op;
@@ -93,7 +93,7 @@ spname(char *oldname, char *newname)
       /*
        *  Add to end of newname
        */
-      for (p = best; *np = *p++; np++)
+      for (p = best; (*np = *p++); np++)
 	;
     }
 }
@@ -102,19 +102,17 @@ spname(char *oldname, char *newname)
  *  Search directory for a guess
  */
 static int
-mindist(char *dir, char *guess, char *best)
+mindist(const char *dir, const char *guess, char *best)
 {
-  DIR *fd;
-  struct dirent *dp;
-  int dist, x;
-
-  dist = 3;    /* Worst distance */
+  int dist = 3;    /* Worst distance */
   if (*dir == '\0')
     dir = ".";
 
+  DIR *fd;
   if ((fd = opendir(dir)) == NULL)
     return dist;
 
+  struct dirent *dp;
   while ((dp = readdir(fd)) != NULL)
     {
       /*
@@ -123,7 +121,7 @@ mindist(char *dir, char *guess, char *best)
        *  any single character match will be a better match
        *  than ".".
        */
-      x = spdist(dp->d_name, guess);
+      int x = spdist(dp->d_name, guess);
       if (x <= dist && x != 3)
 	{
 	  strcpy(best, dp->d_name);
@@ -150,7 +148,7 @@ mindist(char *dir, char *guess, char *best)
  *      3 otherwise
  */
 static int
-spdist(char *cur, char *new_)
+spdist(const char *cur, const char *new_)
 {
   while (*cur == *new_)
     {
@@ -182,7 +180,7 @@ spdist(char *cur, char *new_)
 }
 
 char *
-dirspell (char *dirname)
+dirspell (const char *dirname)
 {
   int n;
   char *guess;

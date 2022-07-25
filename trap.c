@@ -111,7 +111,7 @@ int pending_traps[NSIG];
    Used in execute_cmd.c and builtins/common.c to clean up when
    parse_and_execute does not return normally after executing the
    trap command (e.g., when `return' is executed in the trap command). */
-bool running_trap;
+int running_trap;
 
 /* Set to last_command_exit_value before running a trap. */
 int trap_saved_exit_value;
@@ -1055,7 +1055,7 @@ _run_trap_internal (int sig, const char *tag)
 	  function_code = setjmp_nosigs (return_catch);
 	}
 
-      flags = SEVAL_NONINT|SEVAL_NOHIST;
+      flags = SEVAL_NONINT | SEVAL_NOHIST;
       if (sig != DEBUG_TRAP && sig != RETURN_TRAP && sig != ERROR_TRAP)
 	flags |= SEVAL_RESETLINE;
       evalnest++;

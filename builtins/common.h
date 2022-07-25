@@ -222,7 +222,7 @@ extern int fc_execute_file (const char *);
 extern sh_builtin_func_t *this_shell_builtin;
 extern sh_builtin_func_t *last_shell_builtin;
 
-extern SHELL_VAR *builtin_bind_variable (const char *, char *, int);
+extern SHELL_VAR *builtin_bind_variable (const char *, const char *, int);
 extern int builtin_unbind_variable (const char *);
 
 /* variables from evalfile.c */

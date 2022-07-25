@@ -65,18 +65,20 @@ assoc_flush (HASH_TABLE *hash)
 }
 
 int
-assoc_insert (HASH_TABLE *hash, char *key, char *value)
+assoc_insert (HASH_TABLE *hash, char *key, const char *value)
 {
   BUCKET_CONTENTS *b;
 
   b = hash_search (key, hash, HASH_CREATE);
   if (b == 0)
     return -1;
+
   /* If we are overwriting an existing element's value, we're not going to
      use the key.  Nothing in the array assignment code path frees the key
      string, so we can free it here to avoid a memory leak. */
   if (b->key != key)
     free (key);
+
   FREE (b->data);
   b->data = value ? savestring (value) : (char *)0;
   return (0);
@@ -84,7 +86,7 @@ assoc_insert (HASH_TABLE *hash, char *key, char *value)
 
 /* Like assoc_insert, but returns b->data instead of freeing it */
 PTR_T
-assoc_replace (HASH_TABLE *hash, char *key, char *value)
+assoc_replace (HASH_TABLE *hash, char *key, const char *value)
 {
   BUCKET_CONTENTS *b;
   PTR_T t;
@@ -92,18 +94,20 @@ assoc_replace (HASH_TABLE *hash, char *key, char *value)
   b = hash_search (key, hash, HASH_CREATE);
   if (b == 0)
     return (PTR_T)0;
+
   /* If we are overwriting an existing element's value, we're not going to
      use the key.  Nothing in the array assignment code path frees the key
      string, so we can free it here to avoid a memory leak. */
   if (b->key != key)
     free (key);
+
   t = b->data;
   b->data = value ? savestring (value) : (char *)0;
   return t;
 }
 
 void
-assoc_remove (HASH_TABLE *hash, char *string)
+assoc_remove (HASH_TABLE *hash, const char *string)
 {
   BUCKET_CONTENTS *b;
 
@@ -281,7 +285,7 @@ assoc_subrange (HASH_TABLE *hash, arrayind_t start, arrayind_t nelem,
 }
 
 char *
-assoc_patsub (HASH_TABLE *h, char *pat, char *rep, int mflags)
+assoc_patsub (HASH_TABLE *h, const char *pat, const char *rep, int mflags)
 {
   char	*t;
   int pchar, qflags, pflags;
@@ -312,7 +316,7 @@ assoc_patsub (HASH_TABLE *h, char *pat, char *rep, int mflags)
 }
 
 char *
-assoc_modcase (HASH_TABLE *h, char *pat, int modop, int mflags)
+assoc_modcase (HASH_TABLE *h, const char *pat, int modop, int mflags)
 {
   char	*t;
   int pchar, qflags, pflags;

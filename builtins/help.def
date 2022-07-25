@@ -141,7 +141,7 @@ help_builtin (WORD_LIST *list)
 
       for (pass = 1, this_found = 0; pass < 3; pass++)
 	{
-	  for (i = 0; name = shell_builtins[i].name; i++)
+	  for (i = 0; (name = shell_builtins[i].name); i++)
 	    {
 	      QUIT;
 
@@ -231,14 +231,11 @@ open_helpfile (const char *name)
 static void
 show_longdoc (int i)
 {
-  char * const *doc;
-  int fd;
-
-  doc = shell_builtins[i].long_doc;
+  const char *const *doc = shell_builtins[i].long_doc;
 
   if (doc && doc[0] && *doc[0] == '/' && doc[1] == (char *)NULL)
     {
-      fd = open_helpfile (doc[0]);
+      int fd = open_helpfile (doc[0]);
       if (fd < 0)
 	return;
       zcatfd (fd, 1, doc[0]);

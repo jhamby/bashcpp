@@ -1422,7 +1422,7 @@ redir_varvalue (REDIRECT *redir)
   w = redir->redirector.filename->word;		/* shorthand */
   /* XXX - handle set -u here? */
 #if defined (ARRAY_VARS)
-  if (vr = valid_array_reference (w, 0))
+  if ((vr = valid_array_reference (w, 0)))
     {
       v = array_variable_part (w, 0, &sub, &len);
     }
@@ -1437,7 +1437,7 @@ redir_varvalue (REDIRECT *redir)
 	  if (v && nameref_p (v))
 	    {
 	      w = nameref_cell (v);
-	      if (vr = valid_array_reference (w, 0))
+	      if ((vr = valid_array_reference (w, 0)))
 		v = array_variable_part (w, 0, &sub, &len);
 	      else
 	        v = find_variable (w);
@@ -1460,8 +1460,11 @@ redir_varvalue (REDIRECT *redir)
   if (val == 0 || *val == 0)
     return -1;
 
+#if 0
+  /* this can't happen */
   if (legal_number (val, &vmax) < 0)
     return -1;
+#endif
 
   i = vmax;	/* integer truncation */
   return i;

@@ -17,7 +17,7 @@
 */
 
 #if EXTENDED_GLOB
-int
+bool
 EXTGLOB_PATTERN_P (const CHAR *pat)
 {
   switch (pat[0])
@@ -29,10 +29,10 @@ EXTGLOB_PATTERN_P (const CHAR *pat)
     case L('?'):
       return (pat[1] == L('('));	/* ) */
     default:
-      return 0;
+      return false;
     }
 
-  return 0;
+  return false;
 }
 #endif
 
@@ -40,7 +40,7 @@ EXTGLOB_PATTERN_P (const CHAR *pat)
    character of pattern PAT.  Compiled to both single and wiide character
    versions.  FLAGS is a subset of strmatch flags; used to do case-insensitive
    matching for now. */
-int
+bool
 MATCH_PATTERN_CHAR (const CHAR *pat, const CHAR *string, int flags)
 {
   CHAR c;
@@ -77,7 +77,7 @@ MATCHLEN (const CHAR *pat, size_t max)
     return (0);
 
   matlen = in_cclass = in_collsym = in_equiv = 0;
-  while (c = *pat++)
+  while ((c = *pat++))
     {
       switch (c)
 	{

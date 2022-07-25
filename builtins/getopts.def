@@ -86,8 +86,8 @@ $END
 #define G_INVALID_OPT	-2
 #define G_ARG_MISSING	-3
 
-static int getopts_unbind_variable (char *);
-static int getopts_bind_variable (char *, char *);
+static int getopts_unbind_variable (const char *);
+static int getopts_bind_variable (const char *, const char *);
 static int dogetopts (int, char **);
 
 /* getopts_reset is magic code for when OPTIND is reset.  N is the
@@ -110,7 +110,7 @@ getopts_unbind_variable (const char *name)
 }
 
 static int
-getopts_bind_variable (char *name, char *value)
+getopts_bind_variable (const char *name, const char *value)
 {
   SHELL_VAR *v;
 

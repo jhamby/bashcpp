@@ -264,11 +264,10 @@ void
 dispose_words (void *arg)
 {
   WORD_LIST *list = (WORD_LIST *)arg;
-  WORD_LIST *t;
 
   while (list)
     {
-      t = list;
+      WORD_LIST *t = list;
       list = (WORD_LIST *)(list->next);
       dispose_word (t->word);
 #if 0

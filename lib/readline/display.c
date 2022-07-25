@@ -755,7 +755,7 @@ rl_redisplay (void)
   int _rl_wrapped_multicolumn = 0;
 #endif
 
-  if (_rl_echoing_p == 0)
+  if (!_rl_echoing_p)
     return;
 
   /* Block keyboard interrupts because this function manipulates global

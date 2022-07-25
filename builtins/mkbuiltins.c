@@ -548,7 +548,7 @@ extract_info (const char *filename, FILE *structfile, FILE *externfile)
   output_cpp_line_info = 1;
 
   /* Process each line in the array. */
-  for (i = 0; line = defs->lines->array[i]; i++)
+  for (i = 0; (line = defs->lines->array[i]); i++)
     {
       defs->line_number = i;
 
@@ -662,7 +662,7 @@ free_defs (DEF_FILE *defs)
 
   if (defs->builtins)
     {
-      for (i = 0; builtin = (BUILTIN_DESC *)defs->builtins->array[i]; i++)
+      for (i = 0; (builtin = (BUILTIN_DESC *)defs->builtins->array[i]); i++)
 	{
 	  free_builtin (builtin);
 	  free (builtin);

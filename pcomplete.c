@@ -431,7 +431,7 @@ it_init_builtins (ITEMLIST *itp)
   sl = strlist_create (num_shell_builtins);
   for (i = n = 0; i < num_shell_builtins; i++)
     if (shell_builtins[i].function)
-      sl->list[n++] = shell_builtins[i].name;
+      sl->list[n++] = (char *) shell_builtins[i].name;
   sl->list[sl->list_len = n] = (char *)NULL;
   itp->flags |= LIST_DONTFREEMEMBERS;
   itp->slist = sl;
@@ -448,7 +448,7 @@ it_init_enabled (ITEMLIST *itp)
   for (i = n = 0; i < num_shell_builtins; i++)
     {
       if (shell_builtins[i].function && (shell_builtins[i].flags & BUILTIN_ENABLED))
-	sl->list[n++] = shell_builtins[i].name;
+	sl->list[n++] = (char *) shell_builtins[i].name;
     }
   sl->list[sl->list_len = n] = (char *)NULL;
   itp->flags |= LIST_DONTFREEMEMBERS;
@@ -466,7 +466,7 @@ it_init_disabled (ITEMLIST *itp)
   for (i = n = 0; i < num_shell_builtins; i++)
     {
       if (shell_builtins[i].function && ((shell_builtins[i].flags & BUILTIN_ENABLED) == 0))
-	sl->list[n++] = shell_builtins[i].name;
+	sl->list[n++] = (char *) shell_builtins[i].name;
     }
   sl->list[sl->list_len = n] = (char *)NULL;
   itp->flags |= LIST_DONTFREEMEMBERS;
@@ -498,7 +498,7 @@ it_init_helptopics (ITEMLIST *itp)
 
   sl = strlist_create (num_shell_builtins);
   for (i = n = 0; i < num_shell_builtins; i++)
-    sl->list[n++] = shell_builtins[i].name;
+    sl->list[n++] = (char *) shell_builtins[i].name;
   sl->list[sl->list_len = n] = (char *)NULL;
   itp->flags |= LIST_DONTFREEMEMBERS;
   itp->slist = sl;

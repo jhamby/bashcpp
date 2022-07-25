@@ -148,11 +148,10 @@ mapfile (int fd, long line_count_goal, long origin, long nskip,
   size_t line_length;
   unsigned int array_index, line_count;
   SHELL_VAR *entry;
-  int unbuffered_read;
 
   line = NULL;
   line_length = 0;
-  unbuffered_read = 0;
+  bool unbuffered_read = false;
 
   /* The following check should be done before reading any lines.  Doing it
      here allows us to call bind_array_element instead of bind_array_variable
@@ -179,11 +178,11 @@ mapfile (int fd, long line_count_goal, long origin, long nskip,
 #ifndef __CYGWIN__
   unbuffered_read = (lseek (fd, 0L, SEEK_CUR) < 0) && (errno == ESPIPE);
 #else
-  unbuffered_read = 1;
+  unbuffered_read = true;
 #endif
 
   if (delim != '\n')
-    unbuffered_read = 1;
+    unbuffered_read = true;
 
   zreset ();
 
@@ -210,7 +209,7 @@ mapfile (int fd, long line_count_goal, long origin, long nskip,
 	  run_callback (callback, array_index, line);
 
 	  /* Reset the buffer for bash own stream. */
-	  if (unbuffered_read == 0)
+	  if (!unbuffered_read)
 	    zsyncfd (fd);
 	}
 
@@ -226,7 +225,7 @@ mapfile (int fd, long line_count_goal, long origin, long nskip,
 
   free (line);
 
-  if (unbuffered_read == 0)
+  if (!unbuffered_read)
     zsyncfd (fd);
 
   return EXECUTION_SUCCESS;

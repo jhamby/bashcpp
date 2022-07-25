@@ -47,13 +47,13 @@ extern char array_expand_once;
 extern SHELL_VAR *convert_var_to_array (SHELL_VAR *);
 extern SHELL_VAR *convert_var_to_assoc (SHELL_VAR *);
 
-extern char *make_array_variable_value (SHELL_VAR *, arrayind_t, const char *, char *, int);
+extern char *make_array_variable_value (SHELL_VAR *, arrayind_t, const char *, const char *, int);
 
-extern SHELL_VAR *bind_array_variable (char *, arrayind_t, char *, int);
-extern SHELL_VAR *bind_array_element (SHELL_VAR *, arrayind_t, char *, int);
-extern SHELL_VAR *assign_array_element (const char *, char *, int);
+extern SHELL_VAR *bind_array_variable (const char *, arrayind_t, const char *, int);
+extern SHELL_VAR *bind_array_element (SHELL_VAR *, arrayind_t, const char *, int);
+extern SHELL_VAR *assign_array_element (const char *, const char *, int);
 
-extern SHELL_VAR *bind_assoc_variable (SHELL_VAR *, const char *, char *, char *, int);
+extern SHELL_VAR *bind_assoc_variable (SHELL_VAR *, const char *, char *, const char *, int);
 
 extern SHELL_VAR *find_or_make_array_variable (const char *, int);
 
@@ -81,7 +81,7 @@ extern bool valid_array_reference (const char *, int);
 extern char *array_value (const char *, int, int, int *, arrayind_t *);
 extern char *get_array_value (const char *, int, int *, arrayind_t *);
 
-extern char *array_keys (char *, int, int);
+extern char *array_keys (const char *, int, int);
 
 extern char *array_variable_name (const char *, int, char **, int *);
 extern SHELL_VAR *array_variable_part (const char *, int, char **, int *);

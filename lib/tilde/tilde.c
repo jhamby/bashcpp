@@ -127,12 +127,9 @@ static char *glue_prefix_and_suffix (char *, const char *, int);
 static int
 tilde_find_prefix (const char *string, int *len)
 {
-  register int i, j, string_len;
-  register char **prefixes;
+  char **prefixes = tilde_additional_prefixes;
 
-  prefixes = tilde_additional_prefixes;
-
-  string_len = strlen (string);
+  size_t string_len = strlen (string);
   *len = 0;
 
   if (*string == '\0' || *string == '~')
@@ -140,9 +137,9 @@ tilde_find_prefix (const char *string, int *len)
 
   if (prefixes)
     {
-      for (i = 0; i < string_len; i++)
+      for (int i = 0; i < string_len; i++)
 	{
-	  for (j = 0; prefixes[j]; j++)
+	  for (int j = 0; prefixes[j]; j++)
 	    {
 	      if (strncmp (string + i, prefixes[j], strlen (prefixes[j])) == 0)
 		{
@@ -160,11 +157,9 @@ tilde_find_prefix (const char *string, int *len)
 static int
 tilde_find_suffix (const char *string)
 {
-  register int i, j, string_len;
-  register char **suffixes;
-
-  suffixes = tilde_additional_suffixes;
-  string_len = strlen (string);
+  char **suffixes = tilde_additional_suffixes;
+  size_t string_len = strlen (string);
+  int i;
 
   for (i = 0; i < string_len; i++)
     {
@@ -175,7 +170,7 @@ tilde_find_suffix (const char *string)
 #endif
 	break;
 
-      for (j = 0; suffixes && suffixes[j]; j++)
+      for (int j = 0; suffixes && suffixes[j]; j++)
 	{
 	  if (strncmp (string + i, suffixes[j], strlen (suffixes[j])) == 0)
 	    return (i);
@@ -200,12 +195,11 @@ tilde_expand (const char *string)
   /* Scan through STRING expanding tildes as we come to them. */
   while (1)
     {
-      register int start, end;
       char *tilde_word, *expansion;
       int len;
 
       /* Make START point to the tilde which starts the expansion. */
-      start = tilde_find_prefix (string, &len);
+      int start = tilde_find_prefix (string, &len);
 
       /* Copy the skipped text into the result. */
       if ((result_index + start + 1) > result_size)
@@ -219,7 +213,7 @@ tilde_expand (const char *string)
 
       /* Make END be the index of one after the last character of the
 	 username. */
-      end = tilde_find_suffix (string);
+      int end = tilde_find_suffix (string);
 
       /* If both START and END are zero, we are all done. */
       if (!start && !end)

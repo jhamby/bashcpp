@@ -269,7 +269,7 @@ read_history (const char *filename)
 int
 read_history_range (const char *filename, int from, int to)
 {
-  register char *line_start, *line_end, *p;
+  char *line_start, *line_end, *p;
   char *input, *buffer, *bufend, *last_ts;
   int file, current_line, chars_read, has_timestamps, reset_comment_char;
   struct stat finfo;
@@ -679,7 +679,6 @@ history_truncate_file (const char *fname, int lines)
 static int
 history_do_write (const char *filename, int nelements, int overwrite)
 {
-  register int i;
   char *output, *tempname, *histname;
   int file, mode, rv, exists;
   struct stat finfo, nfinfo;
@@ -720,13 +719,12 @@ history_do_write (const char *filename, int nelements, int overwrite)
      Suggested by Peter Ho (peter@robosts.oxford.ac.uk). */
   {
     HIST_ENTRY **the_history;	/* local */
-    register int j;
-    int buffer_size;
+    int buffer_size = 0;
     char *buffer;
 
     the_history = history_list ();
     /* Calculate the total number of bytes to write. */
-    for (buffer_size = 0, i = history_length - nelements; i < history_length; i++)
+    for (int i = history_length - nelements; i < history_length; i++)
       {
 	if (history_write_timestamps && the_history[i]->timestamp && the_history[i]->timestamp[0])
 	  buffer_size += strlen (the_history[i]->timestamp) + 1;
@@ -763,7 +761,7 @@ mmap_error:
       }
 #endif
 
-    for (j = 0, i = history_length - nelements; i < history_length; i++)
+    for (int j = 0, i = history_length - nelements; i < history_length; i++)
       {
 	if (history_write_timestamps && the_history[i]->timestamp && the_history[i]->timestamp[0])
 	  {

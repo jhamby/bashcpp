@@ -589,7 +589,7 @@ parse_shellopts (char *value)
   int vptr;
 
   vptr = 0;
-  while (vname = extract_colon_unit (value, &vptr))
+  while ((vname = extract_colon_unit (value, &vptr)))
     {
       set_minus_o_option (FLAG_ON, vname);
       free (vname);
@@ -712,7 +712,7 @@ set_builtin (WORD_LIST *list)
 
       if ((on_or_off = *arg) && (on_or_off == '-' || on_or_off == '+'))
 	{
-	  while (flag_name = *++arg)
+	  while ((flag_name = *++arg))
 	    {
 	      if (flag_name == '?')
 		{
@@ -915,7 +915,7 @@ unset_builtin (WORD_LIST *list)
 	 supplied.  The readonly check below takes care of it. */
       if (var == 0 && nameref == 0 &&  unset_variable == 0 && unset_function == 0)
 	{
-	  if (var = find_function (name))
+	  if ((var = find_function (name)))
 	    unset_function = 1;
 	}
 
@@ -954,7 +954,7 @@ unset_builtin (WORD_LIST *list)
 	      if (valid_array_reference (nameref_cell (var), 0))
 		{
 		  tname = savestring (nameref_cell (var));
-		  if (var = array_variable_part (tname, 0, &t, (int *)0))
+		  if ((var = array_variable_part (tname, 0, &t, (int *)0)))
 		    tem = unbind_array_element (var, t, vflags);	/* XXX new third arg */
 		  free (tname);
 		}

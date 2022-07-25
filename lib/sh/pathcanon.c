@@ -110,7 +110,7 @@ sh_canonpath (const char *path, int flags)
 
   /* POSIX.2 says to leave a leading `//' alone.  On cygwin, we skip over any
      leading `x:' (dos drive name). */
-  if (rooted = ROOTEDPATH(path))
+  if ((rooted = ROOTEDPATH(path)))
     {
       stub_char = DIRSEP;
 #if defined (__CYGWIN__)

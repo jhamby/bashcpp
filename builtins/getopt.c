@@ -174,7 +174,7 @@ sh_getopt (int argc, char *const *argv, const char *optstring)
       nextchar = (char *)NULL;
     }
 
-  if (sh_badopt = (temp == NULL || c == ':'))
+  if ((sh_badopt = (temp == NULL || c == ':')))
     {
       if (sh_opterr)
 	BADOPT (c);
@@ -198,7 +198,7 @@ sh_getopt (int argc, char *const *argv, const char *optstring)
 	    NEEDARG (c);
 
 	  sh_optopt = c;
-	  sh_optarg = "";	/* Needed by getopts. */
+	  sh_optarg = (char *)"";	/* Needed by getopts. */
 	  c = (optstring[0] == ':') ? ':' : '?';
 	}
       else

@@ -904,12 +904,12 @@ builtin_help ()
 /* **************************************************************** */
 
 SHELL_VAR *
-builtin_bind_variable (const char *name, char *value, int flags)
+builtin_bind_variable (const char *name, const char *value, int flags)
 {
   SHELL_VAR *v;
 
 #if defined (ARRAY_VARS)
-  if (valid_array_reference (name, assoc_expand_once ? (VA_NOEXPAND|VA_ONEWORD) : 0) == 0)
+  if (valid_array_reference (name, assoc_expand_once ? (VA_NOEXPAND | VA_ONEWORD) : 0) == 0)
     v = bind_variable (name, value, flags);
   else
     v = assign_array_element (name, value, flags | (assoc_expand_once ? ASS_NOEXPAND : 0));

@@ -97,7 +97,7 @@ extern int errno;
 extern char **environ;	/* used if no third argument to main() */
 #endif
 
-extern int gnu_error_format;
+extern char gnu_error_format;
 
 /* Non-zero means that this shell has already been run; i.e. you should
    call shell_reinitialize () if you need to start afresh. */
@@ -176,8 +176,8 @@ const char *shell_name = NULL;
 time_t shell_start_time;
 struct timeval shellstart;
 
-/* Are we running in an emacs shell window? */
-bool running_under_emacs;
+/* Are we running in an emacs shell window? (== 2 for `eterm`) */
+int running_under_emacs;
 
 /* Do we have /dev/fd? */
 #ifdef HAVE_DEV_FD
@@ -511,7 +511,7 @@ main (int argc, char **argv, char **env)
   set_login_shell ("login_shell", login_shell != 0);
 
   if (dump_po_strings)
-    dump_translatable_strings = 1;
+    dump_translatable_strings = true;
 
   if (dump_translatable_strings)
     read_but_dont_execute = 1;
@@ -708,7 +708,7 @@ main (int argc, char **argv, char **env)
     arg_index = bind_args (argv, arg_index, argc, 1);	/* $1 ... $n */
 
   /* The startup files are run with `set -e' temporarily disabled. */
-  if (locally_skip_execution == 0 && running_setuid == 0)
+  if (!locally_skip_execution && !running_setuid)
     {
       old_errexit_flag = exit_immediately_on_error;
       exit_immediately_on_error = 0;
@@ -886,16 +886,14 @@ parse_long_options (char **argv, int arg_start, int arg_end)
 static int
 parse_shell_options (char **argv, int arg_start, int arg_end)
 {
-  int arg_index;
-  int arg_character, on_or_off, next_arg, i;
-  char *o_option, *arg_string;
+  char *arg_string;
 
-  arg_index = arg_start;
+  int arg_index = arg_start;
   while (arg_index != arg_end && (arg_string = argv[arg_index]) &&
 	 (*arg_string == '-' || *arg_string == '+'))
     {
       /* There are flag arguments, so parse them. */
-      next_arg = arg_index + 1;
+      int next_arg = arg_index + 1;
 
       /* A single `-' signals the end of options.  From the 4.3 BSD sh.
 	 An option `--' means the same thing; this is the standard
@@ -905,9 +903,12 @@ parse_shell_options (char **argv, int arg_start, int arg_end)
 	     (arg_string[1] == '-' && arg_string[2] == '\0')))
 	return (next_arg);
 
-      i = 1;
-      on_or_off = arg_string[0];
-      while (arg_character = arg_string[i++])
+      int i = 1;
+      char arg_character;
+      char *o_option;
+
+      char on_or_off = arg_string[0];
+      while ((arg_character = arg_string[i++]))
 	{
 	  switch (arg_character)
 	    {
@@ -953,7 +954,7 @@ parse_shell_options (char **argv, int arg_start, int arg_end)
 	      break;
 
 	    case 'D':
-	      dump_translatable_strings = 1;
+	      dump_translatable_strings = true;
 	      break;
 
 	    default:

@@ -87,7 +87,7 @@ phash_remove (const char *filename)
    in a directory in $PATH that is not an absolute pathname.
    FOUND is the initial value for times_found. */
 void
-phash_insert (char *filename, char *full_path, int check_dot, int found)
+phash_insert (const char *filename, const char *full_path, bool check_dot, int found)
 {
   BUCKET_CONTENTS *item;
 
@@ -97,7 +97,7 @@ phash_insert (char *filename, char *full_path, int check_dot, int found)
   if (hashed_filenames == 0)
     phash_create ();
 
-  item = hash_insert (filename, hashed_filenames, 0);
+  item = hash_insert ((char *)filename, hashed_filenames, 0);
   if (item->data)
     free (pathdata(item)->path);
   else

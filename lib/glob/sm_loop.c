@@ -386,7 +386,7 @@ BRACKMATCH (const CHAR *p, U_CHAR test, int flags)
      circumflex (`^') in its role in a `nonmatching list'.  A bracket
      expression starting with an unquoted circumflex character produces
      unspecified results.  This implementation treats the two identically. */
-  if (inverted = (*p == L('!') || *p == L('^')))
+  if ((inverted = (*p == L('!') || *p == L('^'))))
     ++p;
 
   c = *p++;
@@ -664,7 +664,7 @@ PATSCAN (const CHAR *string, const CHAR *end, INT delim)
   if (string == end)
     return (NULL);
 
-  for (const CHAR *s = string; c = *s; s++)
+  for (const CHAR *s = string; (c = *s); s++)
     {
       if (s >= end)
 	return (s);
@@ -870,7 +870,7 @@ fprintf(stderr, "extmatch: flags = %d\n", flags);
 	    {
 	      pnext = PATSCAN (psub, pe, L('|'));
 	      /* If one of the patterns matches, just bail immediately. */
-	      if (m1 = (GMATCH (s, srest, psub, pnext - 1, NULL, flags) == 0))
+	      if ((m1 = (GMATCH (s, srest, psub, pnext - 1, NULL, flags) == 0)))
 		break;
 	      if (pnext == prest)
 		break;

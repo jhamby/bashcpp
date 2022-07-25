@@ -224,21 +224,20 @@ rl_add_funmap_entry (const char *name, rl_command_func_t *function)
   return funmap_entry;
 }
 
-static int funmap_initialized;
+static bool funmap_initialized;
 
 /* Make the funmap contain all of the default entries. */
 void
 rl_initialize_funmap (void)
 {
-  register int i;
-
   if (funmap_initialized)
     return;
 
+  int i;
   for (i = 0; default_funmap[i].name; i++)
     rl_add_funmap_entry (default_funmap[i].name, default_funmap[i].function);
 
-  funmap_initialized = 1;
+  funmap_initialized = true;
   funmap_program_specific_entry_start = i;
 }
 

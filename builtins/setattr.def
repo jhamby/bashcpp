@@ -313,7 +313,7 @@ set_or_show_attributes (WORD_LIST *list, int attribute, int nodefs)
       if (variable_list)
 	{
 	  SHELL_VAR *var;
-	  for (i = 0; var = variable_list[i]; i++)
+	  for (i = 0; (var = variable_list[i]); i++)
 	    {
 #if defined (ARRAY_VARS)
 	      if (arrays_only && array_p (var) == 0)
@@ -330,7 +330,7 @@ set_or_show_attributes (WORD_LIST *list, int attribute, int nodefs)
 	      if ((var->attributes & attribute))
 		{
 		  show_var_attributes (var, READONLY_OR_EXPORT, nodefs);
-		  if (any_failed = sh_chkwrite (any_failed))
+		  if ((any_failed = sh_chkwrite (any_failed)))
 		    break;
 		}
 	    }
@@ -356,10 +356,10 @@ show_all_var_attributes (int v, int nodefs)
   if (variable_list == 0)
     return (EXECUTION_SUCCESS);
 
-  for (i = any_failed = 0; var = variable_list[i]; i++)
+  for (i = any_failed = 0; (var = variable_list[i]); i++)
     {
       show_var_attributes (var, READONLY_OR_EXPORT, nodefs);
-      if (any_failed = sh_chkwrite (any_failed))
+      if ((any_failed = sh_chkwrite (any_failed)))
         break;
     }
   free (variable_list);
@@ -379,10 +379,10 @@ show_local_var_attributes (int v, int nodefs)
   if (variable_list == 0)
     return (EXECUTION_SUCCESS);
 
-  for (i = any_failed = 0; var = variable_list[i]; i++)
+  for (i = any_failed = 0; (var = variable_list[i]); i++)
     {
       show_var_attributes (var, READONLY_OR_EXPORT, nodefs);
-      if (any_failed = sh_chkwrite (any_failed))
+      if ((any_failed = sh_chkwrite (any_failed)))
         break;
     }
   free (variable_list);

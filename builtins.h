@@ -50,10 +50,10 @@
 
 /* The thing that we build the array of builtins out of. */
 struct builtin {
-  char *name;			/* The name that the user types. */
+  const char *name;		/* The name that the user types. */
   sh_builtin_func_t *function;	/* The address of the invoked function. */
   int flags;			/* One of the #defines above. */
-  char * const *long_doc;	/* NULL terminated array of strings. */
+  const char *const *long_doc;	/* NULL terminated array of strings. */
   const char *short_doc;	/* Short version of documentation. */
   void *handle;			/* dlsym() handle */
 };
