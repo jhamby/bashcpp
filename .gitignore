@@ -6,6 +6,8 @@
 .DS_Store?
 ._*
 .Spotlight-V100
+.vscode
+
 #
 # these files are all created by the build process; none are in the repository
 #
