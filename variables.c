@@ -3436,6 +3436,7 @@ assign_in_env (WORD_DESC *word, int flags)
       if (legal_identifier (name) == 0)
 	{
 	  sh_invalidid (name);
+	  free (name);			/* fix leak */
 	  return (0);
 	}
 

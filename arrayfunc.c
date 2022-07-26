@@ -838,6 +838,7 @@ quote_compound_array_word (char *w, int type)
   nword[i++] = w[ind++];
   value = sh_single_quote (w + ind);
   strcpy (nword + i, value);
+  free (value);			/* fix leak */
 
   return nword;
 }

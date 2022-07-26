@@ -9704,7 +9704,7 @@ expand_word_internal (WORD_DESC *word, int quoted, bool isexp,
 
   /* OK, let's see if we can optimize a common idiom: "$@" */
   if (STREQ (word->word, "\"$@\"") &&
-      (word->flags == (W_HASDOLLAR|W_QUOTED)) &&
+      (word->flags == (W_HASDOLLAR | W_QUOTED)) &&
       dollar_vars[1])		/* XXX - check IFS here as well? */
     {
       if (contains_dollar_at)
@@ -9721,7 +9721,7 @@ expand_word_internal (WORD_DESC *word, int quoted, bool isexp,
 
   istring = (char *)xmalloc (istring_size = DEFAULT_INITIAL_ARRAY_SIZE);
   istring[istring_index = 0] = '\0';
-  quoted_dollar_at = had_quoted_null = has_dollar_at = 0;
+  quoted_dollar_at = had_quoted_null = has_dollar_at = false;
   has_quoted_ifs = false;
   split_on_spaces = false;
   quoted_state = UNQUOTED;
@@ -9788,7 +9788,8 @@ add_string:
 	  {
 	       /* XXX - technically this should only be expanded at the start
 	       of a word */
-	    if (string[++sindex] != LPAREN || (quoted & (Q_HERE_DOCUMENT|Q_DOUBLE_QUOTES)) || (word->flags & (W_DQUOTE|W_NOPROCSUB)))
+	    if (string[++sindex] != LPAREN || (quoted & (Q_HERE_DOCUMENT | Q_DOUBLE_QUOTES)) ||
+		(word->flags & (W_DQUOTE | W_NOPROCSUB)))
 	      {
 		sindex--;	/* add_character: label increments sindex */
 		goto add_character;
@@ -9822,9 +9823,9 @@ add_string:
 	     to `assignment builtins' like declare and export that look like
 	     assignment statements.  We now do tilde expansion on such words
 	     even in POSIX mode. */
-	  if (word->flags & (W_ASSIGNRHS|W_NOTILDE))
+	  if (word->flags & (W_ASSIGNRHS | W_NOTILDE))
 	    {
-	      if (!isexp && (word->flags & (W_NOSPLIT|W_NOSPLIT2)) == 0 && isifs (c))
+	      if (!isexp && (word->flags & (W_NOSPLIT | W_NOSPLIT2)) == 0 && isifs (c))
 		goto add_ifs_character;
 	      else
 		goto add_character;
@@ -9844,7 +9845,7 @@ add_string:
 	  if (word->flags & W_ASSIGNARG)
 	    word->flags |= W_ASSIGNRHS;		/* affects $@ */
 
-	  if (isexp == 0 && (word->flags & (W_NOSPLIT|W_NOSPLIT2)) == 0 && isifs (c))
+	  if (!isexp && (word->flags & (W_NOSPLIT | W_NOSPLIT2)) == 0 && isifs (c))
 	    {
 	      has_quoted_ifs = true;
 	      goto add_ifs_character;
@@ -9853,20 +9854,20 @@ add_string:
 	    goto add_character;
 
 	case ':':
-	  if (word->flags & (W_NOTILDE|W_NOASSNTILDE))
+	  if (word->flags & (W_NOTILDE | W_NOASSNTILDE))
 	    {
-	      if (isexp == 0 && (word->flags & (W_NOSPLIT|W_NOSPLIT2)) == 0 && isifs (c))
+	      if (!isexp && (word->flags & (W_NOSPLIT | W_NOSPLIT2)) == 0 && isifs (c))
 		goto add_ifs_character;
 	      else
 		goto add_character;
 	    }
 
-	  if ((word->flags & (W_ASSIGNMENT|W_ASSIGNRHS)) &&
-	      (posixly_correct == 0 || (word->flags & W_TILDEEXP)) &&
+	  if ((word->flags & (W_ASSIGNMENT | W_ASSIGNRHS)) &&
+	      (!posixly_correct || (word->flags & W_TILDEEXP)) &&
 	      string[sindex+1] == '~')
 	    word->flags |= W_ITILDE;
 
-	  if (isexp == 0 && (word->flags & (W_NOSPLIT|W_NOSPLIT2)) == 0 && isifs (c))
+	  if (!isexp && (word->flags & (W_NOSPLIT | W_NOSPLIT2)) == 0 && isifs (c))
 	    goto add_ifs_character;
 	  else
 	    goto add_character;
@@ -9877,12 +9878,13 @@ add_string:
 	     assignment statement, we don't do tilde expansion.  We don't
 	     do tilde expansion if quoted or in an arithmetic context. */
 
-	  if ((word->flags & (W_NOTILDE|W_DQUOTE)) ||
+	  if ((word->flags & (W_NOTILDE | W_DQUOTE)) ||
 	      (sindex > 0 && ((word->flags & W_ITILDE) == 0)) ||
-	      (quoted & (Q_DOUBLE_QUOTES|Q_HERE_DOCUMENT)))
+	      (quoted & (Q_DOUBLE_QUOTES | Q_HERE_DOCUMENT)))
 	    {
 	      word->flags &= ~W_ITILDE;
-	      if (isexp == 0 && (word->flags & (W_NOSPLIT|W_NOSPLIT2)) == 0 && isifs (c) && (quoted & (Q_DOUBLE_QUOTES|Q_HERE_DOCUMENT)) == 0)
+	      if (!isexp && (word->flags & (W_NOSPLIT | W_NOSPLIT2)) == 0 &&
+		  isifs (c) && (quoted & (Q_DOUBLE_QUOTES | Q_HERE_DOCUMENT)) == 0)
 		goto add_ifs_character;
 	      else
 		goto add_character;
@@ -9890,7 +9892,7 @@ add_string:
 
 	  if (word->flags & W_ASSIGNRHS)
 	    tflag = 2;
-	  else if (word->flags & (W_ASSIGNMENT|W_TILDEEXP))
+	  else if (word->flags & (W_ASSIGNMENT | W_TILDEEXP))
 	    tflag = 1;
 	  else
 	    tflag = 0;
@@ -9936,8 +9938,9 @@ add_string:
 	  tword = param_expand (string, &sindex, quoted, expanded_something,
 			       &temp_has_dollar_at, &quoted_dollar_at,
 			       &had_quoted_null, pflags);
-	  has_dollar_at += temp_has_dollar_at;
-	  split_on_spaces += (tword->flags & W_SPLITSPACE);
+
+	  has_dollar_at |= temp_has_dollar_at;
+	  split_on_spaces |= (tword->flags & W_SPLITSPACE);
 
 	  if (tword == &expand_wdesc_error || tword == &expand_wdesc_fatal)
 	    {
@@ -10038,7 +10041,8 @@ add_string:
 	      SCOPY_CHAR_I (twochars, CTLESC, c, string, sindex, string_size);
 	    }
 	  /* This is the fix for " $@\ " */
-	  else if ((quoted & (Q_HERE_DOCUMENT|Q_DOUBLE_QUOTES)) && ((sh_syntaxtab[c] & tflag) == 0) && isexp == 0 && isifs (c))
+	  else if ((quoted & (Q_HERE_DOCUMENT | Q_DOUBLE_QUOTES)) &&
+		   ((sh_syntaxtab[c] & tflag) == 0) && !isexp && isifs (c))
 	    {
 	      RESIZE_MALLOCED_BUFFER (istring, istring_index, 2, istring_size,
 				      DEFAULT_ARRAY_SIZE);
@@ -10048,7 +10052,7 @@ add_string:
 
 	      SCOPY_CHAR_I (twochars, CTLESC, c, string, sindex, string_size);
 	    }
-	  else if ((quoted & (Q_HERE_DOCUMENT|Q_DOUBLE_QUOTES)) && c == 0)
+	  else if ((quoted & (Q_HERE_DOCUMENT | Q_DOUBLE_QUOTES)) && c == 0)
 	    {
 	      RESIZE_MALLOCED_BUFFER (istring, istring_index, 2, istring_size,
 				      DEFAULT_ARRAY_SIZE);
@@ -10057,7 +10061,8 @@ add_string:
 	      istring[istring_index] = '\0';
 	      break;
 	    }
-	  else if ((quoted & (Q_HERE_DOCUMENT|Q_DOUBLE_QUOTES)) && ((sh_syntaxtab[c] & tflag) == 0))
+	  else if ((quoted & (Q_HERE_DOCUMENT | Q_DOUBLE_QUOTES)) &&
+		   ((sh_syntaxtab[c] & tflag) == 0))
 	    {
 	      SCOPY_CHAR_I (twochars, '\\', c, string, sindex, string_size);
 	    }
@@ -10084,7 +10089,7 @@ add_twochars:
 	  break;
 
 	case '"':
-	  if ((quoted & (Q_DOUBLE_QUOTES|Q_HERE_DOCUMENT)) && ((quoted & Q_ARITH) == 0))
+	  if ((quoted & (Q_DOUBLE_QUOTES | Q_HERE_DOCUMENT)) && ((quoted & Q_ARITH) == 0))
 	    goto add_character;
 
 	  t_index = ++sindex;
@@ -10102,7 +10107,7 @@ add_twochars:
 	      tword->word = temp;
 
 	      if (word->flags & W_ASSIGNARG)
-		tword->flags |= word->flags & (W_ASSIGNARG|W_ASSIGNRHS); /* affects $@ */
+		tword->flags |= word->flags & (W_ASSIGNARG | W_ASSIGNRHS); /* affects $@ */
 	      if (word->flags & W_COMPLETE)
 		tword->flags |= W_COMPLETE;	/* for command substitutions */
 	      if (word->flags & W_NOCOMSUB)
@@ -10115,10 +10120,11 @@ add_twochars:
 
 	      temp = (char *)NULL;
 
-	      temp_has_dollar_at = 0;	/* does this quoted (sub)string include $@? */
+	      temp_has_dollar_at = false;	/* does this quoted (sub)string include $@? */
+
 	      /* Need to get W_HASQUOTEDNULL flag through this function. */
 	      list = expand_word_internal (tword, Q_DOUBLE_QUOTES, 0, &temp_has_dollar_at, NULL);
-	      has_dollar_at += temp_has_dollar_at;
+	      has_dollar_at |= temp_has_dollar_at;
 
 	      if (list == &expand_word_error || list == &expand_word_fatal)
 		{
@@ -10237,14 +10243,16 @@ add_twochars:
 	     this is when we are going to be performing word splitting,
 	     since we have to preserve a null argument if the next character
 	     will cause word splitting. */
-	  if (temp == 0 && quoted_state == PARTIALLY_QUOTED && quoted == 0 && (word->flags & (W_NOSPLIT|W_EXPANDRHS|W_ASSIGNRHS)) == W_EXPANDRHS)
+	  if (temp == 0 && quoted_state == PARTIALLY_QUOTED && quoted == 0 &&
+	      (word->flags & (W_NOSPLIT | W_EXPANDRHS | W_ASSIGNRHS)) == W_EXPANDRHS)
 	    {
 	      c = CTLNUL;
 	      sindex--;
 	      had_quoted_null = true;
 	      goto add_character;
 	    }
-	  if (temp == 0 && quoted_state == PARTIALLY_QUOTED && (word->flags & (W_NOSPLIT|W_NOSPLIT2)))
+	  if (temp == 0 && quoted_state == PARTIALLY_QUOTED &&
+	      (word->flags & (W_NOSPLIT | W_NOSPLIT2)))
 	    continue;
 
 	add_quoted_string:
@@ -10268,7 +10276,7 @@ add_twochars:
 	  /* break; */
 
 	case '\'':
-	  if ((quoted & (Q_DOUBLE_QUOTES|Q_HERE_DOCUMENT)))
+	  if ((quoted & (Q_DOUBLE_QUOTES | Q_HERE_DOCUMENT)))
 	    goto add_character;
 
 	  t_index = ++sindex;
@@ -10297,14 +10305,14 @@ add_twochars:
 	     exception, which is when the string is going to be split.
 	     Posix interp 888/1129 */
 	  if (temp == 0 && quoted_state == PARTIALLY_QUOTED && !quoted &&
-	      (word->flags & (W_NOSPLIT|W_EXPANDRHS|W_ASSIGNRHS)) == W_EXPANDRHS)
+	      (word->flags & (W_NOSPLIT | W_EXPANDRHS | W_ASSIGNRHS)) == W_EXPANDRHS)
 	    {
 	      c = CTLNUL;
 	      sindex--;
 	      goto add_character;
 	    }
 
-	  if (temp == 0 && (quoted_state == PARTIALLY_QUOTED) && (word->flags & (W_NOSPLIT|W_NOSPLIT2)))
+	  if (temp == 0 && (quoted_state == PARTIALLY_QUOTED) && (word->flags & (W_NOSPLIT | W_NOSPLIT2)))
 	    continue;
 
 	  /* If we have a quoted null expansion, add a quoted NULL to istring. */
@@ -10325,7 +10333,8 @@ add_twochars:
 	     positional parameter, add quoted spaces so the spaces in the
 	     expansion of "$@", if any, behave correctly. We still may need to
 	     split if we are expanding the rhs of a word expansion. */
-	  if (ifs_is_null || split_on_spaces || ((word->flags & (W_NOSPLIT|W_NOSPLIT2|W_ASSIGNRHS)) && (word->flags & W_EXPANDRHS) == 0))
+	  if (ifs_is_null || split_on_spaces ||
+	      ((word->flags & (W_NOSPLIT | W_NOSPLIT2 | W_ASSIGNRHS)) && (word->flags & W_EXPANDRHS) == 0))
 	    {
 	      if (string[sindex])
 		sindex++;
@@ -10338,10 +10347,10 @@ add_twochars:
 	default:
 	  /* This is the fix for " $@ " */
 add_ifs_character:
-	  if ((quoted & (Q_HERE_DOCUMENT|Q_DOUBLE_QUOTES)) ||
-	      (!isexp && isifs (c) && (word->flags & (W_NOSPLIT|W_NOSPLIT2)) == 0))
+	  if ((quoted & (Q_HERE_DOCUMENT | Q_DOUBLE_QUOTES)) ||
+	      (!isexp && isifs (c) && (word->flags & (W_NOSPLIT | W_NOSPLIT2)) == 0))
 	    {
-	      if ((quoted & (Q_HERE_DOCUMENT|Q_DOUBLE_QUOTES)) == 0)
+	      if ((quoted & (Q_HERE_DOCUMENT | Q_DOUBLE_QUOTES)) == 0)
 		has_quoted_ifs = true;
 add_quoted_character:
 	      if (string[sindex])	/* from old goto dollar_add_string */
@@ -10422,9 +10431,11 @@ finished_with_string:
 	  tword = alloc_word_desc ();
 	  tword->word = istring;
 	  istring = 0;		/* avoid later free() */
+
 	  tword->flags |= W_HASQUOTEDNULL;		/* XXX */
 	  list = make_word_list (tword, (WORD_LIST *)NULL);
-	  if (quoted & (Q_HERE_DOCUMENT|Q_DOUBLE_QUOTES))
+
+	  if (quoted & (Q_HERE_DOCUMENT | Q_DOUBLE_QUOTES))
 	    tword->flags |= W_QUOTED;
 	}
       /* According to sh, ksh, and Posix.2, if a word expands into nothing
@@ -10452,7 +10463,7 @@ finished_with_string:
 	tword->flags |= W_NOGLOB;	/* XXX */
       if (word->flags & W_NOBRACE)
 	tword->flags |= W_NOBRACE;	/* XXX */
-      if (quoted & (Q_HERE_DOCUMENT|Q_DOUBLE_QUOTES))
+      if (quoted & (Q_HERE_DOCUMENT | Q_DOUBLE_QUOTES))
 	tword->flags |= W_QUOTED;
       list = make_word_list (tword, (WORD_LIST *)NULL);
     }
@@ -10551,7 +10562,7 @@ finished_with_string:
 	    free (istring);
 	  istring = 0;			/* avoid later free() */
 set_word_flags:
-	  if ((quoted & (Q_DOUBLE_QUOTES|Q_HERE_DOCUMENT)) || (quoted_state == WHOLLY_QUOTED))
+	  if ((quoted & (Q_DOUBLE_QUOTES | Q_HERE_DOCUMENT)) || (quoted_state == WHOLLY_QUOTED))
 	    tword->flags |= W_QUOTED;
 	  if (word->flags & W_ASSIGNMENT)
 	    tword->flags |= W_ASSIGNMENT;

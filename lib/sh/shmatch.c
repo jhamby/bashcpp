@@ -39,7 +39,7 @@
 #include "variables.h"
 #include "externs.h"
 
-extern int glob_ignore_case, match_ignore_case;
+extern bool glob_ignore_case, match_ignore_case;
 
 int
 sh_regmatch (const char *string, const char *pattern, int flags)
