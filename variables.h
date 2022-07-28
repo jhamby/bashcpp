@@ -67,21 +67,25 @@ typedef struct variable *sh_var_assign_func_t (struct variable *, const char *, 
 /* For the future */
 union _value {
   char *s;			/* string value */
+#if 0
   intmax_t i;			/* int value */
+#endif
   COMMAND *f;			/* function */
   ARRAY *a;			/* array */
   HASH_TABLE *h;		/* associative array */
+#if 0
   double d;			/* floating point number */
 #if defined (HAVE_LONG_DOUBLE)
   long double ld;		/* long double */
 #endif
   struct variable *v;		/* possible indirect variable use */
   void *opaque;			/* opaque data for future use */
+#endif
 };
 
 typedef struct variable {
   char *name;			/* Symbol that the user types. */
-  char *value;			/* Value that is returned. */
+  _value value;			/* Value that is returned. */
   char *exportstr;		/* String for the environment. */
   sh_var_value_func_t *dynamic_value;	/* Function called to return a `dynamic'
 				   value for a variable, like $SECONDS
@@ -163,24 +167,24 @@ typedef struct _vlist {
 #define name_cell(var)		((var)->name)
 
 /* Accessing variable values: rvalues */
-#define value_cell(var)		((var)->value)
-#define function_cell(var)	(COMMAND *)((var)->value)
-#define array_cell(var)		(ARRAY *)((var)->value)
-#define assoc_cell(var)		(HASH_TABLE *)((var)->value)
-#define nameref_cell(var)	((var)->value)		/* so it can change later */
+#define value_cell(var)		((var)->value.s)
+#define function_cell(var)	(COMMAND *)((var)->value.f)
+#define array_cell(var)		(ARRAY *)((var)->value.a)
+#define assoc_cell(var)		(HASH_TABLE *)((var)->value.h)
+#define nameref_cell(var)	((var)->value.s)		/* so it can change later */
 
 #define NAMEREF_MAX	8	/* only 8 levels of nameref indirection */
 
-#define var_isset(var)		((var)->value != 0)
-#define var_isunset(var)	((var)->value == 0)
-#define var_isnull(var)		((var)->value && *(var)->value == 0)
+#define var_isset(var)		((var)->value.s != 0)
+#define var_isunset(var)	((var)->value.s == 0)
+#define var_isnull(var)		((var)->value.s && *(var)->value.s == 0)
 
 /* Assigning variable values: lvalues */
-#define var_setvalue(var, str)	((var)->value = (str))
-#define var_setfunc(var, func)	((var)->value = (char *)(func))
-#define var_setarray(var, arr)	((var)->value = (char *)(arr))
-#define var_setassoc(var, arr)	((var)->value = (char *)(arr))
-#define var_setref(var, str)	((var)->value = (str))
+#define var_setvalue(var, str)	((var)->value.s = (str))
+#define var_setfunc(var, func)	((var)->value.f = (func))
+#define var_setarray(var, arr)	((var)->value.a = (arr))
+#define var_setassoc(var, arr)	((var)->value.h = (arr))
+#define var_setref(var, str)	((var)->value.s = (str))
 
 /* Make VAR be auto-exported. */
 #define set_auto_export(var) \

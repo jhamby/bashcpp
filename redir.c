@@ -1460,11 +1460,8 @@ redir_varvalue (REDIRECT *redir)
   if (val == 0 || *val == 0)
     return -1;
 
-#if 0
-  /* this can't happen */
-  if (legal_number (val, &vmax) < 0)
+  if (!legal_number (val, &vmax))
     return -1;
-#endif
 
   i = vmax;	/* integer truncation */
   return i;

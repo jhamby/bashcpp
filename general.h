@@ -352,7 +352,11 @@ extern void tilde_initialize ();
 extern char *bash_tilde_find_word (const char *, int, int *);
 extern char *bash_tilde_expand (const char *, int);
 
-/* extern int group_member (gid_t); */
+#if defined(__USE_GNU) && defined(__cplusplus)
+extern "C" int group_member (gid_t) __THROW;
+#else
+extern int group_member (gid_t);
+#endif
 extern char **get_group_list (int *);
 extern int *get_group_array (int *);
 

@@ -164,11 +164,11 @@ make_array_variable_value (SHELL_VAR *entry, arrayind_t ind, const char *key,
       else
 	newval = array_reference (array_cell (entry), ind);
       if (newval)
-	dentry->value = savestring (newval);
+	dentry->value.s = savestring (newval);
       else
 	{
-	  dentry->value = (char *)xmalloc (1);
-	  dentry->value[0] = '\0';
+	  dentry->value.s = (char *)xmalloc (1);
+	  dentry->value.s[0] = '\0';
 	}
       dentry->exportstr = 0;
       dentry->attributes = entry->attributes & ~(att_array|att_assoc|att_exported);
