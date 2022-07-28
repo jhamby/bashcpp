@@ -34,7 +34,7 @@
 
 #include "bashintl.h"
 
-char *sys_siglist[NSIG];
+const char *sys_siglist[NSIG];
 
 void
 initialize_siglist ()
@@ -221,7 +221,7 @@ initialize_siglist ()
 	  sys_siglist[i] =
 	    (char *)xmalloc (INT_STRLEN_BOUND (int) + 1 + strlen (_("Unknown Signal #%d")));
 
-	  sprintf (sys_siglist[i], _("Unknown Signal #%d"), i);
+	  sprintf ((char *)sys_siglist[i], _("Unknown Signal #%d"), i);
 	}
     }
 }

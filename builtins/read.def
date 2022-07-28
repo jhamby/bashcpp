@@ -284,7 +284,7 @@ read_builtin (WORD_LIST *list)
 	  break;
 	case 'N':
 	  ignore_delim = 1;
-	  delim = -1;
+	  delim = (unsigned char)-1;
 	case 'n':
 	  nflag = 1;
 	  code = legal_number (list_optarg, &intval);
@@ -346,7 +346,7 @@ read_builtin (WORD_LIST *list)
 
   /* If we're asked to ignore the delimiter, make sure we do. */
   if (ignore_delim)
-    delim = -1;
+    delim = (unsigned char)-1;
 
   /* IF IFS is unset, we use the default of " \t\n". */
   const char *ifs_chars = getifs ();

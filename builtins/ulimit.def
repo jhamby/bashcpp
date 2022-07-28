@@ -225,8 +225,8 @@ typedef struct {
   int  option;			/* The ulimit option for this limit. */
   int  parameter;		/* Parameter to pass to get_limit (). */
   int  block_factor;		/* Blocking factor for specific limit. */
-  const char * const description;	/* Descriptive string to output. */
-  const char * const units;	/* scale */
+  const char *description;	/* Descriptive string to output. */
+  const char *units;		/* scale */
 } RESOURCE_LIMITS;
 
 static RESOURCE_LIMITS limits[] = {

@@ -114,6 +114,8 @@ extern int errno;
 /* Alignment of types.  */
 #if defined __GNUC__ && __GNUC__ >= 2
 # define alignof(TYPE) __alignof__ (TYPE)
+#elif defined(__VMS) && defined(__cplusplus)
+# define alignof(TYPE) sizeof(TYPE)
 #else
 # define alignof(TYPE) \
     ((int) &((struct { char dummy1; TYPE dummy2; } *) 0)->dummy2)

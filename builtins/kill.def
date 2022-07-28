@@ -262,7 +262,7 @@ use_sigspec:
 static void
 kill_error (pid_t pid, int e)
 {
-  char *x;
+  const char *x;
 
   x = strerror (e);
   if (x == 0)

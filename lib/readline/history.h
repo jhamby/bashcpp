@@ -36,11 +36,7 @@ extern "C" {
 #  include <readline/rltypedefs.h>
 #endif
 
-#ifdef __STDC__
 typedef void *histdata_t;
-#else
-typedef char *histdata_t;
-#endif
 
 /* The structure used to store a history entry. */
 typedef struct _hist_entry {

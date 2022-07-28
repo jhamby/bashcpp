@@ -2535,8 +2535,6 @@ make_local_variable (const char *name, int flags)
 	if (vc_isfuncenv (vc) && vc->scope == variable_context)
 	  break;
       goto set_local_var_flags;
-
-      return (old_var);
     }
 
   /* If we want to change to "inherit the old variable's value" semantics,

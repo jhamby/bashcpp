@@ -1179,7 +1179,7 @@ string_extract_verbatim (const char *string, size_t slen, int *sindex,
 		{
 		  size_t len;
 		  len = mbstowcs (wcharlist, charlist, 0);
-		  if (len == -1)
+		  if (len == (size_t)-1)
 		    len = 0;
 		  wcharlist = (wchar_t *)xmalloc (sizeof (wchar_t) * (len + 1));
 		  mbstowcs (wcharlist, charlist, len + 1);
@@ -5353,11 +5353,13 @@ make_named_pipe ()
   char *tname;
 
   tname = sh_mktmpname ("sh-np", MT_USERANDOM | MT_USETMPDIR);
+#ifndef __VMS
   if (mkfifo (tname, 0600) < 0)
     {
       free (tname);
       return ((char *)NULL);
     }
+#endif
 
   add_fifo_list (tname);
   return (tname);

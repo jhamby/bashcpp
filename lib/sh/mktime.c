@@ -239,7 +239,7 @@ __mktime_internal (struct tm *tp,
        (dt = ydhms_tm_diff (year, yday, hour, min, sec, (*convert) (&t, &tm)));
        t += dt)
     if (--remaining_probes == 0)
-      return -1;
+      return (time_t)-1;
 
   /* Check whether tm.tm_isdst has the requested value, if any.  */
   if (0 <= isdst && 0 <= tm.tm_isdst)
@@ -293,7 +293,7 @@ __mktime_internal (struct tm *tp,
       double dsec = 60 * (60 * (24 * dday + hour) + min) + sec_requested;
 
       if (TIME_T_MAX / 3 - TIME_T_MIN / 3 < (dsec < 0 ? - dsec : dsec))
-	return -1;
+	return (time_t)-1;
     }
 
   *tp = tm;

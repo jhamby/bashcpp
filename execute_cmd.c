@@ -3070,7 +3070,7 @@ displen (const char *s)
 
   wcstr = 0;
   slen = mbstowcs (wcstr, s, 0);
-  if (slen == -1)
+  if (slen == (size_t)-1)
     slen = 0;
   wcstr = (wchar_t *)xmalloc (sizeof (wchar_t) * (slen + 1));
   mbstowcs (wcstr, s, slen + 1);

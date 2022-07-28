@@ -1885,8 +1885,7 @@ get_current_user_info ()
 	}
       else
 	{
-	  current_user.user_name = _("I have no name!");
-	  current_user.user_name = savestring (current_user.user_name);
+	  current_user.user_name = savestring ("I have no name!");
 	  current_user.shell = savestring ("/bin/sh");
 	  current_user.home_dir = savestring ("/");
 	}

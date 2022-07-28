@@ -98,7 +98,7 @@ history_search_internal (const char *string, int direction, int flags)
 	return (-1);
 
       char *line = the_history[i]->line;
-      size_t line_index = strlen (line);
+      ssize_t line_index = strlen (line);
 
       /* If STRING is longer than line, no match. */
       if (!patsearch && (string_len > line_index))

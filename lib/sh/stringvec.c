@@ -59,10 +59,10 @@ strvec_mresize (char **array, int nsize)
 }
 
 /* Return the length of ARRAY, a NULL terminated array of char *. */
-int
+size_t
 strvec_len (char **array)
 {
-  int i;
+  size_t i;
 
   for (i = 0; array[i]; i++);
   return (i);

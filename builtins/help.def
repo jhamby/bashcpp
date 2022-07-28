@@ -231,7 +231,7 @@ open_helpfile (const char *name)
 static void
 show_longdoc (int i)
 {
-  const char *const *doc = shell_builtins[i].long_doc;
+  char **doc = (char **)shell_builtins[i].long_doc;
 
   if (doc && doc[0] && *doc[0] == '/' && doc[1] == (char *)NULL)
     {
@@ -249,10 +249,11 @@ show_longdoc (int i)
 static void
 show_desc (const char *name, int i)
 {
-  char **doc, *line;
+  const char * const* doc;
+  char *line;
   int fd, usefile;
 
-  doc = (char **)shell_builtins[i].long_doc;
+  doc = shell_builtins[i].long_doc;
 
   usefile = (doc && doc[0] && *doc[0] == '/' && doc[1] == (char *)NULL);
   if (usefile)
@@ -265,7 +266,7 @@ show_desc (const char *name, int i)
       /* XXX - handle errors if zmapfd returns < 0 */
     }
   else
-    line = doc ? doc[0] : (char *)NULL;
+    line = (char *)(doc ? doc[0] : NULL);
 
   printf ("%s - ", name);
   for (int j = 0; line && line[j]; j++)
@@ -300,7 +301,7 @@ show_manpage (const char *name, int i)
       close (fd);
     }
   else
-    line = doc ? _(doc[0]) : (char *)NULL;
+    line = (char *)(doc ? _(doc[0]) : NULL);
 
   /* NAME */
   printf ("NAME\n");
@@ -357,7 +358,7 @@ static void
 dispcolumn (int i, char *buf, size_t bufsize, int width, int height)
 {
   /* first column */
-  char *helpdoc = _(shell_builtins[i].short_doc);
+  const char *helpdoc = _(shell_builtins[i].short_doc);
 
   buf[0] = (shell_builtins[i].flags & BUILTIN_ENABLED) ? ' ' : '*';
   strncpy (buf + 1, helpdoc, width - 2);
@@ -391,11 +392,11 @@ static void
 wdispcolumn (int i, char *buf, size_t bufsize, int width, int height)
 {
   /* first column */
-  char *helpdoc = _(shell_builtins[i].short_doc);
+  const char *helpdoc = _(shell_builtins[i].short_doc);
 
   wchar_t *wcstr = 0;
   size_t slen = mbstowcs ((wchar_t *)0, helpdoc, 0);
-  if (slen == -1)
+  if (slen == (size_t)-1)
     {
       dispcolumn (i, buf, bufsize, width, height);
       return;
@@ -442,7 +443,7 @@ wdispcolumn (int i, char *buf, size_t bufsize, int width, int height)
   /* second column */
   helpdoc = _(shell_builtins[i+height].short_doc);
   slen = mbstowcs ((wchar_t *)0, helpdoc, 0);
-  if (slen == -1)
+  if (slen == (size_t)-1)
     {
       /* for now */
       printf ("%c%s\n", (shell_builtins[i+height].flags & BUILTIN_ENABLED) ? ' ' : '*', helpdoc);

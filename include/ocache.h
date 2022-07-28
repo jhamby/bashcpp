@@ -22,13 +22,7 @@
 #define	_OCACHE_H_ 1
 
 #ifndef PTR_T
-
-#if defined (__STDC__)
-#  define PTR_T void *
-#else
-#  define PTR_T char *
-#endif
-
+#define PTR_T void *
 #endif /* PTR_T */
 
 #if 0

@@ -413,7 +413,7 @@ extern char **strvec_mresize (char **, int);
 extern void strvec_flush (char **);
 extern void strvec_dispose (char **);
 extern int strvec_remove (char **, char *);
-extern int strvec_len (char **);
+extern size_t strvec_len (char **);
 extern int strvec_search (char **, char *);
 extern char **strvec_copy (char **);
 extern int strvec_posixcmp (char **, char **);
@@ -523,7 +523,7 @@ extern int zcatfd (int, int, const char *);
 extern ssize_t zgetline (int, char **, size_t *, int, bool);
 
 /* declarations for functions defined in lib/sh/zmapfd.c */
-extern int zmapfd (int, char **, char *);
+extern int zmapfd (int, char **, const char *);
 
 /* declarations for functions defined in lib/sh/zread.c */
 extern ssize_t zread (int, char *, size_t);

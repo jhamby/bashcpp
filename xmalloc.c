@@ -40,11 +40,7 @@
 #include "bashintl.h"
 
 #if !defined (PTR_T)
-#  if defined (__STDC__)
-#    define PTR_T void *
-#  else
-#    define PTR_T char *
-#  endif /* !__STDC__ */
+#define PTR_T void *
 #endif /* !PTR_T */
 
 #if HAVE_SBRK && !HAVE_DECL_SBRK

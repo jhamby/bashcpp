@@ -43,11 +43,13 @@ difftimeval (struct timeval *d, struct timeval *t1, struct timeval *t2)
     {
       d->tv_usec += 1000000;
       d->tv_sec -= 1;
+#if !defined(__VMS)
       if (d->tv_sec < 0)		/* ??? -- BSD/OS does this */
 	{
 	  d->tv_sec = 0;
 	  d->tv_usec = 0;
 	}
+#endif
     }
   return d;
 }

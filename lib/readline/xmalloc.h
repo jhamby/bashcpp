@@ -29,13 +29,7 @@
 #endif
 
 #ifndef PTR_T
-
-#ifdef __STDC__
-#  define PTR_T	void *
-#else
-#  define PTR_T	char *
-#endif
-
+#define PTR_T	void *
 #endif /* !PTR_T */
 
 extern PTR_T xmalloc (size_t);

@@ -34,7 +34,7 @@ wcsdup (const wchar_t *ws)
   size_t len;
 
   len = wcslen (ws);
-  ret = xmalloc ((len + 1) * sizeof (wchar_t));
+  ret = (wchar_t *)xmalloc ((len + 1) * sizeof (wchar_t));
   if (ret == 0)
     return ret;
 

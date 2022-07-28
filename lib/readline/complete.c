@@ -77,11 +77,7 @@ extern int errno;
 #  include "colors.h"
 #endif
 
-#ifdef __STDC__
 typedef int QSFUNC (const void *, const void *);
-#else
-typedef int QSFUNC ();
-#endif
 
 #ifdef HAVE_LSTAT
 #  define LSTAT lstat
@@ -1312,7 +1308,7 @@ remove_duplicate_matches (char **matches)
 static int
 compute_lcd_of_matches (char **match_list, int matches, const char *text)
 {
-  int low;		/* Count of max-matched characters. */
+  int low = 100000;		/* Count of max-matched characters. */
   int lx;
   char *dtext;		/* dequoted TEXT, if needed */
 #if defined (HANDLE_MULTIBYTE)
@@ -1333,7 +1329,7 @@ compute_lcd_of_matches (char **match_list, int matches, const char *text)
     }
 
   int si, c1, c2;
-  for (int i = 1, low = 100000; i < matches; i++)
+  for (int i = 1; i < matches; i++)
     {
 #if defined (HANDLE_MULTIBYTE)
       if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)

@@ -32,6 +32,7 @@
 #include "filecntl.h"
 
 #include <stdio.h>
+#include <sys/time.h>
 #include "bashansi.h"
 
 #include "shell.h"

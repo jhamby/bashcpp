@@ -236,7 +236,7 @@ pretty_print_loop ()
 static sighandler
 alrm_catcher(int i)
 {
-  char *msg;
+  const char *msg;
 
   msg = _("\007timed out waiting for input: auto-logout\n");
   ssize_t ignored = write (1, msg, strlen (msg));

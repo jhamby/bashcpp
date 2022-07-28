@@ -31,8 +31,6 @@ EXTGLOB_PATTERN_P (const CHAR *pat)
     default:
       return false;
     }
-
-  return false;
 }
 #endif
 

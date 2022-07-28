@@ -161,7 +161,6 @@ ere_char (char c)
     default:
       return false;
     }
-  return false;
 }
 
 bool

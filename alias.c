@@ -237,7 +237,7 @@ map_over_aliases (sh_alias_map_func_t *function)
 static void
 sort_aliases (alias_t **array)
 {
-  qsort (array, strvec_len ((char **)array), sizeof (alias_t *), (QSFUNC *)qsort_alias_compare);
+  qsort ((void *)array, strvec_len ((char **)array), sizeof (alias_t *), (QSFUNC *)qsort_alias_compare);
 }
 
 static int

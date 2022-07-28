@@ -275,8 +275,8 @@ ansic_quote (const char *str, int flags, int *rlen)
 #if defined (HANDLE_MULTIBYTE)
 	  b = is_basic (c);
 	  /* XXX - clen comparison to 0 is dicey */
-	  if ((b == 0 && ((clen = mbrtowc (&wc, s, MB_CUR_MAX, 0)) < 0 || MB_INVALIDCH (clen) || iswprint (wc) == 0)) ||
-	      (b == 1 && ISPRINT (c) == 0))
+	  if ((b == 0 && ((clen = mbrtowc (&wc, s, MB_CUR_MAX, 0)) == (size_t)(-1) ||
+	      MB_INVALIDCH (clen) || iswprint (wc) == 0)) || (b == 1 && ISPRINT (c) == 0))
 #else
 	  if (ISPRINT (c) == 0)
 #endif

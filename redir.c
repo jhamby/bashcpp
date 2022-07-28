@@ -135,7 +135,8 @@ void
 redirection_error (REDIRECT *temp, int error,
                    char *fn)		/* already-expanded filename */
 {
-  char *filename, *allocname;
+  const char *filename;
+  char *allocname;
   int oflags;
 
   allocname = 0;

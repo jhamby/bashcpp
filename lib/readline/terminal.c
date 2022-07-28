@@ -393,7 +393,7 @@ rl_resize_terminal (void)
 }
 
 struct _tc_string {
-     const char * const tc_var;
+     const char *tc_var;
      const char **tc_value;
 };
 

@@ -38,11 +38,7 @@
    as of version autoconf-2.13, the AC_CHECK_SIZEOF macro doesn't work
    when cross-compiling.  */
 
-#if __STDC__
 # define UINT_MAX_32_BITS 4294967295U
-#else
-# define UINT_MAX_32_BITS 0xFFFFFFFF
-#endif
 
 /* If UINT_MAX isn't defined, assume it's a 32-bit type.
    This should be valid for all systems GNU cares about because

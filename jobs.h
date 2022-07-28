@@ -257,7 +257,7 @@ extern void terminate_stopped_jobs (void);
 extern void hangup_all_jobs (void);
 extern void kill_current_pipeline (void);
 
-#if defined (__STDC__) && defined (pid_t)
+#if defined (pid_t)
 extern int get_job_by_pid (int, int, PROCESS **);
 extern void describe_pid (int);
 #else

@@ -218,7 +218,7 @@ killpg (pid_t pgrp, int sig)
 }
 #endif /* !HAVE_KILLPG */
 
-#if !defined (HAVE_MKFIFO) && defined (PROCESS_SUBSTITUTION)
+#if !defined (HAVE_MKFIFO) && defined (PROCESS_SUBSTITUTION) && !defined(__VMS)
 int
 mkfifo (char *path, int mode)
 {

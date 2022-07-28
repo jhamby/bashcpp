@@ -105,7 +105,7 @@ static void print_cmd_name (const char *);
 static char *Garg, *Warg, *Parg, *Sarg, *Xarg, *Farg, *Carg;
 
 static const struct _compacts {
-  const char * const actname;
+  const char *actname;
   unsigned long actflag;
   int actopt;
 } compacts[] = {
@@ -138,7 +138,7 @@ static const struct _compacts {
 
 /* This should be a STRING_INT_ALIST */
 static const struct _compopt {
-  const char * const optname;
+  const char *optname;
   unsigned long optflag;
 } compopts[] = {
   { "bashdefault", COPT_BASHDEFAULT },

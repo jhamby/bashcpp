@@ -28,7 +28,7 @@
 #endif /* HAVE_UNDER_SYS_SIGLIST && !HAVE_SYS_SIGLIST && !sys_siglist */
 
 #if !defined (sys_siglist)
-extern char *sys_siglist[];
+extern const char *sys_siglist[];
 #endif /* !sys_siglist */
 
 #endif /* !SYS_SIGLIST_DECLARED && !HAVE_STRSIGNAL */

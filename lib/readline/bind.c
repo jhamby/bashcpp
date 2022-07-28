@@ -65,10 +65,6 @@ extern int errno;
 #include "rlshell.h"
 #include "xmalloc.h"
 
-#if !defined (strchr) && !defined (__STDC__)
-extern char *strchr (), *strrchr ();
-#endif /* !strchr && !__STDC__ */
-
 /* Variables exported by this file. */
 Keymap rl_binding_keymap;
 
@@ -1411,7 +1407,7 @@ parser_include (char *args)
 
 /* Associate textual names with actual functions. */
 static const struct {
-  const char * const name;
+  const char *name;
   _rl_parser_func_t *function;
 } parser_directives [] = {
   { "if", parser_if },
@@ -1768,7 +1764,7 @@ rl_parse_and_bind (char *string)
 #define V_SPECIAL	0x1
 
 static const struct {
-  const char * const name;
+  const char *name;
   bool *value;
   int flags;
 } boolean_varlist [] = {
@@ -1881,7 +1877,7 @@ static int sv_viins_modestr (const char *);
 static int sv_vicmd_modestr (const char *);
 
 static const struct {
-  const char * const name;
+  const char *name;
   int flags;
   _rl_sv_func_t *set_func;
 } string_varlist[] = {
@@ -2240,7 +2236,7 @@ sv_vicmd_modestr (const char *value)
    For example, `Space' returns ' '. */
 
 typedef struct {
-  const char * const name;
+  const char *name;
   int value;
 } assoc_list;
 

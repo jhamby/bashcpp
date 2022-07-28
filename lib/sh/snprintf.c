@@ -302,7 +302,7 @@ static void ldfallback (struct DATA *, const char *, const char *, long double);
 static void dfallback (struct DATA *, const char *, const char *, double);
 #endif
 
-static char *groupnum (char *);
+static char *groupnum (const char *);
 
 #if defined (HAVE_LONG_DOUBLE)
 #  define LONGDOUBLE long double
@@ -1135,7 +1135,8 @@ exponent(struct DATA *p, double d)
 static char *
 groupnum (const char *s)
 {
-  char *se, *ret, *re, *g;
+  const char *se;
+  char *ret, *re, *g;
   int len, slen;
 
   if (grouping == 0 || *grouping <= 0 || *grouping == CHAR_MAX)
@@ -1235,8 +1236,11 @@ vsnprintf_internal(struct DATA *data, char *string, size_t length, const char *f
      LENGTH can be zero here, in the case of snprintf/vsnprintf (it's never
      0 in the case of asprintf/vasprintf), and the return value is the number
      of characters that would have been written. */
+#if 0
+  /* Commented out: size_t is an unsigned type. */
   if (length < 0)
     return -1;
+#endif
 
   if (format == 0)
     return 0;

@@ -187,7 +187,7 @@ get_stat_birthtime (struct stat const *st)
   t.tv_nsec = 0;
 #else
   /* Birth time is not supported.  */
-  t.tv_sec = -1;
+  t.tv_sec = (time_t)-1;
   t.tv_nsec = -1;
   /* Avoid a "parameter unused" warning.  */
   (void) st;

@@ -79,14 +79,14 @@ init_germanic_plural ()
   if (plone.val.num == 0)
     {
       plvar.nargs = 0;
-      plvar.operation = var;
+      plvar.operation = expression::var;
 
       plone.nargs = 0;
-      plone.operation = num;
+      plone.operation = expression::num;
       plone.val.num = 1;
 
       GERMANIC_PLURAL.nargs = 2;
-      GERMANIC_PLURAL.operation = not_equal;
+      GERMANIC_PLURAL.operation = expression::not_equal;
       GERMANIC_PLURAL.val.args[0] = &plvar;
       GERMANIC_PLURAL.val.args[1] = &plone;
     }

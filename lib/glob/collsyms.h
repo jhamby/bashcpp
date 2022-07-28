@@ -26,7 +26,7 @@
 
 typedef struct _COLLSYM {
   const XCHAR *name;
-  const CHAR code;
+  CHAR code;
 } __COLLSYM;
 
 static __COLLSYM POSIXCOLL [] =
@@ -38,11 +38,7 @@ static __COLLSYM POSIXCOLL [] =
 	{  L("EOT"),			L('\004') },
 	{  L("ENQ"),			L('\005') },
 	{  L("ACK"),			L('\006') },
-#ifdef __STDC__
 	{  L("alert"),			L('\a') },
-#else
-	{  L("alert"),			L('\007') },
-#endif
 	{  L("BS"),			L('\010') },
 	{  L("backspace"),		L('\b') },
 	{  L("HT"),			L('\011') },

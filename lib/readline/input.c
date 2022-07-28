@@ -351,21 +351,15 @@ _rl_input_available (void)
   FD_SET (tty, &exceptfds);
   USEC_TO_TIMEVAL (_keyboard_input_timeout, timeout);
   return (select (tty + 1, &readfds, (fd_set *)NULL, &exceptfds, &timeout) > 0);
-#else
-
-#if defined (FIONREAD)
+#elif defined (FIONREAD)
   if (ioctl (tty, FIONREAD, &chars_avail) == 0)
     return (chars_avail);
-#endif
-
-#endif
-
-#if defined (__MINGW32__)
+#elif defined (__MINGW32__)
   if (isatty (tty))
     return (_kbhit ());
-#endif
-
+#else
   return 0;
+#endif
 }
 
 int

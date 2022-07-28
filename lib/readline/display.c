@@ -59,10 +59,6 @@
 #include "rlprivate.h"
 #include "xmalloc.h"
 
-#if !defined (strchr) && !defined (__STDC__)
-extern char *strchr (), *strrchr ();
-#endif /* !strchr && !__STDC__ */
-
 static void putc_face (int, int, char *);
 static void puts_face (const char *, const char *, int);
 static void norm_face (char *, int);

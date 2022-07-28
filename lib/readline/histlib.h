@@ -51,9 +51,6 @@
 #endif
 
 #ifndef member
-#  if !defined (strchr) && !defined (__STDC__)
-extern char *strchr ();
-#  endif /* !strchr && !__STDC__ */
 #define member(c, s) ((c) ? ((char *)strchr ((s), (c)) != (char *)NULL) : 0)
 #endif
 
