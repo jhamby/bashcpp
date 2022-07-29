@@ -28,7 +28,7 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-CC = @CC@
+CXX = @CXX@
 RANLIB = @RANLIB@
 AR = @AR@
 ARFLAGS = @ARFLAGS@
@@ -40,7 +40,7 @@ SHELL = @MAKE_SHELL@
 
 PROFILE_FLAGS = @PROFILE_FLAGS@
 
-CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
 LOCAL_CFLAGS = @LOCAL_CFLAGS@
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@ @LOCAL_LDFLAGS@
@@ -53,13 +53,13 @@ BASHINCDIR = ${topdir}/include
 INCLUDES = -I. -I../.. -I$(topdir) -I$(BASHINCDIR) -I$(topdir)/lib
 
 CCFLAGS = $(PROFILE_FLAGS) $(DEFS) $(LOCAL_DEFS) ${INCLUDES} $(CPPFLAGS) \
-	  $(LOCAL_CFLAGS) $(CFLAGS) ${ADDON_CFLAGS}
+	  $(LOCAL_CFLAGS) $(CXXFLAGS) ${ADDON_CXXFLAGS}
 
 # Here is a rule for making .o files from .c files that doesn't force
 # the type of the machine (like -sun3) into the flags.
 .c.o:
 	$(RM) $@
-	$(CC) -c $(CCFLAGS) $<
+	$(CXX) -x c++ -c $(CCFLAGS) $<
 
 # The name of the library target.
 LIBRARY_NAME = libglob.a

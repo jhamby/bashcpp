@@ -57,11 +57,7 @@ long i00afunc ();
 #define ADDRESS_FUNCTION(arg) &(arg)
 #endif /* CRAY && CRAY_STACKSEG_END */
 
-#if __STDC__
 typedef void *pointer;
-#else
-typedef char *pointer;
-#endif
 
 #define	NULL	0
 
@@ -156,8 +152,7 @@ static header *last_alloca_header = NULL;	/* -> last alloca header.  */
    implementations of C, for example under Gould's UTX/32.  */
 
 pointer
-alloca (size)
-     size_t size;
+alloca (size_t size)
 {
   auto char probe;		/* Probes stack depth: */
   register char *depth = ADDRESS_FUNCTION (probe);

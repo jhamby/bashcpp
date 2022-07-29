@@ -30,14 +30,14 @@
 
 #ifdef SHELL
 extern int running_trap;
-extern int signal_is_trapped PARAMS((int));
+extern int signal_is_trapped (int);
 #endif
 
 extern int malloc_register;
 
 #ifdef MALLOC_REGISTER
 
-extern FILE *_imalloc_fopen PARAMS((char *, char *, char *, char *, size_t));
+extern FILE *_imalloc_fopen (char *, char *, char *, char *, size_t);
 
 #define FIND_ALLOC	0x01	/* find slot for new allocation */
 #define FIND_EXIST	0x02	/* find slot for existing entry for free() or search */
@@ -60,8 +60,7 @@ static ma_table_t mlocation_table[REG_TABLE_SIZE];
  * NOTE: taken from dmalloc (http://dmalloc.com) and modified.
  */
 static unsigned int
-mt_hash (key)
-     const PTR_T key;
+mt_hash (const PTR_T key)
 {
   unsigned int a, b, c;
   unsigned long x;
@@ -78,8 +77,7 @@ mt_hash (key)
 
 #if 0
 static unsigned int
-which_bucket (mem)
-     PTR_T mem;
+which_bucket (PTR_T mem)
 {
   return (mt_hash ((unsigned char *)mem) & (REG_TABLE_SIZE-1));
 }
@@ -95,12 +93,10 @@ which_bucket (mem)
 #endif
 
 static mr_table_t *
-find_entry (mem, flags)
-     PTR_T mem;
-     int flags;
+find_entry (PTR_T mem, int flags)
 {
   unsigned int bucket;
-  register mr_table_t *tp;
+  mr_table_t *tp;
   mr_table_t *endp;
 
   if (mem_overflow.mem == mem)
@@ -135,16 +131,13 @@ find_entry (mem, flags)
 }
 
 mr_table_t *
-mr_table_entry (mem)
-     PTR_T mem;
+mr_table_entry (PTR_T mem)
 {
   return (find_entry (mem, FIND_EXIST));
 }
 
 void
-mregister_describe_mem (mem, fp)
-     PTR_T mem;
-     FILE *fp;
+mregister_describe_mem (PTR_T mem, FILE *fp)
 {
   mr_table_t *entry;
 
@@ -160,12 +153,7 @@ mregister_describe_mem (mem, fp)
 }
 
 void
-mregister_alloc (tag, mem, size, file, line)
-     const char *tag;
-     PTR_T mem;
-     size_t size;
-     const char *file;
-     int line;
+mregister_alloc (const char *tag, PTR_T mem, size_t size, const char *file, int line)
 {
   mr_table_t *tentry;
   sigset_t set, oset;
@@ -216,11 +204,7 @@ mregister_alloc (tag, mem, size, file, line)
 }
 
 void
-mregister_free (mem, size, file, line)
-     PTR_T mem;
-     int size;
-     const char *file;
-     int line;
+mregister_free (PTR_T mem, int size, const char *file, int line)
 {
   mr_table_t *tentry;
   sigset_t set, oset;
@@ -268,8 +252,7 @@ mregister_free (mem, size, file, line)
 
 /* If we ever add more flags, this will require changes. */
 static char *
-_entry_flags(x)
-     int x;
+_entry_flags(int x)
 {
   if (x & MT_FREE)
     return "free";
@@ -280,10 +263,9 @@ _entry_flags(x)
 }
 
 static void
-_register_dump_table(fp)
-     FILE *fp;
+_register_dump_table(FILE *fp)
 {
-  register int i;
+  int i;
   mr_table_t entry;
 
   for (i = 0; i < REG_TABLE_SIZE; i++)
@@ -319,11 +301,9 @@ mregister_table_init ()
 /* Simple for now */
 
 static ma_table_t *
-find_location_entry (file, line)
-     const char *file;
-     int line;
+find_location_entry (const char *file, int line)
 {
-  register ma_table_t *tp, *endp;
+  ma_table_t *tp, *endp;
 
   endp = mlocation_table + location_table_count;
   for (tp = mlocation_table; tp <= endp; tp++)
@@ -335,9 +315,7 @@ find_location_entry (file, line)
 }
 
 void
-mlocation_register_alloc (file, line)
-     const char *file;
-     int line;
+mlocation_register_alloc (const char *file, int line)
 {
   ma_table_t *lentry;
   const char *nfile;
@@ -372,10 +350,9 @@ mlocation_register_alloc (file, line)
 }
 
 static void
-_location_dump_table (fp)
-     FILE *fp;
+_location_dump_table (FILE *fp)
 {
-  register ma_table_t *tp, *endp;
+  ma_table_t *tp, *endp;
 
   endp = mlocation_table + location_table_count;
   for (tp = mlocation_table; tp < endp; tp++)
@@ -418,8 +395,7 @@ mlocation_table_init ()
 #endif /* MALLOC_REGISTER */
 
 int
-malloc_set_register(n)
-     int n;
+malloc_set_register(int n)
 {
   int old;
 

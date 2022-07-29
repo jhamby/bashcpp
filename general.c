@@ -1226,6 +1226,7 @@ initialize_group_array ()
 }
 
 /* Return non-zero if GID is one that we have in our groups list. */
+#if !defined(HAVE_GROUP_MEMBER)
 int
 group_member (gid_t gid)
 {
@@ -1253,6 +1254,7 @@ group_member (gid_t gid)
 
   return (0);
 }
+#endif /* !HAVE_GROUP_MEMBER */
 
 char **
 get_group_list (int *ngp)

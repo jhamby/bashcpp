@@ -38,7 +38,7 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-CC = @CC@
+CXX = @CXX@
 RANLIB = @RANLIB@
 AR = @AR@
 ARFLAGS = @ARFLAGS@
@@ -54,7 +54,7 @@ CTAGS = ctags -tw
 
 DEBUG = @DEBUG@
 
-CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
 LOCAL_CFLAGS = @LOCAL_CFLAGS@ ${DEBUG}
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
@@ -65,11 +65,11 @@ LOCAL_DEFS = @LOCAL_DEFS@
 INCLUDES = -I. -I$(BUILD_DIR) -I$(topdir) -I$(topdir)/lib
 
 CCFLAGS = $(DEFS) $(LOCAL_DEFS) $(APP_CFLAGS) $(CPPFLAGS) ${INCLUDES} \
-	  $(LOCAL_CFLAGS) $(CFLAGS) ${ADDON_CFLAGS}
+	  $(LOCAL_CFLAGS) $(CXXFLAGS) ${ADDON_CXXFLAGS}
 
 .c.o:
 	${RM} $@
-	$(CC) -c $(CCFLAGS) $<
+	$(CXX) -x c++ -c $(CCFLAGS) $<
 
 # The name of the main library target.
 LIBRARY_NAME = libreadline.a
@@ -142,7 +142,7 @@ documentation: force
 # it with the right flags when it's built as part of readline
 tilde.o:	tilde.c
 	rm -f $@
-	$(CC) $(CCFLAGS) -DREADLINE_LIBRARY -c $(srcdir)/tilde.c
+	$(CXX) -x c++ $(CCFLAGS) -DREADLINE_LIBRARY -c $(srcdir)/tilde.c
 
 force:
 

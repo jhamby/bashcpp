@@ -97,7 +97,7 @@ char *
 fnx_tofs (char *string, size_t len)
 {
 #ifdef MACOSX
-  ICONV_CONST char *inbuf;
+  char *inbuf;
   char *tempbuf;
   size_t templen;
 
@@ -139,7 +139,7 @@ char *
 fnx_fromfs (char *string, size_t len)
 {
 #ifdef MACOSX
-  ICONV_CONST char *inbuf;
+  char *inbuf;
   char *tempbuf;
   size_t templen;
 

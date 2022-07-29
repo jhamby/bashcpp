@@ -761,12 +761,10 @@ wait_sigint_handler (int sig)
       restore_sigint_handler ();
       trap_handler (SIGINT);	/* set pending_traps[SIGINT] */
       wait_signal_received = SIGINT;
-      SIGRETURN (0);
+      return;
     }
 
   wait_sigint_received = 1;
-
-  SIGRETURN (0);
 }
 
 static char *

@@ -471,7 +471,7 @@ trap_handler (int sig)
 #if defined (DEBUG)
       internal_warning ("trap_handler: signal %d: signal not trapped", sig);
 #endif
-      SIGRETURN (0);
+      return;
     }
 
   /* This means we're in a subshell, but have not yet reset the handler for
@@ -497,7 +497,7 @@ trap_handler (int sig)
 
       kill (getpid (), sig);
 
-      SIGRETURN (0);
+      return;
     }
 
   if ((sig >= NSIG) ||
@@ -533,8 +533,6 @@ trap_handler (int sig)
 
       errno = oerrno;
     }
-
-  SIGRETURN (0);
 }
 
 int

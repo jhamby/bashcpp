@@ -243,7 +243,6 @@ alrm_catcher(int i)
 
   bash_logout ();	/* run ~/.bash_logout if this is a login shell */
   jump_to_top_level (EXITPROG);
-  SIGRETURN (0);
 }
 
 /* Send an escape sequence to emacs term mode to tell it the

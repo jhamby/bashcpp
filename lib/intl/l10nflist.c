@@ -1,23 +1,18 @@
-/* l10nflist.c - make localization file list. */
-
-/* Copyright (C) 1995-1999, 2000, 2001, 2002, 2005-2009 Free Software Foundation, Inc.
+/* Copyright (C) 1995-1999, 2000-2007 Free Software Foundation, Inc.
    Contributed by Ulrich Drepper <drepper@gnu.ai.mit.edu>, 1995.
 
-   This file is part of GNU Bash.
-
-   Bash is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published by
+   the Free Software Foundation; either version 2.1 of the License, or
    (at your option) any later version.
 
-   Bash is distributed in the hope that it will be useful,
+   This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-*/
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Tell glibc's <string.h> to provide a prototype for stpcpy().
    This must come before <config.h> because <config.h> may include
@@ -41,6 +36,15 @@
 
 #include "loadinfo.h"
 
+/* On some strange systems still no definition of NULL is found.  Sigh!  */
+#ifndef NULL
+# if defined __STDC__ && __STDC__
+#  define NULL ((void *) 0)
+# else
+#  define NULL 0
+# endif
+#endif
+
 /* @@ end of prolog @@ */
 
 #ifdef _LIBC
@@ -61,8 +65,8 @@ static char *stpcpy (char *dest, const char *src);
    IS_ABSOLUTE_PATH(P)  tests whether P is an absolute path.  If it is not,
                         it may be concatenated to a directory pathname.
  */
-#if defined _WIN32 || defined __WIN32__ || defined __EMX__ || defined __DJGPP__
-  /* Win32, OS/2, DOS */
+#if defined _WIN32 || defined __WIN32__ || defined __CYGWIN__ || defined __EMX__ || defined __DJGPP__
+  /* Win32, Cygwin, OS/2, DOS */
 # define ISSLASH(C) ((C) == '/' || (C) == '\\')
 # define HAS_DEVICE(P) \
     ((((P)[0] >= 'A' && (P)[0] <= 'Z') || ((P)[0] >= 'a' && (P)[0] <= 'z')) \
@@ -76,10 +80,13 @@ static char *stpcpy (char *dest, const char *src);
 
 /* Define function which are usually not available.  */
 
-#if !defined _LIBC && !defined HAVE___ARGZ_COUNT
+#ifdef _LIBC
+# define __argz_count(argz, len) INTUSE(__argz_count) (argz, len)
+#elif defined HAVE_ARGZ_COUNT
+# undef __argz_count
+# define __argz_count argz_count
+#else
 /* Returns the number of strings in ARGZ.  */
-static size_t argz_count__ (const char *argz, size_t len);
-
 static size_t
 argz_count__ (const char *argz, size_t len)
 {
@@ -95,17 +102,17 @@ argz_count__ (const char *argz, size_t len)
 }
 # undef __argz_count
 # define __argz_count(argz, len) argz_count__ (argz, len)
-#else
-# ifdef _LIBC
-#  define __argz_count(argz, len) INTUSE(__argz_count) (argz, len)
-# endif
-#endif	/* !_LIBC && !HAVE___ARGZ_COUNT */
+#endif	/* !_LIBC && !HAVE_ARGZ_COUNT */
 
-#if !defined _LIBC && !defined HAVE___ARGZ_STRINGIFY
+#ifdef _LIBC
+# define __argz_stringify(argz, len, sep) \
+  INTUSE(__argz_stringify) (argz, len, sep)
+#elif defined HAVE_ARGZ_STRINGIFY
+# undef __argz_stringify
+# define __argz_stringify argz_stringify
+#else
 /* Make '\0' separated arg vector ARGZ printable by converting all the '\0's
    except the last into the character SEP.  */
-static void argz_stringify__ (char *argz, size_t len, int sep);
-
 static void
 argz_stringify__ (char *argz, size_t len, int sep)
 {
@@ -120,16 +127,13 @@ argz_stringify__ (char *argz, size_t len, int sep)
 }
 # undef __argz_stringify
 # define __argz_stringify(argz, len, sep) argz_stringify__ (argz, len, sep)
+#endif	/* !_LIBC && !HAVE_ARGZ_STRINGIFY */
+
+#ifdef _LIBC
+#elif defined HAVE_ARGZ_NEXT
+# undef __argz_next
+# define __argz_next argz_next
 #else
-# ifdef _LIBC
-#  define __argz_stringify(argz, len, sep) \
-  INTUSE(__argz_stringify) (argz, len, sep)
-# endif
-#endif	/* !_LIBC && !HAVE___ARGZ_STRINGIFY */
-
-#if !defined _LIBC && !defined HAVE___ARGZ_NEXT
-static char *argz_next__ (char *argz, size_t argz_len, const char *entry);
-
 static char *
 argz_next__ (char *argz, size_t argz_len, const char *entry)
 {
@@ -148,12 +152,10 @@ argz_next__ (char *argz, size_t argz_len, const char *entry)
 }
 # undef __argz_next
 # define __argz_next(argz, len, entry) argz_next__ (argz, len, entry)
-#endif	/* !_LIBC && !HAVE___ARGZ_NEXT */
+#endif	/* !_LIBC && !HAVE_ARGZ_NEXT */
 
 
 /* Return number of bits set in X.  */
-static int pop (int x);
-
 static inline int
 pop (int x)
 {
@@ -166,15 +168,14 @@ pop (int x)
   return x;
 }
 
+
 struct loaded_l10nfile *
 _nl_make_l10nflist (struct loaded_l10nfile **l10nfile_list,
-		    const char *dirlist, size_t dirlist_len, int mask,
-		    const char *language, const char *territory,
-		    const char *codeset,
-		    const char *normalized_codeset,
-		    const char *modifier, const char *special,
-		    const char *sponsor, const char *revision,
-		    const char *filename, bool do_allocate)
+		    const char *dirlist, size_t dirlist_len,
+		    int mask, const char *language, const char *territory,
+		    const char *codeset, const char *normalized_codeset,
+		    const char *modifier,
+		    const char *filename, int do_allocate)
 {
   char *abs_filename;
   struct loaded_l10nfile **lastp;
@@ -192,23 +193,14 @@ _nl_make_l10nflist (struct loaded_l10nfile **l10nfile_list,
   /* Allocate room for the full file name.  */
   abs_filename = (char *) malloc (dirlist_len
 				  + strlen (language)
-				  + ((mask & TERRITORY) != 0
+				  + ((mask & XPG_TERRITORY) != 0
 				     ? strlen (territory) + 1 : 0)
 				  + ((mask & XPG_CODESET) != 0
 				     ? strlen (codeset) + 1 : 0)
 				  + ((mask & XPG_NORM_CODESET) != 0
 				     ? strlen (normalized_codeset) + 1 : 0)
-				  + (((mask & XPG_MODIFIER) != 0
-				      || (mask & CEN_AUDIENCE) != 0)
+				  + ((mask & XPG_MODIFIER) != 0
 				     ? strlen (modifier) + 1 : 0)
-				  + ((mask & CEN_SPECIAL) != 0
-				     ? strlen (special) + 1 : 0)
-				  + (((mask & CEN_SPONSOR) != 0
-				      || (mask & CEN_REVISION) != 0)
-				     ? (1 + ((mask & CEN_SPONSOR) != 0
-					     ? strlen (sponsor) : 0)
-					+ ((mask & CEN_REVISION) != 0
-					   ? strlen (revision) + 1 : 0)) : 0)
 				  + 1 + strlen (filename) + 1);
 
   if (abs_filename == NULL)
@@ -226,7 +218,7 @@ _nl_make_l10nflist (struct loaded_l10nfile **l10nfile_list,
 
   cp = stpcpy (cp, language);
 
-  if ((mask & TERRITORY) != 0)
+  if ((mask & XPG_TERRITORY) != 0)
     {
       *cp++ = '_';
       cp = stpcpy (cp, territory);
@@ -241,28 +233,10 @@ _nl_make_l10nflist (struct loaded_l10nfile **l10nfile_list,
       *cp++ = '.';
       cp = stpcpy (cp, normalized_codeset);
     }
-  if ((mask & (XPG_MODIFIER | CEN_AUDIENCE)) != 0)
+  if ((mask & XPG_MODIFIER) != 0)
     {
-      /* This component can be part of both syntaxes but has different
-	 leading characters.  For CEN we use `+', else `@'.  */
-      *cp++ = (mask & CEN_AUDIENCE) != 0 ? '+' : '@';
+      *cp++ = '@';
       cp = stpcpy (cp, modifier);
-    }
-  if ((mask & CEN_SPECIAL) != 0)
-    {
-      *cp++ = '+';
-      cp = stpcpy (cp, special);
-    }
-  if ((mask & (CEN_SPONSOR | CEN_REVISION)) != 0)
-    {
-      *cp++ = ',';
-      if ((mask & CEN_SPONSOR) != 0)
-	cp = stpcpy (cp, sponsor);
-      if ((mask & CEN_REVISION) != 0)
-	{
-	  *cp++ = '_';
-	  cp = stpcpy (cp, revision);
-	}
     }
 
   *cp++ = '/';
@@ -337,8 +311,7 @@ _nl_make_l10nflist (struct loaded_l10nfile **l10nfile_list,
      normalized_codeset.  */
   for (cnt = dirlist_count > 1 ? mask : mask - 1; cnt >= 0; --cnt)
     if ((cnt & ~mask) == 0
-	&& ((cnt & CEN_SPECIFIC) == 0 || (cnt & XPG_SPECIFIC) == 0)
-	&& ((cnt & XPG_CODESET) == 0 || (cnt & XPG_NORM_CODESET) == 0))
+	&& !((cnt & XPG_CODESET) != 0 && (cnt & XPG_NORM_CODESET) != 0))
       {
 	if (dirlist_count > 1)
 	  {
@@ -350,21 +323,20 @@ _nl_make_l10nflist (struct loaded_l10nfile **l10nfile_list,
 	      retval->successor[entries++]
 		= _nl_make_l10nflist (l10nfile_list, dir, strlen (dir) + 1,
 				      cnt, language, territory, codeset,
-				      normalized_codeset, modifier, special,
-				      sponsor, revision, filename, 1);
+				      normalized_codeset, modifier, filename,
+				      1);
 	  }
 	else
 	  retval->successor[entries++]
 	    = _nl_make_l10nflist (l10nfile_list, dirlist, dirlist_len,
 				  cnt, language, territory, codeset,
-				  normalized_codeset, modifier, special,
-				  sponsor, revision, filename, 1);
+				  normalized_codeset, modifier, filename, 1);
       }
   retval->successor[entries] = NULL;
 
   return retval;
 }
-
+
 /* Normalize codeset name.  There is no standard for the codeset
    names.  Normalization allows the user to use any of the common
    names.  The return value is dynamically allocated and has to be
@@ -372,7 +344,7 @@ _nl_make_l10nflist (struct loaded_l10nfile **l10nfile_list,
 const char *
 _nl_normalize_codeset (const char *codeset, size_t name_len)
 {
-  int len = 0;
+  size_t len = 0;
   int only_digit = 1;
   char *retval;
   char *wp;

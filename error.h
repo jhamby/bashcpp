@@ -61,7 +61,7 @@ extern void trace (const char *, ...) __attribute__ ((__format__ (printf, 1, 2))
 /* Report an error having to do with command parsing or execution. */
 extern void command_error (const char *, int, int, int);
 
-extern char *command_errstr (int);
+extern const char *command_errstr (int);
 
 /* Specific error message functions that eventually call report_error or
    internal_error. */

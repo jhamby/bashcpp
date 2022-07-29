@@ -34,7 +34,7 @@
 #endif
 
 #define _(msgid)	gettext(msgid)
-#define N_(msgid)	msgid
+#define N_(msgid)	(char *)msgid
 #define D_(d, msgid)	dgettext(d, msgid)
 
 #define P_(m1, m2, n)	ngettext(m1, m2, n)

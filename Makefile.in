@@ -68,8 +68,8 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 
 @SET_MAKE@
-CC = @CC@
-CC_FOR_BUILD = @CC_FOR_BUILD@
+CXX = @CXX@
+CXX_FOR_BUILD = @CXX_FOR_BUILD@
 YACC = @YACC@
 SHELL = @MAKE_SHELL@
 CP = cp
@@ -91,14 +91,11 @@ TESTSCRIPT = @TESTSCRIPT@
 
 DEBUGGER_START_FILE = @DEBUGGER_START_FILE@
 
-#If you have purify, and want to use it, run the make as `make PURIFY=purify'
-#PURIFY = @PURIFY@
-
 # Here is a rule for making .o files from .c files that does not
 # force the type of the machine (like -M_MACHINE) into the flags.
 .c.o:
 	$(RM) $@
-	$(CC) $(CCFLAGS) -c $<
+	$(CXX) -x c++ $(CCFLAGS) -c $<
 
 EXEEXT = @EXEEXT@
 OBJEXT = @OBJEXT@
@@ -127,8 +124,8 @@ THIS_SH = $(BUILD_DIR)/$(Program)
 # with gprof, or nothing (the default).
 PROFILE_FLAGS= @PROFILE_FLAGS@
 
-CFLAGS = @CFLAGS@
-CFLAGS_FOR_BUILD = @CFLAGS_FOR_BUILD@ @CROSS_COMPILE@
+CXXFLAGS = @CXXFLAGS@
+CXXFLAGS_FOR_BUILD = @CXXFLAGS_FOR_BUILD@ @CROSS_COMPILE@
 CPPFLAGS = @CPPFLAGS@
 CPPFLAGS_FOR_BUILD = @CPPFLAGS_FOR_BUILD@
 LOCAL_CFLAGS = @LOCAL_CFLAGS@ ${DEBUG} ${MALLOC_DEBUG}
@@ -149,13 +146,13 @@ SYSTEM_FLAGS = -DPROGRAM='"$(Program)"' -DCONF_HOSTTYPE='"$(Machine)"' -DCONF_OS
 BASE_CCFLAGS = $(SYSTEM_FLAGS) $(LOCAL_DEFS) \
 	  $(DEFS) $(LOCAL_CFLAGS) $(INCLUDES)
 
-CCFLAGS = $(ADDON_CFLAGS) $(BASE_CCFLAGS) ${PROFILE_FLAGS} $(CPPFLAGS) $(CFLAGS)
+CCFLAGS = $(ADDON_CFLAGS) $(BASE_CCFLAGS) ${PROFILE_FLAGS} $(CPPFLAGS) $(CXXFLAGS)
 
-CCFLAGS_FOR_BUILD = $(BASE_CCFLAGS) $(CPPFLAGS_FOR_BUILD) $(CFLAGS_FOR_BUILD)
+CCFLAGS_FOR_BUILD = $(BASE_CCFLAGS) $(CPPFLAGS_FOR_BUILD) $(CXXFLAGS_FOR_BUILD)
 
-BASE_LDFLAGS = @LDFLAGS@ $(LOCAL_LDFLAGS) $(CFLAGS)
+BASE_LDFLAGS = @LDFLAGS@ $(LOCAL_LDFLAGS) $(CXXFLAGS)
 LDFLAGS = ${ADDON_LDFLAGS} ${BASE_LDFLAGS} ${PROFILE_FLAGS} ${STATIC_LD}
-LDFLAGS_FOR_BUILD = @LDFLAGS_FOR_BUILD@ $(LOCAL_LDFLAGS) $(CFLAGS_FOR_BUILD)
+LDFLAGS_FOR_BUILD = @LDFLAGS_FOR_BUILD@ $(LOCAL_LDFLAGS) $(CXXFLAGS_FOR_BUILD)
 
 ASAN_XCFLAGS = -fsanitize=address -fno-omit-frame-pointer
 ASAN_XLDFLAGS = -fsanitize=address
@@ -365,7 +362,7 @@ INTL_ABSSRC = ${topdir}/$(INTL_LIB)
 INTL_BUILDDIR = ${LIBBUILD}/intl
 
 INTL_LIB     = @LIBINTL@
-INTL_LIBRARY = $(INTL_LIBDIR)/libintl.a
+INTL_LIBRARY = $(INTL_LIB:.la=.a)
 INTL_DEP = @INTL_DEP@
 INTL_INC = @INTL_INC@
 
@@ -421,7 +418,7 @@ BASHINCFILES =	 $(BASHINCDIR)/posixstat.h $(BASHINCDIR)/ansi_stdlib.h \
 		 $(BASHINCDIR)/ocache.h
 
 LIBRARIES = $(GLOB_LIB) $(SHLIB_LIB) $(READLINE_LIB) $(HISTORY_LIB) $(TERMCAP_LIB) \
-	    $(TILDE_LIB) $(MALLOC_LIB) $(INTL_LIB) $(LIBICONV) $(LOCAL_LIBS)
+	    $(TILDE_LIB) $(MALLOC_LIB) $(INTL_LIBRARY) $(LIBICONV) $(LOCAL_LIBS)
 
 LIBDEP = $(GLOB_DEP) $(SHLIB_DEP) $(INTL_DEP) $(READLINE_DEP) $(HISTORY_DEP) $(TERMCAP_DEP) \
 	 $(TILDE_DEP) $(MALLOC_DEP)
@@ -580,7 +577,7 @@ LOADABLES_DIR = ${top_builddir}/examples/loadables
 
 $(Program):  .build $(OBJECTS) $(BUILTINS_DEP) $(LIBDEP)
 	$(RM) $@
-	$(PURIFY) $(CC) $(BUILTINS_LDFLAGS) $(LIBRARY_LDFLAGS) $(LDFLAGS) -o $(Program) $(OBJECTS) $(LIBS)
+	$(CXX) $(BUILTINS_LDFLAGS) $(LIBRARY_LDFLAGS) $(LDFLAGS) -o $(Program) $(OBJECTS) $(LIBS)
 	ls -l $(Program)
 	-$(SIZE) $(Program)
 
@@ -629,11 +626,15 @@ version.h:  $(SOURCES) config.h Makefile patchlevel.h
 	$(SHELL) $(SUPPORT_SRC)mkversion.sh -b -S ${topdir} -s $(RELSTATUS) -d $(Version) -o newversion.h \
 		&& mv newversion.h version.h
 
-bashversion$(EXEEXT): buildversion.o $(SUPPORT_SRC)bashversion.c
-	$(CC_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ $(SUPPORT_SRC)bashversion.c buildversion.o ${LIBS_FOR_BUILD}
+$(SUPPORT_SRC)bashversion.o: $(SUPPORT_SRC)bashversion.c
+	$(CXX_FOR_BUILD) -x c++ $(CCFLAGS_FOR_BUILD) -c -o $@ $(SUPPORT_SRC)bashversion.c
+
+buildversion.o: bashintl.h $(BASHINCDIR)/gettext.h
+bashversion$(EXEEXT): buildversion.o $(SUPPORT_SRC)bashversion.o
+	$(CXX_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ $(SUPPORT_SRC)bashversion.o buildversion.o ${LIBS_FOR_BUILD}
 
 buildversion.o: $(srcdir)/version.c
-	$(CC_FOR_BUILD) $(CCFLAGS_FOR_BUILD) -DBUILDTOOL -c -o $@ $(srcdir)/version.c
+	$(CXX_FOR_BUILD) -x c++ $(CCFLAGS_FOR_BUILD) -DBUILDTOOL -c -o $@ $(srcdir)/version.c
 
 buildversion.o: bashintl.h $(BASHINCDIR)/gettext.h
 buildversion.o: version.h patchlevel.h conftypes.h
@@ -701,23 +702,27 @@ ${LIBINTL_H}:	${INTL_DEP}
 
 signames.o: $(SUPPORT_SRC)signames.c
 	$(RM) $@
-	$(CC) $(CCFLAGS) -c $(SUPPORT_SRC)signames.c
+	$(CXX) -x c++ $(CCFLAGS) -c $(SUPPORT_SRC)signames.c
 
 buildsignames.o:	$(SUPPORT_SRC)signames.c
 	$(RM) $@
-	$(CC_FOR_BUILD) $(CCFLAGS_FOR_BUILD) -DBUILDTOOL -o $@ -c $(SUPPORT_SRC)signames.c
+	$(CXX_FOR_BUILD) -x c++ $(CCFLAGS_FOR_BUILD) -DBUILDTOOL -o $@ -c $(SUPPORT_SRC)signames.c
 
 mksignames.o:	$(SUPPORT_SRC)mksignames.c
 	$(RM) $@
-	$(CC_FOR_BUILD) $(CCFLAGS_FOR_BUILD) -DBUILDTOOL -c $(SUPPORT_SRC)mksignames.c
+	$(CXX_FOR_BUILD) -x c++ $(CCFLAGS_FOR_BUILD) -DBUILDTOOL -c $(SUPPORT_SRC)mksignames.c
 
 mksignames$(EXEEXT):	mksignames.o buildsignames.o
 	$(RM) $@
-	$(CC_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ mksignames.o buildsignames.o ${LIBS_FOR_BUILD}
+	$(CXX_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ mksignames.o buildsignames.o ${LIBS_FOR_BUILD}
 
-mksyntax$(EXEEXT):	${srcdir}/mksyntax.c config.h syntax.h ${BASHINCDIR}/chartypes.h bashansi.h
+mksyntax.o:	$(srcdir)/mksyntax.c config.h syntax.h ${BASHINCDIR}/chartypes.h bashansi.h
 	$(RM) $@
-	${CC_FOR_BUILD} ${CCFLAGS_FOR_BUILD} ${LDFLAGS_FOR_BUILD} -o $@ ${srcdir}/mksyntax.c ${LIBS_FOR_BUILD}
+	$(CXX_FOR_BUILD) -x c++ $(CCFLAGS_FOR_BUILD) -c $(srcdir)/mksyntax.c
+
+mksyntax$(EXEEXT):	mksyntax.o
+	$(RM) $@
+	$(CXX_FOR_BUILD) ${CCFLAGS_FOR_BUILD} ${LDFLAGS_FOR_BUILD} -o $@ mksyntax.o ${LIBS_FOR_BUILD}
 
 # make a list of signals for the local system -- this is done when we're
 # *not* cross-compiling
@@ -801,7 +806,7 @@ doc documentation:  force
 	@(cd $(DOCDIR) ; $(MAKE) $(MFLAGS) )
 
 info dvi ps: force
-	@(cd $(DOCDIR) ; $(MAKE) $(MFLAGS) CFLAGS='$(CCFLAGS)' $@ )
+	@(cd $(DOCDIR) ; $(MAKE) $(MFLAGS) CXXFLAGS='$(CCFLAGS)' $@ )
 
 force:
 
@@ -943,16 +948,16 @@ maybe-clean:
 	fi
 
 recho$(EXEEXT):		$(SUPPORT_SRC)recho.c
-	@$(CC_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ $(SUPPORT_SRC)recho.c ${LIBS_FOR_BUILD}
+	@$(CXX_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ $(SUPPORT_SRC)recho.c ${LIBS_FOR_BUILD}
 
 zecho$(EXEEXT):		$(SUPPORT_SRC)zecho.c
-	@$(CC_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ $(SUPPORT_SRC)zecho.c ${LIBS_FOR_BUILD}
+	@$(CXX_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ $(SUPPORT_SRC)zecho.c ${LIBS_FOR_BUILD}
 
 printenv$(EXEEXT):	$(SUPPORT_SRC)printenv.c
-	@$(CC_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ $(SUPPORT_SRC)printenv.c ${LIBS_FOR_BUILD}
+	@$(CXX_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ $(SUPPORT_SRC)printenv.c ${LIBS_FOR_BUILD}
 
 xcase$(EXEEXT):	$(SUPPORT_SRC)xcase.c
-	@$(CC_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ $(SUPPORT_SRC)xcase.c ${LIBS_FOR_BUILD}
+	@$(CXX_FOR_BUILD) $(CCFLAGS_FOR_BUILD) ${LDFLAGS_FOR_BUILD} -o $@ $(SUPPORT_SRC)xcase.c ${LIBS_FOR_BUILD}
 
 test tests check:	force $(Program) $(TESTS_SUPPORT)
 	@-test -d tests || mkdir tests
@@ -975,11 +980,11 @@ xdist:	force
 depend:	depends
 
 depends: force
-	$(Program) $(SUPPORT_SRC)mkdep -c ${CC} -- ${CCFLAGS} ${CSOURCES}
+	$(Program) $(SUPPORT_SRC)mkdep -c ${CXX} -- ${CCFLAGS} ${CSOURCES}
 
 #### PRIVATE TARGETS ####
 hashtest:	hashlib.c
-	$(CC) -DTEST_HASHING $(CCFLAGS) $(TEST_NBUCKETS) -o $@ $(srcdir)/hashlib.c xmalloc.o $(INTL_LIB) $(MALLOC_LIBRARY)
+	$(CXX) -DTEST_HASHING $(CCFLAGS) $(TEST_NBUCKETS) -o $@ $(srcdir)/hashlib.c xmalloc.o $(INTL_LIB) $(MALLOC_LIBRARY)
 
 ############################ DEPENDENCIES ###############################
 

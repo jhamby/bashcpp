@@ -300,7 +300,7 @@ u32cconv (unsigned long c, char *s)
 
   iconv (localconv, NULL, NULL, NULL, NULL);
 
-  if (iconv (localconv, (ICONV_CONST char **)&iptr, &sn, &optr, &obytesleft) == (size_t)-1)
+  if (iconv (localconv, (char **)&iptr, &sn, &optr, &obytesleft) == (size_t)-1)
     {
       /* You get ISO C99 escape sequences if iconv fails */
       n = u32tocesc (c, s);

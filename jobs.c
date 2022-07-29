@@ -251,7 +251,7 @@ static PROCESS *find_process (pid_t, int, int *);
 static const char *current_working_directory (void);
 static char *job_working_directory (void);
 static char *j_strsignal (int);
-static char *printable_job_status (int, PROCESS *, int);
+static const char *printable_job_status (int, PROCESS *, int);
 
 static PROCESS *find_last_proc (int, int);
 static pid_t find_last_pid (int, int);
@@ -1818,18 +1818,18 @@ j_strsignal (int s)
   return x;
 }
 
-static char *
+static const char *
 printable_job_status (int j, PROCESS *p, int format)
 {
-  static char *temp;
+  char *temp;
   int es;
 
-  temp = _("Done");
+  temp = (char *)_("Done");
 
   if (STOPPED (j) && format == 0)
     {
       if (posixly_correct == 0 || p == 0 || (WIFSTOPPED (p->status) == 0))
-	temp = _("Stopped");
+	temp = (char *)_("Stopped");
       else
 	{
 	  temp = retcode_name_buffer;
@@ -1837,7 +1837,7 @@ printable_job_status (int j, PROCESS *p, int format)
 	}
     }
   else if (RUNNING (j))
-    temp = _("Running");
+    temp = (char *)_("Running");
   else
     {
       if (WIFSTOPPED (p->status))
@@ -1859,7 +1859,7 @@ printable_job_status (int j, PROCESS *p, int format)
 	    snprintf (temp, sizeof(retcode_name_buffer), _("Exit %d"), es);
 	}
       else
-	temp = _("Unknown status");
+	temp = (char *)_("Unknown status");
     }
 
   return temp;
@@ -2701,7 +2701,7 @@ wait_sigint_handler (int sig)
 	    sh_longjmp (wait_intr_buf, 1);
 	  else
 	    /* Let CHECK_WAIT_INTR handle it in wait_for/waitchld */
-	    SIGRETURN (0);
+	    return;
 	}
       else /* wait_builtin but signal not trapped, treat as interrupt */
 	kill (getpid (), SIGINT);
@@ -2720,7 +2720,6 @@ wait_sigint_handler (int sig)
 
   /* Otherwise effectively ignore the SIGINT and allow the running job to
      be killed. */
-  SIGRETURN (0);
 }
 
 static int
@@ -3663,7 +3662,6 @@ sigchld_handler (int sig)
   if (queue_sigchld == 0)
     n = waitchld (-1, 0);
   errno = oerrno;
-  SIGRETURN (n);
 }
 
 /* waitchld() reaps dead or stopped children.  It's called by wait_for and
@@ -4518,8 +4516,6 @@ sigcont_sighandler (int sig)
   initialize_job_signals ();
   set_signal_handler (SIGCONT, old_cont);
   kill (getpid (), SIGCONT);
-
-  SIGRETURN (0);
 }
 
 /* Here we handle stop signals while we are running not as a login shell. */
@@ -4535,8 +4531,6 @@ sigstop_sighandler (int sig)
   give_terminal_to (shell_pgrp, 0);
 
   kill (getpid (), sig);
-
-  SIGRETURN (0);
 }
 
 /* Give the terminal to PGRP.  */

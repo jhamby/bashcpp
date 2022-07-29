@@ -513,11 +513,6 @@
 
 #undef PGRP_PIPE
 
-/* Define if the setvbuf function takes the buffering type as its second
-   argument and the buffer pointer as the third, as on System V
-   before release 3.  */
-#undef SETVBUF_REVERSED
-
 #undef STAT_MACROS_BROKEN
 
 #undef ULIMIT_MAXFDS
@@ -553,12 +548,6 @@
 #undef ICONV_CONST
 
 /* Type and behavior of signal handling functions. */
-
-/* Define as the return type of signal handlers (int or void).  */
-#undef RETSIGTYPE
-
-/* Define if return type of signal handlers is void */
-#undef VOID_SIGHANDLER
 
 #undef MUST_REINSTALL_SIGHANDLERS
 
@@ -1092,8 +1081,6 @@
 /* Define if you have <sys/time.h> */
 #undef HAVE_SYS_TIME_H
 
-#undef TIME_WITH_SYS_TIME
-
 /* Define if you have <sys/times.h> */
 #undef HAVE_SYS_TIMES_H
 
@@ -1228,7 +1215,23 @@
 /* Define if you have the `__argz_stringify' function. */
 #undef HAVE___ARGZ_STRINGIFY
 
+/* Define if you have a working `O_NOATIME' flag. */
+#undef HAVE_WORKING_O_NOATIME
+
+/* Define if you have a working `O_NOFOLLOW' flag. */
+#undef HAVE_WORKING_O_NOFOLLOW
+
 /* End additions for lib/intl */
+
+/* Define if you have the `group_member' function. */
+#undef HAVE_GROUP_MEMBER
+
+/* Definitions for vfork support. */
+#undef HAVE_FORK
+#undef HAVE_VFORK
+
+/* Define to prefer vfork() when vfork() and fork() are available. */
+#undef VFORK_SUBSHELL
 
 #include "config-bot.h"
 

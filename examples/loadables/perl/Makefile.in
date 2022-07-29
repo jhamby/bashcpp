@@ -35,14 +35,14 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 
 @SET_MAKE@
-CC = @CC@
+CXX = @CXX@
 RM = rm -f
 
 SHELL = @MAKE_SHELL@
 
 PERL5 = perl5
 
-CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
 
 #
 # These values are generated for configure by ${topdir}/support/shobj-conf.
@@ -50,8 +50,8 @@ CFLAGS = @CFLAGS@
 # dynamic loading of shared objects, please update the script and send the
 # changes to bash-maintainers@gnu.org.
 #
-SHOBJ_CC = @SHOBJ_CC@
-SHOBJ_CFLAGS = @SHOBJ_CFLAGS@
+SHOBJ_CXX = @SHOBJ_CXX@
+SHOBJ_CXXFLAGS = @SHOBJ_CXXFLAGS@
 SHOBJ_LD = @SHOBJ_LD@
 SHOBJ_LDFLAGS = @SHOBJ_LDFLAGS@
 SHOBJ_XLDFLAGS = @SHOBJ_XLDFLAGS@
@@ -78,18 +78,18 @@ ${BUILTIN}:	${OBJ}
 
 bperl.o:	bperl.c
 	${RM} $@
-	$(SHOBJ_CC) $(SHOBJ_CFLAGS) $(CFLAGS) $(INC) -c -o $@ ${srcdir}/bperl.c
+	$(SHOBJ_CXX) $(SHOBJ_CFLAGS) $(CXXFLAGS) $(INC) -c -o $@ ${srcdir}/bperl.c
 
 iperl.o:	iperl.c
 	${RM} $@
-	$(SHOBJ_CC) ${SHOBJ_CFLAGS} $(PERL_CFLAGS) -c -o $@ ${srcdir}/iperl.c
+	$(SHOBJ_CXX) ${SHOBJ_CFLAGS} $(PERL_CFLAGS) -c -o $@ ${srcdir}/iperl.c
 
 perlxsi.c:
 	${PERL5} -MExtUtils::Embed -e xsinit -- -o $@
 
 perlxsi.o:	perlxsi.c
 	${RM} $@
-	${SHOBJ_CC} ${SHOBJ_CFLAGS} $(PERL_CFLAGS) -c -o $@ perlxsi.c
+	${SHOBJ_CXX} ${SHOBJ_CFLAGS} $(PERL_CFLAGS) -c -o $@ perlxsi.c
 
 clean mostlyclean:
 	${RM} ${OBJ}

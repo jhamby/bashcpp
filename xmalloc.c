@@ -144,7 +144,7 @@ xfree (PTR_T string)
 #include <malloc/shmalloc.h>
 
 static void
-sh_allocerr (const char *func, size_t bytes, char *file, int line)
+sh_allocerr (const char *func, size_t bytes, const char *file, int line)
 {
 #if HAVE_SBRK
       allocated = findbrk ();
@@ -155,7 +155,7 @@ sh_allocerr (const char *func, size_t bytes, char *file, int line)
 }
 
 PTR_T
-sh_xmalloc (size_t bytes, char *file, int line)
+sh_xmalloc (size_t bytes, const char *file, int line)
 {
   PTR_T temp;
 
@@ -174,7 +174,7 @@ sh_xmalloc (size_t bytes, char *file, int line)
 }
 
 PTR_T
-sh_xrealloc (PTR_T pointer, size_t bytes, char *file, int line)
+sh_xrealloc (PTR_T pointer, size_t bytes, const char *file, int line)
 {
   PTR_T temp;
 
@@ -193,7 +193,7 @@ sh_xrealloc (PTR_T pointer, size_t bytes, char *file, int line)
 }
 
 void
-sh_xfree (PTR_T string, char *file, int line)
+sh_xfree (PTR_T string, const char *file, int line)
 {
   if (string)
     sh_free (string, file, line);

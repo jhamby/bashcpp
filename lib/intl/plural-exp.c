@@ -1,23 +1,19 @@
-/* plural-exp.c - Expression parsing for plural form selection. */
-
-/* Copyright (C) 2000, 2001, 2005-2009 Free Software Foundation, Inc.
+/* Expression parsing for plural form selection.
+   Copyright (C) 2000-2001, 2003, 2005-2007 Free Software Foundation, Inc.
    Written by Ulrich Drepper <drepper@cygnus.com>, 2000.
 
-   This file is part of GNU Bash.
-
-   Bash is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published by
+   the Free Software Foundation; either version 2.1 of the License, or
    (at your option) any later version.
 
-   Bash is distributed in the hope that it will be useful,
+   This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-*/
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -29,7 +25,7 @@
 
 #include "plural-exp.h"
 
-#if (defined __GNUC__ && !defined __APPLE_CC__) \
+#if (defined __GNUC__ && !(__APPLE_CC__ > 1) && !defined __cplusplus) \
     || (defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L)
 
 /* These structs are the constant expression for the germanic plural
@@ -37,12 +33,12 @@
 static const struct expression plvar =
 {
   .nargs = 0,
-  .operation = expression::var,
+  .operation = var,
 };
 static const struct expression plone =
 {
   .nargs = 0,
-  .operation = expression::num,
+  .operation = num,
   .val =
   {
     .num = 1
@@ -51,7 +47,7 @@ static const struct expression plone =
 struct expression GERMANIC_PLURAL =
 {
   .nargs = 2,
-  .operation = expression::not_equal,
+  .operation = not_equal,
   .val =
   {
     .args =
@@ -79,14 +75,14 @@ init_germanic_plural ()
   if (plone.val.num == 0)
     {
       plvar.nargs = 0;
-      plvar.operation = expression::var;
+      plvar.operation = var;
 
       plone.nargs = 0;
-      plone.operation = expression::num;
+      plone.operation = num;
       plone.val.num = 1;
 
       GERMANIC_PLURAL.nargs = 2;
-      GERMANIC_PLURAL.operation = expression::not_equal;
+      GERMANIC_PLURAL.operation = not_equal;
       GERMANIC_PLURAL.val.args[0] = &plvar;
       GERMANIC_PLURAL.val.args[1] = &plone;
     }
@@ -98,10 +94,9 @@ init_germanic_plural ()
 
 void
 internal_function
-EXTRACT_PLURAL_EXPRESSION (
-     const char *nullentry,
-     struct expression **pluralp,
-     unsigned long int *npluralsp)
+EXTRACT_PLURAL_EXPRESSION (const char *nullentry,
+			   const struct expression **pluralp,
+			   unsigned long int *npluralsp)
 {
   if (nullentry != NULL)
     {

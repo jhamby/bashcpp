@@ -30,7 +30,7 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-CC = @CC@
+CXX = @CXX@
 RANLIB = @RANLIB@
 AR = @AR@
 ARFLAGS = @ARFLAGS@
@@ -40,7 +40,7 @@ MV = mv
 
 SHELL = @MAKE_SHELL@
 
-CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 
@@ -48,12 +48,12 @@ DEFS = @DEFS@
 
 INCLUDES = -I. -I../.. -I$(topdir) -I$(topdir)/lib -I$(srcdir)
 
-CCFLAGS = $(CFLAGS) $(DEFS) $(CPPFLAGS) ${INCLUDES}
+CCFLAGS = $(CXXFLAGS) $(DEFS) $(CPPFLAGS) ${INCLUDES}
 
 # Here is a rule for making .o files from .c files that doesn't force
 # the type of the machine (like -sun3) into the flags.
 .c.o:
-	$(CC) -c $(CCFLAGS) $<
+	$(CXX) -x c++ -c $(CCFLAGS) $<
 
 SOURCES = termcap.c tparam.c
 OBJECTS = termcap.o tparam.o

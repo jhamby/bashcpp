@@ -69,7 +69,6 @@ suspend_continue (int sig)
 #if 0
   set_signal_handler (SIGSTOP, old_stop);
 #endif
-  SIGRETURN (0);
 }
 
 /* Suspending the shell.  If -f is the arg, then do the suspend

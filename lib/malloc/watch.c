@@ -35,11 +35,7 @@ int		_malloc_nwatch;
 static PTR_T	_malloc_watch_list[WATCH_MAX];
 
 static void
-watch_warn (addr, file, line, type, data)
-     PTR_T addr;
-     const char *file;
-     int line, type;
-     unsigned long data;
+watch_warn (PTR_T addr, const char *file, int line, int type, unsigned long data)
 {
   char *tag;
 
@@ -61,13 +57,9 @@ watch_warn (addr, file, line, type, data)
 }
 
 void
-_malloc_ckwatch (addr, file, line, type, data)
-     PTR_T addr;
-     const char *file;
-     int line, type;
-     unsigned long data;
+_malloc_ckwatch (PTR_T addr, const char *file, int line, int type, unsigned long data)
 {
-  register int i;
+  int i;
 
   for (i = _malloc_nwatch - 1; i >= 0; i--)
     {
@@ -81,10 +73,9 @@ _malloc_ckwatch (addr, file, line, type, data)
 #endif /* MALLOC_WATCH */
 
 PTR_T
-malloc_watch (addr)
-     PTR_T addr;
+malloc_watch (PTR_T addr)
 {
-  register int i;
+  int i;
   PTR_T ret;
 
   if (addr == 0)
@@ -117,11 +108,10 @@ malloc_watch (addr)
    watchpoints.  Returns ADDR if everything went OK, NULL if ADDR was
    not being watched. */
 PTR_T
-malloc_unwatch (addr)
-     PTR_T addr;
+malloc_unwatch (PTR_T addr)
 {
 #ifdef MALLOC_WATCH
-  register int i;
+  int i;
 
   if (addr == 0)
     {

@@ -411,7 +411,7 @@ command_error (const char *func, int code, int e, int flags)
   programming_error ("%s: %s: %d", func, _(cmd_error_table[code]), e);
 }
 
-char *
+const char *
 command_errstr (int code)
 {
   if (code > CMDERR_LAST)

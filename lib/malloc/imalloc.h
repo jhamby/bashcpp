@@ -34,11 +34,7 @@
 
 /* Generic pointer type. */
 #ifndef PTR_T
-#  if defined (__STDC__)
-#    define PTR_T void *
-#  else
-#    define PTR_T char *
-#  endif
+#define PTR_T void *
 #endif
 
 #if !defined (NULL)
@@ -66,14 +62,6 @@
 #    define FASTCOPY(s, d, n)  bcopy (s, d, n)
 #  endif /* HAVE_BCOPY */
 #endif /* !__GNUC__ */
-
-#if !defined (PARAMS)
-#  if defined (__STDC__) || defined (__GNUC__) || defined (__cplusplus) || defined (PROTOTYPES)
-#    define PARAMS(protos) protos
-#  else 
-#    define PARAMS(protos) ()
-#  endif
-#endif
 
 /* Use Duff's device for good zeroing/copying performance.  DO NOT call the
    Duff's device macros with NBYTES == 0. */
@@ -120,9 +108,9 @@ do { 								\
 #define MALLOC_MEMSET(charp, xch, nbytes)				\
 do {									\
   if ((nbytes) <= 32) {							\
-    register char * mzp = (charp);					\
+    char * mzp = (char *)(charp);					\
     unsigned long mctmp = (nbytes);					\
-    register long mcn;							\
+    long mcn;							\
     if (mctmp < 8) mcn = 0; else { mcn = (mctmp-1)/8; mctmp &= 7; }	\
     switch (mctmp) {							\
       case 0: for(;;) { *mzp++ = xch;					\
@@ -167,7 +155,7 @@ do {									\
 
 #include <signal.h>
 
-extern void _malloc_block_signals PARAMS((sigset_t *, sigset_t *));
-extern void _malloc_unblock_signals PARAMS((sigset_t *, sigset_t *));
+extern void _malloc_block_signals (sigset_t *, sigset_t *);
+extern void _malloc_unblock_signals (sigset_t *, sigset_t *);
 
 #endif /* _IMALLOC_H */

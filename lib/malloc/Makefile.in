@@ -24,7 +24,7 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-CC = @CC@
+CXX = @CXX@
 RANLIB = @RANLIB@
 AR = @AR@
 ARFLAGS = @ARFLAGS@
@@ -36,7 +36,7 @@ SHELL = @MAKE_SHELL@
 
 PROFILE_FLAGS = @PROFILE_FLAGS@
 
-CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
 LOCAL_CFLAGS = @LOCAL_CFLAGS@
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
@@ -56,13 +56,13 @@ LIBINTL_H = @LIBINTL_H@
 INCLUDES = -I. -I../.. -I$(topdir) -I$(BASHINCDIR) -I$(topdir)/lib $(INTL_INC)
 
 CCFLAGS = ${PROFILE_FLAGS} ${INCLUDES} $(DEFS) $(LOCAL_DEFS) $(LOCAL_CFLAGS) \
-	  $(CFLAGS) $(MALLOC_CFLAGS) $(CPPFLAGS)
+	  $(CXXFLAGS) $(MALLOC_CFLAGS) $(CPPFLAGS)
 
 .c.o:
-	$(CC) $(CCFLAGS) -c $<
+	$(CXX) -x c++ $(CCFLAGS) -c $<
 
 .s.o:
-	$(CC) $(CCFLAGS) -c $<
+	$(CXX) $(CCFLAGS) -c $<
 
 MALLOC_SOURCE = malloc.c
 STUB_SOURCE = stub.c
@@ -97,7 +97,7 @@ alloca: ${ALLOCA}
 	-test -n "$(RANLIB)" && $(RANLIB) libmalloc.a
 
 alloca.o:	$(srcdir)/$(ALLOCA_SOURCE)
-	$(CC) $(CCFLAGS) -c $(srcdir)/$(ALLOCA_SOURCE)
+	$(CXX) $(CCFLAGS) -c $(srcdir)/$(ALLOCA_SOURCE)
 	@- if test "$(ALLOCA_OBJECT)" != alloca.o ; then \
 		mv $(ALLOCA_OBJECT) alloca.o >/dev/null 2>&1 ; \
 	fi

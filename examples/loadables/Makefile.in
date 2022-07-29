@@ -49,7 +49,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALLMODE= -m 0755
 
 @SET_MAKE@
-CC = @CC@
+CXX = @CXX@
 RM = rm -f
 
 SHELL = @MAKE_SHELL@
@@ -58,7 +58,7 @@ host_os = @host_os@
 host_cpu = @host_cpu@
 host_vendor = @host_vendor@
 
-CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
 LOCAL_CFLAGS = @LOCAL_CFLAGS@
 DEFS = @DEFS@
 LOCAL_DEFS = @LOCAL_DEFS@
@@ -76,7 +76,7 @@ INTL_BUILDDIR = ${LIBBUILD}/intl
 INTL_INC = @INTL_INC@
 LIBINTL_H = @LIBINTL_H@
 
-CCFLAGS = $(DEFS) $(LOCAL_DEFS) $(LOCAL_CFLAGS) $(CPPFLAGS) $(CFLAGS)
+CCFLAGS = $(DEFS) $(LOCAL_DEFS) $(LOCAL_CFLAGS) $(CPPFLAGS) $(CXXFLAGS)
 
 #
 # These values are generated for configure by ${topdir}/support/shobj-conf.
@@ -84,8 +84,8 @@ CCFLAGS = $(DEFS) $(LOCAL_DEFS) $(LOCAL_CFLAGS) $(CPPFLAGS) $(CFLAGS)
 # dynamic loading of shared objects, please update the script and send the
 # changes to bash-maintainers@gnu.org.
 #
-SHOBJ_CC = @SHOBJ_CC@
-SHOBJ_CFLAGS = @SHOBJ_CFLAGS@
+SHOBJ_CXX = @SHOBJ_CXX@
+SHOBJ_CXXFLAGS = @SHOBJ_CXXFLAGS@
 SHOBJ_LD = @SHOBJ_LD@
 SHOBJ_LDFLAGS = @SHOBJ_LDFLAGS@ @LDFLAGS@
 SHOBJ_XLDFLAGS = @SHOBJ_XLDFLAGS@
@@ -97,7 +97,7 @@ INC = -I. -I.. -I$(topdir) -I$(topdir)/lib -I$(topdir)/builtins -I${srcdir} \
       -I$(BUILD_DIR)/builtins $(INTL_INC)
 
 .c.o:
-	$(SHOBJ_CC) $(SHOBJ_CFLAGS) $(CCFLAGS) $(INC) -c -o $@ $<
+	$(SHOBJ_CXX) $(SHOBJ_CXXFLAGS) $(CCFLAGS) $(INC) -c -o $@ $<
 
 
 ALLPROG = print truefalse sleep finfo logname basename dirname fdflags \
@@ -245,7 +245,7 @@ pushd.c:	${topdir}/builtins/pushd.def
 
 pushd.o:	pushd.c
 	$(RM) $@
-	$(SHOBJ_CC) -DHAVE_CONFIG_H -DPUSHD_AND_POPD -DLOADABLE_BUILTIN $(SHOBJ_CFLAGS) $(CFLAGS) $(CPPFLAGS) $(INC) -c -o $@ $<
+	$(SHOBJ_CXX) -DHAVE_CONFIG_H -DPUSHD_AND_POPD -DLOADABLE_BUILTIN $(SHOBJ_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) -c -o $@ $<
 
 pushd:	pushd.o
 	$(SHOBJ_LD) $(SHOBJ_LDFLAGS) $(SHOBJ_XLDFLAGS) -o $@ pushd.o $(SHOBJ_LIBS)

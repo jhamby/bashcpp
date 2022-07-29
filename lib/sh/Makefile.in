@@ -45,7 +45,7 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-CC = @CC@
+CXX = @CXX@
 RANLIB = @RANLIB@
 AR = @AR@
 ARFLAGS = @ARFLAGS@
@@ -55,7 +55,7 @@ MV = mv
 
 SHELL = @MAKE_SHELL@
 
-CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
 LOCAL_CFLAGS = @LOCAL_CFLAGS@ ${DEBUG}
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@ @LOCAL_LDFLAGS@
@@ -67,15 +67,15 @@ LOCAL_DEFS = @LOCAL_DEFS@
 
 INCLUDES = -I. -I../.. -I$(topdir) -I$(topdir)/lib -I$(BASHINCDIR) -I$(srcdir) $(INTL_INC)
 
-CCFLAGS = ${ADDON_CFLAGS} ${PROFILE_FLAGS} ${INCLUDES} $(DEFS) $(LOCAL_DEFS) \
-	  $(LOCAL_CFLAGS) $(CFLAGS) $(CPPFLAGS) 
+CCFLAGS = ${ADDON_CXXFLAGS} ${PROFILE_FLAGS} ${INCLUDES} $(DEFS) $(LOCAL_DEFS) \
+	  $(LOCAL_CFLAGS) $(CXXFLAGS) $(CPPFLAGS) 
 
 GCC_LINT_FLAGS = -Wall -Wshadow -Wpointer-arith -Wcast-qual \
 		 -Wcast-align -Wstrict-prototypes -Wconversion \
 		 -Wmissing-prototypes -Wtraditional -Wredundant-decls -pedantic
 
 .c.o:
-	$(CC) -c $(CCFLAGS) $<
+	$(CXX) -x c++ -c $(CCFLAGS) $<
 
 # The name of the library target.
 LIBRARY_NAME = libsh.a

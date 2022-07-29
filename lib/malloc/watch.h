@@ -34,7 +34,7 @@
 
 extern int _malloc_nwatch;
 
-extern void _malloc_ckwatch PARAMS((PTR_T, const char *, int, int, unsigned long));
+extern void _malloc_ckwatch (PTR_T, const char *, int, int, unsigned long);
                     
 #endif /* MALLOC_WATCH */
 

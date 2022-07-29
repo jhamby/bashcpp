@@ -1,23 +1,19 @@
-/* plural-exp.h - defines for expression parsing and evaluation for plural form selection. */
-
-/* Copyright (C) 2000, 2001, 2002, 2005-2009 Free Software Foundation, Inc.
+/* Expression parsing and evaluation for plural form selection.
+   Copyright (C) 2000-2003, 2005-2007 Free Software Foundation, Inc.
    Written by Ulrich Drepper <drepper@cygnus.com>, 2000.
 
-   This file is part of GNU Bash.
-
-   Bash is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published by
+   the Free Software Foundation; either version 2.1 of the License, or
    (at your option) any later version.
 
-   Bash is distributed in the hope that it will be useful,
+   This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-*/
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifndef _PLURAL_EXP_H
 #define _PLURAL_EXP_H
@@ -30,36 +26,42 @@
 # define attribute_hidden
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+enum expression_operator
+{
+  /* Without arguments:  */
+  var,				/* The variable "n".  */
+  num,				/* Decimal number.  */
+  /* Unary operators:  */
+  lnot,				/* Logical NOT.  */
+  /* Binary operators:  */
+  mult,				/* Multiplication.  */
+  divide,			/* Division.  */
+  module,			/* Modulo operation.  */
+  plus,				/* Addition.  */
+  minus,			/* Subtraction.  */
+  less_than,			/* Comparison.  */
+  greater_than,			/* Comparison.  */
+  less_or_equal,		/* Comparison.  */
+  greater_or_equal,		/* Comparison.  */
+  equal,			/* Comparison for equality.  */
+  not_equal,			/* Comparison for inequality.  */
+  land,				/* Logical AND.  */
+  lor,				/* Logical OR.  */
+  /* Ternary operators:  */
+  qmop				/* Question mark operator.  */
+};
 
 /* This is the representation of the expressions to determine the
    plural form.  */
 struct expression
 {
   int nargs;			/* Number of arguments.  */
-  enum op
-  {
-    /* Without arguments:  */
-    var,			/* The variable "n".  */
-    num,			/* Decimal number.  */
-    /* Unary operators:  */
-    lnot,			/* Logical NOT.  */
-    /* Binary operators:  */
-    mult,			/* Multiplication.  */
-    divide,			/* Division.  */
-    module,			/* Modulo operation.  */
-    plus,			/* Addition.  */
-    minus,			/* Subtraction.  */
-    less_than,			/* Comparison.  */
-    greater_than,		/* Comparison.  */
-    less_or_equal,		/* Comparison.  */
-    greater_or_equal,		/* Comparison.  */
-    equal,			/* Comparison for equality.  */
-    not_equal,			/* Comparison for inequality.  */
-    land,			/* Logical AND.  */
-    lor,			/* Logical OR.  */
-    /* Ternary operators:  */
-    qmop			/* Question mark operator.  */
-  } operation;
+  enum expression_operator operation;
   union
   {
     unsigned long int num;	/* Number value for `num'.  */
@@ -108,13 +110,18 @@ extern void FREE_EXPRESSION (struct expression *exp)
 extern int PLURAL_PARSE (struct parse_args *arg);
 extern struct expression GERMANIC_PLURAL attribute_hidden;
 extern void EXTRACT_PLURAL_EXPRESSION (const char *nullentry,
-				       struct expression **pluralp,
+				       const struct expression **pluralp,
 				       unsigned long int *npluralsp)
      internal_function;
 
-#if !defined (_LIBC) && !defined (IN_LIBINTL)
-extern unsigned long int plural_eval (struct expression *pexp,
-				      unsigned long n);
+#if !defined (_LIBC) && !defined (IN_LIBINTL) && !defined (IN_LIBGLOCALE)
+extern unsigned long int plural_eval (const struct expression *pexp,
+				      unsigned long int n);
+#endif
+
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* _PLURAL_EXP_H */

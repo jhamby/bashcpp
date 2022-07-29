@@ -553,8 +553,6 @@ termsig_sighandler (int sig)
   if (RL_ISSTATE (RL_STATE_SIGHANDLER) || RL_ISSTATE (RL_STATE_TERMPREPPED))
     bashline_set_event_hook ();
 #endif
-
-  SIGRETURN (0);
 }
 
 void
@@ -669,7 +667,7 @@ sigint_sighandler (int sig)
       last_command_exit_value = 128 + sig;
       set_pipestatus_from_exit (last_command_exit_value);
       wait_signal_received = sig;
-      SIGRETURN (0);
+      return;
     }
 
   /* In interactive shells, we will get here instead of trap_handler() so
@@ -691,8 +689,6 @@ sigint_sighandler (int sig)
   else if (RL_ISSTATE (RL_STATE_SIGHANDLER))
     bashline_set_event_hook ();
 #endif
-
-  SIGRETURN (0);
 }
 
 #if defined (SIGWINCH)
@@ -703,7 +699,6 @@ sigwinch_sighandler (int sig)
   set_signal_handler (SIGWINCH, sigwinch_sighandler);
 #endif /* MUST_REINSTALL_SIGHANDLERS */
   sigwinch_received = 1;
-  SIGRETURN (0);
 }
 #endif /* SIGWINCH */
 
@@ -727,7 +722,6 @@ sighandler
 sigterm_sighandler (int sig)
 {
   sigterm_received = 1;		/* XXX - counter? */
-  SIGRETURN (0);
 }
 
 /* Signal functions used by the rest of the code. */
