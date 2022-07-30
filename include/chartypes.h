@@ -35,11 +35,7 @@
    eliminate the && through constant folding."
    Solaris defines some of these symbols so we must undefine them first.  */
 
-#if STDC_HEADERS || (!defined (isascii) && !HAVE_ISASCII)
-#  define IN_CTYPE_DOMAIN(c) 1
-#else
-#  define IN_CTYPE_DOMAIN(c) isascii(c)
-#endif
+#define IN_CTYPE_DOMAIN(c) 1
 
 #if !defined (isspace) && !defined (HAVE_ISSPACE)
 #  define isspace(c) ((c) == ' ' || (c) == '\t' || (c) == '\n' || (c) == '\f')
@@ -88,7 +84,7 @@
   (((c) >= 'a' && (c) <= 'f') \
 	? (c)-'a'+10 \
 	: (c) >= 'A' && (c) <= 'F' ? (c)-'A'+10 : (c)-'0')
-                  
+
 #ifndef ISOCTAL
 #  define ISOCTAL(c)	((c) >= '0' && (c) <= '7')
 #endif

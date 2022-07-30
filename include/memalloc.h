@@ -49,11 +49,7 @@
 extern void *alloca ();
 #    else
 #      if !defined (alloca)
-#        if defined (__STDC__)
 extern void *alloca (size_t);
-#        else
-extern char *alloca ();
-#        endif /* !__STDC__ */
 #      endif /* !alloca */
 #    endif /* !__hpux || !__STDC__ && !alloca */
 #  endif /* !HAVE_ALLOCA_H || C_ALLOCA */

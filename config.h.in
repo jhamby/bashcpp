@@ -262,9 +262,6 @@
 /* Define to use GNU libc extensions */
 #undef _GNU_SOURCE
 
-/* Define if you have the ANSI C header files.  */
-#undef STDC_HEADERS
-
 /* Memory management functions. */
 
 /* Define if using the bash version of malloc in lib/malloc/malloc.c */

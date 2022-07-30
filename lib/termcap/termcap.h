@@ -19,8 +19,6 @@
 #ifndef _TERMCAP_H
 #define _TERMCAP_H 1
 
-#if __STDC__
-
 extern int tgetent (char *buffer, const char *termtype);
 
 extern int tgetnum (const char *name);
@@ -37,27 +35,5 @@ extern char *UP;
 extern char *BC;
 
 extern char *tgoto (const char *cstring, int hpos, int vpos);
-
-#else /* not __STDC__ */
-
-extern int tgetent ();
-
-extern int tgetnum ();
-extern int tgetflag ();
-extern char *tgetstr ();
-
-extern char PC;
-extern short ospeed;
-
-extern void tputs ();
-
-extern char *tparam ();
-
-extern char *UP;
-extern char *BC;
-
-extern char *tgoto ();
-
-#endif /* not __STDC__ */
 
 #endif /* not _TERMCAP_H */

@@ -35,9 +35,7 @@
 #  include <unistd.h>
 #endif
 
-#if STDC_HEADERS
-#  include <stddef.h>
-#endif
+#include <stddef.h>
 
 #ifndef offsetof
 #  define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)

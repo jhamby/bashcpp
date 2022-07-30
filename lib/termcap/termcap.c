@@ -46,23 +46,17 @@ extern char *realloc ();
 #include <string.h>
 #endif
 
-#if !defined (HAVE_BCOPY) && (defined (HAVE_STRING_H) || defined (STDC_HEADERS))
+#if !defined (HAVE_BCOPY)
 #  define bcopy(s, d, n)	memcpy ((d), (s), (n))
 #endif
 
 #else /* not HAVE_CONFIG_H */
 
-#ifdef STDC_HEADERS
 #include <stdlib.h>
 #include <string.h>
-#else
-char *getenv ();
-char *malloc ();
-char *realloc ();
-#endif
 
 /* Do this after the include, in case string.h prototypes bcopy.  */
-#if (defined(HAVE_STRING_H) || defined(STDC_HEADERS)) && !defined(bcopy)
+#if !defined(bcopy)
 #define bcopy(s, d, n) memcpy ((d), (s), (n))
 #endif
 

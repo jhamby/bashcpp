@@ -24,15 +24,6 @@
 
 #include "loadinfo.h"
 
-/* On some strange systems still no definition of NULL is found.  Sigh!  */
-#ifndef NULL
-# if defined __STDC__ && __STDC__
-#  define NULL ((void *) 0)
-# else
-#  define NULL 0
-# endif
-#endif
-
 /* @@ end of prolog @@ */
 
 /* Split a locale name NAME into a leading language part and all the

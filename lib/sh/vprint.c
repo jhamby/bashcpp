@@ -24,14 +24,6 @@
 
 #include <stdio.h>
 
-#if !defined (NULL)
-#  if defined (__STDC__)
-#    define NULL ((void *)0)
-#  else
-#    define NULL 0x0
-#  endif /* __STDC__ */
-#endif /* !NULL */
-
 /*
  * Beware!  Don't trust the value returned by either of these functions; it
  * seems that pre-4.3-tahoe implementations of _doprnt () return the first

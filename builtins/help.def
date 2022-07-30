@@ -201,11 +201,7 @@ builtin_help ()
 
   d = current_builtin - shell_builtins;
 
-#if defined (__STDC__)
   ind = (int)d;
-#else
-  ind = (int)d / sizeof (struct builtin);
-#endif
 
   printf ("%s: %s\n", this_command_name, _(shell_builtins[ind].short_doc));
   show_longdoc (ind);

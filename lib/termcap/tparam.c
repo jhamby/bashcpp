@@ -34,23 +34,18 @@ extern char *realloc ();
 #include <string.h>
 #endif
 
-#if !defined (HAVE_BCOPY) && (defined (HAVE_STRING_H) || defined (STDC_HEADERS))
+#if !defined (HAVE_BCOPY)
 #  define bcopy(s, d, n)	memcpy ((d), (s), (n))
 #endif
 
 #else /* not HAVE_CONFIG_H */
 
-#if defined(HAVE_STRING_H) || defined(STDC_HEADERS)
+#if !defined(bcopy)
 #define bcopy(s, d, n) memcpy ((d), (s), (n))
 #endif
 
-#ifdef STDC_HEADERS
 #include <stdlib.h>
 #include <string.h>
-#else
-char *malloc ();
-char *realloc ();
-#endif
 
 #endif /* not HAVE_CONFIG_H */
 
@@ -59,7 +54,7 @@ char *realloc ();
 #ifndef NULL
 #define NULL (char *) 0
 #endif
-
+
 #ifndef emacs
 static void
 memory_out ()

@@ -71,10 +71,6 @@
 extern int errno;
 #endif
 
-#if !defined (__STDC__) && !defined (strcpy)
-extern char *strcpy ();
-#endif /* !__STDC__ && !strcpy */
-
 #define whitespace(c) (((c) == ' ') || ((c) == '\t'))
 
 /* Flag values that builtins can have. */

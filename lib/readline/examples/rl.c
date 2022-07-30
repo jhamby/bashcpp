@@ -34,7 +34,7 @@
 
 #ifdef HAVE_STDLIB_H
 #  include <stdlib.h>
-#else 
+#else
 extern void exit();
 #endif
 
@@ -50,10 +50,6 @@ extern void exit();
 
 extern int optind;
 extern char *optarg;
-
-#if !defined (strchr) && !defined (__STDC__)
-extern char *strrchr();
-#endif
 
 static char *progname;
 static char *deftext;
