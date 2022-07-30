@@ -6305,7 +6305,7 @@ report_syntax_error (const char *message)
     }
   else
     {
-      msg = EOF_Reached ? _("syntax error: unexpected end of file") : _("syntax error");
+      msg = (char *)(EOF_Reached ? _("syntax error: unexpected end of file") : _("syntax error"));
       parser_error (line_number, "%s", msg);
       /* When the shell is interactive, this file uses EOF_Reached
 	 only for error reporting.  Other mechanisms are used to

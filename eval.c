@@ -68,7 +68,7 @@ reader_loop ()
   if (just_one_command)
     reset_readahead_token ();
 
-  while (EOF_Reached == 0)
+  while (!EOF_Reached)
     {
       int code;
 
@@ -96,7 +96,7 @@ reader_loop ()
 	      current_command = (COMMAND *)NULL;
 	      if (exit_immediately_on_error)
 		variable_context = 0;	/* not in a function */
-	      EOF_Reached = EOF;
+	      EOF_Reached = true;
 	      goto exec_done;
 
 	    case DISCARD:
@@ -108,7 +108,7 @@ reader_loop ()
 	      if (subshell_environment)
 		{
 		  current_command = (COMMAND *)NULL;
-		  EOF_Reached = EOF;
+		  EOF_Reached = true;
 		  goto exec_done;
 		}
 	      /* Obstack free command elements, etc. */
@@ -164,8 +164,8 @@ reader_loop ()
 
 	      current_command_number++;
 
-	      executing = 1;
-	      stdin_redir = 0;
+	      executing = true;
+	      stdin_redir = false;
 
 	      execute_command (current_command);
 
@@ -182,11 +182,11 @@ reader_loop ()
       else
 	{
 	  /* Parse error, maybe discard rest of stream if not interactive. */
-	  if (interactive == 0)
-	    EOF_Reached = EOF;
+	  if (!interactive)
+	    EOF_Reached = true;
 	}
       if (just_one_command)
-	EOF_Reached = EOF;
+	EOF_Reached = true;
     }
   indirection_level--;
   return (last_command_exit_value);
@@ -203,7 +203,7 @@ pretty_print_loop ()
 
   global_posix_mode = posixly_correct;
   last_was_newline = 0;
-  while (EOF_Reached == 0)
+  while (!EOF_Reached)
     {
       code = setjmp_nosigs (top_level);
       if (code)
