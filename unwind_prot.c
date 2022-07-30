@@ -101,7 +101,7 @@ static UNWIND_ELT *unwind_protect_list = (UNWIND_ELT *)NULL;
 /* Allocating from a cache of unwind-protect elements */
 #define UWCACHESIZE	128
 
-sh_obj_cache_t uwcache = {0, 0, 0};
+objcache uwcache = objcache(UWCACHESIZE);
 
 #if 0
 #define uwpalloc(elt)	(elt) = (UNWIND_ELT *)xmalloc (sizeof (UNWIND_ELT))
@@ -110,12 +110,6 @@ sh_obj_cache_t uwcache = {0, 0, 0};
 #define uwpalloc(elt)	ocache_alloc (uwcache, UNWIND_ELT, elt)
 #define uwpfree(elt)	ocache_free (uwcache, UNWIND_ELT, elt)
 #endif
-
-void
-uwp_init ()
-{
-  ocache_create (uwcache, UNWIND_ELT, UWCACHESIZE);
-}
 
 /* Start the beginning of a region. */
 void

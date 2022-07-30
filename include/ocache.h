@@ -50,12 +50,27 @@ do {									\
 #define OC_MEMSET(memp, xch, nbytes) memset ((memp), (xch), (nbytes))
 #endif
 
-typedef struct objcache {
+struct objcache {
+        objcache(int cs) : cs(cs), nc(0) {
+                data = xmalloc((cs) * sizeof (PTR_T));
+        }
+#if 0
+        // Uncomment to free memory on exit (probably not useful).
+        ~objcache() {
+		while (nc > 0) \
+			xfree (((void **)(data))[--nc]);
+
+                if (data)
+                        xfree (data);
+        }
+#endif
+
 	PTR_T	data;
 	int	cs;		/* cache size, number of objects */
 	int	nc;		/* number of cache entries */
-} sh_obj_cache_t;
+};
 
+#if 0
 /* Create an object cache C of N pointers to OTYPE. */
 #define ocache_create(c, otype, n) \
 	do { \
@@ -72,6 +87,7 @@ typedef struct objcache {
 		(c).data = 0; \
 		(c).cs = (c).nc = 0; \
 	} while (0)
+#endif
 
 /* Free all cached items, which are pointers to OTYPE, in object cache C. */
 #define ocache_flush(c, otype) \

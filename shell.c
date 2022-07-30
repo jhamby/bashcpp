@@ -742,8 +742,11 @@ main (int argc, char **argv, char **env)
     }
 #endif
 
+#if 0
+  /* These are now global C++ objects. */
   cmd_init ();		/* initialize the command object caches */
   uwp_init ();
+#endif
 
   if (command_execution_string)
     {

@@ -49,11 +49,12 @@
 int here_doc_first_line = 0;
 
 /* Object caching */
-sh_obj_cache_t wdcache = {0, 0, 0};
-sh_obj_cache_t wlcache = {0, 0, 0};
 
 #define WDCACHESIZE	128
 #define WLCACHESIZE	128
+
+objcache wdcache = objcache(WDCACHESIZE);
+objcache wlcache = objcache(WLCACHESIZE);
 
 static COMMAND *make_for_or_select (enum command_type, WORD_DESC *, WORD_LIST *, COMMAND *, int);
 
@@ -62,13 +63,6 @@ static WORD_LIST *make_arith_for_expr (const char *);
 #endif
 
 static COMMAND *make_until_or_while (enum command_type, COMMAND *, COMMAND *);
-
-void
-cmd_init ()
-{
-  ocache_create (wdcache, WORD_DESC, WDCACHESIZE);
-  ocache_create (wlcache, WORD_LIST, WLCACHESIZE);
-}
 
 WORD_DESC *
 alloc_word_desc ()

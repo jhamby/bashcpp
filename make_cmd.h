@@ -25,8 +25,6 @@
 
 extern int here_doc_first_line;
 
-extern void cmd_init (void);
-
 extern WORD_DESC *alloc_word_desc (void);
 extern WORD_DESC *make_bare_word (const char *);
 extern WORD_DESC *make_word_flags (WORD_DESC *, const char *);

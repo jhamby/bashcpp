@@ -5295,6 +5295,7 @@ execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
   const char *pathname = words->word->word;
 
   char *command;
+  char *p = 0;
   int result = EXECUTION_SUCCESS;
 
 #if defined (RESTRICTED_SHELL)
@@ -5342,7 +5343,7 @@ execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
   else
     {
       int fork_flags = async ? FORK_ASYNC : 0;
-      pid = make_child (savestring (command_line), fork_flags);
+      pid = make_child (p = savestring (command_line), fork_flags);
     }
 
   if (pid == 0)
@@ -5353,6 +5354,10 @@ execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
       /* Cancel traps, in trap.c. */
       restore_original_signals ();
       subshell_environment &= ~SUBSHELL_IGNTRAP;
+
+#if defined (JOB_CONTROL)
+      FREE (p);
+#endif
 
       /* restore_original_signals may have undone the work done
 	 by make_child to ensure that SIGINT and SIGQUIT are ignored

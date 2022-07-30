@@ -21,8 +21,6 @@
 #if !defined (_UNWIND_PROT_H)
 #define _UNWIND_PROT_H
 
-extern void uwp_init ();
-
 /* Run a function without interrupts. */
 extern void begin_unwind_frame (const char *);
 extern void discard_unwind_frame (const char *);
