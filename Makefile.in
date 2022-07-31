@@ -628,6 +628,7 @@ version.h:  $(SOURCES) config.h Makefile patchlevel.h
 
 bashversion.o: $(SUPPORT_SRC)bashversion.c
 	$(CXX_FOR_BUILD) -x c++ $(CCFLAGS_FOR_BUILD) -c -o $@ $(SUPPORT_SRC)bashversion.c
+bashversion.o: version.h patchlevel.h conftypes.h
 
 buildversion.o: bashintl.h $(BASHINCDIR)/gettext.h
 bashversion$(EXEEXT): buildversion.o bashversion.o
