@@ -22,15 +22,12 @@
 #  include <config.h>
 #endif
 
-#include <stdc.h>
-
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <stdarg.h>
-
-#include <stdio.h>
+#include <cstdarg>
+#include <cstdio>
 
 int
 dprintf(int fd, const char *format, ...)
@@ -39,21 +36,22 @@ dprintf(int fd, const char *format, ...)
   int fd2, rc, r2;
   va_list args;
 
-  if ((fd2 = dup(fd)) < 0)
+  if ((fd2 = ::dup(fd)) < 0)
     return -1;
-  fp = fdopen (fd2, "w");
+
+  fp = ::fdopen (fd2, "w");
   if (fp == 0)
     {
-      close (fd2);
+      ::close (fd2);
       return -1;
     }
 
-  SH_VA_START (args, format);
-  rc = vfprintf (fp, format, args);
-  fflush (fp);
+  va_start (args, format);
+  rc = std::vfprintf (fp, format, args);
+  std::fflush (fp);
   va_end (args);
 
-  r2 = fclose (fp);	/* check here */
+  r2 = std::fclose (fp);	/* check here */
 
   return rc;
 }

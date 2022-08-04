@@ -50,16 +50,16 @@ $END
 /* Run the command mentioned in list directly, without going through the
    normal alias/function/builtin/filename lookup process. */
 int
-builtin_builtin (WORD_LIST *list)
+Shell::builtin_builtin (WORD_LIST *list)
 {
   sh_builtin_func_t *function;
 
   if (no_options (list))
-    return (EX_USAGE);
+    return EX_USAGE;
   list = loptend;	/* skip over possible `--' */
 
   if (list == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
   const char *command = list->word->word;
 #if defined (DISABLED_BUILTINS)
@@ -71,13 +71,13 @@ builtin_builtin (WORD_LIST *list)
   if (function == 0)
     {
       sh_notbuiltin (command);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   else
     {
       this_command_name = command;
       this_shell_builtin = function;	/* overwrite "builtin" as this builtin */
       list = (WORD_LIST *)list->next;
-      return ((*function) (list));
+      return (*function) (list);
     }
 }

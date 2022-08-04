@@ -19,77 +19,77 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef _ARRAY_H_
 #define _ARRAY_H_
 
-#include "stdc.h"
+namespace bash
+{
 
 typedef intmax_t	arrayind_t;
 
 enum atype {array_indexed, array_assoc};	/* only array_indexed used */
 
-typedef struct array {
-	enum atype	type;
-	arrayind_t	max_index;
-	int		num_elements;
-	struct array_element *head;
-	struct array_element *lastref;
-} ARRAY;
-
-typedef struct array_element {
+struct ARRAY_ELEMENT {
 	arrayind_t	ind;
-	char	*value;
-	struct array_element *next, *prev;
-} ARRAY_ELEMENT;
+	char		*value;
+	ARRAY_ELEMENT	*next, *prev;
+};
+
+struct ARRAY {
+	arrayind_t	max_index;
+	unsigned int	num_elements;
+	atype		type;
+	ARRAY_ELEMENT *head;
+	ARRAY_ELEMENT *lastref;
+};
 
 typedef int sh_ae_map_func_t (ARRAY_ELEMENT *, void *);
 
 /* Basic operations on entire arrays */
-extern ARRAY	*array_create (void);
-extern void	array_flush (ARRAY *);
-extern void	array_dispose (ARRAY *);
-extern ARRAY	*array_copy (ARRAY *);
-extern ARRAY	*array_slice (ARRAY *, ARRAY_ELEMENT *, ARRAY_ELEMENT *);
-extern void	array_walk (ARRAY   *, sh_ae_map_func_t *, void *);
+ARRAY	*array_create ();
+void	array_flush (ARRAY *);
+void	array_dispose (ARRAY *);
+ARRAY	*array_copy (ARRAY *);
+ARRAY	*array_slice (ARRAY *, ARRAY_ELEMENT *, ARRAY_ELEMENT *);
+void	array_walk (ARRAY *, sh_ae_map_func_t *, void *);
 
-extern ARRAY_ELEMENT *array_shift (ARRAY *, int, int);
-extern int	array_rshift (ARRAY *, int, const char *);
-extern ARRAY_ELEMENT *array_unshift_element (ARRAY *);
-extern int	array_shift_element (ARRAY *, char *);
+ARRAY_ELEMENT *array_shift (ARRAY *, int, int);
+int	array_rshift (ARRAY *, int, const char *);
+ARRAY_ELEMENT *array_unshift_element (ARRAY *);
+int	array_shift_element (ARRAY *, char *);
 
-extern ARRAY	*array_quote (ARRAY *);
-extern ARRAY	*array_quote_escapes (ARRAY *);
-extern ARRAY	*array_dequote (ARRAY *);
-extern ARRAY	*array_dequote_escapes (ARRAY *);
-extern ARRAY	*array_remove_quoted_nulls (ARRAY *);
+ARRAY	*array_quote (ARRAY *);
+ARRAY	*array_quote_escapes (ARRAY *);
+ARRAY	*array_dequote (ARRAY *);
+ARRAY	*array_dequote_escapes (ARRAY *);
+ARRAY	*array_remove_quoted_nulls (ARRAY *);
 
-extern char	*array_subrange (ARRAY *, arrayind_t, arrayind_t, int, int, int);
-extern char	*array_patsub (ARRAY *, char *, char *, int);
-extern char	*array_modcase (ARRAY *, char *, int, int);
+char	*array_subrange (ARRAY *, arrayind_t, arrayind_t, int, int, int);
+char	*array_patsub (ARRAY *, char *, char *, int);
+char	*array_modcase (ARRAY *, char *, int, int);
 
 /* Basic operations on array elements. */
-extern ARRAY_ELEMENT *array_create_element (arrayind_t, const char *);
-extern ARRAY_ELEMENT *array_copy_element (ARRAY_ELEMENT *);
-extern void	array_dispose_element (ARRAY_ELEMENT *);
+ARRAY_ELEMENT *array_create_element (arrayind_t, const char *);
+ARRAY_ELEMENT *array_copy_element (ARRAY_ELEMENT *);
+void	array_dispose_element (ARRAY_ELEMENT *);
 
-extern int	array_insert (ARRAY *, arrayind_t, const char *);
-extern ARRAY_ELEMENT *array_remove (ARRAY *, arrayind_t);
-extern char	*array_reference (ARRAY *, arrayind_t);
+int	array_insert (ARRAY *, arrayind_t, const char *);
+ARRAY_ELEMENT *array_remove (ARRAY *, arrayind_t);
+char	*array_reference (ARRAY *, arrayind_t);
 
 /* Converting to and from arrays */
-extern WORD_LIST *array_to_word_list (ARRAY *);
-extern ARRAY *array_from_word_list (WORD_LIST *);
-extern WORD_LIST *array_keys_to_word_list (ARRAY *);
+WORD_LIST *array_to_word_list (ARRAY *);
+ARRAY *array_from_word_list (WORD_LIST *);
+WORD_LIST *array_keys_to_word_list (ARRAY *);
 
-extern ARRAY *array_assign_list (ARRAY *, WORD_LIST *);
+ARRAY *array_assign_list (ARRAY *, WORD_LIST *);
 
-extern char **array_to_argv (ARRAY *, int *);
+char **array_to_argv (ARRAY *, int *);
 
-extern char *array_to_kvpair (ARRAY *, int);
-extern char *array_to_assign (ARRAY *, int);
-extern char *array_to_string (ARRAY *, const char *, int);
-extern ARRAY *array_from_string (char *, char *);
+char *array_to_kvpair (ARRAY *, int);
+char *array_to_assign (ARRAY *, int);
+char *array_to_string (ARRAY *, const char *, int);
+ARRAY *array_from_string (char *, char *);
 
 /* Flags for array_shift */
 #define AS_DISPOSE	0x01
@@ -122,6 +122,8 @@ extern ARRAY *array_from_string (char *, char *);
 #define ALL_ELEMENT_SUB(c)	((c) == '@' || (c) == '*')
 
 /* In eval.c, but uses ARRAY * */
-extern int execute_array_command (ARRAY *, void *);
+int execute_array_command (ARRAY *, void *);
+
+}  // namespace bash
 
 #endif /* _ARRAY_H_ */

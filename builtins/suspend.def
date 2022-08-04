@@ -47,14 +47,19 @@ $END
 #endif
 
 #include "../bashtypes.h"
-#include <signal.h>
+
+#include <csignal>
+
 #include "../bashintl.h"
 #include "../shell.h"
 #include "../jobs.h"
 #include "common.h"
 #include "bashgetopt.h"
 
-static sighandler suspend_continue (int);
+namespace bash
+{
+
+static void suspend_continue (int);
 
 static SigHandler *old_cont;
 #if 0
@@ -62,7 +67,7 @@ static SigHandler *old_stop;
 #endif
 
 /* Continue handler. */
-static sighandler
+static void
 suspend_continue (int sig)
 {
   set_signal_handler (SIGCONT, old_cont);
@@ -74,7 +79,7 @@ suspend_continue (int sig)
 /* Suspending the shell.  If -f is the arg, then do the suspend
    no matter what.  Otherwise, complain if a login shell. */
 int
-suspend_builtin (WORD_LIST *list)
+Shell::suspend_builtin (WORD_LIST *list)
 {
   int opt, force;
 
@@ -89,7 +94,7 @@ suspend_builtin (WORD_LIST *list)
       CASE_HELPOPT;
       default:
 	builtin_usage ();
-	return (EX_USAGE);
+	return EX_USAGE;
       }
 
   list = loptend;
@@ -97,7 +102,7 @@ suspend_builtin (WORD_LIST *list)
   if (job_control == 0)
     {
       sh_nojobs (_("cannot suspend"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (force == 0)
@@ -107,7 +112,7 @@ suspend_builtin (WORD_LIST *list)
       if (login_shell)
 	{
 	  builtin_error (_("cannot suspend a login shell"));
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
     }
 
@@ -119,7 +124,9 @@ suspend_builtin (WORD_LIST *list)
   old_stop = (SigHandler *)set_signal_handler (SIGSTOP, SIG_DFL);
 #endif
   killpg (shell_pgrp, SIGSTOP);
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 #endif /* JOB_CONTROL */
+
+}  // namespace bash

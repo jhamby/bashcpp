@@ -27,11 +27,11 @@
 # include "localename.h"
 #endif
 
-#include <limits.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <locale.h>
-#include <string.h>
+#include <climits>
+#include <cstddef>
+#include <cstdlib>
+#include <clocale>
+#include <cstring>
 
 #if HAVE_USELOCALE
 /* Mac OS X 10.5 defines the locale_t type in <xlocale.h>.  */
@@ -2594,13 +2594,13 @@ struniq (const char *string)
 
 /* Like gl_locale_name_thread, except that the result is not in storage of
    indefinite extent.  */
+#if HAVE_USELOCALE
 # if !defined IN_LIBINTL
 static
 # endif
 const char *
 gl_locale_name_thread_unsafe (int category, const char *categoryname)
 {
-# if HAVE_USELOCALE
   {
     locale_t thread_locale = uselocale (NULL);
     if (thread_locale != LC_GLOBAL_LOCALE)
@@ -2647,22 +2647,37 @@ gl_locale_name_thread_unsafe (int category, const char *categoryname)
 #  endif
       }
   }
-# endif
   return NULL;
 }
+#else
+# if !defined IN_LIBINTL
+static
+# endif
+const char *
+gl_locale_name_thread_unsafe (int, const char *)
+{
+  return NULL;
+}
+#endif
 
 #endif
 
+#if HAVE_USELOCALE
 const char *
 gl_locale_name_thread (int category, const char *categoryname)
 {
-#if HAVE_USELOCALE
   const char *name = gl_locale_name_thread_unsafe (category, categoryname);
   if (name != NULL)
     return struniq (name);
-#endif
   return NULL;
 }
+#else
+const char *
+gl_locale_name_thread (int, const char *)
+{
+  return NULL;
+}
+#endif
 
 /* XPG3 defines the result of 'setlocale (category, NULL)' as:
    "Directs 'setlocale()' to query 'category' and return the current
@@ -2704,31 +2719,31 @@ gl_locale_name_posix (int category, const char *categoryname)
 }
 
 const char *
-gl_locale_name_environ (int category, const char *categoryname)
+gl_locale_name_environ (int, const char *categoryname)
 {
   const char *retval;
 
   /* Setting of LC_ALL overrides all other.  */
-  retval = getenv ("LC_ALL");
+  retval = ::getenv ("LC_ALL");
   if (retval != NULL && retval[0] != '\0')
     return retval;
   /* Next comes the name of the desired category.  */
-  retval = getenv (categoryname);
+  retval = ::getenv (categoryname);
   if (retval != NULL && retval[0] != '\0')
     return retval;
   /* Last possibility is the LANG environment variable.  */
-  retval = getenv ("LANG");
+  retval = ::getenv ("LANG");
   if (retval != NULL && retval[0] != '\0')
     {
 #if HAVE_CFLOCALECOPYCURRENT || HAVE_CFPREFERENCESCOPYAPPVALUE
       /* Mac OS X 10.2 or newer.
          Ignore invalid LANG value set by the Terminal application.  */
-      if (strcmp (retval, "UTF-8") != 0)
+      if (::strcmp (retval, "UTF-8") != 0)
 #endif
 #if defined __CYGWIN__
       /* Cygwin.
          Ignore dummy LANG value set by ~/.profile.  */
-      if (strcmp (retval, "C.UTF-8") != 0)
+      if (::strcmp (retval, "C.UTF-8") != 0)
 #endif
         return retval;
     }

@@ -46,7 +46,10 @@ $END
 #include <apollo/base.h>
 #include <apollo/loader.h>
 
-inlib_builtin (WORD_LIST *list)
+namespace bash
+{
+
+Shell::inlib_builtin (WORD_LIST *list)
 {
   status_$t status;
   int return_value;
@@ -55,7 +58,7 @@ inlib_builtin (WORD_LIST *list)
   if (!list)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   return_value = EXECUTION_SUCCESS;
@@ -74,6 +77,9 @@ inlib_builtin (WORD_LIST *list)
       list = list->next;
     }
 
-  return (return_value);
+  return return_value;
 }
+
+}  // namespace bash
+
 #endif /* apollo */

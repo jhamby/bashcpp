@@ -28,19 +28,18 @@
 #endif
 
 #if defined (PREFER_STDARG)
-#  include <stdarg.h>
+#  include <cstdarg>
 #else
 #  include <varargs.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 
-#include <errno.h>
+#include <cerrno>
 #if !defined (errno)
 extern int errno;
 #endif /* !errno */
 
-#include "bashansi.h"
 #include "bashintl.h"
 
 #include "shell.h"
@@ -48,10 +47,7 @@ extern int errno;
 #include "flags.h"
 #include "input.h"
 
-#if defined (HISTORY)
-#  include "bashhist.h"
-#endif
-
+#if 0
 extern int executing_line_number (void);
 
 #if defined (JOB_CONTROL)
@@ -74,6 +70,7 @@ static void error_prolog (int);
 const char * const the_current_maintainer = MAINTAINER;
 
 char gnu_error_format = 0;
+#endif
 
 static void
 error_prolog (int print_lineno)
@@ -121,7 +118,7 @@ get_name_for_error ()
     name = "bash";
 #endif
 
-  return (name);
+  return name;
 }
 
 /* Report an error having to do with FILENAME.  This does not use
@@ -417,7 +414,7 @@ command_errstr (int code)
   if (code > CMDERR_LAST)
     code = CMDERR_DEFAULT;
 
-  return (_(cmd_error_table[code]));
+  return _(cmd_error_table[code]);
 }
 
 #ifdef ARRAY_VARS

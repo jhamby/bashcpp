@@ -20,8 +20,6 @@
 
 #include "config.h"
 
-#include <stdc.h>
-
 #include "bashtypes.h"
 
 #if defined (HAVE_UNISTD_H)
@@ -56,14 +54,10 @@
 #  endif /* HAVE_SYS_PTE_H */
 #endif /* !STRUCT_WINSIZE_IN_TERMIOS && !STRUCT_WINSIZE_IN_SYS_IOCTL */
 
-#include <stdio.h>
+#include <cstdio>
 
 /* Return the fd from which we are actually getting input. */
 #define input_tty() (shell_tty != -1) ? shell_tty : fileno (stderr)
-
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
 
 extern int shell_tty;
 

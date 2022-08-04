@@ -3,7 +3,7 @@
 /* Copyright (C) 1995-2009 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,24 +21,6 @@
 
 #if !defined (_RLTTY_H_)
 #define _RLTTY_H_
-
-/* Posix systems use termios and the Posix signal functions. */
-#if defined (TERMIOS_TTY_DRIVER)
-#  include <termios.h>
-#endif /* TERMIOS_TTY_DRIVER */
-
-/* System V machines use termio. */
-#if defined (TERMIO_TTY_DRIVER)
-#  include <termio.h>
-#  if !defined (TCOON)
-#    define TCOON 1
-#  endif
-#endif /* TERMIO_TTY_DRIVER */
-
-/* Other (BSD) machines use sgtty. */
-#if defined (NEW_TTY_DRIVER)
-#  include <sgtty.h>
-#endif
 
 #include "rlwinsize.h"
 
@@ -58,7 +40,7 @@
 #  endif /* !_SVR4_DISABLE */
 #endif /* !NEW_TTY_DRIVER && !_POSIX_VDISABLE */
 
-typedef struct _rl_tty_chars {
+struct _RL_TTY_CHARS {
   unsigned char t_eof;
   unsigned char t_eol;
   unsigned char t_eol2;
@@ -75,6 +57,6 @@ typedef struct _rl_tty_chars {
   unsigned char t_lnext;
   unsigned char t_flush;
   unsigned char t_status;
-} _RL_TTY_CHARS;
+};
 
 #endif /* _RLTTY_H_ */

@@ -31,7 +31,7 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 #include <sys/types.h>
 
 #if defined (HAVE_SYS_SOCKET_H)
@@ -50,17 +50,14 @@
 #  include <arpa/inet.h>
 #endif
 
-#include <bashansi.h>
 #include <bashintl.h>
 
-#include <errno.h>
+#include <cerrno>
 
 #include <shell.h>
-#include <xmalloc.h>
 
-#ifndef errno
-extern int errno;
-#endif
+namespace bash
+{
 
 #if !defined (HAVE_INET_ATON)
 extern int inet_aton (const char *, struct in_addr *);
@@ -121,7 +118,7 @@ _getserv (char *serv, int proto, unsigned short *pp)
     {
       s = (unsigned short)(l & 0xFFFF);
       if (s != l)
-	return (0);
+	return 0;
       s = htons (s);
       if (pp)
 	*pp = s;
@@ -179,7 +176,7 @@ _netopen4(const char *host, const char *serv, int typ)
   if (s < 0)
     {
       sys_error ("socket");
-      return (-1);
+      return -1;
     }
 
   if (connect (s, (struct sockaddr *)&sin, sizeof (sin)) < 0)
@@ -188,7 +185,7 @@ _netopen4(const char *host, const char *serv, int typ)
       sys_error("connect");
       close(s);
       errno = e;
-      return (-1);
+      return -1;
     }
 
   return(s);
@@ -268,9 +265,9 @@ static int
 _netopen(const char *host, const char *serv, int typ)
 {
 #ifdef HAVE_GETADDRINFO
-  return (_netopen6 (host, serv, typ));
+  return _netopen6 (host, serv, typ);
 #else
-  return (_netopen4 (host, serv, typ));
+  return _netopen4 (host, serv, typ);
 #endif
 }
 
@@ -284,47 +281,29 @@ netopen (const char *path)
   char *np, *s, *t;
   int fd;
 
-  np = (char *)xmalloc (strlen (path) + 1);
-  strcpy (np, path);
+  np = savestring (path);
 
   s = np + 9;
-  t = strchr (s, '/');
+  t = std::strchr (s, '/');
   if (t == 0)
     {
       internal_error (_("%s: bad network path specification"), path);
-      free (np);
+      delete[] np;
       return -1;
     }
   *t++ = '\0';
   fd = _netopen (s, t, path[5]);
-  free (np);
+  delete[] np;
 
   return fd;
 }
 
-#if 0
-/*
- * Open a TCP connection to host `host' on the port defined for service
- * `serv' and return the connected socket.
- */
-int
-tcpopen (const char *host, const char *serv)
-{
-  return (_netopen (host, serv, 't'));
-}
-
-/*
- * Open a UDP connection to host `host' on the port defined for service
- * `serv' and return the connected socket.
- */
-int
-udpopen (const char *host, const char *serv)
-{
-  return _netopen (host, serv, 'u');
-}
-#endif
+}  // namespace bash
 
 #else /* !HAVE_NETWORK */
+
+namespace bash
+{
 
 int
 netopen (const char *path)
@@ -332,5 +311,7 @@ netopen (const char *path)
   internal_error (_("network operations not supported"));
   return -1;
 }
+
+}  // namespace bash
 
 #endif /* !HAVE_NETWORK */

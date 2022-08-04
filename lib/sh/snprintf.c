@@ -70,7 +70,6 @@
 #endif
 
 #if defined(DRIVER) && !defined(HAVE_CONFIG_H)
-#define HAVE_LONG_LONG
 #define HAVE_LONG_DOUBLE
 #ifdef __linux__
 #define HAVE_PRINTF_A_FORMAT
@@ -85,23 +84,15 @@
 #define intmax_t long
 #endif
 
-#if !HAVE_SNPRINTF || !HAVE_ASPRINTF
+#if !defined (HAVE_SNPRINTF) || !defined (HAVE_ASPRINTF)
 
 #include <bashtypes.h>
 
-#if defined(PREFER_STDARG)
-#  include <stdarg.h>
-#else
-#  include <varargs.h>
-#endif
+#include <cstdarg>
 
-#ifdef HAVE_LIMITS_H
-#  include <limits.h>
-#endif
+#include <climits>
 #include <bashansi.h>
-#ifdef HAVE_STDDEF_H
-#  include <stddef.h>
-#endif
+#include <cstddef>
 #include <chartypes.h>
 
 #ifdef HAVE_STDINT_H
@@ -109,17 +100,16 @@
 #endif
 
 #ifdef FLOATING_POINT
-#  include <float.h>	/* for manifest constants */
-#  include <stdio.h>	/* for sprintf */
+#  include <cfloat>	/* for manifest constants */
+#  include <cstdio>	/* for sprintf */
 #endif
 
 #include <typemax.h>
 
 #ifdef HAVE_LOCALE_H
-#  include <locale.h>
+#  include <clocale>
 #endif
 
-#include "stdc.h"
 #include <shmbutil.h>
 
 #ifndef DRIVER
@@ -131,10 +121,6 @@
 #  define FL_UNSIGNED   0x08    /* don't add any sign */
 extern char *fmtulong (unsigned long int, int, char *, size_t, int);
 extern char *fmtullong (unsigned long long int, int, char *, size_t, int);
-#endif
-
-#ifndef FREE
-#  define FREE(x)	if (x) free (x)
 #endif
 
 /* Bound on length of the string representing an integer value of type T.
@@ -286,9 +272,7 @@ static void floating (struct DATA *, double);
 static void exponent (struct DATA *, double);
 #endif
 static void number (struct DATA *, unsigned long, int);
-#ifdef HAVE_LONG_LONG
 static void lnumber (struct DATA *, unsigned long long, int);
-#endif
 static void pointer (struct DATA *, unsigned long);
 static void strings (struct DATA *, char *);
 
@@ -328,15 +312,6 @@ static char *groupnum (const char *);
       (sizeof (x) == sizeof (LONGDOUBLE) ? isinf_ld (x) \
        : sizeof (x) == sizeof (double) ? isinf_d (x) \
        : isinf_f (x))
-#endif
-
-#ifdef DRIVER
-static void memory_error_and_abort ();
-static void *xmalloc (size_t);
-static void *xrealloc (void *, size_t);
-static void xfree (void *);
-#else
-#  include <xmalloc.h>
 #endif
 
 /* those are defines specific to snprintf to hopefully
@@ -528,7 +503,7 @@ log_10(double r)
 	  result /= 10.;
 	  i++;
 	}
-      return (-i);
+      return -i;
     }
   else
     {
@@ -537,7 +512,7 @@ log_10(double r)
 	  result *= 10.;
 	  i++;
 	}
-      return (i - 1);
+      return i - 1;
     }
 }
 
@@ -558,7 +533,7 @@ integral(double real, double *ip)
   if (real == 0.)
     {
       *ip = 0.;
-      return (0.);
+      return 0.;
     }
 
   /* negative number ? */
@@ -583,7 +558,7 @@ integral(double real, double *ip)
       real_integral += i*p;
     }
   *ip = real_integral;
-  return (real - real_integral);
+  return real - real_integral;
 }
 
 #define PRECISION 1.e-6
@@ -757,7 +732,6 @@ number(struct DATA *p, unsigned long d, int base)
   FREE (t);
 }
 
-#ifdef HAVE_LONG_LONG
 /*
  * identical to number() but works for `long long'
  */
@@ -828,7 +802,6 @@ lnumber(struct DATA *p, unsigned long long d, int base)
   PAD_LEFT(p);
   FREE (t);
 }
-#endif
 
 static void
 pointer(struct DATA *p, unsigned long d)
@@ -1140,7 +1113,7 @@ groupnum (const char *s)
   int len, slen;
 
   if (grouping == 0 || *grouping <= 0 || *grouping == CHAR_MAX)
-    return ((char *)NULL);
+    return (char *)NULL;
 
   /* find min grouping to size returned string */
   for (len = *grouping, g = grouping; *g; g++)
@@ -1220,9 +1193,7 @@ vsnprintf_internal(struct DATA *data, char *string, size_t length, const char *f
   long double ld;	/* for later */
 #endif
   unsigned long ul;
-#ifdef HAVE_LONG_LONG
   unsigned long long ull;
-#endif
   int state, i, c, n;
   char *s;
 #if HANDLE_MULTIBYTE
@@ -1447,14 +1418,12 @@ conv_break:
 		/* FALLTHROUGH */
 	      case 'u':
 		STAR_ARGS(data);
-#ifdef HAVE_LONG_LONG
 		if (data->flags & PF_LONGLONG)
 		  {
 		    ull = GETARG (unsigned long long);
 		    lnumber(data, ull, 10);
 		  }
 		else
-#endif
 		  {
 		    ul = GETUNSIGNED(data);
 		    number(data, ul, 10);
@@ -1467,14 +1436,12 @@ conv_break:
 	      case 'd':  /* decimal */
 	      case 'i':
 		STAR_ARGS(data);
-#ifdef HAVE_LONG_LONG
 		if (data->flags & PF_LONGLONG)
 		  {
 		    ull = GETARG (long long);
 		    lnumber(data, ull, 10);
 		  }
 		else
-#endif
 		  {
 		    ul = GETSIGNED(data);
 		    number(data, ul, 10);
@@ -1483,14 +1450,12 @@ conv_break:
 		break;
 	      case 'o':  /* octal */
 		STAR_ARGS(data);
-#ifdef HAVE_LONG_LONG
 		if (data->flags & PF_LONGLONG)
 		  {
 		    ull = GETARG (unsigned long long);
 		    lnumber(data, ull, 8);
 		  }
 		else
-#endif
 		  {
 		    ul = GETUNSIGNED(data);
 		    number(data, ul, 8);
@@ -1500,14 +1465,12 @@ conv_break:
 	      case 'x':
 	      case 'X':  /* hexadecimal */
 		STAR_ARGS(data);
-#ifdef HAVE_LONG_LONG
 		if (data->flags & PF_LONGLONG)
 		  {
 		    ull = GETARG (unsigned long long);
 		    lnumber(data, ull, 16);
 		  }
 		else
-#endif
 		  {
 		    ul = GETUNSIGNED(data);
 		    number(data, ul, 16);
@@ -1563,11 +1526,9 @@ conv_break:
 		state = 0;
 		break;
 	      case 'n':
-#ifdef HAVE_LONG_LONG
 		if (data->flags & PF_LONGLONG)
 		  *(GETARG (long long *)) = data->counter;
 		else
-#endif
 		if (data->flags & PF_LONGINT)
 		  *(GETARG (long *)) = data->counter;
 		else if (data->flags & PF_SHORTINT)
@@ -1664,7 +1625,7 @@ vsnprintf(char *string, size_t length, const char *format, va_list args)
   if (string == 0 && length != 0)
     return 0;
   init_data (&data, string, length, format, PFM_SN);
-  return (vsnprintf_internal(&data, string, length, format, args));
+  return vsnprintf_internal(&data, string, length, format, args);
 }
 
 int
@@ -1724,42 +1685,6 @@ asprintf(char **stringp, const char * format, ...)
 #endif /* !HAVE_SNPRINTF || !HAVE_ASPRINTF */
 
 #ifdef DRIVER
-
-static void
-memory_error_and_abort ()
-{
-  write (2, "out of virtual memory\n", 22);
-  abort ();
-}
-
-static void *
-xmalloc(size_t bytes)
-{
-  void *ret;
-
-  ret = malloc(bytes);
-  if (ret == 0)
-    memory_error_and_abort ();
-  return ret;
-}
-
-static void *
-xrealloc (void *pointer, size_t bytes)
-{
-  void *ret;
-
-  ret = pointer ? realloc(pointer, bytes) : malloc(bytes);
-  if (ret == 0)
-    memory_error_and_abort ();
-  return ret;
-}
-
-static void
-xfree(void *x)
-{
-  if (x)
-    free (x);
-}
 
 /* set of small tests for snprintf() */
 main()
@@ -2003,14 +1928,12 @@ main()
   printf("<%s>\n", holder);
   printf("<%s>\n\n", h);
 
-#ifdef HAVE_LONG_LONG
   printf ("<%%llu> LLONG_MAX+1\n");
   i = snprintf(holder, 100, "%llu", (unsigned long long)(LLONG_MAX)+1);
   i = asprintf(&h, "%llu", (unsigned long long)(LLONG_MAX)+1);
   printf("<%llu>\n", (unsigned long long)(LLONG_MAX)+1);
   printf("<%s>\n", holder);
   printf("<%s>\n\n", h);
-#endif
 
 #ifdef HAVE_LONG_DOUBLE
   printf ("<%%6.2LE> 42.42\n");

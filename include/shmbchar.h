@@ -21,16 +21,16 @@
 
 #if defined (HANDLE_MULTIBYTE)
 
-#include <string.h>
+#include <cstring>
 
 /* Tru64 with Desktop Toolkit C has a bug: <stdio.h> must be included before
    <wchar.h>.
    BSD/OS 4.1 has a bug: <stdio.h> and <time.h> must be included before
    <wchar.h>.  */
-#include <stdio.h>
-#include <time.h>
-#include <wchar.h>
-#include <wctype.h>
+#include <cstdio>
+#include <ctime>
+#include <cwchar>
+#include <cwctype>
 
 
 /* is_basic(c) tests whether the single-byte character c is in the
@@ -59,21 +59,29 @@
     && ('s' == 115) && ('t' == 116) && ('u' == 117) && ('v' == 118) \
     && ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
     && ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126)
+
 /* The character set is ISO-646, not EBCDIC. */
 # define IS_BASIC_ASCII 1
 
+namespace bash
+{
+
 extern const unsigned int is_basic_table[];
 
-static inline int
+static inline bool
 is_basic (char c)
 {
-  return (is_basic_table [(unsigned char) c >> 5] >> ((unsigned char) c & 31))
-         & 1;
+  return (is_basic_table [static_cast<unsigned char> (c) >> 5] >> (c & 31)) & 1;
+}
+
 }
 
 #else
 
-static inline int
+namespace bash
+{
+
+static inline bool
 is_basic (char c)
 {
   switch (c)
@@ -100,10 +108,12 @@ is_basic (char c)
     case 'p': case 'q': case 'r': case 's': case 't':
     case 'u': case 'v': case 'w': case 'x': case 'y':
     case 'z': case '{': case '|': case '}': case '~':
-      return 1;
+      return true;
     default:
-      return 0;
+      return false;
     }
+}
+
 }
 
 #endif

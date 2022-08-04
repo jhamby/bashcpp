@@ -26,15 +26,15 @@
 #  include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 
-#include <stdc.h>
-
-#include <bashansi.h>
 #include <bashintl.h>
 #include <bashtypes.h>
+#include <shell.h>
+#include <externs.h>
 
-#include <stdio.h>
-#include <ctype.h>
-#include <xmalloc.h>
+#include <cstdio>
+#include <cctype>
+#include <cstdlib>
+#include <new>
 
 #include <shmbchar.h>
 #include <shmbutil.h>
@@ -43,15 +43,18 @@
 
 #include <glob/strmatch.h>
 
-#define _to_wupper(wc)	(iswlower (wc) ? towupper (wc) : (wc))
-#define _to_wlower(wc)	(iswupper (wc) ? towlower (wc) : (wc))
+namespace bash
+{
+
+#define _to_wupper(wc)	(std::iswlower (wc) ? std::towupper (wc) : (wc))
+#define _to_wlower(wc)	(std::iswupper (wc) ? std::towlower (wc) : (wc))
 
 #if !defined (HANDLE_MULTIBYTE)
 #  define cval(s, i)	((s)[(i)])
-#  define iswalnum(c)	(isalnum(c))
-#  define TOGGLE(x)	(ISUPPER (x) ? tolower ((unsigned char)x) : (TOUPPER (x)))
+#  define iswalnum(c)	(std::isalnum(c))
+#  define TOGGLE(x)	(std::isupper (x) ? std::tolower ((unsigned char)x) : (std::toupper (x)))
 #else
-#  define TOGGLE(x)	(iswupper (x) ? towlower (x) : (_to_wupper(x)))
+#  define TOGGLE(x)	(std::iswupper (x) ? std::towlower (x) : (_to_wupper(x)))
 #endif
 
 /* These must agree with the defines in externs.h */
@@ -67,14 +70,8 @@
 
 #define CASE_USEWORDS	0x1000		/* modify behavior to act on words in passed string */
 
-extern char *substring (const char *, int, int);
-
-#ifndef UCHAR_MAX
-#  define UCHAR_MAX	TYPE_MAXIMUM(unsigned char)
-#endif
-
 #if defined (HANDLE_MULTIBYTE)
-static wchar_t
+static inline wchar_t
 cval (const char *s, int i)
 {
   size_t tmp;
@@ -83,14 +80,18 @@ cval (const char *s, int i)
   mbstate_t mps;
 
   if (MB_CUR_MAX == 1 || is_basic (s[i]))
-    return ((wchar_t)s[i]);
-  l = strlen (s);
+    return static_cast<wchar_t> (s[i]);
+
+  l = std::strlen (s);
   if (i >= (l - 1))
-    return ((wchar_t)s[i]);
-  memset (&mps, 0, sizeof (mbstate_t));
-  tmp = mbrtowc (&wc, s + i, l - i, &mps);
+    return static_cast<wchar_t> (s[i]);
+
+  std::memset (&mps, 0, sizeof (mbstate_t));
+  tmp = std::mbrtowc (&wc, s + i, l - i, &mps);
+
   if (MB_INVALIDCH (tmp) || MB_NULLWCH (tmp))
-    return ((wchar_t)s[i]);
+    return static_cast<wchar_t> (s[i]);
+
   return wc;
 }
 #endif
@@ -98,7 +99,7 @@ cval (const char *s, int i)
 /* Modify the case of characters in STRING matching PAT based on the value of
    FLAGS.  If PAT is null, modify the case of each character */
 char *
-sh_modcase (const char *string, const char *pat, int flags)
+Shell::sh_modcase (const char *string, const char *pat, int flags)
 {
 #if defined (HANDLE_MULTIBYTE)
   char mb[MB_LEN_MAX+1];
@@ -107,7 +108,7 @@ sh_modcase (const char *string, const char *pat, int flags)
 
   if (string == 0 || *string == 0)
     {
-      char *ret = (char *)xmalloc (1);
+      char *ret = new char[1];
       ret[0] = '\0';
       return ret;
     }
@@ -117,10 +118,10 @@ sh_modcase (const char *string, const char *pat, int flags)
 #endif
 
   size_t start = 0;
-  size_t end = strlen (string);
+  size_t end = std::strlen (string);
   int mb_cur_max = MB_CUR_MAX;
 
-  char *ret = (char *)xmalloc (2*end + 1);
+  char *ret = new char[2 * end + 1];
   int retind = 0;
 
   /* See if we are supposed to split on alphanumerics and operate on each word */
@@ -130,16 +131,16 @@ sh_modcase (const char *string, const char *pat, int flags)
   bool inword = false;
   while (start < end)
     {
-      wchar_t wc = cval ((char *)string, start);
+      wchar_t wc = cval (string, start);
 
       if (iswalnum (wc) == 0)
 	inword = false;
 
       if (pat)
 	{
-	  int next = start;
+	  size_t next = start;
 	  ADVANCE_CHAR (string, end, next);
-	  char *s = substring ((char *)string, start, next);
+	  char *s = substring (string, start, next);
 	  bool match = (strmatch (pat, s, FNM_EXTMATCH) != FNM_NOMATCH);
 	  free (s);
 	  if (!match)
@@ -208,8 +209,8 @@ singlebyte:
 	    {
 	    default:
 	    case CASE_NOOP:  nc = wc; break;
-	    case CASE_UPPER:  nc = TOUPPER (wc); break;
-	    case CASE_LOWER:  nc = TOLOWER (wc); break;
+	    case CASE_UPPER:  nc = std::toupper (wc); break;
+	    case CASE_LOWER:  nc = std::tolower (wc); break;
 	    case CASE_TOGGLEALL:
 	    case CASE_TOGGLE: nc = TOGGLE (wc); break;
 	    }
@@ -218,13 +219,13 @@ singlebyte:
 #if defined (HANDLE_MULTIBYTE)
       else
 	{
-	  size_t m = mbrtowc (&wc, string + start, end - start, &state);
+	  size_t m = std::mbrtowc (&wc, string + start, end - start, &state);
 	  /* Have to go through wide case conversion even for single-byte
 	     chars, to accommodate single-byte characters where the
 	     corresponding upper or lower case equivalent is multibyte. */
 	  if (MB_INVALIDCH (m))
 	    {
-	      wc = (unsigned char)string[start];
+	      wc = static_cast<unsigned char> (string[start]);
 	      goto singlebyte;
 	    }
 	  else if (MB_NULLWCH (m))
@@ -251,7 +252,7 @@ singlebyte:
 	      if (mlen > 0)
 		mb[mlen] = '\0';
 	      /* Don't assume the same width */
-	      strncpy (ret + retind, mb, mlen);
+	      std::strncpy (ret + retind, mb, mlen);
 	      retind += mlen;
 	    }
 	}
@@ -263,3 +264,5 @@ singlebyte:
   ret[retind] = '\0';
   return ret;
 }
+
+}  // namespace bash

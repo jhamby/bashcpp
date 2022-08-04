@@ -26,18 +26,6 @@
 
 #if defined (BRACE_EXPANSION) && defined (READLINE)
 
-#include <stdio.h>
-
-#if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
-#  include <unistd.h>
-#endif
-
-#include "bashansi.h"
-#include "shmbutil.h"
-
 #include "shell.h"
 #include <readline/readline.h>
 
@@ -48,7 +36,7 @@ static int
 string_gcd (char *s1, char *s2)
 {
   if (s1 == NULL || s2 == NULL)
-    return (0);
+    return 0;
 
   int i;
   for (i = 0; *s1 && *s2; ++s1, ++s2, ++i)
@@ -57,7 +45,7 @@ string_gcd (char *s1, char *s2)
 	break;
     }
 
-  return (i);
+  return i;
 }
 
 static char *
@@ -142,7 +130,7 @@ really_munge_braces (char **array, int real_start, int real_end, int gcd_zero)
 
   if (gcd_zero == 0)
     result[strlen (result) - 1] = flag ? '}' : '\0';
-  return (result);
+  return result;
 }
 
 static int

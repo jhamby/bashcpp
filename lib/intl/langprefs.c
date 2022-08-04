@@ -21,10 +21,10 @@
 # include <config.h>
 #endif
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #if HAVE_CFPREFERENCESCOPYAPPVALUE
-# include <string.h>
+# include <cstring>
 # include <CoreFoundation/CFPreferences.h>
 # include <CoreFoundation/CFPropertyList.h>
 # include <CoreFoundation/CFArray.h>

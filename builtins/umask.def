@@ -61,6 +61,9 @@ $END
 #include "common.h"
 #include "bashgetopt.h"
 
+namespace bash
+{
+
 /* **************************************************************** */
 /*                                                                  */
 /*                     UMASK Builtin and Helpers                    */
@@ -73,7 +76,7 @@ static int symbolic_umask (WORD_LIST *);
 /* Set or display the mask used by the system when creating files.  Flag
    of -S means display the umask in a symbolic mode. */
 int
-umask_builtin (WORD_LIST *list)
+Shell::umask_builtin (WORD_LIST *list)
 {
   int print_symbolically, opt, umask_value, pflag;
   mode_t umask_arg;
@@ -93,7 +96,7 @@ umask_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
 
@@ -112,14 +115,14 @@ umask_builtin (WORD_LIST *list)
 	  if (umask_value == -1)
 	    {
 	      sh_erange (list->word->word, _("octal number"));
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	}
       else
 	{
 	  umask_value = symbolic_umask (list);
 	  if (umask_value == -1)
-	    return (EXECUTION_FAILURE);
+	    return EXECUTION_FAILURE;
 	}
       umask_arg = (mode_t)umask_value;
       umask (umask_arg);
@@ -139,7 +142,7 @@ umask_builtin (WORD_LIST *list)
 	printf ("%04lo\n", (unsigned long)umask_arg);
     }
 
-  return (sh_chkwrite (EXECUTION_SUCCESS));
+  return sh_chkwrite (EXECUTION_SUCCESS);
 }
 
 /* Print the umask in a symbolic form.  In the output, a letter is
@@ -222,7 +225,7 @@ parse_symbolic_mode (char *mode, int initial_bits)
 	  break;
 	default:
 	  builtin_error (_("`%c': invalid symbolic mode operator"), op);
-	  return (-1);
+	  return -1;
 	}
 
       /* Parse out the `perm' section of the symbolic mode clause. */
@@ -277,11 +280,11 @@ parse_symbolic_mode (char *mode, int initial_bits)
       else
 	{
 	  builtin_error (_("`%c': invalid symbolic mode character"), *s);
-	  return (-1);
+	  return -1;
 	}
     }
 
-  return (bits);
+  return bits;
 }
 
 /* Set the umask from a symbolic mode string similar to that accepted
@@ -301,8 +304,10 @@ symbolic_umask (WORD_LIST *list)
      again before being returned. */
   bits = parse_symbolic_mode (list->word->word, ~um & 0777);
   if (bits == -1)
-    return (-1);
+    return -1;
 
   um = ~bits & 0777;
-  return (um);
+  return um;
 }
+
+}  // namespace bash

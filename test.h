@@ -21,19 +21,20 @@
 #ifndef _TEST_H_
 #define _TEST_H_
 
-#include "stdc.h"
+#include <string>
+using std::string;
 
 /* Values for the flags argument to binary_test */
 #define TEST_PATMATCH	0x01
 #define TEST_ARITHEXP	0x02
 #define TEST_LOCALE	0x04
 
-extern int test_unop (const char *);
-extern int test_binop (const char *);
+extern bool test_unop (const string &);
+extern bool test_binop (const string &);
 
-extern int unary_test (const char *, const char *);
-extern int binary_test (const char *, const char *, const char *, int);
+extern bool unary_test (const string &, const string &);
+extern bool binary_test (const string &, const string &, const string &, int);
 
-extern int test_command (int, char **);
+extern int test_command (int, string *);
 
 #endif /* _TEST_H_ */

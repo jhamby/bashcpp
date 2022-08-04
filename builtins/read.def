@@ -72,16 +72,14 @@ $END
 #include "bashtypes.h"
 #include "posixstat.h"
 
-#include <stdio.h>
-
-#include "bashansi.h"
+#include <cstdio>
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <signal.h>
-#include <errno.h>
+#include <csignal>
+#include <cerrno>
 
 #ifdef __CYGWIN__
 #  include <fcntl.h>
@@ -108,9 +106,8 @@ $END
 
 #include "shmbutil.h"
 
-#if !defined(errno)
-extern int errno;
-#endif
+namespace bash
+{
 
 struct ttsave
 {
@@ -171,7 +168,7 @@ reset_alarm ()
    gets the remainder of the words on the line.  If no variables
    are mentioned in LIST, then the default variable is $REPLY. */
 int
-read_builtin (WORD_LIST *list)
+Shell::read_builtin (WORD_LIST *list)
 {
   int size, nr, pass_next, saw_escape, eof, opt, retval, code, print_ps2, nflag;
   bool input_is_tty, input_is_pipe, skip_ctlesc, skip_ctlnul;
@@ -273,7 +270,7 @@ read_builtin (WORD_LIST *list)
 	  if (code == 0 || ival < 0 || uval < 0)
 	    {
 	      builtin_error (_("%s: invalid timeout specification"), list_optarg);
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  else
 	    {
@@ -291,7 +288,7 @@ read_builtin (WORD_LIST *list)
 	  if (code == 0 || intval < 0 || intval != (int)intval)
 	    {
 	      sh_invalidnum (list_optarg);
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  else
 	    nchars = intval;
@@ -301,14 +298,14 @@ read_builtin (WORD_LIST *list)
 	  if (code == 0 || intval < 0 || intval != (int)intval)
 	    {
 	      builtin_error (_("%s: invalid file descriptor specification"), list_optarg);
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  else
 	    fd = intval;
 	  if (sh_validfd (fd) == 0)
 	    {
 	      builtin_error (_("%d: invalid file descriptor: %s"), fd, strerror (errno));
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  break;
 	case 'd':
@@ -317,7 +314,7 @@ read_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
@@ -326,9 +323,9 @@ read_builtin (WORD_LIST *list)
      and fails if those are unavailable */
   if (have_timeout && tmsec == 0 && tmusec == 0)
 #if 0
-    return (EXECUTION_FAILURE);
+    return EXECUTION_FAILURE;
 #else
-    return (input_avail (fd) ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+    return input_avail (fd) ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
 #endif
 
   /* Convenience: check early whether or not the first of possibly several
@@ -341,7 +338,7 @@ read_builtin (WORD_LIST *list)
 #endif
     {
       sh_invalidid (list->word->word);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   /* If we're asked to ignore the delimiter, make sure we do. */
@@ -752,7 +749,7 @@ add_char:
       if (errno != EINTR)
 	builtin_error (_("read error: %d: %s"), fd, strerror (errno));
       run_unwind_frame ("read_builtin");
-      return ((t_errno != EINTR) ? EXECUTION_FAILURE : 128+lastsig);
+      return (t_errno != EINTR) ? EXECUTION_FAILURE : 128+lastsig;
     }
 
   if (tmsec > 0 || tmusec > 0)
@@ -799,7 +796,7 @@ assign_vars:
 	{
 	  sh_invalidid (arrayname);
 	  free (input_string);
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
 
       var = find_or_make_array_variable (arrayname, 1);
@@ -829,7 +826,7 @@ assign_vars:
 	  dispose_words (alist);
 	}
       free (input_string);
-      return (retval);
+      return retval;
     }
 #endif /* ARRAY_VARS */
 
@@ -865,7 +862,7 @@ assign_vars:
 	VUNSETATTR (var, att_invisible);
 
       free (input_string);
-      return (retval);
+      return retval;
     }
 
   /* This code implements the Posix.2 spec for splitting the words
@@ -888,7 +885,7 @@ assign_vars:
 	{
 	  sh_invalidid (varname);
 	  free (orig_input_string);
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
 
       /* If there are more variables than words read from the input,
@@ -920,7 +917,7 @@ assign_vars:
       if (var == 0)
 	{
 	  free (orig_input_string);
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
 
       stupidly_hack_special_variables (varname);
@@ -936,7 +933,7 @@ assign_vars:
     {
       sh_invalidid (list->word->word);
       free (orig_input_string);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
 #if 0
@@ -982,7 +979,7 @@ assign_vars:
   FREE (tofree);
   free (orig_input_string);
 
-  return (retval);
+  return retval;
 }
 
 static SHELL_VAR *
@@ -1063,7 +1060,7 @@ read_tty_cleanup ()
 int
 read_tty_modified ()
 {
-  return (tty_modified);
+  return tty_modified;
 }
 
 #if defined (READLINE)
@@ -1093,7 +1090,7 @@ set_itext ()
       rl_startup_hook = old_startup_hook;
       old_startup_hook = (rl_hook_func_t *)NULL;
     }
-  return (r1 || r2);
+  return r1 || r2;
 }
 
 static char *
@@ -1177,3 +1174,5 @@ reset_eol_delim ()
   cmap[delim_char].function = old_delim_func;
 }
 #endif
+
+}  // namespace bash

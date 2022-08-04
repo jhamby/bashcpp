@@ -21,8 +21,6 @@
 
 #include <config.h>
 
-#include "stdc.h"
-
 /* We #undef these before defining them because some losing systems
    (HP-UX A.08.07 for example) define these in <unistd.h>.  */
 #undef  FNM_PATHNAME
@@ -53,12 +51,40 @@
 
 #define	FNM_NOMATCH	1
 
+namespace bash
+{
+
+extern int xstrmatch (const char *, const char *, int);
+#if defined (HANDLE_MULTIBYTE)
+extern int internal_wstrmatch (const wchar_t *, const wchar_t *, int);
+#endif
+
 /* Match STRING against the filename pattern PATTERN,
    returning zero if it matches, FNM_NOMATCH if not.  */
-extern int strmatch (const char *, const char *, int);
+static inline int
+strmatch (const char *pattern, const char *string, int flags)
+{
+  if (string == nullptr || pattern == nullptr)
+    return FNM_NOMATCH;
 
-#if HANDLE_MULTIBYTE
-extern int wcsmatch (const wchar_t *, const wchar_t *, int);
+  return xstrmatch (pattern, string, flags);
+}
+
+#if defined (HANDLE_MULTIBYTE)
+static inline int
+wcsmatch (const wchar_t *wpattern, const wchar_t *wstring, int flags)
+{
+  if (wstring == nullptr || wpattern == nullptr)
+    return FNM_NOMATCH;
+
+  return internal_wstrmatch (wpattern, wstring, flags);
+}
 #endif
+
+char *mbsmbchar (const char *);
+
+size_t xdupmbstowcs (wchar_t **destp, char ***indicesp, const char *src);
+
+}  // namespace bash
 
 #endif /* _STRMATCH_H */

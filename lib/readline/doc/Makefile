@@ -44,8 +44,8 @@ BUILD_DIR = .
 TEXINPUTDIR = $(srcdir)
 
 MAKEINFO    = LANGUAGE= makeinfo
-TEXI2DVI    = $(srcdir)/texi2dvi
-TEXI2HTML   = $(srcdir)/texi2html
+TEXI2DVI    = texi2dvi
+TEXI2HTML   = texi2html
 QUIETPS     = #set this to -q to shut up dvips
 PSDPI       = 300	# I don't have any 600-dpi printers
 DVIPS       = dvips -D ${PSDPI} $(QUIETPS) -o $@     # tricky

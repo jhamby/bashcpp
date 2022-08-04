@@ -23,7 +23,8 @@
 #ifndef _SH_GETOPT_H
 #define _SH_GETOPT_H 1
 
-#include "stdc.h"
+namespace bash
+{
 
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,
@@ -78,5 +79,7 @@ extern void sh_getopt_dispose_istate (sh_getopt_state_t *);
 
 extern sh_getopt_state_t *sh_getopt_save_istate (void);
 extern void sh_getopt_restore_istate (sh_getopt_state_t *);
+
+}  // namespace bash
 
 #endif /* _SH_GETOPT_H */

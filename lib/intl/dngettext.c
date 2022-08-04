@@ -20,7 +20,7 @@
 
 #include "gettextP.h"
 
-#include <locale.h>
+#include <clocale>
 
 #ifdef _LIBC
 # include <libintl.h>

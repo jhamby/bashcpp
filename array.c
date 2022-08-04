@@ -38,8 +38,7 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include "bashansi.h"
+#include <cstdio>
 
 #include "shell.h"
 #include "array.h"
@@ -117,7 +116,7 @@ array_dispose(ARRAY *a)
 		return;
 	array_flush (a);
 	array_dispose_element(a->head);
-	free(a);
+	std::free(a);
 }
 
 ARRAY *
@@ -128,6 +127,7 @@ array_copy(ARRAY *a)
 
 	if (a == 0)
 		return((ARRAY *) NULL);
+
 	a1 = array_create();
 	a1->type = a->type;
 	a1->max_index = a->max_index;
@@ -198,7 +198,7 @@ array_shift(ARRAY *a, int n, int flags)
 	int i;
 
 	if (a == 0 || array_empty(a) || n <= 0)
-		return ((ARRAY_ELEMENT *)NULL);
+		return (ARRAY_ELEMENT *)NULL;
 
 	INVALIDATE_LASTREF(a);
 	for (i = 0, ret = ae = element_forw(a->head); ae != a->head && i < n; ae = element_forw(ae), i++)
@@ -207,7 +207,7 @@ array_shift(ARRAY *a, int n, int flags)
 		/* Easy case; shifting out all of the elements */
 		if (flags & AS_DISPOSE) {
 			array_flush (a);
-			return ((ARRAY_ELEMENT *)NULL);
+			return (ARRAY_ELEMENT *)NULL;
 		}
 		for (ae = ret; element_forw(ae) != a->head; ae = element_forw(ae))
 			;
@@ -238,7 +238,7 @@ array_shift(ARRAY *a, int n, int flags)
 			array_dispose_element(ae);
 			ae = ret;
 		}
-		return ((ARRAY_ELEMENT *)NULL);
+		return (ARRAY_ELEMENT *)NULL;
 	}
 
 	return ret;
@@ -255,7 +255,7 @@ array_rshift (ARRAY *a, int n, const char *s)
 	if (a == 0 || (array_empty(a) && s == 0))
 		return 0;
 	else if (n <= 0)
-		return (a->num_elements);
+		return a->num_elements;
 
 	ARRAY_ELEMENT *ae = element_forw(a->head);
 	if (s) {
@@ -277,19 +277,19 @@ array_rshift (ARRAY *a, int n, const char *s)
 	a->max_index = element_index(a->head->prev);
 
 	INVALIDATE_LASTREF(a);
-	return (a->num_elements);
+	return a->num_elements;
 }
 
 ARRAY_ELEMENT *
 array_unshift_element(ARRAY *a)
 {
-	return (array_shift (a, 1, 0));
+	return array_shift (a, 1, 0);
 }
 
 int
 array_shift_element(ARRAY *a, char *v)
 {
-	return (array_rshift (a, 1, v));
+	return array_rshift (a, 1, v);
 }
 
 ARRAY *
@@ -385,7 +385,7 @@ array_subrange (ARRAY *a, arrayind_t start, arrayind_t nelem, int starsub,
 
 	p = a ? array_head (a) : 0;
 	if (p == 0 || array_empty (a) || start > array_max_index(a))
-		return ((char *)NULL);
+		return (char *)NULL;
 
 	/*
 	 * Find element with index START.  If START corresponds to an unset
@@ -398,7 +398,7 @@ array_subrange (ARRAY *a, arrayind_t start, arrayind_t nelem, int starsub,
 		;
 
 	if (p == a->head)
-		return ((char *)NULL);
+		return (char *)NULL;
 
 	/* Starting at P, take NELEM elements, inclusive. */
 	for (i = 0, h = p; p != a->head && i < nelem; i++, p = element_forw(p))
@@ -424,7 +424,7 @@ array_patsub (ARRAY *a, char *pat, char *rep, int mflags)
 	WORD_LIST	*wl, *save;
 
 	if (a == 0 || array_head(a) == 0 || array_empty(a))
-		return ((char *)NULL);
+		return (char *)NULL;
 
 	wl = array_to_word_list(a);
 	if (wl == 0)
@@ -454,11 +454,11 @@ array_modcase (ARRAY *a, char *pat, int modop, int mflags)
 	WORD_LIST	*wl, *save;
 
 	if (a == 0 || array_head(a) == 0 || array_empty(a))
-		return ((char *)NULL);
+		return (char *)NULL;
 
 	wl = array_to_word_list(a);
 	if (wl == 0)
-		return ((char *)NULL);
+		return (char *)NULL;
 
 	for (save = wl; wl; wl = (WORD_LIST *)(wl->next)) {
 		t = sh_modcase(wl->word->word, pat, modop);
@@ -491,15 +491,6 @@ array_create_element(arrayind_t indx, const char *value)
 	r->next = r->prev = (ARRAY_ELEMENT *) NULL;
 	return(r);
 }
-
-#ifdef INCLUDE_UNUSED
-ARRAY_ELEMENT *
-array_copy_element(ARRAY_ELEMENT *ae)
-{
-	return(ae ? array_create_element(element_index(ae), element_value(ae))
-		  : (ARRAY_ELEMENT *) NULL);
-}
-#endif
 
 void
 array_dispose_element(ARRAY_ELEMENT *ae)
@@ -589,7 +580,7 @@ array_insert(ARRAY *a, arrayind_t i, const char *v)
 	}
 	array_dispose_element(new_);
 	INVALIDATE_LASTREF(a);
-	return (-1);		/* problem */
+	return -1;		/* problem */
 }
 
 /*
@@ -600,9 +591,9 @@ ARRAY_ELEMENT *
 array_remove(ARRAY *a, arrayind_t i)
 {
 	if (a == 0 || array_empty(a))
-		return((ARRAY_ELEMENT *) NULL);
+		return (ARRAY_ELEMENT *) NULL;
 	if (i > array_max_index(a) || i < array_first_index(a))
-		return((ARRAY_ELEMENT *)NULL);	/* Keep roving pointer into array to optimize sequential access */
+		return (ARRAY_ELEMENT *)NULL;	/* Keep roving pointer into array to optimize sequential access */
 	ARRAY_ELEMENT *start = LASTREF(a);
 	/* Use same strategy as array_reference to avoid paying large penalty
 	   for semi-random assignment pattern. */
@@ -705,11 +696,12 @@ array_to_word_list(ARRAY *a)
 	ARRAY_ELEMENT	*ae;
 
 	if (a == 0 || array_empty(a))
-		return((WORD_LIST *)NULL);
+		return (WORD_LIST *)NULL;
+
 	list = (WORD_LIST *)NULL;
 	for (ae = element_forw(a->head); ae != a->head; ae = element_forw(ae))
 		list = make_word_list (make_bare_word(element_value(ae)), list);
-	return (REVERSE_LIST(list, WORD_LIST *));
+	return REVERSE_LIST(list, WORD_LIST *);
 }
 
 ARRAY *
@@ -720,7 +712,7 @@ array_from_word_list (WORD_LIST *list)
 	if (list == 0)
 		return((ARRAY *)NULL);
 	a = array_create();
-	return (array_assign_list (a, list));
+	return array_assign_list (a, list);
 }
 
 WORD_LIST *
@@ -736,9 +728,9 @@ array_keys_to_word_list(ARRAY *a)
 	for (ae = element_forw(a->head); ae != a->head; ae = element_forw(ae)) {
 		t = itos(element_index(ae));
 		list = make_word_list (make_bare_word(t), list);
-		free(t);
+		std::free(t);
 	}
-	return (REVERSE_LIST(list, WORD_LIST *));
+	return REVERSE_LIST(list, WORD_LIST *);
 }
 
 ARRAY *
@@ -762,7 +754,7 @@ array_to_argv (ARRAY *a, int *countp)
 	if (a == 0 || array_empty(a)) {
 		if (countp)
 			*countp = 0;
-		return ((char **)NULL);
+		return (char **)NULL;
 	}
 	ret = strvec_create (array_num_elements (a) + 1);
 	i = 0;
@@ -774,7 +766,7 @@ array_to_argv (ARRAY *a, int *countp)
 	ret[i] = (char *)NULL;
 	if (countp)
 		*countp = i;
-	return (ret);
+	return ret;
 }
 
 /*
@@ -790,7 +782,7 @@ array_to_string_internal (ARRAY_ELEMENT *start, ARRAY_ELEMENT *end,
 	int	slen, rsize, rlen, reg;
 
 	if (start == end)	/* XXX - should not happen */
-		return ((char *)NULL);
+		return (char *)NULL;
 
 	slen = strlen(sep);
 	result = NULL;
@@ -802,7 +794,7 @@ array_to_string_internal (ARRAY_ELEMENT *start, ARRAY_ELEMENT *end,
 			reg = strlen(t);
 			RESIZE_MALLOCED_BUFFER (result, rlen, (reg + slen + 2),
 						rsize, rsize);
-			strcpy(result + rlen, t);
+			std::strcpy(result + rlen, t);
 			rlen += reg;
 			if (quoted)
 				free(t);
@@ -844,14 +836,14 @@ array_to_kvpair (ARRAY *a, int quoted)
 		elen = STRLEN (is) + 8 + STRLEN (valstr);
 		RESIZE_MALLOCED_BUFFER (result, rlen, (elen + 1), rsize, rsize);
 
-		strcpy (result + rlen, is);
+		std::strcpy (result + rlen, is);
 		rlen += STRLEN (is);
 		result[rlen++] = ' ';
 		if (valstr) {
-			strcpy (result + rlen, valstr);
+			std::strcpy (result + rlen, valstr);
 			rlen += STRLEN (valstr);
 		} else {
-			strcpy (result + rlen, "\"\"");
+			std::strcpy (result + rlen, "\"\"");
 			rlen += 2;
 		}
 
@@ -866,7 +858,7 @@ array_to_kvpair (ARRAY *a, int quoted)
 	if (quoted) {
 		/* This is not as efficient as it could be... */
 		valstr = sh_single_quote (result);
-		free (result);
+		std::free (result);
 		result = valstr;
 	}
 	return(result);
@@ -881,7 +873,7 @@ array_to_assign (ARRAY *a, int quoted)
 	int	rsize, rlen, elen;
 
 	if (a == 0 || array_empty (a))
-		return((char *)NULL);
+		return (char *)NULL;
 
 	result = (char *)xmalloc (rsize = 128);
 	result[0] = '(';
@@ -903,7 +895,7 @@ array_to_assign (ARRAY *a, int quoted)
 		result[rlen++] = ']';
 		result[rlen++] = '=';
 		if (valstr) {
-			strcpy (result + rlen, valstr);
+			std::strcpy (result + rlen, valstr);
 			rlen += STRLEN (valstr);
 		}
 
@@ -918,7 +910,7 @@ array_to_assign (ARRAY *a, int quoted)
 	if (quoted) {
 		/* This is not as efficient as it could be... */
 		valstr = sh_single_quote (result);
-		free (result);
+		std::free (result);
 		result = valstr;
 	}
 	return(result);
@@ -928,13 +920,13 @@ char *
 array_to_string (ARRAY *a, const char *sep, int quoted)
 {
 	if (a == 0)
-		return((char *)NULL);
+		return (char *)NULL;
 	if (array_empty(a))
-		return(savestring(""));
-	return (array_to_string_internal (element_forw(a->head), a->head, sep, quoted));
+		return savestring("");
+	return array_to_string_internal (element_forw(a->head), a->head, sep, quoted);
 }
 
-#if defined (INCLUDE_UNUSED) || defined (TEST_ARRAY)
+#if defined (TEST_ARRAY)
 /*
  * Return an array consisting of elements in S, separated by SEP
  */
@@ -950,7 +942,7 @@ array_from_string(char *s, char *sep)
 	if (w == 0)
 		return((ARRAY *)NULL);
 	a = array_from_word_list (w);
-	return (a);
+	return a;
 }
 #endif
 
@@ -970,15 +962,15 @@ signal_is_trapped(int s)
 void
 fatal_error(const char *s, ...)
 {
-	fprintf(stderr, "array_test: fatal memory error\n");
-	abort();
+	std::fprintf(stderr, "array_test: fatal memory error\n");
+	std::abort();
 }
 
 void
 programming_error(const char *s, ...)
 {
-	fprintf(stderr, "array_test: fatal programming error\n");
-	abort();
+	std::fprintf(stderr, "array_test: fatal programming error\n");
+	std::abort();
 }
 
 WORD_DESC *
@@ -1013,12 +1005,12 @@ list_string(char *s, char *t, int i)
 		return (WORD_LIST *)NULL;
 	r = savestring(s);
 	wl = (WORD_LIST *)NULL;
-	a = strtok(r, t);
+	a = std::strtok(r, t);
 	while (a) {
 		wl = make_word_list (make_bare_word(a), wl);
-		a = strtok((char *)NULL, t);
+		a = std::strtok((char *)NULL, t);
 	}
-	return (REVERSE_LIST (wl, WORD_LIST *));
+	return REVERSE_LIST (wl, WORD_LIST *);
 }
 
 GENERIC_LIST *
@@ -1038,7 +1030,7 @@ list_reverse (GENERIC_LIST *list)
 char *
 pat_subst(char *s, char *t, char *u, int i)
 {
-	return ((char *)NULL);
+	return (char *)NULL;
 }
 
 char *
@@ -1077,13 +1069,13 @@ main()
 	array_insert(a, 42, "forty-two");
 	print_array(a);
 	s = array_to_string (a, " ", 0);
-	printf("s = %s\n", s);
+	std::printf("s = %s\n", s);
 	copy_of_a = array_from_string(s, " ");
-	printf("copy_of_a:");
+	std::printf("copy_of_a:");
 	print_array(copy_of_a);
 	array_dispose(copy_of_a);
-	printf("\n");
-	free(s);
+	std::printf("\n");
+	std::free(s);
 	ae = array_remove(a, 4);
 	array_dispose_element(ae);
 	ae = array_remove(a, 1029);
@@ -1091,39 +1083,39 @@ main()
 	array_insert(a, 16, "sixteen");
 	print_array(a);
 	s = array_to_string (a, " ", 0);
-	printf("s = %s\n", s);
+	std::printf("s = %s\n", s);
 	copy_of_a = array_from_string(s, " ");
-	printf("copy_of_a:");
+	std::printf("copy_of_a:");
 	print_array(copy_of_a);
 	array_dispose(copy_of_a);
-	printf("\n");
-	free(s);
+	std::printf("\n");
+	std::free(s);
 	array_insert(a, 2, "two");
 	array_insert(a, 1029, "new one thousand twenty-nine");
 	array_insert(a, 0, "zero");
 	array_insert(a, 134, "");
 	print_array(a);
 	s = array_to_string (a, ":", 0);
-	printf("s = %s\n", s);
+	std::printf("s = %s\n", s);
 	copy_of_a = array_from_string(s, ":");
-	printf("copy_of_a:");
+	std::printf("copy_of_a:");
 	print_array(copy_of_a);
 	array_dispose(copy_of_a);
-	printf("\n");
-	free(s);
+	std::printf("\n");
+	std::free(s);
 	new_a = array_copy(a);
 	print_array(new_a);
 	s = array_to_string (new_a, ":", 0);
-	printf("s = %s\n", s);
+	std::printf("s = %s\n", s);
 	copy_of_a = array_from_string(s, ":");
-	free(s);
-	printf("copy_of_a:");
+	std::free(s);
+	std::printf("copy_of_a:");
 	print_array(copy_of_a);
 	array_shift(copy_of_a, 2, AS_DISPOSE);
-	printf("copy_of_a shifted by two:");
+	std::printf("copy_of_a shifted by two:");
 	print_array(copy_of_a);
 	ae = array_shift(copy_of_a, 2, 0);
-	printf("copy_of_a shifted by two:");
+	std::printf("copy_of_a shifted by two:");
 	print_array(copy_of_a);
 	for ( ; ae; ) {
 		aew = element_forw(ae);
@@ -1131,14 +1123,14 @@ main()
 		ae = aew;
 	}
 	array_rshift(copy_of_a, 1, (char *)0);
-	printf("copy_of_a rshift by 1:");
+	std::printf("copy_of_a rshift by 1:");
 	print_array(copy_of_a);
 	array_rshift(copy_of_a, 2, "new element zero");
-	printf("copy_of_a rshift again by 2 with new element zero:");
+	std::printf("copy_of_a rshift again by 2 with new element zero:");
 	print_array(copy_of_a);
 	s = array_to_assign(copy_of_a, 0);
-	printf("copy_of_a=%s\n", s);
-	free(s);
+	std::printf("copy_of_a=%s\n", s);
+	std::free(s);
 	ae = array_shift(copy_of_a, array_num_elements(copy_of_a), 0);
 	for ( ; ae; ) {
 		aew = element_forw(ae);
@@ -1146,7 +1138,7 @@ main()
 		ae = aew;
 	}
 	array_dispose(copy_of_a);
-	printf("\n");
+	std::printf("\n");
 	array_dispose(a);
 	array_dispose(new_a);
 }

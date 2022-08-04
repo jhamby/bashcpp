@@ -24,6 +24,8 @@
 #  include <config.h>
 #endif
 
+#if !defined (HAVE_STRTOIMAX)
+
 #if HAVE_INTTYPES_H
 #  include <inttypes.h>
 #endif
@@ -33,10 +35,8 @@
 #endif
 
 #if HAVE_STDLIB_H
-#  include <stdlib.h>
+#  include <cstdlib>
 #endif
-
-#include <stdc.h>
 
 /* Verify a requirement at compile-time (unlike assert, which is runtime).  */
 #define verify(name, assertion) struct name { char a[(assertion) ? 1 : -1]; }
@@ -51,7 +51,7 @@ extern long strtol (const char *, char **, int);
 #ifndef HAVE_DECL_STRTOLL
 "this configure-time declaration test was not run"
 #endif
-#if !HAVE_DECL_STRTOLL && HAVE_LONG_LONG
+#if !HAVE_DECL_STRTOLL
 extern long long strtoll (const char *, char **, int);
 #endif
 
@@ -62,18 +62,14 @@ extern long long strtoll (const char *, char **, int);
 intmax_t
 strtoimax (const char *ptr, char **endptr, int base)
 {
-#if HAVE_LONG_LONG
   verify(size_is_that_of_long_or_long_long,
 	 (sizeof (intmax_t) == sizeof (long) ||
 	  sizeof (intmax_t) == sizeof (long long)));
 
   if (sizeof (intmax_t) != sizeof (long))
-    return (strtoll (ptr, endptr, base));
-#else
-  verify (size_is_that_of_long, sizeof (intmax_t) == sizeof (long));
-#endif
+    return ::strtoll (ptr, endptr, base);
 
-  return (strtol (ptr, endptr, base));
+  return std::strtol (ptr, endptr, base);
 }
 
 #ifdef TESTING
@@ -83,28 +79,22 @@ main ()
 {
   char *p, *endptr;
   intmax_t x;
-#if HAVE_LONG_LONG
   long long y;
-#endif
   long z;
 
   printf ("sizeof intmax_t: %d\n", sizeof (intmax_t));
 
-#if HAVE_LONG_LONG
   printf ("sizeof long long: %d\n", sizeof (long long));
-#endif
   printf ("sizeof long: %d\n", sizeof (long));
 
   x = strtoimax("42", &endptr, 10);
-#if HAVE_LONG_LONG
   y = strtoll("42", &endptr, 10);
-#else
-  y = -1;
-#endif
   z = strtol("42", &endptr, 10);
 
   printf ("%lld %lld %ld\n", x, y, z);
 
   exit (0);
 }
+#endif
+
 #endif

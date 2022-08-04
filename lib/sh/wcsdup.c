@@ -22,10 +22,8 @@
 
 #if !defined (HAVE_WCSDUP) && defined (HANDLE_MULTIBYTE)
 
-#include <stdc.h>
-#include <wchar.h>
+#include <cwchar>
 #include <bashansi.h>
-#include <xmalloc.h>
 
 wchar_t *
 wcsdup (const wchar_t *ws)
@@ -38,6 +36,6 @@ wcsdup (const wchar_t *ws)
   if (ret == 0)
     return ret;
 
-  return (wcscpy (ret, ws));
+  return wcscpy (ret, ws);
 }
 #endif /* !HAVE_WCSDUP && HANDLE_MULTIBYTE */

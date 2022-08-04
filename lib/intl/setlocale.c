@@ -25,9 +25,9 @@
    This matters on MacOS X 10 and Windows.
    See the comments in localename.c, function gl_locale_name_default.  */
 
-#include <locale.h>
-#include <stdlib.h>
-#include <string.h>
+#include <clocale>
+#include <cstdlib>
+#include <cstring>
 
 /* When building a DLL, we must export some functions.  Note that because
    the functions are only defined for binary backward compatibility, we

@@ -68,8 +68,7 @@
 
 #include "config.h"
 
-#include <stdio.h>
-#include "bashansi.h"
+#include <cstdio>
 
 #if defined (HAVE_UNISTD_H)
 #  ifdef _MINIX
@@ -77,6 +76,8 @@
 #  endif
 #  include <unistd.h>
 #endif
+
+#include <cstring>
 
 #include "chartypes.h"
 #include "bashintl.h"
@@ -87,6 +88,9 @@
 #include "flags.h"
 #include "subst.h"
 #include "typemax.h"		/* INTMAX_MAX, INTMAX_MIN */
+
+namespace bash
+{
 
 /* Because of the $((...)) construct, expressions may include newlines.
    Here is a macro which accepts newlines, tabs and spaces as whitespace. */
@@ -148,7 +152,7 @@
 
 struct lvalue
 {
-  char *tokstr;		/* possibly-rewritten lvalue if not NULL */
+  string tokstr;	/* possibly-rewritten lvalue if not NULL */
   intmax_t tokval;	/* expression evaluated value */
   SHELL_VAR *tokvar;	/* variable described by array or var reference */
   intmax_t ind;		/* array index if not -1 */
@@ -157,23 +161,24 @@ struct lvalue
 /* A structure defining a single expression context. */
 typedef struct {
   int curtok, lasttok;
-  char *expression, *tp, *lasttp;
+  string expression, tp, lasttp;
   intmax_t tokval;
-  char *tokstr;
+  string tokstr;
   int noeval;
   struct lvalue lval;
 } EXPR_CONTEXT;
 
-static char	*expression;	/* The current expression */
-static char	*tp;		/* token lexical position */
-static char	*lasttp;	/* pointer to last token position */
+static string	expression;	/* The current expression */
+static string	tp;		/* token lexical position */
+static string	lasttp;		/* pointer to last token position */
 static int	curtok;		/* the current token */
 static int	lasttok;	/* the previous token */
 static int	assigntok;	/* the OP in OP= */
-static char	*tokstr;	/* current token string */
+static string	tokstr;		/* current token string */
 static intmax_t	tokval;		/* current token value */
 static int	noeval;		/* set to non-zero if no assignment to be done */
-static procenv_t evalbuf;
+
+// static procenv_t evalbuf;
 
 /* set to 1 if the expression has already been run through word expansion */
 static bool	already_expanded;
@@ -188,19 +193,19 @@ static void	init_lvalue (struct lvalue *);
 static struct lvalue *alloc_lvalue (void);
 static void	free_lvalue (struct lvalue *);
 
-static intmax_t	expr_streval (char *, int, struct lvalue *);
-static intmax_t	strlong (const char *);
-static void	evalerror (const char *);
+static intmax_t	expr_streval (string &, int, struct lvalue *);
+static intmax_t	strlong (const string &);
+static void	evalerror (const string &);
 
 static void	pushexp (void);
 static void	popexp (void);
 static void	expr_unwind (void);
-static void	expr_bind_variable (char *, char *);
+static void	expr_bind_variable (string &, string &);
 #if defined (ARRAY_VARS)
-static void	expr_bind_array_element (const char *, arrayind_t, char *);
+static void	expr_bind_array_element (const string &, arrayind_t, string &);
 #endif
 
-static intmax_t subexpr (const char *);
+static intmax_t subexpr (const string &);
 
 static intmax_t	expcomma (void);
 static intmax_t expassign (void);
@@ -225,7 +230,7 @@ static int expr_depth;		   /* Location in the stack. */
 static int expr_stack_size;	   /* Number of slots already allocated. */
 
 #if defined (ARRAY_VARS)
-extern const char *bash_badsub_errmsg;
+extern const string bash_badsub_errmsg;
 #endif
 
 #define SAVETOK(X) \
@@ -287,7 +292,8 @@ popexp ()
     {
       /* See the comment at the top of evalexp() for an explanation of why
 	 this is done. */
-      expression = lasttp = 0;
+      expression.clear();
+      lasttp.clear();
       evalerror (_("recursion stack underflow"));
     }
 
@@ -356,7 +362,7 @@ expr_skipsubscript (const char *vp, char *cp)
       *cp = '[';	/* ] */
     }
   flags = (isassoc && assoc_expand_once && already_expanded) ? VA_NOEXPAND : 0;
-  return (skipsubscript (cp, 0, flags));
+  return skipsubscript (cp, 0, flags);
 }
 
 /* Rewrite tok, which is of the form vname[expression], to vname[ind], where
@@ -404,7 +410,7 @@ evalexp (const char *expr, int flags, bool *validp)
   intmax_t val = 0;
 
   noeval = 0;
-  already_expanded = (flags&EXP_EXPANDED);
+  already_expanded = (flags & EXP_EXPANDED);
 
   FASTCOPY (evalbuf, oevalbuf, sizeof (evalbuf));
 
@@ -424,7 +430,7 @@ evalexp (const char *expr, int flags, bool *validp)
 
       if (validp)
 	*validp = false;
-      return (0);
+      return 0;
     }
 
   val = subexpr (expr);
@@ -434,7 +440,7 @@ evalexp (const char *expr, int flags, bool *validp)
 
   FASTCOPY (oevalbuf, evalbuf, sizeof (evalbuf));
 
-  return (val);
+  return val;
 }
 
 static intmax_t
@@ -447,7 +453,7 @@ subexpr (const char *expr)
     ;
 
   if (p == NULL || *p == '\0')
-    return (0);
+    return 0;
 
   pushexp ();
   expression = savestring (expr);
@@ -604,7 +610,7 @@ expassign ()
       tokstr = (char *)NULL;		/* For freeing on errors. */
     }
 
-  return (value);
+  return value;
 }
 
 /* Conditional expression (expr?expr:expr) */
@@ -678,7 +684,7 @@ explor ()
       lasttok = LOR;
     }
 
-  return (val1);
+  return val1;
 }
 
 /* Logical AND. */
@@ -705,7 +711,7 @@ expland ()
       lasttok = LAND;
     }
 
-  return (val1);
+  return val1;
 }
 
 /* Bitwise OR. */
@@ -724,7 +730,7 @@ expbor ()
       lasttok = NUM;
     }
 
-  return (val1);
+  return val1;
 }
 
 /* Bitwise XOR. */
@@ -743,7 +749,7 @@ expbxor ()
       lasttok = NUM;
     }
 
-  return (val1);
+  return val1;
 }
 
 /* Bitwise AND. */
@@ -762,7 +768,7 @@ expband ()
       lasttok = NUM;
     }
 
-  return (val1);
+  return val1;
 }
 
 static intmax_t
@@ -784,7 +790,7 @@ exp5 ()
 	val1 = (val1 != val2);
       lasttok = NUM;
     }
-  return (val1);
+  return val1;
 }
 
 static intmax_t
@@ -813,7 +819,7 @@ exp4 ()
 	val1 = val1 > val2;
       lasttok = NUM;
     }
-  return (val1);
+  return val1;
 }
 
 /* Left and right shifts. */
@@ -838,7 +844,7 @@ expshift ()
       lasttok = NUM;
     }
 
-  return (val1);
+  return val1;
 }
 
 static intmax_t
@@ -861,7 +867,7 @@ exp3 ()
 	val1 -= val2;
       lasttok = NUM;
     }
-  return (val1);
+  return val1;
 }
 
 static intmax_t
@@ -922,7 +928,7 @@ expmuldiv ()
 #endif
       lasttok = NUM;
     }
-  return (val1);
+  return val1;
 }
 
 static intmax_t
@@ -953,12 +959,12 @@ exppower ()
       val2 = exppower ();	/* exponentiation is right-associative */
       lasttok = NUM;
       if (val2 == 0)
-	return (1);
+	return 1;
       if (val2 < 0)
 	evalerror (_("exponent less than 0"));
       val1 = ipow (val1, val2);
     }
-  return (val1);
+  return val1;
 }
 
 static intmax_t
@@ -993,7 +999,7 @@ exp1 ()
   else
     val = exp0 ();
 
-  return (val);
+  return val;
 }
 
 static intmax_t
@@ -1092,7 +1098,7 @@ exp0 ()
   else
     evalerror (_("syntax error: operand expected"));
 
-  return (val);
+  return val;
 }
 
 static void
@@ -1110,7 +1116,7 @@ alloc_lvalue ()
 
   lv = (struct lvalue *)xmalloc (sizeof (struct lvalue));
   init_lvalue (lv);
-  return (lv);
+  return lv;
 }
 
 static void
@@ -1135,7 +1141,7 @@ expr_streval (char *tok, int e, struct lvalue *lvalue)
   /* If we are suppressing evaluation, just short-circuit here instead of
      going through the rest of the evaluator. */
   if (noeval)
-    return (0);
+    return 0;
 
   initial_depth = expr_depth;
 
@@ -1198,7 +1204,7 @@ expr_streval (char *tok, int e, struct lvalue *lvalue)
     {
       if (no_longjmp_on_fatal_error && interactive_shell)
 	sh_longjmp (evalbuf, 1);
-      return (0);
+      return 0;
     }
 
   tval = (value && *value) ? subexpr (value) : 0;
@@ -1215,7 +1221,7 @@ expr_streval (char *tok, int e, struct lvalue *lvalue)
 #endif
     }
 
-  return (tval);
+  return tval;
 }
 
 static bool
@@ -1580,21 +1586,10 @@ strlong (const char *num)
 	break;
     }
 
-  return (val);
+  return val;
 }
 
 #if defined (EXPR_TEST)
-void *
-xmalloc (int n)
-{
-  return (malloc (n));
-}
-
-void *
-xrealloc (void *s, int n)
-{
-  return (realloc (s, n));
-}
 
 SHELL_VAR *find_variable () { return 0;}
 SHELL_VAR *bind_variable () { return 0; }
@@ -1635,7 +1630,9 @@ builtin_error (const char *format, int arg1, int arg2, int arg3, int arg4, int a
 char *
 itos (intmax_t n)
 {
-  return ("42");
+  return "42";
 }
 
 #endif /* EXPR_TEST */
+
+}  //namespace bash

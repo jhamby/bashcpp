@@ -22,20 +22,18 @@
 
 #if defined (HANDLE_MULTIBYTE)
 
-#include <stdc.h>
-#include <wchar.h>
-#include <bashansi.h>
+#include <cwchar>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <stdio.h>
-#include <limits.h>
+#include <cstdio>
+#include <cstdlib>
+#include <climits>
+#include <cstring>
 
 #if HAVE_ICONV
 #  include <iconv.h>
 #endif
-
-#include <xmalloc.h>
 
 #ifndef USHORT_MAX
 #  ifdef USHRT_MAX
@@ -45,17 +43,16 @@
 #  endif
 #endif
 
-#if !defined (STREQ)
-#  define STREQ(a, b) ((a)[0] == (b)[0] && strcmp ((a), (b)) == 0)
-#endif /* !STREQ */
-
 #if defined (HAVE_LOCALE_CHARSET)
 extern "C" const char *locale_charset (void);
 #else
 extern char *get_locale_var (const char *);
 #endif
 
-extern int locale_utf8locale;
+#include "shell.h"
+
+namespace bash
+{
 
 static int u32init = 0;
 static int utf8locale = 0;
@@ -74,20 +71,20 @@ stub_charset ()
   locale = get_locale_var ("LC_CTYPE");
   if (locale == 0 || *locale == 0)
     {
-      strcpy (charsetbuf, "ASCII");
+      std::strcpy (charsetbuf, "ASCII");
       return charsetbuf;
     }
-  s = strrchr (locale, '.');
+  s = std::strrchr (locale, '.');
   if (s)
     {
-      strncpy (charsetbuf, s+1, sizeof (charsetbuf) - 1);
+      std::strncpy (charsetbuf, s+1, sizeof (charsetbuf) - 1);
       charsetbuf[sizeof (charsetbuf) - 1] = '\0';
-      char *t = strchr (charsetbuf, '@');
+      char *t = std::strchr (charsetbuf, '@');
       if (t)
 	*t = 0;
       return charsetbuf;
     }
-  strncpy (charsetbuf, locale, sizeof (charsetbuf) - 1);
+  std::strncpy (charsetbuf, locale, sizeof (charsetbuf) - 1);
   charsetbuf[sizeof (charsetbuf) - 1] = '\0';
   return charsetbuf;
 }
@@ -99,7 +96,7 @@ u32reset ()
 #if defined (HAVE_ICONV)
   if (u32init && localconv != (iconv_t)-1)
     {
-      iconv_close (localconv);
+      ::iconv_close (localconv);
       localconv = (iconv_t)-1;
     }
 #endif
@@ -139,9 +136,9 @@ u32tocesc (u_bits32_t wc, char *s)
   int l;
 
   if (wc < 0x10000)
-    l = sprintf (s, "\\u%04X", wc);
+    l = std::sprintf (s, "\\u%04X", wc);
   else
-    l = sprintf (s, "\\u%08X", wc);
+    l = std::sprintf (s, "\\u%08X", wc);
   return l;
 }
 
@@ -153,7 +150,7 @@ u32toutf8 (u_bits32_t wc, char *s)
 
   if (wc < 0x0080)
     {
-      s[0] = (char)wc;
+      s[0] = static_cast<char> (wc);
       l = 1;
     }
   else if (wc < 0x0800)
@@ -215,14 +212,14 @@ u32toutf16 (u_bits32_t c, wchar_t *s)
   l = 0;
   if (c < 0x0d800 || (c >= 0x0e000 && c <= 0x0ffff))
     {
-      s[0] = (wchar_t) (c & 0xFFFF);
+      s[0] = static_cast<wchar_t> (c & 0xFFFF);
       l = 1;
     }
   else if (c >= 0x10000 && c <= 0x010ffff)
     {
       c -= 0x010000;
-      s[0] = (wchar_t)((c >> 10) + 0xd800);
-      s[1] = (wchar_t)((c & 0x3ff) + 0xdc00);
+      s[0] = static_cast<wchar_t> ((c >> 10) + 0xd800);
+      s[1] = static_cast<wchar_t> ((c & 0x3ff) + 0xdc00);
       l = 2;
     }
   s[l] = 0;
@@ -232,7 +229,7 @@ u32toutf16 (u_bits32_t c, wchar_t *s)
 /* convert a single unicode-32 character into a multibyte string and put the
    result in S, which must be large enough (at least max(10,MB_LEN_MAX) bytes) */
 int
-u32cconv (unsigned long c, char *s)
+Shell::u32cconv (unsigned long c, char *s)
 {
   wchar_t wc;
   wchar_t ws[3];
@@ -248,9 +245,9 @@ u32cconv (unsigned long c, char *s)
 #if __STDC_ISO_10646__
   wc = c;
   if (sizeof (wchar_t) == 4 && c <= 0x7fffffff)
-    n = wctomb (s, wc);
+    n = std::wctomb (s, wc);
   else if (sizeof (wchar_t) == 2 && c <= 0x10ffff && u32toutf16 (c, ws))
-    n = wcstombs (s, ws, MB_LEN_MAX);
+    n = std::wcstombs (s, ws, MB_LEN_MAX);
   else
     n = -1;
   if (n != -1)
@@ -262,7 +259,7 @@ u32cconv (unsigned long c, char *s)
   if (u32init == 0)
     {
       utf8locale = locale_utf8locale;
-      localconv = (iconv_t)-1;
+      localconv = reinterpret_cast<iconv_t> (-1);
       if (utf8locale == 0)
 	{
 #if HAVE_LOCALE_CHARSET
@@ -273,7 +270,7 @@ u32cconv (unsigned long c, char *s)
 	  charset = stub_charset ();
 #endif
 	  localconv = iconv_open (charset, "UTF-8");
-	  if (localconv == (iconv_t)-1)
+	  if (localconv == reinterpret_cast<iconv_t> (-1))
 	    /* We assume ASCII when presented with an unknown encoding. */
 	    localconv = iconv_open ("ASCII", "UTF-8");
 	}
@@ -298,9 +295,9 @@ u32cconv (unsigned long c, char *s)
   iptr = s;
   sn = n;
 
-  iconv (localconv, NULL, NULL, NULL, NULL);
+  ::iconv (localconv, NULL, NULL, NULL, NULL);
 
-  if (iconv (localconv, (char **)&iptr, &sn, &optr, &obytesleft) == (size_t)-1)
+  if (::iconv (localconv, (char **)&iptr, &sn, &optr, &obytesleft) == (size_t)-1)
     {
       /* You get ISO C99 escape sequences if iconv fails */
       n = u32tocesc (c, s);
@@ -312,7 +309,7 @@ u32cconv (unsigned long c, char *s)
   /* number of chars to be copied is optr - obuf if we want to do bounds
      checking */
   strcpy (s, obuf);
-  return (optr - obuf);
+  return optr - obuf;
 #endif	/* HAVE_ICONV */
 
   if (locale_utf8locale)
@@ -326,4 +323,7 @@ void
 u32reset ()
 {
 }
+
 #endif /* HANDLE_MULTIBYTE */
+
+}  // namespace bash

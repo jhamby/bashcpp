@@ -71,20 +71,17 @@ $END
 #  include <unistd.h>
 #endif
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include "../shell.h"
 #include "../flags.h"
 #include "../parser.h"
-#include "../bashhist.h"
 #include <readline/history.h>
 #include "bashgetopt.h"
 #include "common.h"
 
-#if !defined (errno)
-extern int errno;
-#endif
+namespace bash
+{
 
 static char *histtime (HIST_ENTRY *, const char *);
 static int display_history (WORD_LIST *);
@@ -101,7 +98,7 @@ static int expand_and_print_history (WORD_LIST *);
 #define DFLAG	0x80
 
 int
-history_builtin (WORD_LIST *list)
+Shell::history_builtin (WORD_LIST *list)
 {
   int flags, opt;
   char *delete_arg;
@@ -142,7 +139,7 @@ history_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
@@ -151,7 +148,7 @@ history_builtin (WORD_LIST *list)
   if (opt && opt != AFLAG && opt != RFLAG && opt != WFLAG && opt != NFLAG)
     {
       builtin_error (_("cannot use more than one of -anrw"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   /* clear the history, but allow other arguments to add to it again. */
@@ -159,7 +156,7 @@ history_builtin (WORD_LIST *list)
     {
       bash_clear_history ();
       if (list == 0)
-	return (EXECUTION_SUCCESS);
+	return EXECUTION_SUCCESS;
     }
 
   char *range;
@@ -167,14 +164,14 @@ history_builtin (WORD_LIST *list)
     {
       if (list)
 	push_history (list);
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 #if defined (BANG_HISTORY)
   else if (flags & PFLAG)
     {
       if (list)
-	return (expand_and_print_history (list));
-      return (sh_chkwrite (EXECUTION_SUCCESS));
+	return expand_and_print_history (list);
+      return sh_chkwrite (EXECUTION_SUCCESS);
     }
 #endif
   else if ((flags & DFLAG) && (range = strchr ((delete_arg[0] == '-') ? delete_arg + 1 : delete_arg, '-')))
@@ -185,7 +182,7 @@ history_builtin (WORD_LIST *list)
 	{
 	  range[-1] = '-';
 	  sh_erange (delete_arg, _("history position"));
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
       if (delete_arg[0] == '-' && delete_start < 0)
         {
@@ -195,7 +192,7 @@ history_builtin (WORD_LIST *list)
 	    {
 start_error:
 	      sh_erange (delete_arg, _("history position"));
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
         }
       /* numbers as displayed by display_history are offset by history_base */
@@ -210,7 +207,7 @@ start_error:
 	    {
 range_error:
 	      sh_erange (range, _("history position"));
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
         }
       else if (delete_end > 0)
@@ -220,7 +217,7 @@ range_error:
       int result = bash_delete_history_range (delete_start, delete_end);
       if (where_history () > history_length)
 	history_set_pos (history_length);
-      return (result ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+      return result ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
     }
   else if (flags & DFLAG)
     {
@@ -228,7 +225,7 @@ range_error:
       if (legal_number (delete_arg, &delete_offset) == 0)
 	{
 	  sh_erange (delete_arg, _("history position"));
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
       /* check for negative offsets, count back from end of list */
       if (delete_arg[0] == '-' && delete_offset < 0)
@@ -240,14 +237,14 @@ range_error:
 	  if (ind < history_base)
 	    {
 	      sh_erange (delete_arg, _("history position"));
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  opt = ind + history_base;	/* compensate for opt - history_base below */
 	}
       else if ((delete_offset < history_base) || (delete_offset >= (history_base + history_length)))
 	{
 	  sh_erange (delete_arg, _("history position"));
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
       else
 	opt = delete_offset;
@@ -259,12 +256,12 @@ range_error:
 	 we delete the last history entry. */
       if (where_history () > history_length)
 	history_set_pos (history_length);
-      return (result ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+      return result ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
     }
   else if ((flags & (AFLAG|RFLAG|NFLAG|WFLAG|CFLAG)) == 0)
     {
       int result = display_history (list);
-      return (sh_chkwrite (result));
+      return sh_chkwrite (result);
     }
 
   char *filename = list ? list->word->word : get_string_value ("HISTFILE");
@@ -274,7 +271,7 @@ range_error:
   if (restricted && strchr (filename, '/'))
     {
       sh_restricted (filename);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 #endif
 
@@ -316,7 +313,7 @@ range_error:
 				    history_base - obase;
     }
 
-  return (result ? EXECUTION_FAILURE : EXECUTION_SUCCESS);
+  return result ? EXECUTION_FAILURE : EXECUTION_SUCCESS;
 }
 
 /* Accessors for HIST_ENTRY lists that are called HLIST. */
@@ -350,7 +347,7 @@ display_history (WORD_LIST *list)
   if (list)
     {
       if (get_numeric_arg (list, 0, &limit) == 0)
-	return (EXECUTION_FAILURE);
+	return EXECUTION_FAILURE;
 
       if (limit < 0)
 	limit = -limit;
@@ -386,7 +383,7 @@ display_history (WORD_LIST *list)
 	}
     }
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 /* Remove the last entry in the history list and add each argument in
@@ -453,4 +450,7 @@ expand_and_print_history (WORD_LIST *list)
   return result;
 }
 #endif /* BANG_HISTORY */
+
+}  // namespace bash
+
 #endif /* HISTORY */

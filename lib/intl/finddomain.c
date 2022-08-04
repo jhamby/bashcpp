@@ -19,10 +19,10 @@
 # include <config.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 #include <sys/types.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #if defined HAVE_UNISTD_H || defined _LIBC
 # include <unistd.h>
@@ -124,18 +124,9 @@ _nl_find_domain (const char *dirname, char *locale,
   alias_value = _nl_expand_alias (locale);
   if (alias_value != NULL)
     {
-#if defined _LIBC || defined HAVE_STRDUP
-      locale = strdup (alias_value);
+      locale = ::strdup (alias_value);
       if (locale == NULL)
 	return NULL;
-#else
-      size_t len = strlen (alias_value) + 1;
-      locale = (char *) malloc (len);
-      if (locale == NULL)
-	return NULL;
-
-      memcpy (locale, alias_value, len);
-#endif
     }
 
   /* Now we determine the single parts of the locale name.  First
@@ -183,7 +174,7 @@ _nl_find_domain (const char *dirname, char *locale,
 out:
   /* The space for normalized_codeset is dynamically allocated.  Free it.  */
   if (mask & XPG_NORM_CODESET)
-    free ((void *) normalized_codeset);
+    std::free (const_cast<char*> (normalized_codeset));
 
   return retval;
 }

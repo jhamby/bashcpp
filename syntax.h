@@ -21,52 +21,58 @@
 #ifndef _SYNTAX_H_
 #define _SYNTAX_H_
 
+#include "bashtypes.h"
+
+namespace bash
+{
+
 /* Defines for use by mksyntax.c */
 
-#define slashify_in_quotes "\\`$\"\n"
-#define slashify_in_here_document "\\`$"
+static const char *slashify_in_quotes = "\\`$\"\n";
+static const char *slashify_in_here_document = "\\`$";
 
-#define shell_meta_chars   "()<>;&|"
-#define shell_break_chars  "()<>;&| \t\n"
+static const char *shell_meta_chars = "()<>;&|";
+static const char *shell_break_chars = "()<>;&| \t\n";
 
-#define shell_quote_chars	"\"`'"
+static const char *shell_quote_chars = "\"`'";
 
 #if defined (PROCESS_SUBSTITUTION)
-#  define shell_exp_chars		"$<>"
+static const char *shell_exp_chars = "$<>";
 #else
-#  define shell_exp_chars		"$"
+static const char *shell_exp_chars = "$";
 #endif
 
 #if defined (EXTENDED_GLOB)
-#  define ext_glob_chars	"@*+?!"
+static const char *ext_glob_chars = "@*+?!";
 #else
-#  define ext_glob_chars	""
+static const char *ext_glob_chars = "";
 #endif
-#define shell_glob_chars	"*?[]^"
+
+static const char *shell_glob_chars = "*?[]^";
 
 /* Defines shared by mksyntax.c and the rest of the shell code. */
 
 /* Values for character flags in syntax tables */
 
-#define CWORD		0x0000	/* nothing special; an ordinary character */
-#define CSHMETA		0x0001	/* shell meta character */
-#define CSHBRK		0x0002	/* shell break character */
-#define CBACKQ		0x0004	/* back quote */
-#define CQUOTE		0x0008	/* shell quote character */
-#define CSPECL		0x0010	/* special character that needs quoting */
-#define CEXP		0x0020	/* shell expansion character */
-#define CBSDQUOTE	0x0040	/* characters escaped by backslash in double quotes */
-#define CBSHDOC		0x0080	/* characters escaped by backslash in here doc */
-#define CGLOB		0x0100	/* globbing characters */
-#define CXGLOB		0x0200	/* extended globbing characters */
-#define CXQUOTE		0x0400	/* cquote + backslash */
-#define CSPECVAR	0x0800	/* single-character shell variable name */
-#define CSUBSTOP	0x1000	/* values of OP for ${word[:]OPstuff} */
-#define CBLANK		0x2000	/* whitespace (blank) character */
+const uint16_t CWORD =		0x0000;	/* nothing special; an ordinary character */
+const uint16_t CSHMETA =	0x0001;	/* shell meta character */
+const uint16_t CSHBRK =		0x0002;	/* shell break character */
+const uint16_t CBACKQ =		0x0004;	/* back quote */
+const uint16_t CQUOTE =		0x0008;	/* shell quote character */
+const uint16_t CSPECL =		0x0010;	/* special character that needs quoting */
+const uint16_t CEXP =		0x0020;	/* shell expansion character */
+const uint16_t CBSDQUOTE =	0x0040;	/* characters escaped by backslash in double quotes */
+const uint16_t CBSHDOC =	0x0080;	/* characters escaped by backslash in here doc */
+const uint16_t CGLOB =		0x0100;	/* globbing characters */
+const uint16_t CXGLOB =		0x0200;	/* extended globbing characters */
+const uint16_t CXQUOTE =	0x0400;	/* cquote + backslash */
+const uint16_t CSPECVAR =	0x0800;	/* single-character shell variable name */
+const uint16_t CSUBSTOP =	0x1000;	/* values of OP for ${word[:]OPstuff} */
+const uint16_t CBLANK =		0x2000;	/* whitespace (blank) character */
 
 /* Defines for use by the rest of the shell. */
-extern int sh_syntaxtab[];
-extern int sh_syntabsiz;
+// extern int sh_syntaxtab[];
+// extern int sh_syntabsiz;
 
 #define shellmeta(c)	(sh_syntaxtab[(unsigned char)(c)] & CSHMETA)
 #define shellbreak(c)	(sh_syntaxtab[(unsigned char)(c)] & CSHBRK)
@@ -99,8 +105,6 @@ extern int sh_syntabsiz;
 #define CTLESC '\001'
 #define CTLNUL '\177'
 
-#if !defined (HAVE_ISBLANK) && !defined (isblank)
-#  define isblank(x)	((x) == ' ' || (x) == '\t')
-#endif
+}  // namespace bash
 
 #endif /* _SYNTAX_H_ */

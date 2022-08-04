@@ -25,7 +25,7 @@
 /* Use the POSIX threads library.  */
 
 # include <pthread.h>
-# include <stdlib.h>
+# include <cstdlib>
 
 # if PTHREAD_IN_USE_DETECTION_HARD
 

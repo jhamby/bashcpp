@@ -48,13 +48,14 @@ $END
 #  include <unistd.h>
 #endif
 
-#include "../bashansi.h"
-
 #include "../shell.h"
 #include "../execute_cmd.h"
 #include "../flags.h"
 #include "bashgetopt.h"
 #include "common.h"
+
+namespace bash
+{
 
 #if defined (_CS_PATH) && defined (HAVE_CONFSTR) && !HAVE_DECL_CONFSTR
 extern size_t confstr (int, char *, size_t);
@@ -63,7 +64,7 @@ extern size_t confstr (int, char *, size_t);
 /* Run the commands mentioned in LIST without paying attention to shell
    functions. */
 int
-command_builtin (WORD_LIST *list)
+Shell::command_builtin (WORD_LIST *list)
 {
   int result, verbose, use_standard_path, opt;
   COMMAND *command;
@@ -86,19 +87,19 @@ command_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
 
   if (list == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
 #if defined (RESTRICTED_SHELL)
   if (use_standard_path && restricted)
     {
       sh_restricted ("-p");
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 #endif
 
@@ -116,7 +117,7 @@ command_builtin (WORD_LIST *list)
 	  any_found += found;
 	}
 
-      return (any_found ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+      return any_found ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
     }
 
   begin_unwind_frame ("command_builtin");
@@ -140,5 +141,7 @@ command_builtin (WORD_LIST *list)
 
   run_unwind_frame ("command_builtin");
 
-  return (result);
+  return result;
 }
+
+}  // namespace bash

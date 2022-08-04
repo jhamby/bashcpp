@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include "bashtypes.h"
 #include "posixstat.h"
 #if defined (HAVE_SYS_PARAM_H)
@@ -30,12 +30,10 @@
 #  include <unistd.h>
 #endif
 #include "posixtime.h"
-#include "bashansi.h"
 #include "bashintl.h"
 
 #include "shell.h"
 #include "execute_cmd.h"
-#include "mailcheck.h"
 #include <tilde/tilde.h>
 
 /* Values for flags word in struct _fileinfo */
@@ -45,14 +43,14 @@ extern time_t shell_start_time;
 
 extern int mailstat (const char *, struct stat *);
 
-typedef struct _fileinfo {
+struct FileInfo {
   char *name;
   char *msg;
   time_t access_time;
   time_t mod_time;
   off_t file_size;
   int flags;
-} FILEINFO;
+};
 
 /* The list of remembered mail files. */
 static FILEINFO **mailfiles = (FILEINFO **)NULL;
@@ -85,7 +83,7 @@ int
 time_to_check_mail ()
 {
   char *temp;
-  time_t now;
+  std::time_t now;
   intmax_t seconds;
 
   temp = get_string_value ("MAILCHECK");
@@ -93,12 +91,12 @@ time_to_check_mail ()
   /* Negative number, or non-numbers (such as empty string) cause no
      checking to take place. */
   if (temp == 0 || legal_number (temp, &seconds) == 0 || seconds < 0)
-    return (0);
+    return 0;
 
   now = NOW;
   /* Time to check if MAILCHECK is explicitly set to zero, or if enough
      time has passed since the last check. */
-  return (seconds == 0 || ((now - last_time_mail_checked) >= seconds));
+  return seconds == 0 || ((now - last_time_mail_checked) >= seconds);
 }
 
 /* Okay, we have checked the mail.  Perhaps I should make this function
@@ -145,7 +143,8 @@ find_mail_file (char *file)
 static void
 init_mail_file (int i)
 {
-  mailfiles[i]->access_time = mailfiles[i]->mod_time = last_time_mail_checked ? last_time_mail_checked : shell_start_time;
+  mailfiles[i]->access_time = (mailfiles[i]->mod_time = last_time_mail_checked)
+				? last_time_mail_checked : shell_start_time;
   mailfiles[i]->file_size = 0;
   mailfiles[i]->flags = 0;
 }
@@ -234,7 +233,7 @@ free_mail_files ()
     dispose_mail_file (mailfiles[i]);
 
   if (mailfiles)
-    free (mailfiles);
+    std::free (mailfiles);
 
   mailfiles_count = 0;
   mailfiles = (FILEINFO **)NULL;
@@ -264,7 +263,7 @@ file_mod_date_changed (int i)
     return false;
 
   if (finfo.st_size > 0)
-    return (mtime < finfo.st_mtime);
+    return mtime < finfo.st_mtime;
 
   if (finfo.st_size == 0 && mailfiles[i]->file_size > 0)
     UPDATE_MAIL_FILE (i, finfo);
@@ -276,7 +275,7 @@ file_mod_date_changed (int i)
 static bool
 file_access_date_changed (int i)
 {
-  time_t atime;
+  std::time_t atime;
   struct stat finfo;
   char *file;
 
@@ -287,7 +286,7 @@ file_access_date_changed (int i)
     return false;
 
   if (finfo.st_size > 0)
-    return (atime < finfo.st_atime);
+    return atime < finfo.st_atime;
 
   return false;
 }
@@ -303,7 +302,7 @@ file_has_grown (int i)
   file = mailfiles[i]->name;
   size = mailfiles[i]->file_size;
 
-  return ((mailstat (file, &finfo) == 0) && (finfo.st_size > size));
+  return mailstat (file, &finfo) == 0) && (finfo.st_size > size;
 }
 
 /* Take an element from $MAILPATH and return the portion from
@@ -330,7 +329,7 @@ parse_mailpath_spec (char *str)
       if (*s == '?' || *s == '%')
 	return s;
     }
-  return ((char *)NULL);
+  return (char *)NULL;
 }
 
 char *
@@ -340,13 +339,13 @@ make_default_mailpath ()
   char *mp;
 
   get_current_user_info ();
-  mp = (char *)xmalloc (2 + sizeof (DEFAULT_MAIL_DIRECTORY) + strlen (current_user.user_name));
-  strcpy (mp, DEFAULT_MAIL_DIRECTORY);
+  mp = (char *)xmalloc (2 + sizeof (DEFAULT_MAIL_DIRECTORY) + std::strlen (current_user.user_name));
+  std::strcpy (mp, DEFAULT_MAIL_DIRECTORY);
   mp[sizeof(DEFAULT_MAIL_DIRECTORY) - 1] = '/';
-  strcpy (mp + sizeof (DEFAULT_MAIL_DIRECTORY), current_user.user_name);
-  return (mp);
+  std::strcpy (mp + sizeof (DEFAULT_MAIL_DIRECTORY), current_user.user_name);
+  return mp;
 #else
-  return ((char *)NULL);
+  return (char *)NULL;
 #endif
 }
 
@@ -385,7 +384,7 @@ remember_mail_dates ()
       if (mp && *mp)
 	*mp++ = '\0';
       add_mail_file (mailfile, mp);
-      free (mailfile);
+      std::free (mailfile);
     }
 }
 
@@ -471,7 +470,7 @@ check_mail ()
   if (dollar_underscore)
     {
       bind_variable ("_", dollar_underscore, 0);
-      free (dollar_underscore);
+      std::free (dollar_underscore);
     }
   else
     unbind_variable ("_");

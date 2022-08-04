@@ -20,19 +20,22 @@
 
 #include <config.h>
 
-#include <stdio.h>
-#include <errno.h>
+#include <cstdio>
+#include <cerrno>
+#include <cstring>
 
 #include <bashtypes.h>
 #include <posixstat.h>
 #include <posixdir.h>
-#include <bashansi.h>
 
 #if defined (HAVE_SYS_PARAM_H)
 #  include <sys/param.h>
 #endif
 
 #include <maxpath.h>
+
+namespace bash
+{
 
 /*
  *     Stat a file. If it's a maildir, check all messages
@@ -65,10 +68,10 @@ mailstat(const char *path, struct stat *st)
   atime = mtime = 0;
 
   /* First see if it's a directory. */
-  if ((i = stat(path, st)) != 0 || S_ISDIR(st->st_mode) == 0)
+  if ((i = ::stat (path, st)) != 0 || S_ISDIR (st->st_mode) == 0)
     return i;
 
-  if (strlen(path) > sizeof(dir) - 5)
+  if (std::strlen (path) > sizeof(dir) - 5)
     {
 #ifdef ENAMETOOLONG
       errno = ENAMETOOLONG;
@@ -91,19 +94,19 @@ mailstat(const char *path, struct stat *st)
 
   /* See if cur/ is present */
   sprintf(dir, "%s/cur", path);
-  if (stat(dir, &st_tmp) || S_ISDIR(st_tmp.st_mode) == 0)
+  if (::stat(dir, &st_tmp) || S_ISDIR(st_tmp.st_mode) == 0)
     return 0;
   st_ret.st_atime = st_tmp.st_atime;
 
   /* See if tmp/ is present */
-  sprintf(dir, "%s/tmp", path);
-  if (stat(dir, &st_tmp) || S_ISDIR(st_tmp.st_mode) == 0)
+  std::sprintf(dir, "%s/tmp", path);
+  if (::stat(dir, &st_tmp) || S_ISDIR(st_tmp.st_mode) == 0)
     return 0;
   st_ret.st_mtime = st_tmp.st_mtime;
 
   /* And new/ */
-  sprintf(dir, "%s/new", path);
-  if (stat(dir, &st_tmp) || S_ISDIR(st_tmp.st_mode) == 0)
+  std::sprintf(dir, "%s/new", path);
+  if (::stat(dir, &st_tmp) || S_ISDIR(st_tmp.st_mode) == 0)
     return 0;
   st_ret.st_mtime = st_tmp.st_mtime;
 
@@ -121,17 +124,17 @@ mailstat(const char *path, struct stat *st)
   /* Loop over new/ and cur/ */
   for (i = 0; i < 2; i++)
     {
-      sprintf(dir, "%s/%s", path, i ? "cur" : "new");
-      sprintf(file, "%s/", dir);
-      l = strlen(file);
-      if ((dd = opendir(dir)) == NULL)
+      std::sprintf(dir, "%s/%s", path, i ? "cur" : "new");
+      std::sprintf(file, "%s/", dir);
+      l = std::strlen(file);
+      if ((dd = ::opendir(dir)) == NULL)
 	return 0;
-      while ((fn = readdir(dd)) != NULL)
+      while ((fn = ::readdir(dd)) != NULL)
 	{
-	  if (fn->d_name[0] == '.' || strlen(fn->d_name) + l >= sizeof(file))
+	  if (fn->d_name[0] == '.' || std::strlen(fn->d_name) + l >= sizeof(file))
 	    continue;
-	  strcpy(file + l, fn->d_name);
-	  if (stat(file, &st_tmp) != 0)
+	  std::strcpy(file + l, fn->d_name);
+	  if (::stat(file, &st_tmp) != 0)
 	    continue;
 	  st_ret.st_size += st_tmp.st_size;
 #ifdef HAVE_STRUCT_STAT_ST_BLOCKS
@@ -144,7 +147,7 @@ mailstat(const char *path, struct stat *st)
 	  if (st_tmp.st_mtime > mtime)
 	    mtime = st_tmp.st_mtime;
 	}
-      closedir(dd);
+      ::closedir(dd);
     }
 
 /*  if (atime) */	/* Set atime even if cur/ is empty */
@@ -155,3 +158,5 @@ mailstat(const char *path, struct stat *st)
     *st = st_ret_last = st_ret;
     return 0;
 }
+
+}  // namespace bash

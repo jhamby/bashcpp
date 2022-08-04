@@ -27,7 +27,7 @@
 #include <posixstat.h>
 #include <filecntl.h>
 
-#include <errno.h>
+#include <cerrno>
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
@@ -51,7 +51,7 @@ isnetconn (int fd)
   l = sizeof(sa);
   rv = getpeername(fd, &sa, &l);
   /* Posix.2 says getpeername can return these errors. */
-  return ((rv < 0 && (errno == ENOTSOCK || errno == ENOTCONN || errno == EINVAL || errno == EBADF)) ? false : true);
+  return (rv < 0 && (errno == ENOTSOCK || errno == ENOTCONN || errno == EINVAL || errno == EBADF)) ? false : true;
 #else /* !HAVE_GETPEERNAME || SVR4_2 || __BEOS__ */
 #  if defined (SVR4) || defined (SVR4_2)
   /* Sockets on SVR4 and SVR4.2 are character special (streams) devices. */
@@ -65,14 +65,14 @@ isnetconn (int fd)
   if (S_ISFIFO (sb.st_mode))
     return false;
 #    endif /* S_ISFIFO */
-  return (S_ISCHR (sb.st_mode));
+  return S_ISCHR (sb.st_mode);
 #  else /* !SVR4 && !SVR4_2 */
 #    if defined (S_ISSOCK) && !defined (__BEOS__)
   struct stat sb;
 
   if (fstat (fd, &sb) < 0)
     return false;
-  return (S_ISSOCK (sb.st_mode));
+  return S_ISSOCK (sb.st_mode);
 #    else /* !S_ISSOCK || __BEOS__ */
   return false;
 #    endif /* !S_ISSOCK || __BEOS__ */

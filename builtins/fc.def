@@ -68,7 +68,6 @@ $END
 #include <stdio.h>
 #include <chartypes.h>
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 #include <errno.h>
 
@@ -76,15 +75,13 @@ $END
 #include "../builtins.h"
 #include "../flags.h"
 #include "../parser.h"
-#include "../bashhist.h"
 #include "maxpath.h"
 #include <readline/history.h>
 #include "bashgetopt.h"
 #include "common.h"
 
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
+namespace bash
+{
 
 #define HIST_INVALID INT_MIN
 #define HIST_ERANGE  INT_MIN+1
@@ -159,13 +156,9 @@ static char *fc_gethist (char *, HIST_ENTRY **, int);
 static int fc_gethnum (char *, HIST_ENTRY **, int);
 static int fc_number (WORD_LIST *);
 static void fc_replhist (char *);
-#ifdef INCLUDE_UNUSED
-static char *fc_readline (FILE *);
-static void fc_addhist (char *);
-#endif
 
 static void
-set_verbose_flag ()
+Shell::set_verbose_flag ()
 {
   echo_input_at_read = verbose_flag;
 }
@@ -187,7 +180,7 @@ unlink_and_free (void *arg)
 }
 
 int
-fc_builtin (WORD_LIST *list)
+Shell::fc_builtin (WORD_LIST *list)
 {
   int numbering, reverse, listing, execute;
 
@@ -227,7 +220,7 @@ fc_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
 
@@ -278,7 +271,7 @@ fc_builtin (WORD_LIST *list)
 	  if (rlist)
 	    FREE_RLIST ();
 
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
 
       if (rlist)
@@ -293,14 +286,14 @@ fc_builtin (WORD_LIST *list)
       fc_replhist (command);	/* replace `fc -s' with command */
       /* Posix says that the re-executed commands should be entered into the
 	 history. */
-      return (parse_and_execute (command, "fc", SEVAL_NOHIST));
+      return parse_and_execute (command, "fc", SEVAL_NOHIST);
     }
 
   /* This is the second form of the command (the list-or-edit-and-rerun
      form). */
   HIST_ENTRY **hlist = history_list ();
   if (hlist == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
   int i;
   for (i = 0; hlist[i]; i++);
@@ -366,17 +359,17 @@ fc_builtin (WORD_LIST *list)
   if (histbeg == HIST_INVALID || histend == HIST_INVALID)
     {
       sh_erange ((char *)NULL, _("history specification"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   else if (histbeg == HIST_ERANGE || histend == HIST_ERANGE)
     {
       sh_erange ((char *)NULL, _("history specification"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   else if (histbeg == HIST_NOTFOUND || histend == HIST_NOTFOUND)
     {
       builtin_error (_("no command found"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   /* We don't throw an error for line specifications out of range, per POSIX */
@@ -410,17 +403,17 @@ fc_builtin (WORD_LIST *list)
   if (histbeg == HIST_INVALID || histend == HIST_INVALID)
     {
       sh_erange ((char *)NULL, _("history specification"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   else if (histbeg == HIST_ERANGE || histend == HIST_ERANGE)
     {
       sh_erange ((char *)NULL, _("history specification"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   else if (histbeg == HIST_NOTFOUND || histend == HIST_NOTFOUND)
     {
       builtin_error (_("no command found"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   /* We don't throw an error for line specifications out of range, per POSIX */
@@ -450,7 +443,7 @@ fc_builtin (WORD_LIST *list)
 	{
 	  builtin_error (_("%s: cannot open temp file: %s"), fn ? fn : "", strerror (errno));
 	  FREE (fn);
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
     }
 
@@ -470,7 +463,7 @@ fc_builtin (WORD_LIST *list)
     }
 
   if (listing)
-    return (sh_chkwrite (EXECUTION_SUCCESS));
+    return sh_chkwrite (EXECUTION_SUCCESS);
 
   fflush (stream);
   if (ferror (stream))
@@ -478,7 +471,7 @@ fc_builtin (WORD_LIST *list)
       sh_wrerror ();
       fclose (stream);
       FREE (fn);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   fclose (stream);
 
@@ -500,7 +493,7 @@ fc_builtin (WORD_LIST *list)
     {
       unlink (fn);
       free (fn);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
 #if defined (READLINE)
@@ -528,7 +521,7 @@ fc_builtin (WORD_LIST *list)
   retval = fc_execute_file (fn);
   run_unwind_frame ("fc builtin");
 
-  return (retval);
+  return retval;
 }
 
 /* Return 1 if LIST->word->word is a legal number for fc's use. */
@@ -542,7 +535,7 @@ fc_number (WORD_LIST *list)
   s = list->word->word;
   if (*s == '-')
     s++;
-  return (legal_number (s, (intmax_t *)NULL));
+  return legal_number (s, (intmax_t *)NULL);
 }
 
 /* Return an absolute index into HLIST which corresponds to COMMAND.  If
@@ -579,14 +572,14 @@ fc_gethnum (char *command, HIST_ENTRY **hlist, int mode)
     while (last_hist >= 0 && hlist[last_hist] == 0)
       last_hist--;
   if (last_hist < 0)
-    return (-1);
+    return -1;
 
   int real_last = i;
   i = last_hist;
 
   /* No specification defaults to most recent command. */
   if (command == NULL)
-    return (i);
+    return i;
 
   /* back up from the end to the last non-null history entry */
   while (hlist[real_last] == 0 && real_last > 0)
@@ -618,10 +611,10 @@ fc_gethnum (char *command, HIST_ENTRY **hlist, int mode)
       if (n < 0)
 	{
 	  n += i + 1;
-	  return (n < 0 ? 0 : n);
+	  return n < 0 ? 0 : n;
 	}
       else if (n == 0)
-	return ((sign == -1) ? (listing ? real_last : HIST_INVALID) : i);
+	return (sign == -1) ? (listing ? real_last : HIST_INVALID) : i;
       else
 	{
 	  /* If we're out of range (greater than I (last history entry) or
@@ -630,9 +623,9 @@ fc_gethnum (char *command, HIST_ENTRY **hlist, int mode)
 	     value in a desired range of history entries. */
 	  n -= history_base;
 	  if (n < 0)
-	    return (mode & HN_FIRST ? 0 : i);
+	    return mode & HN_FIRST ? 0 : i;
 	  else if (n >= i)
-	    return (mode & HN_FIRST ? 0 : i);
+	    return mode & HN_FIRST ? 0 : i;
 	  else
 	    return n;
 	}
@@ -642,9 +635,9 @@ fc_gethnum (char *command, HIST_ENTRY **hlist, int mode)
   for (int j = i; j >= 0; j--)
     {
       if (STREQN (command, histline (j), clen))
-	return (j);
+	return j;
     }
-  return (HIST_NOTFOUND);
+  return HIST_NOTFOUND;
 }
 
 /* Locate the most recent history line which begins with
@@ -654,58 +647,15 @@ static char *
 fc_gethist (char *command, HIST_ENTRY **hlist, int mode)
 {
   if (hlist == 0)
-    return ((char *)NULL);
+    return (char *)NULL;
 
   int i = fc_gethnum (command, hlist, mode);
 
   if (i >= 0)
-    return (savestring (histline (i)));
+    return savestring (histline (i));
   else
-    return ((char *)NULL);
+    return (char *)NULL;
 }
-
-#ifdef INCLUDE_UNUSED
-/* Read the edited history lines from STREAM and return them
-   one at a time.  This can read unlimited length lines.  The
-   caller should free the storage. */
-static char *
-fc_readline (FILE *stream)
-{
-  int c;
-  int line_len = 0, lindex = 0;
-  char *line = (char *)NULL;
-
-  while ((c = getc (stream)) != EOF)
-    {
-      if ((lindex + 2) >= line_len)
-	line = (char *)xrealloc (line, (line_len += 128));
-
-      if (c == '\n')
-	{
-	  line[lindex++] = '\n';
-	  line[lindex++] = '\0';
-	  return (line);
-	}
-      else
-	line[lindex++] = c;
-    }
-
-  if (!lindex)
-    {
-      if (line)
-	free (line);
-
-      return ((char *)NULL);
-    }
-
-  if (lindex + 2 >= line_len)
-    line = (char *)xrealloc (line, lindex + 3);
-
-  line[lindex++] = '\n';	    /* Finish with newline if none in file */
-  line[lindex++] = '\0';
-  return (line);
-}
-#endif
 
 /* Perform the SUBS on COMMAND.
    SUBS is a list of substitutions, and COMMAND is a simple string.
@@ -723,7 +673,7 @@ fc_dosubs (char *command, REPL *subs)
       free (new_);
       new_ = t;
     }
-  return (new_);
+  return new_;
 }
 
 /* Use `command' to replace the last entry in the history list, which,
@@ -747,24 +697,6 @@ fc_replhist (char *command)
     }
 }
 
-#ifdef INCLUDE_UNUSED
-/* Add LINE to the history, after removing a single trailing newline. */
-static void
-fc_addhist (char *line)
-{
-  int n;
-
-  if (line == 0 || *line == 0)
-    return;
-
-  n = strlen (line);
-
-  if (line[n - 1] == '\n')
-    line[n - 1] = '\0';
-
-  if (line && *line)
-    maybe_add_history (line);		/* Obeys HISTCONTROL setting. */
-}
-#endif
+}  // namespace bash
 
 #endif /* HISTORY */

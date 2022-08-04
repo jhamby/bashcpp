@@ -22,9 +22,7 @@
    mktime.  */
 /* #define DEBUG 1 */
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
 
 #ifdef _LIBC
 # define HAVE_LIMITS_H 1
@@ -39,19 +37,15 @@
 #define LEAP_SECONDS_POSSIBLE 1
 #endif
 
-#ifndef VMS
 #include <sys/types.h>		/* Some systems define `time_t' here.  */
-#endif
-#include <time.h>
+#include <ctime>
 
-#if HAVE_LIMITS_H
-#include <limits.h>
+#if defined (HAVE_LIMITS_H)
+#include <climits>
 #endif
-
-#include "bashansi.h"
 
 #if DEBUG_MKTIME
-#include <stdio.h>
+#include <cstdio>
 /* Make it work even if the system's libc has its own mktime routine.  */
 #define mktime my_mktime
 #endif /* DEBUG_MKTIME */

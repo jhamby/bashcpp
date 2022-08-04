@@ -24,7 +24,7 @@
 /* These values are supposed to be in <limits.h> or one of the files
    it includes. */
 #if defined (HAVE_LIMITS_H)
-#  include <limits.h>
+#  include <climits>
 #endif /* !HAVE_LIMITS_H */
 
 /* If PATH_MAX is not defined, look for MAXPATHLEN */

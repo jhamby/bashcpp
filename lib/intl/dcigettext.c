@@ -49,23 +49,17 @@ char *alloca ();
 # endif
 #endif
 
-#include <errno.h>
-#ifndef errno
-extern int errno;
-#endif
-#ifndef __set_errno
-# define __set_errno(val) errno = (val)
-#endif
+#include <cerrno>
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>
 
 #if defined HAVE_UNISTD_H || defined _LIBC
 # include <unistd.h>
 #endif
 
-#include <locale.h>
+#include <clocale>
 
 #ifdef _LIBC
   /* Guess whether integer division by zero raises signal SIGFPE.
@@ -78,7 +72,7 @@ extern int errno;
 # endif
 #endif
 #if !INTDIV0_RAISES_SIGFPE
-# include <signal.h>
+# include <csignal>
 #endif
 
 #if defined HAVE_SYS_PARAM_H || defined _LIBC
@@ -585,7 +579,7 @@ DCIGETTEXT (const char *domainname, const char *msgid1, const char *msgid2,
 # ifdef _LIBC
       __libc_rwlock_unlock (__libc_setlocale_lock);
 # endif
-      __set_errno (saved_errno);
+      errno = saved_errno;
       return retval;
     }
 #endif
@@ -636,7 +630,7 @@ DCIGETTEXT (const char *domainname, const char *msgid1, const char *msgid2,
 	      resolved_dirname = (char *) alloca (path_max + dirname_len);
 	      ADD_BLOCK (block_list, tmp_dirname);
 
-	      __set_errno (0);
+	      errno = 0;
 	      ret = getcwd (resolved_dirname, path_max);
 	      if (ret != NULL || errno != ERANGE)
 		break;
@@ -832,7 +826,7 @@ DCIGETTEXT (const char *domainname, const char *msgid1, const char *msgid2,
 		  (*foundp)->translation_length = retlen;
 		}
 
-	      __set_errno (saved_errno);
+	      errno = saved_errno;
 
 	      /* Now deal with plural.  */
 	      if (plural)
@@ -867,7 +861,7 @@ DCIGETTEXT (const char *domainname, const char *msgid1, const char *msgid2,
 	_nl_log_untranslated (logfilename, domainname, msgid1, msgid2, plural);
     }
 #endif
-  __set_errno (saved_errno);
+  errno = saved_errno;
   return (plural == 0
 	  ? (char *) msgid1
 	  /* Use the Germanic plural rule.  */

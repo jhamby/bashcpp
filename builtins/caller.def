@@ -40,7 +40,7 @@ is invalid.
 $END
 
 #include <config.h>
-#include <stdio.h>
+#include <cstdio>
 #include "chartypes.h"
 #include "bashtypes.h"
 
@@ -51,29 +51,24 @@ $END
 #  include <unistd.h>
 #endif
 
-#include <errno.h>
+#include <cerrno>
 
 #include "../bashintl.h"
 
 #include "../shell.h"
 #include "common.h"
-#include "builtext.h"
 #include "bashgetopt.h"
 
 #ifdef LOADABLE_BUILTIN
 #  include "builtins.h"
 #endif
 
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
-
 int
-caller_builtin (WORD_LIST *list)
+Shell::caller_builtin (WORD_LIST *list)
 {
 #if !defined (ARRAY_VARS)
   printf ("1 NULL\n");
-  return (EXECUTION_FAILURE);
+  return EXECUTION_FAILURE;
 #else
   SHELL_VAR *funcname_v, *bash_source_v, *bash_lineno_v;
   ARRAY *funcname_a, *bash_source_a, *bash_lineno_a;
@@ -87,13 +82,13 @@ caller_builtin (WORD_LIST *list)
   GET_ARRAY_FROM_VAR ("BASH_LINENO", bash_lineno_v, bash_lineno_a);
 
   if (bash_lineno_a == 0 || array_empty (bash_lineno_a))
-    return (EXECUTION_FAILURE);
+    return EXECUTION_FAILURE;
 
   if (bash_source_a == 0 || array_empty (bash_source_a))
-    return (EXECUTION_FAILURE);
+    return EXECUTION_FAILURE;
 
  if (no_options (list))
-    return (EX_USAGE);
+    return EX_USAGE;
   list = loptend;       /* skip over possible `--' */
 
   /* If there is no argument list, then give short form: line filename. */
@@ -102,11 +97,11 @@ caller_builtin (WORD_LIST *list)
       lineno_s = array_reference (bash_lineno_a, 0);
       source_s = array_reference (bash_source_a, 1);
       printf("%s %s\n", lineno_s ? lineno_s : "NULL", source_s ? source_s : "NULL");
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   if (funcname_a == 0 || array_empty (funcname_a))
-    return (EXECUTION_FAILURE);
+    return EXECUTION_FAILURE;
 
   if (legal_number (list->word->word, &num))
     {
@@ -115,7 +110,7 @@ caller_builtin (WORD_LIST *list)
       funcname_s = array_reference (funcname_a, num+1);
 
       if (lineno_s == NULL|| source_s == NULL || funcname_s == NULL)
-	return (EXECUTION_FAILURE);
+	return EXECUTION_FAILURE;
 
       printf("%s %s %s\n", lineno_s, funcname_s, source_s);
     }
@@ -123,10 +118,10 @@ caller_builtin (WORD_LIST *list)
     {
       sh_invalidnum (list->word->word);
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 #endif
 }
 

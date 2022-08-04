@@ -48,13 +48,16 @@ $END
 #include "common.h"
 #include "builtext.h"	/* for jobs_builtin */
 
+namespace bash
+{
+
 extern char check_jobs_at_exit;
 
 static int exit_or_logout (WORD_LIST *);
 static int sourced_logout;
 
 int
-exit_builtin (WORD_LIST *list)
+Shell::exit_builtin (WORD_LIST *list)
 {
   CHECK_HELPOPT (list);
 
@@ -64,8 +67,10 @@ exit_builtin (WORD_LIST *list)
       fflush (stderr);
     }
 
-  return (exit_or_logout (list));
+  return exit_or_logout (list);
 }
+
+}  // namespace bash
 
 $BUILTIN logout
 $FUNCTION logout_builtin
@@ -76,19 +81,22 @@ Exits a login shell with exit status N.  Returns an error if not executed
 in a login shell.
 $END
 
+namespace bash
+{
+
 /* How to logout. */
 int
-logout_builtin (WORD_LIST *list)
+Shell::logout_builtin (WORD_LIST *list)
 {
   CHECK_HELPOPT (list);
 
   if (login_shell == 0 /* && interactive */)
     {
       builtin_error (_("not login shell: use `exit'"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   else
-    return (exit_or_logout (list));
+    return exit_or_logout (list);
 }
 
 static int
@@ -129,7 +137,7 @@ exit_or_logout (WORD_LIST *list)
 	     so that either `exit', `logout', or ^D will work to exit
 	     immediately if nothing intervenes. */
 	  this_shell_builtin = last_shell_builtin = exit_builtin;
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
     }
 #endif /* JOB_CONTROL */
@@ -164,3 +172,5 @@ bash_logout ()
 #endif
     }
 }
+
+}  // namespace bash

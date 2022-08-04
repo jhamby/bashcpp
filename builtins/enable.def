@@ -58,7 +58,6 @@ $END
 #endif
 
 #include <stdio.h>
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include "../shell.h"
@@ -71,6 +70,9 @@ $END
 #if defined (PROGRAMMABLE_COMPLETION)
 #  include "../pcomplete.h"
 #endif
+
+namespace bash
+{
 
 #define ENABLED  1
 #define DISABLED 2
@@ -105,7 +107,7 @@ static int enable_shell_command (const char *, bool);
    then print out a list of shell commands showing which are enabled and
    which are disabled. */
 int
-enable_builtin (WORD_LIST *list)
+Shell::enable_builtin (WORD_LIST *list)
 {
   int result, flags;
   int opt, filter;
@@ -140,7 +142,7 @@ enable_builtin (WORD_LIST *list)
 	  break;
 #else
 	  builtin_error (_("dynamic loading not available"));
-	  return (EX_USAGE);
+	  return EX_USAGE;
 #endif
 #if defined (HAVE_DLCLOSE)
 	case 'd':
@@ -148,12 +150,12 @@ enable_builtin (WORD_LIST *list)
 	  break;
 #else
 	  builtin_error (_("dynamic loading not available"));
-	  return (EX_USAGE);
+	  return EX_USAGE;
 #endif /* HAVE_DLCLOSE */
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
 
@@ -164,7 +166,7 @@ enable_builtin (WORD_LIST *list)
   if (restricted && (flags & (FFLAG|DFLAG)))
     {
       sh_restricted ((char *)NULL);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 #endif
 
@@ -220,7 +222,7 @@ enable_builtin (WORD_LIST *list)
 	  list = (WORD_LIST *)list->next;
 	}
     }
-  return (result);
+  return result;
 }
 
 /* List some builtins.
@@ -254,7 +256,7 @@ enable_shell_command (const char *name, bool disable_p)
 
   b = builtin_address_internal (name, 1);
   if (b == 0)
-    return (EXECUTION_FAILURE);
+    return EXECUTION_FAILURE;
 
   if (disable_p)
     b->flags &= ~BUILTIN_ENABLED;
@@ -262,7 +264,7 @@ enable_shell_command (const char *name, bool disable_p)
   else if (restricted && ((b->flags & BUILTIN_ENABLED) == 0))
     {
       sh_restricted ((char *)NULL);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 #endif
   else
@@ -273,7 +275,7 @@ enable_shell_command (const char *name, bool disable_p)
   set_itemlist_dirty (&it_disabled);
 #endif
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 #if defined (HAVE_DLOPEN) && defined (HAVE_DLSYM)
@@ -294,7 +296,7 @@ dyn_load_builtin (WORD_LIST *list, int flags, const char *filename)
   char *loadables_path, *load_path;
 
   if (list == 0)
-    return (EXECUTION_FAILURE);
+    return EXECUTION_FAILURE;
 
 #ifndef RTLD_LAZY
 #define RTLD_LAZY 1
@@ -333,7 +335,7 @@ dyn_load_builtin (WORD_LIST *list, int flags, const char *filename)
       builtin_error (_("cannot open shared object %s: %s"), name, dlerror ());
       if (name != filename)
 	free (name);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   int new_size = 0;
@@ -406,7 +408,7 @@ dyn_load_builtin (WORD_LIST *list, int flags, const char *filename)
     {
       free (new_builtins);
       dlclose (handle);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (new_size)
@@ -435,7 +437,7 @@ dyn_load_builtin (WORD_LIST *list, int flags, const char *filename)
     }
 
   free (new_builtins);
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 #endif
 
@@ -475,10 +477,10 @@ static int
 local_dlclose (void *handle)
 {
 #if !defined (__MACHTEN__)
-  return (dlclose (handle));
+  return dlclose (handle);
 #else /* __MACHTEN__ */
   dlclose (handle);
-  return ((dlerror () != NULL) ? -1 : 0);
+  return (dlerror () != NULL) ? -1 : 0;
 #endif /* __MACHTEN__ */
 }
 
@@ -495,12 +497,12 @@ dyn_unload_builtin (const char *name)
   if (b == 0)
     {
       sh_notbuiltin (name);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   if (b->flags & STATIC_BUILTIN)
     {
       builtin_error (_("%s: not dynamically loaded"), name);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   handle = (void *)b->handle;
@@ -526,12 +528,14 @@ dyn_unload_builtin (const char *name)
   if (ref == 1 && local_dlclose (handle) != 0)
     {
       builtin_error (_("%s: cannot delete: %s"), name, dlerror ());
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   /* Now remove this entry from the builtin table and reinitialize. */
   delete_builtin (b);
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 #endif
+
+}  // namespace bash

@@ -30,9 +30,8 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 #include "chartypes.h"
-#include "bashansi.h"
 #include "command.h"
 #include "general.h"
 #include "externs.h"
@@ -83,10 +82,10 @@ find_alias (const char *name)
   BUCKET_CONTENTS *al;
 
   if (aliases == 0)
-    return ((alias_t *)NULL);
+    return (alias_t *)NULL;
 
   al = hash_search (name, aliases, 0);
-  return (al ? (alias_t *)al->data : (alias_t *)NULL);
+  return al ? (alias_t *)al->data : (alias_t *)NULL;
 }
 
 /* Return the value of the alias for NAME, or NULL if there is none. */
@@ -96,10 +95,10 @@ get_alias_value (const char *name)
   alias_t *alias;
 
   if (aliases == 0)
-    return ((char *)NULL);
+    return (char *)NULL;
 
   alias = find_alias (name);
-  return (alias ? alias->value : (char *)NULL);
+  return alias ? alias->value : (char *)NULL;
 }
 
 /* Make a new alias from NAME and VALUE.  If NAME can be found,
@@ -121,7 +120,7 @@ add_alias (const char *name, const char *value)
 
   if (temp)
     {
-      free (temp->value);
+      std::free (temp->value);
       temp->value = savestring (value);
       temp->flags &= ~AL_EXPANDNEXT;
       if (value[0])
@@ -162,9 +161,9 @@ free_alias_data (PTR_T data)
   if (a->flags & AL_BEINGEXPANDED)
     clear_string_list_expander (a);	/* call back to the parser */
 
-  free (a->value);
-  free (a->name);
-  free (data);
+  std::free (a->value);
+  std::free (a->name);
+  std::free (data);
 }
 
 /* Remove the alias with name NAME from the alias table.  Returns
@@ -174,20 +173,20 @@ int
 remove_alias (const char *name)
 {
   if (aliases == 0)
-    return (-1);
+    return -1;
 
   BUCKET_CONTENTS *elt = hash_remove (name, aliases, 0);
   if (elt)
     {
       free_alias_data (elt->data);
-      free (elt->key);		/* alias name */
-      free (elt);		/* XXX */
+      std::free (elt->key);		/* alias name */
+      std::free (elt);		/* XXX */
 #if defined (PROGRAMMABLE_COMPLETION)
       set_itemlist_dirty (&it_aliases);
 #endif
-      return (aliases->nentries);
+      return aliases->nentries;
     }
-  return (-1);
+  return -1;
 }
 
 /* Delete all aliases. */
@@ -215,7 +214,7 @@ map_over_aliases (sh_alias_map_func_t *function)
 
   int i = HASH_ENTRIES (aliases);
   if (i == 0)
-    return ((alias_t **)NULL);
+    return (alias_t **)NULL;
 
   list = (alias_t **)xmalloc ((i + 1) * sizeof (alias_t *));
   for (i = list_index = 0; i < aliases->nbuckets; i++)
@@ -231,13 +230,13 @@ map_over_aliases (sh_alias_map_func_t *function)
 	    }
 	}
     }
-  return (list);
+  return list;
 }
 
 static void
 sort_aliases (alias_t **array)
 {
-  qsort ((void *)array, strvec_len ((char **)array), sizeof (alias_t *), (QSFUNC *)qsort_alias_compare);
+  std::qsort ((void *)array, strvec_len ((char **)array), sizeof (alias_t *), (QSFUNC *)qsort_alias_compare);
 }
 
 static int
@@ -246,9 +245,9 @@ qsort_alias_compare (alias_t **as1, alias_t **as2)
   int result;
 
   if ((result = (*as1)->name[0] - (*as2)->name[0]) == 0)
-    result = strcmp ((*as1)->name, (*as2)->name);
+    result = std::strcmp ((*as1)->name, (*as2)->name);
 
-  return (result);
+  return result;
 }
 
 /* Return a sorted list of all defined aliases */
@@ -258,12 +257,13 @@ all_aliases ()
   alias_t **list;
 
   if (aliases == 0 || HASH_ENTRIES (aliases) == 0)
-    return ((alias_t **)NULL);
+    return (alias_t **)NULL;
 
   list = map_over_aliases ((sh_alias_map_func_t *)NULL);
   if (list)
     sort_aliases (list);
-  return (list);
+
+  return list;
 }
 
 char *
@@ -272,7 +272,7 @@ alias_expand_word (const char *s)
   alias_t *r;
 
   r = find_alias (s);
-  return (r ? savestring (r->value) : (char *)NULL);
+  return r ? savestring (r->value) : (char *)NULL;
 }
 
 /* Readline support functions -- expand all aliases in a line. */
@@ -324,7 +324,7 @@ skipquotes (const char *string, int start)
       if (string[i] == delimiter)
 	return i;
     }
-  return (i);
+  return i;
 }
 
 /* Skip the white space and any quoted characters in STRING, starting at
@@ -403,7 +403,7 @@ skipws (const char *string, int start)
 	}
       break;
     }
-  return (i);
+  return i;
 }
 
 /* Characters that may appear in a token.  Basically, anything except white
@@ -449,7 +449,7 @@ rd_token (const char *string, int start)
 	  continue;
 	}
     }
-  return (i);
+  return i;
 }
 
 /* Return a new line, with any aliases substituted. */
@@ -460,7 +460,7 @@ alias_expand (const char *string)
   int line_len, tl, real_start, expand_next, expand_this_token;
   alias_t *alias;
 
-  line_len = strlen (string) + 1;
+  line_len = std::strlen (string) + 1;
   line = (char *)xmalloc (line_len);
   token = (char *)xmalloc (line_len);
 
@@ -485,16 +485,16 @@ alias_expand (const char *string)
 
       if (start == i && string[i] == '\0')
 	{
-	  free (token);
-	  return (line);
+	  std::free (token);
+	  return line;
 	}
 
       /* copy the just-skipped characters into the output string,
 	 expanding it if there is not enough room. */
-      int j = strlen (line);
+      int j = std::strlen (line);
       tl = i - start;	/* number of characters just skipped */
       RESIZE_MALLOCED_BUFFER (line, j, (tl + 1), line_len, (tl + 50));
-      strncpy (line + j, string + start, tl);
+      std::strncpy (line + j, string + start, tl);
       line[j + tl] = '\0';
 
       real_start = i;
@@ -540,13 +540,13 @@ alias_expand (const char *string)
 	  int vlen, llen;
 
 	  v = alias->value;
-	  vlen = strlen (v);
-	  llen = strlen (line);
+	  vlen = std::strlen (v);
+	  llen = std::strlen (line);
 
 	  /* +3 because we possibly add one more character below. */
 	  RESIZE_MALLOCED_BUFFER (line, llen, (vlen + 3), line_len, (vlen + 50));
 
-	  strcpy (line + llen, v);
+	  std::strcpy (line + llen, v);
 
 	  if ((expand_this_token && vlen && whitespace (v[vlen - 1])) ||
 	      alias_expand_all)
@@ -556,12 +556,12 @@ alias_expand (const char *string)
 	{
 	  int llen, tlen;
 
-	  llen = strlen (line);
+	  llen = std::strlen (line);
 	  tlen = i - real_start; /* tlen == strlen(token) */
 
 	  RESIZE_MALLOCED_BUFFER (line, llen, (tlen + 1), line_len, (llen + tlen + 50));
 
-	  strncpy (line + llen, string + real_start, tlen);
+	  std::strncpy (line + llen, string + real_start, tlen);
 	  line[llen + tlen] = '\0';
 	}
       command_word = 0;

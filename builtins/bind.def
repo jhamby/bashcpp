@@ -70,11 +70,8 @@ $END
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include <errno.h>
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
+#include <cstdio>
+#include <cerrno>
 
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -108,7 +105,7 @@ static int unbind_keyseq (char *);
 #define XXFLAG	0x2000
 
 int
-bind_builtin (WORD_LIST *list)
+Shell::bind_builtin (WORD_LIST *list)
 {
   int return_code;
   Keymap kmap, saved_keymap;
@@ -119,7 +116,7 @@ bind_builtin (WORD_LIST *list)
     {
 #if 0
       builtin_error (_("line editing not enabled"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
 #else
       builtin_warning (_("line editing not enabled"));
 #endif
@@ -310,7 +307,7 @@ bind_builtin (WORD_LIST *list)
   if (return_code < 0)
     return_code = EXECUTION_FAILURE;
 
-  return (sh_chkwrite (return_code));
+  return sh_chkwrite (return_code);
 }
 
 static int
@@ -377,7 +374,7 @@ unbind_keyseq (char *seq)
   if ((f = rl_function_of_keyseq_len (kseq, kslen, (Keymap)0, &type)) == 0)
     {
       free (kseq);
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
   if (type == ISKMAP)
     f = ((Keymap) f)[ANYOTHERKEY].function;
@@ -389,13 +386,13 @@ unbind_keyseq (char *seq)
     {
       free (kseq);
       builtin_error (_("`%s': cannot unbind"), seq);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (f == bash_execute_unix_command)
     unbind_unix_command (seq);
 
   free (kseq);
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 #endif /* READLINE */

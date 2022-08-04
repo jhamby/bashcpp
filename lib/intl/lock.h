@@ -78,12 +78,12 @@
 #ifndef _LOCK_H
 #define _LOCK_H
 
-#include <errno.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstdlib>
 
 /* ========================================================================= */
 
-#if USE_POSIX_THREADS
+#if defined(USE_POSIX_THREADS) && USE_POSIX_THREADS
 
 /* Use the POSIX threads library.  */
 
@@ -376,7 +376,7 @@ extern int glthread_once_singlethreaded (pthread_once_t *once_control);
 
 /* ========================================================================= */
 
-#if USE_PTH_THREADS
+#if defined(USE_PTH_THREADS) && USE_PTH_THREADS
 
 /* Use the GNU Pth threads library.  */
 
@@ -484,7 +484,7 @@ extern int glthread_once_singlethreaded (pth_once_t *once_control);
 
 /* ========================================================================= */
 
-#if USE_SOLARIS_THREADS
+#if defined(USE_SOLARIS_THREADS) && USE_SOLARIS_THREADS
 
 /* Use the old Solaris threads library.  */
 
@@ -613,7 +613,7 @@ extern int glthread_once_singlethreaded (gl_once_t *once_control);
 
 /* ========================================================================= */
 
-#if USE_WINDOWS_THREADS
+#if defined(USE_WINDOWS_THREADS) && USE_WINDOWS_THREADS
 
 # define WIN32_LEAN_AND_MEAN  /* avoid including junk */
 # include <windows.h>
@@ -763,7 +763,10 @@ extern void glthread_once_func (gl_once_t *once_control, void (*initfunction) (v
 
 /* ========================================================================= */
 
-#if !(USE_POSIX_THREADS || USE_PTH_THREADS || USE_SOLARIS_THREADS || USE_WINDOWS_THREADS)
+#if !((defined(USE_POSIX_THREADS) && USE_POSIX_THREADS) || \
+      (defined(USE_PTH_THREADS) && USE_PTH_THREADS) || \
+      (defined(USE_SOLARIS_THREADS) && USE_SOLARIS_THREADS) || \
+      (defined(USE_WINDOWS_THREADS) && USE_WINDOWS_THREADS))
 
 /* Provide dummy implementation if threads are not supported.  */
 

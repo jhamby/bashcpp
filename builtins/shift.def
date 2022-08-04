@@ -29,7 +29,6 @@ $PRODUCES shift.c
 #  include <unistd.h>
 #endif
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include "../shell.h"
@@ -47,6 +46,9 @@ Exit Status:
 Returns success unless N is negative or greater than $#.
 $END
 
+namespace bash
+{
+
 char print_shift_error;
 
 /* Shift the arguments ``left''.  Shift DOLLAR_VARS down then take one
@@ -54,7 +56,7 @@ char print_shift_error;
    anything in it, it is a number which says where to start the
    shifting.  Return > 0 if `times' > $#, otherwise 0. */
 int
-shift_builtin (WORD_LIST *list)
+Shell::shift_builtin (WORD_LIST *list)
 {
   intmax_t times;
   int itimes, nargs;
@@ -62,21 +64,21 @@ shift_builtin (WORD_LIST *list)
   CHECK_HELPOPT (list);
 
   if (get_numeric_arg (list, 0, &times) == 0)
-    return (EXECUTION_FAILURE);
+    return EXECUTION_FAILURE;
 
   if (times == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
   else if (times < 0)
     {
       sh_erange (list ? list->word->word : NULL, _("shift count"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   nargs = number_of_args ();
   if (times > nargs)
     {
       if (print_shift_error)
 	sh_erange (list ? list->word->word : NULL, _("shift count"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   else if (times == nargs)
     clear_dollar_vars ();
@@ -85,5 +87,7 @@ shift_builtin (WORD_LIST *list)
 
   invalidate_cached_quoted_dollar_at ();
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
+
+}  // namespace bash

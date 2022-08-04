@@ -19,77 +19,22 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define READLINE_LIBRARY
-
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
-
-#include <sys/types.h>
-#include <stdio.h>
-
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
-#endif
-
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif
-
-#include "rldefs.h"
-#include "rlmbutil.h"
-
 #include "readline.h"
 #include "history.h"
-#include "histlib.h"
-
 #include "rlprivate.h"
-#include "xmalloc.h"
 
-#ifdef abs
-#  undef abs
-#endif
-#define abs(x)		(((x) >= 0) ? (x) : -(x))
+#include <sys/types.h>
 
-_rl_search_cxt *_rl_nscxt = 0;
-
-extern HIST_ENTRY *_rl_saved_line_for_history;
-
-/* Functions imported from the rest of the library. */
-extern void _rl_free_history_entry (HIST_ENTRY *);
-
-static char *noninc_search_string = (char *) NULL;
-static int noninc_history_pos;
-
-static char *prev_line_found = (char *) NULL;
-
-static int rl_history_search_len;
-static int rl_history_search_pos;
-static int rl_history_search_flags;
-
-static char *history_search_string;
-static int history_string_size;
-
-static void make_history_line_current (HIST_ENTRY *);
-static int noninc_search_from_pos (char *, int, int, int, int *);
-static int noninc_dosearch (char *, int, int);
-static int noninc_search (int, int);
-static int rl_history_search_internal (int, int);
-static void rl_history_search_reinit (int);
-
-static _rl_search_cxt *_rl_nsearch_init (int, int);
-static void _rl_nsearch_abort (_rl_search_cxt *);
-static int _rl_nsearch_dispatch (_rl_search_cxt *, int);
+namespace readline
+{
 
 /* Make the data from the history entry ENTRY be the contents of the
    current line.  This doesn't do anything with rl_point; the caller
    must set it. */
-static void
-make_history_line_current (HIST_ENTRY *entry)
+void
+Readline::make_history_line_current (HIST_ENTRY *entry)
 {
-  _rl_replace_text (entry->line, 0, rl_end);
+  _rl_replace_text (entry->line, 0, rl_end ());
   _rl_fix_point (1);
 #if defined (VI_MODE)
   if (rl_editing_mode == vi_mode)
@@ -101,8 +46,9 @@ make_history_line_current (HIST_ENTRY *entry)
 #endif
 
   if (_rl_saved_line_for_history)
-    _rl_free_history_entry (_rl_saved_line_for_history);
-  _rl_saved_line_for_history = (HIST_ENTRY *)NULL;
+    delete _rl_saved_line_for_history;
+
+  _rl_saved_line_for_history = nullptr;
 }
 
 /* Search the history list for STRING starting at absolute history position
@@ -110,18 +56,16 @@ make_history_line_current (HIST_ENTRY *entry)
    beginning of a history line, otherwise a full substring match is performed
    for STRING.  DIR < 0 means to search backwards through the history list,
    DIR >= 0 means to search forward. */
-static int
-noninc_search_from_pos (char *string, int pos, int dir, int flags, int *ncp)
+unsigned int
+Readline::noninc_search_from_pos (const char *string, unsigned int pos, int dir,
+				  rl_search_flags flags, unsigned int *ncp)
 {
-  int ret, old, sflags;
-  char *s;
+  unsigned int ret;
+  const char *s;
 
-  if (pos < 0)
-    return -1;
-
-  old = where_history ();
+  unsigned int old = where_history ();
   if (history_set_pos (pos) == 0)
-    return -1;
+    return static_cast<unsigned int> (-1);
 
   RL_SETSTATE(RL_STATE_SEARCH);
   /* These functions return the match offset in the line; history_offset gives
@@ -129,10 +73,10 @@ noninc_search_from_pos (char *string, int pos, int dir, int flags, int *ncp)
   if (flags & SF_PATTERN)
     {
       s = string;
-      sflags = 0;		/* Non-anchored search */
+      hist_search_flags sflags = NON_ANCHORED_SEARCH;
       if (*s == '^')
 	{
-	  sflags |= ANCHORED_SEARCH;
+	  sflags = ANCHORED_SEARCH;
 	  s++;
 	}
       ret = _hs_history_patsearch (s, dir, sflags);
@@ -143,47 +87,50 @@ noninc_search_from_pos (char *string, int pos, int dir, int flags, int *ncp)
     ret = history_search (string, dir);
   RL_UNSETSTATE(RL_STATE_SEARCH);
 
-  if (ncp)
-    *ncp = ret;		/* caller will catch -1 to indicate no-op */
+  // only update values on success
+  if (ret != static_cast<unsigned int> (-1))
+    {
+      if (ncp)
+	*ncp = ret;
 
-  if (ret != -1)
-    ret = where_history ();
+      ret = where_history ();
+    }
 
   history_set_pos (old);
-  return (ret);
+  return ret;
 }
 
 /* Search for a line in the history containing STRING.  If DIR is < 0, the
    search is backwards through previous entries, else through subsequent
    entries.  Returns 1 if the search was successful, 0 otherwise. */
-static int
-noninc_dosearch (char *string, int dir, int flags)
+bool
+Readline::noninc_dosearch (const char *string, int dir, rl_search_flags flags)
 {
-  int oldpos, pos, ind;
-  HIST_ENTRY *entry;
-
-  if (string == 0 || *string == '\0' || noninc_history_pos < 0)
+  if (string == nullptr || *string == '\0')
     {
       rl_ding ();
-      return 0;
+      return false;
     }
 
-  pos = noninc_search_from_pos (string, noninc_history_pos + dir, dir, flags, &ind);
-  if (pos == -1)
+  unsigned int ind;
+  unsigned int pos = noninc_search_from_pos (string, static_cast<unsigned int>
+				    (static_cast<int> (noninc_history_pos) + dir),
+				    dir, flags, &ind);
+  if (pos == static_cast<unsigned int> (-1))
     {
       /* Search failed, current history position unchanged. */
       rl_maybe_unsave_line ();
       rl_clear_message ();
       rl_point = 0;
       rl_ding ();
-      return 0;
+      return false;
     }
 
-  noninc_history_pos = pos;
+  noninc_history_pos = static_cast<unsigned int> (pos);
 
-  oldpos = where_history ();
+  unsigned int oldpos = where_history ();
   history_set_pos (noninc_history_pos);
-  entry = current_history ();		/* will never be NULL after successful search */
+  HIST_ENTRY *entry = current_history ();  // will never be NULL after successful search
 
 #if defined (VI_MODE)
   if (rl_editing_mode != vi_mode)
@@ -192,33 +139,37 @@ noninc_dosearch (char *string, int dir, int flags)
 
   make_history_line_current (entry);
 
-  if (_rl_enable_active_region && ((flags & SF_PATTERN) == 0) && ind > 0 && ind < rl_end)
+  if (_rl_enable_active_region && ((flags & SF_PATTERN) == 0) &&
+      ind > 0 && ind < rl_end ())
     {
       rl_point = ind;
-      rl_mark = ind + strlen (string);
-      if (rl_mark > rl_end)
-	rl_mark = rl_end;	/* can't happen? */
+      rl_mark = ind + static_cast<unsigned int> (std::strlen (string));
+      if (rl_mark > rl_end ())
+	rl_mark = rl_end ();	/* can't happen? */
       rl_activate_mark ();
     }
   else
     {
       rl_point = 0;
-      rl_mark = rl_end;
+      rl_mark = rl_end ();
     }
 
   rl_clear_message ();
-  return 1;
+  return true;
 }
 
-static _rl_search_cxt *
-_rl_nsearch_init (int dir, int pchar)
+Readline::_rl_search_cxt *
+Readline::_rl_nsearch_init (int dir, char pchar)
 {
   _rl_search_cxt *cxt;
-  char *p;
 
-  cxt = _rl_scxt_alloc (RL_SEARCH_NSEARCH, 0);
+  cxt = new _rl_search_cxt (RL_SEARCH_NSEARCH, SF_NONE, rl_point, rl_mark,
+			    where_history (), _rl_keymap);
+
   if (dir < 0)
-    cxt->sflags |= SF_REVERSE;		/* not strictly needed */
+    /* not strictly needed */
+    cxt->sflags |= SF_REVERSE;
+
 #if defined (VI_MODE)
   if (VI_COMMAND_MODE() && (pchar == '?' || pchar == '/'))
     cxt->sflags |= SF_PATTERN;
@@ -232,15 +183,15 @@ _rl_nsearch_init (int dir, int pchar)
   /* Clear the undo list, since reading the search string should create its
      own undo list, and the whole list will end up being freed when we
      finish reading the search string. */
-  rl_undo_list = 0;
+  rl_undo_list = nullptr;
 
   /* Use the line buffer to read the search string. */
   rl_line_buffer[0] = 0;
-  rl_end = rl_point = 0;
+  rl_point = 0;
 
-  p = _rl_make_prompt_for_search (pchar ? pchar : ':');
+  char *p = _rl_make_prompt_for_search (pchar ? pchar : ':');
   rl_message ("%s", p);
-  xfree (p);
+  delete[] p;
 
   RL_SETSTATE(RL_STATE_NSEARCH);
 
@@ -250,18 +201,18 @@ _rl_nsearch_init (int dir, int pchar)
 }
 
 int
-_rl_nsearch_cleanup (_rl_search_cxt *cxt, int r)
+Readline::_rl_nsearch_cleanup (_rl_search_cxt *cxt, int r)
 {
-  _rl_scxt_dispose (cxt, 0);
-  _rl_nscxt = 0;
+  delete cxt;
+  _rl_nscxt = nullptr;
 
   RL_UNSETSTATE(RL_STATE_NSEARCH);
 
-  return (r != 1);
+  return r != 1;
 }
 
-static void
-_rl_nsearch_abort (_rl_search_cxt *cxt)
+void
+Readline::_rl_nsearch_abort (_rl_search_cxt *cxt)
 {
   rl_maybe_unsave_line ();
   rl_clear_message ();
@@ -276,8 +227,8 @@ _rl_nsearch_abort (_rl_search_cxt *cxt)
 /* Process just-read character C according to search context CXT.  Return -1
    if the caller should abort the search, 0 if we should break out of the
    loop, and 1 if we should continue to read characters. */
-static int
-_rl_nsearch_dispatch (_rl_search_cxt *cxt, int c)
+int
+Readline::_rl_nsearch_dispatch (_rl_search_cxt *cxt, int c)
 {
   int n;
 
@@ -322,7 +273,8 @@ _rl_nsearch_dispatch (_rl_search_cxt *cxt, int c)
 	 input queue doesn't work well. We just have to check to see if the
 	 number of chars in the input queue is enough for the bracketed paste
 	 prefix and hope for the best. */
-      if (_rl_enable_bracketed_paste && ((n = _rl_nchars_available ()) >= (BRACK_PASTE_SLEN-1)))
+      if (_rl_enable_bracketed_paste &&
+	  ((n = _rl_nchars_available ()) >= (BRACK_PASTE_SLEN - 1)))
 	{
 	  if (_rl_read_bracketed_paste_prefix (c) == 1)
 	    rl_bracketed_paste_begin (1, c);
@@ -338,7 +290,7 @@ _rl_nsearch_dispatch (_rl_search_cxt *cxt, int c)
 
     default:
 #if defined (HANDLE_MULTIBYTE)
-      if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+      if (MB_CUR_MAX > 1 && !rl_byte_oriented)
 	rl_insert_text (cxt->mb);
       else
 #endif
@@ -346,7 +298,7 @@ _rl_nsearch_dispatch (_rl_search_cxt *cxt, int c)
       break;
     }
 
-  (*rl_redisplay_function) ();
+  ((*this).*rl_redisplay_function) ();
   rl_deactivate_mark ();
   return 1;
 }
@@ -355,8 +307,8 @@ _rl_nsearch_dispatch (_rl_search_cxt *cxt, int c)
    -1 if the search should be aborted, any other value means to clean up
    using _rl_nsearch_cleanup ().  Returns 1 if the search was successful,
    0 otherwise. */
-static int
-_rl_nsearch_dosearch (_rl_search_cxt *cxt)
+int
+Readline::_rl_nsearch_dosearch (_rl_search_cxt *cxt)
 {
   rl_mark = cxt->save_mark;
 
@@ -365,7 +317,7 @@ _rl_nsearch_dosearch (_rl_search_cxt *cxt)
      string, punt. */
   if (rl_point == 0)
     {
-      if (noninc_search_string == 0)
+      if (noninc_search_string == nullptr)
 	{
 	  rl_ding ();
 	  rl_restore_prompt ();
@@ -377,7 +329,7 @@ _rl_nsearch_dosearch (_rl_search_cxt *cxt)
     {
       /* We want to start the search from the current history position. */
       noninc_history_pos = cxt->save_line;
-      FREE (noninc_search_string);
+      delete[] noninc_search_string;
       noninc_search_string = savestring (rl_line_buffer);
 
       /* If we don't want the subsequent undo list generated by the search
@@ -389,7 +341,7 @@ _rl_nsearch_dosearch (_rl_search_cxt *cxt)
     }
 
   rl_restore_prompt ();
-  return (noninc_dosearch (noninc_search_string, cxt->direction, cxt->sflags&SF_PATTERN));
+  return noninc_dosearch (noninc_search_string, cxt->direction, (cxt->sflags & SF_PATTERN));
 }
 
 /* Search non-interactively through the history list.  DIR < 0 means to
@@ -397,8 +349,8 @@ _rl_nsearch_dosearch (_rl_search_cxt *cxt)
    the search is for commands subsequent to the current position in the
    history list.  PCHAR is the character to use for prompting when reading
    the search string; if not specified (0), it defaults to `:'. */
-static int
-noninc_search (int dir, int pchar)
+int
+Readline::noninc_search (int dir, char pchar)
 {
   _rl_search_cxt *cxt;
   int c, r;
@@ -406,7 +358,7 @@ noninc_search (int dir, int pchar)
   cxt = _rl_nsearch_init (dir, pchar);
 
   if (RL_ISSTATE (RL_STATE_CALLBACK))
-    return (0);
+    return 0;
 
   /* Read the search string. */
   r = 0;
@@ -431,13 +383,13 @@ noninc_search (int dir, int pchar)
     }
 
   r = _rl_nsearch_dosearch (cxt);
-  return ((r >= 0) ? _rl_nsearch_cleanup (cxt, r) : (r != 1));
+  return (r >= 0) ? _rl_nsearch_cleanup (cxt, r) : (r != 1);
 }
 
 /* Search forward through the history list for a string.  If the vi-mode
    code calls this, KEY will be `?'. */
 int
-rl_noninc_forward_search (int count, int key)
+Readline::rl_noninc_forward_search (int, int key)
 {
   return noninc_search (1, (key == '?') ? '?' : 0);
 }
@@ -445,7 +397,7 @@ rl_noninc_forward_search (int count, int key)
 /* Reverse search the history list for a string.  If the vi-mode code
    calls this, KEY will be `/'. */
 int
-rl_noninc_reverse_search (int count, int key)
+Readline::rl_noninc_reverse_search (int, int key)
 {
   return noninc_search (-1, (key == '/') ? '/' : 0);
 }
@@ -454,49 +406,49 @@ rl_noninc_reverse_search (int count, int key)
    for.  If there is no saved search string, abort.  If the vi-mode code
    calls this, KEY will be `N'. */
 int
-rl_noninc_forward_search_again (int count, int key)
+Readline::rl_noninc_forward_search_again (int, int key)
 {
   int r;
 
   if (!noninc_search_string)
     {
       rl_ding ();
-      return (1);
+      return 1;
     }
 #if defined (VI_MODE)
   if (VI_COMMAND_MODE() && key == 'N')
     r = noninc_dosearch (noninc_search_string, 1, SF_PATTERN);
   else
 #endif
-    r = noninc_dosearch (noninc_search_string, 1, 0);
-  return (r != 1);
+    r = noninc_dosearch (noninc_search_string, 1, SF_NONE);
+  return r != 1;
 }
 
 /* Reverse search in the history list for the last string searched
    for.  If there is no saved search string, abort.  If the vi-mode code
    calls this, KEY will be `n'. */
 int
-rl_noninc_reverse_search_again (int count, int key)
+Readline::rl_noninc_reverse_search_again (int, int key)
 {
   int r;
 
   if (!noninc_search_string)
     {
       rl_ding ();
-      return (1);
+      return 1;
     }
 #if defined (VI_MODE)
   if (VI_COMMAND_MODE() && key == 'n')
     r = noninc_dosearch (noninc_search_string, -1, SF_PATTERN);
   else
 #endif
-    r = noninc_dosearch (noninc_search_string, -1, 0);
-  return (r != 1);
+    r = noninc_dosearch (noninc_search_string, -1, SF_NONE);
+  return r != 1;
 }
 
 #if defined (READLINE_CALLBACKS)
 int
-_rl_nsearch_callback (_rl_search_cxt *cxt)
+Readline::_rl_nsearch_callback (_rl_search_cxt *cxt)
 {
   int c, r;
 
@@ -512,19 +464,16 @@ _rl_nsearch_callback (_rl_search_cxt *cxt)
     return 1;
 
   r = _rl_nsearch_dosearch (cxt);
-  return ((r >= 0) ? _rl_nsearch_cleanup (cxt, r) : (r != 1));
+  return r >= 0 ? _rl_nsearch_cleanup (cxt, r) : (r != 1);
 }
 #endif
 
-static int
-rl_history_search_internal (int count, int dir)
+int
+Readline::rl_history_search_internal (int count, int dir)
 {
-  HIST_ENTRY *temp;
-  int ret, oldpos, newcol;
-  char *t;
-
   rl_maybe_save_line ();
-  temp = (HIST_ENTRY *)NULL;
+  HIST_ENTRY *temp = nullptr;
+  unsigned int newcol = 0;
 
   /* Search COUNT times through the history for a line matching
      history_search_string.  If history_search_string[0] == '^', the
@@ -534,43 +483,38 @@ rl_history_search_internal (int count, int dir)
   while (count)
     {
       RL_CHECK_SIGNALS ();
-      ret = noninc_search_from_pos (history_search_string, rl_history_search_pos + dir, dir, 0, &newcol);
-      if (ret == -1)
+      unsigned int new_pos = static_cast<unsigned int>
+					(static_cast<int> (rl_history_search_pos) + dir);
+      unsigned int ret = noninc_search_from_pos (history_search_string.c_str (),
+						 new_pos, dir, SF_NONE, &newcol);
+      if (ret == static_cast<unsigned int> (-1))
 	break;
 
       /* Get the history entry we found. */
       rl_history_search_pos = ret;
-      oldpos = where_history ();
+      unsigned int oldpos = where_history ();
       history_set_pos (rl_history_search_pos);
       temp = current_history ();	/* will never be NULL after successful search */
       history_set_pos (oldpos);
 
       /* Don't find multiple instances of the same line. */
-      if (prev_line_found && STREQ (prev_line_found, temp->line))
+      if (prev_line_found && STREQ (prev_line_found, temp->line.c_str ()))
         continue;
-      prev_line_found = temp->line;
+
+      prev_line_found = temp->line.c_str ();	// XXX - could the ptr be freed too soon?
       count--;
     }
 
   /* If we didn't find anything at all, return. */
-  if (temp == 0)
+  if (temp == nullptr)
     {
       rl_maybe_unsave_line ();
       rl_ding ();
       /* If you don't want the saved history line (last match) to show up
          in the line buffer after the search fails, change the #if 0 to
          #if 1 */
-#if 0
-      if (rl_point > rl_history_search_len)
-        {
-          rl_point = rl_end = rl_history_search_len;
-          rl_line_buffer[rl_end] = '\0';
-          rl_mark = 0;
-        }
-#else
       rl_point = rl_history_search_len;	/* rl_maybe_unsave_line changes it */
-      rl_mark = rl_end;
-#endif
+      rl_mark = rl_end ();
       return 1;
     }
 
@@ -582,41 +526,28 @@ rl_history_search_internal (int count, int dir)
     rl_point = rl_history_search_len;	/* easy case */
   else
     {
-#if 0
-      t = strstr (rl_line_buffer, history_search_string);	/* XXX */
-      rl_point = t ? (int)(t - rl_line_buffer) + rl_history_search_len : rl_end;
-#else
-      rl_point = (newcol >= 0) ? newcol : rl_end;
-#endif
+      rl_point = newcol;	// XXX: always succeeds?
     }
-  rl_mark = rl_end;
+  rl_mark = rl_end ();
 
   return 0;
 }
 
-static void
-rl_history_search_reinit (int flags)
+void
+Readline::rl_history_search_reinit (hist_search_flags flags)
 {
-  int sind;
-
   rl_history_search_pos = where_history ();
-  rl_history_search_len = rl_point;
+  rl_history_search_len = static_cast<unsigned int> (rl_point);
   rl_history_search_flags = flags;
 
-  prev_line_found = (char *)NULL;
+  prev_line_found = nullptr;
   if (rl_point)
     {
-      /* Allocate enough space for anchored and non-anchored searches */
-      if (rl_history_search_len >= history_string_size - 2)
-	{
-	  history_string_size = rl_history_search_len + 2;
-	  history_search_string = (char *)xrealloc (history_search_string, history_string_size);
-	}
-      sind = 0;
+      history_search_string.clear ();
       if (flags & ANCHORED_SEARCH)
-	history_search_string[sind++] = '^';
-      strncpy (history_search_string + sind, rl_line_buffer, rl_point);
-      history_search_string[rl_point + sind] = '\0';
+	history_search_string.push_back ('^');
+
+      history_search_string.append (rl_line_buffer, rl_point);
     }
   _rl_free_saved_history_line ();
 }
@@ -625,36 +556,36 @@ rl_history_search_reinit (int flags)
    from the start of the line to rl_point.  This is a non-incremental
    search.  The search is anchored to the beginning of the history line. */
 int
-rl_history_search_forward (int count, int ignore)
+Readline::rl_history_search_forward (int count, int ignore)
 {
   if (count == 0)
-    return (0);
+    return 0;
 
-  if (rl_last_func != rl_history_search_forward &&
-      rl_last_func != rl_history_search_backward)
+  if (rl_last_func != &Readline::rl_history_search_forward &&
+      rl_last_func != &Readline::rl_history_search_backward)
     rl_history_search_reinit (ANCHORED_SEARCH);
 
   if (rl_history_search_len == 0)
-    return (rl_get_next_history (count, ignore));
-  return (rl_history_search_internal (abs (count), (count > 0) ? 1 : -1));
+    return rl_get_next_history (count, ignore);
+  return rl_history_search_internal (std::abs (count), (count > 0) ? 1 : -1);
 }
 
 /* Search backward through the history for the string of characters
    from the start of the line to rl_point.  This is a non-incremental
    search. */
 int
-rl_history_search_backward (int count, int ignore)
+Readline::rl_history_search_backward (int count, int ignore)
 {
   if (count == 0)
-    return (0);
+    return 0;
 
-  if (rl_last_func != rl_history_search_forward &&
-      rl_last_func != rl_history_search_backward)
+  if (rl_last_func != &Readline::rl_history_search_forward &&
+      rl_last_func != &Readline::rl_history_search_backward)
     rl_history_search_reinit (ANCHORED_SEARCH);
 
   if (rl_history_search_len == 0)
-    return (rl_get_previous_history (count, ignore));
-  return (rl_history_search_internal (abs (count), (count > 0) ? -1 : 1));
+    return rl_get_previous_history (count, ignore);
+  return rl_history_search_internal (std::abs (count), (count > 0) ? -1 : 1);
 }
 
 /* Search forward in the history for the string of characters
@@ -662,34 +593,36 @@ rl_history_search_backward (int count, int ignore)
    search.  The search succeeds if the search string is present anywhere
    in the history line. */
 int
-rl_history_substr_search_forward (int count, int ignore)
+Readline::rl_history_substr_search_forward (int count, int ignore)
 {
   if (count == 0)
-    return (0);
+    return 0;
 
-  if (rl_last_func != rl_history_substr_search_forward &&
-      rl_last_func != rl_history_substr_search_backward)
+  if (rl_last_func != &Readline::rl_history_substr_search_forward &&
+      rl_last_func != &Readline::rl_history_substr_search_backward)
     rl_history_search_reinit (NON_ANCHORED_SEARCH);
 
   if (rl_history_search_len == 0)
-    return (rl_get_next_history (count, ignore));
-  return (rl_history_search_internal (abs (count), (count > 0) ? 1 : -1));
+    return rl_get_next_history (count, ignore);
+  return rl_history_search_internal (std::abs (count), (count > 0) ? 1 : -1);
 }
 
 /* Search backward through the history for the string of characters
    from the start of the line to rl_point.  This is a non-incremental
    search. */
 int
-rl_history_substr_search_backward (int count, int ignore)
+Readline::rl_history_substr_search_backward (int count, int ignore)
 {
   if (count == 0)
-    return (0);
+    return 0;
 
-  if (rl_last_func != rl_history_substr_search_forward &&
-      rl_last_func != rl_history_substr_search_backward)
+  if (rl_last_func != &Readline::rl_history_substr_search_forward &&
+      rl_last_func != &Readline::rl_history_substr_search_backward)
     rl_history_search_reinit (NON_ANCHORED_SEARCH);
 
   if (rl_history_search_len == 0)
-    return (rl_get_previous_history (count, ignore));
-  return (rl_history_search_internal (abs (count), (count > 0) ? -1 : 1));
+    return rl_get_previous_history (count, ignore);
+  return rl_history_search_internal (std::abs (count), (count > 0) ? -1 : 1);
 }
+
+}  // namespace readline

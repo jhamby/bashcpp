@@ -22,13 +22,12 @@
 #if !defined (_PCOMPLETE_H_)
 #  define _PCOMPLETE_H_
 
-#include "stdc.h"
 #include "hashlib.h"
 
-typedef struct compspec {
-  int refcount;
-  unsigned long actions;
-  unsigned long options;
+namespace bash
+{
+
+struct COMPSPEC {
   char *globpat;
   char *words;
   char *prefix;
@@ -37,56 +36,59 @@ typedef struct compspec {
   char *command;
   char *lcommand;
   char *filterpat;
-} COMPSPEC;
+  uint32_t refcount;
+  uint32_t actions;
+  uint32_t options;
+};
 
 /* Values for COMPSPEC actions.  These are things the shell knows how to
    build internally. */
-#define CA_ALIAS	(1<<0)
-#define CA_ARRAYVAR	(1<<1)
-#define CA_BINDING	(1<<2)
-#define CA_BUILTIN	(1<<3)
-#define CA_COMMAND	(1<<4)
-#define CA_DIRECTORY	(1<<5)
-#define CA_DISABLED	(1<<6)
-#define CA_ENABLED	(1<<7)
-#define CA_EXPORT	(1<<8)
-#define CA_FILE		(1<<9)
-#define CA_FUNCTION	(1<<10)
-#define CA_GROUP	(1<<11)
-#define CA_HELPTOPIC	(1<<12)
-#define CA_HOSTNAME	(1<<13)
-#define CA_JOB		(1<<14)
-#define CA_KEYWORD	(1<<15)
-#define CA_RUNNING	(1<<16)
-#define CA_SERVICE	(1<<17)
-#define CA_SETOPT	(1<<18)
-#define CA_SHOPT	(1<<19)
-#define CA_SIGNAL	(1<<20)
-#define CA_STOPPED	(1<<21)
-#define CA_USER		(1<<22)
-#define CA_VARIABLE	(1<<23)
+const uint32_t CA_ALIAS =		(1<<0);
+const uint32_t CA_ARRAYVAR =		(1<<1);
+const uint32_t CA_BINDING =		(1<<2);
+const uint32_t CA_BUILTIN =		(1<<3);
+const uint32_t CA_COMMAND =		(1<<4);
+const uint32_t CA_DIRECTORY =		(1<<5);
+const uint32_t CA_DISABLED =		(1<<6);
+const uint32_t CA_ENABLED =		(1<<7);
+const uint32_t CA_EXPORT =		(1<<8);
+const uint32_t CA_FILE =		(1<<9);
+const uint32_t CA_FUNCTION =		(1<<10);
+const uint32_t CA_GROUP =		(1<<11);
+const uint32_t CA_HELPTOPIC =		(1<<12);
+const uint32_t CA_HOSTNAME =		(1<<13);
+const uint32_t CA_JOB =			(1<<14);
+const uint32_t CA_KEYWORD =		(1<<15);
+const uint32_t CA_RUNNING =		(1<<16);
+const uint32_t CA_SERVICE =		(1<<17);
+const uint32_t CA_SETOPT =		(1<<18);
+const uint32_t CA_SHOPT =		(1<<19);
+const uint32_t CA_SIGNAL =		(1<<20);
+const uint32_t CA_STOPPED =		(1<<21);
+const uint32_t CA_USER =		(1<<22);
+const uint32_t CA_VARIABLE =		(1<<23);
 
 /* Values for COMPSPEC options field. */
-#define COPT_RESERVED	(1<<0)		/* reserved for other use */
-#define COPT_DEFAULT	(1<<1)
-#define COPT_FILENAMES	(1<<2)
-#define COPT_DIRNAMES	(1<<3)
-#define COPT_NOQUOTE	(1<<4)
-#define COPT_NOSPACE	(1<<5)
-#define COPT_BASHDEFAULT (1<<6)
-#define COPT_PLUSDIRS	(1<<7)
-#define COPT_NOSORT	(1<<8)
+const uint32_t COPT_RESERVED =		(1<<0);		/* reserved for other use */
+const uint32_t COPT_DEFAULT =		(1<<1);
+const uint32_t COPT_FILENAMES =		(1<<2);
+const uint32_t COPT_DIRNAMES =		(1<<3);
+const uint32_t COPT_NOQUOTE =		(1<<4);
+const uint32_t COPT_NOSPACE =		(1<<5);
+const uint32_t COPT_BASHDEFAULT =	(1<<6);
+const uint32_t COPT_PLUSDIRS =		(1<<7);
+const uint32_t COPT_NOSORT =		(1<<8);
 
-#define COPT_LASTUSER	COPT_NOSORT
+const uint32_t COPT_LASTUSER =		COPT_NOSORT;
 
-#define PCOMP_RETRYFAIL (COPT_LASTUSER << 1)
-#define PCOMP_NOTFOUND	(COPT_LASTUSER << 2)
+const uint32_t PCOMP_RETRYFAIL =	(COPT_LASTUSER << 1);
+const uint32_t PCOMP_NOTFOUND =		(COPT_LASTUSER << 2);
 
 
 /* List of items is used by the code that implements the programmable
    completions. */
 typedef struct _list_of_items {
-  int flags;
+  uint32_t flags;
   int (*list_getter) (struct _list_of_items *);	/* function to call to get the list */
 
   STRINGLIST *slist;
@@ -98,17 +100,18 @@ typedef struct _list_of_items {
 } ITEMLIST;
 
 /* Values for ITEMLIST -> flags */
-#define LIST_DYNAMIC		0x001
-#define LIST_DIRTY		0x002
-#define LIST_INITIALIZED	0x004
-#define LIST_MUSTSORT		0x008
-#define LIST_DONTFREE		0x010
-#define LIST_DONTFREEMEMBERS	0x020
+const uint32_t LIST_DYNAMIC =		0x001;
+const uint32_t LIST_DIRTY =		0x002;
+const uint32_t LIST_INITIALIZED =	0x004;
+const uint32_t LIST_MUSTSORT =		0x008;
+const uint32_t LIST_DONTFREE =		0x010;
+const uint32_t LIST_DONTFREEMEMBERS =	0x020;
 
-#define EMPTYCMD	"_EmptycmD_"
-#define DEFAULTCMD	"_DefaultCmD_"
-#define INITIALWORD	"_InitialWorD_"
+const char *EMPTYCMD =		"_EmptycmD_";
+const char *DEFAULTCMD =	"_DefaultCmD_";
+const char *INITIALWORD =	"_InitialWorD_";
 
+#if 0
 extern HASH_TABLE *prog_completes;
 
 extern char *pcomp_line;
@@ -143,13 +146,14 @@ extern ITEMLIST it_stopped;
 extern ITEMLIST it_users;
 extern ITEMLIST it_variables;
 
-extern COMPSPEC *pcomp_curcs;
+extern CompSpec *pcomp_curcs;
 extern const char *pcomp_curcmd;
+#endif
 
 /* Functions from pcomplib.c */
-extern COMPSPEC *compspec_create (void);
-extern void compspec_dispose (COMPSPEC *);
-extern COMPSPEC *compspec_copy (COMPSPEC *);
+extern CompSpec *compspec_create (void);
+extern void compspec_dispose (CompSpec *);
+extern CompSpec *compspec_copy (CompSpec *);
 
 extern void progcomp_create (void);
 extern void progcomp_flush (void);
@@ -157,21 +161,24 @@ extern void progcomp_dispose (void);
 
 extern int progcomp_size (void);
 
-extern int progcomp_insert (char *, COMPSPEC *);
+extern int progcomp_insert (char *, CompSpec *);
 extern int progcomp_remove (char *);
 
-extern COMPSPEC *progcomp_search (const char *);
+extern CompSpec *progcomp_search (const string &);
 
 extern void progcomp_walk (hash_wfunc *);
 
 /* Functions from pcomplete.c */
 extern void set_itemlist_dirty (ITEMLIST *);
 
-extern STRINGLIST *completions_to_stringlist (char **);
+extern STRINGLIST *completions_to_stringlist (string *);
 
-extern STRINGLIST *gen_compspec_completions (COMPSPEC *, const char *, const char *, int, int, int *);
-extern char **programmable_completions (const char *, const char *, int, int, int *);
+extern STRINGLIST *gen_compspec_completions (CompSpec *, const string &, const string &, int, int, int *);
+extern char **programmable_completions (const string &, const string &, int, int, int *);
 
 extern void pcomp_set_readline_variables (int, int);
-extern void pcomp_set_compspec_options (COMPSPEC *, int, int);
+extern void pcomp_set_compspec_options (CompSpec *, int, int);
+
+}  // namespace bash
+
 #endif /* _PCOMPLETE_H_ */

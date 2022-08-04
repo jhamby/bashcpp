@@ -66,13 +66,13 @@
 # endif
 #endif
 
-#include <locale.h>     /* localeconv() */
-#include <stdio.h>      /* snprintf(), sprintf() */
-#include <stdlib.h>     /* abort(), malloc(), realloc(), free() */
-#include <string.h>     /* memcpy(), strlen() */
-#include <errno.h>      /* errno */
-#include <limits.h>     /* CHAR_BIT */
-#include <float.h>      /* DBL_MAX_EXP, LDBL_MAX_EXP */
+#include <clocale>     /* localeconv() */
+#include <cstdio>      /* snprintf(), sprintf() */
+#include <cstdlib>     /* abort(), malloc(), realloc(), free() */
+#include <cstring>     /* memcpy(), strlen() */
+#include <cerrno>      /* errno */
+#include <climits>     /* CHAR_BIT */
+#include <cfloat>      /* DBL_MAX_EXP, LDBL_MAX_EXP */
 #if HAVE_NL_LANGINFO
 # include <langinfo.h>
 #endif
@@ -90,29 +90,29 @@
 #include "verify.h"
 
 #if (NEED_PRINTF_DOUBLE || NEED_PRINTF_LONG_DOUBLE) && !defined IN_LIBINTL
-# include <math.h>
+# include <cmath>
 # include "float+.h"
 #endif
 
 #if (NEED_PRINTF_DOUBLE || NEED_PRINTF_INFINITE_DOUBLE) && !defined IN_LIBINTL
-# include <math.h>
+# include <cmath>
 # include "isnand-nolibm.h"
 #endif
 
 #if (NEED_PRINTF_LONG_DOUBLE || NEED_PRINTF_INFINITE_LONG_DOUBLE) && !defined IN_LIBINTL
-# include <math.h>
+# include <cmath>
 # include "isnanl-nolibm.h"
 # include "fpucw.h"
 #endif
 
 #if (NEED_PRINTF_DIRECTIVE_A || NEED_PRINTF_DOUBLE) && !defined IN_LIBINTL
-# include <math.h>
+# include <cmath>
 # include "isnand-nolibm.h"
 # include "printf-frexp.h"
 #endif
 
 #if (NEED_PRINTF_DIRECTIVE_A || NEED_PRINTF_LONG_DOUBLE) && !defined IN_LIBINTL
-# include <math.h>
+# include <cmath>
 # include "isnanl-nolibm.h"
 # include "printf-frexpl.h"
 # include "fpucw.h"
@@ -1532,7 +1532,7 @@ is_borderline (const char *digits, size_t precision)
    of sprintf or SNPRINTF of a single conversion directive.  */
 static size_t
 MAX_ROOM_NEEDED (const arguments *ap, size_t arg_index, FCHAR_T conversion,
-                 arg_type type, int flags, size_t width, int has_precision,
+                 arg_type type, int, size_t width, int has_precision,
                  size_t precision, int pad_ourselves)
 {
   size_t tmp_length;
@@ -1540,7 +1540,6 @@ MAX_ROOM_NEEDED (const arguments *ap, size_t arg_index, FCHAR_T conversion,
   switch (conversion)
     {
     case 'd': case 'i': case 'u':
-# if HAVE_LONG_LONG_INT
       if (type == TYPE_LONGLONGINT || type == TYPE_ULONGLONGINT)
         tmp_length =
           (unsigned int) (sizeof (unsigned long long) * CHAR_BIT
@@ -1548,7 +1547,6 @@ MAX_ROOM_NEEDED (const arguments *ap, size_t arg_index, FCHAR_T conversion,
                          )
           + 1; /* turn floor into ceil */
       else
-# endif
       if (type == TYPE_LONGINT || type == TYPE_ULONGINT)
         tmp_length =
           (unsigned int) (sizeof (unsigned long) * CHAR_BIT
@@ -1570,7 +1568,6 @@ MAX_ROOM_NEEDED (const arguments *ap, size_t arg_index, FCHAR_T conversion,
       break;
 
     case 'o':
-# if HAVE_LONG_LONG_INT
       if (type == TYPE_LONGLONGINT || type == TYPE_ULONGLONGINT)
         tmp_length =
           (unsigned int) (sizeof (unsigned long long) * CHAR_BIT
@@ -1578,7 +1575,6 @@ MAX_ROOM_NEEDED (const arguments *ap, size_t arg_index, FCHAR_T conversion,
                          )
           + 1; /* turn floor into ceil */
       else
-# endif
       if (type == TYPE_LONGINT || type == TYPE_ULONGINT)
         tmp_length =
           (unsigned int) (sizeof (unsigned long) * CHAR_BIT
@@ -1598,7 +1594,6 @@ MAX_ROOM_NEEDED (const arguments *ap, size_t arg_index, FCHAR_T conversion,
       break;
 
     case 'x': case 'X':
-# if HAVE_LONG_LONG_INT
       if (type == TYPE_LONGLONGINT || type == TYPE_ULONGLONGINT)
         tmp_length =
           (unsigned int) (sizeof (unsigned long long) * CHAR_BIT
@@ -1606,7 +1601,6 @@ MAX_ROOM_NEEDED (const arguments *ap, size_t arg_index, FCHAR_T conversion,
                          )
           + 1; /* turn floor into ceil */
       else
-# endif
       if (type == TYPE_LONGINT || type == TYPE_ULONGINT)
         tmp_length =
           (unsigned int) (sizeof (unsigned long) * CHAR_BIT
@@ -1926,11 +1920,9 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                   case TYPE_COUNT_LONGINT_POINTER:
                     *a.arg[dp->arg_index].a.a_count_longint_pointer = length;
                     break;
-#if HAVE_LONG_LONG_INT
                   case TYPE_COUNT_LONGLONGINT_POINTER:
                     *a.arg[dp->arg_index].a.a_count_longlongint_pointer = length;
                     break;
-#endif
                   default:
                     abort ();
                   }
@@ -2693,7 +2685,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                               errno = EILSEQ;
                               return NULL;
                             }
-                          if (precision < count)
+                          if (static_cast<ssize_t>(precision) < count)
                             break;
                           arg_end++;
                           characters += count;
@@ -4834,7 +4826,6 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
 
                 switch (type)
                   {
-#if HAVE_LONG_LONG_INT
                   case TYPE_LONGLONGINT:
                   case TYPE_ULONGLONGINT:
 # if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
@@ -4846,7 +4837,6 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                     *fbp++ = 'l';
                     /*FALLTHROUGH*/
 # endif
-#endif
                   case TYPE_LONGINT:
                   case TYPE_ULONGINT:
 #if HAVE_WINT_T
@@ -5043,7 +5033,6 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                           SNPRINTF_BUF (arg);
                         }
                         break;
-#if HAVE_LONG_LONG_INT
                       case TYPE_LONGLONGINT:
                         {
                           long long int arg = a.arg[dp->arg_index].a.a_longlongint;
@@ -5056,7 +5045,6 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                           SNPRINTF_BUF (arg);
                         }
                         break;
-#endif
                       case TYPE_DOUBLE:
                         {
                           double arg = a.arg[dp->arg_index].a.a_double;
@@ -5116,7 +5104,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                       {
                         /* Verify that snprintf() has NUL-terminated its
                            result.  */
-                        if (count < maxlen
+                        if (count < static_cast<ssize_t>(maxlen)
                             && ((TCHAR_T *) (result + length)) [count] != '\0')
                           abort ();
                         /* Portability hack.  */

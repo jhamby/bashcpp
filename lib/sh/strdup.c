@@ -21,9 +21,11 @@
 
 #include <config.h>
 
+#if !defined (HAVE_STRDUP)
+
 /* Get specification.  */
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 
 /* Duplicate S, returning an identical malloc'd string.  */
 char *
@@ -37,5 +39,7 @@ strdup (const char *s)
     return NULL;
 
   memcpy (new, s, len);
-  return ((char *)new);
+  return (char *)new;
 }
+
+#endif

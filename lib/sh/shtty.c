@@ -86,13 +86,13 @@ TTYSTRUCT *
 ttattr (int fd)
 {
   if (ttsaved == 0)
-    return ((TTYSTRUCT *)0);
+    return (TTYSTRUCT *)0;
   if (fd == 0)
     return &ttin;
   else if (fd == 1)
     return &ttout;
   else
-    return ((TTYSTRUCT *)0);
+    return (TTYSTRUCT *)0;
 }
 
 /*
@@ -149,7 +149,7 @@ ttfd_onechar (int fd, TTYSTRUCT *ttp)
 {
   if (tt_setonechar(ttp) < 0)
     return -1;
-  return (ttsetattr (fd, ttp));
+  return ttsetattr (fd, ttp);
 }
 
 /* Set the terminal into one-character-at-a-time mode */
@@ -161,7 +161,7 @@ ttonechar ()
   if (ttsaved == 0)
     return -1;
   tt = ttin;
-  return (ttfd_onechar (0, &tt));
+  return ttfd_onechar (0, &tt);
 }
 
 /*
@@ -186,7 +186,7 @@ ttfd_noecho (int fd, TTYSTRUCT *ttp)
 {
   if (tt_setnoecho (ttp) < 0)
     return -1;
-  return (ttsetattr (fd, ttp));
+  return ttsetattr (fd, ttp);
 }
 
 /* Set the terminal into no-echo mode */
@@ -198,7 +198,7 @@ ttnoecho ()
   if (ttsaved == 0)
     return -1;
   tt = ttin;
-  return (ttfd_noecho (0, &tt));
+  return ttfd_noecho (0, &tt);
 }
 
 /*
@@ -225,7 +225,7 @@ ttfd_eightbit (int fd, TTYSTRUCT *ttp)
 {
   if (tt_seteightbit (ttp) < 0)
     return -1;
-  return (ttsetattr (fd, ttp));
+  return ttsetattr (fd, ttp);
 }
 
 /* Set the terminal into eight-bit mode */
@@ -237,7 +237,7 @@ tteightbit ()
   if (ttsaved == 0)
     return -1;
   tt = ttin;
-  return (ttfd_eightbit (0, &tt));
+  return ttfd_eightbit (0, &tt);
 }
 
 /*
@@ -260,7 +260,7 @@ ttfd_nocanon (int fd, TTYSTRUCT *ttp)
 {
   if (tt_setnocanon (ttp) < 0)
     return -1;
-  return (ttsetattr (fd, ttp));
+  return ttsetattr (fd, ttp);
 }
 
 /* Set the terminal into non-canonical mode */
@@ -272,7 +272,7 @@ ttnocanon ()
   if (ttsaved == 0)
     return -1;
   tt = ttin;
-  return (ttfd_nocanon (0, &tt));
+  return ttfd_nocanon (0, &tt);
 }
 
 /*
@@ -284,7 +284,7 @@ tt_setcbreak(TTYSTRUCT *ttp)
 {
   if (tt_setonechar (ttp) < 0)
     return -1;
-  return (tt_setnoecho (ttp));
+  return tt_setnoecho (ttp);
 }
 
 /* Set the tty associated with FD and TTP into cbreak (no-echo,
@@ -294,7 +294,7 @@ ttfd_cbreak (int fd, TTYSTRUCT *ttp)
 {
   if (tt_setcbreak (ttp) < 0)
     return -1;
-  return (ttsetattr (fd, ttp));
+  return ttsetattr (fd, ttp);
 }
 
 /* Set the terminal into cbreak (no-echo, one-character-at-a-time) mode */
@@ -306,5 +306,5 @@ ttcbreak ()
   if (ttsaved == 0)
     return -1;
   tt = ttin;
-  return (ttfd_cbreak (0, &tt));
+  return ttfd_cbreak (0, &tt);
 }

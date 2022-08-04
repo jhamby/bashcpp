@@ -53,7 +53,7 @@ vfprintf (iop, fmt, ap)
     }
   else
     len = _doprnt (fmt, ap, iop);
-  return (ferror (iop) ? EOF : len);
+  return ferror (iop) ? EOF : len;
 }
 
 /*
@@ -72,6 +72,6 @@ vsprintf (str, fmt, ap)
   f._cnt = 32767;
   len = _doprnt (fmt, ap, &f);
   *f._ptr = 0;
-  return (len);
+  return len;
 }
 #endif /* USE_VFPRINTF_EMULATION */

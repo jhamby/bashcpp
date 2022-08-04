@@ -22,14 +22,12 @@
 #if !defined (_FLAGS_H_)
 #define _FLAGS_H_
 
-#include "stdc.h"
-
 /* Welcome to the world of Un*x, where everything is slightly backwards. */
-#define FLAG_ON '-'
-#define FLAG_OFF '+'
+const char FLAG_ON = '-';
+const char FLAG_OFF = '+';
 
-#define FLAG_ERROR -1
-#define FLAG_UNKNOWN (char *)0
+const char FLAG_ERROR = -1;
+const char FLAG_UNKNOWN = 0;
 
 /* The thing that we build the array of flags out of. */
 struct flags_alist {
@@ -73,13 +71,13 @@ extern char restricted_shell;
 
 extern char *find_flag (int);
 extern char change_flag (int, int);
-extern char *which_set_flags (void);
-extern void reset_shell_flags (void);
+extern char *which_set_flags ();
+extern void reset_shell_flags ();
 
-extern char *get_current_flags (void);
+extern char *get_current_flags ();
 extern void set_current_flags (const char *);
 
-extern void initialize_flags (void);
+extern void initialize_flags ();
 
 /* A macro for efficiency. */
 #define change_flag_char(flag, on_or_off)  change_flag (flag, on_or_off)

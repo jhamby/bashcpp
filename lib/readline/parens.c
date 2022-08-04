@@ -19,119 +19,94 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define READLINE_LIBRARY
-
-#if defined (__TANDEM)
-#  include <floss.h>
-#endif
-
-#include "rlconf.h"
-
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
-
-#include <stdio.h>
-#include <sys/types.h>
-
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
-#endif
-
-#include "posixselect.h"
-
-#if defined (HAVE_STRING_H)
-#  include <string.h>
-#else /* !HAVE_STRING_H */
-#  include <strings.h>
-#endif /* !HAVE_STRING_H */
-
 #include "readline.h"
 #include "rlprivate.h"
 
-static int find_matching_open (char *, int, int);
+#include <sys/types.h>
 
-/* Non-zero means try to blink the matching open parenthesis when the
-   close parenthesis is inserted. */
-bool rl_blink_matching_paren = false;
+#include "posixselect.h"
 
-static int _paren_blink_usec = 500000;
+namespace readline
+{
+
+static int find_matching_open (const std::string &, unsigned int, char, const char *);
 
 /* Change emacs_standard_keymap to have bindings for paren matching when
    ON_OR_OFF is 1, change them back to self_insert when ON_OR_OFF == 0. */
 void
-_rl_enable_paren_matching (bool on_or_off)
+Readline::_rl_enable_paren_matching (bool on_or_off)
 {
   if (on_or_off)
     {
       /* ([{ */
-      rl_bind_key_in_map (')', rl_insert_close, emacs_standard_keymap);
-      rl_bind_key_in_map (']', rl_insert_close, emacs_standard_keymap);
-      rl_bind_key_in_map ('}', rl_insert_close, emacs_standard_keymap);
+      rl_bind_key_in_map (')', &Readline::rl_insert_close, emacs_standard_keymap ());
+      rl_bind_key_in_map (']', &Readline::rl_insert_close, emacs_standard_keymap ());
+      rl_bind_key_in_map ('}', &Readline::rl_insert_close, emacs_standard_keymap ());
 
 #if defined (VI_MODE)
       /* ([{ */
-      rl_bind_key_in_map (')', rl_insert_close, vi_insertion_keymap);
-      rl_bind_key_in_map (']', rl_insert_close, vi_insertion_keymap);
-      rl_bind_key_in_map ('}', rl_insert_close, vi_insertion_keymap);
+      rl_bind_key_in_map (')', &Readline::rl_insert_close, vi_insertion_keymap ());
+      rl_bind_key_in_map (']', &Readline::rl_insert_close, vi_insertion_keymap ());
+      rl_bind_key_in_map ('}', &Readline::rl_insert_close, vi_insertion_keymap ());
 #endif
     }
   else
     {
       /* ([{ */
-      rl_bind_key_in_map (')', rl_insert, emacs_standard_keymap);
-      rl_bind_key_in_map (']', rl_insert, emacs_standard_keymap);
-      rl_bind_key_in_map ('}', rl_insert, emacs_standard_keymap);
+      rl_bind_key_in_map (')', &Readline::rl_insert, emacs_standard_keymap ());
+      rl_bind_key_in_map (']', &Readline::rl_insert, emacs_standard_keymap ());
+      rl_bind_key_in_map ('}', &Readline::rl_insert, emacs_standard_keymap ());
 
 #if defined (VI_MODE)
       /* ([{ */
-      rl_bind_key_in_map (')', rl_insert, vi_insertion_keymap);
-      rl_bind_key_in_map (']', rl_insert, vi_insertion_keymap);
-      rl_bind_key_in_map ('}', rl_insert, vi_insertion_keymap);
+      rl_bind_key_in_map (')', &Readline::rl_insert, vi_insertion_keymap ());
+      rl_bind_key_in_map (']', &Readline::rl_insert, vi_insertion_keymap ());
+      rl_bind_key_in_map ('}', &Readline::rl_insert, vi_insertion_keymap ());
 #endif
     }
 }
 
 int
-rl_set_paren_blink_timeout (int u)
+Readline::rl_set_paren_blink_timeout (int u)
 {
   int o;
 
   o = _paren_blink_usec;
   if (u > 0)
     _paren_blink_usec = u;
-  return (o);
+  return o;
 }
 
 int
-rl_insert_close (int count, int invoking_key)
+Readline::rl_insert_close (int count, int invoking_key)
 {
   if (rl_explicit_arg || !rl_blink_matching_paren)
     _rl_insert_char (count, invoking_key);
   else
     {
 #if defined (HAVE_SELECT)
-      int orig_point, match_point, ready;
-      struct timeval timer;
-      fd_set readfds;
-
       _rl_insert_char (1, invoking_key);
-      (*rl_redisplay_function) ();
-      match_point =
-	find_matching_open (rl_line_buffer, rl_point - 2, invoking_key);
+      ((*this).*rl_redisplay_function) ();
+
+      int match_point =
+	find_matching_open (rl_line_buffer, rl_point - 2,
+			    static_cast<char> (invoking_key),
+			    rl_basic_quote_characters);
 
       /* Emacs might message or ring the bell here, but I don't. */
       if (match_point < 0)
 	return 1;
 
+      fd_set readfds;
+      struct timeval timer;
       FD_ZERO (&readfds);
-      FD_SET (fileno (rl_instream), &readfds);
+      FD_SET (::fileno (rl_instream), &readfds);
       USEC_TO_TIMEVAL (_paren_blink_usec, timer);
 
-      orig_point = rl_point;
-      rl_point = match_point;
-      (*rl_redisplay_function) ();
-      ready = select (1, &readfds, (fd_set *)NULL, (fd_set *)NULL, &timer);
+      unsigned int orig_point = rl_point;
+      rl_point = static_cast<unsigned int> (match_point);
+      ((*this).*rl_redisplay_function) ();
+      (void) ::select (1, &readfds, nullptr, nullptr, &timer);
       rl_point = orig_point;
 #else /* !HAVE_SELECT */
       _rl_insert_char (count, invoking_key);
@@ -141,9 +116,10 @@ rl_insert_close (int count, int invoking_key)
 }
 
 static int
-find_matching_open (char *string, int from, int closer)
+find_matching_open (const std::string &string, unsigned int from, char closer,
+		    const char *quote_chars)
 {
-  int opener;
+  char opener;
 
   switch (closer)
     {
@@ -151,26 +127,30 @@ find_matching_open (char *string, int from, int closer)
     case '}': opener = '{'; break;
     case ')': opener = '('; break;
     default:
-      return (-1);
+      return -1;
     }
 
   int level = 1;		/* The closer passed in counts as 1. */
-  int delimiter = 0;		/* Delimited state unknown. */
+  char delimiter = 0;		/* Delimited state unknown. */
 
   int i;
-  for (i = from; i > -1; i--)
+  for (i = static_cast<int> (from); i > -1; --i)
     {
-      if (delimiter && (string[i] == delimiter))
+      char ch = string[static_cast<unsigned int> (i)];
+
+      if (delimiter && (ch == delimiter))
 	delimiter = 0;
-      else if (rl_basic_quote_characters && strchr (rl_basic_quote_characters, string[i]))
-	delimiter = string[i];
-      else if (!delimiter && (string[i] == closer))
+      else if (quote_chars && std::strchr (quote_chars, ch))
+	delimiter = ch;
+      else if (!delimiter && (ch == closer))
 	level++;
-      else if (!delimiter && (string[i] == opener))
+      else if (!delimiter && (ch == opener))
 	level--;
 
       if (!level)
 	break;
     }
-  return (i);
+  return i;
 }
+
+}  // namespace readline

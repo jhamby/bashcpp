@@ -23,9 +23,8 @@
 #if !defined (_TILDE_H_)
 #  define _TILDE_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace readline
+{
 
 /* A function can be defined using prototypes and compile on both ANSI C
    and traditional C compilers with something like this:
@@ -62,11 +61,6 @@ extern char *tilde_expand (const char *);
    tilde.  If there is no expansion, call tilde_expansion_failure_hook. */
 extern char *tilde_expand_word (const char *);
 
-/* Find the portion of the string beginning with ~ that should be expanded. */
-extern char *tilde_find_word (const char *, int, int *);
-
-#ifdef __cplusplus
-}
-#endif
+}  // namespace readline
 
 #endif /* _TILDE_H_ */

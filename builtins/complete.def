@@ -59,20 +59,19 @@ $END
 #  include <unistd.h>
 #endif
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include "../shell.h"
 #include "../builtins.h"
 #include "../pcomplete.h"
-#include "../bashline.h"
 
 #include "common.h"
 #include "bashgetopt.h"
 
 #include <readline/readline.h>
 
-#define STRDUP(x)       ((x) ? savestring (x) : (char *)NULL)
+namespace bash
+{
 
 /* Structure containing all the non-action (binary) options; filled in by
    build_actions(). */
@@ -211,7 +210,7 @@ build_actions (WORD_LIST *list, struct _optflags *flagp,
 	    {
 	      sh_invalidopt ("-r");
 	      builtin_usage ();
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 
 	case 'p':
@@ -224,7 +223,7 @@ build_actions (WORD_LIST *list, struct _optflags *flagp,
 	    {
 	      sh_invalidopt ("-p");
 	      builtin_usage ();
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 
 	case 'a':
@@ -268,7 +267,7 @@ build_actions (WORD_LIST *list, struct _optflags *flagp,
 	  if (ind < 0)
 	    {
 	      sh_invalidoptname (list_optarg);
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 	  copts |= compopts[ind].optflag;
 	  break;
@@ -277,7 +276,7 @@ build_actions (WORD_LIST *list, struct _optflags *flagp,
 	  if (ind < 0)
 	    {
 	      builtin_error (_("%s: invalid action name"), list_optarg);
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 	  acts |= compacts[ind].actflag;
 	  break;
@@ -294,7 +293,7 @@ build_actions (WORD_LIST *list, struct _optflags *flagp,
 	    {
 	      sh_invalidopt ("-D");
 	      builtin_usage ();
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 	case 'E':
 	  if (flagp)
@@ -306,7 +305,7 @@ build_actions (WORD_LIST *list, struct _optflags *flagp,
 	    {
 	      sh_invalidopt ("-E");
 	      builtin_usage ();
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 	case 'I':
 	  if (flagp)
@@ -318,7 +317,7 @@ build_actions (WORD_LIST *list, struct _optflags *flagp,
 	    {
 	      sh_invalidopt ("-I");
 	      builtin_usage ();
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 	case 'F':
 	  w.word = Farg = list_optarg;
@@ -326,7 +325,7 @@ build_actions (WORD_LIST *list, struct _optflags *flagp,
 	  if (check_identifier (&w, posixly_correct) == 0 || strpbrk (Farg, shell_break_chars) != 0)
 	    {
 	      sh_invalidid (Farg);
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 	  break;
 	case 'G':
@@ -347,14 +346,14 @@ build_actions (WORD_LIST *list, struct _optflags *flagp,
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
 
   *actp = acts;
   *optp = copts;
 
-  return (opt_given ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+  return opt_given ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
 }
 
 /* Add, remove, and display completion specifiers. */
@@ -370,7 +369,7 @@ complete_builtin (WORD_LIST *list)
   if (list == 0)
     {
       print_all_completions ();
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   opt_given = oflags.pflag = oflags.rflag = 0;
@@ -384,7 +383,7 @@ complete_builtin (WORD_LIST *list)
      as a side effect if they are supplied as options. */
   rval = build_actions (list, &oflags, &acts, &copts);
   if (rval == EX_USAGE)
-    return (rval);
+    return rval;
   opt_given = rval != EXECUTION_FAILURE;
 
   list = loptend;
@@ -410,9 +409,9 @@ complete_builtin (WORD_LIST *list)
       else if (list == 0)
 	{
 	  print_all_completions ();
-	  return (EXECUTION_SUCCESS);
+	  return EXECUTION_SUCCESS;
 	}
-      return (print_cmd_completions (list));
+      return print_cmd_completions (list);
     }
 
   /* next, -r overrides everything else. */
@@ -427,15 +426,15 @@ complete_builtin (WORD_LIST *list)
       else if (list == 0)
 	{
 	  progcomp_flush ();
-	  return (EXECUTION_SUCCESS);
+	  return EXECUTION_SUCCESS;
 	}
-      return (remove_cmd_completions (list));
+      return remove_cmd_completions (list);
     }
 
   if (wl == 0 && list == 0 && opt_given)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   /* If we get here, we need to build a compspec and add it for each
@@ -460,7 +459,7 @@ complete_builtin (WORD_LIST *list)
     }
 
   dispose_words (wl);
-  return (rval);
+  return rval;
 }
 
 static int
@@ -562,7 +561,7 @@ print_one_completion (const char *cmd, COMPSPEC *cs)
   print_cmd_name (cmd);
   printf ("\n");
 
-  return (0);
+  return 0;
 }
 
 static void
@@ -585,7 +584,7 @@ print_compitem (BUCKET_CONTENTS *item)
   cmd = item->key;
   cs = (COMPSPEC *)item->data;
 
-  return (print_one_completion (cmd, cs));
+  return print_one_completion (cmd, cs);
 }
 
 static void
@@ -613,7 +612,7 @@ print_cmd_completions (WORD_LIST *list)
 	}
     }
 
-  return (sh_chkwrite (ret));
+  return sh_chkwrite (ret);
 }
 
 $BUILTIN compgen
@@ -631,7 +630,7 @@ Returns success unless an invalid option is supplied or an error occurs.
 $END
 
 int
-compgen_builtin (WORD_LIST *list)
+Shell::compgen_builtin (WORD_LIST *list)
 {
   int rval;
   unsigned long acts, copts;
@@ -642,7 +641,7 @@ compgen_builtin (WORD_LIST *list)
   int old_ind;
 
   if (list == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
   acts = copts = (unsigned long)0L;
   Garg = Warg = Parg = Sarg = Xarg = Farg = Carg = (char *)NULL;
@@ -652,9 +651,9 @@ compgen_builtin (WORD_LIST *list)
      as a side effect if they are supplied as options. */
   rval = build_actions (list, (struct _optflags *)NULL, &acts, &copts);
   if (rval == EX_USAGE)
-    return (rval);
+    return rval;
   if (rval == EXECUTION_FAILURE)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
   list = loptend;
 
@@ -720,8 +719,10 @@ compgen_builtin (WORD_LIST *list)
     }
 
   compspec_dispose (cs);
-  return (rval);
+  return rval;
 }
+
+}  // namespace bash
 
 $BUILTIN compopt
 $DEPENDS_ON PROGRAMMABLE_COMPLETION
@@ -754,8 +755,11 @@ Returns success unless an invalid option is supplied or NAME does not
 have a completion specification defined.
 $END
 
+namespace bash
+{
+
 int
-compopt_builtin (WORD_LIST *list)
+Shell::compopt_builtin (WORD_LIST *list)
 {
   int opts_on, opts_off, *opts, opt, oind, ret, Dflag, Eflag, Iflag;
   WORD_LIST *l, *wl;
@@ -776,7 +780,7 @@ compopt_builtin (WORD_LIST *list)
 	  if (oind < 0)
 	    {
 	      sh_invalidoptname (list_optarg);
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 	  *opts |= compopts[oind].optflag;
 	  break;
@@ -792,7 +796,7 @@ compopt_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
@@ -811,14 +815,14 @@ compopt_builtin (WORD_LIST *list)
       if (RL_ISSTATE (RL_STATE_COMPLETING) == 0 || pcomp_curcs == 0)
 	{
 	  builtin_error (_("not currently executing completion function"));
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
       cs = pcomp_curcs;
 
       if (opts_on == 0 && opts_off == 0)
 	{
 	  print_compopts (pcomp_curcmd, cs, 1);
-          return (sh_chkwrite (ret));
+          return sh_chkwrite (ret);
 	}
 
       /* Set the compspec options */
@@ -829,7 +833,7 @@ compopt_builtin (WORD_LIST *list)
       pcomp_set_readline_variables (opts_on, 1);
       pcomp_set_readline_variables (opts_off, 0);
 
-      return (ret);
+      return ret;
     }
 
   for (l = wl ? wl : list; l; l = (WORD_LIST *)l->next)
@@ -855,5 +859,7 @@ compopt_builtin (WORD_LIST *list)
   if (wl)
     dispose_words (wl);
 
-  return (ret);
+  return ret;
 }
+
+}  // namespace bash

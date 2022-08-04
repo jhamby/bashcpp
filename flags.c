@@ -28,133 +28,10 @@
 #include "execute_cmd.h"
 #include "flags.h"
 
-#if defined (BANG_HISTORY)
-#  include "bashhist.h"
-#endif
-
 #if defined (JOB_CONTROL)
 extern bool set_job_control (bool);
 #endif
 
-/* **************************************************************** */
-/*								    */
-/*			The Standard sh Flags.			    */
-/*								    */
-/* **************************************************************** */
-
-/* Non-zero means automatically mark variables which are modified or created
-   as auto export variables. */
-char mark_modified_vars = 0;
-
-/* Non-zero causes asynchronous job notification.  Otherwise, job state
-   notification only takes place just before a primary prompt is printed. */
-char asynchronous_notification = 0;
-
-/* Non-zero means exit immediately if a command exits with a non-zero
-   exit status.  The first is what controls set -e; the second is what
-   bash uses internally. */
-char errexit_flag = 0;
-char exit_immediately_on_error = 0;
-
-/* Non-zero means disable filename globbing. */
-char disallow_filename_globbing = 0;
-
-/* Non-zero means that all keyword arguments are placed into the environment
-   for a command, not just those that appear on the line before the command
-   name. */
-char place_keywords_in_env = 0;
-
-/* Non-zero means read commands, but don't execute them.  This is useful
-   for debugging shell scripts that should do something hairy and possibly
-   destructive. */
-char read_but_dont_execute = 0;
-
-/* Non-zero means end of file is after one command. */
-char just_one_command = 0;
-
-/* Non-zero means don't overwrite existing files while doing redirections. */
-char noclobber = 0;
-
-/* Non-zero means trying to get the value of $i where $i is undefined
-   causes an error, instead of a null substitution. */
-char unbound_vars_is_error = 0;
-
-/* Non-zero means type out input lines after you read them. */
-char echo_input_at_read = 0;
-char verbose_flag = 0;
-
-/* Non-zero means type out the command definition after reading, but
-   before executing. */
-char echo_command_at_execute = 0;
-
-/* Non-zero means turn on the job control features. */
-char jobs_m_flag = 0;
-
-/* Non-zero means this shell is interactive, even if running under a
-   pipe. */
-char forced_interactive = 0;
-
-/* By default, follow the symbolic links as if they were real directories
-   while hacking the `cd' command.  This means that `cd ..' moves up in
-   the string of symbolic links that make up the current directory, instead
-   of the absolute directory.  The shell variable `nolinks' also controls
-   this flag. */
-char no_symbolic_links = 0;
-
-/* **************************************************************** */
-/*								    */
-/*		     Non-Standard Flags Follow Here.		    */
-/*								    */
-/* **************************************************************** */
-
-#if 0
-/* Non-zero means do lexical scoping in the body of a FOR command. */
-char lexical_scoping = 0;
-#endif
-
-/* Non-zero means look up and remember command names in a hash table, */
-char hashing_enabled = 1;
-
-#if defined (BANG_HISTORY)
-/* Non-zero means that we are doing history expansion.  The default.
-   This means !22 gets the 22nd line of history. */
-char history_expansion = HISTEXPAND_DEFAULT;
-char histexp_flag = 0;
-#endif /* BANG_HISTORY */
-
-/* Non-zero means that we allow comments to appear in interactive commands. */
-char interactive_comments = 1;
-
-#if defined (RESTRICTED_SHELL)
-/* Non-zero means that this shell is `restricted'.  A restricted shell
-   disallows: changing directories, command or path names containing `/',
-   unsetting or resetting the values of $PATH and $SHELL, and any type of
-   output redirection. */
-char restricted = 0;			/* currently restricted */
-char restricted_shell = 0;		/* shell was started in restricted mode. */
-#endif /* RESTRICTED_SHELL */
-
-/* Non-zero means that this shell is running in `privileged' mode.  This
-   is required if the shell is to run setuid.  If the `-p' option is
-   not supplied at startup, and the real and effective uids or gids
-   differ, disable_priv_mode is called to relinquish setuid status. */
-char privileged_mode = 0;
-
-#if defined (BRACE_EXPANSION)
-/* Zero means to disable brace expansion: foo{a,b} -> fooa foob */
-char brace_expansion = 1;
-#endif
-
-/* Non-zero means that shell functions inherit the DEBUG trap. */
-char function_trace_mode = 0;
-
-/* Non-zero means that shell functions inherit the ERR trap. */
-char error_trace_mode = 0;
-
-/* Non-zero means that the rightmost non-zero exit status in a pipeline
-   is the exit status of the entire pipeline.  If each processes exits
-   with a 0 status, the status of the pipeline is 0. */
-char pipefail_opt = 0;
 
 /* **************************************************************** */
 /*								    */
@@ -214,7 +91,7 @@ find_flag (int name)
   for (i = 0; shell_flags[i].name; i++)
     {
       if (shell_flags[i].name == name)
-	return (shell_flags[i].value);
+	return shell_flags[i].value;
     }
   return NULL;
 }
@@ -230,13 +107,13 @@ change_flag (int flag, int on_or_off)
 #if defined (RESTRICTED_SHELL)
   /* Don't allow "set +r" in a shell which is `restricted'. */
   if (restricted && flag == 'r' && on_or_off == FLAG_OFF)
-    return (FLAG_ERROR);
+    return FLAG_ERROR;
 #endif /* RESTRICTED_SHELL */
 
   value = find_flag (flag);
 
   if ((value == NULL) || (on_or_off != FLAG_ON && on_or_off != FLAG_OFF))
-    return (FLAG_ERROR);
+    return FLAG_ERROR;
 
   old_value = *value;
   *value = (on_or_off == FLAG_ON) ? 1 : 0;
@@ -285,7 +162,7 @@ change_flag (int flag, int on_or_off)
       break;
     }
 
-  return (old_value);
+  return old_value;
 }
 
 /* Return a string which is the names of all the currently
@@ -307,7 +184,7 @@ which_set_flags ()
     temp[string_index++] = 's';
 
   temp[string_index] = '\0';
-  return (temp);
+  return temp;
 }
 
 char *
@@ -320,7 +197,7 @@ get_current_flags ()
   for (i = 0; shell_flags[i].name; i++)
     temp[i] = *(shell_flags[i].value);
   temp[i] = '\0';
-  return (temp);
+  return temp;
 }
 
 void

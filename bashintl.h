@@ -29,12 +29,13 @@
 /* Include this *after* config.h */
 #include "gettext.h"
 
-#if defined (HAVE_LOCALE_H)
-#  include <locale.h>
-#endif
+#include <clocale>
+
+namespace bash
+{
 
 #define _(msgid)	gettext(msgid)
-#define N_(msgid)	(char *)msgid
+#define N_(msgid)	const_cast<char*>(msgid)
 #define D_(d, msgid)	dgettext(d, msgid)
 
 #define P_(m1, m2, n)	ngettext(m1, m2, n)
@@ -43,12 +44,25 @@
 #  undef HAVE_SETLOCALE
 #endif
 
-#if !defined (HAVE_SETLOCALE)
-#  define setlocale(cat, loc)
+// moved from locale.c for performance
+
+#if defined (HAVE_LOCALECONV)
+static inline char
+locale_decpoint ()
+{
+  struct lconv *lv;
+
+  lv = std::localeconv ();
+  return (lv && lv->decimal_point && lv->decimal_point[0]) ? lv->decimal_point[0] : '.';
+}
+#else
+static inline char
+locale_decpoint ()
+{
+  return '.';
+}
 #endif
 
-#if !defined (HAVE_LOCALE_H) || !defined (HAVE_LOCALECONV)
-#  define locale_decpoint()	'.'
-#endif
+}  // namespace bash
 
 #endif /* !_BASHINTL_H_ */

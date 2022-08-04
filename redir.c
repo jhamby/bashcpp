@@ -20,11 +20,7 @@
 
 #include "config.h"
 
-#if !defined (__GNUC__) && !defined (HAVE_ALLOCA_H) && defined (_AIX)
-  #pragma alloca
-#endif /* _AIX && RISC6000 && !__GNUC__ */
-
-#include <stdio.h>
+#include <cstdio>
 #include "bashtypes.h"
 #if !defined (_MINIX) && defined (HAVE_SYS_FILE_H)
 #  include <sys/file.h>
@@ -36,22 +32,15 @@
 #  include <unistd.h>
 #endif
 
-#include <errno.h>
+#include <cerrno>
 
-#if !defined (errno)
-extern int errno;
-#endif
-
-#include "bashansi.h"
 #include "bashintl.h"
-#include "memalloc.h"
 
 #define NEED_FPURGE_DECL
 
 #include "shell.h"
 #include "flags.h"
 #include "execute_cmd.h"
-#include "redir.h"
 #include "trap.h"
 
 #if defined (BUFFERED_INPUT)
@@ -60,9 +49,12 @@ extern int errno;
 
 #include "builtins/pipesize.h"
 
+namespace bash
+{
+
 /* FreeBSD 13 can reliably handle atomic writes at this capacity without
    hanging. */
-#if __FreeBSD__ && !defined (HEREDOC_PIPESIZE)
+#if defined (__FreeBSD__) && !defined (HEREDOC_PIPESIZE)
 #  define HEREDOC_PIPESIZE 4096
 #endif
 
@@ -87,6 +79,10 @@ extern int errno;
 
 #define SHELL_FD_BASE	10
 
+static bool expandable_redirection_filename (REDIRECT *);
+
+
+#if 0
 bool expanding_redir;
 
 extern REDIRECT *redirection_undo_list;
@@ -94,20 +90,19 @@ extern REDIRECT *exec_redirection_undo_list;
 
 /* Static functions defined and used in this file. */
 static void add_exec_redirect (REDIRECT *);
-static int add_undo_redirect (int, enum r_instruction, int);
+static int add_undo_redirect (int, r_instruction, int);
 static int add_undo_close_redirect (int);
-static int expandable_redirection_filename (REDIRECT *);
-static int stdin_redirection (enum r_instruction, int);
+static int stdin_redirection (r_instruction, int);
 static int undoablefd (int);
 static int do_redirection_internal (REDIRECT *, int, char **);
 
-static char *heredoc_expand (WORD_DESC *, enum r_instruction, size_t *);
+static char *heredoc_expand (WordDesc *, r_instruction, size_t *);
 static int heredoc_write (int, char *, size_t);
-static int here_document_to_fd (WORD_DESC *, enum r_instruction);
+static int here_document_to_fd (WordDesc *, r_instruction);
 
-static int redir_special_open (int, char *, int, int, enum r_instruction);
-static int noclobber_open (char *, int, int, enum r_instruction);
-static int redir_open (char *, int, int, enum r_instruction);
+static int redir_special_open (int, char *, int, int, r_instruction);
+static int noclobber_open (char *, int, int, r_instruction);
+static int redir_open (char *, int, int, r_instruction);
 
 static int redir_varassign (REDIRECT *, int);
 static int redir_varvalue (REDIRECT *);
@@ -116,30 +111,27 @@ static int redir_varvalue (REDIRECT *);
    a new redirection and when creating the redirection undo list. */
 static REDIRECTEE rd;
 
-/* Set to errno when a here document cannot be created for some reason.
-   Used to print a reasonable error message. */
-static int heredoc_errno;
+#endif
 
 #define REDIRECTION_ERROR(r, e, fd) \
 do { \
   if ((r) < 0) \
     { \
       if (fd >= 0) \
-	close (fd); \
+	::close (fd); \
       set_exit_status (EXECUTION_FAILURE);\
-      return ((e) == 0 ? EINVAL : (e));\
+      return (e) == 0 ? EINVAL : (e);\
     } \
 } while (0)
 
 void
-redirection_error (REDIRECT *temp, int error,
-                   char *fn)		/* already-expanded filename */
+Shell::redirection_error (REDIRECT *temp, int error,
+			  const char *fn)		/* already-expanded filename */
 {
   const char *filename;
-  char *allocname;
-  int oflags;
+  char *allocname = nullptr;
+  word_desc_flags oflags;
 
-  allocname = 0;
   if ((temp->rflags & REDIR_VARASSIGN) && error < 0)
     filename = allocname = savestring (temp->redirector.filename->word);
   else if ((temp->rflags & REDIR_VARASSIGN) == 0 && temp->redirector.dest < 0)
@@ -163,13 +155,13 @@ redirection_error (REDIRECT *temp, int error,
 	  break;
 	case r_duplicating_input_word:
 	  if (temp->redirector.dest == 0)	/* Guess */
-	    filename = temp->redirectee.filename->word;	/* XXX */
+	    filename = temp->redirectee.filename->word.c_str ();	/* XXX */
 	  else
 	    filename = allocname = itos (temp->redirector.dest);
 	  break;
 	case r_duplicating_output_word:
 	  if (temp->redirector.dest == 1)	/* Guess */
-	    filename = temp->redirectee.filename->word;	/* XXX */
+	    filename = temp->redirectee.filename->word.c_str ();	/* XXX */
 	  else
 	    filename = allocname = itos (temp->redirector.dest);
 	  break;
@@ -189,8 +181,8 @@ redirection_error (REDIRECT *temp, int error,
       temp->redirectee.filename->flags |= W_NOCOMSUB;
       filename = allocname = redirection_expand (temp->redirectee.filename);
       temp->redirectee.filename->flags = oflags;
-      if (filename == 0)
-	filename = temp->redirectee.filename->word;
+      if (filename == nullptr)
+	filename = temp->redirectee.filename->word.c_str ();
     }
   else if (temp->redirectee.dest < 0)
     filename = _("file descriptor out of range");
@@ -214,7 +206,8 @@ redirection_error (REDIRECT *temp, int error,
 #endif /* RESTRICTED_SHELL */
 
     case HEREDOC_REDIRECT:
-      internal_error (_("cannot create temp file for here-document: %s"), strerror (heredoc_errno));
+      internal_error (_("cannot create temp file for here-document: %s"),
+		      std::strerror (heredoc_errno));
       break;
 
     case BADVAR_REDIRECT:
@@ -222,11 +215,11 @@ redirection_error (REDIRECT *temp, int error,
       break;
 
     default:
-      internal_error ("%s: %s", filename, strerror (error));
+      internal_error ("%s: %s", filename, std::strerror (error));
       break;
     }
 
-  FREE (allocname);
+  delete[] allocname;
 }
 
 /* Perform the redirections on LIST.  If flags & RX_ACTIVE, then actually
@@ -236,7 +229,7 @@ redirection_error (REDIRECT *temp, int error,
    is non-zero, file descriptors opened in do_redirection () have their
    close-on-exec flag set. */
 int
-do_redirections (REDIRECT *list, int flags)
+Shell::do_redirections (REDIRECT *list, redir_flags flags)
 {
   int error;
   REDIRECT *temp;
@@ -261,16 +254,16 @@ do_redirections (REDIRECT *list, int flags)
 	{
 	  redirection_error (temp, error, fn);
 	  FREE (fn);
-	  return (error);
+	  return error;
 	}
       FREE (fn);
     }
-  return (0);
+  return 0;
 }
 
 /* Return non-zero if the redirection pointed to by REDIRECT has a
    redirectee.filename that can be expanded. */
-static int
+static bool
 expandable_redirection_filename (REDIRECT *redirect)
 {
   switch (redirect->instruction)
@@ -287,24 +280,24 @@ expandable_redirection_filename (REDIRECT *redirect)
     case r_duplicating_output_word:
     case r_move_input_word:
     case r_move_output_word:
-      return 1;
+      return true;
 
     default:
-      return 0;
+      return false;
     }
 }
 
 /* Expand the word in WORD returning a string.  If WORD expands to
    multiple words (or no words), then return NULL. */
 char *
-redirection_expand (WORD_DESC *word)
+Shell::redirection_expand (WORD_DESC *word)
 {
   char *result;
   WORD_LIST *tlist1, *tlist2;
   WORD_DESC *w;
   int old;
 
-  w = copy_word (word);
+  w = new WORD_DESC (*word);
   if (posixly_correct)
     w->flags |= W_NOSPLIT;
 
@@ -331,11 +324,11 @@ redirection_expand (WORD_DESC *word)
 	 Dispose of the word list and return NULL. */
       if (tlist2)
 	dispose_words (tlist2);
-      return ((char *)NULL);
+      return nullptr;
     }
   result = string_list (tlist2);  /* XXX savestring (tlist2->word->word)? */
   dispose_words (tlist2);
-  return (result);
+  return result;
 }
 
 /* Expand a here-document or here-string (determined by RI) contained in
@@ -346,8 +339,8 @@ redirection_expand (WORD_DESC *word)
    the returned document should be written directly to whatever file
    descriptor is specified. In particular, it adds a newline to the end of
    a here-string to preserve previous semantics. */
-static char *
-heredoc_expand (WORD_DESC *redirectee, enum r_instruction ri, size_t *lenp)
+char *
+Shell::heredoc_expand (WORD_DESC *redirectee, enum r_instruction ri, size_t *lenp)
 {
   char *document;
   size_t dlen;
@@ -357,7 +350,7 @@ heredoc_expand (WORD_DESC *redirectee, enum r_instruction ri, size_t *lenp)
     {
       if (lenp)
         *lenp = 0;
-      return (redirectee->word);
+      return redirectee->word;
     }
 
   /* Quoted here documents are not expanded */
@@ -365,7 +358,7 @@ heredoc_expand (WORD_DESC *redirectee, enum r_instruction ri, size_t *lenp)
     {
       if (lenp)
         *lenp = STRLEN (redirectee->word);
-      return (redirectee->word);
+      return redirectee->word;
     }
 
   expanding_redir = 1;
@@ -400,14 +393,14 @@ heredoc_expand (WORD_DESC *redirectee, enum r_instruction ri, size_t *lenp)
 
 /* Write HEREDOC (of length HDLEN) to FD, returning 0 on success and ERRNO on
    error. Don't handle interrupts. */
-static int
+static inline int
 heredoc_write (int fd, char *heredoc, size_t herelen)
 {
   ssize_t nw;
   int e;
 
   errno = 0;
-  nw = write (fd, heredoc, herelen);
+  nw = ::write (fd, heredoc, herelen);
   e = errno;
   if (nw != herelen)
     {
@@ -438,7 +431,7 @@ here_document_to_fd (WORD_DESC *redirectee, enum r_instruction ri)
   /* If we have a zero-length document, don't mess with a temp file */
   if (document_len == 0)
     {
-      fd = open ("/dev/null", O_RDONLY);
+      fd = ::open ("/dev/null", O_RDONLY);
       r = errno;
       if (document != redirectee->word)
 	FREE (document);
@@ -458,7 +451,7 @@ here_document_to_fd (WORD_DESC *redirectee, enum r_instruction ri)
 	  if (document != redirectee->word)
 	    free (document);
 	  errno = r;
-	  return (-1);
+	  return -1;
 	}
 
 #if defined (F_GETPIPE_SZ)
@@ -474,9 +467,9 @@ here_document_to_fd (WORD_DESC *redirectee, enum r_instruction ri)
 	{
 	  close (herepipe[0]);
 	  errno = r;
-	  return (-1);
+	  return -1;
 	}
-      return (herepipe[0]);
+      return herepipe[0];
     }
 #endif
 
@@ -492,10 +485,10 @@ use_tempfile:
       if (document != redirectee->word)
 	FREE (document);
       errno = r;
-      return (fd);
+      return fd;
     }
 
-  fchmod (fd, S_IRUSR | S_IWUSR);
+  ::fchmod (fd, S_IRUSR | S_IWUSR);
   SET_CLOSE_ON_EXEC (fd);
 
   errno = r = 0;		/* XXX */
@@ -509,7 +502,7 @@ use_tempfile:
       unlink (filename);
       free (filename);
       errno = r;
-      return (-1);
+      return -1;
     }
 
   /* In an attempt to avoid races, we close the first fd only after opening
@@ -550,13 +543,13 @@ use_tempfile:
       close (fd2);
       free (filename);
       errno = r;
-      return (-1);
+      return -1;
     }
 
   free (filename);
 
   fchmod (fd2, S_IRUSR);
-  return (fd2);
+  return fd2;
 }
 
 #define RF_DEVFD	1
@@ -581,7 +574,7 @@ static STRING_INT_ALIST _redir_special_filenames[] = {
   { "/dev/tcp/*/*", RF_DEVTCP },
   { "/dev/udp/*/*", RF_DEVUDP },
 #endif
-  { (char *)NULL, -1 }
+  { nullptr, -1 }
 };
 
 static int
@@ -625,7 +618,7 @@ redir_special_open (int spec, char *filename, int flags, int mode,
     case RF_DEVUDP:
 #if defined (RESTRICTED_SHELL)
       if (restricted)
-	return (RESTRICTED_REDIRECT);
+	return RESTRICTED_REDIRECT;
 #endif
 #if defined (HAVE_NETWORK)
       fd = netopen (filename);
@@ -653,7 +646,7 @@ noclobber_open (char *filename, int flags, int mode, enum r_instruction ri)
      immediately. */
   r = stat (filename, &finfo);
   if (r == 0 && (S_ISREG (finfo.st_mode)))
-    return (NOCLOBBER_REDIRECT);
+    return NOCLOBBER_REDIRECT;
 
   /* If the file was not present (r != 0), make sure we open it
      exclusively so that if it is created before we open it, our open
@@ -664,13 +657,13 @@ noclobber_open (char *filename, int flags, int mode, enum r_instruction ri)
   if (r != 0)
     {
       fd = open (filename, flags|O_EXCL, mode);
-      return ((fd < 0 && errno == EEXIST) ? NOCLOBBER_REDIRECT : fd);
+      return (fd < 0 && errno == EEXIST) ? NOCLOBBER_REDIRECT : fd;
     }
   fd = open (filename, flags, mode);
 
   /* If the open failed, return the file descriptor right away. */
   if (fd < 0)
-    return (errno == EEXIST ? NOCLOBBER_REDIRECT : fd);
+    return errno == EEXIST ? NOCLOBBER_REDIRECT : fd;
 
   /* OK, the open succeeded, but the file may have been changed from a
      non-regular file to a regular file between the stat and the open.
@@ -689,7 +682,7 @@ noclobber_open (char *filename, int flags, int mode, enum r_instruction ri)
   /* The file has been replaced.  badness. */
   close (fd);
   errno = EEXIST;
-  return (NOCLOBBER_REDIRECT);
+  return NOCLOBBER_REDIRECT;
 }
 
 static int
@@ -699,7 +692,7 @@ redir_open (char *filename, int flags, int mode, enum r_instruction ri)
 
   r = find_string_in_alist (filename, _redir_special_filenames, 1);
   if (r >= 0)
-    return (redir_special_open (r, filename, flags, mode, ri));
+    return redir_special_open (r, filename, flags, mode, ri);
 
   /* If we are in noclobber mode, you are not allowed to overwrite
      existing files.  Check before opening. */
@@ -707,7 +700,7 @@ redir_open (char *filename, int flags, int mode, enum r_instruction ri)
     {
       fd = noclobber_open (filename, flags, mode, ri);
       if (fd == NOCLOBBER_REDIRECT)
-	return (NOCLOBBER_REDIRECT);
+	return NOCLOBBER_REDIRECT;
     }
   else
     {
@@ -784,7 +777,7 @@ do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
       /* XXX - what to do with [N]<&$w- where w is unset or null?  ksh93
 	       closes N. */
       if (redirectee_word == 0)
-	return (AMBIGUOUS_REDIRECT);
+	return AMBIGUOUS_REDIRECT;
       else if (redirectee_word[0] == '-' && redirectee_word[1] == '\0')
 	{
 	  sd = redirect->redirector;
@@ -825,7 +818,7 @@ do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
       else
 	{
 	  free (redirectee_word);
-	  return (AMBIGUOUS_REDIRECT);
+	  return AMBIGUOUS_REDIRECT;
 	}
 
       free (redirectee_word);
@@ -880,13 +873,13 @@ do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
 	redirectee->flags = oflags;
 
       if (redirectee_word == 0)
-	return (AMBIGUOUS_REDIRECT);
+	return AMBIGUOUS_REDIRECT;
 
 #if defined (RESTRICTED_SHELL)
       if (restricted && (WRITE_REDIRECT (ri)))
 	{
 	  free (redirectee_word);
-	  return (RESTRICTED_REDIRECT);
+	  return RESTRICTED_REDIRECT;
 	}
 #endif /* RESTRICTED_SHELL */
 
@@ -897,10 +890,10 @@ do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
 	free (redirectee_word);
 
       if (fd == NOCLOBBER_REDIRECT || fd == RESTRICTED_REDIRECT)
-	return (fd);
+	return fd;
 
       if (fd < 0)
-	return (errno);
+	return errno;
 
       if (flags & RX_ACTIVE)
 	{
@@ -949,13 +942,13 @@ do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
 		{
 		  close (redirector);
 		  close (fd);
-		  return (r);	/* XXX */
+		  return r;	/* XXX */
 		}
 	    }
 	  else if ((fd != redirector) && (dup2 (fd, redirector) < 0))
 	    {
 	      close (fd);	/* dup2 failed? must be fd limit issue */
-	      return (errno);
+	      return errno;
 	    }
 
 #if defined (BUFFERED_INPUT)
@@ -999,7 +992,7 @@ do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
 	      if (flags & RX_UNDOABLE)
 		add_undo_redirect (2, ri, -1);
 	      if (dup2 (1, 2) < 0)
-		return (errno);
+		return errno;
 	    }
 	}
       break;
@@ -1016,7 +1009,7 @@ do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
 	  if (fd < 0)
 	    {
 	      heredoc_errno = errno;
-	      return (HEREDOC_REDIRECT);
+	      return HEREDOC_REDIRECT;
 	    }
 
 	  if (redirect->rflags & REDIR_VARASSIGN)
@@ -1049,14 +1042,14 @@ do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
 		    {
 		      close (redirector);
 		      close (fd);
-		      return (r);	/* XXX */
+		      return r;	/* XXX */
 		    }
 		}
 	      else if (fd != redirector && dup2 (fd, redirector) < 0)
 		{
 		  r = errno;
 		  close (fd);
-		  return (r);
+		  return r;
 		}
 
 #if defined (BUFFERED_INPUT)
@@ -1120,12 +1113,12 @@ do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
 	      if ((r = redir_varassign (redirect, redirector)) < 0)
 		{
 		  close (redirector);
-		  return (r);	/* XXX */
+		  return r;	/* XXX */
 		}
 	    }
 	  /* This is correct.  2>&1 means dup2 (1, 2); */
 	  else if (dup2 (redir_fd, redirector) < 0)
-	    return (errno);
+	    return errno;
 
 #if defined (BUFFERED_INPUT)
 	  if (ri == r_duplicating_input || ri == r_move_input)
@@ -1218,7 +1211,7 @@ do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
     case r_move_output_word:
       break;
     }
-  return (0);
+  return 0;
 }
 
 /* Remember the file descriptor associated with the slot FD,
@@ -1253,7 +1246,7 @@ add_undo_redirect (int fd, enum r_instruction ri, int fdbase)
   if (new_fd < 0)
     {
       sys_error (_("redirection error: cannot duplicate fd"));
-      return (-1);
+      return -1;
     }
 
   clexec_flag = fcntl (fd, F_GETFD, 0);
@@ -1315,7 +1308,7 @@ add_undo_redirect (int fd, enum r_instruction ri, int fdbase)
   else if (redirection_undo_list->flags & RX_SAVCLEXEC)
     SET_CLOSE_ON_EXEC (new_fd);
 
-  return (0);
+  return 0;
 }
 
 /* Set up to close FD when we are finished with the current command
@@ -1356,11 +1349,11 @@ stdin_redirection (enum r_instruction ri, int redirector)
     case r_reading_until:
     case r_deblank_reading_until:
     case r_reading_string:
-      return (1);
+      return 1;
     case r_duplicating_input:
     case r_duplicating_input_word:
     case r_close_this:
-      return (redirector == 0);
+      return redirector == 0;
     case r_output_direction:
     case r_appending_to:
     case r_duplicating_output:
@@ -1372,9 +1365,9 @@ stdin_redirection (enum r_instruction ri, int redirector)
     case r_move_output:
     case r_move_input_word:
     case r_move_output_word:
-      return (0);
+      return 0;
     }
-  return (0);
+  return 0;
 }
 
 /* Return non-zero if any of the redirections in REDIRS alter the standard
@@ -1467,3 +1460,5 @@ redir_varvalue (REDIRECT *redir)
   i = vmax;	/* integer truncation */
   return i;
 }
+
+}  // namespace bash

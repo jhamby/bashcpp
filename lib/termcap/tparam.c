@@ -23,15 +23,11 @@
 #include <config.h>
 
 #ifdef HAVE_STDLIB_H
-#  include <stdlib.h>
-#else
-extern char *getenv ();
-extern char *malloc ();
-extern char *realloc ();
+#  include <cstdlib>
 #endif
 
 #if defined (HAVE_STRING_H)
-#include <string.h>
+#include <cstring>
 #endif
 
 #if !defined (HAVE_BCOPY)

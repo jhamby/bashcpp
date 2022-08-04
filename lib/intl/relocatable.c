@@ -31,16 +31,10 @@
 
 #if ENABLE_RELOCATABLE
 
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#ifdef NO_XMALLOC
-# define xmalloc malloc
-#else
-# include "xalloc.h"
-#endif
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #if (defined _WIN32 || defined __WIN32__) && !defined __CYGWIN__
 # define WIN32_LEAN_AND_MEAN
@@ -56,14 +50,6 @@
 #if DEPENDS_ON_LIBINTL && ENABLE_NLS
 # include <libintl.h>
 #endif
-
-/* Faked cheap 'bool'.  */
-#undef bool
-#undef false
-#undef true
-#define bool int
-#define false 0
-#define true 1
 
 /* Pathname support.
    ISSLASH(C)           tests whether C is a directory separator character.
@@ -126,8 +112,8 @@ set_this_relocation_prefix (const char *orig_prefix_arg,
 
       orig_prefix_len = strlen (orig_prefix_arg);
       curr_prefix_len = strlen (curr_prefix_arg);
-      memory = (char *) xmalloc (orig_prefix_len + 1 + curr_prefix_len + 1);
-#ifdef NO_XMALLOC
+      memory = (char *) malloc (orig_prefix_len + 1 + curr_prefix_len + 1);
+#if defined(NO_XMALLOC) && !defined(__cplusplus)
       if (memory != NULL)
 #endif
         {
@@ -211,8 +197,8 @@ compute_curr_prefix (const char *orig_installprefix,
           break;
       }
 
-    q = (char *) xmalloc (p - curr_pathname + 1);
-#ifdef NO_XMALLOC
+    q = (char *) malloc (p - curr_pathname + 1);
+#if defined(NO_XMALLOC) && !defined(__cplusplus)
     if (q == NULL)
       return NULL;
 #endif
@@ -278,7 +264,7 @@ compute_curr_prefix (const char *orig_installprefix,
       char *curr_prefix;
 
       curr_prefix = (char *) xmalloc (curr_prefix_len + 1);
-#ifdef NO_XMALLOC
+#if defined(NO_XMALLOC) && !defined(__cplusplus)
       if (curr_prefix == NULL)
         {
           free (curr_installdir);
@@ -462,9 +448,9 @@ relocate (const char *pathname)
       if (pathname[orig_prefix_len] == '\0')
         {
           /* pathname equals orig_prefix.  */
-          char *result = (char *) xmalloc (strlen (curr_prefix) + 1);
+          char *result = (char *) malloc (strlen (curr_prefix) + 1);
 
-#ifdef NO_XMALLOC
+#if defined(NO_XMALLOC) && !defined(__cplusplus)
           if (result != NULL)
 #endif
             {
@@ -477,9 +463,9 @@ relocate (const char *pathname)
           /* pathname starts with orig_prefix.  */
           const char *pathname_tail = &pathname[orig_prefix_len];
           char *result =
-            (char *) xmalloc (curr_prefix_len + strlen (pathname_tail) + 1);
+            (char *) malloc (curr_prefix_len + strlen (pathname_tail) + 1);
 
-#ifdef NO_XMALLOC
+#if defined(NO_XMALLOC) && !defined(__cplusplus)
           if (result != NULL)
 #endif
             {

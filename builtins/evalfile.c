@@ -28,11 +28,10 @@
 #include "posixstat.h"
 #include "filecntl.h"
 
-#include <stdio.h>
-#include <signal.h>
-#include <errno.h>
+#include <cstdio>
+#include <csignal>
+#include <cerrno>
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include "../shell.h"
@@ -46,17 +45,12 @@
 
 #include <y.tab.h>
 
-#if defined (HISTORY)
-#  include "../bashhist.h"
-#endif
-
 #include <typemax.h>
 
 #include "common.h"
 
-#if !defined (errno)
-extern int errno;
-#endif
+namespace bash
+{
 
 /* Flags for _evalfile() */
 #define FEVAL_ENOENTOK		0x001
@@ -73,7 +67,7 @@ extern int errno;
 int sourcelevel = 0;
 
 static int
-_evalfile (const char *filename, int flags)
+Shell::_evalfile (const char *filename, int flags)
 {
   volatile int old_interactive;
   procenv_t old_return_catch;
@@ -135,13 +129,13 @@ file_error_and_exit:
     {
       (*errfunc) (_("%s: is a directory"), filename);
       close (fd);
-      return ((flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE : -1);
+      return (flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE : -1;
     }
   else if ((flags & FEVAL_REGFILE) && S_ISREG (finfo.st_mode) == 0)
     {
       (*errfunc) (_("%s: not a regular file"), filename);
       close (fd);
-      return ((flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE : -1);
+      return (flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE : -1;
     }
 
   file_size = (size_t)finfo.st_size;
@@ -150,7 +144,7 @@ file_error_and_exit:
     {
       (*errfunc) (_("%s: file is too large"), filename);
       close (fd);
-      return ((flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE : -1);
+      return (flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE : -1;
     }
 
   if (S_ISREG (finfo.st_mode) && file_size <= SSIZE_MAX)
@@ -176,7 +170,7 @@ file_error_and_exit:
   if (nr == 0)
     {
       free (string);
-      return ((flags & FEVAL_BUILTIN) ? EXECUTION_SUCCESS : 1);
+      return (flags & FEVAL_BUILTIN) ? EXECUTION_SUCCESS : 1;
     }
 
   if ((flags & FEVAL_CHECKBINARY) &&
@@ -184,7 +178,7 @@ file_error_and_exit:
     {
       free (string);
       (*errfunc) (_("%s: cannot execute binary file"), filename);
-      return ((flags & FEVAL_BUILTIN) ? EX_BINARY_FILE : -1);
+      return (flags & FEVAL_BUILTIN) ? EX_BINARY_FILE : -1;
     }
 
   i = strlen (string);
@@ -202,7 +196,7 @@ file_error_and_exit:
 	      {
 		free (string);
 		(*errfunc) (_("%s: cannot execute binary file"), filename);
-		return ((flags & FEVAL_BUILTIN) ? EX_BINARY_FILE : -1);
+		return (flags & FEVAL_BUILTIN) ? EX_BINARY_FILE : -1;
 	      }
           }
     }
@@ -310,11 +304,11 @@ file_error_and_exit:
   if (current_token == yacc_EOF)
     push_token ('\n');		/* XXX */
 
-  return ((flags & FEVAL_BUILTIN) ? result : 1);
+  return (flags & FEVAL_BUILTIN) ? result : 1;
 }
 
 int
-maybe_execute_file (const char *fname, bool force_noninteractive)
+Shell::maybe_execute_file (const char *fname, bool force_noninteractive)
 {
   char *filename;
   int result, flags;
@@ -329,7 +323,7 @@ maybe_execute_file (const char *fname, bool force_noninteractive)
 }
 
 int
-force_execute_file (const char *fname, bool force_noninteractive)
+Shell::force_execute_file (const char *fname, bool force_noninteractive)
 {
   char *filename;
   int result, flags;
@@ -345,7 +339,7 @@ force_execute_file (const char *fname, bool force_noninteractive)
 
 #if defined (HISTORY)
 int
-fc_execute_file (const char *filename)
+Shell::fc_execute_file (const char *filename)
 {
   int flags;
 
@@ -353,12 +347,12 @@ fc_execute_file (const char *filename)
      remember_on_history is set.  We use FEVAL_BUILTIN to return
      the result of parse_and_execute. */
   flags = FEVAL_ENOENTOK|FEVAL_HISTORY|FEVAL_REGFILE|FEVAL_BUILTIN;
-  return (_evalfile (filename, flags));
+  return _evalfile (filename, flags);
 }
 #endif /* HISTORY */
 
 int
-source_file (const char *filename, int sflags)
+Shell::source_file (const char *filename, int sflags)
 {
   int flags, rval;
 
@@ -373,3 +367,5 @@ source_file (const char *filename, int sflags)
   run_return_trap ();
   return rval;
 }
+
+}  // namespace bash

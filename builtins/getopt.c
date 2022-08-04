@@ -28,10 +28,12 @@
 #endif
 
 #include <stdio.h>
-#include "memalloc.h"
 #include "../bashintl.h"
 #include "../shell.h"
 #include "getopt.h"
+
+namespace bash
+{
 
 /* For communication from `sh_getopt' to the caller.
    When `sh_getopt' finds an option that takes an argument,
@@ -118,7 +120,7 @@ sh_getopt (int argc, char *const *argv, const char *optstring)
   if (sh_optind >= argc || sh_optind < 0)	/* XXX was sh_optind > argc */
     {
       sh_optind = argc;
-      return (EOF);
+      return EOF;
     }
 
   /* Initialize the internal data when the first call is made.
@@ -342,3 +344,5 @@ main (int argc, char **argv)
 }
 
 #endif /* TEST */
+
+}  // namespace bash

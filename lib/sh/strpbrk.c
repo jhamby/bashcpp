@@ -27,8 +27,6 @@
 
 #if !defined (HAVE_STRPBRK)
 
-#include <stdc.h>
-
 /* Find the first occurrence in S of any character in ACCEPT.  */
 char *
 strpbrk (const char *s, const char *accept)

@@ -20,8 +20,6 @@
 
 #include <config.h>
 
-#include "bashansi.h"
-
 #if defined (HAVE_UNISTD_H)
 #  ifdef _MINIX
 #    include <sys/types.h>
@@ -29,7 +27,7 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "shell.h"
 #include "hashlib.h"
@@ -76,13 +74,13 @@ hash_create (int buckets)
   for (i = 0; i < buckets; i++)
     new_table->bucket_array[i] = (BUCKET_CONTENTS *)NULL;
 
-  return (new_table);
+  return new_table;
 }
 
 int
 hash_size (HASH_TABLE *table)
 {
-  return (HASH_ENTRIES(table));
+  return HASH_ENTRIES(table);
 }
 
 static BUCKET_CONTENTS *
@@ -92,7 +90,7 @@ copy_bucket_array (BUCKET_CONTENTS *ba,
   BUCKET_CONTENTS *new_bucket, *n, *e;
 
   if (ba == 0)
-    return ((BUCKET_CONTENTS *)0);
+    return (BUCKET_CONTENTS *)0;
 
   for (n = (BUCKET_CONTENTS *)0, e = ba; e; e = e->next)
     {
@@ -175,7 +173,7 @@ hash_copy (HASH_TABLE *table, sh_string_func_t *cpdata)
   int i;
 
   if (table == 0)
-    return ((HASH_TABLE *)NULL);
+    return (HASH_TABLE *)NULL;
 
   new_table = hash_create (table->nbuckets);
 
@@ -227,7 +225,7 @@ hash_bucket (const char *string, HASH_TABLE *table)
 {
   unsigned int h;
 
-  return (HASH_BUCKET (string, table, h));
+  return HASH_BUCKET (string, table, h);
 }
 
 /* Return a pointer to the hashed item.  If the HASH_CREATE flag is passed,
@@ -250,7 +248,7 @@ hash_search (const char *string, HASH_TABLE *table, int flags)
       if (hv == list->khash && STREQ (list->key, string))
 	{
 	  list->times_found++;
-	  return (list);
+	  return list;
 	}
     }
 
@@ -272,7 +270,7 @@ hash_search (const char *string, HASH_TABLE *table, int flags)
       list->times_found = 0;
 
       table->nentries++;
-      return (list);
+      return list;
     }
 
   return (BUCKET_CONTENTS *)NULL;
@@ -303,11 +301,11 @@ hash_remove (const char *string, HASH_TABLE *table, int flags)
 	    table->bucket_array[bucket] = temp->next;
 
 	  table->nentries--;
-	  return (temp);
+	  return temp;
 	}
       prev = temp;
     }
-  return ((BUCKET_CONTENTS *) NULL);
+  return (BUCKET_CONTENTS *) NULL;
 }
 
 /* Create an entry for STRING, in TABLE.  If the entry already
@@ -344,7 +342,7 @@ hash_insert (char *string, HASH_TABLE *table, int flags)
       table->nentries++;
     }
 
-  return (item);
+  return item;
 }
 
 /* Remove and discard all entries in TABLE.  If FREE_DATA is non-null, it
@@ -451,7 +449,7 @@ int running_trap = 0;
 int
 signal_is_trapped (int s)
 {
-  return (0);
+  return 0;
 }
 
 void

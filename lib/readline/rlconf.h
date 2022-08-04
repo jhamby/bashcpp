@@ -3,7 +3,7 @@
 /* Copyright (C) 1992-2015 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -75,5 +75,8 @@
 #define RL_VI_INS_MODESTR_DEFLEN	5
 #define RL_VI_CMD_MODESTR_DEFAULT	"(cmd)"
 #define RL_VI_CMD_MODESTR_DEFLEN	5
+
+/* What we assume for a max number of kills. */
+#define DEFAULT_MAX_KILLS 10
 
 #endif /* _RLCONF_H_ */

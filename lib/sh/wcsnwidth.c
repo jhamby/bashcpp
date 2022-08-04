@@ -23,32 +23,37 @@
 
 #if defined (HANDLE_MULTIBYTE)
 
-#include <stdc.h>
-#include <wchar.h>
-#include <bashansi.h>
+#include <cwchar>
+
+#include "externs.h"
+
+namespace bash
+{
 
 /* Return the number of wide characters that will be displayed from wide string
    PWCS.  If the display width exceeds MAX, return the number of wide chars
    from PWCS required to display MAX characters on the screen. */
-int
+ssize_t
 wcsnwidth(const wchar_t *pwcs, size_t n, size_t max)
 {
-  wchar_t wc, *ws;
-  int len, l;
+  wchar_t wc;
 
-  len = 0;
-  ws = (wchar_t *)pwcs;
+  size_t len = 0;
+  const wchar_t *ws = pwcs;
   while (n-- > 0 && (wc = *ws++) != L'\0')
     {
-      l = wcwidth (wc);
+      int l = ::wcwidth (wc);
       if (l < 0)
-	return (-1);
-      else if (l == max - len)
-        return (ws - pwcs);
-      else if (l > max - len)
-        return (--ws - pwcs);
-      len += l;
+	return -1;
+      else if (l == static_cast<int> (max - len))
+        return ws - pwcs;
+      else if (l > static_cast<int> (max - len))
+        return --ws - pwcs;
+      len += static_cast<unsigned int> (l);
     }
-  return (ws - pwcs);
+  return ws - pwcs;
 }
+
+}  // namespace bash
+
 #endif

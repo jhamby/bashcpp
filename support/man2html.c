@@ -169,19 +169,6 @@ stralloc(int len)
 	return newstr;
 }
 
-void *
-xmalloc (size_t size)
-{
-	void *ret;
-
-	ret = malloc (size);
-	if (ret == 0) {
-		fprintf(stderr, "man2html: out of memory");
-		exit(EXIT_FAILURE);
-	}
-	return ret;
-}
-
 /*
  * Some systems don't have strdup so lets use our own - which can also
  * check for out of memory.

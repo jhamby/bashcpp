@@ -29,11 +29,14 @@
 #include <unistd.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 #include "chartypes.h"
 
 #include "shell.h"
 #include "builtins.h"
+
+namespace bash
+{
 
 #define DECIMAL	'.'		/* XXX - should use locale */
 
@@ -42,13 +45,13 @@ do { \
   if (ip) *ip = ipart * mult; \
   if (up) *up = upart; \
   if (ep) *ep = p; \
-  return (x); \
+  return x; \
 } while (0)
 
 /*
  * An incredibly simplistic floating point converter.
  */
-static int multiplier[7] = { 1, 100000, 10000, 1000, 100, 10, 1 };
+static constexpr int multiplier[7] = { 1, 100000, 10000, 1000, 100, 10, 1 };
 
 /* Take a decimal number int-part[.[micro-part]] and convert it to the whole
    and fractional portions.  The fractional portion is returned in
@@ -78,12 +81,12 @@ uconvert(char *s, long *ip, long *up, char **ep)
     {
       if (*p == DECIMAL)		/* decimal point */
 	break;
-      if (DIGIT(*p) == 0)
+      if (std::isdigit(*p) == 0)
 	RETURN(0);
       ipart = (ipart * 10) + (*p - '0');
     }
 
-  if (p == 0 || *p == 0)	/* callers ensure p can never be 0; this is to shut up clang */
+  if (p == nullptr || *p == 0)	/* callers ensure p can never be 0; this is to shut up clang */
     RETURN(1);
 
   if (*p == DECIMAL)
@@ -92,7 +95,7 @@ uconvert(char *s, long *ip, long *up, char **ep)
   /* Look for up to six digits past a decimal point. */
   for (n = 0; n < 6 && p[n]; n++)
     {
-      if (DIGIT(p[n]) == 0)
+      if (std::isdigit(p[n]) == 0)
 	{
 	  if (ep)
 	    {
@@ -113,9 +116,11 @@ uconvert(char *s, long *ip, long *up, char **ep)
   if (ep)
     {
       p += n;
-      while (DIGIT(*p))
+      while (std::isdigit(*p))
 	p++;
     }
 
   RETURN(1);
 }
+
+}  // namespace bash

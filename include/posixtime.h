@@ -29,7 +29,7 @@
 #  include <sys/time.h>
 #endif
 
-#include <time.h>
+#include <ctime>
 
 #if !defined (HAVE_SYSCONF) || !defined (_SC_CLK_TCK)
 #  if !defined (CLK_TCK)

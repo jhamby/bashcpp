@@ -26,14 +26,9 @@
 #  include <unistd.h>
 #endif
 
-#if defined (HAVE_LIMITS_H)
-#  include <limits.h>
-#endif
-
-#include <bashansi.h>
-#ifdef HAVE_STDDEF_H
-#  include <stddef.h>
-#endif
+#include <climits>
+#include <cstddef>
+#include <cstring>
 
 #ifdef HAVE_STDINT_H
 #  include <stdint.h>
@@ -42,20 +37,14 @@
 #  include <inttypes.h>
 #endif
 #include <chartypes.h>
-#include <errno.h>
+#include <cerrno>
 
 #include <bashintl.h>
 
-#include "stdc.h"
-
 #include <typemax.h>
 
-#ifndef errno
-extern int errno;
-#endif
-
-#define x_digs  "0123456789abcdef"
-#define X_digs  "0123456789ABCDEF"
+const char *x_digs = "0123456789abcdef";
+const char *X_digs = "0123456789ABCDEF";
 
 /* XXX -- assumes uppercase letters, lowercase letters, and digits are
    contiguous */
@@ -94,10 +83,10 @@ fmtulong (UNSIGNED_LONG ui, int base, char *buf, size_t len, int flags)
     {
 #if 1
       /* XXX - truncation possible with long translation */
-      strncpy (buf, _("invalid base"), len - 1);
-      buf[len-1] = '\0';
+      std::strncpy (buf, _("invalid base"), len - 1);
+      buf[len - 1] = '\0';
       errno = EINVAL;
-      return (p = buf);
+      return p = buf;
 #else
       base = 10;
 #endif
@@ -119,26 +108,26 @@ fmtulong (UNSIGNED_LONG ui, int base, char *buf, size_t len, int flags)
     case 10:
       if (ui < 10)
 	{
-	  *p-- = TOCHAR (ui);
+	  *p-- = static_cast<char> (ui);
 	  break;
 	}
       /* Favor signed arithmetic over unsigned arithmetic; it is faster on
 	 many machines. */
       if ((LONG)ui < 0)
 	{
-	  *p-- = TOCHAR (ui % 10);
+	  *p-- = static_cast<char> (ui % 10);
 	  si = ui / 10;
 	}
       else
         si = ui;
       do
-	*p-- = TOCHAR (si % 10);
+	*p-- = static_cast<char> (si % 10);
       while (si /= 10);
       break;
 
     case 8:
       do
-	*p-- = TOCHAR (ui & 7);
+	*p-- = static_cast<char> (ui & 7);
       while (ui >>= 3);
       break;
 
@@ -150,7 +139,7 @@ fmtulong (UNSIGNED_LONG ui, int base, char *buf, size_t len, int flags)
 
     case 2:
       do
-	*p-- = TOCHAR (ui & 1);
+	*p-- = static_cast<char> (ui & 1);
       while (ui >>= 1);
       break;
 
@@ -174,13 +163,13 @@ fmtulong (UNSIGNED_LONG ui, int base, char *buf, size_t len, int flags)
   else if ((flags & FL_ADDBASE) && base != 10)
     {
       *p-- = '#';
-      *p-- = TOCHAR (base % 10);
+      *p-- = static_cast<char> (base % 10);
       if (base > 10)
-        *p-- = TOCHAR (base / 10);
+        *p-- = static_cast<char> (base / 10);
     }
 
   if (sign)
     *p-- = '-';
 
-  return (p + 1);
+  return p + 1;
 }

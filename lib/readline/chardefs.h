@@ -22,136 +22,160 @@
 #ifndef _CHARDEFS_H_
 #define _CHARDEFS_H_
 
-#include <ctype.h>
+namespace readline
+{
 
-#if defined (HAVE_CONFIG_H)
-#  if defined (HAVE_STRING_H)
-#    include <string.h>
-#  endif /* HAVE_STRING_H */
-#  if defined (HAVE_STRINGS_H)
-#    include <strings.h>
-#  endif /* HAVE_STRINGS_H */
-#else
-#  include <string.h>
-#endif /* !HAVE_CONFIG_H */
+static inline bool whitespace (char c) {
+  return c == ' ' || c == '\t';
+}
 
-#ifndef whitespace
-#define whitespace(c) (((c) == ' ') || ((c) == '\t'))
-#endif
-
-#ifdef CTRL
-#  undef CTRL
-#endif
-#ifdef UNCTRL
-#  undef UNCTRL
-#endif
+static inline bool member (char c, const char *s) {
+  return c ? (std::strchr (s, c) != nullptr) : false;
+}
 
 /* Some character stuff. */
-#define control_character_threshold 0x020   /* Smaller than this is control. */
-#define control_character_mask 0x1f	    /* 0x20 - 1 */
-#define meta_character_threshold 0x07f	    /* Larger than this is Meta. */
-#define control_character_bit 0x40	    /* 0x000000, must be off. */
-#define meta_character_bit 0x080	    /* x0000000, must be on. */
-#define largest_char 255		    /* Largest character value. */
+#define control_character_threshold 0x020	/* Smaller than this is control. */
+#define control_character_mask 0x1f		/* 0x20 - 1 */
+#define meta_character_threshold 0x07f		/* Larger than this is Meta. */
+#define control_character_bit 0x40		/* 0x000000, must be off. */
+#define meta_character_bit 0x080		/* x0000000, must be on. */
+#define largest_char 255		/* Largest character value. */
 
 #define CTRL_CHAR(c) ((c) < control_character_threshold && (((c) & 0x80) == 0))
 #define META_CHAR(c) ((c) > meta_character_threshold && (c) <= largest_char)
+
+// Linux <sys/ttydefaults.h> defines this.
+#ifdef CTRL
+#undef CTRL
+#endif
 
 #define CTRL(c) ((c) & control_character_mask)
 #define META(c) ((c) | meta_character_bit)
 
 #define UNMETA(c) ((c) & (~meta_character_bit))
-#define UNCTRL(c) _rl_to_upper(((c)|control_character_bit))
+#define UNCTRL(c) (static_cast<char> (_rl_to_upper(((c) | control_character_bit))))
 
 #define IN_CTYPE_DOMAIN(c) 1
-
-#if !defined (isxdigit) && !defined (HAVE_ISXDIGIT) && !defined (__cplusplus)
-#  define isxdigit(c)   (isdigit((unsigned char)(c)) || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F'))
-#endif
 
 #if defined (CTYPE_NON_ASCII)
 #  define NON_NEGATIVE(c) 1
 #else
-#  define NON_NEGATIVE(c) ((unsigned char)(c) == (c))
+#  define NON_NEGATIVE(c) (static_cast<unsigned char> (c) == (c))
 #endif
 
 /* Some systems define these; we want our definitions. */
 #undef ISPRINT
 
-/* Beware:  these only work with single-byte ASCII characters. */
+/* Beware:  these only work with single-byte ASCII characters (or EBCDIC). */
 
-#define ISALNUM(c)	(IN_CTYPE_DOMAIN (c) && isalnum ((unsigned char)c))
-#define ISALPHA(c)	(IN_CTYPE_DOMAIN (c) && isalpha ((unsigned char)c))
-#define ISDIGIT(c)	(IN_CTYPE_DOMAIN (c) && isdigit ((unsigned char)c))
-#define ISLOWER(c)	(IN_CTYPE_DOMAIN (c) && islower ((unsigned char)c))
-#define ISPRINT(c)	(IN_CTYPE_DOMAIN (c) && isprint ((unsigned char)c))
-#define ISUPPER(c)	(IN_CTYPE_DOMAIN (c) && isupper ((unsigned char)c))
-#define ISXDIGIT(c)	(IN_CTYPE_DOMAIN (c) && isxdigit ((unsigned char)c))
+static inline bool _rl_lowercase_p (int c) {
+  return NON_NEGATIVE(c) && std::islower(c);
+}
 
-#define _rl_lowercase_p(c)	(NON_NEGATIVE(c) && ISLOWER(c))
-#define _rl_uppercase_p(c)	(NON_NEGATIVE(c) && ISUPPER(c))
-#define _rl_digit_p(c)		((c) >= '0' && (c) <= '9')
+static inline bool _rl_uppercase_p (int c) {
+  return NON_NEGATIVE(c) && std::isupper(c);
+}
 
-#define _rl_pure_alphabetic(c)	(NON_NEGATIVE(c) && ISALPHA(c))
-#define ALPHABETIC(c)		(NON_NEGATIVE(c) && ISALNUM(c))
+static inline bool _rl_digit_p (int c) {
+  return c >= '0' && c <= '9';
+}
 
-#ifndef _rl_to_upper
-#  define _rl_to_upper(c) (_rl_lowercase_p(c) ? toupper((unsigned char)c) : (c))
-#  define _rl_to_lower(c) (_rl_uppercase_p(c) ? tolower((unsigned char)c) : (c))
+static inline bool _rl_pure_alphabetic (int c) {
+  return NON_NEGATIVE(c) && std::isalpha(c);
+}
+
+static inline bool ALPHABETIC (int c) {
+  return NON_NEGATIVE(c) && std::isalnum(c);
+}
+
+static inline int _rl_to_upper (int c) {
+  return _rl_lowercase_p (c) ? std::toupper (static_cast<unsigned char> (c)) : c;
+}
+
+static inline int _rl_to_lower (int c) {
+  return _rl_uppercase_p (c) ? std::tolower (static_cast<unsigned char> (c)) : c;
+}
+
+static inline int _rl_digit_value (int c) {
+  return c - '0';
+}
+
+static inline bool _rl_isident (int c) {
+  return std::isalnum(c) || (c) == '_';
+}
+
+static inline bool ISOCTAL (int c) {
+  return c >= '0' && c <= '7';
+}
+
+static inline int OCTVALUE (int c) {
+  return c - '0';
+}
+
+static inline bool ISXDIGIT (int c) {
+  return std::isxdigit (c);
+}
+
+static inline int HEXVALUE (int c) {
+  return (c >= 'a' && c <= 'f')
+	  ? (c - 'a' + 10)
+	  : (c >= 'A' && c <= 'F') ? (c - 'A' + 10) : (c - '0');
+}
+
+/* Return 0 if C is not a member of the class of characters that belong
+   in words, or 1 if it is.  Moved from util.c. */
+
+const bool _rl_allow_pathname_alphabetic_chars = false;
+const char *const pathname_alphabetic_chars = "/-_=~.#$";
+
+static inline bool
+rl_alphabetic (char c)
+{
+  if (ALPHABETIC (c))
+    return true;
+
+  return (_rl_allow_pathname_alphabetic_chars &&
+	    std::strchr (pathname_alphabetic_chars, c) != nullptr);
+}
+
+#if defined (HANDLE_MULTIBYTE)
+static inline bool
+_rl_walphabetic (wint_t wc)
+{
+  if (std::iswalnum (wc))
+    return true;
+
+  return (_rl_allow_pathname_alphabetic_chars &&
+	    std::strchr (pathname_alphabetic_chars, (wc & 0177)) != nullptr);
+}
 #endif
 
-#ifndef _rl_digit_value
-#  define _rl_digit_value(x) ((x) - '0')
-#endif
+// Note: making these chars unsigned eliminates warnings when using them as array indices.
 
-#ifndef _rl_isident
-#  define _rl_isident(c) (ISALNUM(c) || (c) == '_')
-#endif
+// Newline character.
+const unsigned char NEWLINE = '\n';
 
-#ifndef ISOCTAL
-#  define ISOCTAL(c)	((c) >= '0' && (c) <= '7')
-#endif
-#define OCTVALUE(c)	((c) - '0')
+// Return character (^M).
+const unsigned char RETURN = CTRL('M');
 
-#define HEXVALUE(c) \
-  (((c) >= 'a' && (c) <= 'f') \
-  	? (c)-'a'+10 \
-  	: (c) >= 'A' && (c) <= 'F' ? (c)-'A'+10 : (c)-'0')
+// Delete character.
+const unsigned char RUBOUT = 0x7f;
 
-#ifndef NEWLINE
-#define NEWLINE '\n'
-#endif
+// Tab character.
+const unsigned char TAB = '\t';
 
-#ifndef RETURN
-#define RETURN CTRL('M')
-#endif
+// Abort character (^G).
+const unsigned char ABORT_CHAR = CTRL('G');
 
-#ifndef RUBOUT
-#define RUBOUT 0x7f
-#endif
+// Form-feed character (^L).
+const unsigned char PAGE = CTRL('L');
 
-#ifndef TAB
-#define TAB '\t'
-#endif
+// Space character.
+const unsigned char SPACE = ' ';	/* XXX - was 0x20 */
 
-#ifdef ABORT_CHAR
-#undef ABORT_CHAR
-#endif
-#define ABORT_CHAR CTRL('G')
+// Escape character.
+const unsigned char ESC = CTRL('[');
 
-#ifdef PAGE
-#undef PAGE
-#endif
-#define PAGE CTRL('L')
-
-#ifdef SPACE
-#undef SPACE
-#endif
-#define SPACE ' '	/* XXX - was 0x20 */
-
-#ifdef ESC
-#undef ESC
-#endif
-#define ESC CTRL('[')
+}  // namespace readline
 
 #endif  /* _CHARDEFS_H_ */

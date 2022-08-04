@@ -60,14 +60,14 @@ int continuing = 0;
 /* Set up to break x levels, where x defaults to 1, but can be specified
    as the first argument. */
 int
-break_builtin (WORD_LIST *list)
+Shell::break_builtin (WORD_LIST *list)
 {
   intmax_t newbreak;
 
   CHECK_HELPOPT (list);
 
   if (check_loop_level () == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
   (void)get_numeric_arg (list, 1, &newbreak);
 
@@ -75,7 +75,7 @@ break_builtin (WORD_LIST *list)
     {
       sh_erange (list->word->word, _("loop count"));
       breaking = loop_level;
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (newbreak > loop_level)
@@ -83,7 +83,7 @@ break_builtin (WORD_LIST *list)
 
   breaking = newbreak;
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 $BUILTIN continue
@@ -101,14 +101,14 @@ $END
 /* Set up to continue x levels, where x defaults to 1, but can be specified
    as the first argument. */
 int
-continue_builtin (WORD_LIST *list)
+Shell::continue_builtin (WORD_LIST *list)
 {
   intmax_t newcont;
 
   CHECK_HELPOPT (list);
 
   if (check_loop_level () == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
   (void)get_numeric_arg (list, 1, &newcont);
 
@@ -116,7 +116,7 @@ continue_builtin (WORD_LIST *list)
     {
       sh_erange (list->word->word, _("loop count"));
       breaking = loop_level;
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (newcont > loop_level)
@@ -124,7 +124,7 @@ continue_builtin (WORD_LIST *list)
 
   continuing = newcont;
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 /* Return non-zero if a break or continue command would be okay.
@@ -137,5 +137,5 @@ check_loop_level ()
     builtin_error (_("only meaningful in a `for', `while', or `until' loop"));
 #endif /* BREAK_COMPLAINS */
 
-  return (loop_level);
+  return loop_level;
 }

@@ -21,6 +21,8 @@
 #include <config.h>
 
 #include <bashtypes.h>
+#include <externs.h>
+
 #if defined (HAVE_SYS_PARAM_H)
 #  include <sys/param.h>
 #endif
@@ -30,7 +32,7 @@
 #endif
 
 #if defined (HAVE_LIMITS_H)
-#  include <limits.h>
+#  include <climits>
 #endif
 
 #if !defined (HAVE_SYSCONF) || !defined (_SC_CLK_TCK)
@@ -43,19 +45,24 @@
 #  endif /* !CLK_TCK */
 #endif /* !HAVE_SYSCONF && !_SC_CLK_TCK */
 
+namespace bash
+{
+
 long
 get_clk_tck ()
 {
   static long retval = 0;
 
   if (retval != 0)
-    return (retval);
+    return retval;
 
 #if defined (HAVE_SYSCONF) && defined (_SC_CLK_TCK)
-  retval = sysconf (_SC_CLK_TCK);
+  retval = ::sysconf (_SC_CLK_TCK);
 #else /* !SYSCONF || !_SC_CLK_TCK */
   retval = CLK_TCK;
 #endif /* !SYSCONF || !_SC_CLK_TCK */
 
-  return (retval);
+  return retval;
 }
+
+}  // namespace bash

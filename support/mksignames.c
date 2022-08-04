@@ -22,14 +22,10 @@
 #include <config.h>
 
 #include <sys/types.h>
-#include <signal.h>
+#include <csignal>
 
-#include <stdio.h>
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif /* HAVE_STDLIB_H */
+#include <cstdio>
+#include <cstdlib>
 
 /* Duplicated from signames.c */
 #if !defined (NSIG)
@@ -40,11 +36,12 @@
 
 /* Imported from signames.c */
 extern void initialize_signames ();
-extern char *signal_names[];
+extern const char *signal_names[];
+extern char *progname;
 
 char *progname;
 
-void
+static void
 write_signames (FILE *stream)
 {
   int i;
@@ -63,7 +60,7 @@ write_signames (FILE *stream)
   for (i = 0; i <= LASTSIG; i++)
     fprintf (stream, "    \"%s\",\n", signal_names[i]);
 
-  fprintf (stream, "    (char *)0x0\n");
+  fprintf (stream, "    nullptr\n");
   fprintf (stream, "};\n\n");
   fprintf (stream, "#define initialize_signames()\n\n");
 #endif

@@ -22,7 +22,6 @@
 
 #if !defined (HAVE_STRCASECMP)
 
-#include <stdc.h>
 #include <bashansi.h>
 #include <chartypes.h>
 
@@ -50,7 +49,7 @@ strncasecmp (const char *string1, const char *string2, size_t count)
     }
   while (--count != 0);
 
-  return (0);
+  return 0;
 }
 
 /* strcmp (), but caseless. */
@@ -65,7 +64,7 @@ strcasecmp (const char *string1, const char *string2)
   s2 = string2;
 
   if (s1 == s2)
-    return (0);
+    return 0;
 
   while ((r = TOLOWER ((unsigned char)*s1) - TOLOWER ((unsigned char)*s2)) == 0)
     {
@@ -74,6 +73,6 @@ strcasecmp (const char *string1, const char *string2)
       s2++;
     }
 
-  return (r);
+  return r;
 }
 #endif /* !HAVE_STRCASECMP */

@@ -21,22 +21,22 @@
 #if !defined (_BASHTYPES_H_)
 #  define _BASHTYPES_H_
 
-#if defined (CRAY)
-#  define word __word
-#endif
-
 #include <sys/types.h>
-
-#if defined (CRAY)
-#  undef word
-#endif
 
 #if defined (HAVE_INTTYPES_H)
 #  include <inttypes.h>
 #endif
 
-#if HAVE_STDINT_H
+#if defined (HAVE_STDINT_H)
 #  include <stdint.h>
+#endif
+
+// Fake C++11 keywords for older C++ compilers.
+#if !defined (nullptr) && __cplusplus < 201103L
+# define noexcept throw ()
+# define override
+# define nullptr NULL
+# define constexpr const
 #endif
 
 #endif /* _BASHTYPES_H_ */

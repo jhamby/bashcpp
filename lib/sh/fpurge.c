@@ -20,13 +20,10 @@
 
 #include <config.h>
 
-#include "stdc.h"
-
-#include <stdio.h>
+#include <cstdio>
 
 /* Specification.  Same as in ../../externs.h.  */
-#define NEED_FPURGE_DECL
-#if HAVE_FPURGE
+#if defined (HAVE_FPURGE)
 #  define fpurge _bash_fpurge
 #endif
 extern int fpurge (FILE *stream);
@@ -34,7 +31,7 @@ extern int fpurge (FILE *stream);
 #if HAVE___FPURGE                   /* glibc >= 2.2, Haiku, Solaris >= 7 */
 # include <stdio_ext.h>
 #endif
-#include <stdlib.h>
+#include <cstdlib>
 
 /* Inline contents of gnulib:stdio-impl.h */
 

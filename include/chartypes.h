@@ -21,89 +21,54 @@
 #ifndef _SH_CHARTYPES_H
 #define _SH_CHARTYPES_H
 
-#include <ctype.h>
+#include <cctype>
 
-/* Jim Meyering writes:
+namespace bash {
 
-   "... Some ctype macros are valid only for character codes that
-   isascii says are ASCII (SGI's IRIX-4.0.5 is one such system --when
-   using /bin/cc or gcc but without giving an ansi option).  So, all
-   ctype uses should be through macros like ISPRINT...  If
-   STDC_HEADERS is defined, then autoconf has verified that the ctype
-   macros don't need to be guarded with references to isascii. ...
-   Defining IN_CTYPE_DOMAIN to 1 should let any compiler worth its salt
-   eliminate the && through constant folding."
-   Solaris defines some of these symbols so we must undefine them first.  */
-
-#define IN_CTYPE_DOMAIN(c) 1
-
-#if !defined (isspace) && !defined (HAVE_ISSPACE)
-#  define isspace(c) ((c) == ' ' || (c) == '\t' || (c) == '\n' || (c) == '\f')
-#endif
-
-#if !defined (isprint) && !defined (HAVE_ISPRINT)
-#  define isprint(c) (isalpha((unsigned char)c) || isdigit((unsigned char)c) || ispunct((unsigned char)c))
-#endif
-
-#if defined (isblank) || defined (HAVE_ISBLANK)
-#  define ISBLANK(c) (IN_CTYPE_DOMAIN (c) && isblank ((unsigned char)c))
+// OpenVMS has C++03 except some C99 functions are in namespace std only.
+#if __cplusplus >= 201103L || defined(__VMS)
+using std::isblank;
 #else
-#  define ISBLANK(c) ((c) == ' ' || (c) == '\t')
+using ::isblank;
 #endif
 
-#if defined (isgraph) || defined (HAVE_ISGRAPH)
-#  define ISGRAPH(c) (IN_CTYPE_DOMAIN (c) && isgraph (c))
-#else
-#  define ISGRAPH(c) (IN_CTYPE_DOMAIN (c) && isprint ((unsigned char)c) && !isspace ((unsigned char)c))
-#endif
+static inline bool isword(char c) {
+  return std::isalpha(c) || std::isdigit(c) || (c == '_');
+}
 
-#if !defined (isxdigit) && !defined (HAVE_ISXDIGIT)
-#  define isxdigit(c)	(((c) >= '0' && (c) <= '9') || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F'))
-#endif
+static inline int hexvalue(char c) {
+  return (c >= 'a' && c <= 'f')
+	  ? (c - 'a' + 10)
+	  : (c >= 'A' && c <= 'F') ? (c - 'A' + 10) : (c - '0');
+}
 
-#undef ISPRINT
+static inline bool isoctal(char c) {
+  return c >= '0' && c <= '7';
+}
 
-#define ISPRINT(c) (IN_CTYPE_DOMAIN (c) && isprint ((unsigned char)c))
-#define ISDIGIT(c) (IN_CTYPE_DOMAIN (c) && isdigit ((unsigned char)c))
-#define ISALNUM(c) (IN_CTYPE_DOMAIN (c) && isalnum ((unsigned char)c))
-#define ISALPHA(c) (IN_CTYPE_DOMAIN (c) && isalpha ((unsigned char)c))
-#define ISCNTRL(c) (IN_CTYPE_DOMAIN (c) && iscntrl ((unsigned char)c))
-#define ISLOWER(c) (IN_CTYPE_DOMAIN (c) && islower ((unsigned char)c))
-#define ISPUNCT(c) (IN_CTYPE_DOMAIN (c) && ispunct ((unsigned char)c))
-#define ISSPACE(c) (IN_CTYPE_DOMAIN (c) && isspace ((unsigned char)c))
-#define ISUPPER(c) (IN_CTYPE_DOMAIN (c) && isupper ((unsigned char)c))
-#define ISXDIGIT(c) (IN_CTYPE_DOMAIN (c) && isxdigit ((unsigned char)c))
+static inline int octvalue(char c) {
+  return c - '0';
+}
 
-#define ISLETTER(c)	(ISALPHA(c))
+static inline int todigit(char c) {
+  return c - '0';
+}
 
-#define DIGIT(c)	((c) >= '0' && (c) <= '9')
+static inline char tochar(int i) {
+  return static_cast<char>(i) + '0';
+}
 
-#define ISWORD(c)	(ISLETTER(c) || DIGIT(c) || ((c) == '_'))
+/* letter to control char -- ASCII.  The TOUPPER is in there so \ce and
+   \cE will map to the same character in $'...' expansions. */
+static inline char toctrl(char c) {
+  return (c == '?') ? 0x7f : (std::toupper(c) & 0x1f);
+}
 
-#define HEXVALUE(c) \
-  (((c) >= 'a' && (c) <= 'f') \
-	? (c)-'a'+10 \
-	: (c) >= 'A' && (c) <= 'F' ? (c)-'A'+10 : (c)-'0')
+/* control char to letter -- ASCII */
+static inline int unctrl(char c) {
+  return std::toupper(c) ^ 0x40;
+}
 
-#ifndef ISOCTAL
-#  define ISOCTAL(c)	((c) >= '0' && (c) <= '7')
-#endif
-#define OCTVALUE(c)	((c) - '0')
-
-#define TODIGIT(c)	((c) - '0')
-#define TOCHAR(c)	((c) + '0')
-
-#define TOLOWER(c)	(ISUPPER(c) ? tolower(c) : (c))
-#define TOUPPER(c)	(ISLOWER(c) ? toupper(c) : (c))
-
-#ifndef TOCTRL
-   /* letter to control char -- ASCII.  The TOUPPER is in there so \ce and
-      \cE will map to the same character in $'...' expansions. */
-#  define TOCTRL(x)	((x) == '?' ? 0x7f : (TOUPPER(x) & 0x1f))
-#endif
-#ifndef UNCTRL
-   /* control char to letter -- ASCII */
-#  define UNCTRL(x)	(TOUPPER(x) ^ 0x40)
-#endif
+}
 
 #endif /* _SH_CHARTYPES_H */

@@ -94,10 +94,6 @@ $END
 #include "bashgetopt.h"
 #include "pipesize.h"
 
-#if !defined (errno)
-extern int errno;
-#endif
-
 /* For some reason, HPUX chose to make these definitions visible only if
    _KERNEL is defined, so we define _KERNEL before including <sys/resource.h>
    and #undef it afterward. */
@@ -203,6 +199,9 @@ extern int errno;
 #define POSIXBLK	-2
 
 #define BLOCKSIZE(x)	(((x) == POSIXBLK) ? (posixly_correct ? 512 : 1024) : (x))
+
+namespace bash
+{
 
 static int _findlim (int);
 
@@ -326,7 +325,7 @@ static char optstring[4 + 2 * NCMDS];
 /* Report or set limits associated with certain per-process resources.
    See the help documentation in builtins.c for a full description. */
 int
-ulimit_builtin (WORD_LIST *list)
+Shell::ulimit_builtin (WORD_LIST *list)
 {
 //   int c, limind, mode, opt, all_limits;
 
@@ -374,7 +373,7 @@ ulimit_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	case '?':
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 
 	default:
 	  if (ncmd >= cmdlistsz)
@@ -394,13 +393,13 @@ ulimit_builtin (WORD_LIST *list)
           if (STREQ (list->word->word, "unlimited") == 0)
             {
               builtin_error (_("%s: invalid limit argument"), list->word->word);
-              return (EXECUTION_FAILURE);
+              return EXECUTION_FAILURE;
             }
-          return (set_all_limits (mode == 0 ? LIMIT_SOFT|LIMIT_HARD : mode, RLIM_INFINITY));
+          return set_all_limits (mode == 0 ? LIMIT_SOFT|LIMIT_HARD : mode, RLIM_INFINITY);
         }
 #endif
       print_all_limits (mode == 0 ? LIMIT_SOFT : mode);
-      return (sh_chkwrite (EXECUTION_SUCCESS));
+      return sh_chkwrite (EXECUTION_SUCCESS);
     }
 
   /* default is `ulimit -f' */
@@ -420,15 +419,15 @@ ulimit_builtin (WORD_LIST *list)
       if (limind == -1)
 	{
 	  builtin_error (_("`%c': bad command"), cmdlist[c].cmd);
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
 
   for (int c = 0; c < ncmd; c++)
     if (ulimit_internal (cmdlist[c].cmd, cmdlist[c].arg, mode, ncmd > 1) == EXECUTION_FAILURE)
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 static int
@@ -447,13 +446,13 @@ ulimit_internal (int cmd, char *cmdarg, int mode, int multiple)
     {
       builtin_error (_("%s: cannot get limit: %s"), limits[limind].description,
 						 strerror (errno));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (setting == 0)	/* print the value of the specified limit */
     {
       printone (limind, (mode & LIMIT_SOFT) ? soft_limit : hard_limit, multiple);
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   /* Setting the limit. */
@@ -472,23 +471,23 @@ ulimit_internal (int cmd, char *cmdarg, int mode, int multiple)
       if ((real_limit / block_factor) != limit)
 	{
 	  sh_erange (cmdarg, _("limit"));
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
     }
   else
     {
       sh_invalidnum (cmdarg);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (set_limit (limind, real_limit, mode) < 0)
     {
       builtin_error (_("%s: cannot modify limit: %s"), limits[limind].description,
 						    strerror (errno));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 static int
@@ -515,7 +514,7 @@ get_limit (int ind, RLIMTYPE *softlim, RLIMTYPE *hardlim)
 	  value = (RLIMTYPE)getdtablesize ();
 	  break;
 	case RLIMIT_VIRTMEM:
-	  return (getmaxvm (softlim, hardlim));
+	  return getmaxvm (softlim, hardlim);
 	case RLIMIT_MAXUPROC:
 	  if (getmaxuprc (&value) < 0)
 	    return -1;
@@ -525,7 +524,7 @@ get_limit (int ind, RLIMTYPE *softlim, RLIMTYPE *hardlim)
 	  return -1;
 	}
       *softlim = *hardlim = value;
-      return (0);
+      return 0;
     }
   else
     {
@@ -563,7 +562,7 @@ set_limit (int ind, RLIMTYPE newlim, int mode)
       {
       case RLIMIT_FILESIZE:
 #if !defined (HAVE_RESOURCE)
-	return (ulimit (2, newlim / 512L));
+	return ulimit (2, newlim / 512L);
 #else
 	errno = EINVAL;
 	return -1;
@@ -576,7 +575,7 @@ set_limit (int ind, RLIMTYPE newlim, int mode)
 	setdtablesize (newlim);
 	return 0;
 #  else
-	return (setdtablesize (newlim));
+	return setdtablesize (newlim);
 #  endif
 #endif
       case RLIMIT_PIPESIZE:
@@ -604,7 +603,7 @@ set_limit (int ind, RLIMTYPE newlim, int mode)
       if (mode & LIMIT_HARD)
 	limit.rlim_max = val;
 
-      return (setrlimit (limits[ind].parameter, &limit));
+      return setrlimit (limits[ind].parameter, &limit);
 #else
       errno = EINVAL;
       return -1;
@@ -775,3 +774,5 @@ set_all_limits (int mode, RLIMTYPE newlim)
 }
 
 #endif /* !_MINIX */
+
+}  // namespace bash

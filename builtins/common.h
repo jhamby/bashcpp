@@ -21,7 +21,10 @@
 #if  !defined (__COMMON_H)
 #  define __COMMON_H
 
-#include "stdc.h"
+#include "../command.h"
+
+namespace bash
+{
 
 #define ISOPTION(s, c)	(s[0] == '-' && s[1] == c && !s[2])
 #define ISHELP(s)	(STREQ ((s), "--help"))
@@ -31,222 +34,194 @@ do { \
   if ((l) && (l)->word && ISHELP((l)->word->word)) \
     { \
       builtin_help (); \
-      return (EX_USAGE); \
+      return EX_USAGE; \
     } \
 } while (0)
 
 #define CASE_HELPOPT \
   case GETOPT_HELP: \
     builtin_help (); \
-    return (EX_USAGE)
+    return EX_USAGE
 
 /* Flag values for parse_and_execute () */
-#define SEVAL_NONINT	0x001
-#define SEVAL_INTERACT	0x002
-#define SEVAL_NOHIST	0x004
-#define SEVAL_NOFREE	0x008
-#define SEVAL_RESETLINE	0x010
-#define SEVAL_PARSEONLY	0x020
-#define SEVAL_NOLONGJMP 0x040
-#define SEVAL_FUNCDEF	0x080		/* only allow function definitions */
-#define SEVAL_ONECMD	0x100		/* only allow a single command */
-#define SEVAL_NOHISTEXP	0x200		/* inhibit history expansion */
+enum parse_flags {
+  SEVAL_NONINT =	0x001,
+  SEVAL_INTERACT =	0x002,
+  SEVAL_NOHIST =	0x004,
+  SEVAL_NOFREE =	0x008,
+  SEVAL_RESETLINE =	0x010,
+  SEVAL_PARSEONLY =	0x020,
+  SEVAL_NOLONGJMP =	0x040,
+  SEVAL_FUNCDEF =	0x080,		/* only allow function definitions */
+  SEVAL_ONECMD =	0x100,		/* only allow a single command */
+  SEVAL_NOHISTEXP =	0x200		/* inhibit history expansion */
+};
 
 /* Flags for describe_command, shared between type.def and command.def */
-#define CDESC_ALL		0x001	/* type -a */
-#define CDESC_SHORTDESC		0x002	/* command -V */
-#define CDESC_REUSABLE		0x004	/* command -v */
-#define CDESC_TYPE		0x008	/* type -t */
-#define CDESC_PATH_ONLY		0x010	/* type -p */
-#define CDESC_FORCE_PATH	0x020	/* type -ap or type -P */
-#define CDESC_NOFUNCS		0x040	/* type -f */
-#define CDESC_ABSPATH		0x080	/* convert to absolute path, no ./ */
-#define CDESC_STDPATH		0x100	/* command -p */
+enum cmd_desc_flags {
+  CDESC_ALL =		0x001,	/* type -a */
+  CDESC_SHORTDESC =	0x002,	/* command -V */
+  CDESC_REUSABLE =	0x004,	/* command -v */
+  CDESC_TYPE =		0x008,	/* type -t */
+  CDESC_PATH_ONLY =	0x010,	/* type -p */
+  CDESC_FORCE_PATH =	0x020,	/* type -ap or type -P */
+  CDESC_NOFUNCS =	0x040,	/* type -f */
+  CDESC_ABSPATH =	0x080,	/* convert to absolute path, no ./ */
+  CDESC_STDPATH =	0x100	/* command -p */
+};
 
 /* Flags for get_job_by_name */
-#define JM_PREFIX		0x01	/* prefix of job name */
-#define JM_SUBSTRING		0x02	/* substring of job name */
-#define JM_EXACT		0x04	/* match job name exactly */
-#define JM_STOPPED		0x08	/* match stopped jobs only */
-#define JM_FIRSTMATCH		0x10	/* return first matching job */
+enum get_job_flags {
+  JM_PREFIX =		0x01,	/* prefix of job name */
+  JM_SUBSTRING =	0x02,	/* substring of job name */
+  JM_EXACT =		0x04,	/* match job name exactly */
+  JM_STOPPED =		0x08,	/* match stopped jobs only */
+  JM_FIRSTMATCH =	0x10	/* return first matching job */
+};
 
 /* Flags for remember_args and value of changed_dollar_vars */
-#define ARGS_NONE		0x0
-#define ARGS_INVOC		0x01
-#define ARGS_FUNC		0x02
-#define ARGS_SETBLTIN		0x04
+enum remember_args_flags {
+  ARGS_NONE =		0x0,
+  ARGS_INVOC =		0x01,
+  ARGS_FUNC =		0x02,
+  ARGS_SETBLTIN =	0x04
+};
 
 /* Maximum number of attribute letters */
-#define MAX_ATTRIBUTES		16
+const int MAX_ATTRIBUTES = 16;
 
 /* Functions from common.c */
-extern void builtin_error (const char *, ...)  __attribute__((__format__ (printf, 1, 2)));
-extern void builtin_warning (const char *, ...)  __attribute__((__format__ (printf, 1, 2)));
-extern void builtin_usage (void);
-extern void no_args (WORD_LIST *);
-extern int no_options (WORD_LIST *);
+void builtin_error (const char *, ...)  __attribute__((__format__ (printf, 1, 2)));
+void builtin_warning (const char *, ...)  __attribute__((__format__ (printf, 1, 2)));
+void builtin_usage ();
+void no_args (WORD_LIST *);
+int no_options (WORD_LIST *);
 
 /* common error message functions */
-extern void sh_needarg (const char *);
-extern void sh_neednumarg (const char *);
-extern void sh_notfound (const char *);
-extern void sh_invalidopt (const char *);
-extern void sh_invalidoptname (const char *);
-extern void sh_invalidid (const char *);
-extern void sh_invalidnum (const char *);
-extern void sh_invalidsig (const char *);
-extern void sh_erange (const char *, const char *);
-extern void sh_badpid (const char *);
-extern void sh_badjob (const char *);
-extern void sh_readonly (const char *);
-extern void sh_nojobs (const char *);
-extern void sh_restricted (const char *);
-extern void sh_notbuiltin (const char *);
-extern void sh_wrerror (void);
-extern void sh_ttyerror (int);
-extern int sh_chkwrite (int);
+void sh_needarg (const char *);
+void sh_neednumarg (const char *);
+void sh_notfound (const char *);
+void sh_invalidopt (const char *);
+void sh_invalidoptname (const char *);
+void sh_invalidid (const char *);
+void sh_invalidnum (const char *);
+void sh_invalidsig (const char *);
+void sh_erange (const char *, const char *);
+void sh_badpid (const char *);
+void sh_badjob (const char *);
+void sh_readonly (const char *);
+void sh_nojobs (const char *);
+void sh_restricted (const char *);
+void sh_notbuiltin (const char *);
+void sh_wrerror ();
+void sh_ttyerror (int);
+int sh_chkwrite (int);
 
-extern char **make_builtin_argv (WORD_LIST *, int *);
-extern void remember_args (WORD_LIST *, bool);
-extern void shift_args (int);
-extern int number_of_args (void);
+char **make_builtin_argv (WORD_LIST *, int *);
+void remember_args (WORD_LIST *, bool);
+void shift_args (int);
+int number_of_args ();
 
-extern int dollar_vars_changed (void);
-extern void set_dollar_vars_unchanged (void);
-extern void set_dollar_vars_changed (void);
+int dollar_vars_changed ();
+void set_dollar_vars_unchanged ();
+void set_dollar_vars_changed ();
 
-extern int get_numeric_arg (WORD_LIST *, int, intmax_t *);
-extern int get_exitstat (WORD_LIST *);
-extern int read_octal (const char *);
-
-/* Keeps track of the current working directory. */
-extern char *the_current_working_directory;
-extern char *get_working_directory (const char *);
-extern void set_working_directory (const char *);
+int get_numeric_arg (WORD_LIST *, int, intmax_t *);
+int get_exitstat (WORD_LIST *);
+int read_octal (const char *);
 
 #if defined (JOB_CONTROL)
-extern int get_job_by_name (const char *, int);
-extern int get_job_spec (WORD_LIST *);
+int get_job_by_name (const char *, int);
+int get_job_spec (WORD_LIST *);
 #endif
-extern int display_signal_list (WORD_LIST *, int);
+int display_signal_list (WORD_LIST *, int);
 
-/* It's OK to declare a function as returning a Function * without
-   providing a definition of what a `Function' is. */
-extern struct builtin *builtin_address_internal (const char *, int);
-extern sh_builtin_func_t *find_shell_builtin (const char *);
-extern sh_builtin_func_t *builtin_address (const char *);
-extern sh_builtin_func_t *find_special_builtin (const char *);
-extern void initialize_shell_builtins (void);
+struct builtin *builtin_address_internal (const char *, int);
+Shell::sh_builtin_func_t find_shell_builtin (const char *);
+Shell::sh_builtin_func_t builtin_address (const char *);
+Shell::sh_builtin_func_t find_special_builtin (const char *);
+void initialize_shell_builtins ();
 
 /* Functions from exit.def */
-extern void bash_logout (void);
+void bash_logout ();
 
 /* Functions from getopts.def */
-extern void getopts_reset (int);
+void getopts_reset (int);
 
 /* Functions from help.def */
-extern void builtin_help (void);
+void builtin_help ();
 
 /* Functions from read.def */
-extern void read_tty_cleanup (void);
-extern int read_tty_modified (void);
+void read_tty_cleanup ();
+int read_tty_modified ();
 
 /* Functions from set.def */
-extern char minus_o_option_value (const char *);
-extern void list_minus_o_opts (int, int);
-extern const char **get_minus_o_opts (void);
-extern int set_minus_o_option (int, const char *);
+char minus_o_option_value (const char *);
+void list_minus_o_opts (int, int);
+const char **get_minus_o_opts ();
+int set_minus_o_option (int, const char *);
 
-extern void set_shellopts (void);
-extern void parse_shellopts (const char *);
-extern void initialize_shell_options (int);
+void set_shellopts ();
+void parse_shellopts (const char *);
+void initialize_shell_options (bool);
 
-extern void reset_shell_options (void);
+void reset_shell_options ();
 
-extern char *get_current_options (void);
-extern void set_current_options (const char *);
+char *get_current_options ();
+void set_current_options (const char *);
 
 /* Functions from shopt.def */
-extern void reset_shopt_options (void);
-extern char **get_shopt_options (void);
+void reset_shopt_options ();
+char **get_shopt_options ();
 
-extern int shopt_setopt (const char *, int);
-extern int shopt_listopt (const char *, int);
+int shopt_setopt (const char *, int);
+int shopt_listopt (const char *, int);
 
-extern int set_login_shell (const char *, int);
+int set_login_shell (const char *, int);
 
-extern void set_bashopts (void);
-extern void parse_bashopts (const char *);
-extern void initialize_bashopts (int);
+void set_bashopts ();
+void parse_bashopts (const char *);
+void initialize_bashopts (int);
 
-extern void set_compatibility_opts (void);
+void set_compatibility_opts ();
 
 /* Functions from type.def */
-extern bool describe_command (const char *, int);
+bool describe_command (const char *, int);
 
 /* Functions from setattr.def */
-extern int set_or_show_attributes (WORD_LIST *, int, int);
-extern int show_all_var_attributes (int, int);
-extern int show_local_var_attributes (int, int);
-extern int show_var_attributes (SHELL_VAR *, int, int);
-extern int show_name_attributes (const char *, int);
-extern int show_localname_attributes (const char *, int);
-extern int show_func_attributes (const char *, int);
-extern void set_var_attribute (const char *, int, int);
-extern int var_attribute_string (SHELL_VAR *, int, char *);
+int set_or_show_attributes (WORD_LIST *, int, int);
+int show_all_var_attributes (int, int);
+int show_local_var_attributes (int, int);
+int show_var_attributes (SHELL_VAR *, int, int);
+int show_name_attributes (const char *, int);
+int show_localname_attributes (const char *, int);
+int show_func_attributes (const char *, int);
+void set_var_attribute (const char *, int, int);
+int var_attribute_string (SHELL_VAR *, int, char *);
 
 /* Functions from pushd.def */
-extern char *get_dirstack_from_string (const char *);
-extern char *get_dirstack_element (intmax_t, int);
-extern void set_dirstack_element (intmax_t, int, const char *);
-extern WORD_LIST *get_directory_stack (int);
+char *get_dirstack_from_string (const char *);
+char *get_dirstack_element (intmax_t, int);
+void set_dirstack_element (intmax_t, int, const char *);
+WORD_LIST *get_directory_stack (int);
 
 /* Functions from evalstring.c */
-extern int parse_and_execute (char *string, const char *from_file, int flags);
-extern int evalstring (char *string, const char *from_file, int flags);
-extern void parse_and_execute_cleanup (int old_running_trap);
-extern int parse_string (char *string, const char *from_file, int flags, char **endp);
-extern int should_suppress_fork (COMMAND *);
-extern int can_optimize_connection (COMMAND *);
-extern void optimize_fork (COMMAND *);
-extern void optimize_subshell_command (COMMAND *);
-extern void optimize_shell_function (COMMAND *);
+int parse_and_execute (char *string, const char *from_file, int flags);
+int evalstring (char *string, const char *from_file, int flags);
+void parse_and_execute_cleanup (int old_running_trap);
+int parse_string (char *string, const char *from_file, int flags, char **endp);
+int should_suppress_fork (COMMAND *);
+int can_optimize_connection (COMMAND *);
+void optimize_fork (COMMAND *);
+void optimize_subshell_command (COMMAND *);
+void optimize_shell_function (COMMAND *);
 
 /* Functions from evalfile.c */
-extern int maybe_execute_file (const char *, bool);
-extern int force_execute_file (const char *, bool);
-extern int source_file (const char *, int);
-extern int fc_execute_file (const char *);
+int maybe_execute_file (const char *, bool);
+int force_execute_file (const char *, bool);
+int source_file (const char *, int);
+int fc_execute_file (const char *);
 
-/* variables from common.c */
-extern sh_builtin_func_t *this_shell_builtin;
-extern sh_builtin_func_t *last_shell_builtin;
-
-extern SHELL_VAR *builtin_bind_variable (const char *, const char *, int);
-extern int builtin_unbind_variable (const char *);
-
-/* variables from evalfile.c */
-extern int sourcelevel;
-
-/* variables from evalstring.c */
-extern int parse_and_execute_level;
-
-/* variables from break.def/continue.def */
-extern int breaking;
-extern int continuing;
-extern int loop_level;
-
-/* variables from read.def */
-extern bool sigalrm_seen;
-
-/* variables from shift.def */
-extern char print_shift_error;
-
-/* variables from source.def */
-extern bool source_searches_cwd;
-extern char source_uses_path;
-
-/* variables from wait.def */
-extern bool wait_intr_flag;
+}  // namespace bash
 
 #endif /* !__COMMON_H */

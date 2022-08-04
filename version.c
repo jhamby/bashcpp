@@ -20,9 +20,7 @@
 
 #include <config.h>
 
-#include <stdio.h>
-
-#include "stdc.h"
+#include <cstdio>
 
 #include "version.h"
 #include "patchlevel.h"
@@ -30,30 +28,34 @@
 
 #include "bashintl.h"
 
+namespace bash
+{
+
 extern const char *shell_name;
 
 /* Defines from version.h */
 extern const char * const dist_version = DISTVERSION;
 extern const int patch_level = PATCHLEVEL;
-extern const int build_version = BUILDVERSION;
+const int build_version = BUILDVERSION;
 #ifdef RELSTATUS
-extern const char * const release_status = RELSTATUS;
+const char * const release_status = RELSTATUS;
 #else
-extern const char * const release_status = (char *)0;
+const char * const release_status = (char *)0;
 #endif
+
+// A version string for use by the what command. Use a separate
+// declaration to satisfy -Wmissing-variable-declarations.
+extern const char * const sccs_version;
 extern const char * const sccs_version = SCCSVERSION;
 
-extern const char * const bash_copyright = N_("Copyright (C) 2020 Free Software Foundation, Inc.");
-extern const char * const bash_license = N_("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n");
-
-/* If == 31, shell compatible with bash-3.1, == 32 with bash-3.2, and so on */
-int shell_compatibility_level = DEFAULT_COMPAT_LEVEL;
+const char * const bash_copyright = N_("Copyright (C) 2020 Free Software Foundation, Inc.");
+const char * const bash_license = N_("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n");
 
 /* Functions for getting, setting, and displaying the shell version. */
 
 /* Forward declarations so we don't have to include externs.h */
-extern char *shell_version_string (void);
-extern void show_shell_version (int);
+extern char *shell_version_string ();
+extern void show_shell_version (bool);
 
 /* Give version information about this shell. */
 char *
@@ -64,30 +66,24 @@ shell_version_string ()
   if (tt[0] == '\0')
     {
       if (release_status)
-#if HAVE_SNPRINTF
-	snprintf (tt, sizeof (tt), "%s.%d(%d)-%s", dist_version, patch_level, build_version, release_status);
-#else
-	sprintf (tt, "%s.%d(%d)-%s", dist_version, patch_level, build_version, release_status);
-#endif
+	std::snprintf (tt, sizeof (tt), "%s.%d(%d)-%s", dist_version, patch_level, build_version, release_status);
       else
-#if HAVE_SNPRINTF
-	snprintf (tt, sizeof (tt), "%s.%d(%d)", dist_version, patch_level, build_version);
-#else
-	sprintf (tt, "%s.%d(%d)", dist_version, patch_level, build_version);
-#endif
+	std::snprintf (tt, sizeof (tt), "%s.%d(%d)", dist_version, patch_level, build_version);
     }
   return tt;
 }
 
 void
-show_shell_version (int extended)
+show_shell_version (bool extended)
 {
-  printf (_("GNU bash, version %s (%s)\n"), shell_version_string (), MACHTYPE);
+  std::printf (_("GNU bash, version %s (%s)\n"), shell_version_string (), MACHTYPE);
   if (extended)
     {
-      printf ("%s\n", _(bash_copyright));
-      printf ("%s\n", _(bash_license));
-      printf ("%s\n", _("This is free software; you are free to change and redistribute it."));
-      printf ("%s\n", _("There is NO WARRANTY, to the extent permitted by law."));
+      std::printf ("%s\n", _(bash_copyright));
+      std::printf ("%s\n", _(bash_license));
+      std::printf ("%s\n", _("This is free software; you are free to change and redistribute it."));
+      std::printf ("%s\n", _("There is NO WARRANTY, to the extent permitted by law."));
     }
 }
+
+}  // namespace bash

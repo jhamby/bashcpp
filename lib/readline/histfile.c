@@ -23,23 +23,7 @@
    don't have to know what data types are used, just what functions
    you can call.  I think I have done that. */
 
-#define READLINE_LIBRARY
-
-#if defined (__TANDEM)
-#  define _XOPEN_SOURCE_EXTENDED 1
-#  include <unistd.h>
-#  include <floss.h>
-#endif
-
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
-
-#include <stdio.h>
-
-#if defined (HAVE_LIMITS_H)
-#  include <limits.h>
-#endif
+#include "history.h"
 
 #include <sys/types.h>
 #if ! defined (_MINIX) && defined (HAVE_SYS_FILE_H)
@@ -47,18 +31,6 @@
 #endif
 #include "posixstat.h"
 #include <fcntl.h>
-
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif /* HAVE_STDLIB_H */
-
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
-#endif
-
-#include <ctype.h>
 
 #if defined (__EMX__)
 #  undef HAVE_MMAP
@@ -68,8 +40,8 @@
 #  include <sys/mman.h>
 
 #  ifdef MAP_FILE
-#    define MAP_RFLAGS	(MAP_FILE|MAP_PRIVATE)
-#    define MAP_WFLAGS	(MAP_FILE|MAP_SHARED)
+#    define MAP_RFLAGS	(MAP_FILE | MAP_PRIVATE)
+#    define MAP_WFLAGS	(MAP_FILE | MAP_SHARED)
 #  else
 #    define MAP_RFLAGS	MAP_PRIVATE
 #    define MAP_WFLAGS	MAP_SHARED
@@ -99,68 +71,31 @@
 #  define O_BINARY 0
 #endif /* !__EMX__ && !__CYGWIN__ */
 
-#include <errno.h>
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
-
-#include "history.h"
-#include "histlib.h"
-
-#include "rlshell.h"
-#include "xmalloc.h"
-
 #if !defined (PATH_MAX)
 #  define PATH_MAX	1024	/* default */
 #endif
 
-extern void _hs_append_history_line (int, const char *);
+namespace readline
+{
 
-/* history file version; currently unused */
-int history_file_version = 1;
-
-/* If non-zero, we write timestamps to the history file in history_do_write() */
-int history_write_timestamps = 0;
-
-/* If non-zero, we assume that a history file that starts with a timestamp
-   uses timestamp-delimited entries and can include multi-line history
-   entries. Used by read_history_range */
-int history_multiline_entries = 0;
-
-/* Immediately after a call to read_history() or read_history_range(), this
-   will return the number of lines just read from the history file in that
-   call. */
-int history_lines_read_from_file = 0;
-
-/* Immediately after a call to write_history() or history_do_write(), this
-   will return the number of lines just written to the history file in that
-   call.  This also works with history_truncate_file. */
-int history_lines_written_to_file = 0;
-
-/* Does S look like the beginning of a history timestamp entry?  Placeholder
-   for more extensive tests. */
-#define HIST_TIMESTAMP_START(s)		(*(s) == history_comment_char && isdigit ((unsigned char)(s)[1]) )
-
-static char *history_backupfile (const char *);
+// static functions that don't need to be class members.
 static char *history_tempfile (const char *);
-static int histfile_backup (const char *, const char *);
 static int histfile_restore (const char *, const char *);
 static int history_rename (const char *, const char *);
 
 /* Return the string that should be used in the place of this
    filename.  This only matters when you don't specify the
    filename to read_history (), or write_history (). */
-static char *
-history_filename (const char *filename)
+char *
+History::history_filename (const char *filename)
 {
   char *return_val;
   const char *home;
-  int home_len;
 
-  return_val = filename ? savestring (filename) : (char *)NULL;
+  return_val = filename ? savestring (filename) : nullptr;
 
   if (return_val)
-    return (return_val);
+    return return_val;
 
   home = sh_get_env_value ("HOME");
 #if defined (_WIN32)
@@ -168,77 +103,47 @@ history_filename (const char *filename)
     home = sh_get_env_value ("APPDATA");
 #endif
 
-  if (home == 0)
-    return (NULL);
-  else
-    home_len = strlen (home);
+  if (home == nullptr)
+    return nullptr;
 
-  return_val = (char *)xmalloc (2 + home_len + 8); /* strlen(".history") == 8 */
-  strcpy (return_val, home);
+  size_t home_len = strlen (home);
+
+  return_val = new char[2 + home_len + 8]; /* strlen(".history") == 8 */
+  std::strcpy (return_val, home);
   return_val[home_len] = '/';
 #if defined (__MSDOS__)
-  strcpy (return_val + home_len + 1, "_history");
+  std::strcpy (return_val + home_len + 1, "_history");
 #else
-  strcpy (return_val + home_len + 1, ".history");
+  std::strcpy (return_val + home_len + 1, ".history");
 #endif
 
-  return (return_val);
+  return return_val;
 }
 
-static char *
-history_backupfile (const char *filename)
-{
-  const char *fn;
-  char *ret, linkbuf[PATH_MAX+1];
-  size_t len;
-  ssize_t n;
-  struct stat fs;
-
-  fn = filename;
-#if defined (HAVE_READLINK)
-  /* Follow symlink to avoid backing up symlink itself; call will fail if
-     not a symlink */
-  if ((n = readlink (filename, linkbuf, sizeof (linkbuf) - 1)) > 0)
-    {
-      linkbuf[n] = '\0';
-      fn = linkbuf;
-    }
-#endif
-
-  len = strlen (fn);
-  ret = (char *)xmalloc (len + 2);
-  strcpy (ret, fn);
-  ret[len] = '-';
-  ret[len+1] = '\0';
-  return ret;
-}
+// private helper function
 
 static char *
 history_tempfile (const char *filename)
 {
-  const char *fn;
-  char *ret, linkbuf[PATH_MAX+1];
-  size_t len;
-  ssize_t n;
-  struct stat fs;
-  int pid;
+  const char *fn = filename;
 
-  fn = filename;
 #if defined (HAVE_READLINK)
   /* Follow symlink so tempfile created in the same directory as any symlinked
      history file; call will fail if not a symlink */
-  if ((n = readlink (filename, linkbuf, sizeof (linkbuf) - 1)) > 0)
+  char linkbuf[PATH_MAX+1];
+  ssize_t n;
+  if ((n = ::readlink (filename, linkbuf, sizeof (linkbuf) - 1)) > 0)
     {
       linkbuf[n] = '\0';
       fn = linkbuf;
     }
 #endif
 
-  len = strlen (fn);
-  ret = (char *)xmalloc (len + 11);
-  strcpy (ret, fn);
+  size_t len = std::strlen (fn);
+  char *ret = new char[len + 11];
+  std::strcpy (ret, fn);
 
-  pid = (int)getpid ();
+  int pid = static_cast<int> (::getpid ());
 
   /* filename-PID.tmp */
   ret[len] = '-';
@@ -247,48 +152,31 @@ history_tempfile (const char *filename)
   ret[len+3] = (pid / 100 % 10) + '0';
   ret[len+4] = (pid / 10 % 10) + '0';
   ret[len+5] = (pid % 10) + '0';
-  strcpy (ret + len + 6, ".tmp");
+  std::strcpy (ret + len + 6, ".tmp");
 
   return ret;
-}
-
-/* Add the contents of FILENAME to the history list, a line at a time.
-   If FILENAME is NULL, then read from ~/.history.  Returns 0 if
-   successful, or errno if not. */
-int
-read_history (const char *filename)
-{
-  return (read_history_range (filename, 0, -1));
 }
 
 /* Read a range of lines from FILENAME, adding them to the history list.
    Start reading at the FROM'th line and end at the TO'th.  If FROM
    is zero, start at the beginning.  If TO is less than FROM, read
-   until the end of the file.  If FILENAME is NULL, then read from
+   until the end of the file.  If FILENAME is nullptr, then read from
    ~/.history.  Returns 0 if successful, or errno if not. */
 int
-read_history_range (const char *filename, int from, int to)
+History::read_history_range (const char *filename, unsigned int from,
+			     unsigned int to)
 {
-  char *line_start, *line_end, *p;
-  char *input, *buffer, *bufend, *last_ts;
-  int file, current_line, chars_read, has_timestamps, reset_comment_char;
-  struct stat finfo;
-  size_t file_size;
-#if defined (EFBIG)
-  int overflow_errno = EFBIG;
-#elif defined (EOVERFLOW)
-  int overflow_errno = EOVERFLOW;
-#else
-  int overflow_errno = EIO;
-#endif
-
   history_lines_read_from_file = 0;
 
-  buffer = last_ts = (char *)NULL;
-  input = history_filename (filename);
-  file = input ? open (input, O_RDONLY|O_BINARY, 0666) : -1;
+  char *buffer = nullptr;
+  char *input = history_filename (filename);
 
-  if ((file < 0) || (fstat (file, &finfo) == -1))
+  int file = input ? ::open (input, O_RDONLY | O_BINARY, 0644) : -1;
+  size_t file_size;	// this must be before goto error_and_exit
+  ssize_t chars_read;
+
+  struct stat finfo;
+  if ((file < 0) || (::fstat (file, &finfo) == -1))
     goto error_and_exit;
 
   if (S_ISREG (finfo.st_mode) == 0)
@@ -301,26 +189,20 @@ read_history_range (const char *filename, int from, int to)
       goto error_and_exit;
     }
 
-  file_size = (size_t)finfo.st_size;
-
-  /* check for overflow on very large files */
-  if (file_size != finfo.st_size || file_size + 1 < file_size)
-    {
-      errno = overflow_errno;
-      goto error_and_exit;
-    }
+  file_size = static_cast<size_t> (finfo.st_size);
 
   if (file_size == 0)
     {
-      free (input);
-      close (file);
+      delete[] input;
+      ::close (file);
       return 0;	/* don't waste time if we don't have to */
     }
 
 #ifdef HISTORY_USE_MMAP
   /* We map read/write and private so we can change newlines to NULs without
      affecting the underlying object. */
-  buffer = (char *)mmap (0, file_size, PROT_READ|PROT_WRITE, MAP_RFLAGS, file, 0);
+  buffer = ::mmap (0, file_size, PROT_READ | PROT_WRITE,
+			   MAP_RFLAGS, file, 0);
   if ((void *)buffer == MAP_FAILED)
     {
       errno = overflow_errno;
@@ -328,15 +210,10 @@ read_history_range (const char *filename, int from, int to)
     }
   chars_read = file_size;
 #else
-  buffer = (char *)malloc (file_size + 1);
-  if (buffer == 0)
-    {
-      errno = overflow_errno;
-      goto error_and_exit;
-    }
-
-  chars_read = read (file, buffer, file_size);
+  buffer = new char[file_size + 1];
+  chars_read = ::read (file, buffer, file_size);
 #endif
+
   if (chars_read < 0)
     {
   error_and_exit:
@@ -344,51 +221,58 @@ read_history_range (const char *filename, int from, int to)
 	chars_read = errno;
       else
 	chars_read = EIO;
-      if (file >= 0)
-	close (file);
 
-      FREE (input);
+      if (file >= 0)
+	::close (file);
+
+      delete[] input;
 #ifndef HISTORY_USE_MMAP
-      FREE (buffer);
+      delete[] buffer;
 #endif
 
-      return (chars_read);
+      return static_cast<int> (chars_read);
     }
 
-  close (file);
+  ::close (file);
 
   /* Set TO to larger than end of file if negative. */
-  if (to < 0)
-    to = chars_read;
+  if (to == static_cast<unsigned int> (-1))
+    to = static_cast<unsigned int> (chars_read);
 
   /* Start at beginning of file, work to end. */
-  bufend = buffer + chars_read;
+  char *bufend = buffer + chars_read;
   *bufend = '\0';		/* null-terminate buffer for timestamp checks */
-  current_line = 0;
+  unsigned int current_line = 0;
 
   /* Heuristic: the history comment character rarely changes, so assume we
      have timestamps if the buffer starts with `#[:digit:]' and temporarily
      set history_comment_char so timestamp parsing works right */
-  reset_comment_char = 0;
-  if (history_comment_char == '\0' && buffer[0] == '#' && isdigit ((unsigned char)buffer[1]))
+  bool reset_comment_char = false;
+  if (history_comment_char == '\0' && buffer[0] == '#' &&
+      std::isdigit (static_cast<unsigned char> (buffer[1])))
     {
       history_comment_char = '#';
-      reset_comment_char = 1;
+      reset_comment_char = true;
     }
 
-  has_timestamps = HIST_TIMESTAMP_START (buffer);
-  history_multiline_entries += has_timestamps && history_write_timestamps;
+  bool has_timestamps = HIST_TIMESTAMP_START (buffer);
+  history_multiline_entries |= (has_timestamps && history_write_timestamps);
+
+  char *last_ts = nullptr;
 
   /* Skip lines until we are at FROM. */
   if (has_timestamps)
     last_ts = buffer;
+
+  char *line_start, *line_end;
+
   for (line_start = line_end = buffer; line_end < bufend && current_line < from; line_end++)
     if (*line_end == '\n')
       {
-      	p = line_end + 1;
+	char *p = line_end + 1;
       	/* If we see something we think is a timestamp, continue with this
 	   line.  We should check more extensively here... */
-	if (HIST_TIMESTAMP_START(p) == 0)
+	if (!HIST_TIMESTAMP_START(p))
 	  current_line++;
 	else
 	  last_ts = p;
@@ -418,14 +302,14 @@ read_history_range (const char *filename, int from, int to)
 	  {
 	    if (HIST_TIMESTAMP_START(line_start) == 0)
 	      {
-	      	if (last_ts == NULL && history_length > 0 && history_multiline_entries)
-		  _hs_append_history_line (history_length - 1, line_start);
+		if (last_ts == nullptr && !the_history.empty () && history_multiline_entries)
+		  _hs_append_history_line (history_offset - 1, line_start);
 		else
 		  add_history (line_start);
 		if (last_ts)
 		  {
 		    add_history_time (last_ts);
-		    last_ts = NULL;
+		    last_ts = nullptr;
 		  }
 	      }
 	    else
@@ -447,14 +331,14 @@ read_history_range (const char *filename, int from, int to)
   if (reset_comment_char)
     history_comment_char = '\0';
 
-  FREE (input);
+  delete[] input;
 #ifndef HISTORY_USE_MMAP
-  FREE (buffer);
+  delete[] buffer;
 #else
-  munmap (buffer, file_size);
+  ::munmap (buffer, file_size);
 #endif
 
-  return (0);
+  return 0;
 }
 
 /* We need a special version for WIN32 because Windows rename() refuses to
@@ -463,29 +347,10 @@ static int
 history_rename (const char *old, const char *new_)
 {
 #if defined (_WIN32)
-  return (MoveFileEx (old, new_, MOVEFILE_REPLACE_EXISTING) == 0 ? -1 : 0);
+  return MoveFileEx (old, new_, MOVEFILE_REPLACE_EXISTING) == 0 ? -1 : 0;
 #else
-  return (rename (old, new_));
+  return ::rename (old, new_);
 #endif
-}
-
-/* Save FILENAME to BACK, handling case where FILENAME is a symlink
-   (e.g., ~/.bash_history -> .histfiles/.bash_history.$HOSTNAME) */
-static int
-histfile_backup (const char *filename, const char *back)
-{
-#if defined (HAVE_READLINK)
-  char linkbuf[PATH_MAX+1];
-  ssize_t n;
-
-  /* Follow to target of symlink to avoid renaming symlink itself */
-  if ((n = readlink (filename, linkbuf, sizeof (linkbuf) - 1)) > 0)
-    {
-      linkbuf[n] = '\0';
-      return (history_rename (linkbuf, back));
-    }
-#endif
-  return (history_rename (filename, back));
 }
 
 /* Restore ORIG from BACKUP handling case where ORIG is a symlink
@@ -498,13 +363,13 @@ histfile_restore (const char *backup, const char *orig)
   ssize_t n;
 
   /* Follow to target of symlink to avoid renaming symlink itself */
-  if ((n = readlink (orig, linkbuf, sizeof (linkbuf) - 1)) > 0)
+  if ((n = ::readlink (orig, linkbuf, sizeof (linkbuf) - 1)) > 0)
     {
       linkbuf[n] = '\0';
-      return (history_rename (backup, linkbuf));
+      return history_rename (backup, linkbuf);
     }
 #endif
-  return (history_rename (backup, orig));
+  return history_rename (backup, orig);
 }
 
 /* Should we call chown, based on whether finfo and nfinfo describe different
@@ -514,30 +379,32 @@ histfile_restore (const char *backup, const char *orig)
   (finfo.st_uid != nfinfo.st_uid || finfo.st_gid != nfinfo.st_gid)
 
 /* Truncate the history file FNAME, leaving only LINES trailing lines.
-   If FNAME is NULL, then use ~/.history.  Writes a new file and renames
+   If FNAME is nullptr, then use ~/.history.  Writes a new file and renames
    it to the original name.  Returns 0 on success, errno on failure. */
 int
-history_truncate_file (const char *fname, int lines)
+History::history_truncate_file (const char *fname, unsigned int lines)
 {
   char *buffer, *filename, *tempname, *bp, *bp1;		/* bp1 == bp+1 */
-  int file, chars_read, rv, orig_lines, exists, r;
+  int file, rv, exists, r;
+  unsigned int orig_lines = 0;
   struct stat finfo, nfinfo;
+  ssize_t chars_read;
   size_t file_size;
 
   history_lines_written_to_file = 0;
 
-  buffer = (char *)NULL;
+  buffer = nullptr;
   filename = history_filename (fname);
-  tempname = 0;
-  file = filename ? open (filename, O_RDONLY|O_BINARY, 0666) : -1;
+  tempname = nullptr;
+  file = filename ? ::open (filename, O_RDONLY | O_BINARY, 0644) : -1;
   rv = exists = 0;
 
   /* Don't try to truncate non-regular files. */
-  if (file == -1 || fstat (file, &finfo) == -1)
+  if (file == -1 || ::fstat (file, &finfo) == -1)
     {
       rv = errno;
       if (file != -1)
-	close (file);
+	::close (file);
       goto truncate_exit;
     }
   exists = 1;
@@ -547,7 +414,7 @@ history_truncate_file (const char *fname, int lines)
 
   if (S_ISREG (finfo.st_mode) == 0)
     {
-      close (file);
+      ::close (file);
 #ifdef EFTYPE
       rv = EFTYPE;
 #else
@@ -556,32 +423,11 @@ history_truncate_file (const char *fname, int lines)
       goto truncate_exit;
     }
 
-  file_size = (size_t)finfo.st_size;
+  file_size = static_cast<size_t> (finfo.st_size);
 
-  /* check for overflow on very large files */
-  if (file_size != finfo.st_size || file_size + 1 < file_size)
-    {
-      close (file);
-#if defined (EFBIG)
-      rv = errno = EFBIG;
-#elif defined (EOVERFLOW)
-      rv = errno = EOVERFLOW;
-#else
-      rv = errno = EINVAL;
-#endif
-      goto truncate_exit;
-    }
-
-  buffer = (char *)malloc (file_size + 1);
-  if (buffer == 0)
-    {
-      rv = errno;
-      close (file);
-      goto truncate_exit;
-    }
-
-  chars_read = read (file, buffer, file_size);
-  close (file);
+  buffer = new char[file_size + 1];
+  chars_read = ::read (file, buffer, file_size);
+  ::close (file);
 
   if (chars_read <= 0)
     {
@@ -628,22 +474,22 @@ history_truncate_file (const char *fname, int lines)
 
   tempname = history_tempfile (filename);
 
-  if ((file = open (tempname, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0600)) != -1)
+  if ((file = ::open (tempname, (O_WRONLY | O_CREAT | O_TRUNC | O_BINARY), 0600)) != -1)
     {
-      if (write (file, bp, chars_read - (bp - buffer)) < 0)
+      if (::write (file, bp, static_cast<size_t> (chars_read - (bp - buffer))) < 0)
 	rv = errno;
 
-      if (fstat (file, &nfinfo) < 0 && rv == 0)
+      if (::fstat (file, &nfinfo) < 0 && rv == 0)
 	rv = errno;
 
-      if (close (file) < 0 && rv == 0)
+      if (::close (file) < 0 && rv == 0)
 	rv = errno;
     }
   else
     rv = errno;
 
  truncate_exit:
-  FREE (buffer);
+  delete[] buffer;
 
   history_lines_written_to_file = orig_lines - lines;
 
@@ -654,7 +500,7 @@ history_truncate_file (const char *fname, int lines)
     {
       rv = errno;
       if (tempname)
-	unlink (tempname);
+	::unlink (tempname);
       history_lines_written_to_file = 0;
     }
 
@@ -664,11 +510,11 @@ history_truncate_file (const char *fname, int lines)
      with a shared history file, we don't want to leave the history file
      owned by root. */
   if (rv == 0 && exists && SHOULD_CHOWN (finfo, nfinfo))
-    r = chown (filename, finfo.st_uid, finfo.st_gid);
+    r = ::chown (filename, finfo.st_uid, finfo.st_gid);
 #endif
 
-  xfree (filename);
-  FREE (tempname);
+  delete[] filename;
+  delete[] tempname;
 
   return rv;
 }
@@ -676,117 +522,114 @@ history_truncate_file (const char *fname, int lines)
 /* Workhorse function for writing history.  Writes the last NELEMENT entries
    from the history list to FILENAME.  OVERWRITE is non-zero if you
    wish to replace FILENAME with the entries. */
-static int
-history_do_write (const char *filename, int nelements, int overwrite)
+int
+History::history_do_write (const char *filename, unsigned int nelements, bool overwrite)
 {
-  char *output, *tempname, *histname;
-  int file, mode, rv, exists;
-  struct stat finfo, nfinfo;
+  int mode;
+  struct stat finfo;
 #ifdef HISTORY_USE_MMAP
-  size_t cursize;
+  off_t cursize;
 
   history_lines_written_to_file = 0;
 
-  mode = overwrite ? O_RDWR|O_CREAT|O_TRUNC|O_BINARY : O_RDWR|O_APPEND|O_BINARY;
+  mode = overwrite ? O_RDWR | O_CREAT | O_TRUNC | O_BINARY
+		   : O_RDWR | O_APPEND | O_BINARY;
 #else
-  mode = overwrite ? O_WRONLY|O_CREAT|O_TRUNC|O_BINARY : O_WRONLY|O_APPEND|O_BINARY;
+  mode = overwrite ? O_WRONLY | O_CREAT | O_TRUNC | O_BINARY
+		   : O_WRONLY | O_APPEND | O_BINARY;
 #endif
-  histname = history_filename (filename);
-  exists = histname ? (stat (histname, &finfo) == 0) : 0;
 
-  tempname = (overwrite && exists && S_ISREG (finfo.st_mode)) ? history_tempfile (histname) : 0;
-  output = tempname ? tempname : histname;
+  char *histname = history_filename (filename);
+  bool exists = histname ? (::stat (histname, &finfo) == 0) : false;
 
-  file = output ? open (output, mode, 0600) : -1;
-  rv = 0;
+  char *tempname = (overwrite && exists && S_ISREG (finfo.st_mode))
+			? history_tempfile (histname) : nullptr;
+  char *output = tempname ? tempname : histname;
+
+  int file = output ? ::open (output, mode, 0600) : -1;
+  int rv = 0;
 
   if (file == -1)
     {
       rv = errno;
-      FREE (histname);
-      FREE (tempname);
-      return (rv);
+      delete[] histname;
+      delete[] tempname;
+      return rv;
     }
 
 #ifdef HISTORY_USE_MMAP
-  cursize = overwrite ? 0 : lseek (file, 0, SEEK_END);
+  cursize = overwrite ? 0 : ::lseek (file, 0, SEEK_END);
 #endif
 
-  if (nelements > history_length)
-    nelements = history_length;
+  if (nelements > history_length ())
+    nelements = history_length ();
 
   /* Build a buffer of all the lines to write, and write them in one syscall.
      Suggested by Peter Ho (peter@robosts.oxford.ac.uk). */
   {
-    HIST_ENTRY **the_history;	/* local */
-    int buffer_size = 0;
-    char *buffer;
+    size_t buffer_size = 0;
 
-    the_history = history_list ();
     /* Calculate the total number of bytes to write. */
-    for (int i = history_length - nelements; i < history_length; i++)
+    for (int i = static_cast<int> (history_index_end) - static_cast<int> (nelements);
+	 i < static_cast<int> (history_index_end); i++)
       {
-	if (history_write_timestamps && the_history[i]->timestamp && the_history[i]->timestamp[0])
-	  buffer_size += strlen (the_history[i]->timestamp) + 1;
-	buffer_size += strlen (the_history[i]->line) + 1;
+	unsigned int pos = static_cast<unsigned int> ((i < 0) ? i + static_cast<int> (history_length ()) : i);
+	if (history_write_timestamps && !the_history[pos]->timestamp.empty ())
+	  buffer_size += the_history[pos]->timestamp.size () + 1;
+	buffer_size += the_history[pos]->line.size () + 1;
       }
 
     /* Allocate the buffer, and fill it. */
+    char *buffer;
+
 #ifdef HISTORY_USE_MMAP
-    if (ftruncate (file, buffer_size+cursize) == -1)
+    if (::ftruncate (file, buffer_size+cursize) == -1)
       goto mmap_error;
-    buffer = (char *)mmap (0, buffer_size, PROT_READ|PROT_WRITE, MAP_WFLAGS, file, cursize);
+    buffer = ::mmap (0, buffer_size, PROT_READ | PROT_WRITE, MAP_WFLAGS, file, cursize);
     if ((void *)buffer == MAP_FAILED)
       {
 mmap_error:
 	rv = errno;
-	close (file);
+	::close (file);
 	if (tempname)
-	  unlink (tempname);
-	FREE (histname);
-	FREE (tempname);
+	  ::unlink (tempname);
+	delete[] histname;
+	delete[] tempname;
 	return rv;
       }
 #else
-    buffer = (char *)malloc (buffer_size);
-    if (buffer == 0)
-      {
-      	rv = errno;
-	close (file);
-	if (tempname)
-	  unlink (tempname);
-	FREE (histname);
-	FREE (tempname);
-	return rv;
-      }
+    buffer = new char[buffer_size];
 #endif
 
-    for (int j = 0, i = history_length - nelements; i < history_length; i++)
+    for (int j = 0, i = static_cast<int> (history_index_end) - static_cast<int> (nelements);
+	 i < static_cast<int> (history_index_end); i++)
       {
-	if (history_write_timestamps && the_history[i]->timestamp && the_history[i]->timestamp[0])
+	unsigned int pos = static_cast<unsigned int> ((i < 0) ? i + static_cast<int> (history_length ()) : i);
+	if (history_write_timestamps && !the_history[pos]->timestamp.empty ())
 	  {
-	    strcpy (buffer + j, the_history[i]->timestamp);
-	    j += strlen (the_history[i]->timestamp);
+	    std::strcpy (buffer + j, the_history[pos]->timestamp.c_str ());
+	    j += the_history[pos]->timestamp.size ();
 	    buffer[j++] = '\n';
 	  }
-	strcpy (buffer + j, the_history[i]->line);
-	j += strlen (the_history[i]->line);
+	std::strcpy (buffer + j, the_history[pos]->line.c_str ());
+	j += the_history[pos]->line.size ();
 	buffer[j++] = '\n';
       }
 
 #ifdef HISTORY_USE_MMAP
-    if (msync (buffer, buffer_size, MS_ASYNC) != 0 || munmap (buffer, buffer_size) != 0)
+    if (::msync (buffer, buffer_size, MS_ASYNC) != 0 || ::munmap (buffer, buffer_size) != 0)
       rv = errno;
 #else
-    if (write (file, buffer, buffer_size) < 0)
+    if (::write (file, buffer, buffer_size) < 0)
       rv = errno;
-    xfree (buffer);
+
+    delete[] buffer;
 #endif
   }
 
   history_lines_written_to_file = nelements;
 
-  if (close (file) < 0 && rv == 0)
+  if (::close (file) < 0 && rv == 0)
     rv = errno;
 
   if (rv == 0 && histname && tempname)
@@ -796,7 +639,7 @@ mmap_error:
     {
       rv = errno;
       if (tempname)
-	unlink (tempname);
+	::unlink (tempname);
       history_lines_written_to_file = 0;
     }
 
@@ -806,28 +649,13 @@ mmap_error:
      with a shared history file, we don't want to leave the history file
      owned by root. */
   if (rv == 0 && exists)
-    mode = chown (histname, finfo.st_uid, finfo.st_gid);
+    mode = ::chown (histname, finfo.st_uid, finfo.st_gid);
 #endif
 
-  FREE (histname);
-  FREE (tempname);
+  delete[] histname;
+  delete[] tempname;
 
-  return (rv);
+  return rv;
 }
 
-/* Append NELEMENT entries to FILENAME.  The entries appended are from
-   the end of the list minus NELEMENTs up to the end of the list. */
-int
-append_history (int nelements, const char *filename)
-{
-  return (history_do_write (filename, nelements, HISTORY_APPEND));
-}
-
-/* Overwrite FILENAME with the current history.  If FILENAME is NULL,
-   then write the history list to ~/.history.  Values returned
-   are as in read_history ().*/
-int
-write_history (const char *filename)
-{
-  return (history_do_write (filename, history_length, HISTORY_OVERWRITE));
-}
+}  // namespace readline

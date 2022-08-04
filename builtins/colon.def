@@ -59,16 +59,21 @@ $END
 #include "../bashansi.h"
 #include "../shell.h"
 
+namespace bash
+{
+
 /* Return a successful result. */
 int
-colon_builtin (WORD_LIST *ignore)
+Shell::colon_builtin (WORD_LIST *ignore)
 {
-  return (0);
+  return 0;
 }
 
 /* Return an unsuccessful result. */
 int
-false_builtin (WORD_LIST *ignore)
+Shell::false_builtin (WORD_LIST *ignore)
 {
-  return (1);
+  return 1;
 }
+
+}  // namespace bash

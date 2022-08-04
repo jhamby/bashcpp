@@ -78,8 +78,7 @@ static char rcsid[] = "$Id: inet_addr.c,v 1.5 1996/08/14 03:48:37 drepper Exp $"
 #endif
 
 #include <bashansi.h>
-#include <ctype.h>
-#include <stdc.h>
+#include <cctype>
 
 #ifndef INADDR_NONE
 #  define INADDR_NONE 0xffffffff
@@ -99,8 +98,8 @@ inet_addr(const char *cp)
 	struct in_addr val;
 
 	if (inet_aton(cp, &val))
-		return (val.s_addr);
-	return (INADDR_NONE);
+		return val.s_addr;
+	return INADDR_NONE;
 }
 #endif
 
@@ -133,7 +132,7 @@ inet_aton(const char *cp, struct in_addr *addr)
 		if (c != '0' && c != '1' && c != '2' && c != '3' && c != '4' &&
 		    c != '5' && c != '6' && c != '7' && c != '8' && c != '9')
 #endif
-			return (0);
+			return 0;
 		val = 0; base = 10;
 		if (c == '0') {
 			c = *++cp;
@@ -161,7 +160,7 @@ inet_aton(const char *cp, struct in_addr *addr)
 			 *	a.b	(with b treated as 24 bits)
 			 */
 			if (pp >= parts + 3)
-				return (0);
+				return 0;
 			*pp++ = val;
 			c = *++cp;
 		} else
@@ -171,7 +170,7 @@ inet_aton(const char *cp, struct in_addr *addr)
 	 * Check for trailing characters.
 	 */
 	if (c != '\0' && (!isascii(c) || !isspace(c)))
-		return (0);
+		return 0;
 	/*
 	 * Concoct the address according to
 	 * the number of parts specified.
@@ -180,32 +179,32 @@ inet_aton(const char *cp, struct in_addr *addr)
 	switch (n) {
 
 	case 0:
-		return (0);		/* initial nondigit */
+		return 0;		/* initial nondigit */
 
 	case 1:				/* a -- 32 bits */
 		break;
 
 	case 2:				/* a.b -- 8.24 bits */
 		if (val > 0xffffff)
-			return (0);
+			return 0;
 		val |= parts[0] << 24;
 		break;
 
 	case 3:				/* a.b.c -- 8.8.16 bits */
 		if (val > 0xffff)
-			return (0);
+			return 0;
 		val |= (parts[0] << 24) | (parts[1] << 16);
 		break;
 
 	case 4:				/* a.b.c.d -- 8.8.8.8 bits */
 		if (val > 0xff)
-			return (0);
+			return 0;
 		val |= (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8);
 		break;
 	}
 	if (addr)
 		addr->s_addr = htonl(val);
-	return (1);
+	return 1;
 }
 
 #endif /* !HAVE_INET_ATON */

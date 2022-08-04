@@ -60,7 +60,6 @@ $END
 #endif
 
 #include <stdio.h>
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include "../shell.h"
@@ -75,6 +74,9 @@ $END
 
 #include "common.h"
 #include "bashgetopt.h"
+
+namespace bash
+{
 
 extern int find_reserved_word (char *);
 
@@ -107,10 +109,10 @@ extern int find_reserved_word (char *);
  */
 
 int
-type_builtin (WORD_LIST *list)
+Shell::type_builtin (WORD_LIST *list)
 {
   if (list == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
   int dflags = CDESC_SHORTDESC;	/* default */
   bool any_failed = false;
@@ -167,7 +169,7 @@ type_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
@@ -184,7 +186,7 @@ type_builtin (WORD_LIST *list)
     }
 
   opt = (!any_failed) ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
-  return (sh_chkwrite (opt));
+  return sh_chkwrite (opt);
 }
 
 /*
@@ -402,5 +404,7 @@ describe_command (const char *command, int dflags)
 	break;
     }
 
-  return (found);
+  return found;
 }
+
+}  // namespace bash

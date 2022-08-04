@@ -28,8 +28,6 @@
 #  include <unistd.h>
 #endif
 
-#include "bashansi.h"
-
 #include "shell.h"
 #include "flags.h"
 #include "findcmd.h"
@@ -127,12 +125,12 @@ phash_search (const char *filename)
   int same;
 
   if (hashing_enabled == 0 || hashed_filenames == 0)
-    return ((char *)NULL);
+    return (char *)NULL;
 
   item = hash_search (filename, hashed_filenames, 0);
 
   if (item == NULL)
-    return ((char *)NULL);
+    return (char *)NULL;
 
   /* If this filename is hashed, but `.' comes before it in the path,
      see if ./filename is executable.  If the hashed value is not an
@@ -152,13 +150,13 @@ phash_search (const char *filename)
 	dotted_filename = savestring (tail);
 
       if (executable_file (dotted_filename))
-	return (dotted_filename);
+	return dotted_filename;
 
       free (dotted_filename);
 
 #if 0
       if (pathdata(item)->flags & HASH_RELPATH)
-	return ((char *)NULL);
+	return (char *)NULL;
 #endif
 
       /* Watch out.  If this file was hashed to "./filename", and
@@ -186,5 +184,5 @@ phash_search (const char *filename)
 	}
     }
 
-  return (savestring (path));
+  return savestring (path);
 }

@@ -22,34 +22,10 @@
 
 #if defined (READLINE)
 
-#include "bashtypes.h"
-#include "posixstat.h"
-
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
-#endif
-
-#if defined (HAVE_GRP_H)
-#  include <grp.h>
-#endif
-
-#if defined (HAVE_NETDB_H)
-#  include <netdb.h>
-#endif
-
-#include <signal.h>
-
-#include <stdio.h>
-#include "chartypes.h"
-#include "bashansi.h"
-#include "bashintl.h"
-
 #include "shell.h"
 #include "input.h"
 #include "parser.h"
 #include "builtins.h"
-#include "bashhist.h"
-#include "bashline.h"
 #include "execute_cmd.h"
 #include "findcmd.h"
 #include "pathexp.h"
@@ -107,11 +83,7 @@ extern int bash_brace_completion (int, int);
 #endif /* BRACE_COMPLETION */
 
 /* To avoid including curses.h/term.h/termcap.h and that whole mess. */
-#ifdef _MINIX
-extern int tputs (const char *string, int nlines, void (*outx(int)));
-#else
 extern int tputs (const char *string, int nlines, int (*outx(int)));
-#endif
 
 /* Forward declarations */
 
@@ -165,7 +137,7 @@ static void cleanup_expansion_error (void);
 static void maybe_make_readline_line (char *);
 static void set_up_new_line (char *);
 
-static int check_redir (int);
+static bool check_redir (int);
 static char **attempt_shell_completion (const char *, int, int);
 static char *variable_completion_function (const char *, int);
 static char *hostname_completion_function (const char *, int);
@@ -224,7 +196,7 @@ static char **prog_complete_matches;
 #endif
 
 extern char no_symbolic_links;
-extern STRING_INT_ALIST word_token_alist[];
+extern StringIntAlist word_token_alist[];
 
 /* SPECIFIC_COMPLETION_FUNCTIONS specifies that we have individual
    completion functions which indicate what type of completion should be
@@ -432,7 +404,7 @@ enable_hostname_completion (int on_or_off)
       rl_completer_word_break_characters = nval;
     }
 
-  return (old_value);
+  return old_value;
 }
 
 /* Called once from parse.y if we are going to use readline. */
@@ -631,13 +603,13 @@ initialize_readline ()
     posix_readline_initialize (1);
 #endif
 
-  bash_readline_initialized = 1;
+  bash_readline_initialized = true;
 }
 
 void
 bashline_reinitialize ()
 {
-  bash_readline_initialized = 0;
+  bash_readline_initialized = false;
 }
 
 void
@@ -704,7 +676,7 @@ bash_re_edit (const char *line)
   old_rl_startup_hook = rl_startup_hook;
   rl_startup_hook = bash_push_line;
 
-  return (0);
+  return 0;
 }
 
 static int
@@ -712,8 +684,8 @@ display_shell_version (int count, int c)
 {
   rl_crlf ();
   show_shell_version (0);
-  putc ('\r', rl_outstream);
-  fflush (rl_outstream);
+  std::putc ('\r', rl_outstream);
+  std::fflush (rl_outstream);
   rl_on_new_line ();
   rl_redisplay ();
   return 0;
@@ -781,11 +753,11 @@ snarf_hosts_from_file (const char *filename)
 {
   char *temp, buffer[256], name[256];
 
-  FILE *file = fopen (filename, "r");
+  FILE *file = std::fopen (filename, "r");
   if (file == 0)
     return;
 
-  while ((temp = fgets (buffer, 255, file)))
+  while ((temp = std::fgets (buffer, 255, file)))
     {
       /* Skip to first character. */
       int i;
@@ -833,12 +805,12 @@ snarf_hosts_from_file (const char *filename)
 	    ;
 	  if (i == start)
 	    continue;
-	  strncpy (name, buffer + start, i - start);
+	  std::strncpy (name, buffer + start, i - start);
 	  name[i - start] = '\0';
 	  add_host_name (name);
 	}
     }
-  fclose (file);
+  std::fclose (file);
 }
 
 /* Return the hostname list. */
@@ -847,7 +819,7 @@ get_hostname_list ()
 {
   if (hostname_list_initialized == 0)
     initialize_hostname_list ();
-  return (hostname_list);
+  return hostname_list;
 }
 
 void
@@ -856,7 +828,7 @@ clear_hostname_list ()
   if (hostname_list_initialized == 0)
     return;
   for (int i = 0; i < hostname_list_length; i++)
-    free (hostname_list[i]);
+    std::free (hostname_list[i]);
   hostname_list_length = hostname_list_initialized = 0;
 }
 
@@ -872,7 +844,7 @@ hostnames_matching (char *text)
     initialize_hostname_list ();
 
   if (hostname_list_initialized == 0)
-    return ((char **)NULL);
+    return (char **)NULL;
 
   /* Special case.  If TEXT consists of nothing, then the whole list is
      what is desired. */
@@ -883,11 +855,11 @@ hostnames_matching (char *text)
       for (i = 0; i < hostname_list_length; i++)
 	result[i] = hostname_list[i];
       result[i] = (char *)NULL;
-      return (result);
+      return result;
     }
 
   /* Scan until found, or failure. */
-  int len = strlen (text);
+  int len = std::strlen (text);
   result = (char **)NULL;
   int i, nmatch, rsize;
   for (i = nmatch = rsize = 0; i < hostname_list_length; i++)
@@ -906,7 +878,7 @@ hostnames_matching (char *text)
     }
   if (nmatch)
     result[nmatch] = (char *)NULL;
-  return (result);
+  return result;
 }
 
 /* This vi mode command causes VI_EDIT_COMMAND to be run on the current
@@ -922,7 +894,7 @@ edit_and_execute_command (int count, int c, int editing_mode, const char *edit_c
 {
   char *command;
   int r, rrs, metaflag;
-  sh_parser_state_t ps;
+  ShellParserState ps;
 
   rrs = rl_readline_state;
   saved_command_line_count = current_command_line_count;
@@ -933,7 +905,7 @@ edit_and_execute_command (int count, int c, int editing_mode, const char *edit_c
   if (rl_explicit_arg)
     {
       command = (char *)xmalloc (strlen (edit_command) + 8);
-      sprintf (command, "%s %d", edit_command, count);
+      std::sprintf (command, "%s %d", edit_command, count);
     }
   else
     {
@@ -995,16 +967,16 @@ static int
 vi_edit_and_execute_command (int count, int c)
 {
   if (posixly_correct)
-    return (edit_and_execute_command (count, c, VI_EDITING_MODE, POSIX_VI_EDIT_COMMAND));
+    return edit_and_execute_command (count, c, VI_EDITING_MODE, POSIX_VI_EDIT_COMMAND);
   else
-    return (edit_and_execute_command (count, c, VI_EDITING_MODE, VI_EDIT_COMMAND));
+    return edit_and_execute_command (count, c, VI_EDITING_MODE, VI_EDIT_COMMAND);
 }
 #endif /* VI_MODE */
 
 static int
 emacs_edit_and_execute_command (int count, int c)
 {
-  return (edit_and_execute_command (count, c, EMACS_EDITING_MODE, EMACS_EDIT_COMMAND));
+  return edit_and_execute_command (count, c, EMACS_EDITING_MODE, EMACS_EDIT_COMMAND);
 }
 
 #if defined (ALIAS)
@@ -1042,7 +1014,7 @@ bash_forward_shellword (int count, int key)
   DECLARE_MBSTATE;
 
   if (count < 0)
-    return (bash_backward_shellword (-count, key));
+    return bash_backward_shellword (-count, key);
 
   /* The tricky part of this is deciding whether or not the first character
      we're on is an unquoted metacharacter.  Not completely handled yet. */
@@ -1132,14 +1104,14 @@ bash_forward_shellword (int count, int key)
       if (p == rl_end || rl_line_buffer[p] == 0)
 	{
 	  rl_point = rl_end;
-	  return (0);
+	  return 0;
 	}
 
       count--;
     }
 
   rl_point = p;
-  return (0);
+  return 0;
 }
 
 static int
@@ -1150,7 +1122,7 @@ bash_backward_shellword (int count, int key)
   DECLARE_MBSTATE;
 
   if (count < 0)
-    return (bash_forward_shellword (-count, key));
+    return bash_forward_shellword (-count, key);
 
   p = rl_point;
   slen = rl_end;
@@ -1209,7 +1181,7 @@ bash_kill_shellword (int count, int key)
   int p;
 
   if (count < 0)
-    return (bash_backward_kill_shellword (-count, key));
+    return bash_backward_kill_shellword (-count, key);
 
   p = rl_point;
   bash_forward_shellword (count, key);
@@ -1230,7 +1202,7 @@ bash_backward_kill_shellword (int count, int key)
   int p;
 
   if (count < 0)
-    return (bash_kill_shellword (-count, key));
+    return bash_kill_shellword (-count, key);
 
   p = rl_point;
   bash_backward_shellword (count, key);
@@ -1315,7 +1287,7 @@ bash_transpose_shellwords (int count, int key)
 
 /* check for redirections and other character combinations that are not
    command separators */
-static int
+static bool
 check_redir (int ti)
 {
   /* Handle the two character tokens `>&', `<&', and `>|'.
@@ -1325,22 +1297,22 @@ check_redir (int ti)
 
   if ((this_char == '&' && (prev_char == '<' || prev_char == '>')) ||
       (this_char == '|' && prev_char == '>'))
-    return (1);
+    return true;
   else if (this_char == '{' && prev_char == '$') /*}*/
-    return (1);
+    return true;
 #if 0	/* Not yet */
   else if (this_char == '(' && prev_char == '$') /*)*/
-    return (1);
+    return true;
   else if (this_char == '(' && prev_char == '<') /*)*/
-    return (1);
+    return true;
 #if defined (EXTENDED_GLOB)
   else if (extended_glob && this_char == '(' && prev_char == '!') /*)*/
-    return (1);
+    return true;
 #endif
 #endif
   else if (char_is_quoted (rl_line_buffer, ti))
-    return (1);
-  return (0);
+    return true;
+  return false;
 }
 
 #if defined (PROGRAMMABLE_COMPLETION)
@@ -1358,13 +1330,15 @@ find_cmd_start (int start)
   /* Flags == SD_NOJMP only because we want to skip over command substitutions
      in assignment statements.  Have to test whether this affects `standalone'
      command substitutions as individual words. */
-  while (((s = skip_to_delim (rl_line_buffer, os, COMMAND_SEPARATORS, SD_NOJMP|SD_COMPLETE/*|SD_NOSKIPCMD*/)) <= start) &&
+  while (((s = skip_to_delim (rl_line_buffer, os, COMMAND_SEPARATORS,
+			      SD_NOJMP | SD_COMPLETE/* | SD_NOSKIPCMD*/)) <= start) &&
 	 rl_line_buffer[s])
     {
       /* Handle >| token crudely; treat as > not | */
       if (s > 0 && rl_line_buffer[s] == '|' && rl_line_buffer[s-1] == '>')
 	{
-	  ns = skip_to_delim (rl_line_buffer, s+1, COMMAND_SEPARATORS, SD_NOJMP|SD_COMPLETE/*|SD_NOSKIPCMD*/);
+	  ns = skip_to_delim (rl_line_buffer, s + 1,
+			      COMMAND_SEPARATORS, SD_NOJMP | SD_COMPLETE/* | SD_NOSKIPCMD*/);
 	  if (ns > start || rl_line_buffer[ns] == 0)
 	    return os;
 	  os = ns+1;
@@ -1385,10 +1359,11 @@ find_cmd_start (int start)
 	      (shellbreak(nc) == 0))	/* }} */
 	    {
 	      /* Not a reserved word, look for another delim */
-	      ns = skip_to_delim (rl_line_buffer, s+1, COMMAND_SEPARATORS, SD_NOJMP|SD_COMPLETE/*|SD_NOSKIPCMD*/);
+	      ns = skip_to_delim (rl_line_buffer, s+1, COMMAND_SEPARATORS,
+				  SD_NOJMP | SD_COMPLETE/* | SD_NOSKIPCMD*/);
 	      if (ns > start || rl_line_buffer[ns] == 0)
 		return os;
-	      os = ns+1;
+	      os = ns + 1;
 	      continue;
 	    }
 	}
@@ -1402,7 +1377,7 @@ find_cmd_end (int end)
 {
   int e;
 
-  e = skip_to_delim (rl_line_buffer, end, COMMAND_SEPARATORS, SD_NOJMP|SD_COMPLETE);
+  e = skip_to_delim (rl_line_buffer, end, COMMAND_SEPARATORS, SD_NOJMP | SD_COMPLETE);
   return e;
 }
 
@@ -1424,7 +1399,7 @@ find_cmd_name (int start, int *sp, int *ep)
   if (ep)
     *ep = e;
 
-  return (name);
+  return name;
 }
 
 static char *
@@ -1437,7 +1412,7 @@ prog_complete_return (const char *text, int matchnum)
 
   if (prog_complete_matches == 0 || prog_complete_matches[ind] == 0)
     return (char *)NULL;
-  return (prog_complete_matches[ind++]);
+  return prog_complete_matches[ind++];
 }
 
 #endif /* PROGRAMMABLE_COMPLETION */
@@ -1540,7 +1515,7 @@ attempt_shell_completion (const char *text, int start, int end)
   if (in_command_position && invalid_completion (text, ti))
     {
       rl_attempted_completion_over = 1;
-      return ((char **)NULL);
+      return (char **)NULL;
     }
 
   /* Check that we haven't incorrectly flagged a closed command substitution
@@ -1678,7 +1653,7 @@ attempt_shell_completion (const char *text, int start, int end)
 	  if ((foundcs & COPT_DEFAULT) == 0)
 	    rl_attempted_completion_over = 1;	/* no default */
 	  if (matches || ((foundcs & COPT_BASHDEFAULT) == 0))
-	    return (matches);
+	    return matches;
 	}
     }
 #endif
@@ -1807,7 +1782,7 @@ bash_default_completion (const char *text, int start, int end, int qc, int compf
 	}
     }
 
-  return (matches);
+  return matches;
 }
 
 static int
@@ -1818,7 +1793,7 @@ bash_command_name_stat_hook (char **name)
   /* If it's not something we're going to look up in $PATH, just call the
      normal filename stat hook. */
   if (absolute_program (*name))
-    return (bash_filename_stat_hook (name));
+    return bash_filename_stat_hook (name);
 
   cname = *name;
   /* XXX - we could do something here with converting aliases, builtins,
@@ -2006,9 +1981,9 @@ command_word_completion_function (const char *hint_text, int state)
 	  alias = alias_list[local_index++]->name;
 
 	  if (igncase == 0 && (STREQN (alias, hint, hint_len)))
-	    return (savestring (alias));
+	    return savestring (alias);
 	  else if (igncase && strncasecmp (alias, hint, hint_len) == 0)
-	    return (savestring (alias));
+	    return savestring (alias);
 	}
 #endif /* ALIAS */
       local_index = 0;
@@ -2023,7 +1998,7 @@ command_word_completion_function (const char *hint_text, int state)
 	    reserved_word = word_token_alist[local_index++].word;
 
 	    if (STREQN (reserved_word, hint, hint_len))
-	      return (savestring (reserved_word));
+	      return savestring (reserved_word);
 	  }
 	local_index = 0;
 	mapping_over++;
@@ -2038,9 +2013,9 @@ command_word_completion_function (const char *hint_text, int state)
 
 	  /* Honor completion-ignore-case for shell function names. */
 	  if (igncase == 0 && (STREQN (varname, hint, hint_len)))
-	    return (savestring (varname));
+	    return savestring (varname);
 	  else if (igncase && strncasecmp (varname, hint, hint_len) == 0)
-	    return (savestring (varname));
+	    return savestring (varname);
 	}
       local_index = 0;
       mapping_over++;
@@ -2058,7 +2033,7 @@ command_word_completion_function (const char *hint_text, int state)
 	    {
 	      int i = local_index++;
 
-	      return (savestring (shell_builtins[i].name));
+	      return savestring (shell_builtins[i].name);
 	    }
 	}
       local_index = 0;
@@ -2081,13 +2056,13 @@ globword:
 	  if (GLOB_FAILED (glob_matches) || glob_matches == 0)
 	    {
 	      glob_matches = (char **)NULL;
-	      return ((char *)NULL);
+	      return (char *)NULL;
 	    }
 
 	  local_index = 0;
 
 	  if (glob_matches[1] && rl_completion_type == TAB)	/* multiple matches are bad */
-	    return ((char *)NULL);
+	    return (char *)NULL;
 	}
 
       while ((val = glob_matches[local_index++]))
@@ -2100,13 +2075,13 @@ globword:
 		  free (val);
 		  val = temp;
 		}
-	      return (val);
+	      return val;
 	    }
 	  free (val);
         }
 
       glob_ignore_case = old_glob_ignore_case;
-      return ((char *)NULL);
+      return (char *)NULL;
     }
 
   /* If the text passed is a directory in the current directory, return it
@@ -2116,7 +2091,7 @@ globword:
   if (hint_is_dir)
     {
       hint_is_dir = false;	/* only return the hint text once */
-      return (savestring (hint_text));
+      return savestring (hint_text);
     }
 
   /* Repeatedly call filename_completion_function while we have
@@ -2134,7 +2109,7 @@ globword:
 	 are all done. */
       if (path == 0 || path[path_index] == 0 ||
 	  (current_path = extract_colon_unit (path, &path_index)) == 0)
-	return ((char *)NULL);
+	return (char *)NULL;
 
       searching_path = 1;
       if (*current_path == 0)
@@ -2184,7 +2159,7 @@ globword:
       /* If the hint text is an absolute program, then don't bother
 	 searching through PATH. */
       if (absolute_program (hint))
-	return ((char *)NULL);
+	return (char *)NULL;
 
       goto outer;
     }
@@ -2262,7 +2237,7 @@ globword:
 	    free (cval);
 	  free (val);
 	  val = (char *)"";		/* So it won't be NULL. */
-	  return (temp);
+	  return temp;
 	}
       else
 	{
@@ -2339,7 +2314,7 @@ command_subst_completion_function (const char *text, int state)
   if (matches == 0 || matches[cmd_index] == 0)
     {
       rl_filename_quoting_desired = 0;	/* disable quoting */
-      return ((char *)NULL);
+      return (char *)NULL;
     }
   else
     {
@@ -2353,7 +2328,7 @@ command_subst_completion_function (const char *text, int state)
       strcpy (value + start_len, matches[cmd_index]);
 
       cmd_index++;
-      return (value);
+      return value;
     }
 }
 
@@ -2391,7 +2366,7 @@ variable_completion_function (const char *text, int state)
 
   if (!varlist || !varlist[varlist_index])
     {
-      return ((char *)NULL);
+      return (char *)NULL;
     }
   else
     {
@@ -2411,7 +2386,7 @@ variable_completion_function (const char *text, int state)
 	strcat (value, "}");
 
       varlist_index++;
-      return (value);
+      return value;
     }
 }
 
@@ -2448,10 +2423,10 @@ hostname_completion_function (const char *text, int state)
       *t = first_char;
       strcpy (t + first_char_loc, list[list_index]);
       list_index++;
-      return (t);
+      return t;
     }
 
-  return ((char *)NULL);
+  return (char *)NULL;
 }
 
 /*
@@ -2461,7 +2436,7 @@ char *
 bash_servicename_completion_function (const char *text, int state)
 {
 #if defined (__WIN32__) || defined (__OPENNT) || !defined (HAVE_GETSERVENT)
-  return ((char *)NULL);
+  return (char *)NULL;
 #else
   static char *sname = (char *)NULL;
   static struct servent *srvent;
@@ -2502,7 +2477,7 @@ bash_servicename_completion_function (const char *text, int state)
   if (srvent == 0)
     {
       endservent ();
-      return ((char *)NULL);
+      return (char *)NULL;
     }
 
   value = afound ? savestring (aentry) : savestring (srvent->s_name);
@@ -2517,7 +2492,7 @@ char *
 bash_groupname_completion_function (const char *text, int state)
 {
 #if defined (__WIN32__) || defined (__OPENNT) || !defined (HAVE_GRP_H)
-  return ((char *)NULL);
+  return (char *)NULL;
 #else
   static char *gname = (char *)NULL;
   static struct group *grent;
@@ -2542,11 +2517,11 @@ bash_groupname_completion_function (const char *text, int state)
   if (grent == 0)
     {
       endgrent ();
-      return ((char *)NULL);
+      return (char *)NULL;
     }
 
   value = savestring (grent->gr_name);
-  return (value);
+  return value;
 #endif
 }
 
@@ -2650,12 +2625,12 @@ alias_expand_line (int count, int ignore)
   if (new_line)
     {
       set_up_new_line (new_line);
-      return (0);
+      return 0;
     }
   else
     {
       cleanup_expansion_error ();
-      return (1);
+      return 1;
     }
 }
 #endif
@@ -2672,12 +2647,12 @@ history_expand_line (int count, int ignore)
   if (new_line)
     {
       set_up_new_line (new_line);
-      return (0);
+      return 0;
     }
   else
     {
       cleanup_expansion_error ();
-      return (1);
+      return 1;
     }
 }
 
@@ -2697,10 +2672,10 @@ tcsh_magic_space (int count, int ignore)
 	 were performed. */
       rl_point = (old_point == 0) ? old_point : rl_end - dist_from_end;
       rl_insert (1, ' ');
-      return (0);
+      return 0;
     }
   else
-    return (1);
+    return 1;
 }
 #endif /* BANG_HISTORY */
 
@@ -2729,12 +2704,12 @@ history_and_alias_expand_line (int count, int ignore)
   if (new_line)
     {
       set_up_new_line (new_line);
-      return (0);
+      return 0;
     }
   else
     {
       cleanup_expansion_error ();
-      return (1);
+      return 1;
     }
 }
 
@@ -2947,7 +2922,7 @@ name_is_acceptable (const char *name)
 static int
 ignore_dot_names (char *name)
 {
-  return (name[0] != '.');
+  return name[0] != '.';
 }
 #endif
 
@@ -2979,7 +2954,7 @@ test_for_directory (const char *name)
   bool r = file_isdir (fn);
   free (fn);
 
-  return (r);
+  return r;
 }
 
 static bool
@@ -2992,7 +2967,7 @@ test_for_canon_directory (const char *name)
   bool r = file_isdir (fn);
   free (fn);
 
-  return (r);
+  return r;
 }
 
 /* Remove files from NAMES, leaving directories. */
@@ -3071,7 +3046,7 @@ restore_tilde (char *val, char *directory_part)
   if (l <= 0)
     {
       free (dh2);
-      return (savestring (val));		/* XXX - just punt */
+      return savestring (val);		/* XXX - just punt */
     }
 
   ret = (char *)xmalloc (dl2 + 2 + l);
@@ -3079,7 +3054,7 @@ restore_tilde (char *val, char *directory_part)
   strcpy (ret + dl2, val + xl);
 
   free (dh2);
-  return (ret);
+  return ret;
 }
 
 static char *
@@ -3202,7 +3177,7 @@ directory_exists (const char *dirname, int should_dequote)
   r = stat (new_dirname, &sb) == 0;
 #endif
   free (new_dirname);
-  return (r);
+  return r;
 }
 
 /* Expand a filename before the readline completion code passes it to stat(2).
@@ -3279,7 +3254,7 @@ bash_filename_stat_hook (char **dirname)
       free (temp1);
     }
 
-  return (return_value);
+  return return_value;
 }
 
 /* Handle symbolic link references and other directory name
@@ -3459,7 +3434,7 @@ bash_directory_completion_hook (char **dirname)
       free (temp1);
     }
 
-  return (return_value);
+  return return_value;
 }
 
 static char **history_completion_array = (char **)NULL;
@@ -3531,9 +3506,9 @@ history_completion_generator (const char *hint_text, int state)
     {
       /* XXX - should this use completion-ignore-case? */
       if (strncmp (text, history_completion_array[local_index++], len) == 0)
-	return (savestring (history_completion_array[local_index - 1]));
+	return savestring (history_completion_array[local_index - 1]);
     }
-  return ((char *)NULL);
+  return (char *)NULL;
 }
 
 static int
@@ -3725,7 +3700,7 @@ bash_complete_command_internal (int what_to_do)
 static bool
 completion_glob_pattern (char *string)
 {
-  return (glob_pattern_p (string) == 1);
+  return glob_pattern_p (string) == 1;
 }
 
 static char *globtext;
@@ -3787,9 +3762,9 @@ static char *
 bash_glob_quote_filename (char *s, int rtype, char *qcp)
 {
   if (globorig && qcp && *qcp == '\0' && STREQ (s, globorig))
-    return (savestring (s));
+    return savestring (s);
   else
-    return (bash_quote_filename (s, rtype, qcp));
+    return bash_quote_filename (s, rtype, qcp);
 }
 
 static int
@@ -3896,7 +3871,7 @@ bash_vi_complete (int count, int key)
   if (key == '*' || key == '\\')
     rl_vi_start_inserting (key, 1, 1);
 
-  return (r);
+  return r;
 #else
   return rl_vi_complete (count, key);
 #endif /* !SPECIFIC_COMPLETION_FUNCTIONS */
@@ -4286,7 +4261,7 @@ get_cmd_xmap_from_edit_mode ()
       return emacs_std_cmd_xmap;
 #if defined (VI_MODE)
     case VI_EDITING_MODE:
-      return (get_cmd_xmap_from_keymap (rl_get_keymap ()));
+      return get_cmd_xmap_from_keymap (rl_get_keymap ());
 #endif
     default:
       return (Keymap)NULL;
@@ -4302,9 +4277,9 @@ get_cmd_xmap_from_keymap (Keymap kmap)
   if (kmap == emacs_standard_keymap)
     return emacs_std_cmd_xmap;
   else if (kmap == emacs_meta_keymap)
-    return (FUNCTION_TO_KEYMAP (emacs_std_cmd_xmap, ESC));
+    return FUNCTION_TO_KEYMAP (emacs_std_cmd_xmap, ESC);
   else if (kmap == emacs_ctlx_keymap)
-    return (FUNCTION_TO_KEYMAP (emacs_std_cmd_xmap, CTRL('X')));
+    return FUNCTION_TO_KEYMAP (emacs_std_cmd_xmap, CTRL('X'));
 #if defined (VI_MODE)
   else if (kmap == vi_insertion_keymap)
     return vi_insert_cmd_xmap;
@@ -4465,7 +4440,7 @@ bash_dequote_text (const char *text)
 
   qc = (text[0] == '"' || text[0] == '\'') ? text[0] : 0;
   dtxt = bash_dequote_filename ((char *)text, qc);
-  return (dtxt);
+  return dtxt;
 }
 
 /* This event hook is designed to be called after readline receives a signal

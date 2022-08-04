@@ -73,7 +73,6 @@ $END
 #  include <unistd.h>
 #endif
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include "../shell.h"
@@ -81,6 +80,9 @@ $END
 #include "common.h"
 #include "bashgetopt.h"
 #include "getopt.h"
+
+namespace bash
+{
 
 #define G_EOF		-1
 #define G_INVALID_OPT	-2
@@ -103,9 +105,9 @@ static int
 getopts_unbind_variable (const char *name)
 {
 #if 0
-  return (unbind_variable (name));
+  return unbind_variable (name);
 #else
-  return (unbind_variable_noref (name));
+  return unbind_variable_noref (name);
 #endif
 }
 
@@ -118,13 +120,13 @@ getopts_bind_variable (const char *name, const char *value)
     {
       v = bind_variable (name, value, 0);
       if (v && (readonly_p (v) || noassign_p (v)))
-	return (EX_MISCERROR);
-      return (v ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+	return EX_MISCERROR;
+      return v ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
     }
   else
     {
       sh_invalidid (name);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 }
 
@@ -167,7 +169,7 @@ dogetopts (int argc, char **argv)
   if (argc < 3)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   /* argv[0] is "getopts". */
@@ -259,7 +261,7 @@ dogetopts (int argc, char **argv)
     {
       getopts_unbind_variable ("OPTARG");
       getopts_bind_variable (name, "?");
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (ret == G_INVALID_OPT)
@@ -276,7 +278,7 @@ dogetopts (int argc, char **argv)
       else
 	getopts_unbind_variable ("OPTARG");
 
-      return (ret);
+      return ret;
     }
 
   if (ret == G_ARG_MISSING)
@@ -295,19 +297,19 @@ dogetopts (int argc, char **argv)
 	  ret = getopts_bind_variable (name, "?");
 	  getopts_unbind_variable ("OPTARG");
 	}
-      return (ret);
+      return ret;
     }
 
   bind_variable ("OPTARG", sh_optarg, 0);
 
   strval[0] = (char) ret;
   strval[1] = '\0';
-  return (getopts_bind_variable (name, strval));
+  return getopts_bind_variable (name, strval);
 }
 
 /* The getopts builtin.  Build an argv, and call dogetopts with it. */
 int
-getopts_builtin (WORD_LIST *list)
+Shell::getopts_builtin (WORD_LIST *list)
 {
   char **av;
   int ac, ret;
@@ -325,7 +327,7 @@ getopts_builtin (WORD_LIST *list)
 	builtin_help ();
       else
 	builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
   list = loptend;
 
@@ -333,5 +335,7 @@ getopts_builtin (WORD_LIST *list)
   ret = dogetopts (ac, av);
   free ((char *)av);
 
-  return (ret);
+  return ret;
 }
+
+}  // namespace bash

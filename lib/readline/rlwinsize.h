@@ -4,7 +4,7 @@
 /* Copyright (C) 1997-2009 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -22,10 +22,6 @@
 
 #if !defined (_RLWINSIZE_H_)
 #define _RLWINSIZE_H_
-
-#if defined (HAVE_CONFIG_H)
-#  include "config.h"
-#endif
 
 /* Try to find the definitions of `struct winsize' and TIOGCWINSZ */
 
@@ -52,7 +48,7 @@
 #endif /* !STRUCT_WINSIZE_IN_TERMIOS && !STRUCT_WINSIZE_IN_SYS_IOCTL */
 
 #if defined (M_UNIX) && !defined (_SCO_DS) && !defined (tcflow)
-#  define tcflow(fd, action)	ioctl(fd, TCXONC, action)
+#  define tcflow(fd, action)	::ioctl(fd, TCXONC, action)
 #endif
 
 #endif /* _RL_WINSIZE_H */

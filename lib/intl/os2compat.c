@@ -19,8 +19,8 @@
 #include <config.h>
 #endif
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include <sys/param.h>
 
 /* A version of getenv() that works from DLLs */

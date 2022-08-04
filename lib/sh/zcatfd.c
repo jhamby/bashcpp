@@ -26,13 +26,7 @@
 #  include <unistd.h>
 #endif
 
-#include <errno.h>
-
-#include <stdc.h>
-
-#if !defined (errno)
-extern int errno;
-#endif
+#include <cerrno>
 
 #ifndef ZBUFSIZ
 #  define ZBUFSIZ 4096

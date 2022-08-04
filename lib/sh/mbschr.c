@@ -20,66 +20,64 @@
 
 #include <config.h>
 
-#ifdef HAVE_STDLIB_H
-#  include <stdlib.h>
-#endif
+#include <cstdlib>
 
-#include "bashansi.h"
 #include "shmbutil.h"
+#include "general.h"
+#include "shell.h"
 
-extern int locale_mb_cur_max;
-extern int locale_utf8locale;
-
-#undef mbschr
-
-extern const char *utf8_mbschr (const char *, int);	/* XXX */
+namespace bash
+{
 
 /* In some locales, the non-first byte of some multibyte characters have
    the same value as some ascii character.  Faced with these strings, a
    legacy strchr() might return the wrong value. */
 
 const char *
-mbschr (const char *s, int c)
+Shell::mbschr (const char *s, int c)
 {
 #if HANDLE_MULTIBYTE
-  char *pos;
+  const char *pos;
   mbstate_t state;
-  size_t strlength, mblength;
 
   if (locale_utf8locale && c < 0x80)
-    return (utf8_mbschr (s, c));		/* XXX */
+    return utf8_mbschr (s, c);		/* XXX */
 
   /* The locale encodings with said weird property are BIG5, BIG5-HKSCS,
      GBK, GB18030, SHIFT_JIS, and JOHAB.  They exhibit the problem only
      when c >= 0x30.  We can therefore use the faster bytewise search if
      c <= 0x30. */
-  if ((unsigned char)c >= '0' && locale_mb_cur_max > 1)
+  if (static_cast<unsigned char> (c) >= '0' && locale_mb_cur_max > 1)
     {
-      pos = (char *)s;
-      memset (&state, '\0', sizeof(mbstate_t));
-      strlength = strlen (s);
+      pos = s;
+      std::memset (&state, '\0', sizeof(mbstate_t));
+      size_t strlength = std::strlen (s);
 
       while (strlength > 0)
 	{
+	  size_t mblength;
 	  if (is_basic (*pos))
 	    mblength = 1;
 	  else
 	    {
-	      mblength = mbrlen (pos, strlength, &state);
-	      if (mblength == (size_t)-2 || mblength == (size_t)-1 || mblength == (size_t)0)
+	      mblength = std::mbrlen (pos, strlength, &state);
+	      if (mblength == static_cast<size_t> (-2) ||
+		  mblength == static_cast<size_t> (-1) || mblength == 0)
 	        mblength = 1;
 	    }
 
-	  if (mblength == 1 && c == (unsigned char)*pos)
+	  if (mblength == 1 && c == static_cast<unsigned char> (*pos))
 	    return pos;
 
 	  strlength -= mblength;
 	  pos += mblength;
 	}
 
-      return ((char *)NULL);
+      return nullptr;
     }
   else
 #endif
-  return (strchr (s, c));
+  return std::strchr (s, c);
 }
+
+}  // namespace bash

@@ -17,22 +17,23 @@
 #include <config.h>
 
 #if defined (HANDLE_MULTIBYTE)
-#include <stdlib.h>
-#include <limits.h>
+#include <cstdlib>
+#include <climits>
 
-#include <errno.h>
+#include <cerrno>
 
-#include <shmbutil.h>
-#include <shmbchar.h>
+#include "general.h"
+#include "shmbutil.h"
+#include "shmbchar.h"
+#include "shell.h"
 
-#ifndef errno
-extern int errno;
-#endif
+namespace bash
+{
 
-#if IS_BASIC_ASCII
+#if defined (IS_BASIC_ASCII)
 
 /* Bit table of characters in the ISO C "basic character set".  */
-const unsigned int is_basic_table [UCHAR_MAX / 32 + 1] =
+constexpr unsigned int is_basic_table [UCHAR_MAX / 32 + 1] =
 {
   0x00001a00,           /* '\t' '\v' '\f' */
   0xffffffef,           /* ' '...'#' '%'...'?' */
@@ -43,10 +44,10 @@ const unsigned int is_basic_table [UCHAR_MAX / 32 + 1] =
 
 #endif /* IS_BASIC_ASCII */
 
-extern int locale_utf8locale;
+// extern int locale_utf8locale;
 
-extern char *utf8_mbsmbchar (const char *);
-extern int utf8_mblen (const char *, size_t);
+// extern char *utf8_mbsmbchar (const char *);
+// extern int utf8_mblen (const char *, size_t);
 
 /* Count the number of characters in S, counting multi-byte characters as a
    single character. */
@@ -59,7 +60,7 @@ mbstrlen (const char *s)
 
   nc = 0;
   mb_cur_max = MB_CUR_MAX;
-  while (*s && (clen = (f = is_basic (*s)) ? 1 : mbrlen(s, mb_cur_max, &mbs)) != 0)
+  while (*s && (clen = (f = is_basic (*s)) ? 1 : std::mbrlen(s, mb_cur_max, &mbs)) != 0)
     {
       if (MB_INVALIDCH(clen))
 	{
@@ -79,8 +80,8 @@ mbstrlen (const char *s)
 /* Return pointer to first multibyte char in S, or NULL if none. */
 /* XXX - if we know that the locale is UTF-8, we can just check whether or
    not any byte has the eighth bit turned on */
-char *
-mbsmbchar (const char *s)
+const char *
+Shell::mbsmbchar (const char *s)
 {
   char *t;
   size_t clen;
@@ -88,7 +89,7 @@ mbsmbchar (const char *s)
   int mb_cur_max;
 
   if (locale_utf8locale)
-    return (utf8_mbsmbchar (s));	/* XXX */
+    return utf8_mbsmbchar (s);	/* XXX */
 
   mb_cur_max = MB_CUR_MAX;
   for (t = (char *)s; *t; t++)
@@ -99,7 +100,7 @@ mbsmbchar (const char *s)
       if (locale_utf8locale)		/* not used if above code active */
 	clen = utf8_mblen (t, mb_cur_max);
       else
-	clen = mbrlen (t, mb_cur_max, &mbs);
+	clen = std::mbrlen (t, mb_cur_max, &mbs);
 
       if (clen == 0)
         return 0;
@@ -113,7 +114,7 @@ mbsmbchar (const char *s)
 }
 
 int
-sh_mbsnlen(const char *src, size_t srclen, int maxlen)
+Shell::sh_mbsnlen(const char *src, size_t srclen, int maxlen)
 {
   int count;
   int sind;
@@ -130,3 +131,5 @@ sh_mbsnlen(const char *src, size_t srclen, int maxlen)
   return count;
 }
 #endif
+
+}  // namespace bash

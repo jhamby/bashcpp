@@ -25,8 +25,6 @@ $PRODUCES echo.c
 #  include <unistd.h>
 #endif
 
-#include "../bashansi.h"
-
 #include <stdio.h>
 #include "../shell.h"
 
@@ -85,6 +83,9 @@ Options:
 Exit Status:
 Returns success unless a write error occurs.
 $END
+
+namespace bash
+{
 
 #if defined (V9_ECHO)
 #  define VALID_ECHO_OPTIONS "neE"
@@ -197,5 +198,7 @@ just_echo:
   if (display_return)
     putchar ('\n');
 
-  return (sh_chkwrite (EXECUTION_SUCCESS));
+  return sh_chkwrite (EXECUTION_SUCCESS);
 }
+
+}  // namespace bash

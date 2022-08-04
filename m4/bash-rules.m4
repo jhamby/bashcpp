@@ -90,40 +90,6 @@ else
 fi
 ])
 
-AC_DEFUN([BASH_DECL_PRINTF],
-[AC_MSG_CHECKING(for declaration of printf in <stdio.h>)
-AC_CACHE_VAL(bash_cv_printf_declared,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdio.h>
-typedef int (*_bashfunc)(const char *, ...);
-#include <stdlib.h>
-int
-main()
-{
-_bashfunc pf;
-pf = (_bashfunc) printf;
-exit(pf == 0);
-}
-]])],[bash_cv_printf_declared=yes],[bash_cv_printf_declared=no],[AC_MSG_WARN(cannot check printf declaration if cross compiling -- defaulting to yes)
-    bash_cv_printf_declared=yes
-])])
-AC_MSG_RESULT($bash_cv_printf_declared)
-if test $bash_cv_printf_declared = yes; then
-AC_DEFINE(PRINTF_DECLARED)
-fi
-])
-
-AC_DEFUN([BASH_DECL_SBRK],
-[AC_MSG_CHECKING(for declaration of sbrk in <unistd.h>)
-AC_CACHE_VAL(bash_cv_sbrk_declared,
-[AC_EGREP_HEADER(sbrk, unistd.h,
- bash_cv_sbrk_declared=yes, bash_cv_sbrk_declared=no)])
-AC_MSG_RESULT($bash_cv_sbrk_declared)
-if test $bash_cv_sbrk_declared = yes; then
-AC_DEFINE(SBRK_DECLARED)
-fi
-])
-
 dnl
 dnl Check for sys_siglist[] or _sys_siglist[]
 dnl
@@ -692,58 +658,6 @@ main()
 AC_MSG_RESULT($bash_cv_fnm_extmatch)
 if test $bash_cv_fnm_extmatch = yes; then
 AC_DEFINE(HAVE_LIBC_FNM_EXTMATCH)
-fi
-])
-
-AC_DEFUN([BASH_FUNC_POSIX_SETJMP],
-[AC_REQUIRE([BASH_SYS_SIGNAL_VINTAGE])
-AC_MSG_CHECKING(for presence of POSIX-style sigsetjmp/siglongjmp)
-AC_CACHE_VAL(bash_cv_func_sigsetjmp,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <sys/types.h>
-#include <signal.h>
-#include <setjmp.h>
-#include <stdlib.h>
-
-int
-main()
-{
-#if !defined (_POSIX_VERSION) || !defined (HAVE_POSIX_SIGNALS)
-exit (1);
-#else
-
-int code;
-sigset_t set, oset;
-sigjmp_buf xx;
-
-/* get the mask */
-sigemptyset(&set);
-sigemptyset(&oset);
-sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &set);
-sigprocmask(SIG_BLOCK, (sigset_t *)NULL, &oset);
-
-/* save it */
-code = sigsetjmp(xx, 1);
-if (code)
-  exit(0);	/* could get sigmask and compare to oset here. */
-
-/* change it */
-sigaddset(&set, SIGINT);
-sigprocmask(SIG_BLOCK, &set, (sigset_t *)NULL);
-
-/* and siglongjmp */
-siglongjmp(xx, 10);
-exit(1);
-#endif
-}]])],[bash_cv_func_sigsetjmp=present],[bash_cv_func_sigsetjmp=missing],[AC_MSG_WARN(cannot check for sigsetjmp/siglongjmp if cross-compiling -- defaulting to missing)
-     bash_cv_func_sigsetjmp=missing
-])])
-AC_MSG_RESULT($bash_cv_func_sigsetjmp)
-if test $bash_cv_func_sigsetjmp = present; then
-AC_DEFINE(HAVE_POSIX_SIGSETJMP)
 fi
 ])
 
@@ -1603,12 +1517,8 @@ AC_CHECK_HEADERS(langinfo.h)
 AC_CHECK_HEADERS(mbstr.h)
 
 AC_CHECK_FUNC(mbrlen, AC_DEFINE(HAVE_MBRLEN))
-AC_CHECK_FUNC(mbscasecmp, AC_DEFINE(HAVE_MBSCMP))
-AC_CHECK_FUNC(mbscmp, AC_DEFINE(HAVE_MBSCMP))
 AC_CHECK_FUNC(mbsnrtowcs, AC_DEFINE(HAVE_MBSNRTOWCS))
 AC_CHECK_FUNC(mbsrtowcs, AC_DEFINE(HAVE_MBSRTOWCS))
-
-AC_REPLACE_FUNCS(mbschr)
 
 AC_CHECK_FUNC(wcrtomb, AC_DEFINE(HAVE_WCRTOMB))
 AC_CHECK_FUNC(wcscoll, AC_DEFINE(HAVE_WCSCOLL))
@@ -2061,39 +1971,6 @@ if test "$bash_cv_wexitstatus_offset" -gt 32 ; then
 fi
 AC_MSG_RESULT($bash_cv_wexitstatus_offset)
 AC_DEFINE_UNQUOTED([WEXITSTATUS_OFFSET], [$bash_cv_wexitstatus_offset], [Offset of exit status in wait status word])
-])
-
-AC_DEFUN([BASH_FUNC_SBRK],
-[
-  AC_MSG_CHECKING([for sbrk])
-  AC_CACHE_VAL(ac_cv_func_sbrk,
-  [AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]], [[ void *x = sbrk (4096); ]])],[ac_cv_func_sbrk=yes],[ac_cv_func_sbrk=no])])
-  AC_MSG_RESULT($ac_cv_func_sbrk)
-  if test X$ac_cv_func_sbrk = Xyes; then
-    AC_CACHE_CHECK([for working sbrk], [bash_cv_func_sbrk],
-      [AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdlib.h>
-#include <unistd.h>
-
-int
-main(int c, char **v)
-{
-	void *x;
-
-	x = sbrk (4096);
-	exit ((x == (void *)-1) ? 1 : 0);
-}
-]])],[bash_cv_func_sbrk=yes],[bash_cv_func_snprintf=sbrk],[AC_MSG_WARN([cannot check working sbrk if cross-compiling])
-    bash_cv_func_sbrk=yes
-])])
-    if test $bash_cv_func_sbrk = no; then
-      ac_cv_func_sbrk=no
-    fi
-  fi
-  if test $ac_cv_func_sbrk = yes; then
-    AC_DEFINE(HAVE_SBRK, 1,
-      [Define if you have a working sbrk function.])
-  fi
 ])
 
 AC_DEFUN([BASH_FUNC_FNMATCH_EQUIV_FALLBACK],

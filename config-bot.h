@@ -36,16 +36,8 @@
 #  define HAVE_BSD_PGRP
 #endif
 
-/* Try this without testing __STDC__ for the time being. */
-#if defined (HAVE_STDARG_H)
-#  define PREFER_STDARG
-#  define USE_VARARGS
-#else
-#  if defined (HAVE_VARARGS_H)
-#    define PREFER_VARARGS
-#    define USE_VARARGS
-#  endif
-#endif
+#define PREFER_STDARG
+#define USE_VARARGS
 
 #if defined (HAVE_SYS_SOCKET_H) && defined (HAVE_GETPEERNAME) && defined (HAVE_NETINET_IN_H)
 #  define HAVE_NETWORK
@@ -56,7 +48,7 @@
 #endif
 
 /* backwards compatibility between different autoconf versions */
-#if HAVE_DECL_SYS_SIGLIST && !defined (SYS_SIGLIST_DECLARED)
+#if defined (HAVE_DECL_SYS_SIGLIST) && !defined (SYS_SIGLIST_DECLARED)
 #  define SYS_SIGLIST_DECLARED
 #endif
 
@@ -94,11 +86,11 @@
 #  undef COND_REGEXP
 #endif
 
-#if !HAVE_MKSTEMP
+#if !defined (HAVE_MKSTEMP)
 #  undef USE_MKSTEMP
 #endif
 
-#if !HAVE_MKDTEMP
+#if !defined (HAVE_MKDTEMP)
 #  undef USE_MKDTMP
 #endif
 
@@ -137,33 +129,19 @@
 #  undef SYSLOG_HISTORY
 #endif
 
+#if defined (HAVE_VFORK) && !defined (HAVE_FORK)
+#  define VFORK_SUBSHELL
+#endif
+
 /************************************************/
 /* check multibyte capability for I18N code	*/
 /************************************************/
 
 /* For platforms which support the ISO C amendment 1 functionality we
    support user defined character classes.  */
-/* Solaris 2.5 has a bug: <wchar.h> must be included before <wctype.h>.  */
-#if defined (HAVE_WCTYPE_H) && defined (HAVE_WCHAR_H) && defined (HAVE_LOCALE_H)
-#  include <wchar.h>
-#  include <wctype.h>
-#  if defined (HAVE_ISWCTYPE) && \
-      defined (HAVE_ISWLOWER) && \
-      defined (HAVE_ISWUPPER) && \
-      defined (HAVE_MBSRTOWCS) && \
-      defined (HAVE_MBRTOWC) && \
-      defined (HAVE_MBRLEN) && \
-      defined (HAVE_TOWLOWER) && \
-      defined (HAVE_TOWUPPER) && \
-      defined (HAVE_WCHAR_T) && \
-      defined (HAVE_WCTYPE_T) && \
-      defined (HAVE_WINT_T) && \
-      defined (HAVE_WCWIDTH) && \
-      defined (HAVE_WCTYPE)
-     /* system is supposed to support XPG5 */
-#    define HANDLE_MULTIBYTE      1
-#  endif
-#endif
+#include <cwchar>
+#include <cwctype>
+#define HANDLE_MULTIBYTE      1
 
 /* If we don't want multibyte chars even on a system that supports them, let
    the configuring user turn multibyte support off. */
@@ -172,7 +150,7 @@
 #endif
 
 /* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
-#if HANDLE_MULTIBYTE && !defined (HAVE_MBSTATE_T)
+#if defined (HANDLE_MULTIBYTE) && !defined (HAVE_MBSTATE_T)
 #  define wcsrtombs(dest, src, len, ps) (wcsrtombs) (dest, src, len, 0)
 #  define mbsrtowcs(dest, src, len, ps) (mbsrtowcs) (dest, src, len, 0)
 #  define wcrtomb(s, wc, ps) (wcrtomb) (s, wc, 0)
@@ -184,7 +162,7 @@
 /* Make sure MB_LEN_MAX is at least 16 (some systems define
    MB_LEN_MAX as 1) */
 #ifdef HANDLE_MULTIBYTE
-#  include <limits.h>
+#  include <climits>
 #  if defined(MB_LEN_MAX) && (MB_LEN_MAX < 16)
 #    undef MB_LEN_MAX
 #  endif

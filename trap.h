@@ -21,12 +21,8 @@
 #if !defined (_TRAP_H_)
 #define _TRAP_H_
 
-#include "stdc.h"
-
-#if !defined (SIG_DFL)
 #include "bashtypes.h"
-#include <signal.h>
-#endif /* SIG_DFL */
+#include <csignal>
 
 #if !defined (NSIG)
 #define NSIG 64
@@ -50,14 +46,12 @@
 #define DSIG_NOCASE	0x02		/* case-insensitive comparison */
 
 /* A value which can never be the target of a trap handler. */
-#define IMPOSSIBLE_TRAP_HANDLER (SigHandler *)initialize_traps
+#define IMPOSSIBLE_TRAP_HANDLER (sighandler_t *)initialize_traps
 
-#define signal_object_p(x,f) (decode_signal (x,f) != NO_SIG)
+namespace bash
+{
 
-#define TRAP_STRING(s) \
-  (signal_is_trapped (s) && signal_is_ignored (s) == 0) ? trap_list[s] \
-							: (char *)NULL
-
+#if 0
 extern char *trap_list[];
 
 extern int trapped_signal_received;
@@ -67,13 +61,13 @@ extern int trap_saved_exit_value;
 extern bool suppress_debug_trap_verbose;
 
 /* Externally-visible functions declared in trap.c. */
-extern void initialize_traps (void);
+extern void initialize_traps ();
 
-extern void run_pending_traps (void);
+extern void run_pending_traps ();
 
 extern void queue_sigchld_trap (int);
 extern void maybe_set_sigchld_trap (void *);
-extern void set_impossible_sigchld_trap (void);
+extern void set_impossible_sigchld_trap ();
 extern void set_sigchld_trap (char *);
 
 extern void set_debug_trap (char *);
@@ -89,18 +83,18 @@ extern void set_signal (int, char *);
 
 extern void restore_default_signal (int);
 extern void ignore_signal (int);
-extern int run_exit_trap (void);
+extern int run_exit_trap ();
 extern void run_trap_cleanup (int);
-extern int run_debug_trap (void);
-extern void run_error_trap (void);
-extern void run_return_trap (void);
+extern int run_debug_trap ();
+extern void run_error_trap ();
+extern void run_return_trap ();
 
-extern void free_trap_strings (void);
-extern void reset_signal_handlers (void);
-extern void restore_original_signals (void);
+extern void free_trap_strings ();
+extern void reset_signal_handlers ();
+extern void restore_original_signals ();
 
 extern void get_original_signal (int);
-extern void get_all_original_signals (void);
+extern void get_all_original_signals ();
 
 extern const char *signal_name (int);
 
@@ -119,10 +113,28 @@ extern int signal_in_progress (int);
 extern void set_trap_state (int);
 
 extern int next_pending_trap (int);
-extern int first_pending_trap (void);
-extern void clear_pending_traps (void);
-extern int any_signals_trapped (void);
-extern void check_signals (void);
-extern void check_signals_and_traps (void);
+extern int first_pending_trap ();
+extern void clear_pending_traps ();
+extern int any_signals_trapped ();
+extern void check_signals ();
+extern void check_signals_and_traps ();
+
+/* Inline functions. */
+
+static bool
+is_signal_object(const char *x, int f)
+{
+  return decode_signal (x, f) != NO_SIG;
+}
+
+static const char *
+trap_string(int s)
+{
+  return (signal_is_trapped (s) && signal_is_ignored (s) == 0)
+	  ? trap_list[s] : NULL;
+}
+#endif
+
+}  // namespace bash
 
 #endif /* _TRAP_H_ */

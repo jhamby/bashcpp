@@ -22,8 +22,7 @@
 
 #if defined (PROGRAMMABLE_COMPLETION)
 
-#include "bashansi.h"
-#include <stdio.h>
+#include <cstdio>
 
 #if defined (HAVE_UNISTD_H)
 #  ifdef _MINIX
@@ -37,7 +36,10 @@
 #include "shell.h"
 #include "pcomplete.h"
 
-#define COMPLETE_HASH_BUCKETS	256	/* must be power of two */
+namespace bash
+{
+
+static constexpr int COMPLETE_HASH_BUCKETS =	256;	/* must be power of two */
 
 #define STRDUP(x)	((x) ? savestring (x) : (char *)NULL)
 
@@ -120,7 +122,7 @@ progcomp_create ()
 int
 progcomp_size ()
 {
-  return (HASH_ENTRIES (prog_completes));
+  return HASH_ENTRIES (prog_completes);
 }
 
 static void
@@ -162,9 +164,9 @@ progcomp_remove (char *cmd)
 	free_progcomp (item->data);
       free (item->key);
       free (item);
-      return (1);
+      return 1;
     }
-  return (0);
+  return 0;
 }
 
 int
@@ -196,16 +198,16 @@ progcomp_search (const char *cmd)
   COMPSPEC *cs;
 
   if (prog_completes == 0)
-    return ((COMPSPEC *)NULL);
+    return (COMPSPEC *)NULL;
 
   item = hash_search (cmd, prog_completes, 0);
 
   if (item == NULL)
-    return ((COMPSPEC *)NULL);
+    return (COMPSPEC *)NULL;
 
   cs = (COMPSPEC *)item->data;
 
-  return (cs);
+  return cs;
 }
 
 void
@@ -216,5 +218,7 @@ progcomp_walk (hash_wfunc *pfunc)
 
   hash_walk (prog_completes, pfunc);
 }
+
+}  // namespace bash
 
 #endif /* PROGRAMMABLE_COMPLETION */

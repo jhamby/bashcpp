@@ -46,7 +46,7 @@
    system headers, defines a conflicting _Static_assert that is no
    better than ours; override it.  */
 #ifndef _GL_HAVE_STATIC_ASSERT
-# include <stddef.h>
+# include <cstddef>
 # undef _Static_assert
 #endif
 

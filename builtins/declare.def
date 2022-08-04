@@ -81,7 +81,6 @@ $END
 
 #include <stdio.h>
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include "../shell.h"
@@ -90,15 +89,20 @@ $END
 #include "builtext.h"
 #include "bashgetopt.h"
 
+namespace bash
+{
+
 static SHELL_VAR *declare_find_variable (const char *, int, int);
 static int declare_internal (WORD_LIST *, int);
 
 /* Declare or change variable attributes. */
 int
-declare_builtin (WORD_LIST *list)
+Shell::declare_builtin (WORD_LIST *list)
 {
-  return (declare_internal (list, 0));
+  return declare_internal (list, 0);
 }
+
+}  // namespace bash
 
 $BUILTIN local
 $FUNCTION local_builtin
@@ -115,22 +119,26 @@ Exit Status:
 Returns success unless an invalid option is supplied, a variable
 assignment error occurs, or the shell is not executing a function.
 $END
+
+namespace bash
+{
+
 int
-local_builtin (WORD_LIST *list)
+Shell::local_builtin (WORD_LIST *list)
 {
   /* Catch a straight `local --help' before checking function context */
   if (list && list->word && STREQ (list->word->word, "--help"))
     {
       builtin_help ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   if (variable_context)
-    return (declare_internal (list, 1));
+    return declare_internal (list, 1);
   else
     {
       builtin_error (_("can only be used in a function"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 }
 
@@ -146,16 +154,16 @@ declare_find_variable (const char *name, int mkglobal, int chklocal)
   SHELL_VAR *var;
 
   if (mkglobal == 0)
-    return (find_variable (name));
+    return find_variable (name);
   else if (chklocal)
     {
       var = find_variable (name);
       if (var && local_p (var) && var->context == variable_context)
 	return var;
-      return (find_global_variable (name));
+      return find_global_variable (name);
     }
   else
-    return (find_global_variable (name));
+    return find_global_variable (name);
 }
 
 /* The workhorse function. */
@@ -187,7 +195,7 @@ declare_internal (WORD_LIST *list, int local_var)
 	  break;
 #else
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 #endif
 	case 'A':
 #if defined (ARRAY_VARS)
@@ -195,7 +203,7 @@ declare_internal (WORD_LIST *list, int local_var)
 	  break;
 #else
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 #endif
 	case 'p':
 /*	  if (local_var == 0) */
@@ -257,7 +265,7 @@ declare_internal (WORD_LIST *list, int local_var)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
 
@@ -274,11 +282,11 @@ declare_internal (WORD_LIST *list, int local_var)
       else if (pflag && (flags_on == 0 || flags_on == att_function))
 	show_all_var_attributes (flags_on == 0, nodefs);
       else if (flags_on == 0)
-	return (set_builtin ((WORD_LIST *)NULL));
+	return set_builtin ((WORD_LIST *)NULL);
       else
 	set_or_show_attributes ((WORD_LIST *)NULL, flags_on, nodefs);
 
-      return (sh_chkwrite (EXECUTION_SUCCESS));
+      return sh_chkwrite (EXECUTION_SUCCESS);
     }
 
   bool any_failed = false;
@@ -298,7 +306,7 @@ declare_internal (WORD_LIST *list, int local_var)
 	      any_failed = true;
 	    }
 	}
-      return (sh_chkwrite (any_failed ? EXECUTION_FAILURE : EXECUTION_SUCCESS));
+      return sh_chkwrite (any_failed ? EXECUTION_FAILURE : EXECUTION_SUCCESS);
     }
 
 #define NEXT_VARIABLE() free (name); list = (WORD_LIST *)list->next; continue
@@ -509,7 +517,7 @@ restart_new_var_name:
 	    {
 	      builtin_error (_("cannot use `-f' to make functions"));
 	      free (name);
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  else		/* declare -f [-rx] name [name...] */
 	    {
@@ -994,3 +1002,5 @@ restart_new_var_name:
 		       : ((!any_failed) ? EXECUTION_SUCCESS
 					: EXECUTION_FAILURE));
 }
+
+}  // namespace bash

@@ -31,10 +31,9 @@
 #endif
 
 #include "filecntl.h"
-#include "bashansi.h"
-#include <stdio.h>
+#include <cstdio>
 #include "chartypes.h"
-#include <errno.h>
+#include <cerrno>
 
 #include "bashintl.h"
 
@@ -129,7 +128,7 @@ posix_initialize (bool on)
 int
 num_posix_options ()
 {
-  return ((sizeof (posix_vars) / sizeof (posix_vars[0])) - 1);
+  return (sizeof (posix_vars) / sizeof (posix_vars[0])) - 1;
 }
 
 char *
@@ -184,7 +183,7 @@ string_to_rlimtype (char *s)
     }
   for ( ; s && *s && DIGIT (*s); s++)
     ret = (ret * 10) + TODIGIT (*s);
-  return (neg ? -ret : ret);
+  return neg ? -ret : ret;
 }
 
 void
@@ -372,7 +371,7 @@ importable_function_name (const char *string, size_t len)
     return false;
   if (shellblank (*string) || shellblank(string[len-1]))
     return false;
-  return (posixly_correct ? legal_identifier (string) : true);
+  return posixly_correct ? legal_identifier (string) : true;
 }
 
 bool
@@ -421,19 +420,19 @@ assignment (const char *string, int flags)
      we don't have a subscript, even if the word is a valid assignment
      statement otherwise, we don't want to treat it as one. */
   if ((flags & 1) && c != '[')		/* ] */
-    return (0);
+    return 0;
   else if ((flags & 1) == 0 && legal_variable_starter (c) == 0)
 #else
   if (legal_variable_starter (c) == 0)
 #endif
-    return (0);
+    return 0;
 
   while ((c = string[indx]))
     {
       /* The following is safe.  Note that '=' at the start of a word
 	 is not an assignment statement. */
       if (c == '=')
-	return (indx);
+	return indx;
 
 #if defined (ARRAY_VARS)
       if (c == '[')
@@ -442,25 +441,25 @@ assignment (const char *string, int flags)
 	  /* XXX - why not check for blank subscripts here, if we do in
 	     valid_array_reference? */
 	  if (string[newi++] != ']')
-	    return (0);
+	    return 0;
 	  if (string[newi] == '+' && string[newi+1] == '=')
-	    return (newi + 1);
-	  return ((string[newi] == '=') ? newi : 0);
+	    return newi + 1;
+	  return (string[newi] == '=') ? newi : 0;
 	}
 #endif /* ARRAY_VARS */
 
       /* Check for `+=' */
       if (c == '+' && string[indx+1] == '=')
-	return (indx + 1);
+	return indx + 1;
 
       /* Variable names in assignment statements may contain only letters,
 	 digits, and `_'. */
       if (legal_variable_char (c) == 0)
-	return (0);
+	return 0;
 
       indx++;
     }
-  return (0);
+  return 0;
 }
 
 bool
@@ -471,9 +470,9 @@ line_isblank (const char *line)
   if (line == 0)
     return false;		/* XXX */
   for (i = 0; line[i]; i++)
-    if (isblank ((unsigned char)line[i]) == 0)
+    if (std::isblank ((unsigned char)line[i]) == 0)
       break;
-  return (line[i] == '\0');
+  return line[i] == '\0';
 }
 
 /* **************************************************************** */
@@ -516,7 +515,7 @@ sh_unset_nodelay_mode (int fd)
   if (flags & bflags)
     {
       flags &= ~bflags;
-      return (fcntl (fd, F_SETFL, flags));
+      return fcntl (fd, F_SETFL, flags);
     }
 
   return 0;
@@ -526,21 +525,21 @@ sh_unset_nodelay_mode (int fd)
 int
 sh_setclexec (int fd)
 {
-  return (SET_CLOSE_ON_EXEC (fd));
+  return SET_CLOSE_ON_EXEC (fd);
 }
 
 /* Return 1 if file descriptor FD is valid; 0 otherwise. */
 int
 sh_validfd (int fd)
 {
-  return (fcntl (fd, F_GETFD, 0) >= 0);
+  return fcntl (fd, F_GETFD, 0) >= 0;
 }
 
 int
 fd_ispipe (int fd)
 {
   errno = 0;
-  return ((lseek (fd, 0L, SEEK_CUR) < 0) && (errno == ESPIPE));
+  return lseek (fd, 0L, SEEK_CUR) < 0) && (errno == ESPIPE;
 }
 
 #if 0
@@ -577,7 +576,7 @@ check_dev_tty ()
 /* Return 1 if PATH1 and PATH2 are the same file.  This is kind of
    expensive.  If non-NULL STP1 and STP2 point to stat structures
    corresponding to PATH1 and PATH2, respectively. */
-int
+bool
 same_file (const char *path1, const char *path2,
            struct stat *stp1, struct stat *stp2)
 {
@@ -586,18 +585,18 @@ same_file (const char *path1, const char *path2,
   if (stp1 == NULL)
     {
       if (stat (path1, &st1) != 0)
-	return (0);
+	return false;
       stp1 = &st1;
     }
 
   if (stp2 == NULL)
     {
       if (stat (path2, &st2) != 0)
-	return (0);
+	return false;
       stp2 = &st2;
     }
 
-  return ((stp1->st_dev == stp2->st_dev) && (stp1->st_ino == stp2->st_ino));
+  return stp1->st_dev == stp2->st_dev) && (stp1->st_ino == stp2->st_ino;
 }
 
 /* Move FD to a number close to the maximum number of file descriptors
@@ -631,12 +630,12 @@ move_to_high_fd (int fd, int check_new, int maxfd)
     {
       if (check_new == 0 || fd != fileno (stderr))	/* don't close stderr */
 	close (fd);
-      return (script_fd);
+      return script_fd;
     }
 
   /* OK, we didn't find one less than our artificial maximum; return the
      original file descriptor. */
-  return (fd);
+  return fd;
 }
 
 /* Return non-zero if the characters from SAMPLE are not all valid
@@ -654,12 +653,12 @@ check_binary_file (const char *sample, int sample_len)
     {
       c = sample[i];
       if (c == '\n')
-	return (0);
+	return 0;
       if (c == '\0')
-	return (1);
+	return 1;
     }
 
-  return (0);
+  return 0;
 }
 
 /* **************************************************************** */
@@ -706,7 +705,7 @@ file_exists (const char *fn)
 {
   struct stat sb;
 
-  return (stat (fn, &sb) == 0);
+  return stat (fn, &sb) == 0;
 }
 
 bool
@@ -714,13 +713,13 @@ file_isdir (const char *fn)
 {
   struct stat sb;
 
-  return ((stat (fn, &sb) == 0) && S_ISDIR (sb.st_mode));
+  return stat (fn, &sb) == 0) && S_ISDIR (sb.st_mode;
 }
 
 bool
 file_iswdir (const char *fn)
 {
-  return (file_isdir (fn) && sh_eaccess (fn, W_OK) == 0);
+  return file_isdir (fn) && sh_eaccess (fn, W_OK) == 0;
 }
 
 /* Return 1 if STRING is "." or "..", optionally followed by a directory
@@ -764,7 +763,7 @@ absolute_pathname (const char *string)
 bool
 absolute_program (const char *string)
 {
-  return ((char *)mbschr (string, '/') != (char *)NULL);
+  return (char *)mbschr (string, '/') != (char *)NULL;
 }
 
 /* **************************************************************** */
@@ -797,7 +796,7 @@ make_absolute (const char *string, const char *dot_path)
   else
     result = sh_makepath (dot_path, string, 0);
 
-  return (result);
+  return result;
 }
 
 /* Return the `basename' of the pathname in STRING (the stuff after the
@@ -809,14 +808,14 @@ base_pathname (const char *string)
 
 #if 0
   if (absolute_pathname (string) == 0)
-    return (string);
+    return string;
 #endif
 
   if (string[0] == '/' && string[1] == 0)
-    return (string);
+    return string;
 
   p = strrchr (string, '/');
-  return (p ? ++p : string);
+  return p ? ++p : string;
 }
 
 /* Return the full pathname of FILE.  Easy.  Filenames that begin
@@ -831,12 +830,12 @@ full_pathname (char *file)
   file = (*file == '~') ? bash_tilde_expand (file, 0) : savestring (file);
 
   if (ABSPATH(file))
-    return (file);
+    return file;
 
   ret = sh_makepath ((char *)NULL, file, (MP_DOCWD|MP_RMDOT));
   free (file);
 
-  return (ret);
+  return ret;
 }
 
 /* A slightly related function.  Get the prettiest name of this
@@ -858,10 +857,10 @@ polite_directory_format (const char *name)
       strncpy (tdir + 1, name + l, sizeof(tdir) - 2);
       tdir[0] = '~';
       tdir[sizeof(tdir) - 1] = '\0';
-      return (tdir);
+      return tdir;
     }
   else
-    return (name);
+    return name;
 }
 
 /* Trim NAME.  If NAME begins with `~/', skip over tilde prefix.  Trim to
@@ -957,11 +956,11 @@ extract_colon_unit (char *string, int *p_index)
   char *value;
 
   if (string == 0)
-    return (string);
+    return string;
 
   len = strlen (string);
   if (*p_index >= len)
-    return ((char *)NULL);
+    return (char *)NULL;
 
   i = *p_index;
 
@@ -989,7 +988,7 @@ extract_colon_unit (char *string, int *p_index)
   else
     value = substring (string, start, i);
 
-  return (value);
+  return value;
 }
 
 /* **************************************************************** */
@@ -1028,7 +1027,7 @@ bash_special_tilde_expansions (char *text)
     result = get_dirstack_from_string (text);
 #endif
 
-  return (result ? savestring (result) : (char *)NULL);
+  return result ? savestring (result) : (char *)NULL;
 }
 
 /* Initialize the tilde expander.  In Bash, we handle `~-' and `~+', as
@@ -1155,7 +1154,7 @@ bash_tilde_expand (const char *s, int assign_p)
 
   QUIT;
 
-  return (ret);
+  return ret;
 }
 
 /* **************************************************************** */
@@ -1236,7 +1235,7 @@ group_member (gid_t gid)
 
   /* Short-circuit if possible, maybe saving a call to getgroups(). */
   if (gid == current_user.gid || gid == current_user.egid)
-    return (1);
+    return 1;
 
 #if defined (HAVE_GETGROUPS)
   if (ngroups == 0)
@@ -1244,15 +1243,15 @@ group_member (gid_t gid)
 
   /* In case of error, the user loses. */
   if (ngroups <= 0)
-    return (0);
+    return 0;
 
   /* Search through the list looking for GID. */
   for (i = 0; i < ngroups; i++)
     if (gid == (gid_t)group_array[i])
-      return (1);
+      return 1;
 #endif
 
-  return (0);
+  return 0;
 }
 #endif /* !HAVE_GROUP_MEMBER */
 
@@ -1298,7 +1297,7 @@ get_group_array (int *ngp)
     {
       if (ngp)
 	*ngp = ngroups;
-      return (group_iarray);
+      return group_iarray;
     }
 
   if (ngroups == 0)
@@ -1342,15 +1341,15 @@ conf_standard_path ()
       p = (char *)xmalloc (len + 2);
       *p = '\0';
       confstr (_CS_PATH, p, len);
-      return (p);
+      return p;
     }
   else
-    return (savestring (STANDARD_UTILS_PATH));
+    return savestring (STANDARD_UTILS_PATH);
 #else /* !_CS_PATH || !HAVE_CONFSTR  */
 #  if defined (CS_PATH)
-  return (savestring (CS_PATH));
+  return savestring (CS_PATH);
 #  else
-  return (savestring (STANDARD_UTILS_PATH));
+  return savestring (STANDARD_UTILS_PATH);
 #  endif /* !CS_PATH */
 #endif /* !_CS_PATH || !HAVE_CONFSTR */
 }
@@ -1373,5 +1372,5 @@ default_columns ()
   if (check_window_size)
     get_new_window_size (0, (int *)0, &c);
 
-  return (c > 0 ? c : 80);
+  return c > 0 ? c : 80;
 }

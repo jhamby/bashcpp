@@ -159,17 +159,13 @@
    characters, even if the OS supports them. */
 #undef NO_MULTIBYTE_SUPPORT
 
-/* Define DEBUGGER if you want to compile in some features used only by the 
+/* Define DEBUGGER if you want to compile in some features used only by the
    bash debugger. */
 #undef DEBUGGER
 
 /* Define STRICT_POSIX if you want bash to be strictly posix.2 conformant by
    default (except for echo; that is controlled separately). */
 #undef STRICT_POSIX
-
-/* Define MEMSCRAMBLE if you want the bash malloc and free to scramble
-   memory contents on malloc() and free(). */
-#undef MEMSCRAMBLE
 
 /* Define for case-modifying variable attributes; variables modified on
    assignment */
@@ -217,12 +213,8 @@
 #undef PROTOTYPES
 #undef __PROTOTYPES
 
+/* Define if char is unsigned (untested). */
 #undef __CHAR_UNSIGNED__
-
-/* Define if the compiler supports `long long' variables. */
-#undef HAVE_LONG_LONG
-
-#undef HAVE_UNSIGNED_LONG_LONG
 
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
@@ -263,18 +255,6 @@
 #undef _GNU_SOURCE
 
 /* Memory management functions. */
-
-/* Define if using the bash version of malloc in lib/malloc/malloc.c */
-#undef USING_BASH_MALLOC
-
-#undef DISABLE_MALLOC_WRAPPERS
-
-/* Define if using alloca.c.  */
-#undef C_ALLOCA
-
-/* Define to one of _getb67, GETB67, getb67 for Cray-2 and Cray-YMP systems.
-   This function is required for alloca.c support on those systems.  */
-#undef CRAY_STACKSEG_END
 
 /* Define if you have alloca, as a function or macro.  */
 #undef HAVE_ALLOCA
@@ -340,7 +320,7 @@
 
 /* Define to integer type wide enough to hold a pointer if <stdint.h> doesn't define. */
 #undef uintptr_t
- 
+
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef uid_t
 
@@ -725,15 +705,6 @@
 /* Define if you have the mbrtowc function. */
 #undef HAVE_MBRTOWC
 
-/* Define if you have the mbscasecmp function. */
-#undef HAVE_MBSCASECMP
-
-/* Define if you have the mbschr function. */
-#undef HAVE_MBSCHR
-
-/* Define if you have the mbscmp function. */
-#undef HAVE_MBSCMP
-
 /* Define if you have the mbsnrtowcs function. */
 #undef HAVE_MBSNRTOWCS
 
@@ -824,9 +795,6 @@
 /* Define if you have the siginterrupt function.  */
 #undef HAVE_SIGINTERRUPT
 
-/* Define if you have the POSIX.1-style sigsetjmp function.  */
-#undef HAVE_POSIX_SIGSETJMP
-
 /* Define if you have the snprintf function.  */
 #undef HAVE_SNPRINTF
 
@@ -857,26 +825,8 @@
 /* Define if you have the strpbrk function. */
 #undef HAVE_STRPBRK
 
-/* Define if you have the strstr function. */
-#undef HAVE_STRSTR
-
-/* Define if you have the strtod function. */
-#undef HAVE_STRTOD
-
 /* Define if you have the strtoimax function. */
 #undef HAVE_STRTOIMAX
-
-/* Define if you have the strtol function. */
-#undef HAVE_STRTOL
-
-/* Define if you have the strtoll function. */
-#undef HAVE_STRTOLL
-
-/* Define if you have the strtoul function. */
-#undef HAVE_STRTOUL
-
-/* Define if you have the strtoull function. */
-#undef HAVE_STRTOULL
 
 /* Define if you have the strtoumax function. */
 #undef HAVE_STRTOUMAX
@@ -982,12 +932,6 @@
 /* Define if you have the <libintl.h> header file. */
 #undef HAVE_LIBINTL_H
 
-/* Define if you have the <limits.h> header file.  */
-#undef HAVE_LIMITS_H
-
-/* Define if you have the <locale.h> header file.  */
-#undef HAVE_LOCALE_H
-
 /* Define if you have the <mbstr.h> header file.  */
 #undef HAVE_MBSTR_H
 
@@ -1005,27 +949,6 @@
 
 /* Define if you have the <regex.h> header file. */
 #undef HAVE_REGEX_H
-
-/* Define if you have the <stdlib.h> header file.  */
-#undef HAVE_STDLIB_H
-
-/* Define if you have the <stdarg.h> header file.  */
-#undef HAVE_STDARG_H
-
-/* Define if you have the <string.h> header file.  */
-#undef HAVE_STRING_H
-
-/* Define if you have the <strings.h> header file.  */
-#undef HAVE_STRINGS_H
-
-/* Define if you have the <memory.h> header file.  */
-#undef HAVE_MEMORY_H
-
-/* Define if you have the <stdbool.h> header file. */
-#undef HAVE_STDBOOL_H
-
-/* Define if you have the <stddef.h> header file. */
-#undef HAVE_STDDEF_H
 
 /* Define if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -1102,15 +1025,6 @@
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
-/* Define if you have the <varargs.h> header file.  */
-#undef HAVE_VARARGS_H
-
-/* Define if you have the <wchar.h> header file.  */
-#undef HAVE_WCHAR_H
-
-/* Define if you have the <varargs.h> header file.  */
-#undef HAVE_WCTYPE_H
-
 /* Presence of certain system libraries. */
 
 #undef HAVE_LIBDL
@@ -1158,14 +1072,8 @@
 /* Define if you have the <argz.h> header file. */
 #undef HAVE_ARGZ_H
 
-/* Define if you have the <errno.h> header file. */
-#undef HAVE_ERRNO_H
-
 /* Define if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
-
-/* Define if you have the <malloc.h> header file. */
-#undef HAVE_MALLOC_H
 
 /* Define if you have the <stdio_ext.h> header file. */
 #undef HAVE_STDIO_EXT_H
@@ -1175,9 +1083,6 @@
 
 /* Define if you have the `localeconv' function. */
 #undef HAVE_LOCALECONV
-
-/* Define if your system has a working `malloc' function. */
-/* #undef HAVE_MALLOC */
 
 /* Define if you have the `mempcpy' function. */
 #undef HAVE_MEMPCPY
@@ -1200,9 +1105,6 @@
 /* Define if you have the `strcspn' function. */
 #undef HAVE_STRCSPN
 
-/* Define if you have the `strdup' function. */
-#undef HAVE_STRDUP
-
 /* Define if you have the `__argz_count' function. */
 #undef HAVE___ARGZ_COUNT
 
@@ -1223,11 +1125,13 @@
 /* Define if you have the `group_member' function. */
 #undef HAVE_GROUP_MEMBER
 
-/* Definitions for vfork support. */
+/* Define if you have the `fork' function. */
 #undef HAVE_FORK
+
+/* Define if you have the `vfork' function. */
 #undef HAVE_VFORK
 
-/* Define to prefer vfork() when vfork() and fork() are available. */
+/* Define to prefer vfork() to fork() when both are available. */
 #undef VFORK_SUBSHELL
 
 #include "config-bot.h"

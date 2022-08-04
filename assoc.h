@@ -22,44 +22,40 @@
 #ifndef _ASSOC_H_
 #define _ASSOC_H_
 
-#include "stdc.h"
 #include "hashlib.h"
 
-#define ASSOC_HASH_BUCKETS	1024
+namespace bash
+{
 
-#define assoc_empty(h)		((h)->nentries == 0)
-#define assoc_num_elements(h)	((h)->nentries)
+const int ASSOC_HASH_BUCKETS = 1024;
 
-#define assoc_create(n)		(hash_create((n)))
+void assoc_dispose (HASH_TABLE *);
+void assoc_flush (HASH_TABLE *);
 
-#define assoc_copy(h)		(hash_copy((h), 0))
+int assoc_insert (HASH_TABLE *, char *, const char *);
+void *assoc_replace (HASH_TABLE *, char *, const char *);
+void assoc_remove (HASH_TABLE *, const char *);
 
-#define assoc_walk(h, f)	(hash_walk((h), (f))
+char *assoc_reference (HASH_TABLE *, const char *);
 
-extern void assoc_dispose (HASH_TABLE *);
-extern void assoc_flush (HASH_TABLE *);
+char *assoc_subrange (HASH_TABLE *, arrayind_t, arrayind_t, int, int, int);
+char *assoc_patsub (HASH_TABLE *, const char *, const char *, int);
+char *assoc_modcase (HASH_TABLE *, const char *, int, int);
 
-extern int assoc_insert (HASH_TABLE *, char *, const char *);
-extern PTR_T assoc_replace (HASH_TABLE *, char *, const char *);
-extern void assoc_remove (HASH_TABLE *, const char *);
+HASH_TABLE *assoc_quote (HASH_TABLE *);
+HASH_TABLE *assoc_quote_escapes (HASH_TABLE *);
+HASH_TABLE *assoc_dequote (HASH_TABLE *);
+HASH_TABLE *assoc_dequote_escapes (HASH_TABLE *);
+HASH_TABLE *assoc_remove_quoted_nulls (HASH_TABLE *);
 
-extern char *assoc_reference (HASH_TABLE *, const char *);
+char *assoc_to_kvpair (HASH_TABLE *, int);
+char *assoc_to_assign (HASH_TABLE *, int);
 
-extern char *assoc_subrange (HASH_TABLE *, arrayind_t, arrayind_t, int, int, int);
-extern char *assoc_patsub (HASH_TABLE *, const char *, const char *, int);
-extern char *assoc_modcase (HASH_TABLE *, const char *, int, int);
+WORD_LIST *assoc_to_word_list (HASH_TABLE *);
+WORD_LIST *assoc_keys_to_word_list (HASH_TABLE *);
 
-extern HASH_TABLE *assoc_quote (HASH_TABLE *);
-extern HASH_TABLE *assoc_quote_escapes (HASH_TABLE *);
-extern HASH_TABLE *assoc_dequote (HASH_TABLE *);
-extern HASH_TABLE *assoc_dequote_escapes (HASH_TABLE *);
-extern HASH_TABLE *assoc_remove_quoted_nulls (HASH_TABLE *);
+char *assoc_to_string (HASH_TABLE *, const char *, int);
 
-extern char *assoc_to_kvpair (HASH_TABLE *, int);
-extern char *assoc_to_assign (HASH_TABLE *, int);
+}  // namespace bash
 
-extern WORD_LIST *assoc_to_word_list (HASH_TABLE *);
-extern WORD_LIST *assoc_keys_to_word_list (HASH_TABLE *);
-
-extern char *assoc_to_string (HASH_TABLE *, const char *, int);
 #endif /* _ASSOC_H_ */

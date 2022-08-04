@@ -22,13 +22,13 @@
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
-#include "bashansi.h"
-#include <stdio.h>
+
+#include <cstdio>
+#include <cstring>
+
 #include "bashtypes.h"
 
-#include "stdc.h"
 #include "bashintl.h"
-#include <xmalloc.h>
 
 #if defined (HAVE_ICONV)
 #  include <iconv.h>
@@ -65,10 +65,10 @@ curencoding ()
   loc = get_locale_var ("LC_CTYPE");
   if (loc == 0 || *loc == 0)
     return "";
-  char *dot = strchr (loc, '.');
+  char *dot = std::strchr (loc, '.');
   if (dot == 0)
     return loc;
-  char *mod = strchr (dot, '@');
+  char *mod = std::strchr (dot, '@');
   if (mod)
     *mod = '\0';
   return ++dot;

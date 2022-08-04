@@ -19,248 +19,199 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define READLINE_LIBRARY
-
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
-
-#if !defined (BUFSIZ)
-#include <stdio.h>
-#endif /* BUFSIZ */
-
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif /* HAVE_STDLIB_H */
-
-#include "rlconf.h"
 #include "readline.h"
 
-#include "xmalloc.h"
+namespace readline
+{
 
-typedef int QSFUNC (const void *, const void *);
-
-extern int _rl_qsort_string_compare (char **, char **);
-
-FUNMAP **funmap;
-static int funmap_size;
-static int funmap_entry;
-
-/* After initializing the function map, this is the index of the first
-   program specific function. */
-int funmap_program_specific_entry_start;
-
-static const FUNMAP default_funmap[] = {
-  { "abort", rl_abort },
-  { "accept-line", rl_newline },
-  { "arrow-key-prefix", rl_arrow_keys },
-  { "backward-byte", rl_backward_byte },
-  { "backward-char", rl_backward_char },
-  { "backward-delete-char", rl_rubout },
-  { "backward-kill-line", rl_backward_kill_line },
-  { "backward-kill-word", rl_backward_kill_word },
-  { "backward-word", rl_backward_word },
-  { "beginning-of-history", rl_beginning_of_history },
-  { "beginning-of-line", rl_beg_of_line },
-  { "bracketed-paste-begin", rl_bracketed_paste_begin },
-  { "call-last-kbd-macro", rl_call_last_kbd_macro },
-  { "capitalize-word", rl_capitalize_word },
-  { "character-search", rl_char_search },
-  { "character-search-backward", rl_backward_char_search },
-  { "clear-display", rl_clear_display },
-  { "clear-screen", rl_clear_screen },
-  { "complete", rl_complete },
-  { "copy-backward-word", rl_copy_backward_word },
-  { "copy-forward-word", rl_copy_forward_word },
-  { "copy-region-as-kill", rl_copy_region_to_kill },
-  { "delete-char", rl_delete },
-  { "delete-char-or-list", rl_delete_or_show_completions },
-  { "delete-horizontal-space", rl_delete_horizontal_space },
-  { "digit-argument", rl_digit_argument },
-  { "do-lowercase-version", rl_do_lowercase_version },
-  { "downcase-word", rl_downcase_word },
-  { "dump-functions", rl_dump_functions },
-  { "dump-macros", rl_dump_macros },
-  { "dump-variables", rl_dump_variables },
-  { "emacs-editing-mode", rl_emacs_editing_mode },
-  { "end-kbd-macro", rl_end_kbd_macro },
-  { "end-of-history", rl_end_of_history },
-  { "end-of-line", rl_end_of_line },
-  { "exchange-point-and-mark", rl_exchange_point_and_mark },
-  { "forward-backward-delete-char", rl_rubout_or_delete },
-  { "forward-byte", rl_forward_byte },
-  { "forward-char", rl_forward_char },
-  { "forward-search-history", rl_forward_search_history },
-  { "forward-word", rl_forward_word },
-  { "history-search-backward", rl_history_search_backward },
-  { "history-search-forward", rl_history_search_forward },
-  { "history-substring-search-backward", rl_history_substr_search_backward },
-  { "history-substring-search-forward", rl_history_substr_search_forward },
-  { "insert-comment", rl_insert_comment },
-  { "insert-completions", rl_insert_completions },
-  { "kill-whole-line", rl_kill_full_line },
-  { "kill-line", rl_kill_line },
-  { "kill-region", rl_kill_region },
-  { "kill-word", rl_kill_word },
-  { "menu-complete", rl_menu_complete },
-  { "menu-complete-backward", rl_backward_menu_complete },
-  { "next-history", rl_get_next_history },
-  { "next-screen-line", rl_next_screen_line },
-  { "non-incremental-forward-search-history", rl_noninc_forward_search },
-  { "non-incremental-reverse-search-history", rl_noninc_reverse_search },
-  { "non-incremental-forward-search-history-again", rl_noninc_forward_search_again },
-  { "non-incremental-reverse-search-history-again", rl_noninc_reverse_search_again },
-  { "old-menu-complete", rl_old_menu_complete },
-  { "operate-and-get-next", rl_operate_and_get_next },
-  { "overwrite-mode", rl_overwrite_mode },
+static const Readline::FUNMAP default_funmap[] = {
+  { "abort",				&Readline::rl_abort },
+  { "accept-line",			&Readline::rl_newline },
+  { "arrow-key-prefix",			&Readline::rl_arrow_keys },
+  { "backward-byte",			&Readline::rl_backward_byte },
+  { "backward-char",			&Readline::rl_backward_char },
+  { "backward-delete-char",		&Readline::rl_rubout },
+  { "backward-kill-line",		&Readline::rl_backward_kill_line },
+  { "backward-kill-word",		&Readline::rl_backward_kill_word },
+  { "backward-word",			&Readline::rl_backward_word },
+  { "beginning-of-history",		&Readline::rl_beginning_of_history },
+  { "beginning-of-line",		&Readline::rl_beg_of_line },
+  { "bracketed-paste-begin",		&Readline::rl_bracketed_paste_begin },
+  { "call-last-kbd-macro",		&Readline::rl_call_last_kbd_macro },
+  { "capitalize-word",			&Readline::rl_capitalize_word },
+  { "character-search",			&Readline::rl_char_search },
+  { "character-search-backward",	&Readline::rl_backward_char_search },
+  { "clear-display",			&Readline::rl_clear_display },
+  { "clear-screen", 			&Readline::rl_clear_screen },
+  { "complete", 			&Readline::rl_complete },
+  { "copy-backward-word", 		&Readline::rl_copy_backward_word },
+  { "copy-forward-word", 		&Readline::rl_copy_forward_word },
+  { "copy-region-as-kill", 		&Readline::rl_copy_region_to_kill },
+  { "delete-char", 			&Readline::rl_delete },
+  { "delete-char-or-list", 		&Readline::rl_delete_or_show_completions },
+  { "delete-horizontal-space", 		&Readline::rl_delete_horizontal_space },
+  { "digit-argument", 			&Readline::rl_digit_argument },
+  { "do-lowercase-version", 		&Readline::rl_do_lowercase_version },
+  { "downcase-word", 			&Readline::rl_downcase_word },
+  { "dump-functions", 			&Readline::rl_dump_functions },
+  { "dump-macros", 			&Readline::rl_dump_macros },
+  { "dump-variables", 			&Readline::rl_dump_variables },
+  { "emacs-editing-mode", 		&Readline::rl_emacs_editing_mode },
+  { "end-kbd-macro", 			&Readline::rl_end_kbd_macro },
+  { "end-of-history", 			&Readline::rl_end_of_history },
+  { "end-of-line", 			&Readline::rl_end_of_line },
+  { "exchange-point-and-mark", 		&Readline::rl_exchange_point_and_mark },
+  { "forward-backward-delete-char", 	&Readline::rl_rubout_or_delete },
+  { "forward-byte",			&Readline::rl_forward_byte },
+  { "forward-char",			&Readline::rl_forward_char },
+  { "forward-search-history",		&Readline::rl_forward_search_history },
+  { "forward-word",			&Readline::rl_forward_word },
+  { "history-search-backward",		&Readline::rl_history_search_backward },
+  { "history-search-forward",		&Readline::rl_history_search_forward },
+  { "history-substring-search-backward", &Readline::rl_history_substr_search_backward },
+  { "history-substring-search-forward",	&Readline::rl_history_substr_search_forward },
+  { "insert-comment",			&Readline::rl_insert_comment },
+  { "insert-completions",		&Readline::rl_insert_completions },
+  { "kill-whole-line",			&Readline::rl_kill_full_line },
+  { "kill-line",			&Readline::rl_kill_line },
+  { "kill-region",			&Readline::rl_kill_region },
+  { "kill-word",			&Readline::rl_kill_word },
+  { "menu-complete",			&Readline::rl_menu_complete },
+  { "menu-complete-backward",		&Readline::rl_backward_menu_complete },
+  { "next-history",			&Readline::rl_get_next_history },
+  { "next-screen-line",			&Readline::rl_next_screen_line },
+  { "non-incremental-forward-search-history", &Readline::rl_noninc_forward_search },
+  { "non-incremental-reverse-search-history", &Readline::rl_noninc_reverse_search },
+  { "non-incremental-forward-search-history-again", &Readline::rl_noninc_forward_search_again },
+  { "non-incremental-reverse-search-history-again", &Readline::rl_noninc_reverse_search_again },
+  { "old-menu-complete",		&Readline::rl_old_menu_complete },
+  { "operate-and-get-next",		&Readline::rl_operate_and_get_next },
+  { "overwrite-mode",			&Readline::rl_overwrite_mode },
 #if defined (_WIN32)
-  { "paste-from-clipboard", rl_paste_from_clipboard },
+  { "paste-from-clipboard",		&Readline::rl_paste_from_clipboard },
 #endif
-  { "possible-completions", rl_possible_completions },
-  { "previous-history", rl_get_previous_history },
-  { "previous-screen-line", rl_previous_screen_line },
-  { "print-last-kbd-macro", rl_print_last_kbd_macro },
-  { "quoted-insert", rl_quoted_insert },
-  { "re-read-init-file", rl_re_read_init_file },
-  { "redraw-current-line", rl_refresh_line},
-  { "reverse-search-history", rl_reverse_search_history },
-  { "revert-line", rl_revert_line },
-  { "self-insert", rl_insert },
-  { "set-mark", rl_set_mark },
-  { "skip-csi-sequence", rl_skip_csi_sequence },
-  { "start-kbd-macro", rl_start_kbd_macro },
-  { "tab-insert", rl_tab_insert },
-  { "tilde-expand", rl_tilde_expand },
-  { "transpose-chars", rl_transpose_chars },
-  { "transpose-words", rl_transpose_words },
-  { "tty-status", rl_tty_status },
-  { "undo", rl_undo_command },
-  { "universal-argument", rl_universal_argument },
-  { "unix-filename-rubout", rl_unix_filename_rubout },
-  { "unix-line-discard", rl_unix_line_discard },
-  { "unix-word-rubout", rl_unix_word_rubout },
-  { "upcase-word", rl_upcase_word },
-  { "yank", rl_yank },
-  { "yank-last-arg", rl_yank_last_arg },
-  { "yank-nth-arg", rl_yank_nth_arg },
-  { "yank-pop", rl_yank_pop },
+  { "possible-completions",		&Readline::rl_possible_completions },
+  { "previous-history",			&Readline::rl_get_previous_history },
+  { "previous-screen-line",		&Readline::rl_previous_screen_line },
+  { "print-last-kbd-macro",		&Readline::rl_print_last_kbd_macro },
+  { "quoted-insert",			&Readline::rl_quoted_insert },
+  { "re-read-init-file",		&Readline::rl_re_read_init_file },
+  { "redraw-current-line",		&Readline::rl_refresh_line},
+  { "reverse-search-history",		&Readline::rl_reverse_search_history },
+  { "revert-line",			&Readline::rl_revert_line },
+  { "self-insert",			&Readline::rl_insert },
+  { "set-mark",				&Readline::rl_set_mark },
+  { "skip-csi-sequence",		&Readline::rl_skip_csi_sequence },
+  { "start-kbd-macro",			&Readline::rl_start_kbd_macro },
+  { "tab-insert",			&Readline::rl_tab_insert },
+  { "tilde-expand",			&Readline::rl_tilde_expand },
+  { "transpose-chars",			&Readline::rl_transpose_chars },
+  { "transpose-words",			&Readline::rl_transpose_words },
+  { "tty-status",			&Readline::rl_tty_status },
+  { "undo",				&Readline::rl_undo_command },
+  { "universal-argument",		&Readline::rl_universal_argument },
+  { "unix-filename-rubout",		&Readline::rl_unix_filename_rubout },
+  { "unix-line-discard",		&Readline::rl_unix_line_discard },
+  { "unix-word-rubout",			&Readline::rl_unix_word_rubout },
+  { "upcase-word",			&Readline::rl_upcase_word },
+  { "yank",				&Readline::rl_yank },
+  { "yank-last-arg",			&Readline::rl_yank_last_arg },
+  { "yank-nth-arg",			&Readline::rl_yank_nth_arg },
+  { "yank-pop",				&Readline::rl_yank_pop },
 
 #if defined (VI_MODE)
-  { "vi-append-eol", rl_vi_append_eol },
-  { "vi-append-mode", rl_vi_append_mode },
-  { "vi-arg-digit", rl_vi_arg_digit },
-  { "vi-back-to-indent", rl_vi_back_to_indent },
-  { "vi-backward-bigword", rl_vi_bWord },
-  { "vi-backward-word", rl_vi_bword },
-  { "vi-bWord", rl_vi_bWord },
-  { "vi-bword", rl_vi_bword },	/* BEWARE: name matching is case insensitive */
-  { "vi-change-case", rl_vi_change_case },
-  { "vi-change-char", rl_vi_change_char },
-  { "vi-change-to", rl_vi_change_to },
-  { "vi-char-search", rl_vi_char_search },
-  { "vi-column", rl_vi_column },
-  { "vi-complete", rl_vi_complete },
-  { "vi-delete", rl_vi_delete },
-  { "vi-delete-to", rl_vi_delete_to },
-  { "vi-eWord", rl_vi_eWord },
-  { "vi-editing-mode", rl_vi_editing_mode },
-  { "vi-end-bigword", rl_vi_eWord },
-  { "vi-end-word", rl_vi_end_word },
-  { "vi-eof-maybe", rl_vi_eof_maybe },
-  { "vi-eword", rl_vi_eword },	/* BEWARE: name matching is case insensitive */
-  { "vi-fWord", rl_vi_fWord },
-  { "vi-fetch-history", rl_vi_fetch_history },
-  { "vi-first-print", rl_vi_first_print },
-  { "vi-forward-bigword", rl_vi_fWord },
-  { "vi-forward-word", rl_vi_fword },
-  { "vi-fword", rl_vi_fword },	/* BEWARE: name matching is case insensitive */
-  { "vi-goto-mark", rl_vi_goto_mark },
-  { "vi-insert-beg", rl_vi_insert_beg },
-  { "vi-insertion-mode", rl_vi_insert_mode },
-  { "vi-match", rl_vi_match },
-  { "vi-movement-mode", rl_vi_movement_mode },
-  { "vi-next-word", rl_vi_next_word },
-  { "vi-overstrike", rl_vi_overstrike },
-  { "vi-overstrike-delete", rl_vi_overstrike_delete },
-  { "vi-prev-word", rl_vi_prev_word },
-  { "vi-put", rl_vi_put },
-  { "vi-redo", rl_vi_redo },
-  { "vi-replace", rl_vi_replace },
-  { "vi-rubout", rl_vi_rubout },
-  { "vi-search", rl_vi_search },
-  { "vi-search-again", rl_vi_search_again },
-  { "vi-set-mark", rl_vi_set_mark },
-  { "vi-subst", rl_vi_subst },
-  { "vi-tilde-expand", rl_vi_tilde_expand },
-  { "vi-unix-word-rubout", rl_vi_unix_word_rubout },
-  { "vi-yank-arg", rl_vi_yank_arg },
-  { "vi-yank-pop", rl_vi_yank_pop },
-  { "vi-yank-to", rl_vi_yank_to },
+  { "vi-append-eol",			&Readline::rl_vi_append_eol },
+  { "vi-append-mode",			&Readline::rl_vi_append_mode },
+  { "vi-arg-digit",			&Readline::rl_vi_arg_digit },
+  { "vi-back-to-indent",		&Readline::rl_vi_back_to_indent },
+  { "vi-backward-bigword",		&Readline::rl_vi_bWord },
+  { "vi-backward-word",			&Readline::rl_vi_bword },
+  { "vi-bWord",				&Readline::rl_vi_bWord },
+  { "vi-bword",				&Readline::rl_vi_bword },	/* BEWARE: name matching is case insensitive */
+  { "vi-change-case",			&Readline::rl_vi_change_case },
+  { "vi-change-char",			&Readline::rl_vi_change_char },
+  { "vi-change-to",			&Readline::rl_vi_change_to },
+  { "vi-char-search",			&Readline::rl_vi_char_search },
+  { "vi-column",			&Readline::rl_vi_column },
+  { "vi-complete",			&Readline::rl_vi_complete },
+  { "vi-delete",			&Readline::rl_vi_delete },
+  { "vi-delete-to",			&Readline::rl_vi_delete_to },
+  { "vi-eWord",				&Readline::rl_vi_eWord },
+  { "vi-editing-mode",			&Readline::rl_vi_editing_mode },
+  { "vi-end-bigword",			&Readline::rl_vi_eWord },
+  { "vi-end-word",			&Readline::rl_vi_end_word },
+  { "vi-eof-maybe",			&Readline::rl_vi_eof_maybe },
+  { "vi-eword",				&Readline::rl_vi_eword },	/* BEWARE: name matching is case insensitive */
+  { "vi-fWord",				&Readline::rl_vi_fWord },
+  { "vi-fetch-history",			&Readline::rl_vi_fetch_history },
+  { "vi-first-print",			&Readline::rl_vi_first_print },
+  { "vi-forward-bigword",		&Readline::rl_vi_fWord },
+  { "vi-forward-word",			&Readline::rl_vi_fword },
+  { "vi-fword",				&Readline::rl_vi_fword },	/* BEWARE: name matching is case insensitive */
+  { "vi-goto-mark",			&Readline::rl_vi_goto_mark },
+  { "vi-insert-beg",			&Readline::rl_vi_insert_beg },
+  { "vi-insertion-mode",		&Readline::rl_vi_insert_mode },
+  { "vi-match",				&Readline::rl_vi_match },
+  { "vi-movement-mode",			&Readline::rl_vi_movement_mode },
+  { "vi-next-word",			&Readline::rl_vi_next_word },
+  { "vi-overstrike",			&Readline::rl_vi_overstrike },
+  { "vi-overstrike-delete",		&Readline::rl_vi_overstrike_delete },
+  { "vi-prev-word",			&Readline::rl_vi_prev_word },
+  { "vi-put",				&Readline::rl_vi_put },
+  { "vi-redo",				&Readline::rl_vi_redo },
+  { "vi-replace",			&Readline::rl_vi_replace },
+  { "vi-rubout",			&Readline::rl_vi_rubout },
+  { "vi-search",			&Readline::rl_vi_search },
+  { "vi-search-again",			&Readline::rl_vi_search_again },
+  { "vi-set-mark",			&Readline::rl_vi_set_mark },
+  { "vi-subst",				&Readline::rl_vi_subst },
+  { "vi-tilde-expand",			&Readline::rl_vi_tilde_expand },
+  { "vi-unix-word-rubout",		&Readline::rl_vi_unix_word_rubout },
+  { "vi-yank-arg",			&Readline::rl_vi_yank_arg },
+  { "vi-yank-pop",			&Readline::rl_vi_yank_pop },
+  { "vi-yank-to",			&Readline::rl_vi_yank_to },
 #endif /* VI_MODE */
 
- {(char *)NULL, (rl_command_func_t *)NULL }
+ { nullptr, nullptr }
 };
-
-int
-rl_add_funmap_entry (const char *name, rl_command_func_t *function)
-{
-  if (funmap_entry + 2 >= funmap_size)
-    {
-      funmap_size += 64;
-      funmap = (FUNMAP **)xrealloc (funmap, funmap_size * sizeof (FUNMAP *));
-    }
-
-  funmap[funmap_entry] = (FUNMAP *)xmalloc (sizeof (FUNMAP));
-  funmap[funmap_entry]->name = name;
-  funmap[funmap_entry]->function = function;
-
-  funmap[++funmap_entry] = (FUNMAP *)NULL;
-  return funmap_entry;
-}
-
-static bool funmap_initialized;
 
 /* Make the funmap contain all of the default entries. */
 void
-rl_initialize_funmap (void)
+Readline::rl_initialize_funmap ()
 {
   if (funmap_initialized)
     return;
 
-  int i;
-  for (i = 0; default_funmap[i].name; i++)
+  for (size_t i = 0; default_funmap[i].name; i++)
     rl_add_funmap_entry (default_funmap[i].name, default_funmap[i].function);
 
   funmap_initialized = true;
-  funmap_program_specific_entry_start = i;
 }
 
-/* Produce a NULL terminated array of known function names.  The array
+/* Produce a nullptr-terminated array of known function names.  The array
    is sorted.  The array itself is allocated, but not the strings inside.
-   You should free () the array when you done, but not the pointers. */
+   You should delete[] the array when you done, but not the pointers. */
 const char **
-rl_funmap_names (void)
+Readline::rl_funmap_names ()
 {
-  const char **result;
-  int result_size, result_index;
+  std::vector<const char*> result;
 
   /* Make sure that the function map has been initialized. */
   rl_initialize_funmap ();
 
-  for (result_index = result_size = 0, result = (const char **)NULL; funmap[result_index]; result_index++)
+  for (size_t result_index = 0; funmap[result_index]; result_index++)
     {
-      if (result_index + 2 > result_size)
-	{
-	  result_size += 20;
-	  result = (const char **)xrealloc (result, result_size * sizeof (char *));
-	}
-
-      result[result_index] = funmap[result_index]->name;
-      result[result_index + 1] = (char *)NULL;
+      result.push_back (funmap[result_index]->name);
     }
 
-  qsort (result, result_index, sizeof (char *), (QSFUNC *)_rl_qsort_string_compare);
-  return (result);
+  result.push_back (nullptr);
+  size_t result_size = result.size ();
+
+  const char **result_copy = new const char*[result_size];
+  std::copy (result.begin (), result.end (), result_copy);
+
+  std::qsort (result_copy, result_size, sizeof (char *), &_rl_qsort_string_compare);
+  return result_copy;
 }
+
+}  // namespace readline

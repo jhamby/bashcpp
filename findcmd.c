@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include "chartypes.h"
 #include "bashtypes.h"
 #if !defined (_MINIX) && defined (HAVE_SYS_FILE_H)
@@ -32,11 +32,9 @@
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
-#include <errno.h>
 
-#include "bashansi.h"
+#include <cerrno>
 
-#include "memalloc.h"
 #include "shell.h"
 #include "execute_cmd.h"
 #include "flags.h"
@@ -46,10 +44,6 @@
 #include "findcmd.h"	/* matching prototypes and declarations */
 
 #include <glob/strmatch.h>
-
-#if !defined (errno)
-extern int errno;
-#endif
 
 /* Static functions defined and used in this file. */
 static char *_find_user_command_internal (const char *, int);
@@ -117,12 +111,12 @@ file_status (const char *name)
 
   /* Determine whether this file exists or not. */
   if (stat (name, &finfo) < 0)
-    return (0);
+    return 0;
 
   /* If the file is a directory, then it is not "executable" in the
      sense of the shell. */
   if (S_ISDIR (finfo.st_mode))
-    return (FS_EXISTS|FS_DIRECTORY);
+    return FS_EXISTS|FS_DIRECTORY;
 
   r = FS_EXISTS;
 
@@ -208,13 +202,13 @@ executable_file (const char *file)
   if (s & FS_DIRECTORY)
     errno = EISDIR;	/* let's see if we can improve error messages */
 #endif
-  return ((s & FS_EXECABLE) && ((s & FS_DIRECTORY) == 0));
+  return (s & FS_EXECABLE) && ((s & FS_DIRECTORY) == 0);
 }
 
 bool
 is_directory (const char *file)
 {
-  return (file_status (file) & FS_DIRECTORY);
+  return file_status (file) & FS_DIRECTORY;
 }
 
 bool
@@ -223,7 +217,7 @@ executable_or_directory (const char *file)
   int s;
 
   s = file_status (file);
-  return ((s & FS_EXECABLE) || (s & FS_DIRECTORY));
+  return (s & FS_EXECABLE) || (s & FS_DIRECTORY);
 }
 
 /* Locate the executable file referenced by NAME, searching along
@@ -234,7 +228,7 @@ executable_or_directory (const char *file)
 char *
 find_user_command (const char *name)
 {
-  return (find_user_command_internal (name, FS_EXEC_PREFERRED|FS_NODIRS));
+  return find_user_command_internal (name, FS_EXEC_PREFERRED|FS_NODIRS);
 }
 
 /* Locate the file referenced by NAME, searching along the contents
@@ -245,7 +239,7 @@ find_user_command (const char *name)
 char *
 find_path_file (const char *name)
 {
-  return (find_user_command_internal (name, FS_READABLE));
+  return find_user_command_internal (name, FS_READABLE);
 }
 
 static char *
@@ -262,11 +256,11 @@ _find_user_command_internal (const char *name, int flags)
     path_list = (char *)NULL;
 
   if (path_list == 0 || *path_list == '\0')
-    return (savestring (name));
+    return savestring (name);
 
   cmd = find_user_command_in_path (name, path_list, flags);
 
-  return (cmd);
+  return cmd;
 }
 
 static char *
@@ -284,7 +278,7 @@ find_user_command_internal (const char *name, int flags)
     res = _find_user_command_internal (name, flags);
   return res;
 #else
-  return (_find_user_command_internal (name, flags));
+  return _find_user_command_internal (name, flags);
 #endif
 }
 
@@ -300,7 +294,7 @@ get_next_path_element (char *path_list, int *path_index_pointer)
   path = extract_colon_unit (path_list, path_index_pointer);
 
   if (path == 0)
-    return (path);
+    return path;
 
   if (*path == '\0')
     {
@@ -308,7 +302,7 @@ get_next_path_element (char *path_list, int *path_index_pointer)
       path = savestring (".");
     }
 
-  return (path);
+  return path;
 }
 
 /* Look for PATHNAME in $PATH.  Returns either the hashed command
@@ -368,7 +362,7 @@ search_for_command (const char *pathname, int flags)
       else
 	path_list = 0;
 
-      command = find_user_command_in_path (pathname, path_list, FS_EXEC_PREFERRED|FS_NODIRS);
+      command = find_user_command_in_path (pathname, path_list, FS_EXEC_PREFERRED | FS_NODIRS);
 
       if (command && hashing_enabled && temp_path == 0 && (flags & CMDSRCH_HASH))
 	{
@@ -397,7 +391,7 @@ search_for_command (const char *pathname, int flags)
 	free (path_list);
     }
 
-  return (command);
+  return command;
 }
 
 char *
@@ -479,7 +473,7 @@ user_command_matches (const char *name, int flags, int state)
   if (match)
     match_index++;
 
-  return (match);
+  return match;
 }
 
 static char *
@@ -491,15 +485,15 @@ find_absolute_program (const char *name, int flags)
 
   /* If the file doesn't exist, quit now. */
   if ((st & FS_EXISTS) == 0)
-    return ((char *)NULL);
+    return (char *)NULL;
 
   /* If we only care about whether the file exists or not, return
      this filename.  Otherwise, maybe we care about whether this
      file is executable.  If it is, and that is what we want, return it. */
   if ((flags & FS_EXISTS) || ((flags & FS_EXEC_ONLY) && (st & FS_EXECABLE)))
-    return (savestring (name));
+    return savestring (name);
 
-  return (NULL);
+  return NULL;
 }
 
 static char *
@@ -509,11 +503,11 @@ find_in_path_element (const char *name, char *path, int flags, int name_len,
   int status;
   char *full_path, *xpath;
 
-  xpath = (posixly_correct == 0 && *path == '~') ? bash_tilde_expand (path, 0) : path;
+  xpath = (!posixly_correct && *path == '~') ? bash_tilde_expand (path, 0) : path;
 
   /* Remember the location of "." in the path, in all its forms
      (as long as they begin with a `.', e.g. `./.') */
-  if (dot_found_in_search == 0 && *xpath == '.')
+  if (!dot_found_in_search && *xpath == '.')
     dot_found_in_search = same_file (".", xpath, dotinfop, (struct stat *)NULL);
 
   full_path = sh_makepath (xpath, name, 0);
@@ -526,17 +520,17 @@ find_in_path_element (const char *name, char *path, int flags, int name_len,
   if ((status & FS_EXISTS) == 0)
     {
       free (full_path);
-      return ((char *)NULL);
+      return (char *)NULL;
     }
 
   /* The file exists.  If the caller simply wants the first file, here it is. */
   if (flags & FS_EXISTS)
-    return (full_path);
+    return full_path;
 
   /* If we have a readable file, and the caller wants a readable file, this
      is it. */
   if ((flags & FS_READABLE) && (status & FS_READABLE))
-    return (full_path);
+    return full_path;
 
   /* If the file is executable, then it satisfies the cases of
       EXEC_ONLY and EXEC_PREFERRED.  Return this file unconditionally. */
@@ -545,7 +539,7 @@ find_in_path_element (const char *name, char *path, int flags, int name_len,
     {
       FREE (file_to_lose_on);
       file_to_lose_on = (char *)NULL;
-      return (full_path);
+      return full_path;
     }
 
   /* The file is not executable, but it does exist.  If we prefer
@@ -562,10 +556,10 @@ find_in_path_element (const char *name, char *path, int flags, int name_len,
       ((flags & FS_READABLE) && (status & FS_READABLE) == 0))
     {
       free (full_path);
-      return ((char *)NULL);
+      return (char *)NULL;
     }
   else
-    return (full_path);
+    return full_path;
 }
 
 /* This does the dirty work for find_user_command_internal () and
@@ -594,11 +588,11 @@ find_user_command_in_path (const char *name, char *path_list, int flags)
   if (absolute_program (name))
     {
       full_path = find_absolute_program (name, flags);
-      return (full_path);
+      return full_path;
     }
 
   if (path_list == 0 || *path_list == '\0')
-    return (savestring (name));		/* XXX */
+    return savestring (name);		/* XXX */
 
   file_to_lose_on = (char *)NULL;
   name_len = strlen (name);
@@ -631,7 +625,7 @@ find_user_command_in_path (const char *name, char *path_list, int flags)
       if (full_path)
 	{
 	  FREE (file_to_lose_on);
-	  return (full_path);
+	  return full_path;
 	}
     }
 
@@ -647,7 +641,7 @@ find_user_command_in_path (const char *name, char *path_list, int flags)
       file_to_lose_on = (char *)NULL;
     }
 
-  return (file_to_lose_on);
+  return file_to_lose_on;
 }
 
 /* External interface to find a command given a $PATH.  Separate from
@@ -655,5 +649,5 @@ find_user_command_in_path (const char *name, char *path_list, int flags)
 char *
 find_in_path (const char *name, char *path_list, int flags)
 {
-  return (find_user_command_in_path (name, path_list, flags));
+  return find_user_command_in_path (name, path_list, flags);
 }

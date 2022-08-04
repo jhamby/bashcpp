@@ -19,49 +19,26 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define READLINE_LIBRARY
-
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
+#include "readline.h"
+#include "rlprivate.h"
 
 #include <sys/types.h>
-
-#include <stdio.h>
-
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif /* HAVE_STDLIB_H */
-
-#if defined (HAVE_LOCALE_H)
-#  include <locale.h>
-#endif
 
 #if defined (HAVE_LANGINFO_CODESET)
 #  include <langinfo.h>
 #endif
 
-#include <ctype.h>
+namespace readline
+{
 
-#include "rldefs.h"
-#include "readline.h"
-#include "rlshell.h"
-#include "rlprivate.h"
-
-static int utf8locale (char *);
+static bool utf8locale (const char *);
 
 #if !defined (HAVE_SETLOCALE)
 /* A list of legal values for the LANG or LC_CTYPE environment variables.
    If a locale name in this list is the value for the LC_ALL, LC_CTYPE,
    or LANG environment variable (using the first of those with a value),
    readline eight-bit mode is enabled. */
-static char *legal_lang_values[] =
+static const char *legal_lang_values[] =
 {
  "iso88591",
  "iso88592",
@@ -81,59 +58,51 @@ static char *legal_lang_values[] =
 static char *normalize_codeset (char *);
 #endif /* !HAVE_SETLOCALE */
 
+#if !defined (HAVE_LANGINFO_CODESET) || !defined (HAVE_SETLOCALE)
 static char *find_codeset (char *, size_t *);
+#endif  // !HAVE_LANGINFO_CODESET || !HAVE_SETLOCALE
 
-static char *_rl_get_locale_var (const char *);
-
-static char *
-_rl_get_locale_var (const char *v)
-{
-  char *lspec;
-
-  lspec = sh_get_env_value ("LC_ALL");
-  if (lspec == 0 || *lspec == 0)
-    lspec = sh_get_env_value (v);
-  if (lspec == 0 || *lspec == 0)
-    lspec = sh_get_env_value ("LANG");
-
-  return lspec;
-}
-
-static int
-utf8locale (char *lspec)
+bool
+#if defined (HAVE_LANGINFO_CODESET)
+utf8locale (const char *)
+#else
+utf8locale (const char *lspec)
+#endif
 {
   char *cp;
-  size_t len;
 
-#if HAVE_LANGINFO_CODESET
-  cp = nl_langinfo (CODESET);
-  return (STREQ (cp, "UTF-8") || STREQ (cp, "utf8"));
+#if defined (HAVE_LANGINFO_CODESET)
+  cp = ::nl_langinfo (CODESET);
+  return STREQ (cp, "UTF-8") || STREQ (cp, "utf8");
 #else
-  cp = find_codeset (lspec, &len);
+  size_t len;
+  cp = find_codeset (const_cast<char *> (lspec), &len);
 
   if (cp == 0 || len < 4 || len > 5)
     return 0;
-  return ((len == 5) ? strncmp (cp, "UTF-8", len) == 0 : strncmp (cp, "utf8", 4) == 0);
+  return (len == 5) ? std::strncmp (cp, "UTF-8", len) == 0 : std::strncmp (cp, "utf8", 4) == 0;
 #endif
 }
 
 /* Query the right environment variables and call setlocale() to initialize
    the C library locale settings. */
 char *
-_rl_init_locale (void)
+Readline::_rl_init_locale ()
 {
   /* Set the LC_CTYPE locale category from environment variables. */
   const char *lspec = _rl_get_locale_var ("LC_CTYPE");
+
   /* Since _rl_get_locale_var queries the right environment variables,
      we query the current locale settings with setlocale(), and, if
      that doesn't return anything, we set lspec to the empty string to
      force the subsequent call to setlocale() to define the `native'
      environment. */
-  if (lspec == 0 || *lspec == 0)
-    lspec = setlocale (LC_CTYPE, (char *)NULL);
-  if (lspec == 0)
+  if (lspec == nullptr || *lspec == '\0')
+    lspec = std::setlocale (LC_CTYPE, nullptr);
+  if (lspec == nullptr)
     lspec = "";
-  char *ret = setlocale (LC_CTYPE, lspec);	/* ok, since it does not change locale */
+
+  char *ret = std::setlocale (LC_CTYPE, lspec);	/* ok, since it does not change locale */
 
   _rl_utf8locale = (ret && *ret) ? utf8locale (ret) : 0;
 
@@ -141,27 +110,21 @@ _rl_init_locale (void)
 }
 
 /* Check for LC_ALL, LC_CTYPE, and LANG and use the first with a value
-   to decide the defaults for 8-bit character input and output.  Returns
-   1 if we set eight-bit mode. */
-int
-_rl_init_eightbit (void)
+   to decide the defaults for 8-bit character input and output. */
+void
+Readline::_rl_init_eightbit ()
 {
 /* If we have setlocale(3), just check the current LC_CTYPE category
    value, and go into eight-bit mode if it's not C or POSIX. */
 #if defined (HAVE_SETLOCALE)
-  char *lspec, *t;
-
-  t = _rl_init_locale ();	/* returns static pointer */
+  char *t = _rl_init_locale ();	/* returns static pointer */
 
   if (t && *t && (t[0] != 'C' || t[1]) && (STREQ (t, "POSIX") == 0))
     {
-      _rl_meta_flag = 1;
-      _rl_convert_meta_chars_to_ascii = 0;
-      _rl_output_meta_chars = 1;
-      return (1);
+      _rl_meta_flag = true;
+      _rl_convert_meta_chars_to_ascii = false;
+      _rl_output_meta_chars = true;
     }
-  else
-    return (0);
 
 #else /* !HAVE_SETLOCALE */
   char *lspec, *t;
@@ -173,20 +136,19 @@ _rl_init_eightbit (void)
   lspec = _rl_get_locale_var ("LC_CTYPE");
 
   if (lspec == 0 || (t = normalize_codeset (lspec)) == 0)
-    return (0);
+    return 0;
   for (i = 0; t && legal_lang_values[i]; i++)
     if (STREQ (t, legal_lang_values[i]))
       {
-	_rl_meta_flag = 1;
-	_rl_convert_meta_chars_to_ascii = 0;
-	_rl_output_meta_chars = 1;
+	_rl_meta_flag = true;
+	_rl_convert_meta_chars_to_ascii = false;
+	_rl_output_meta_chars = true;
 	break;
       }
 
   _rl_utf8locale = *t ? STREQ (t, "utf8") : 0;
 
-  xfree (t);
-  return (legal_lang_values[i] ? 1 : 0);
+  delete[] t;
 #endif /* !HAVE_SETLOCALE */
 }
 
@@ -195,27 +157,25 @@ static char *
 normalize_codeset (char *codeset)
 {
   size_t namelen, i;
-  int len, all_digits;
+  int len;
   char *wp, *retval;
 
   codeset = find_codeset (codeset, &namelen);
 
   if (codeset == 0)
-    return (codeset);
+    return codeset;
 
-  all_digits = 1;
+  bool all_digits = true;
   for (len = 0, i = 0; i < namelen; i++)
     {
-      if (ISALNUM ((unsigned char)codeset[i]))
+      if (std::isalnum (static_cast<unsigned char> (codeset[i])))
 	{
 	  len++;
 	  all_digits &= _rl_digit_p (codeset[i]);
 	}
     }
 
-  retval = (char *)malloc ((all_digits ? 3 : 0) + len + 1);
-  if (retval == 0)
-    return ((char *)0);
+  retval = new char[(all_digits ? 3 : 0) + len + 1];
 
   wp = retval;
   /* Add `iso' to beginning of an all-digit codeset */
@@ -227,7 +187,7 @@ normalize_codeset (char *codeset)
     }
 
   for (i = 0; i < namelen; i++)
-    if (ISALPHA ((unsigned char)codeset[i]))
+    if (std::isalpha (static_cast<unsigned char> (codeset[i])))
       *wp++ = _rl_to_lower (codeset[i]);
     else if (_rl_digit_p (codeset[i]))
       *wp++ = codeset[i];
@@ -237,6 +197,7 @@ normalize_codeset (char *codeset)
 }
 #endif /* !HAVE_SETLOCALE */
 
+#if !defined (HAVE_LANGINFO_CODESET) || !defined (HAVE_SETLOCALE)
 /* Isolate codeset portion of locale specification. */
 static char *
 find_codeset (char *name, size_t *lenp)
@@ -244,7 +205,7 @@ find_codeset (char *name, size_t *lenp)
   char *cp, *language, *result;
 
   cp = language = name;
-  result = (char *)0;
+  result = NULL;
 
   while (*cp && *cp != '_' && *cp != '@' && *cp != '+' && *cp != ',')
     cp++;
@@ -254,7 +215,7 @@ find_codeset (char *name, size_t *lenp)
      name.  Perhaps there are funny codeset names.  */
   if (language == cp)
     {
-      *lenp = strlen (language);
+      *lenp = std::strlen (language);
       result = language;
     }
   else
@@ -279,10 +240,13 @@ find_codeset (char *name, size_t *lenp)
 	}
       else
 	{
-	  *lenp = strlen (language);
+	  *lenp = std::strlen (language);
 	  result = language;
 	}
     }
 
   return result;
 }
+#endif  // !HAVE_LANGINFO_CODESET || !HAVE_SETLOCALE
+
+}  // namespace readline

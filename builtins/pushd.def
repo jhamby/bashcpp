@@ -128,10 +128,9 @@ $END
 #  include <unistd.h>
 #endif
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
-#include <errno.h>
+#include <cerrno>
 
 #include <tilde/tilde.h>
 
@@ -144,9 +143,8 @@ $END
 #  include "builtins.h"
 #endif
 
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
+namespace bash
+{
 
 /* The list of remembered directories. */
 static char **pushd_directory_list = (char **)NULL;
@@ -170,7 +168,7 @@ static int get_dirstack_index (intmax_t, int, int *);
 #define CLEARSTAK	0x08
 
 int
-pushd_builtin (WORD_LIST *list)
+Shell::pushd_builtin (WORD_LIST *list)
 {
   WORD_LIST *orig_list = list;
 
@@ -191,12 +189,12 @@ pushd_builtin (WORD_LIST *list)
       if (directory_list_offset == 0)
 	{
 	  builtin_error (_("no other directory"));
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
 
       char *current_directory = get_working_directory ("pushd");
       if (current_directory == 0)
-	return (EXECUTION_FAILURE);
+	return EXECUTION_FAILURE;
 
       int j = directory_list_offset - 1;
       char *temp = pushd_directory_list[j];
@@ -229,7 +227,7 @@ pushd_builtin (WORD_LIST *list)
 	    {
 	      sh_invalidnum (list->word->word);
 	      builtin_usage ();
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 
 	  if (direction == '-')
@@ -238,7 +236,7 @@ pushd_builtin (WORD_LIST *list)
 	  if (num > directory_list_offset || num < 0)
 	    {
 	      pushd_error (directory_list_offset, list->word->word);
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  flags |= ROTATE;
 	}
@@ -246,7 +244,7 @@ pushd_builtin (WORD_LIST *list)
 	{
 	  sh_invalidopt (list->word->word);
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
       else
 	break;
@@ -286,13 +284,13 @@ pushd_builtin (WORD_LIST *list)
     }
 
   if (list == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
   /* Change to the directory in list->word->word.  Save the current
      directory on the top of the stack. */
   char *current_directory = get_working_directory ("pushd");
   if (current_directory == 0)
-    return (EXECUTION_FAILURE);
+    return EXECUTION_FAILURE;
 
   int j = ((flags & NOCD) == 0) ? cd_builtin (skipopt ? orig_list : list) : EXECUTION_SUCCESS;
   if (j == EXECUTION_SUCCESS)
@@ -301,12 +299,12 @@ pushd_builtin (WORD_LIST *list)
       dirs_builtin ((WORD_LIST *)NULL);
       if (flags & NOCD)
 	free (current_directory);
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
   else
     {
       free (current_directory);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 }
 
@@ -314,7 +312,7 @@ pushd_builtin (WORD_LIST *list)
    If LIST is non-null it should consist of a word +N or -N, which says
    what element to delete from the stack.  The default is the top one. */
 int
-popd_builtin (WORD_LIST *list)
+Shell::popd_builtin (WORD_LIST *list)
 {
   intmax_t which;
   int flags;
@@ -341,7 +339,7 @@ popd_builtin (WORD_LIST *list)
 	    {
 	      sh_invalidnum (list->word->word);
 	      builtin_usage ();
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 	  which_word = list->word->word;
 	}
@@ -349,13 +347,13 @@ popd_builtin (WORD_LIST *list)
 	{
 	  sh_invalidopt (list->word->word);
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
       else if (*list->word->word)
 	{
 	  builtin_error (_("%s: invalid argument"), list->word->word);
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
       else
 	break;
@@ -364,7 +362,7 @@ popd_builtin (WORD_LIST *list)
   if (which > directory_list_offset || (which < -directory_list_offset) || (directory_list_offset == 0 && which == 0))
     {
       pushd_error (directory_list_offset, which_word ? which_word : "");
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   /* Handle case of no specification, or top of stack specification. */
@@ -374,7 +372,7 @@ popd_builtin (WORD_LIST *list)
       int i = ((flags & NOCD) == 0) ? cd_to_string (pushd_directory_list[directory_list_offset - 1])
       				: EXECUTION_SUCCESS;
       if (i != EXECUTION_SUCCESS)
-	return (i);
+	return i;
       free (pushd_directory_list[--directory_list_offset]);
     }
   else
@@ -386,7 +384,7 @@ popd_builtin (WORD_LIST *list)
       if (i < 0 || i > directory_list_offset)
 	{
 	  pushd_error (directory_list_offset, which_word ? which_word : "");
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
       free (pushd_directory_list[i]);
       directory_list_offset--;
@@ -397,12 +395,12 @@ popd_builtin (WORD_LIST *list)
     }
 
   dirs_builtin ((WORD_LIST *)NULL);
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 /* Print the current list of directories on the directory stack. */
 int
-dirs_builtin (WORD_LIST *list)
+Shell::dirs_builtin (WORD_LIST *list)
 {
   int flags, desired_index, index_flag, vflag;
   const char *w;
@@ -439,7 +437,7 @@ dirs_builtin (WORD_LIST *list)
 	    {
 	      sh_invalidnum (list->word->word);
 	      builtin_usage ();
-	      return (EX_USAGE);
+	      return EX_USAGE;
 	    }
 	  sign = (*list->word->word == '+') ? 1 : -1;
 	  desired_index = get_dirstack_index (i, sign, &index_flag);
@@ -448,20 +446,20 @@ dirs_builtin (WORD_LIST *list)
 	{
 	  sh_invalidopt (list->word->word);
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
 
   if (flags & CLEARSTAK)
     {
       clear_directory_stack ();
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   if (index_flag && (desired_index < 0 || desired_index > directory_list_offset))
     {
       pushd_error (directory_list_offset, w);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
 #define DIRSTACK_FORMAT(temp) \
@@ -481,7 +479,7 @@ dirs_builtin (WORD_LIST *list)
       if (index_flag)
 	{
 	  putchar ('\n');
-	  return (sh_chkwrite (EXECUTION_SUCCESS));
+	  return sh_chkwrite (EXECUTION_SUCCESS);
 	}
     }
 
@@ -507,7 +505,7 @@ dirs_builtin (WORD_LIST *list)
 
   putchar ('\n');
 
-  return (sh_chkwrite (EXECUTION_SUCCESS));
+  return sh_chkwrite (EXECUTION_SUCCESS);
 }
 
 static void
@@ -543,7 +541,7 @@ cd_to_string (char *name)
   tlist = make_word_list (make_word ("--"), dir);
   result = cd_builtin (tlist);
   dispose_words (tlist);
-  return (result);
+  return result;
 }
 
 static int
@@ -556,7 +554,7 @@ change_to_temp (char *temp)
   if (tt == EXECUTION_SUCCESS)
     dirs_builtin ((WORD_LIST *)NULL);
 
-  return (tt);
+  return tt;
 }
 
 static void
@@ -584,7 +582,7 @@ get_dirstack_index (intmax_t ind, int sign, int *indexp)
       return 0;
     }
   else if (ind >= 0 && ind <= directory_list_offset)
-    return (sign > 0 ? directory_list_offset - ind : ind);
+    return sign > 0 ? directory_list_offset - ind : ind;
   else
     return -1;
 }
@@ -603,29 +601,17 @@ get_dirstack_from_string (char *string)
       string++;
     }
   if (legal_number (string, &i) == 0)
-    return ((char *)NULL);
+    return (char *)NULL;
 
   index_flag = 0;
   ind = get_dirstack_index (i, sign, &index_flag);
   if (index_flag && (ind < 0 || ind > directory_list_offset))
-    return ((char *)NULL);
+    return (char *)NULL;
   if (index_flag == 0 || (index_flag == 1 && ind == 0))
-    return (get_string_value ("PWD"));
+    return get_string_value ("PWD");
   else
-    return (pushd_directory_list[ind]);
+    return pushd_directory_list[ind];
 }
-
-#ifdef INCLUDE_UNUSED
-char *
-get_dirstack_element (intmax_t ind, int sign)
-{
-  int i;
-
-  i = get_dirstack_index (ind, sign, (int *)NULL);
-  return (i < 0 || i > directory_list_offset) ? (char *)NULL
-					      : pushd_directory_list[i];
-}
-#endif
 
 void
 set_dirstack_element (intmax_t ind, int sign, const char *value)
@@ -771,5 +757,7 @@ struct builtin dirs_struct = {
 	0
 };
 #endif /* LOADABLE_BUILTIN */
+
+}  // namespace bash
 
 #endif /* PUSHD_AND_POPD */

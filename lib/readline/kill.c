@@ -19,35 +19,14 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define READLINE_LIBRARY
-
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
+#include "readline.h"
+#include "history.h"
+#include "rlprivate.h"
 
 #include <sys/types.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>           /* for _POSIX_VERSION */
-#endif /* HAVE_UNISTD_H */
-
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif /* HAVE_STDLIB_H */
-
-#include <stdio.h>
-
-/* System-specific feature definitions and include files. */
-#include "rldefs.h"
-
-/* Some standard library routines. */
-#include "readline.h"
-#include "history.h"
-
-#include "rlprivate.h"
-#include "xmalloc.h"
+namespace readline
+{
 
 /* **************************************************************** */
 /*								    */
@@ -55,102 +34,46 @@
 /*								    */
 /* **************************************************************** */
 
-/* What we assume for a max number of kills. */
-#define DEFAULT_MAX_KILLS 10
-
-/* The real variable to look at to find out when to flush kills. */
-static int rl_max_kills =  DEFAULT_MAX_KILLS;
-
-/* Where to store killed text. */
-static char **rl_kill_ring = (char **)NULL;
-
-/* Where we are in the kill ring. */
-static int rl_kill_index;
-
-/* How many slots we have in the kill ring. */
-static int rl_kill_ring_length;
-
-static int _rl_copy_to_kill_ring (char *, int);
-static int region_kill_internal (bool);
-static int _rl_copy_word_as_kill (int, int);
-static int rl_yank_nth_arg_internal (int, int, int);
-
-/* How to say that you only want to save a certain amount
-   of kill material. */
-int
-rl_set_retained_kills (int num)
-{
-  return 0;
-}
-
 /* Add TEXT to the kill ring, allocating a new kill ring slot as necessary.
-   This uses TEXT directly, so the caller must not free it.  If APPEND is
-   non-zero, and the last command was a kill, the text is appended to the
-   current kill ring slot, otherwise prepended. */
-static int
-_rl_copy_to_kill_ring (char *text, int append)
+   If APPEND is true, and the last command was a kill, the text is appended
+   to the current kill ring slot, otherwise prepended. */
+void
+Readline::_rl_copy_to_kill_ring (const std::string &text, bool append)
 {
-  char *old;
-  int slot;
+  unsigned int slot;
 
   /* First, find the slot to work with. */
-  if (_rl_last_command_was_kill == 0 || rl_kill_ring == 0)
+  if (!_rl_last_command_was_kill || rl_kill_ring_length == 0)
     {
       /* Get a new slot.  */
-      if (rl_kill_ring == 0)
-	{
-	  /* If we don't have any defined, then make one. */
-	  rl_kill_ring = (char **)
-	    xmalloc (((rl_kill_ring_length = 1) + 1) * sizeof (char *));
-	  rl_kill_ring[slot = 0] = (char *)NULL;
-	}
+      if (rl_kill_ring_index == DEFAULT_MAX_KILLS - 1)
+	slot = 0;
       else
-	{
-	  /* We have to add a new slot on the end, unless we have
-	     exceeded the max limit for remembering kills. */
-	  slot = rl_kill_ring_length;
-	  if (slot == rl_max_kills)
-	    {
-	      xfree (rl_kill_ring[0]);
-	      for (int i = 0; i < slot; i++)
-		rl_kill_ring[i] = rl_kill_ring[i + 1];
-	    }
-	  else
-	    {
-	      slot = rl_kill_ring_length += 1;
-	      rl_kill_ring = (char **)xrealloc (rl_kill_ring, (slot + 1) * sizeof (char *));
-	    }
-	  rl_kill_ring[--slot] = (char *)NULL;
-	}
+	slot = rl_kill_ring_index + 1;
+
+      if (rl_kill_ring_length < DEFAULT_MAX_KILLS)
+	++rl_kill_ring_length;
     }
   else
-    slot = rl_kill_ring_length - 1;
+    slot = rl_kill_ring_index;
 
   /* If the last command was a kill, prepend or append. */
-  if (_rl_last_command_was_kill && rl_kill_ring[slot] && rl_editing_mode != vi_mode)
+  if (_rl_last_command_was_kill && !rl_kill_ring[slot].empty () &&
+      rl_editing_mode != vi_mode)
     {
-      old = rl_kill_ring[slot];
-      char *new_ = (char *)xmalloc (1 + strlen (old) + strlen (text));
-
       if (append)
 	{
-	  strcpy (new_, old);
-	  strcat (new_, text);
+	  rl_kill_ring[slot] += text;
 	}
       else
 	{
-	  strcpy (new_, text);
-	  strcat (new_, old);
+	  rl_kill_ring[slot].insert (0, text);
 	}
-      xfree (old);
-      xfree (text);
-      rl_kill_ring[slot] = new_;
     }
   else
     rl_kill_ring[slot] = text;
 
-  rl_kill_index = slot;
-  return 0;
+  rl_kill_ring_index = slot;
 }
 
 /* The way to kill something.  This appends or prepends to the last
@@ -158,16 +81,17 @@ _rl_copy_to_kill_ring (char *text, int append)
    than TO, then the text is appended, otherwise prepended.  If the
    last command was not a kill command, then a new slot is made for
    this kill. */
-int
-rl_kill_text (int from, int to)
+void
+Readline::rl_kill_text (unsigned int from, unsigned int to)
 {
   char *text;
 
   /* Is there anything to kill? */
   if (from == to)
     {
+      // Note: readline_internal_char () also reads this flag.
       _rl_last_command_was_kill = true;
-      return 0;
+      return;
     }
 
   text = rl_copy_text (from, to);
@@ -176,9 +100,9 @@ rl_kill_text (int from, int to)
   rl_delete_text (from, to);
 
   _rl_copy_to_kill_ring (text, from < to);
+  delete[] text;
 
   _rl_last_command_was_kill = true;
-  return 0;
 }
 
 /* Now REMEMBER!  In order to do prepending or appending correctly, kill
@@ -193,15 +117,13 @@ rl_kill_text (int from, int to)
 
 /* Delete the word at point, saving the text in the kill ring. */
 int
-rl_kill_word (int count, int key)
+Readline::rl_kill_word (int count, int key)
 {
-  int orig_point;
-
   if (count < 0)
-    return (rl_backward_kill_word (-count, key));
+    return rl_backward_kill_word (-count, key);
   else
     {
-      orig_point = rl_point;
+      unsigned int orig_point = rl_point;
       rl_forward_word (count, key);
 
       if (rl_point != orig_point)
@@ -216,15 +138,13 @@ rl_kill_word (int count, int key)
 
 /* Rubout the word before point, placing it on the kill ring. */
 int
-rl_backward_kill_word (int count, int key)
+Readline::rl_backward_kill_word (int count, int key)
 {
-  int orig_point;
-
   if (count < 0)
-    return (rl_kill_word (-count, key));
+    return rl_kill_word (-count, key);
   else
     {
-      orig_point = rl_point;
+      unsigned int orig_point = rl_point;
       rl_backward_word (count, key);
 
       if (rl_point != orig_point)
@@ -239,15 +159,13 @@ rl_backward_kill_word (int count, int key)
 /* Kill from here to the end of the line.  If DIRECTION is negative, kill
    back to the line start instead. */
 int
-rl_kill_line (int direction, int key)
+Readline::rl_kill_line (int direction, int key)
 {
-  int orig_point;
-
   if (direction < 0)
-    return (rl_backward_kill_line (1, key));
+    return rl_backward_kill_line (1, key);
   else
     {
-      orig_point = rl_point;
+      unsigned int orig_point = rl_point;
       rl_end_of_line (1, key);
       if (orig_point != rl_point)
 	rl_kill_text (orig_point, rl_point);
@@ -261,19 +179,17 @@ rl_kill_line (int direction, int key)
 /* Kill backwards to the start of the line.  If DIRECTION is negative, kill
    forwards to the line end instead. */
 int
-rl_backward_kill_line (int direction, int key)
+Readline::rl_backward_kill_line (int direction, int key)
 {
-  int orig_point;
-
   if (direction < 0)
-    return (rl_kill_line (1, key));
+    return rl_kill_line (1, key);
   else
     {
       if (rl_point == 0)
 	rl_ding ();
       else
 	{
-	  orig_point = rl_point;
+	  unsigned int orig_point = rl_point;
 	  rl_beg_of_line (1, key);
 	  if (rl_point != orig_point)
 	    rl_kill_text (orig_point, rl_point);
@@ -286,11 +202,11 @@ rl_backward_kill_line (int direction, int key)
 
 /* Kill the whole line, no matter where point is. */
 int
-rl_kill_full_line (int count, int key)
+Readline::rl_kill_full_line (int, int)
 {
   rl_begin_undo_group ();
   rl_point = 0;
-  rl_kill_text (rl_point, rl_end);
+  rl_kill_text (rl_point, rl_end ());
   rl_mark = 0;
   rl_end_undo_group ();
   return 0;
@@ -303,15 +219,13 @@ rl_kill_full_line (int count, int key)
 /* This does what C-w does in Unix.  We can't prevent people from
    using behaviour that they expect. */
 int
-rl_unix_word_rubout (int count, int key)
+Readline::rl_unix_word_rubout (int count, int)
 {
-  int orig_point;
-
   if (rl_point == 0)
     rl_ding ();
   else
     {
-      orig_point = rl_point;
+      unsigned int orig_point = rl_point;
       if (count <= 0)
 	count = 1;
 
@@ -335,21 +249,19 @@ rl_unix_word_rubout (int count, int key)
 /* This deletes one filename component in a Unix pathname.  That is, it
    deletes backward to directory separator (`/') or whitespace.  */
 int
-rl_unix_filename_rubout (int count, int key)
+Readline::rl_unix_filename_rubout (int count, int)
 {
-  int orig_point, c;
-
   if (rl_point == 0)
     rl_ding ();
   else
     {
-      orig_point = rl_point;
+      unsigned int orig_point = rl_point;
       if (count <= 0)
 	count = 1;
 
       while (count--)
 	{
-	  c = rl_line_buffer[rl_point - 1];
+	  char c = rl_line_buffer[rl_point - 1];
 	  while (rl_point && (whitespace (c) || c == '/'))
 	    {
 	      rl_point--;
@@ -378,7 +290,7 @@ rl_unix_filename_rubout (int count, int key)
    into the line at all, and if you aren't, then you know what you are
    doing. */
 int
-rl_unix_line_discard (int count, int key)
+Readline::rl_unix_line_discard (int, int)
 {
   if (rl_point == 0)
     rl_ding ();
@@ -392,55 +304,57 @@ rl_unix_line_discard (int count, int key)
   return 0;
 }
 
-/* Copy the text in the `region' to the kill ring.  If DELETE is non-zero,
-   delete the text from the line as well. */
-static int
-region_kill_internal (bool delete_)
+/* Copy the text in the `region' to the kill ring.  If
+   `delete_after_copy` is true, delete the text from the line as well. */
+void
+Readline::region_kill_internal (bool delete_after_copy)
 {
   char *text;
 
   if (rl_mark != rl_point)
     {
       text = rl_copy_text (rl_point, rl_mark);
-      if (delete_)
+
+      if (delete_after_copy)
 	rl_delete_text (rl_point, rl_mark);
+
       _rl_copy_to_kill_ring (text, rl_point < rl_mark);
+      delete[] text;
     }
 
   _rl_fix_point (1);
   _rl_last_command_was_kill = true;
-  return 0;
 }
 
 /* Copy the text in the region to the kill ring. */
 int
-rl_copy_region_to_kill (int count, int key)
+Readline::rl_copy_region_to_kill (int, int)
 {
-  return (region_kill_internal (0));
+  region_kill_internal (false);
+  return 0;
 }
 
 /* Kill the text between the point and mark. */
 int
-rl_kill_region (int count, int key)
+Readline::rl_kill_region (int, int)
 {
-  int r, npoint;
+  unsigned int npoint;
 
   npoint = (rl_point < rl_mark) ? rl_point : rl_mark;
-  r = region_kill_internal (1);
+  region_kill_internal (true);
+
   rl_point = npoint;
   _rl_fix_point (1);
-  return r;
+  return 0;
 }
 
 /* Copy COUNT words to the kill ring.  DIR says which direction we look
    to find the words. */
-static int
-_rl_copy_word_as_kill (int count, int dir)
+int
+Readline::_rl_copy_word_as_kill (int count, int dir)
 {
-  int om, op, r;
-
-  om = rl_mark;
-  op = rl_point;
+  unsigned int om = rl_mark;
+  unsigned int op = rl_point;
 
   if (dir > 0)
     rl_forward_word (count, 0);
@@ -454,44 +368,37 @@ _rl_copy_word_as_kill (int count, int dir)
   else
     rl_forward_word (count, 0);
 
-  r = region_kill_internal (0);
+  region_kill_internal (0);
 
   rl_mark = om;
   rl_point = op;
-
-  return r;
+  return 0;
 }
 
 int
-rl_copy_forward_word (int count, int key)
+Readline::rl_copy_forward_word (int count, int key)
 {
   if (count < 0)
-    return (rl_copy_backward_word (-count, key));
+    return rl_copy_backward_word (-count, key);
 
-  return (_rl_copy_word_as_kill (count, 1));
+  return _rl_copy_word_as_kill (count, 1);
 }
 
 int
-rl_copy_backward_word (int count, int key)
+Readline::rl_copy_backward_word (int count, int key)
 {
   if (count < 0)
-    return (rl_copy_forward_word (-count, key));
+    return rl_copy_forward_word (-count, key);
 
-  return (_rl_copy_word_as_kill (count, -1));
+  return _rl_copy_word_as_kill (count, -1);
 }
 
 /* Yank back the last killed text.  This ignores arguments. */
 int
-rl_yank (int count, int key)
+Readline::rl_yank (int, int)
 {
-  if (rl_kill_ring == 0)
-    {
-      _rl_abort_internal ();
-      return 1;
-    }
-
   _rl_set_mark_at_pos (rl_point);
-  rl_insert_text (rl_kill_ring[rl_kill_index]);
+  rl_insert_text (rl_kill_ring[rl_kill_ring_index]);
   return 0;
 }
 
@@ -500,26 +407,29 @@ rl_yank (int count, int key)
    delete that text from the line, rotate the index down, and
    yank back some other text. */
 int
-rl_yank_pop (int count, int key)
+Readline::rl_yank_pop (int, int)
 {
-  int l, n;
-
-  if (((rl_last_func != rl_yank_pop) && (rl_last_func != rl_yank)) ||
-      !rl_kill_ring)
+  // check for empty kill ring or unexpected last function.
+  if (!rl_kill_ring_length || ((rl_last_func != &Readline::rl_yank_pop) &&
+      (rl_last_func != &Readline::rl_yank)))
     {
       _rl_abort_internal ();
       return 1;
     }
 
-  l = strlen (rl_kill_ring[rl_kill_index]);
-  n = rl_point - l;
-  if (n >= 0 && STREQN (rl_line_buffer + n, rl_kill_ring[rl_kill_index], l))
+  unsigned int l = static_cast<unsigned int> (rl_kill_ring[rl_kill_ring_index].size ());
+  unsigned int n = rl_point - l;
+
+  if (rl_point >= l && STREQN (&rl_line_buffer[n],
+			       rl_kill_ring[rl_kill_ring_index].data (), l))
     {
       rl_delete_text (n, rl_point);
       rl_point = n;
-      rl_kill_index--;
-      if (rl_kill_index < 0)
-	rl_kill_index = rl_kill_ring_length - 1;
+      if (rl_kill_ring_index == 0)
+	rl_kill_ring_index = DEFAULT_MAX_KILLS - 1;
+      else
+	--rl_kill_ring_index;
+
       rl_yank (1, 0);
       return 0;
     }
@@ -532,26 +442,28 @@ rl_yank_pop (int count, int key)
 
 #if defined (VI_MODE)
 int
-rl_vi_yank_pop (int count, int key)
+Readline::rl_vi_yank_pop (int, int)
 {
-  int l, n;
-
-  if (((rl_last_func != rl_vi_yank_pop) && (rl_last_func != rl_vi_put)) ||
-      !rl_kill_ring)
+  // check for empty kill ring or unexpected last function.
+  if (!rl_kill_ring_length || ((rl_last_func != &Readline::rl_vi_yank_pop) &&
+      (rl_last_func != &Readline::rl_vi_put)))
     {
       _rl_abort_internal ();
       return 1;
     }
 
-  l = strlen (rl_kill_ring[rl_kill_index]);
-  n = rl_point - l;
-  if (n >= 0 && STREQN (rl_line_buffer + n, rl_kill_ring[rl_kill_index], l))
+  unsigned int l = static_cast<unsigned int> (rl_kill_ring[rl_kill_ring_index].size ());
+  unsigned int n = rl_point - l;
+  if (rl_point >= l && STREQN (&rl_line_buffer[n],
+			       rl_kill_ring[rl_kill_ring_index].data (), l))
     {
       rl_delete_text (n, rl_point);
       rl_point = n;
-      rl_kill_index--;
-      if (rl_kill_index < 0)
-	rl_kill_index = rl_kill_ring_length - 1;
+      if (rl_kill_ring_index == 0)
+	rl_kill_ring_index = DEFAULT_MAX_KILLS - 1;
+      else
+	--rl_kill_ring_index;
+
       rl_vi_put (1, 'p');
       return 0;
     }
@@ -565,36 +477,32 @@ rl_vi_yank_pop (int count, int key)
 
 /* Yank the COUNTh argument from the previous history line, skipping
    HISTORY_SKIP lines before looking for the `previous line'. */
-static int
-rl_yank_nth_arg_internal (int count, int key, int history_skip)
+int
+Readline::rl_yank_nth_arg_internal (int count, int key, int history_skip)
 {
-  HIST_ENTRY *entry;
-  char *arg;
-  int i, pos;
-
-  pos = where_history ();
+  unsigned int pos = where_history ();
 
   if (history_skip)
     {
-      for (i = 0; i < history_skip; i++)
-	entry = previous_history ();
+      for (int i = 0; i < history_skip; i++)
+	(void) previous_history ();
     }
 
-  entry = previous_history ();
+  HIST_ENTRY *entry = previous_history ();
 
   history_set_pos (pos);
 
-  if (entry == 0)
+  if (entry == nullptr)
     {
       rl_ding ();
       return 1;
     }
 
-  arg = history_arg_extract (count, count, entry->line);
+  char *arg = history_arg_extract (count, count, entry->line.c_str ());
   if (!arg || !*arg)
     {
       rl_ding ();
-      FREE (arg);
+      delete[] arg;
       return 1;
     }
 
@@ -605,7 +513,7 @@ rl_yank_nth_arg_internal (int count, int key, int history_skip)
 #if defined (VI_MODE)
   /* Vi mode always inserts a space before yanking the argument, and it
      inserts it right *after* rl_point. */
-  if (rl_editing_mode == vi_mode && _rl_keymap == vi_movement_keymap)
+  if (rl_editing_mode == vi_mode && _rl_keymap == vi_movement_keymap ())
     {
       rl_vi_append_mode (1, key);
       rl_insert_text (" ");
@@ -613,7 +521,7 @@ rl_yank_nth_arg_internal (int count, int key, int history_skip)
 #endif /* VI_MODE */
 
   rl_insert_text (arg);
-  xfree (arg);
+  delete[] arg;
 
   rl_end_undo_group ();
   return 0;
@@ -621,48 +529,44 @@ rl_yank_nth_arg_internal (int count, int key, int history_skip)
 
 /* Yank the COUNTth argument from the previous history line. */
 int
-rl_yank_nth_arg (int count, int key)
+Readline::rl_yank_nth_arg (int count, int key)
 {
-  return (rl_yank_nth_arg_internal (count, key, 0));
+  return rl_yank_nth_arg_internal (count, key, 0);
 }
 
 /* Yank the last argument from the previous history line.  This `knows'
    how rl_yank_nth_arg treats a count of `$'.  With an argument, this
    behaves the same as rl_yank_nth_arg. */
 int
-rl_yank_last_arg (int count, int key)
+Readline::rl_yank_last_arg (int count, int key)
 {
-  static int history_skip = 0;
-  static int explicit_arg_p = 0;
-  static int count_passed = 1;
-  static int direction = 1;
-  static int undo_needed = 0;
-  int retval;
-
-  if (rl_last_func != rl_yank_last_arg)
+  if (rl_last_func != &Readline::rl_yank_last_arg)
     {
-      history_skip = 0;
-      explicit_arg_p = rl_explicit_arg;
-      count_passed = count;
-      direction = 1;
+      _rl_yank_history_skip = 0;
+      _rl_yank_explicit_arg = rl_explicit_arg;
+      _rl_yank_count_passed = count;
+      _rl_yank_direction = 1;
     }
   else
     {
-      if (undo_needed)
+      if (_rl_yank_undo_needed)
 	rl_do_undo ();
+
       if (count < 0)		/* XXX - was < 1 */
-        direction = -direction;
-      history_skip += direction;
-      if (history_skip < 0)
-	history_skip = 0;
+        _rl_yank_direction = -_rl_yank_direction;
+
+      _rl_yank_history_skip += _rl_yank_direction;
+      if (_rl_yank_history_skip < 0)
+	_rl_yank_history_skip = 0;
     }
 
-  if (explicit_arg_p)
-    retval = rl_yank_nth_arg_internal (count_passed, key, history_skip);
+  int retval;
+  if (_rl_yank_explicit_arg)
+    retval = rl_yank_nth_arg_internal (_rl_yank_count_passed, key, _rl_yank_history_skip);
   else
-    retval = rl_yank_nth_arg_internal ('$', key, history_skip);
+    retval = rl_yank_nth_arg_internal ('$', key, _rl_yank_history_skip);
 
-  undo_needed = retval == 0;
+  _rl_yank_undo_needed = (retval == 0);
   return retval;
 }
 
@@ -670,48 +574,37 @@ rl_yank_last_arg (int count, int key)
    `bracketed paste' sequence, read the rest of the pasted input until the
    closing sequence and return the pasted text. */
 char *
-_rl_bracketed_text (size_t *lenp)
+Readline::_rl_bracketed_text (unsigned int *lenp)
 {
   int c;
-  size_t len, cap;
-  char *buf;
 
-  len = 0;
-  buf = (char *)xmalloc (cap = 64);
-  buf[0] = '\0';
+  size_t len = 0;
+  std::string buf;
 
   RL_SETSTATE (RL_STATE_MOREINPUT);
   while ((c = rl_read_key ()) >= 0)
     {
       if (RL_ISSTATE (RL_STATE_MACRODEF))
-	_rl_add_macro_char (c);
+	_rl_add_macro_char (static_cast<char> (c));
 
       if (c == '\r')		/* XXX */
 	c = '\n';
 
-      if (len == cap)
-	buf = (char *)xrealloc (buf, cap *= 2);
+      buf.push_back (static_cast<char> (c));
 
-      buf[len++] = c;
       if (len >= BRACK_PASTE_SLEN && c == BRACK_PASTE_LAST &&
-	  STREQN (buf + len - BRACK_PASTE_SLEN, BRACK_PASTE_SUFF, BRACK_PASTE_SLEN))
+	  STREQN (&buf[len - BRACK_PASTE_SLEN], BRACK_PASTE_SUFF, BRACK_PASTE_SLEN))
 	{
-	  len -= BRACK_PASTE_SLEN;
+	  buf.resize (buf.size () - BRACK_PASTE_SLEN);
 	  break;
 	}
     }
   RL_UNSETSTATE (RL_STATE_MOREINPUT);
 
-  if (c >= 0)
-    {
-      if (len == cap)
-	buf = (char *)xrealloc (buf, cap + 1);
-      buf[len] = '\0';
-    }
-
   if (lenp)
-    *lenp = len;
-  return (buf);
+    *lenp = static_cast<unsigned int> (buf.size ());
+
+  return savestring (buf);
 }
 
 /* Having read the special escape sequence denoting the beginning of a
@@ -719,63 +612,63 @@ _rl_bracketed_text (size_t *lenp)
    closing sequence and insert the pasted text as a single unit without
    interpretation. Temporarily highlight the inserted text. */
 int
-rl_bracketed_paste_begin (int count, int key)
+Readline::rl_bracketed_paste_begin (int, int)
 {
-  int retval, c;
-  size_t len, cap;
-  char *buf;
+  unsigned int len;
 
-  buf = _rl_bracketed_text (&len);
+  char *buf = _rl_bracketed_text (&len);
   rl_mark = rl_point;
-  retval = rl_insert_text (buf) == len ? 0 : 1;
+
+  int retval = rl_insert_text (buf) == len ? 0 : 1;
   if (_rl_enable_active_region)
     rl_activate_mark ();
 
-  xfree (buf);
-  return (retval);
+  delete[] buf;
+  return retval;
 }
 
 int
-_rl_read_bracketed_paste_prefix (int c)
+Readline::_rl_read_bracketed_paste_prefix (int c)
 {
-  char pbuf[BRACK_PASTE_SLEN+1];
-  int key, ind, j;
+  char pbuf[BRACK_PASTE_SLEN + 1];
+  int key = 0, ind = 0;
 
   const char *pbpref = BRACK_PASTE_PREF;		/* XXX - debugging */
   if (c != pbpref[0])
-    return (0);
-  pbuf[ind = 0] = c;
-  while (ind < BRACK_PASTE_SLEN-1 &&
-	 (RL_ISSTATE (RL_STATE_INPUTPENDING|RL_STATE_MACROINPUT) == 0) &&
-         _rl_pushed_input_available () == 0 &&
+    return 0;
+  pbuf[0] = static_cast<char> (c);
+
+  while (ind < BRACK_PASTE_SLEN - 1 &&
+	 (RL_ISSTATE (RL_STATE_INPUTPENDING | RL_STATE_MACROINPUT) == 0) &&
+         !_rl_pushed_input_available () &&
          _rl_input_queued (0))
     {
       key = rl_read_key ();		/* XXX - for now */
       if (key < 0)
 	break;
-      pbuf[++ind] = key;
+      pbuf[++ind] = static_cast<char> (key);
       if (pbuf[ind] != pbpref[ind])
         break;
     }
 
-  if (ind < BRACK_PASTE_SLEN-1)		/* read incomplete sequence */
+  if (ind < BRACK_PASTE_SLEN - 1)		/* read incomplete sequence */
     {
       while (ind >= 0)
 	_rl_unget_char (pbuf[ind--]);
-      return (key < 0 ? key : 0);
+      return key < 0 ? key : 0;
     }
-  return (key < 0 ? key : 1);
+  return key < 0 ? key : 1;
 }
 
 /* Get a character from wherever we read input, handling input in bracketed
    paste mode. If we don't have or use bracketed paste mode, this can be
    used in place of rl_read_key(). */
 int
-_rl_bracketed_read_key ()
+Readline::_rl_bracketed_read_key ()
 {
   int c, r;
   char *pbuf;
-  size_t pblen;
+  unsigned int pblen;
 
   RL_SETSTATE(RL_STATE_MOREINPUT);
   c = rl_read_key ();
@@ -785,21 +678,22 @@ _rl_bracketed_read_key ()
     return -1;
 
   /* read pasted data with bracketed-paste mode enabled. */
-  if (_rl_enable_bracketed_paste && c == ESC && (r = _rl_read_bracketed_paste_prefix (c)) == 1)
+  if (_rl_enable_bracketed_paste && c == ESC &&
+      (r = _rl_read_bracketed_paste_prefix (c)) == 1)
     {
       pbuf = _rl_bracketed_text (&pblen);
       if (pblen == 0)
 	{
-	  xfree (pbuf);
+	  delete[] pbuf;
 	  return 0;		/* XXX */
 	}
-      c = (unsigned char)pbuf[0];
+      c = static_cast<unsigned char> (pbuf[0]);
       if (pblen > 1)
 	{
 	  while (--pblen > 0)
-	    _rl_unget_char ((unsigned char)pbuf[pblen]);
+	    _rl_unget_char (static_cast<unsigned char> (pbuf[pblen]));
 	}
-      xfree (pbuf);
+      delete[] pbuf;
     }
 
   return c;
@@ -809,20 +703,19 @@ _rl_bracketed_read_key ()
    paste mode. If we don't have or use bracketed paste mode, this can be
    used in place of rl_read_key(). */
 int
-_rl_bracketed_read_mbstring (char *mb, int mlen)
+Readline::_rl_bracketed_read_mbstring (char *mb, int mlen)
 {
-  int c, r;
-
-  c = _rl_bracketed_read_key ();
+  int c = _rl_bracketed_read_key ();
   if (c < 0)
     return -1;
 
 #if defined (HANDLE_MULTIBYTE)
-  if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+  if (MB_CUR_MAX > 1 && !rl_byte_oriented)
     c = _rl_read_mbstring (c, mb, mlen);
   else
 #endif
-    mb[0] = c;
+    mb[0] = static_cast<char> (c);
+
   mb[mlen] = '\0';		/* just in case */
 
   return c;
@@ -833,33 +726,35 @@ _rl_bracketed_read_mbstring (char *mb, int mlen)
 #include <windows.h>
 
 int
-rl_paste_from_clipboard (int count, int key)
+Readline::rl_paste_from_clipboard (int count, int key)
 {
   char *data, *ptr;
   int len;
 
   if (OpenClipboard (NULL) == 0)
-    return (0);
+    return 0;
 
-  data = (char *)GetClipboardData (CF_TEXT);
+  data = static_cast<char *> (GetClipboardData (CF_TEXT));
   if (data)
     {
-      ptr = strchr (data, '\r');
+      ptr = std::strchr (data, '\r');
       if (ptr)
 	{
 	  len = ptr - data;
-	  ptr = (char *)xmalloc (len + 1);
+	  ptr = new char[len + 1];
 	  ptr[len] = '\0';
-	  strncpy (ptr, data, len);
+	  std::strncpy (ptr, data, len);
 	}
       else
         ptr = data;
       _rl_set_mark_at_pos (rl_point);
       rl_insert_text (ptr);
       if (ptr != data)
-	xfree (ptr);
+	delete[] ptr;
       CloseClipboard ();
     }
-  return (0);
+  return 0;
 }
 #endif /* _WIN32 */
+
+}  // namespace readline

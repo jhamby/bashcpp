@@ -22,19 +22,15 @@
 
 #if !defined (HAVE_GETCWD)
 
-#if !defined (__GNUC__) && !defined (HAVE_ALLOCA_H) && defined (_AIX)
-  #pragma alloca
-#endif /* _AIX && RISC6000 && !__GNUC__ */
-
 #if defined (__QNX__)
 #  undef HAVE_LSTAT
 #endif
 
 #include <bashtypes.h>
-#include <errno.h>
+#include <cerrno>
 
 #if defined (HAVE_LIMITS_H)
-#  include <limits.h>
+#  include <climits>
 #endif
 
 #if defined (HAVE_UNISTD_H)
@@ -88,7 +84,7 @@ _path_checkino (const char *dotp, const char *name, ino_t thisino)
     }
   free (fullpath);
   errno = e;
-  return (st.st_ino == thisino);
+  return st.st_ino == thisino;
 }
 #endif
 
@@ -120,7 +116,7 @@ getcwd (char *buf, size_t size)
   if (buf != NULL && size == 0)
     {
       errno = EINVAL;
-      return ((char *)NULL);
+      return (char *)NULL;
     }
 
   pathsize = sizeof (path);
@@ -129,12 +125,12 @@ getcwd (char *buf, size_t size)
   pathbuf = path;
 
   if (stat (".", &st) < 0)
-    return ((char *)NULL);
+    return (char *)NULL;
   thisdev = st.st_dev;
   thisino = st.st_ino;
 
   if (stat ("/", &st) < 0)
-    return ((char *)NULL);
+    return (char *)NULL;
   rootdev = st.st_dev;
   rootino = st.st_ino;
 
@@ -302,7 +298,7 @@ getcwd (char *buf, size_t size)
   if (pathbuf != path)
     free (pathbuf);
 
-  return (buf);
+  return buf;
 
  lose:
   if ((dotlist != dots) && dotlist)
@@ -319,7 +315,7 @@ getcwd (char *buf, size_t size)
       free ((PTR_T) pathbuf);
       errno = e;
     }
-  return ((char *)NULL);
+  return (char *)NULL;
 }
 
 #if defined (TEST)

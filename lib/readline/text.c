@@ -19,59 +19,23 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define READLINE_LIBRARY
+#include "readline.h"
+#include "history.h"
+#include "rlprivate.h"
 
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
-
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif /* HAVE_STDLIB_H */
-
-#if defined (HAVE_LOCALE_H)
-#  include <locale.h>
-#endif
-
-#include <stdio.h>
-
-/* System-specific feature definitions and include files. */
-#include "rldefs.h"
-#include "rlmbutil.h"
+#include <clocale>
 
 #if defined (__EMX__)
 #  define INCL_DOSPROCESS
 #  include <os2.h>
 #endif /* __EMX__ */
 
-/* Some standard library routines. */
-#include "readline.h"
-#include "history.h"
-
-#include "rlprivate.h"
-#include "rlshell.h"
-#include "xmalloc.h"
-
-/* Forward declarations. */
-static int rl_change_case (int, int);
-static int _rl_char_search (int, int, int);
-
-#if defined (READLINE_CALLBACKS)
-static int _rl_insert_next_callback (_rl_callback_generic_arg *);
-static int _rl_char_search_callback (_rl_callback_generic_arg *);
-#endif
+namespace readline
+{
 
 /* The largest chunk of text that can be inserted in one call to
    rl_insert_text.  Text blocks larger than this are divided. */
 #define TEXT_COUNT_MAX	1024
-
-bool _rl_optimize_typeahead = true;	/* rl_insert tries to read typeahead */
 
 /* **************************************************************** */
 /*								    */
@@ -82,137 +46,82 @@ bool _rl_optimize_typeahead = true;	/* rl_insert tries to read typeahead */
 /* Insert a string of text into the line at point.  This is the only
    way that you should do insertion.  _rl_insert_char () calls this
    function.  Returns the number of characters inserted. */
-int
-rl_insert_text (const char *string)
+unsigned int
+Readline::rl_insert_text (const std::string &str)
 {
-  int l = (string && *string) ? strlen (string) : 0;
+  unsigned int l = static_cast<unsigned int> (str.size ());
   if (l == 0)
     return 0;
 
-  if (rl_end + l >= rl_line_buffer_len)
-    rl_extend_line_buffer (rl_end + l);
-
-  for (int i = rl_end; i >= rl_point; i--)
-    rl_line_buffer[i + l] = rl_line_buffer[i];
-  strncpy (rl_line_buffer + rl_point, string, l);
+  rl_line_buffer.insert (rl_point, str);
 
   /* Remember how to undo this if we aren't undoing something. */
-  if (_rl_doing_an_undo == 0)
+  if (!_rl_doing_an_undo)
     {
       /* If possible and desirable, concatenate the undos. */
       if ((l == 1) &&
 	  rl_undo_list &&
-	  (rl_undo_list->what == UNDO_INSERT) &&
-	  (rl_undo_list->end == rl_point) &&
-	  (rl_undo_list->end - rl_undo_list->start < 20))
-	rl_undo_list->end++;
+	  (rl_undo_list->back ().what == UNDO_INSERT) &&
+	  (rl_undo_list->back ().end == rl_point) &&
+	  (rl_undo_list->back ().end - rl_undo_list->back ().start < 20))
+	rl_undo_list->back ().end++;
       else
-	rl_add_undo (UNDO_INSERT, rl_point, rl_point + l, (char *)NULL);
+	rl_add_undo (UNDO_INSERT, rl_point, rl_point + l, nullptr);
     }
   rl_point += l;
-  rl_end += l;
-  rl_line_buffer[rl_end] = '\0';
   return l;
 }
 
 /* Delete the string between FROM and TO.  FROM is inclusive, TO is not.
    Returns the number of characters deleted. */
-int
-rl_delete_text (int from, int to)
+unsigned int
+Readline::rl_delete_text (unsigned int from, unsigned int to)
 {
   /* Fix it if the caller is confused. */
   if (from > to)
-    SWAP (from, to);
+    std::swap (from, to);
 
   /* fix boundaries */
-  if (to > rl_end)
+  if (to > rl_end ())
     {
-      to = rl_end;
+      to = rl_end ();
       if (from > to)
 	from = to;
     }
-  if (from < 0)
-    from = 0;
+
+  unsigned int diff = to - from;
+  if (diff == 0)
+    return 0;
 
   char *text = rl_copy_text (from, to);
-
-  /* Some versions of strncpy() can't handle overlapping arguments. */
-  int diff = to - from;
-  for (int i = from; i < rl_end - diff; i++)
-    rl_line_buffer[i] = rl_line_buffer[i + diff];
+  rl_line_buffer.erase (from, diff);
 
   /* Remember how to undo this delete. */
-  if (_rl_doing_an_undo == 0)
+  if (!_rl_doing_an_undo)
     rl_add_undo (UNDO_DELETE, from, to, text);
   else
-    xfree (text);
+    delete[] text;
 
-  rl_end -= diff;
-  rl_line_buffer[rl_end] = '\0';
   _rl_fix_mark ();
-  return (diff);
+  return diff;
 }
-
-/* Fix up point so that it is within the line boundaries after killing
-   text.  If FIX_MARK_TOO is non-zero, the mark is forced within line
-   boundaries also. */
-
-#define _RL_FIX_POINT(x) \
-	do { \
-	if (x > rl_end) \
-	  x = rl_end; \
-	else if (x < 0) \
-	  x = 0; \
-	} while (0)
-
-void
-_rl_fix_point (int fix_mark_too)
-{
-  _RL_FIX_POINT (rl_point);
-  if (fix_mark_too)
-    _RL_FIX_POINT (rl_mark);
-}
-
-void
-_rl_fix_mark (void)
-{
-  _RL_FIX_POINT (rl_mark);
-}
-#undef _RL_FIX_POINT
 
 /* Replace the contents of the line buffer between START and END with
    TEXT.  The operation is undoable.  To replace the entire line in an
-   undoable mode, use _rl_replace_text(text, 0, rl_end); */
-int
-_rl_replace_text (const char *text, int start, int end)
+   undoable mode, use _rl_replace_text(text, 0, rl_line_buffer.size ()); */
+unsigned int
+Readline::_rl_replace_text (const std::string &text, unsigned int start, unsigned int end)
 {
-  int n = 0;
+  unsigned int n = 0;
   rl_begin_undo_group ();
   if (start <= end)
     rl_delete_text (start, end + 1);
   rl_point = start;
-  if (*text)
+  if (!text.empty ())
     n = rl_insert_text (text);
   rl_end_undo_group ();
 
   return n;
-}
-
-/* Replace the current line buffer contents with TEXT.  If CLEAR_UNDO is
-   non-zero, we free the current undo list. */
-void
-rl_replace_line (const char *text, int clear_undo)
-{
-  int len = strlen (text);
-  if (len >= rl_line_buffer_len)
-    rl_extend_line_buffer (len);
-  strcpy (rl_line_buffer, text);
-  rl_end = len;
-
-  if (clear_undo)
-    rl_free_undo_list ();
-
-  _rl_fix_point (1);
 }
 
 /* **************************************************************** */
@@ -226,11 +135,8 @@ rl_replace_line (const char *text, int clear_undo)
 
 /* Note that:
 
-   rl_end is the place in the string that we would place '\0';
-   i.e., it is always safe to place '\0' there.
-
    rl_point is the place in the string where the cursor is.  Sometimes
-   this is the same as rl_end.
+   this is the same as rl_line_buffer.size ().
 
    Any command that is called interactively receives two arguments.
    The first is a count: the numeric arg passed to this command.
@@ -250,20 +156,19 @@ rl_replace_line (const char *text, int clear_undo)
 
 /* Move forward COUNT bytes. */
 int
-rl_forward_byte (int count, int key)
+Readline::rl_forward_byte (int count, int key)
 {
   if (count < 0)
-    return (rl_backward_byte (-count, key));
+    return rl_backward_byte (-count, key);
 
   if (count > 0)
     {
-      int end, lend;
-
-      end = rl_point + count;
+      unsigned int end = rl_point + static_cast<unsigned int> (count);
+      unsigned int lend;
 #if defined (VI_MODE)
-      lend = rl_end > 0 ? rl_end - (VI_COMMAND_MODE()) : rl_end;
+      lend = rl_end () > 0 ? rl_end () - (VI_COMMAND_MODE()) : rl_end ();
 #else
-      lend = rl_end;
+      lend = rl_end ();
 #endif
 
       if (end > lend)
@@ -275,42 +180,36 @@ rl_forward_byte (int count, int key)
 	rl_point = end;
     }
 
-  if (rl_end < 0)
-    rl_end = 0;
-
   return 0;
 }
 
-int
-_rl_forward_char_internal (int count)
+unsigned int
+Readline::_rl_forward_char_internal (int count)
 {
-  int point;
+  unsigned int point;
 
 #if defined (HANDLE_MULTIBYTE)
   point = _rl_find_next_mbchar (rl_line_buffer, rl_point, count, MB_FIND_NONZERO);
 
 #if defined (VI_MODE)
-  if (point >= rl_end && VI_COMMAND_MODE())
-    point = _rl_find_prev_mbchar (rl_line_buffer, rl_end, MB_FIND_NONZERO);
+  if (point >= rl_end () && VI_COMMAND_MODE())
+    point = _rl_find_prev_mbchar (rl_line_buffer, rl_end (), MB_FIND_NONZERO);
 #endif
 
-    if (rl_end < 0)
-      rl_end = 0;
 #else
   point = rl_point + count;
 #endif
 
-  if (point > rl_end)
-    point = rl_end;
-  return (point);
+  if (point > rl_end ())
+    point = rl_end ();
+  return point;
 }
 
-int
-_rl_backward_char_internal (int count)
+unsigned int
+Readline::_rl_backward_char_internal (int count)
 {
-  int point;
+  unsigned int point = rl_point;
 
-  point = rl_point;
 #if defined (HANDLE_MULTIBYTE)
   if (count > 0)
     {
@@ -327,33 +226,29 @@ _rl_backward_char_internal (int count)
     point -= count;
 #endif
 
-  if (point < 0)
-    point = 0;
-  return (point);
+  return point;
 }
 
 #if defined (HANDLE_MULTIBYTE)
 /* Move forward COUNT characters. */
 int
-rl_forward_char (int count, int key)
+Readline::rl_forward_char (int count, int key)
 {
-  int point;
-
   if (MB_CUR_MAX == 1 || rl_byte_oriented)
-    return (rl_forward_byte (count, key));
+    return rl_forward_byte (count, key);
 
   if (count < 0)
-    return (rl_backward_char (-count, key));
+    return rl_backward_char (-count, key);
 
   if (count > 0)
     {
-      if (rl_point == rl_end && EMACS_MODE())
+      if (rl_point == rl_line_buffer.size () && EMACS_MODE())
 	{
 	  rl_ding ();
 	  return 0;
 	}
 
-      point = _rl_forward_char_internal (count);
+      unsigned int point = _rl_forward_char_internal (count);
 
       if (rl_point == point)
 	rl_ding ();
@@ -365,39 +260,36 @@ rl_forward_char (int count, int key)
 }
 #else /* !HANDLE_MULTIBYTE */
 int
-rl_forward_char (int count, int key)
+Readline::rl_forward_char (int count, int key)
 {
-  return (rl_forward_byte (count, key));
+  return rl_forward_byte (count, key);
 }
 #endif /* !HANDLE_MULTIBYTE */
 
 /* Backwards compatibility. */
 int
-rl_forward (int count, int key)
+Readline::rl_forward (int count, int key)
 {
-  return (rl_forward_char (count, key));
+  return rl_forward_char (count, key);
 }
 
 /* Move backward COUNT bytes. */
 int
-rl_backward_byte (int count, int key)
+Readline::rl_backward_byte (int count, int key)
 {
   if (count < 0)
-    return (rl_forward_byte (-count, key));
+    return rl_forward_byte (-count, key);
 
   if (count > 0)
     {
-      if (rl_point < count)
+      if (rl_point < static_cast<size_t> (count))
 	{
 	  rl_point = 0;
 	  rl_ding ();
 	}
       else
-	rl_point -= count;
+	rl_point -= static_cast<size_t> (count);
     }
-
-  if (rl_point < 0)
-    rl_point = 0;
 
   return 0;
 }
@@ -405,19 +297,17 @@ rl_backward_byte (int count, int key)
 #if defined (HANDLE_MULTIBYTE)
 /* Move backward COUNT characters. */
 int
-rl_backward_char (int count, int key)
+Readline::rl_backward_char (int count, int key)
 {
-  int point;
-
   if (MB_CUR_MAX == 1 || rl_byte_oriented)
-    return (rl_backward_byte (count, key));
+    return rl_backward_byte (count, key);
 
   if (count < 0)
-    return (rl_forward_char (-count, key));
+    return rl_forward_char (-count, key);
 
   if (count > 0)
     {
-      point = rl_point;
+      unsigned int point = rl_point;
 
       while (count > 0 && point > 0)
 	{
@@ -437,22 +327,22 @@ rl_backward_char (int count, int key)
 }
 #else
 int
-rl_backward_char (int count, int key)
+Readline::rl_backward_char (int count, int key)
 {
-  return (rl_backward_byte (count, key));
+  return rl_backward_byte (count, key);
 }
 #endif
 
 /* Backwards compatibility. */
 int
-rl_backward (int count, int key)
+Readline::rl_backward (int count, int key)
 {
-  return (rl_backward_char (count, key));
+  return rl_backward_char (count, key);
 }
 
 /* Move to the beginning of the line. */
 int
-rl_beg_of_line (int count, int key)
+Readline::rl_beg_of_line (int, int)
 {
   rl_point = 0;
   return 0;
@@ -460,36 +350,35 @@ rl_beg_of_line (int count, int key)
 
 /* Move to the end of the line. */
 int
-rl_end_of_line (int count, int key)
+Readline::rl_end_of_line (int, int)
 {
-  rl_point = rl_end;
+  rl_point = rl_end ();
   return 0;
 }
 
 /* Move forward a word.  We do what Emacs does.  Handles multibyte chars. */
 int
-rl_forward_word (int count, int key)
+Readline::rl_forward_word (int count, int key)
 {
-  int c;
-
   if (count < 0)
-    return (rl_backward_word (-count, key));
+    return rl_backward_word (-count, key);
 
   while (count)
     {
-      if (rl_point > rl_end)
-	rl_point = rl_end;
-      if (rl_point == rl_end)
+      if (rl_point > rl_end ())
+	rl_point = rl_end ();
+
+      if (rl_point == rl_end ())
 	return 0;
 
       /* If we are not in a word, move forward until we are in one.
 	 Then, move forward until we hit a non-alphabetic character. */
-      c = _rl_char_value (rl_line_buffer, rl_point);
+      wchar_t c = _rl_char_value (rl_line_buffer, rl_point);
 
       if (_rl_walphabetic (c) == 0)
 	{
 	  rl_point = MB_NEXTCHAR (rl_line_buffer, rl_point, 1, MB_FIND_NONZERO);
-	  while (rl_point < rl_end)
+	  while (rl_point < rl_end ())
 	    {
 	      c = _rl_char_value (rl_line_buffer, rl_point);
 	      if (_rl_walphabetic (c))
@@ -498,13 +387,14 @@ rl_forward_word (int count, int key)
 	    }
 	}
 
-      if (rl_point > rl_end)
-	rl_point = rl_end;
-      if (rl_point == rl_end)
+      if (rl_point > rl_end ())
+	rl_point = rl_end ();
+
+      if (rl_point == rl_end ())
 	return 0;
 
       rl_point = MB_NEXTCHAR (rl_line_buffer, rl_point, 1, MB_FIND_NONZERO);
-      while (rl_point < rl_end)
+      while (rl_point < rl_end ())
 	{
 	  c = _rl_char_value (rl_line_buffer, rl_point);
 	  if (_rl_walphabetic (c) == 0)
@@ -520,12 +410,10 @@ rl_forward_word (int count, int key)
 
 /* Move backward a word.  We do what Emacs does.  Handles multibyte chars. */
 int
-rl_backward_word (int count, int key)
+Readline::rl_backward_word (int count, int key)
 {
-  int c, p;
-
   if (count < 0)
-    return (rl_forward_word (-count, key));
+    return rl_forward_word (-count, key);
 
   while (count)
     {
@@ -535,8 +423,8 @@ rl_backward_word (int count, int key)
       /* Like rl_forward_word (), except that we look at the characters
 	 just before point. */
 
-      p = MB_PREVCHAR (rl_line_buffer, rl_point, MB_FIND_NONZERO);
-      c = _rl_char_value (rl_line_buffer, p);
+      unsigned int p = MB_PREVCHAR (rl_line_buffer, rl_point, MB_FIND_NONZERO);
+      wchar_t c = _rl_char_value (rl_line_buffer, p);
 
       if (_rl_walphabetic (c) == 0)
 	{
@@ -569,10 +457,10 @@ rl_backward_word (int count, int key)
 
 /* Clear the current line.  Numeric argument to C-l does this. */
 int
-rl_refresh_line (int ignore1, int ignore2)
+Readline::rl_refresh_line (int, int)
 {
   _rl_refresh_line ();
-  rl_display_fixed = 1;
+  rl_display_fixed = true;
   return 0;
 }
 
@@ -580,7 +468,7 @@ rl_refresh_line (int ignore1, int ignore2)
    the prompt and the current input line.  Given a numeric arg, redraw only
    the current line. */
 int
-rl_clear_screen (int count, int key)
+Readline::rl_clear_screen (int count, int key)
 {
   if (rl_explicit_arg)
     {
@@ -588,44 +476,38 @@ rl_clear_screen (int count, int key)
       return 0;
     }
 
-  _rl_clear_screen (0);		/* calls termcap function to clear screen */
+  _rl_clear_screen (false);	/* calls termcap function to clear screen */
   rl_keep_mark_active ();
   rl_forced_update_display ();
-  rl_display_fixed = 1;
-
+  rl_display_fixed = true;
   return 0;
 }
 
 int
-rl_clear_display (int count, int key)
+Readline::rl_clear_display (int, int)
 {
-  _rl_clear_screen (1);		/* calls termcap function to clear screen and scrollback buffer */
+  _rl_clear_screen (true);	/* calls termcap function to clear screen and scrollback buffer */
   rl_forced_update_display ();
-  rl_display_fixed = 1;
-
+  rl_display_fixed = true;
   return 0;
 }
 
 int
-rl_previous_screen_line (int count, int key)
+Readline::rl_previous_screen_line (int, int key)
 {
-  int c;
-
-  c = _rl_term_autowrap ? _rl_screenwidth : (_rl_screenwidth + 1);
-  return (rl_backward_char (c, key));
+  int c = static_cast<int> (_rl_term_autowrap ? _rl_screenwidth : (_rl_screenwidth + 1));
+  return rl_backward_char (c, key);
 }
 
 int
-rl_next_screen_line (int count, int key)
+Readline::rl_next_screen_line (int, int key)
 {
-  int c;
-
-  c = _rl_term_autowrap ? _rl_screenwidth : (_rl_screenwidth + 1);
-  return (rl_forward_char (c, key));
+  int c = static_cast<int> (_rl_term_autowrap ? _rl_screenwidth : (_rl_screenwidth + 1));
+  return rl_forward_char (c, key);
 }
 
 int
-rl_skip_csi_sequence (int count, int key)
+Readline::rl_skip_csi_sequence (int, int)
 {
   int ch;
 
@@ -635,11 +517,11 @@ rl_skip_csi_sequence (int count, int key)
   while (ch >= 0x20 && ch < 0x40);
   RL_UNSETSTATE (RL_STATE_MOREINPUT);
 
-  return (ch < 0);
+  return ch < 0;
 }
 
 int
-rl_arrow_keys (int count, int key)
+Readline::rl_arrow_keys (int count, int)
 {
   int ch;
 
@@ -647,7 +529,7 @@ rl_arrow_keys (int count, int key)
   ch = rl_read_key ();
   RL_UNSETSTATE(RL_STATE_MOREINPUT);
   if (ch < 0)
-    return (1);
+    return 1;
 
   switch (_rl_to_upper (ch))
     {
@@ -660,14 +542,14 @@ rl_arrow_keys (int count, int key)
       break;
 
     case 'C':
-      if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+      if (MB_CUR_MAX > 1 && !rl_byte_oriented)
 	rl_forward_char (count, ch);
       else
 	rl_forward_byte (count, ch);
       break;
 
     case 'D':
-      if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+      if (MB_CUR_MAX > 1 && !rl_byte_oriented)
 	rl_backward_char (count, ch);
       else
 	rl_backward_byte (count, ch);
@@ -686,40 +568,33 @@ rl_arrow_keys (int count, int key)
 /*								    */
 /* **************************************************************** */
 
-#ifdef HANDLE_MULTIBYTE
-static char pending_bytes[MB_LEN_MAX];
-static int pending_bytes_length = 0;
-static mbstate_t ps = {0};
-#endif
-
 /* Insert the character C at the current location, moving point forward.
    If C introduces a multibyte sequence, we read the whole sequence and
    then insert the multibyte char into the line buffer. */
 int
-_rl_insert_char (int count, int c)
+Readline::_rl_insert_char (int count, int c)
 {
-  char *string;
+  if (count <= 0)
+    return 0;
+
+  std::string string;
 #ifdef HANDLE_MULTIBYTE
   int string_size;
   char incoming[MB_LEN_MAX + 1];
   int incoming_length = 0;
   mbstate_t ps_back;
-  static int stored_count = 0;
 #endif
-
-  if (count <= 0)
-    return 0;
 
 #if defined (HANDLE_MULTIBYTE)
   if (MB_CUR_MAX == 1 || rl_byte_oriented)
     {
-      incoming[0] = c;
+      incoming[0] = static_cast<char> (c);
       incoming[1] = '\0';
       incoming_length = 1;
     }
   else if (_rl_utf8locale && (c & 0x80) == 0)
     {
-      incoming[0] = c;
+      incoming[0] = static_cast<char> (c);
       incoming[1] = '\0';
       incoming_length = 1;
     }
@@ -728,58 +603,64 @@ _rl_insert_char (int count, int c)
       wchar_t wc;
       size_t ret;
 
-      if (stored_count <= 0)
-	stored_count = count;
+      if (_rl_stored_count <= 0)
+	_rl_stored_count = count;
       else
-	count = stored_count;
+	count = _rl_stored_count;
 
-      ps_back = ps;
-      pending_bytes[pending_bytes_length++] = c;
-      ret = mbrtowc (&wc, pending_bytes, pending_bytes_length, &ps);
+      ps_back = _rl_pending_mbstate;
+      _rl_pending_bytes[_rl_pending_bytes_length++] = static_cast<char> (c);
 
-      if (ret == (size_t)-2)
+      ret = std::mbrtowc (&wc, _rl_pending_bytes,
+			  static_cast<size_t> (_rl_pending_bytes_length),
+			  &_rl_pending_mbstate);
+
+      if (ret == static_cast<size_t> (-2))
 	{
 	  /* Bytes too short to compose character, try to wait for next byte.
 	     Restore the state of the byte sequence, because in this case the
 	     effect of mbstate is undefined. */
-	  ps = ps_back;
+	  _rl_pending_mbstate = ps_back;
 	  return 1;
 	}
-      else if (ret == (size_t)-1)
+      else if (ret == static_cast<size_t> (-1))
 	{
 	  /* Invalid byte sequence for the current locale.  Treat first byte
 	     as a single character. */
-	  incoming[0] = pending_bytes[0];
+	  incoming[0] = _rl_pending_bytes[0];
 	  incoming[1] = '\0';
 	  incoming_length = 1;
-	  pending_bytes_length--;
-	  memmove (pending_bytes, pending_bytes + 1, pending_bytes_length);
+	  _rl_pending_bytes_length--;
+	  std::memmove (_rl_pending_bytes, _rl_pending_bytes + 1,
+			static_cast<size_t> (_rl_pending_bytes_length));
 	  /* Clear the state of the byte sequence, because in this case the
 	     effect of mbstate is undefined. */
-	  memset (&ps, 0, sizeof (mbstate_t));
+	  std::memset (&_rl_pending_mbstate, 0, sizeof (mbstate_t));
 	}
-      else if (ret == (size_t)0)
+      else if (ret == 0)
 	{
 	  incoming[0] = '\0';
 	  incoming_length = 0;
-	  pending_bytes_length--;
+	  _rl_pending_bytes_length--;
 	  /* Clear the state of the byte sequence, because in this case the
 	     effect of mbstate is undefined. */
-	  memset (&ps, 0, sizeof (mbstate_t));
+	  std::memset (&_rl_pending_mbstate, 0, sizeof (mbstate_t));
 	}
       else if (ret == 1)
 	{
-	  incoming[0] = pending_bytes[0];
+	  incoming[0] = _rl_pending_bytes[0];
 	  incoming[incoming_length = 1] = '\0';
-	  pending_bytes_length = 0;
+	  _rl_pending_bytes_length = 0;
 	}
       else
 	{
 	  /* We successfully read a single multibyte character. */
-	  memcpy (incoming, pending_bytes, pending_bytes_length);
-	  incoming[pending_bytes_length] = '\0';
-	  incoming_length = pending_bytes_length;
-	  pending_bytes_length = 0;
+	  std::memcpy (incoming, _rl_pending_bytes,
+		       static_cast<size_t> (_rl_pending_bytes_length));
+
+	  incoming[_rl_pending_bytes_length] = '\0';
+	  incoming_length = _rl_pending_bytes_length;
+	  _rl_pending_bytes_length = 0;
 	}
     }
 #endif /* HANDLE_MULTIBYTE */
@@ -790,33 +671,29 @@ _rl_insert_char (int count, int c)
     {
 #if defined (HANDLE_MULTIBYTE)
       string_size = count * incoming_length;
-      string = (char *)xmalloc (1 + string_size);
-
       int i = 0;
       while (i < string_size)
 	{
 	  if (incoming_length == 1)
-	    string[i++] = *incoming;
+	    {
+	      string.push_back (*incoming);
+	      i++;
+	    }
 	  else
 	    {
-	      strncpy (string + i, incoming, incoming_length);
+	      string.append (incoming, static_cast<size_t> (incoming_length));
 	      i += incoming_length;
 	    }
 	}
       incoming_length = 0;
-      stored_count = 0;
+      _rl_stored_count = 0;
 #else /* !HANDLE_MULTIBYTE */
-      string = (char *)xmalloc (1 + count);
-
       int i;
       for (i = 0; i < count; i++)
-	string[i] = c;
+	string.push_back (c);
 #endif /* !HANDLE_MULTIBYTE */
 
-      string[i] = '\0';
       rl_insert_text (string);
-      xfree (string);
-
       return 0;
     }
 
@@ -825,16 +702,18 @@ _rl_insert_char (int count, int c)
       int decreaser;
 #if defined (HANDLE_MULTIBYTE)
       string_size = incoming_length * TEXT_COUNT_MAX;
-      string = (char *)xmalloc (1 + string_size);
 
       int i = 0;
       while (i < string_size)
 	{
 	  if (incoming_length == 1)
-	    string[i++] = *incoming;
+	    {
+	      string.push_back (*incoming);
+	      i++;
+	    }
 	  else
 	    {
-	      strncpy (string + i, incoming, incoming_length);
+	      string.append (incoming, static_cast<size_t> (incoming_length));
 	      i += incoming_length;
 	    }
 	}
@@ -842,24 +721,21 @@ _rl_insert_char (int count, int c)
       while (count)
 	{
 	  decreaser = (count > TEXT_COUNT_MAX) ? TEXT_COUNT_MAX : count;
-	  string[decreaser*incoming_length] = '\0';
+	  string.resize (static_cast<size_t> (decreaser * incoming_length));
 	  rl_insert_text (string);
 	  count -= decreaser;
 	}
 
-      xfree (string);
       incoming_length = 0;
-      stored_count = 0;
+      _rl_stored_count = 0;
 #else /* !HANDLE_MULTIBYTE */
-      char str[TEXT_COUNT_MAX+1];
-
       for (int i = 0; i < TEXT_COUNT_MAX; i++)
-	str[i] = c;
+	string.push_back (c);
 
       while (count)
 	{
 	  decreaser = (count > TEXT_COUNT_MAX ? TEXT_COUNT_MAX : count);
-	  str[decreaser] = '\0';
+	  string.resize (decreaser);
 	  rl_insert_text (str);
 	  count -= decreaser;
 	}
@@ -880,18 +756,15 @@ _rl_insert_char (int count, int c)
       else
 	{
 	  /* Inserting a single character. */
-	  char str[2];
-
-	  str[1] = '\0';
-	  str[0] = c;
-	  rl_insert_text (str);
+	  string.push_back (static_cast<char> (c));
+	  rl_insert_text (string);
 	}
     }
 #if defined (HANDLE_MULTIBYTE)
   else
     {
       rl_insert_text (incoming);
-      stored_count = 0;
+      _rl_stored_count = 0;
     }
 #endif
 
@@ -902,7 +775,7 @@ _rl_insert_char (int count, int c)
    If C introduces a multibyte character sequence, read the entire sequence
    before starting the overwrite loop. */
 int
-_rl_overwrite_char (int count, int c)
+Readline::_rl_overwrite_char (int count, int c)
 {
   int i;
 #if defined (HANDLE_MULTIBYTE)
@@ -910,7 +783,7 @@ _rl_overwrite_char (int count, int c)
   int k;
 
   /* Read an entire multibyte character sequence to insert COUNT times. */
-  if (count > 0 && MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+  if (count > 0 && MB_CUR_MAX > 1 && !rl_byte_oriented)
     k = _rl_read_mbstring (c, mbkey, MB_LEN_MAX);
 #endif
 
@@ -919,13 +792,13 @@ _rl_overwrite_char (int count, int c)
   for (i = 0; i < count; i++)
     {
 #if defined (HANDLE_MULTIBYTE)
-      if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+      if (MB_CUR_MAX > 1 && !rl_byte_oriented)
 	rl_insert_text (mbkey);
       else
 #endif
 	_rl_insert_char (1, c);
 
-      if (rl_point < rl_end)
+      if (rl_point < rl_line_buffer.size ())
 	rl_delete (1, c);
     }
 
@@ -935,21 +808,22 @@ _rl_overwrite_char (int count, int c)
 }
 
 int
-rl_insert (int count, int c)
+Readline::rl_insert (int count, int c)
 {
-  int r = (rl_insert_mode == RL_IM_INSERT) ? _rl_insert_char (count, c) : _rl_overwrite_char (count, c);
+  int r = (rl_insert_mode == RL_IM_INSERT) ? _rl_insert_char (count, c)
+					   : _rl_overwrite_char (count, c);
 
   /* XXX -- attempt to batch-insert pending input that maps to self-insert */
   int x = 0;
-  int n = (unsigned short)-2;
+  int n = -2;
   while (_rl_optimize_typeahead &&
 	 rl_num_chars_to_read == 0 &&
-	 (RL_ISSTATE (RL_STATE_INPUTPENDING|RL_STATE_MACROINPUT) == 0) &&
+	 (RL_ISSTATE (RL_STATE_INPUTPENDING | RL_STATE_MACROINPUT) == 0) &&
 	 _rl_pushed_input_available () == 0 &&
 	 _rl_input_queued (0) &&
 	 (n = rl_read_key ()) > 0 &&
-	 _rl_keymap[(unsigned char)n].type == ISFUNC &&
-	 _rl_keymap[(unsigned char)n].function == rl_insert)
+	 _rl_keymap[n & 0xff].type == ISFUNC &&
+	 _rl_keymap[n & 0xff].value.function == &Readline::rl_insert)
     {
       r = (rl_insert_mode == RL_IM_INSERT) ? _rl_insert_char (1, n) : _rl_overwrite_char (1, n);
       /* _rl_insert_char keeps its own set of pending characters to compose a
@@ -960,7 +834,7 @@ rl_insert (int count, int c)
 	 We don't want to call rl_insert_next if _rl_insert_char has already
 	 stored the character in the pending_bytes array because that will
 	 result in doubled input. */
-      n = (unsigned short)-2;
+      n = -2;
       x++;		/* count of bytes of typeahead read, currently unused */
       if (r == 1)	/* read partial multibyte character */
 	continue;
@@ -968,22 +842,23 @@ rl_insert (int count, int c)
 	break;
     }
 
-  if (n != (unsigned short)-2)		/* -2 = sentinel value for having inserted N */
+  if (n != -2)		/* -2 = sentinel value for having inserted N */
     {
       /* setting rl_pending_input inhibits setting rl_last_func so we do it
 	 ourselves here */
-      rl_last_func = rl_insert;
+      rl_last_func = &Readline::rl_insert;
       _rl_reset_argument ();
-      rl_executing_keyseq[rl_key_sequence_length = 0] = '\0';
-      r = rl_execute_next (n);
+      rl_executing_keyseq.clear ();
+      rl_execute_next (n);
+      return 0;
     }
 
   return r;
 }
 
 /* Insert the next typed character verbatim. */
-static int
-_rl_insert_next (int count)
+int
+Readline::_rl_insert_next (int count)
 {
   int c;
 
@@ -995,19 +870,19 @@ _rl_insert_next (int count)
     return 1;
 
   if (RL_ISSTATE (RL_STATE_MACRODEF))
-    _rl_add_macro_char (c);
+    _rl_add_macro_char (static_cast<char> (c));
 
 #if defined (HANDLE_SIGNALS)
   if (RL_ISSTATE (RL_STATE_CALLBACK) == 0)
     _rl_restore_tty_signals ();
 #endif
 
-  return (_rl_insert_char (count, c));
+  return _rl_insert_char (count, c);
 }
 
 #if defined (READLINE_CALLBACKS)
-static int
-_rl_insert_next_callback (_rl_callback_generic_arg *data)
+int
+Readline::_rl_insert_next_callback (_rl_callback_generic_arg *data)
 {
   int count = data->count;
   int r = 0;
@@ -1024,8 +899,8 @@ _rl_insert_next_callback (_rl_callback_generic_arg *data)
     }
 
   /* Deregister function, let rl_callback_read_char deallocate data */
-  _rl_callback_func = 0;
-  _rl_want_redisplay = 1;
+  _rl_callback_func = nullptr;
+  _rl_want_redisplay = true;
 
   if (count == 0)
     return r;
@@ -1035,7 +910,7 @@ _rl_insert_next_callback (_rl_callback_generic_arg *data)
 #endif
 
 int
-rl_quoted_insert (int count, int key)
+Readline::rl_quoted_insert (int count, int)
 {
   /* Let's see...should the callback interface futz with signal handling? */
 #if defined (HANDLE_SIGNALS)
@@ -1046,9 +921,9 @@ rl_quoted_insert (int count, int key)
 #if defined (READLINE_CALLBACKS)
   if (RL_ISSTATE (RL_STATE_CALLBACK))
     {
-      _rl_callback_data = _rl_callback_data_alloc (count);
-      _rl_callback_func = _rl_insert_next_callback;
-      return (0);
+      _rl_callback_data = new _rl_callback_generic_arg (count);
+      _rl_callback_func = &Readline::_rl_insert_next_callback;
+      return 0;
     }
 #endif
 
@@ -1068,28 +943,29 @@ rl_quoted_insert (int count, int key)
 
 /* Insert a tab character. */
 int
-rl_tab_insert (int count, int key)
+Readline::rl_tab_insert (int count, int)
 {
-  return (_rl_insert_char (count, '\t'));
+  return _rl_insert_char (count, '\t');
 }
 
 /* What to do when a NEWLINE is pressed.  We accept the whole line.
    KEY is the key that invoked this command.  I guess it could have
    meaning in the future. */
 int
-rl_newline (int count, int key)
+Readline::rl_newline (int, int)
 {
   if (rl_mark_active_p ())
     {
       rl_deactivate_mark ();
-      (*rl_redisplay_function) ();
-      _rl_want_redisplay = 0;
+      ((*this).*rl_redisplay_function) ();
+      _rl_want_redisplay = false;
     }
 
-  rl_done = 1;
+  rl_done = true;
 
   if (_rl_history_preserve_point)
-    _rl_history_saved_point = (rl_point == rl_end) ? -1 : rl_point;
+    _rl_history_saved_point = (rl_point == rl_line_buffer.size ()) ?
+					static_cast<unsigned int> (-1) : rl_point;
 
   RL_SETSTATE(RL_STATE_DONE);
 
@@ -1097,18 +973,19 @@ rl_newline (int count, int key)
   if (rl_editing_mode == vi_mode)
     {
       _rl_vi_done_inserting ();
-      if (_rl_vi_textmod_command (_rl_vi_last_command) == 0)	/* XXX */
+      if (!_rl_vi_textmod_command (_rl_vi_last_command))	/* XXX */
 	_rl_vi_reset_last ();
     }
 #endif /* VI_MODE */
 
   /* If we've been asked to erase empty lines, suppress the final update,
      since _rl_update_final calls rl_crlf(). */
-  if (rl_erase_empty_line && rl_point == 0 && rl_end == 0)
+  if (rl_erase_empty_line && rl_point == 0 && rl_line_buffer.empty ())
     return 0;
 
   if (_rl_echoing_p)
     _rl_update_final ();
+
   return 0;
 }
 
@@ -1117,7 +994,7 @@ rl_newline (int count, int key)
    is just a stub, you bind keys to it and the code in _rl_dispatch ()
    is special cased. */
 int
-rl_do_lowercase_version (int ignore1, int ignore2)
+Readline::rl_do_lowercase_version (int, int)
 {
   return 0;
 }
@@ -1126,18 +1003,16 @@ rl_do_lowercase_version (int ignore1, int ignore2)
    rubout in overwrite mode has one oddity:  it replaces a control
    character that's displayed as two characters (^X) with two spaces. */
 int
-_rl_overwrite_rubout (int count, int key)
+Readline::_rl_overwrite_rubout (int count, int key)
 {
-  int opoint;
-  int i, l;
-
   if (rl_point == 0)
     {
       rl_ding ();
       return 1;
     }
 
-  opoint = rl_point;
+  unsigned int opoint = rl_point;
+  int i, l;
 
   /* L == number of spaces to insert */
   for (i = l = 0; i < count; i++)
@@ -1154,7 +1029,7 @@ _rl_overwrite_rubout (int count, int key)
     rl_delete_text (opoint, rl_point);
 
   /* Emacs puts point at the beginning of the sequence of spaces. */
-  if (rl_point < rl_end)
+  if (rl_point < rl_line_buffer.size ())
     {
       opoint = rl_point;
       _rl_insert_char (l, ' ');
@@ -1168,10 +1043,10 @@ _rl_overwrite_rubout (int count, int key)
 
 /* Rubout the character behind point. */
 int
-rl_rubout (int count, int key)
+Readline::rl_rubout (int count, int key)
 {
   if (count < 0)
-    return (rl_delete (-count, key));
+    return rl_delete (-count, key);
 
   if (!rl_point)
     {
@@ -1180,20 +1055,17 @@ rl_rubout (int count, int key)
     }
 
   if (rl_insert_mode == RL_IM_OVERWRITE)
-    return (_rl_overwrite_rubout (count, key));
+    return _rl_overwrite_rubout (count, key);
 
-  return (_rl_rubout_char (count, key));
+  return _rl_rubout_char (count, key);
 }
 
 int
-_rl_rubout_char (int count, int key)
+Readline::_rl_rubout_char (int count, int key)
 {
-  int orig_point;
-  unsigned char c;
-
   /* Duplicated code because this is called from other parts of the library. */
   if (count < 0)
-    return (rl_delete (-count, key));
+    return rl_delete (-count, key);
 
   if (rl_point == 0)
     {
@@ -1201,7 +1073,7 @@ _rl_rubout_char (int count, int key)
       return 1;
     }
 
-  orig_point = rl_point;
+  unsigned int orig_point = rl_point;
   if (count > 1 || rl_explicit_arg)
     {
       rl_backward_char (count, key);
@@ -1209,13 +1081,12 @@ _rl_rubout_char (int count, int key)
     }
   else if (MB_CUR_MAX == 1 || rl_byte_oriented)
     {
-      c = rl_line_buffer[--rl_point];
+      int c = static_cast<unsigned char> (rl_line_buffer[--rl_point]);
       rl_delete_text (rl_point, orig_point);
       /* The erase-at-end-of-line hack is of questionable merit now. */
-      if (rl_point == rl_end && ISPRINT ((unsigned char)c) && _rl_last_c_pos)
+      if (rl_point == rl_line_buffer.size () && std::isprint (c) && _rl_last_c_pos)
 	{
-	  int l;
-	  l = rl_character_len (c, rl_point);
+	  unsigned int l = rl_character_len (c, rl_point);
 	  _rl_erase_at_end_of_line (l);
 	}
     }
@@ -1231,14 +1102,12 @@ _rl_rubout_char (int count, int key)
 /* Delete the character under the cursor.  Given a numeric argument,
    kill that many characters instead. */
 int
-rl_delete (int count, int key)
+Readline::rl_delete (int count, int key)
 {
-  int xpoint;
-
   if (count < 0)
-    return (_rl_rubout_char (-count, key));
+    return _rl_rubout_char (-count, key);
 
-  if (rl_point == rl_end)
+  if (rl_point == rl_line_buffer.size ())
     {
       rl_ding ();
       return 1;
@@ -1246,8 +1115,8 @@ rl_delete (int count, int key)
 
   if (count > 1 || rl_explicit_arg)
     {
-      xpoint = rl_point;
-      if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+      unsigned int xpoint = rl_point;
+      if (MB_CUR_MAX > 1 && !rl_byte_oriented)
 	rl_forward_char (count, key);
       else
 	rl_forward_byte (count, key);
@@ -1257,7 +1126,7 @@ rl_delete (int count, int key)
     }
   else
     {
-      xpoint = MB_NEXTCHAR (rl_line_buffer, rl_point, 1, MB_FIND_NONZERO);
+      unsigned int xpoint = MB_NEXTCHAR (rl_line_buffer, rl_point, 1, MB_FIND_NONZERO);
       rl_delete_text (rl_point, xpoint);
     }
   return 0;
@@ -1268,26 +1137,24 @@ rl_delete (int count, int key)
    behind the cursor is deleted.  COUNT is obeyed and may be used
    to delete forward or backward that many characters. */
 int
-rl_rubout_or_delete (int count, int key)
+Readline::rl_rubout_or_delete (int count, int key)
 {
-  if (rl_end != 0 && rl_point == rl_end)
-    return (_rl_rubout_char (count, key));
+  if (rl_end () != 0 && rl_point == rl_end ())
+    return _rl_rubout_char (count, key);
   else
-    return (rl_delete (count, key));
+    return rl_delete (count, key);
 }
 
 /* Delete all spaces and tabs around point. */
 int
-rl_delete_horizontal_space (int count, int ignore)
+Readline::rl_delete_horizontal_space (int, int)
 {
-  int start;
-
   while (rl_point && whitespace (rl_line_buffer[rl_point - 1]))
     rl_point--;
 
-  start = rl_point;
+  unsigned int start = rl_point;
 
-  while (rl_point < rl_end && whitespace (rl_line_buffer[rl_point]))
+  while (rl_point < rl_end () && whitespace (rl_line_buffer[rl_point]))
     rl_point++;
 
   if (start != rl_point)
@@ -1296,9 +1163,6 @@ rl_delete_horizontal_space (int count, int ignore)
       rl_point = start;
     }
 
-  if (rl_point < 0)
-    rl_point = 0;
-
   return 0;
 }
 
@@ -1306,12 +1170,13 @@ rl_delete_horizontal_space (int count, int ignore)
    is caught before this is invoked, so this really does the same thing as
    delete-char-or-list-or-eof, as long as it's bound to the eof character. */
 int
-rl_delete_or_show_completions (int count, int key)
+Readline::rl_delete_or_show_completions (int count, int key)
 {
+  size_t rl_end = rl_line_buffer.size ();
   if (rl_end != 0 && rl_point == rl_end)
-    return (rl_possible_completions (count, key));
+    return rl_possible_completions (count, key);
   else
-    return (rl_delete (count, key));
+    return rl_delete (count, key);
 }
 
 #ifndef RL_COMMENT_BEGIN_DEFAULT
@@ -1321,10 +1186,9 @@ rl_delete_or_show_completions (int count, int key)
 /* Turn the current line into a comment in shell history.
    A K*rn shell style function. */
 int
-rl_insert_comment (int count, int key)
+Readline::rl_insert_comment (int, int key)
 {
   const char *rl_comment_text;
-  int rl_comment_len;
 
   rl_beg_of_line (1, key);
   rl_comment_text = _rl_comment_begin ? _rl_comment_begin : RL_COMMENT_BEGIN_DEFAULT;
@@ -1333,17 +1197,17 @@ rl_insert_comment (int count, int key)
     rl_insert_text (rl_comment_text);
   else
     {
-      rl_comment_len = strlen (rl_comment_text);
-      if (STREQN (rl_comment_text, rl_line_buffer, rl_comment_len))
+      unsigned int rl_comment_len = static_cast<unsigned int> (std::strlen (rl_comment_text));
+      if (STREQN (rl_comment_text, rl_line_buffer.c_str (), rl_comment_len))
 	rl_delete_text (rl_point, rl_point + rl_comment_len);
       else
 	rl_insert_text (rl_comment_text);
     }
 
-  (*rl_redisplay_function) ();
+  ((*this).*rl_redisplay_function) ();
   rl_newline (1, '\n');
 
-  return (0);
+  return 0;
 }
 
 /* **************************************************************** */
@@ -1352,30 +1216,25 @@ rl_insert_comment (int count, int key)
 /*								    */
 /* **************************************************************** */
 
-/* The three kinds of things that we know how to do. */
-#define UpCase 1
-#define DownCase 2
-#define CapCase 3
-
 /* Uppercase the word at point. */
 int
-rl_upcase_word (int count, int key)
+Readline::rl_upcase_word (int count, int)
 {
-  return (rl_change_case (count, UpCase));
+  return rl_change_case (count, UpCase);
 }
 
 /* Lowercase the word at point. */
 int
-rl_downcase_word (int count, int key)
+Readline::rl_downcase_word (int count, int)
 {
-  return (rl_change_case (count, DownCase));
+  return rl_change_case (count, DownCase);
 }
 
 /* Upcase the first letter, downcase the rest. */
 int
-rl_capitalize_word (int count, int key)
+Readline::rl_capitalize_word (int count, int)
 {
- return (rl_change_case (count, CapCase));
+ return rl_change_case (count, CapCase);
 }
 
 /* The meaty function.
@@ -1383,17 +1242,14 @@ rl_capitalize_word (int count, int key)
    OP is one of UpCase, DownCase, or CapCase.
    If a negative argument is given, leave point where it started,
    otherwise, leave it where it moves to. */
-static int
-rl_change_case (int count, int op)
+int
+Readline::rl_change_case (int count, case_change_type op)
 {
-  int start, next, end;
-  int inword, nc, nop;
-  wchar_t c;
+  unsigned int start, end;
 #if defined (HANDLE_MULTIBYTE)
   wchar_t wc, nwc;
-  char mb[MB_LEN_MAX+1];
-  int mlen;
-  size_t m;
+  char mb[MB_LEN_MAX + 1];
+  size_t mlen, m;
   mbstate_t mps;
 #endif
 
@@ -1408,97 +1264,77 @@ rl_change_case (int count, int op)
     }
 
   if (count < 0)
-    SWAP (start, end);
+    std::swap (start, end);
 
 #if defined (HANDLE_MULTIBYTE)
-  memset (&mps, 0, sizeof (mbstate_t));
+  std::memset (&mps, 0, sizeof (mbstate_t));
 #endif
 
   /* We are going to modify some text, so let's prepare to undo it. */
   rl_modifying (start, end);
 
-  inword = 0;
+  bool inword = false;
   while (start < end)
     {
-      c = _rl_char_value (rl_line_buffer, start);
+      wchar_t c = _rl_char_value (rl_line_buffer, start);
+
       /*  This assumes that the upper and lower case versions are the same width. */
-      next = MB_NEXTCHAR (rl_line_buffer, start, 1, MB_FIND_NONZERO);
+      unsigned int next = MB_NEXTCHAR (rl_line_buffer, start, 1, MB_FIND_NONZERO);
 
       if (_rl_walphabetic (c) == 0)
 	{
-	  inword = 0;
+	  inword = false;
 	  start = next;
 	  continue;
 	}
 
+      case_change_type nop;
       if (op == CapCase)
 	{
 	  nop = inword ? DownCase : UpCase;
-	  inword = 1;
+	  inword = true;
 	}
       else
 	nop = op;
+
       /* Can't check isascii here; some languages (e.g, Turkish) have
 	 multibyte upper and lower case equivalents of single-byte ascii
 	 characters */
       if (MB_CUR_MAX == 1 || rl_byte_oriented)
 	{
-	  nc = (nop == UpCase) ? _rl_to_upper (c) : _rl_to_lower (c);
-	  rl_line_buffer[start] = nc;
+	  int nc = (nop == UpCase) ? _rl_to_upper (c) : _rl_to_lower (c);
+	  rl_line_buffer[start] = static_cast<char> (nc);
 	}
 #if defined (HANDLE_MULTIBYTE)
       else
 	{
-	  m = mbrtowc (&wc, rl_line_buffer + start, end - start, &mps);
+	  m = std::mbrtowc (&wc, rl_line_buffer.c_str () + start, end - start, &mps);
 	  if (MB_INVALIDCH (m))
-	    wc = (wchar_t)rl_line_buffer[start];
+	    wc = static_cast<wchar_t> (rl_line_buffer[start]);
 	  else if (MB_NULLWCH (m))
 	    wc = L'\0';
-	  nwc = (nop == UpCase) ? _rl_to_wupper (wc) : _rl_to_wlower (wc);
+	  nwc = static_cast<wchar_t> ((nop == UpCase) ?	_rl_to_wupper (static_cast<wint_t> (wc))
+						      : _rl_to_wlower (static_cast<wint_t> (wc)));
 	  if  (nwc != wc)	/*  just skip unchanged characters */
 	    {
-	      char *s, *e;
 	      mbstate_t ts;
 
-	      memset (&ts, 0, sizeof (mbstate_t));
-	      mlen = wcrtomb (mb, nwc, &ts);
-	      if (mlen < 0)
+	      std::memset (&ts, 0, sizeof (mbstate_t));
+	      mlen = std::wcrtomb (mb, nwc, &ts);
+	      if (static_cast<ssize_t> (mlen) < 0)
 		{
 		  nwc = wc;
-		  memset (&ts, 0, sizeof (mbstate_t));
-		  mlen = wcrtomb (mb, nwc, &ts);
-		  if (mlen < 0)		/* should not happen */
-		    strncpy (mb, rl_line_buffer + start, mlen = m);
+		  std::memset (&ts, 0, sizeof (mbstate_t));
+		  mlen = std::wcrtomb (mb, nwc, &ts);
+		  if (static_cast<ssize_t> (mlen) < 0)		/* should not happen */
+		    mlen = m = 0;
 		}
-	      if (mlen > 0)
-		mb[mlen] = '\0';
-	      /* what to do if m != mlen? adjust below */
+	      /* what to do if m != mlen? C++ makes replacement simple. */
 	      /* m == length of old char, mlen == length of new char */
-	      s = rl_line_buffer + start;
-	      e = rl_line_buffer + rl_end;
 	      if (m == mlen)
-		memcpy (s, mb, mlen);
-	      else if (m > mlen)
-		{
-		  memcpy (s, mb, mlen);
-		  memmove (s + mlen, s + m, (e - s) - m);
-		  next -= m - mlen;	/* next char changes */
-		  end -= m - mlen;	/* end of word changes */
-		  rl_end -= m - mlen;	/* end of line changes */
-		  rl_line_buffer[rl_end] = 0;
-		}
-	      else if (m < mlen)
-		{
-		  rl_extend_line_buffer (rl_end + mlen + (e - s) - m + 2);
-		  s = rl_line_buffer + start;	/* have to redo this */
-		  e = rl_line_buffer + rl_end;
-		  memmove (s + mlen, s + m, (e - s) - m);
-		  memcpy (s, mb, mlen);
-		  next += mlen - m;	/* next char changes */
-		  end += mlen - m;	/* end of word changes */
-		  rl_end += mlen - m;	/* end of line changes */
-		  rl_line_buffer[rl_end] = 0;
-		}
+		std::memcpy (&rl_line_buffer[start], mb, mlen);
+	      else
+		rl_line_buffer.replace (start, m, mb, mlen);
 	    }
 	}
 #endif
@@ -1519,11 +1355,11 @@ rl_change_case (int count, int op)
 /* Transpose the words at point.  If point is at the end of the line,
    transpose the two words before point. */
 int
-rl_transpose_words (int count, int key)
+Readline::rl_transpose_words (int count, int key)
 {
   char *word1, *word2;
-  int w1_beg, w1_end, w2_beg, w2_end;
-  int orig_point = rl_point;
+  unsigned int w1_beg, w1_end, w2_beg, w2_end;
+  unsigned int orig_point = rl_point;
 
   if (!count)
     return 0;
@@ -1570,8 +1406,8 @@ rl_transpose_words (int count, int key)
 
   /* I think that does it. */
   rl_end_undo_group ();
-  xfree (word1);
-  xfree (word2);
+  delete[] word1;
+  delete[] word2;
 
   return 0;
 }
@@ -1579,20 +1415,12 @@ rl_transpose_words (int count, int key)
 /* Transpose the characters at point.  If point is at the end of the line,
    then transpose the characters before point. */
 int
-rl_transpose_chars (int count, int key)
+Readline::rl_transpose_chars (int count, int)
 {
-#if defined (HANDLE_MULTIBYTE)
-  char *dummy;
-  int i;
-#else
-  char dummy[2];
-#endif
-  int char_length, prev_point;
-
   if (count == 0)
     return 0;
 
-  if (!rl_point || rl_end < 2)
+  if (!rl_point || rl_line_buffer.size () < 2)
     {
       rl_ding ();
       return 1;
@@ -1600,36 +1428,38 @@ rl_transpose_chars (int count, int key)
 
   rl_begin_undo_group ();
 
-  if (rl_point == rl_end)
+  if (rl_point == rl_line_buffer.size ())
     {
       rl_point = MB_PREVCHAR (rl_line_buffer, rl_point, MB_FIND_NONZERO);
       count = 1;
     }
 
-  prev_point = rl_point;
+  unsigned int prev_point = rl_point;
   rl_point = MB_PREVCHAR (rl_line_buffer, rl_point, MB_FIND_NONZERO);
 
 #if defined (HANDLE_MULTIBYTE)
-  char_length = prev_point - rl_point;
-  dummy = (char *)xmalloc (char_length + 1);
+  unsigned int char_length = prev_point - rl_point;
+  char *dummy = new char[char_length + 1];
+  unsigned int i;
   for (i = 0; i < char_length; i++)
     dummy[i] = rl_line_buffer[rl_point + i];
   dummy[i] = '\0';
 #else
-  dummy[0] = rl_line_buffer[rl_point];
-  dummy[char_length = 1] = '\0';
+  unsigned int char_length = 1;
+  char dummy[2] = { rl_line_buffer[rl_point], '\0' };
 #endif
 
   rl_delete_text (rl_point, rl_point + char_length);
 
-  rl_point = _rl_find_next_mbchar (rl_line_buffer, rl_point, count, MB_FIND_NONZERO);
+  rl_point = _rl_find_next_mbchar (rl_line_buffer, rl_point,
+				   count, MB_FIND_NONZERO);
 
   _rl_fix_point (0);
   rl_insert_text (dummy);
   rl_end_undo_group ();
 
 #if defined (HANDLE_MULTIBYTE)
-  xfree (dummy);
+  delete[] dummy;
 #endif
 
   return 0;
@@ -1643,24 +1473,23 @@ rl_transpose_chars (int count, int key)
 
 int
 #if defined (HANDLE_MULTIBYTE)
-_rl_char_search_internal (int count, int dir, char *smbchar, int len)
+Readline::_rl_char_search_internal (int count, int dir, char *smbchar, unsigned int len)
 #else
-_rl_char_search_internal (int count, int dir, int schar)
+Readline::_rl_char_search_internal (int count, int dir, int schar)
 #endif
 {
-  int pos, inc;
 #if defined (HANDLE_MULTIBYTE)
-  int prepos;
+  size_t prepos;
 #endif
 
   if (dir == 0)
     return 1;
 
-  pos = rl_point;
-  inc = (dir < 0) ? -1 : 1;
+  unsigned int pos = rl_point;
+  int inc = (dir < 0) ? -1 : 1;
   while (count)
     {
-      if ((dir < 0 && pos <= 0) || (dir > 0 && pos >= rl_end))
+      if ((dir < 0 && pos == 0) || (dir > 0 && pos >= rl_end ()))
 	{
 	  rl_ding ();
 	  return 1;
@@ -1675,7 +1504,7 @@ _rl_char_search_internal (int count, int dir, int schar)
       do
 	{
 #if defined (HANDLE_MULTIBYTE)
-	  if (_rl_is_mbchar_matched (rl_line_buffer, pos, rl_end, smbchar, len))
+	  if (_rl_is_mbchar_matched (rl_line_buffer.c_str (), pos, rl_end (), smbchar, len))
 #else
 	  if (rl_line_buffer[pos] == schar)
 #endif
@@ -1700,7 +1529,7 @@ _rl_char_search_internal (int count, int dir, int schar)
       while ((dir < 0) ? pos-- : ++pos < rl_end);
 #endif
     }
-  return (0);
+  return 0;
 }
 
 /* Search COUNT times for a character read from the current input stream.
@@ -1708,8 +1537,8 @@ _rl_char_search_internal (int count, int dir, int schar)
    the search goes in BDIR.  So much is dependent on HANDLE_MULTIBYTE
    that there are two separate versions of this function. */
 #if defined (HANDLE_MULTIBYTE)
-static int
-_rl_char_search (int count, int fdir, int bdir)
+int
+Readline::_rl_char_search (int count, int fdir, int bdir)
 {
   char mbchar[MB_LEN_MAX];
   int mb_len;
@@ -1720,9 +1549,11 @@ _rl_char_search (int count, int fdir, int bdir)
     return 1;
 
   if (count < 0)
-    return (_rl_char_search_internal (-count, bdir, mbchar, mb_len));
+    return _rl_char_search_internal (-count, bdir, mbchar,
+				     static_cast<unsigned int> (mb_len));
   else
-    return (_rl_char_search_internal (count, fdir, mbchar, mb_len));
+    return _rl_char_search_internal (count, fdir, mbchar,
+				     static_cast<unsigned int> (mb_len));
 }
 #else /* !HANDLE_MULTIBYTE */
 static int
@@ -1735,55 +1566,55 @@ _rl_char_search (int count, int fdir, int bdir)
     return 1;
 
   if (count < 0)
-    return (_rl_char_search_internal (-count, bdir, c));
+    return _rl_char_search_internal (-count, bdir, c);
   else
-    return (_rl_char_search_internal (count, fdir, c));
+    return _rl_char_search_internal (count, fdir, c);
 }
 #endif /* !HANDLE_MULTIBYTE */
 
 #if defined (READLINE_CALLBACKS)
-static int
-_rl_char_search_callback (_rl_callback_generic_arg *data)
+int
+Readline::_rl_char_search_callback (_rl_callback_generic_arg *data)
 {
-  _rl_callback_func = 0;
-  _rl_want_redisplay = 1;
+  _rl_callback_func = nullptr;
+  _rl_want_redisplay = true;
 
-  return (_rl_char_search (data->count, data->i1, data->i2));
+  return _rl_char_search (data->count, data->i1, data->i2);
 }
 #endif
 
 int
-rl_char_search (int count, int key)
+Readline::rl_char_search (int count, int)
 {
 #if defined (READLINE_CALLBACKS)
   if (RL_ISSTATE (RL_STATE_CALLBACK))
     {
-      _rl_callback_data = _rl_callback_data_alloc (count);
+      _rl_callback_data = new _rl_callback_generic_arg (count);
       _rl_callback_data->i1 = FFIND;
       _rl_callback_data->i2 = BFIND;
-      _rl_callback_func = _rl_char_search_callback;
-      return (0);
+      _rl_callback_func = &Readline::_rl_char_search_callback;
+      return 0;
     }
 #endif
 
-  return (_rl_char_search (count, FFIND, BFIND));
+  return _rl_char_search (count, FFIND, BFIND);
 }
 
 int
-rl_backward_char_search (int count, int key)
+Readline::rl_backward_char_search (int count, int)
 {
 #if defined (READLINE_CALLBACKS)
   if (RL_ISSTATE (RL_STATE_CALLBACK))
     {
-      _rl_callback_data = _rl_callback_data_alloc (count);
+      _rl_callback_data = new _rl_callback_generic_arg (count);
       _rl_callback_data->i1 = BFIND;
       _rl_callback_data->i2 = FFIND;
-      _rl_callback_func = _rl_char_search_callback;
-      return (0);
+      _rl_callback_func = &Readline::_rl_char_search_callback;
+      return 0;
     }
 #endif
 
-  return (_rl_char_search (count, BFIND, FFIND));
+  return _rl_char_search (count, BFIND, FFIND);
 }
 
 /* **************************************************************** */
@@ -1792,75 +1623,21 @@ rl_backward_char_search (int count, int key)
 /*								    */
 /* **************************************************************** */
 
-/* Set the mark at POSITION. */
-int
-_rl_set_mark_at_pos (int position)
-{
-  if (position < 0 || position > rl_end)
-    return 1;
-
-  rl_mark = position;
-  return 0;
-}
-
 /* A bindable command to set the mark. */
 int
-rl_set_mark (int count, int key)
+Readline::rl_set_mark (int count, int)
 {
-  return (_rl_set_mark_at_pos (rl_explicit_arg ? count : rl_point));
+  return _rl_set_mark_at_pos (rl_explicit_arg ? static_cast<unsigned int> (count)
+					      : rl_point);
 }
 
 /* Exchange the position of mark and point. */
 int
-rl_exchange_point_and_mark (int count, int key)
+Readline::rl_exchange_point_and_mark (int, int)
 {
-  if (rl_mark > rl_end)
-    rl_mark = -1;
-
-  if (rl_mark < 0)
-    {
-      rl_ding ();
-      rl_mark = 0;		/* like _RL_FIX_POINT */
-      return 1;
-    }
-  else
-    {
-      SWAP (rl_point, rl_mark);
-      rl_activate_mark ();
-    }
-
+  std::swap (rl_point, rl_mark);
+  rl_activate_mark ();
   return 0;
 }
 
-/* Active mark support */
-
-/* Is the region active? */
-static bool mark_active = false;
-
-/* Does the current command want the mark to remain active when it completes? */
-bool _rl_keep_mark_active;
-
-void
-rl_keep_mark_active (void)
-{
-  _rl_keep_mark_active = true;
-}
-
-void
-rl_activate_mark (void)
-{
-  mark_active = true;
-  rl_keep_mark_active ();
-}
-
-void
-rl_deactivate_mark (void)
-{
-  mark_active = false;
-}
-
-int
-rl_mark_active_p (void)
-{
-  return (mark_active);
-}
+}  // namespace readline

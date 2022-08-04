@@ -121,7 +121,6 @@ $END
 #  include <unistd.h>
 #endif
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include "../shell.h"
@@ -129,9 +128,12 @@ $END
 #include "../test.h"
 #include "common.h"
 
+namespace bash
+{
+
 /* TEST/[ builtin. */
 int
-test_builtin (WORD_LIST *list)
+Shell::test_builtin (WORD_LIST *list)
 {
   char **argv;
   int argc, result;
@@ -144,15 +146,17 @@ test_builtin (WORD_LIST *list)
       if (this_command_name[0] == '[' && !this_command_name[1])
 	{
 	  builtin_error (_("missing `]'"));
-	  return (EX_BADUSAGE);
+	  return EX_BADUSAGE;
 	}
 
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   argv = make_builtin_argv  (list, &argc);
   result = test_command (argc, argv);
   free ((char *)argv);
 
-  return (result);
+  return result;
 }
+
+}  // namespace bash

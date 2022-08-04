@@ -19,48 +19,11 @@
 # include <config.h>
 #endif
 
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
 
 #include "plural-exp.h"
-
-#if (defined __GNUC__ && !(__APPLE_CC__ > 1) && !defined __cplusplus) \
-    || (defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L)
-
-/* These structs are the constant expression for the germanic plural
-   form determination.  It represents the expression  "n != 1".  */
-static const struct expression plvar =
-{
-  .nargs = 0,
-  .operation = var,
-};
-static const struct expression plone =
-{
-  .nargs = 0,
-  .operation = num,
-  .val =
-  {
-    .num = 1
-  }
-};
-struct expression GERMANIC_PLURAL =
-{
-  .nargs = 2,
-  .operation = not_equal,
-  .val =
-  {
-    .args =
-    {
-      [0] = (struct expression *) &plvar,
-      [1] = (struct expression *) &plone
-    }
-  }
-};
-
-# define INIT_GERMANIC_PLURAL()
-
-#else
 
 /* For compilers without support for ISO C 99 struct/union initializers:
    Initialization at run-time.  */
@@ -90,8 +53,6 @@ init_germanic_plural ()
 
 # define INIT_GERMANIC_PLURAL() init_germanic_plural ()
 
-#endif
-
 void
 internal_function
 EXTRACT_PLURAL_EXPRESSION (const char *nullentry,
@@ -103,27 +64,27 @@ EXTRACT_PLURAL_EXPRESSION (const char *nullentry,
       const char *plural;
       const char *nplurals;
 
-      plural = strstr (nullentry, "plural=");
-      nplurals = strstr (nullentry, "nplurals=");
+      plural = ::strstr (nullentry, "plural=");
+      nplurals = ::strstr (nullentry, "nplurals=");
       if (plural == NULL || nplurals == NULL)
 	goto no_plural;
       else
 	{
-	  char *endp;
-	  unsigned long int n;
+	  const char *endp;
+	  unsigned long n;
 	  struct parse_args args;
 
 	  /* First get the number.  */
 	  nplurals += 9;
-	  while (*nplurals != '\0' && isspace ((unsigned char) *nplurals))
+	  while (*nplurals != '\0' && std::isspace (static_cast<unsigned char> (*nplurals)))
 	    ++nplurals;
 	  if (!(*nplurals >= '0' && *nplurals <= '9'))
 	    goto no_plural;
 #if defined HAVE_STRTOUL || defined _LIBC
-	  n = strtoul (nplurals, &endp, 10);
+	  n = std::strtoul (nplurals, &endp, 10);
 #else
 	  for (endp = nplurals, n = 0; *endp >= '0' && *endp <= '9'; endp++)
-	    n = n * 10 + (*endp - '0');
+	    n = n * 10 + static_cast<unsigned char> (*endp - '0');
 #endif
 	  if (nplurals == endp)
 	    goto no_plural;

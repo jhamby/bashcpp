@@ -31,28 +31,18 @@
 #endif
 #include "filecntl.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include <sys/time.h>
-#include "bashansi.h"
 
 #include "shell.h"
 
-extern time_t shell_start_time;
-
-extern int last_random_value;
+namespace bash
+{
 
 static u_bits32_t intrand32 (u_bits32_t);
-static u_bits32_t genseed (void);
-
-static u_bits32_t brand32 (void);
-static void sbrand32 (u_bits32_t);
-static void perturb_rand32 (void);
-
-/* The random number seed.  You can change this by setting RANDOM. */
-static u_bits32_t rseed = 1;
 
 /* Returns a 32-bit pseudo-random number. */
-static u_bits32_t
+static inline u_bits32_t
 intrand32 (u_bits32_t last)
 {
   /* Minimal Standard generator from
@@ -76,30 +66,32 @@ intrand32 (u_bits32_t last)
   /* Can't seed with 0. */
   ret = (last == 0) ? 123459876 : last;
   h = ret / 127773;
-  l = ret - (127773 * h);
+  l = static_cast<bits32_t> (ret) - (127773 * h);
   t = 16807 * l - 2836 * h;
-  ret = (t < 0) ? t + 0x7fffffff : t;
+  ret = static_cast<u_bits32_t> ((t < 0) ? t + 0x7fffffff : t);
 
-  return (ret);
+  return ret;
 }
 
-static u_bits32_t
-genseed ()
+u_bits32_t
+Shell::genseed ()
 {
   struct timeval tv;
   u_bits32_t iv;
 
-  gettimeofday (&tv, NULL);
-  iv = (u_bits32_t)((uintptr_t)seedrand);		/* let the compiler truncate */
-  iv = tv.tv_sec ^ tv.tv_usec ^ getpid () ^ getppid () ^ current_user.uid ^ iv;
-  return (iv);
+  ::gettimeofday (&tv, NULL);
+  iv = static_cast<u_bits32_t> (
+	reinterpret_cast<uintptr_t> (&intrand32));	// include a function ptr in the seed
+  iv = static_cast<u_bits32_t> (
+	tv.tv_sec ^ tv.tv_usec ^ ::getpid () ^ ::getppid () ^ current_user.uid ^ iv);
+  return iv;
 }
 
 #define BASH_RAND_MAX	32767		/* 0x7fff - 16 bits */
 
 /* Returns a pseudo-random number between 0 and 32767. */
 int
-brand ()
+Shell::brand ()
 {
   unsigned int ret;
 
@@ -108,72 +100,19 @@ brand ()
     ret = (rseed >> 16) ^ (rseed & 65535);
   else
     ret = rseed;
-  return (ret & BASH_RAND_MAX);
+  return ret & BASH_RAND_MAX;
 }
-
-/* Set the random number generator seed to SEED. */
-void
-sbrand (unsigned long seed)
-{
-  rseed = seed;
-  last_random_value = 0;
-}
-
-void
-seedrand ()
-{
-  u_bits32_t iv;
-
-  iv = genseed ();
-  sbrand (iv);
-}
-
-static u_bits32_t rseed32 = 1073741823;
-static int last_rand32;
-
-static int urandfd = -1;
 
 #define BASH_RAND32_MAX	0x7fffffff	/* 32 bits */
 
 /* Returns a 32-bit pseudo-random number between 0 and 4294967295. */
-static u_bits32_t
-brand32 ()
+u_bits32_t
+Shell::brand32 ()
 {
-  u_bits32_t ret;
-
   rseed32 = intrand32 (rseed32);
-  return (rseed32 & BASH_RAND32_MAX);
+  return rseed32 & BASH_RAND32_MAX;
 }
 
-static void
-sbrand32 (u_bits32_t seed)
-{
-  last_rand32 = rseed32 = seed;
-}
-
-void
-seedrand32 ()
-{
-  u_bits32_t iv;
-
-  iv = genseed ();
-  sbrand32 (iv);
-}
-
-static void
-perturb_rand32 ()
-{
-  rseed32 ^= genseed ();
-}
-
-/* Force another attempt to open /dev/urandom on the next call to get_urandom32 */
-void
-urandom_close ()
-{
-  if (urandfd >= 0)
-    close (urandfd);
-  urandfd = -1;
-}
 
 #if !defined (HAVE_GETRANDOM)
 /* Imperfect emulation of getrandom(2). */
@@ -199,7 +138,7 @@ getrandom (void *buf, size_t len, unsigned int flags)
       oflags = O_RDONLY;
       if (flags & GRND_NONBLOCK)
 	oflags |= O_NONBLOCK;
-      urandfd = open ("/dev/urandom", oflags, 0);
+      urandfd = ::open ("/dev/urandom", oflags, 0);
       if (urandfd >= 0)
 	SET_CLOSE_ON_EXEC (urandfd);
       else
@@ -208,19 +147,19 @@ getrandom (void *buf, size_t len, unsigned int flags)
 	  return -1;
 	}
     }
-  if (urandfd >= 0 && (r = read (urandfd, buf, len)) == len)
-    return (r);
+  if (urandfd >= 0 && (r = ::read (urandfd, buf, len)) == len)
+    return r;
   return -1;
 }
 #endif
 
 u_bits32_t
-get_urandom32 ()
+Shell::get_urandom32 ()
 {
   u_bits32_t ret;
 
-  if (getrandom ((void *)&ret, sizeof (ret), GRND_NONBLOCK) == sizeof (ret))
-    return (last_rand32 = ret);
+  if (getrandom (&ret, sizeof (ret), GRND_NONBLOCK) == sizeof (ret))
+    return last_rand32 = ret;
 
 #if defined (HAVE_ARC4RANDOM)
   ret = arc4random ();
@@ -231,5 +170,7 @@ get_urandom32 ()
     ret = brand32 ();
   while (ret == last_rand32);
 #endif
-  return (last_rand32 = ret);
+  return last_rand32 = ret;
 }
+
+}  // namespace bash

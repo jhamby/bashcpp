@@ -23,6 +23,9 @@
 
 #include "sig.h"	/* for sig_atomic_t */
 
+namespace bash
+{
+
 /* Non-zero means SIGINT has already occurred. */
 extern volatile sig_atomic_t interrupt_state;
 extern volatile sig_atomic_t terminating_signal;
@@ -65,7 +68,8 @@ extern volatile sig_atomic_t terminating_signal;
 
 #define CHECK_WAIT_INTR \
   do { \
-    if (wait_intr_flag && wait_signal_received && this_shell_builtin && (this_shell_builtin == wait_builtin)) \
+    if (wait_intr_flag && wait_signal_received && this_shell_builtin && \
+	(this_shell_builtin == wait_builtin)) \
       sh_longjmp (wait_intr_buf, 1); \
   } while (0)
 
@@ -78,4 +82,7 @@ extern volatile sig_atomic_t terminating_signal;
   do { \
     if (sigterm_received) termsig_handler (SIGTERM); \
   } while (0)
+
+}  // namespace bash
+
 #endif /* _QUIT_H_ */

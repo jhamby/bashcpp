@@ -18,10 +18,10 @@
 #define _VASNWPRINTF_H
 
 /* Get va_list.  */
-#include <stdarg.h>
+#include <cstdarg>
 
 /* Get wchar_t, size_t.  */
-#include <stddef.h>
+#include <cstddef>
 
 #ifdef __cplusplus
 extern "C" {

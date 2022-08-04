@@ -18,10 +18,10 @@
 #define _VASNPRINTF_H
 
 /* Get va_list.  */
-#include <stdarg.h>
+#include <cstdarg>
 
 /* Get size_t.  */
-#include <stddef.h>
+#include <cstddef>
 
 #ifndef __attribute__
 /* This feature is available in gcc versions 2.5 and later.  */

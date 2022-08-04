@@ -22,12 +22,64 @@
 #if !defined (_RL_SHELL_H_)
 #define _RL_SHELL_H_
 
-#include "rlstdc.h"
+namespace readline
+{
 
-extern char *sh_single_quote (const char *);
-extern void sh_set_lines_and_columns (int, int);
-extern char *sh_get_env_value (const char *);
-extern char *sh_get_home_dir (void);
-extern int sh_unset_nodelay_mode (int);
+// Useful helper functions used by history and readline.
+
+// Create a new copy of null-terminated string s. Free with delete[].
+static inline char *
+savestring(const char *s) {
+  return std::strcpy(new char[1 + std::strlen(s)], s);
+}
+
+// Create a new copy of C++ string s. Free with delete[].
+static inline char *
+savestring(const std::string &s) {
+  return std::strcpy(new char[1 + s.size()], s.c_str());
+}
+
+// Compare two strings for equality.
+static inline bool STREQ (const char *a, const char *b) {
+  return std::strcmp (a, b) == 0;
+}
+
+// Compare two strings for equality, up to n characters.
+static inline bool STREQN (const char *a, const char *b, size_t n) {
+  return std::strncmp (a, b, n) == 0;
+}
+
+// This is either a pure virtual class or has a default implementation,
+// depending on whether we compile this library as part of bash or not.
+
+#ifdef SHELL
+
+class ReadlineShell {
+public:
+  virtual ~ReadlineShell();
+
+  virtual char *sh_single_quote (const char *) = 0;
+  virtual void sh_set_lines_and_columns (unsigned int, unsigned int) = 0;
+  virtual char *sh_get_env_value (const char *) = 0;
+  virtual char *sh_get_home_dir () = 0;
+  virtual int sh_unset_nodelay_mode (int) = 0;
+};
+
+#else
+
+class ReadlineShell {
+public:
+  virtual ~ReadlineShell();
+
+  virtual char *sh_single_quote (const char *);
+  virtual void sh_set_lines_and_columns (unsigned int, unsigned int);
+  virtual char *sh_get_env_value (const char *);
+  virtual char *sh_get_home_dir ();
+  virtual int sh_unset_nodelay_mode (int);
+};
+
+#endif
+
+}  // namespace readline
 
 #endif /* _RL_SHELL_H_ */

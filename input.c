@@ -26,8 +26,9 @@
 #endif
 #include "filecntl.h"
 #include "posixstat.h"
-#include <stdio.h>
-#include <errno.h>
+
+#include <cstdio>
+#include <cerrno>
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
@@ -194,7 +195,7 @@ make_buffered_stream (int fd, char *buffer, size_t bufsize)
     bp->b_flag |= B_UNBUFF;
   if (O_TEXT && (fcntl (fd, F_GETFL) & O_TEXT) != 0)
     bp->b_flag |= B_TEXT;
-  return (bp);
+  return bp;
 }
 
 /* Allocate a new BUFFERED_STREAM, copy BP to it, and return the new copy. */
@@ -204,11 +205,11 @@ copy_buffered_stream (BUFFERED_STREAM *bp)
   BUFFERED_STREAM *nbp;
 
   if (!bp)
-    return ((BUFFERED_STREAM *)NULL);
+    return (BUFFERED_STREAM *)NULL;
 
   nbp = (BUFFERED_STREAM *)xmalloc (sizeof (BUFFERED_STREAM));
   xbcopy ((char *)bp, (char *)nbp, sizeof (BUFFERED_STREAM));
-  return (nbp);
+  return nbp;
 }
 
 int
@@ -306,9 +307,9 @@ check_bash_input (int fd)
   if (fd_is_bash_input (fd))
     {
       if (fd > 0)
-	return ((save_bash_input (fd, -1) == -1) ? -1 : 0);
+	return (save_bash_input (fd, -1) == -1) ? -1 : 0;
       else if (fd == 0)
-        return ((sync_buffered_stream (fd) == -1) ? -1 : 0);
+        return (sync_buffered_stream (fd) == -1) ? -1 : 0;
     }
   return 0;
 }
@@ -363,7 +364,7 @@ duplicate_buffered_stream (int fd1, int fd2)
   if (fd_is_bash_input (fd1) || (buffers[fd1] && (buffers[fd1]->b_flag & B_SHAREDBUF)))
     buffers[fd2]->b_flag |= B_SHAREDBUF;
 
-  return (fd2);
+  return fd2;
 }
 
 /* Return 1 if a seek on FD will succeed. */
@@ -382,7 +383,7 @@ fd_to_buffered_stream (int fd)
   if (fstat (fd, &sb) < 0)
     {
       close (fd);
-      return ((BUFFERED_STREAM *)NULL);
+      return (BUFFERED_STREAM *)NULL;
     }
 
   size = (fd_is_seekable (fd)) ? min (sb.st_size, MAX_INPUT_BUFFER_SIZE) : 1;
@@ -390,7 +391,7 @@ fd_to_buffered_stream (int fd)
     size = 1;
   buffer = (char *)xmalloc (size);
 
-  return (make_buffered_stream (fd, buffer, size));
+  return make_buffered_stream (fd, buffer, size);
 }
 
 /* Return a buffered stream corresponding to FILE, a file name. */
@@ -400,7 +401,7 @@ open_buffered_stream (char *file)
   int fd;
 
   fd = open (file, O_RDONLY);
-  return ((fd >= 0) ? fd_to_buffered_stream (fd) : (BUFFERED_STREAM *)NULL);
+  return (fd >= 0) ? fd_to_buffered_stream (fd) : (BUFFERED_STREAM *)NULL;
 }
 
 /* Deallocate a buffered stream and free up its resources.  Make sure we
@@ -428,12 +429,12 @@ close_buffered_stream (BUFFERED_STREAM *bp)
   int fd;
 
   if (!bp)
-    return (0);
+    return 0;
   fd = bp->b_fd;
   if (bp->b_flag & B_SHAREDBUF)
     bp->b_buffer = (char *)NULL;
   free_buffered_stream (bp);
-  return (close (fd));
+  return close (fd);
 }
 
 /* Deallocate the buffered stream associated with file descriptor FD, and
@@ -447,8 +448,8 @@ close_buffered_fd (int fd)
       return -1;
     }
   if (fd >= nbuffers || !buffers || !buffers[fd])
-    return (close (fd));
-  return (close_buffered_stream (buffers[fd]));
+    return close (fd);
+  return close_buffered_stream (buffers[fd]);
 }
 
 /* Make the BUFFERED_STREAM associated with buffers[FD] be BP, and return
@@ -497,12 +498,12 @@ b_fill_buffer (BUFFERED_STREAM *bp)
 	bp->b_flag |= B_EOF;
       else
 	bp->b_flag |= B_ERROR;
-      return (EOF);
+      return EOF;
     }
 
   bp->b_used = nr;
   bp->b_inputp = 0;
-  return (bp->b_buffer[bp->b_inputp++] & 0xFF);
+  return bp->b_buffer[bp->b_inputp++] & 0xFF;
 }
 
 /* Get a character from buffered stream BP. */
@@ -516,10 +517,10 @@ static int
 bufstream_ungetc(int c, BUFFERED_STREAM *bp)
 {
   if (c == EOF || bp == 0 || bp->b_inputp == 0)
-    return (EOF);
+    return EOF;
 
   bp->b_buffer[--bp->b_inputp] = c;
-  return (c);
+  return c;
 }
 
 /* Seek backwards on file BFD to synchronize what we've read so far
@@ -531,13 +532,13 @@ sync_buffered_stream (int bfd)
   off_t chars_left;
 
   if (buffers == 0 || (bp = buffers[bfd]) == 0)
-    return (-1);
+    return -1;
 
   chars_left = bp->b_used - bp->b_inputp;
   if (chars_left)
     lseek (bp->b_fd, -chars_left, SEEK_CUR);
   bp->b_used = bp->b_inputp = 0;
-  return (0);
+  return 0;
 }
 
 int
@@ -549,7 +550,7 @@ buffered_getchar ()
     return EOF;
 
 #if !defined (DJGPP)
-  return (bufstream_getc (buffers[bash_input.location.buffered_fd]));
+  return bufstream_getc (buffers[bash_input.location.buffered_fd]);
 #else
   /* On DJGPP, ignore \r. */
   int ch;
@@ -562,7 +563,7 @@ buffered_getchar ()
 int
 buffered_ungetchar (int c)
 {
-  return (bufstream_ungetc (c, buffers[bash_input.location.buffered_fd]));
+  return bufstream_ungetc (c, buffers[bash_input.location.buffered_fd]);
 }
 
 /* Make input come from file descriptor BFD through a buffered stream. */
@@ -580,20 +581,6 @@ with_input_from_buffered_stream (int bfd, char *name)
 }
 
 #if defined (TEST)
-void *
-xmalloc(int s)
-{
-	return (malloc (s));
-}
-
-void *
-xrealloc(char *s, int size)
-{
-	if (!s)
-		return(malloc (size));
-	else
-		return(realloc (s, size));
-}
 
 void
 init_yy_io ()

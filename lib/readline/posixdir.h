@@ -28,7 +28,7 @@
 #  if defined (HAVE_STRUCT_DIRENT_D_NAMLEN)
 #    define D_NAMLEN(d)	((d)->d_namlen)
 #  else
-#    define D_NAMLEN(d)   (strlen ((d)->d_name))
+#    define D_NAMLEN(d)   (static_cast<unsigned int> (std::strlen ((d)->d_name)))
 #  endif /* !HAVE_STRUCT_DIRENT_D_NAMLEN */
 #else
 #  if defined (HAVE_SYS_NDIR_H)

@@ -33,15 +33,13 @@
 #  include <sys/file.h>
 #endif /* HAVE_SYS_FILE_H */
 
-#if defined (HAVE_PSELECT)
-#  include <signal.h>
+#if defined (HAVE_PSELECT) || defined (HAVE_SELECT)
+#  include <csignal>
 #endif
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif /* HAVE_UNISTD_H */
-
-#include "bashansi.h"
 
 #include "posixselect.h"
 
@@ -49,12 +47,8 @@
 #  include <sys/ioctl.h>
 #endif
 
-#include <stdio.h>
-#include <errno.h>
-
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
+#include <cstdio>
+#include <cerrno>
 
 #if !defined (O_NDELAY) && defined (O_NONBLOCK)
 #  define O_NDELAY O_NONBLOCK	/* Posix style */
@@ -84,7 +78,7 @@ input_avail (int fd)
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
   result = select (fd + 1, &readfds, (fd_set *)NULL, &exceptfds, &timeout);
-  return ((result <= 0) ? 0 : 1);
+  return (result <= 0) ? 0 : 1;
 #endif
 
 #if defined (FIONREAD)
@@ -92,7 +86,7 @@ input_avail (int fd)
   result = ioctl (fd, FIONREAD, &chars_avail);
   if (result == -1 && errno == EIO)
     return -1;
-  return (chars_avail);
+  return chars_avail;
 #endif
 
   return 0;
@@ -114,7 +108,7 @@ nchars_avail (int fd, int nchars)
   if (fd < 0 || nchars < 0)
     return -1;
   if (nchars == 0)
-    return (input_avail (fd));
+    return input_avail (fd);
 
   chars_avail = 0;
 

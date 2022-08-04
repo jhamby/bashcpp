@@ -21,8 +21,6 @@
 #if !defined (_FINDCMD_H_)
 #define _FINDCMD_H_
 
-#include "stdc.h"
-
 /* Flags for search_for_command */
 #define CMDSRCH_HASH		0x01
 #define CMDSRCH_STDPATH		0x02

@@ -45,16 +45,16 @@ $END
 
 #include "../bashtypes.h"
 #include "posixstat.h"
-#include <signal.h>
-#include <errno.h>
+
+#include <csignal>
+#include <cerrno>
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include "../shell.h"
@@ -65,17 +65,12 @@ $END
 #endif
 #include "../flags.h"
 #include "../trap.h"
-#if defined (HISTORY)
-#  include "../bashhist.h"
-#endif
 #include "common.h"
 #include "bashgetopt.h"
 #include "input.h"
 
-/* Not all systems declare ERRNO in errno.h... and some systems #define it! */
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
+namespace bash
+{
 
 extern REDIRECT *redirection_undo_list;
 extern char *exec_argv0;
@@ -96,7 +91,7 @@ mkdashname (const char *name)
 }
 
 int
-exec_builtin (WORD_LIST *list)
+Shell::exec_builtin (WORD_LIST *list)
 {
   int exit_value = EXECUTION_FAILURE;
   int cleanenv, login, opt, orig_job_control;
@@ -122,7 +117,7 @@ exec_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
@@ -132,13 +127,13 @@ exec_builtin (WORD_LIST *list)
   redirection_undo_list = (REDIRECT *)NULL;
 
   if (list == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
 #if defined (RESTRICTED_SHELL)
   if (restricted)
     {
       sh_restricted ((char *)NULL);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 #endif /* RESTRICTED_SHELL */
 
@@ -267,5 +262,7 @@ failed_exec:
     restart_job_control ();
 #endif /* JOB_CONTROL */
 
-  return (exit_value);
+  return exit_value;
 }
+
+}  // namespace bash

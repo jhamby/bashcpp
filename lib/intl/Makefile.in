@@ -64,7 +64,8 @@ mkdir_p = @mkdir_p@
 
 l =
 
-AR = ar
+AR = @AR@
+ARFLAGS = @ARFLAGS@
 CXX = @CXX@
 LIBTOOL = @LIBTOOL@
 RANLIB = @RANLIB@
@@ -158,7 +159,6 @@ SOURCES = \
   printf.c \
   setlocale.c \
   version.c \
-  xsize.c \
   osdep.c \
   os2compat.c \
   intl-exports.c \
@@ -191,7 +191,6 @@ OBJECTS = \
   printf.$lo \
   setlocale.$lo \
   version.$lo \
-  xsize.$lo \
   osdep.$lo \
   intl-compat.$lo
 OBJECTS_RES_yes = libintl.res.$lo
@@ -212,7 +211,7 @@ all: libintl.$la libintl.h charset.alias ref-add.sed ref-del.sed
 
 libintl.a libgnuintl.a: $(OBJECTS)
 	$(AM_V_at)rm -f $@
-	$(AM_V_AR)$(AR) cru $@ $(OBJECTS)
+	$(AM_V_AR)$(AR) $(ARFLAGS) $@ $(OBJECTS)
 	$(AM_V_at)$(RANLIB) $@
 
 libintl.la libgnuintl.la: $(OBJECTS) $(OBJECTS_RES_@WOE32@)
@@ -297,8 +296,6 @@ setlocale.lo: $(srcdir)/setlocale.c
 	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CC --mode=compile $(COMPILE) $(srcdir)/setlocale.c
 version.lo: $(srcdir)/version.c
 	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CC --mode=compile $(COMPILE) $(srcdir)/version.c
-xsize.lo: $(srcdir)/xsize.c
-	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CC --mode=compile $(COMPILE) $(srcdir)/xsize.c
 osdep.lo: $(srcdir)/osdep.c
 	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CC --mode=compile $(COMPILE) $(srcdir)/osdep.c
 intl-compat.lo: $(srcdir)/intl-compat.c
@@ -586,7 +583,7 @@ dcigettext.$lo: $(srcdir)/eval-plural.h
 localcharset.$lo: $(srcdir)/localcharset.h
 bindtextdom.$lo dcigettext.$lo finddomain.$lo loadmsgcat.$lo localealias.$lo lock.$lo log.$lo: $(srcdir)/lock.h
 localealias.$lo localcharset.$lo relocatable.$lo: $(srcdir)/relocatable.h
-printf.$lo: $(srcdir)/printf-args.h $(srcdir)/printf-args.c $(srcdir)/printf-parse.h $(srcdir)/wprintf-parse.h $(srcdir)/xsize.h $(srcdir)/xsize.c $(srcdir)/printf-parse.c $(srcdir)/vasnprintf.h $(srcdir)/vasnwprintf.h $(srcdir)/vasnprintf.c
+printf.$lo: $(srcdir)/printf-args.h $(srcdir)/printf-args.c $(srcdir)/printf-parse.h $(srcdir)/wprintf-parse.h $(srcdir)/xsize.h $(srcdir)/printf-parse.c $(srcdir)/vasnprintf.h $(srcdir)/vasnwprintf.h $(srcdir)/vasnprintf.c
 
 # A bison-2.1 generated plural.c includes <libintl.h> if ENABLE_NLS.
 PLURAL_DEPS_yes = libintl.h

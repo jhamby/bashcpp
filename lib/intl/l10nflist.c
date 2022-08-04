@@ -25,14 +25,14 @@
 # include <config.h>
 #endif
 
-#include <string.h>
+#include <cstring>
 
 #if defined _LIBC || defined HAVE_ARGZ_H
 # include <argz.h>
 #endif
-#include <ctype.h>
+#include <cctype>
 #include <sys/types.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "loadinfo.h"
 

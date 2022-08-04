@@ -28,10 +28,7 @@
 #include <unistd.h>
 #endif
 
-#include <errno.h>
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
+#include <cerrno>
 
 #if defined (HAVE_SELECT)
 #  include "posixselect.h"
@@ -60,21 +57,21 @@ falarm(unsigned int secs, unsigned int usecs)
   /* Backwards compatibility with alarm(3) */
   if (oit.it_value.tv_usec)
     oit.it_value.tv_sec++;
-  return (oit.it_value.tv_sec);
+  return oit.it_value.tv_sec;
 }
 #else
 int
 falarm (unsigned int secs, unsigned int usecs)
 {
   if (secs == 0 && usecs == 0)
-    return (alarm (0));
+    return alarm (0);
 
   if (secs == 0 || usecs >= 500000)
     {
       secs++;
       usecs = 0;
     }
-  return (alarm (secs));
+  return alarm (secs);
 }
 #endif /* !HAVE_SETITIMER */
 
@@ -131,6 +128,6 @@ fsleep(long sec, long usec)
 {
   if (usec >= 500000)	/* round */
    sec++;
-  return (sleep(sec));
+  return sleep(sec);
 }
 #endif /* !HAVE_TIMEVAL || !HAVE_SELECT */

@@ -24,9 +24,10 @@
 #include "quit.h"
 #include "siglist.h"
 
-#include "stdc.h"
-
 #include "posixwait.h"
+
+namespace bash
+{
 
 /* Defines controlling the fashion in which jobs are listed. */
 #define JLIST_STANDARD       0
@@ -62,17 +63,12 @@
 
 /* Each child of the shell is remembered in a STRUCT PROCESS.  A circular
    chain of such structures is a pipeline. */
-typedef struct process {
-  struct process *next;	/* Next process in the pipeline.  A circular chain. */
+struct PROCESS {
+  char *command;	/* The particular program that is running. */
   pid_t pid;		/* Process ID. */
   WAIT status;		/* The status of this command as returned by wait. */
   int running;		/* Non-zero if this process is running. */
-  char *command;	/* The particular program that is running. */
-} PROCESS;
-
-struct pipeline_saver {
-  struct process *pipeline;
-  struct pipeline_saver *next;
+  int _pad;		// silence clang -Wpadded warning
 };
 
 /* PALIVE really means `not exited' */
@@ -91,7 +87,14 @@ struct pipeline_saver {
 #define get_job_by_jid(ind)	(jobs[(ind)])
 
 /* A description of a pipeline's state. */
-typedef enum { JNONE = -1, JRUNNING = 1, JSTOPPED = 2, JDEAD = 4, JMIXED = 8 } JOB_STATE;
+enum JOB_STATE {
+  JNONE = -1,
+  JRUNNING = 1,
+  JSTOPPED = 2,
+  JDEAD = 4,
+  JMIXED = 8
+};
+
 #define JOBSTATE(job)	(jobs[(job)]->state)
 #define J_JOBSTATE(j)	((j)->state)
 
@@ -102,57 +105,23 @@ typedef enum { JNONE = -1, JRUNNING = 1, JSTOPPED = 2, JDEAD = 4, JMIXED = 8 } J
 #define INVALID_JOB(j)	((j) < 0 || (j) >= js.j_jobslots || get_job_by_jid(j) == 0)
 
 /* Values for the FLAGS field in the JOB struct below. */
-#define J_FOREGROUND 0x01 /* Non-zero if this is running in the foreground.  */
-#define J_NOTIFIED   0x02 /* Non-zero if already notified about job state.   */
-#define J_JOBCONTROL 0x04 /* Non-zero if this job started under job control. */
-#define J_NOHUP      0x08 /* Don't send SIGHUP to job if shell gets SIGHUP. */
-#define J_STATSAVED  0x10 /* A process in this job had status saved via $! */
-#define J_ASYNC	     0x20 /* Job was started asynchronously */
-#define J_PIPEFAIL   0x40 /* pipefail set when job was started */
-#define J_WAITING    0x80 /* one of a list of jobs for which we are waiting */
+enum job_flags {
+  J_NOFLAGS =		   0,
+  J_FOREGROUND =	0x01, /* Non-zero if this is running in the foreground.  */
+  J_NOTIFIED =		0x02, /* Non-zero if already notified about job state.   */
+  J_JOBCONTROL =	0x04, /* Non-zero if this job started under job control. */
+  J_NOHUP =		0x08, /* Don't send SIGHUP to job if shell gets SIGHUP. */
+  J_STATSAVED =		0x10, /* A process in this job had status saved via $! */
+  J_ASYNC =		0x20, /* Job was started asynchronously */
+  J_PIPEFAIL =		0x40, /* pipefail set when job was started */
+  J_WAITING =		0x80 /* one of a list of jobs for which we are waiting */
+};
 
 #define IS_FOREGROUND(j)	((jobs[j]->flags & J_FOREGROUND) != 0)
 #define IS_NOTIFIED(j)		((jobs[j]->flags & J_NOTIFIED) != 0)
 #define IS_JOBCONTROL(j)	((jobs[j]->flags & J_JOBCONTROL) != 0)
 #define IS_ASYNC(j)		((jobs[j]->flags & J_ASYNC) != 0)
 #define IS_WAITING(j)		((jobs[j]->flags & J_WAITING) != 0)
-
-typedef struct job {
-  char *wd;	   /* The working directory at time of invocation. */
-  PROCESS *pipe;   /* The pipeline of processes that make up this job. */
-  pid_t pgrp;	   /* The process ID of the process group (necessary). */
-  JOB_STATE state; /* The state that this job is in. */
-  int flags;	   /* Flags word: J_NOTIFIED, J_FOREGROUND, or J_JOBCONTROL. */
-#if defined (JOB_CONTROL)
-  COMMAND *deferred;	/* Commands that will execute when this job is done. */
-  sh_vptrfunc_t *j_cleanup; /* Cleanup function to call when job marked JDEAD */
-  PTR_T cleanarg;	/* Argument passed to (*j_cleanup)() */
-#endif /* JOB_CONTROL */
-} JOB;
-
-struct jobstats {
-  /* limits */
-  long c_childmax;
-  /* child process statistics */
-  int c_living;		/* running or stopped child processes */
-  int c_reaped;		/* exited child processes still in jobs list */
-  int c_injobs;		/* total number of child processes in jobs list */
-  /* child process totals */
-  int c_totforked;	/* total number of children this shell has forked */
-  int c_totreaped;	/* total number of children this shell has reaped */
-  /* job counters and indices */
-  int j_jobslots;	/* total size of jobs array */
-  int j_lastj;		/* last (newest) job allocated */
-  int j_firstj;		/* first (oldest) job allocated */
-  int j_njobs;		/* number of non-NULL jobs in jobs array */
-  int j_ndead;		/* number of JDEAD jobs in jobs array */
-  /* */
-  int j_current;	/* current job */
-  int j_previous;	/* previous job */
-  /* */
-  JOB *j_lastmade;	/* last job allocated by stop_pipeline */
-  JOB *j_lastasync;	/* last async job allocated by stop_pipeline */
-};
 
 /* Revised to accommodate new hash table bgpids implementation. */
 typedef pid_t ps_index_t;
@@ -163,6 +132,7 @@ struct pidstat {
 
   pid_t pid;
   bits16_t status;		/* only 8 bits really needed */
+  char _pad[2];			// silence clang -Wpadded warning
 };
 
 struct bgpids {
@@ -172,9 +142,10 @@ struct bgpids {
   ps_index_t nalloc;
 
   int npid;
+  int _pad;			// silence clang -Wpadded warning
 };
 
-#define NO_PIDSTAT (ps_index_t)-1
+#define NO_PIDSTAT (static_cast<ps_index_t> (-1))
 
 /* standalone process status struct, without bgpids indexes */
 struct procstat {
@@ -182,140 +153,24 @@ struct procstat {
   bits16_t status;
 };
 
-/* A standalone singly-linked list of PROCESS *, used in various places
+/* A standalone linked list of PROCESS *, used in various places
    including keeping track of process substitutions. */
-struct procchain {
-  PROCESS *head;
-  PROCESS *end;
-  int nproc;
-};
-
-#define NO_JOB  -1	/* An impossible job array index. */
-#define DUP_JOB -2	/* A possible return value for get_job_spec (). */
-#define BAD_JOBSPEC -3	/* Bad syntax for job spec. */
+typedef std::list<PROCESS> procchain;
 
 /* A value which cannot be a process ID. */
-#define NO_PID (pid_t)-1
+#define NO_PID (static_cast<pid_t> (-1))
 
-#define ANY_PID (pid_t)-1
+/* A value representing any process ID. */
+#define ANY_PID (static_cast<pid_t> (-1))
 
 /* flags for make_child () */
-#define FORK_SYNC	0		/* normal synchronous process */
-#define FORK_ASYNC	1		/* background process */
-#define FORK_NOJOB	2		/* don't put process in separate pgrp */
-#define FORK_NOTERM	4		/* don't give terminal to any pgrp */
+enum make_child_flags {
+  FORK_SYNC =	0,		/* normal synchronous process */
+  FORK_ASYNC =	1,		/* background process */
+  FORK_NOJOB =	2,		/* don't put process in separate pgrp */
+  FORK_NOTERM =	4		/* don't give terminal to any pgrp */
+};
 
-/* System calls. */
-#if !defined (HAVE_UNISTD_H)
-extern pid_t fork (), getpid (), getpgrp ();
-#endif /* !HAVE_UNISTD_H */
-
-/* Stuff from the jobs.c file. */
-extern struct jobstats js;
-
-extern pid_t original_pgrp, shell_pgrp, pipeline_pgrp;
-extern volatile pid_t last_made_pid, last_asynchronous_pid;
-extern char asynchronous_notification;
-
-extern bool already_making_children;
-extern bool running_in_background;
-
-extern PROCESS *last_procsub_child;
-
-extern JOB **jobs;
-
-extern void making_children (void);
-extern void stop_making_children (void);
-extern void cleanup_the_pipeline (void);
-extern void discard_last_procsub_child (void);
-extern void save_pipeline (bool);
-extern PROCESS *restore_pipeline (bool);
-extern void start_pipeline (void);
-extern int stop_pipeline (bool, COMMAND *);
-extern int discard_pipeline (PROCESS *);
-extern void append_process (char *, pid_t, int, int);
-
-extern void save_proc_status (pid_t, int);
-
-extern PROCESS *procsub_add (PROCESS *);
-extern PROCESS *procsub_search (pid_t);
-extern PROCESS *procsub_delete (pid_t);
-extern int procsub_waitpid (pid_t);
-extern void procsub_waitall (void);
-extern void procsub_clear (void);
-extern void procsub_prune (void);
-
-extern void delete_job (int, int);
-extern void nohup_job (int);
-extern void delete_all_jobs (int);
-extern void nohup_all_jobs (int);
-
-extern int count_all_jobs (void);
-
-extern void terminate_current_pipeline (void);
-extern void terminate_stopped_jobs (void);
-extern void hangup_all_jobs (void);
-extern void kill_current_pipeline (void);
-
-#if defined (pid_t)
-extern int get_job_by_pid (int, int, PROCESS **);
-extern void describe_pid (int);
-#else
-extern int get_job_by_pid (pid_t, int, PROCESS **);
-extern void describe_pid (pid_t);
-#endif
-
-extern void list_one_job (JOB *, int, int, int);
-extern void list_all_jobs (int);
-extern void list_stopped_jobs (int);
-extern void list_running_jobs (int);
-
-extern pid_t make_child (char *, int);
-
-extern int get_tty_state (void);
-extern int set_tty_state (void);
-
-extern int job_exit_status (int);
-extern int job_exit_signal (int);
-
-extern int wait_for_single_pid (pid_t, int);
-extern void wait_for_background_pids (struct procstat *);
-extern int wait_for (pid_t, int);
-extern int wait_for_job (int, int, struct procstat *);
-extern int wait_for_any_job (int, struct procstat *);
-
-extern void wait_sigint_cleanup (void);
-
-extern void notify_and_cleanup (void);
-extern void reap_dead_jobs (void);
-extern int start_job (int, bool);
-extern int kill_pid (pid_t, int, int);
-extern bool initialize_job_control (bool);
-extern void initialize_job_signals (void);
-extern int give_terminal_to (pid_t, int);
-
-extern void run_sigchld_trap (int);
-
-extern int freeze_jobs_list (void);
-extern void unfreeze_jobs_list (void);
-extern void set_jobs_list_frozen (int);
-extern bool set_job_control (bool);
-extern void without_job_control (void);
-extern void end_job_control (void);
-extern void restart_job_control (void);
-extern void set_sigchld_handler (void);
-extern void ignore_tty_job_signals (void);
-extern void default_tty_job_signals (void);
-extern void get_original_tty_job_signals (void);
-
-extern void init_job_stats (void);
-
-extern void close_pgrp_pipe (void);
-extern void save_pgrp_pipe (int *, int);
-extern void restore_pgrp_pipe (int *);
-
-extern void set_maxchild (int);
-
-extern bool job_control;		/* set to false in nojobs.c */
+}  // namespace bash
 
 #endif /* _JOBS_H_ */

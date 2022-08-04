@@ -24,30 +24,32 @@
 #  include <unistd.h>
 #endif
 
-#include "../bashansi.h"
 #include <chartypes.h>
-#include <errno.h>
+#include <cerrno>
 
 #include "../shell.h"
 #include "common.h"
 
 #include "bashgetopt.h"
 
+namespace bash
+{
+
 #define ISOPT(s)	(((*(s) == '-') || (plus && *(s) == '+')) && (s)[1])
 #define NOTOPT(s)	(((*(s) != '-') && (!plus || *(s) != '+')) || (s)[1] == '\0')
 
-static int	sp;
+// static int	sp;
 
-char    *list_optarg;
-int	list_optopt;
-int	list_opttype;
+// char    *list_optarg;
+// int	list_optopt;
+// int	list_opttype;
 
-static WORD_LIST *lhead = (WORD_LIST *)NULL;
-WORD_LIST	*lcurrent = (WORD_LIST *)NULL;
-WORD_LIST	*loptend;	/* Points to the first non-option argument in the list */
+// static WORD_LIST *lhead = (WORD_LIST *)NULL;
+// WORD_LIST	*lcurrent = (WORD_LIST *)NULL;
+// WORD_LIST	*loptend;	/* Points to the first non-option argument in the list */
 
 int
-internal_getopt(WORD_LIST *list, const char *opts)
+Shell::internal_getopt(WORD_LIST *list, const char *opts)
 {
 	int	plus;	/* nonzero means to handle +option */
 	static char errstr[3] = { '-', '\0', '\0' };
@@ -77,7 +79,7 @@ internal_getopt(WORD_LIST *list, const char *opts)
 		} else if (ISHELP (lcurrent->word->word)) {
 			lhead = (WORD_LIST *)NULL;
 			loptend = lcurrent;
-			return (GETOPT_HELP);
+			return GETOPT_HELP;
 		} else if (lcurrent->word->word[0] == '-' &&
 			   lcurrent->word->word[1] == '-' &&
 			   lcurrent->word->word[2] == 0) {
@@ -151,7 +153,7 @@ internal_getopt(WORD_LIST *list, const char *opts)
 				sh_neednumarg (errstr);
 				sp = 1;
 				list_optarg = (char *)NULL;
-				return ('?');
+				return '?';
 			}
 		}
 
@@ -172,8 +174,10 @@ internal_getopt(WORD_LIST *list, const char *opts)
  */
 
 void
-reset_internal_getopt ()
+Shell::reset_internal_getopt ()
 {
 	lhead = lcurrent = loptend = (WORD_LIST *)NULL;
 	sp = 1;
 }
+
+}  // namespace bash

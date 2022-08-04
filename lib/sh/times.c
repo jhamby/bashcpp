@@ -48,17 +48,17 @@ times(struct tms *tms)
 		clk_tck = get_clk_tck();
 
 	if (getrusage(RUSAGE_SELF, &ru) < 0)
-		return ((clock_t)-1);
+		return (clock_t)-1;
 	tms->tms_utime = CONVTCK(ru.ru_utime);
 	tms->tms_stime = CONVTCK(ru.ru_stime);
 
 	if (getrusage(RUSAGE_CHILDREN, &ru) < 0)
-		return ((clock_t)-1);
+		return (clock_t)-1;
 	tms->tms_cutime = CONVTCK(ru.ru_utime);
 	tms->tms_cstime = CONVTCK(ru.ru_stime);
 
 	if (gettimeofday(&tv, NULL) < 0)
-		return ((clock_t)-1);
+		return (clock_t)-1;
 	rv = (clock_t)(CONVTCK(tv));
 #else /* !HAVE_GETRUSAGE */
 	if (clk_tck == -1)

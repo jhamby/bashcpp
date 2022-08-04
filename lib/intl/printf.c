@@ -41,14 +41,14 @@ char *alloca ();
 # endif
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 
 #if !HAVE_POSIX_PRINTF
 
-#include <errno.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cerrno>
+#include <climits>
+#include <cstdlib>
+#include <cstring>
 
 /* Some systems, like OSF/1 4.0 and Woe32, don't have EOVERFLOW.  */
 #ifndef EOVERFLOW

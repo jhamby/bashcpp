@@ -31,14 +31,10 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include <errno.h>
+#include <cstdio>
+#include <cerrno>
 
 #include <shell.h>
-
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
 
 /* Return a string corresponding to the error number E.  From
    the ANSI C spec. */
@@ -57,7 +53,7 @@ strerror (int e)
   extern char *sys_errlist[];
 
   if (e > 0 && e < sys_nerr)
-    return (sys_errlist[e]);
+    return sys_errlist[e];
   else
 #endif /* HAVE_SYS_ERRLIST */
     {
@@ -67,7 +63,7 @@ strerror (int e)
       strcpy (emsg, errbase);
       strcat (emsg, z);
       free (z);
-      return (&emsg[0]);
+      return &emsg[0];
     }
 }
 #endif /* HAVE_STRERROR */

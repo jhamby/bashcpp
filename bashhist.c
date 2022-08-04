@@ -22,51 +22,31 @@
 
 #if defined (HISTORY)
 
-#if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
- #    include <sys/types.h>
-#  endif
-#  include <unistd.h>
-#endif
-
-#include "bashtypes.h"
-#include <stdio.h>
-#include <errno.h>
-#include "bashansi.h"
-#include "posixstat.h"
-#include "filecntl.h"
-
-#include "bashintl.h"
-
-#if defined (SYSLOG_HISTORY)
-#  include <syslog.h>
-#endif
-
 #include "shell.h"
 #include "flags.h"
 #include "parser.h"
 #include "input.h"
 #include "parser.h"	/* for the struct dstack stuff. */
 #include "pathexp.h"	/* for the struct ignorevar stuff */
-#include "bashhist.h"	/* matching prototypes and declarations */
 #include "builtins/common.h"
 
 #include <readline/history.h>
 #include <glob/glob.h>
 #include <glob/strmatch.h>
 
-#if defined (READLINE)
-#  include "bashline.h"
-extern int rl_done, rl_dispatching;	/* should really include readline.h */
+#if defined (SYSLOG_HISTORY)
+#  include <syslog.h>
 #endif
 
 #ifndef HISTSIZE_DEFAULT
 #  define HISTSIZE_DEFAULT "500"
 #endif
 
-#if !defined (errno)
-extern int errno;
-#endif
+namespace bash
+{
+
+#if 0
+// this needs to migrate into Shell class
 
 static int histignore_item_func (struct ign *);
 static int check_history_control (const char *);
@@ -204,12 +184,13 @@ static bool should_expand (const char *);
 static HIST_ENTRY *last_history_entry (void);
 static char *expand_histignore_pattern (const char *);
 static bool history_should_ignore (const char *);
+#endif
 
 #if defined (BANG_HISTORY)
 /* Is the history expansion starting at string[i] one that should not
    be expanded? */
-static int
-bash_history_inhibit_expansion (char *string, int i)
+bool
+Shell::bash_history_inhibit_expansion (const char *string, int i)
 {
   int t, si;
   char hx[2];
@@ -239,7 +220,7 @@ bash_history_inhibit_expansion (char *string, int i)
      single-quoted part and then look at what's left. */
   if (history_quoting_state == '\'')
     {
-      si = skip_to_delim (string, 0, "'", SD_NOJMP|SD_HISTEXP);
+      si = skip_to_delim (string, 0, "'", SD_NOJMP | SD_HISTEXP);
       if (string[si] == 0 || si >= i)
 	return true;
       si++;
@@ -247,17 +228,17 @@ bash_history_inhibit_expansion (char *string, int i)
 
   /* Make sure the history expansion should not be skipped by quoting or
      command/process substitution. */
-  if ((t = skip_to_histexp (string, si, hx, SD_NOJMP|SD_HISTEXP)) > 0)
+  if ((t = skip_to_histexp (string, si, hx, SD_NOJMP | SD_HISTEXP)) > 0)
     {
       /* Skip instances of history expansion appearing on the line before
 	 this one. */
       while (t < i)
 	{
-	  t = skip_to_histexp (string, t+1, hx, SD_NOJMP|SD_HISTEXP);
+	  t = skip_to_histexp (string, t+1, hx, SD_NOJMP | SD_HISTEXP);
 	  if (t <= 0)
 	    return false;
 	}
-      return (t > i);
+      return t > i;
     }
   else
     return false;
@@ -403,30 +384,6 @@ bash_delete_last_history ()
   return r;
 }
 
-#ifdef INCLUDE_UNUSED
-/* Write the existing history out to the history file. */
-void
-save_history ()
-{
-  char *hf;
-  int r;
-
-  hf = get_string_value ("HISTFILE");
-  if (hf && *hf && file_exists (hf))
-    {
-      /* Append only the lines that occurred this session to
-	 the history file. */
-      using_history ();
-
-      if (history_lines_this_session <= where_history () || force_append_history)
-	r = append_history (history_lines_this_session, hf);
-      else
-	r = write_history (hf);
-      sv_histsize ("HISTFILESIZE");
-    }
-}
-#endif
-
 int
 maybe_append_history (const char *filename)
 {
@@ -443,7 +400,7 @@ maybe_append_history (const char *filename)
 	  if (fd < 0)
 	    {
 	      builtin_error (_("%s: cannot create: %s"), filename, strerror (errno));
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  close (fd);
 	}
@@ -460,7 +417,7 @@ maybe_append_history (const char *filename)
   else
     history_lines_this_session = 0;	/* reset if > where_history() */
 
-  return (result);
+  return result;
 }
 
 /* If this is an interactive shell, then append the lines executed
@@ -507,7 +464,7 @@ maybe_save_shell_history ()
 	  sv_histsize ("HISTFILESIZE");
 	}
     }
-  return (result);
+  return result;
 }
 
 #if defined (READLINE)
@@ -594,7 +551,7 @@ pre_process_line (char *line, bool print_changes, bool addit)
 	      if (history_reediting && expanded < 0 && rl_done)
 		re_edit (line);
 #    endif /* READLINE */
-	      return ((char *)NULL);
+	      return (char *)NULL;
 	    }
 
 #    if defined (READLINE)
@@ -602,7 +559,7 @@ pre_process_line (char *line, bool print_changes, bool addit)
 	    {
 	      re_edit (history_value);
 	      free (history_value);
-	      return ((char *)NULL);
+	      return (char *)NULL;
 	    }
 #    endif
 	}
@@ -623,7 +580,7 @@ pre_process_line (char *line, bool print_changes, bool addit)
     return_value = savestring (line);
 #endif
 
-  return (return_value);
+  return return_value;
 }
 
 /* Return 1 if the first non-whitespace character in LINE is a `#', indicating
@@ -642,25 +599,10 @@ shell_comment (const char *line)
     ;
   if (p && *p == '#')
     return 1;
-  n = skip_to_delim (line, p - line, "#", SD_NOJMP|SD_GLOB|SD_EXTGLOB|SD_COMPLETE);
+  n = skip_to_delim (line, p - line, "#",
+	(SD_NOJMP | SD_GLOB | SD_EXTGLOB | SD_COMPLETE));
   return (line[n] == '#') ? 2 : 0;
 }
-
-#ifdef INCLUDE_UNUSED
-/* Remove shell comments from LINE.  A `#' and anything after it is a comment.
-   This isn't really useful yet, since it doesn't handle quoting. */
-static char *
-filter_comments (char *line)
-{
-  char *p;
-
-  for (p = line; p && *p && *p != '#'; p++)
-    ;
-  if (p && *p == '#')
-    *p = '\0';
-  return (line);
-}
-#endif
 
 /* Check LINE against what HISTCONTROL says to do.  Returns 1 if the line
    should be saved; 0 if it should be discarded. */
@@ -938,7 +880,7 @@ int
 history_number ()
 {
   using_history ();
-  return ((remember_on_history || enable_history_list) ? history_base + where_history () : 1);
+  return (remember_on_history || enable_history_list) ? history_base + where_history () : 1;
 }
 
 static bool
@@ -961,7 +903,7 @@ histignore_item_func (struct ign *ign)
 {
   if (should_expand (ign->val))
     ign->flags |= HIGN_EXPAND;
-  return (0);
+  return 0;
 }
 
 void
@@ -988,7 +930,7 @@ last_history_line ()
 
   he = last_history_entry ();
   if (he == 0)
-    return ((char *)NULL);
+    return (char *)NULL;
   return he->line;
 }
 
@@ -1001,7 +943,7 @@ expand_histignore_pattern (const char *pat)
   phe = last_history_entry ();
 
   if (phe == (HIST_ENTRY *)0)
-    return (savestring (pat));
+    return savestring (pat);
 
   ret = strcreplace (pat, '&', phe->line, 1);
 
@@ -1038,4 +980,7 @@ history_should_ignore (const char *line)
 
   return match;
 }
+
+}  // namespace bash
+
 #endif /* HISTORY */

@@ -20,56 +20,28 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define READLINE_LIBRARY
-
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
+/* System-specific feature definitions and include files. */
+#include "rldefs.h"
 
 #include <sys/types.h>
-
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif /* HAVE_STDLIB_H */
-
-#if defined (HAVE_STRING_H)
-#  include <string.h>
-#else
-#  include <strings.h>
-#endif /* !HAVE_STRING_H */
-
-#if defined (HAVE_LIMITS_H)
-#  include <limits.h>
-#endif
 
 #if defined (HAVE_FCNTL_H)
 #include <fcntl.h>
 #endif
-#if defined (HAVE_PWD_H)
-#include <pwd.h>
-#endif
 
-#include <stdio.h>
-
-#include "rlstdc.h"
 #include "rlshell.h"
-#include "rldefs.h"
-
-#include "xmalloc.h"
 
 #if defined (HAVE_GETPWUID) && !defined (HAVE_GETPW_DECLS)
-extern struct passwd *getpwuid PARAMS((uid_t));
+extern "C" struct passwd *getpwuid (uid_t);
 #endif /* HAVE_GETPWUID && !HAVE_GETPW_DECLS */
 
-#ifndef NULL
-#  define NULL 0
-#endif
+namespace readline
+{
+
+// Define the virtual destructor.
+ReadlineShell::~ReadlineShell() {}
+
+#if !defined (SHELL)
 
 #ifndef CHAR_BIT
 #  define CHAR_BIT 8
@@ -90,13 +62,11 @@ extern struct passwd *getpwuid PARAMS((uid_t));
 /* All of these functions are resolved from bash if we are linking readline
    as part of bash. */
 
-#ifndef SHELL
-
 /* Does shell-like quoting using single quotes. */
 char *
-sh_single_quote (const char *string)
+ReadlineShell::sh_single_quote (const char *string)
 {
-  char *result = (char *)xmalloc (3 + (4 * strlen (string)));
+  char *result = new char[3 + (4 * std::strlen (string))];
   char *r = result;
   *r++ = '\'';
 
@@ -116,66 +86,71 @@ sh_single_quote (const char *string)
   *r++ = '\'';
   *r = '\0';
 
-  return (result);
+  return result;
 }
 
 /* Set the environment variables LINES and COLUMNS to lines and cols,
    respectively. */
-static char setenv_buf[INT_STRLEN_BOUND (int) + 1];
-static char putenv_buf1[INT_STRLEN_BOUND (int) + 6 + 1];	/* sizeof("LINES=") == 6 */
-static char putenv_buf2[INT_STRLEN_BOUND (int) + 8 + 1];	/* sizeof("COLUMNS=") == 8 */
-
-void
-sh_set_lines_and_columns (int lines, int cols)
-{
 #if defined (HAVE_SETENV)
-  sprintf (setenv_buf, "%d", lines);
-  setenv ("LINES", setenv_buf, 1);
-
-  sprintf (setenv_buf, "%d", cols);
-  setenv ("COLUMNS", setenv_buf, 1);
+static char setenv_buf[INT_STRLEN_BOUND (int) + 1];
 #else /* !HAVE_SETENV */
 #  if defined (HAVE_PUTENV)
-  sprintf (putenv_buf1, "LINES=%d", lines);
-  putenv (putenv_buf1);
+static char putenv_buf1[INT_STRLEN_BOUND (int) + 6 + 1];	/* sizeof("LINES=") == 6 */
+static char putenv_buf2[INT_STRLEN_BOUND (int) + 8 + 1];	/* sizeof("COLUMNS=") == 8 */
+#  endif /* HAVE_PUTENV */
+#endif /* !HAVE_SETENV */
 
-  sprintf (putenv_buf2, "COLUMNS=%d", cols);
-  putenv (putenv_buf2);
+void
+ReadlineShell::sh_set_lines_and_columns (unsigned int lines, unsigned int cols)
+{
+#if defined (HAVE_SETENV)
+  std::snprintf (setenv_buf, sizeof (setenv_buf), "%u", lines);
+  ::setenv ("LINES", setenv_buf, 1);
+
+  std::snprintf (setenv_buf, sizeof (setenv_buf), "%u", cols);
+  ::setenv ("COLUMNS", setenv_buf, 1);
+#else /* !HAVE_SETENV */
+#  if defined (HAVE_PUTENV)
+  std::snprintf (putenv_buf1, sizeof (putenv_buf1), "LINES=%u", lines);
+  ::putenv (putenv_buf1);
+
+  std::snprintf (putenv_buf2, sizeof (putenv_buf2), "COLUMNS=%u", cols);
+  ::putenv (putenv_buf2);
 #  endif /* HAVE_PUTENV */
 #endif /* !HAVE_SETENV */
 }
 
 char *
-sh_get_env_value (const char *varname)
+ReadlineShell::sh_get_env_value (const char *varname)
 {
-  return ((char *)getenv (varname));
+  return std::getenv (varname);
 }
 
 char *
-sh_get_home_dir (void)
+ReadlineShell::sh_get_home_dir ()
 {
   static char *home_dir = (char *)NULL;
   struct passwd *entry;
 
   if (home_dir)
-    return (home_dir);
+    return home_dir;
 
   home_dir = (char *)NULL;
 #if defined (HAVE_GETPWUID)
 #  if defined (__TANDEM)
-  entry = getpwnam (getlogin ());
+  entry = ::getpwnam (getlogin ());
 #  else
-  entry = getpwuid (getuid ());
+  entry = ::getpwuid (getuid ());
 #  endif
   if (entry)
     home_dir = savestring (entry->pw_dir);
 #endif
 
 #if defined (HAVE_GETPWENT)
-  endpwent ();		/* some systems need this */
+  ::endpwent ();		/* some systems need this */
 #endif
 
-  return (home_dir);
+  return home_dir;
 }
 
 #if !defined (O_NDELAY)
@@ -185,12 +160,12 @@ sh_get_home_dir (void)
 #endif
 
 int
-sh_unset_nodelay_mode (int fd)
+ReadlineShell::sh_unset_nodelay_mode (int fd)
 {
 #if defined (HAVE_FCNTL)
   int flags, bflags;
 
-  if ((flags = fcntl (fd, F_GETFL, 0)) < 0)
+  if ((flags = ::fcntl (fd, F_GETFL, 0)) < 0)
     return -1;
 
   bflags = 0;
@@ -206,11 +181,13 @@ sh_unset_nodelay_mode (int fd)
   if (flags & bflags)
     {
       flags &= ~bflags;
-      return (fcntl (fd, F_SETFL, flags));
+      return ::fcntl (fd, F_SETFL, flags);
     }
 #endif
 
   return 0;
 }
 
-#endif	/* !SHELL */
+#endif  // !SHELL
+
+}  // namespace readline

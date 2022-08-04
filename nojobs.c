@@ -30,9 +30,9 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include <signal.h>
-#include <errno.h>
+#include <cstdio>
+#include <csignal>
+#include <cerrno>
 
 #if defined (BUFFERED_INPUT)
 #  include "input.h"
@@ -50,6 +50,9 @@
 
 #include "builtins/builtext.h"	/* for wait_builtin */
 #include "builtins/common.h"
+
+namespace bash
+{
 
 #define DEFAULT_CHILD_MAX 4096
 
@@ -69,10 +72,6 @@
 
 /* Return the fd from which we are actually getting input. */
 #define input_tty() (shell_tty != -1) ? shell_tty : fileno (stderr)
-
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
 
 extern void set_original_signal (int, SigHandler *);
 
@@ -135,7 +134,7 @@ static int get_pid_flags (pid_t);
 static void add_pid (pid_t, bool);
 static void mark_dead_jobs_as_notified (bool);
 
-static sighandler wait_sigint_handler (int);
+static SigHandler *wait_sigint_handler (int);
 static char *j_strsignal (int);
 
 #if defined (HAVE_WAITPID)
@@ -175,12 +174,12 @@ find_proc_slot (pid_t pid)
 
   for (i = 0; i < pid_list_size; i++)
     if (pid_list[i].pid == NO_PID || pid_list[i].pid == pid)
-      return (i);
+      return i;
 
   if (i == pid_list_size)
     alloc_pid_list ();
 
-  return (i);
+  return i;
 }
 
 /* Return the offset within the PID_LIST array of a slot containing PID,
@@ -192,9 +191,9 @@ find_index_by_pid (pid_t pid)
 
   for (i = 0; i < pid_list_size; i++)
     if (pid_list[i].pid == pid)
-      return (i);
+      return i;
 
-  return (NO_PID);
+  return NO_PID;
 }
 
 /* Return the status of PID as looked up in the PID_LIST array.  A
@@ -206,19 +205,19 @@ find_status_by_pid (pid_t pid)
 
   i = find_index_by_pid (pid);
   if (i == NO_PID)
-    return (PROC_BAD);
+    return PROC_BAD;
   if (pid_list[i].flags & PROC_RUNNING)
-    return (PROC_STILL_ALIVE);
-  return (pid_list[i].status);
+    return PROC_STILL_ALIVE;
+  return pid_list[i].status;
 }
 
 static int
 process_exit_status (WAIT status)
 {
   if (WIFSIGNALED (status))
-    return (128 + WTERMSIG (status));
+    return 128 + WTERMSIG (status);
   else
-    return (WEXITSTATUS (status));
+    return WEXITSTATUS (status);
 }
 
 /* Return the status of PID as looked up in the PID_LIST array.  A
@@ -230,10 +229,10 @@ find_termsig_by_pid (pid_t pid)
 
   i = find_index_by_pid (pid);
   if (i == NO_PID)
-    return (0);
+    return 0;
   if (pid_list[i].flags & PROC_RUNNING)
-    return (0);
-  return (get_termsig ((WAIT)pid_list[i].status));
+    return 0;
+  return get_termsig ((WAIT)pid_list[i].status);
 }
 
 /* Set LAST_COMMAND_EXIT_SIGNAL depending on STATUS.  If STATUS is -1, look
@@ -243,9 +242,9 @@ static int
 get_termsig (WAIT status)
 {
   if (WIFSTOPPED (status) == 0 && WIFSIGNALED (status))
-    return (WTERMSIG (status));
+    return WTERMSIG (status);
   else
-    return (0);
+    return 0;
 }
 
 /* Give PID the status value STATUS in the PID_LIST array. */
@@ -314,7 +313,7 @@ get_pid_flags (pid_t pid)
   if (slot == NO_PID)
     return 0;
 
-  return (pid_list[slot].flags);
+  return pid_list[slot].flags;
 }
 
 static void
@@ -459,7 +458,7 @@ siginterrupt (int sig, int flag)
   else
     act.sa_flags |= SA_RESTART;
 
-  return (sigaction (sig, &act, (struct sigaction *)NULL));
+  return sigaction (sig, &act, (struct sigaction *)NULL);
 }
 #endif /* !HAVE_SIGINTERRUPT && HAVE_POSIX_SIGNALS */
 
@@ -566,7 +565,7 @@ make_child (char *command, int flags)
 
       add_pid (pid, async_p);
     }
-  return (pid);
+  return pid;
 }
 
 void
@@ -638,14 +637,14 @@ wait_for_single_pid (pid_t pid, int flags)
   if (pstatus == PROC_BAD)
     {
       internal_error (_("wait: pid %ld is not a child of this shell"), (long)pid);
-      return (127);
+      return 127;
     }
 
   if (pstatus != PROC_STILL_ALIVE)
     {
       if (pstatus > 128)
 	last_command_exit_signal = find_termsig_by_pid (pid);
-      return (pstatus);
+      return pstatus;
     }
 
   siginterrupt (SIGINT, 1);
@@ -676,7 +675,7 @@ wait_for_single_pid (pid_t pid, int flags)
   QUIT;
   CHECK_WAIT_INTR;
 
-  return (got_pid > 0 ? process_exit_status (status) : -1);
+  return got_pid > 0 ? process_exit_status (status) : -1;
 }
 
 /* Wait for all of the shell's children to exit.  Called by the `wait'
@@ -794,13 +793,13 @@ wait_for (pid_t pid, int flags)
   pstatus = find_status_by_pid (pid);
 
   if (pstatus == PROC_BAD)
-    return (0);
+    return 0;
 
   if (pstatus != PROC_STILL_ALIVE)
     {
       if (pstatus > 128)
 	last_command_exit_signal = find_termsig_by_pid (pid);
-      return (pstatus);
+      return pstatus;
     }
 
   /* If we are running a script, ignore SIGINT while we're waiting for
@@ -899,7 +898,7 @@ wait_for (pid_t pid, int flags)
   else if (interactive_shell == 0 && subshell_environment == 0 && check_window_size)
     get_new_window_size (0, (int *)0, (int *)0);
 
-  return (return_val);
+  return return_val;
 }
 
 /* Send PID SIGNAL.  Returns -1 on failure, 0 on success.  If GROUP is non-zero,
@@ -915,7 +914,7 @@ kill_pid (pid_t pid, int signal, int group)
       group = 1;
     }
   result = group ? killpg (pid, signal) : kill (pid, signal);
-  return (result);
+  return result;
 }
 
 static TTYSTRUCT shell_tty_info;
@@ -995,7 +994,7 @@ get_job_by_pid (pid_t pid, int block, PROCESS **ignore)
   int i;
 
   i = find_index_by_pid (pid);
-  return ((i == NO_PID) ? PROC_BAD : i);
+  return (i == NO_PID) ? PROC_BAD : i;
 }
 
 /* Print descriptive information about the job with leader pid PID. */
@@ -1026,3 +1025,5 @@ count_all_jobs ()
 {
   return 0;
 }
+
+}  // namespace bash

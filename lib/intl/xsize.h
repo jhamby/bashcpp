@@ -19,10 +19,10 @@
 #define _XSIZE_H
 
 /* Get size_t.  */
-#include <stddef.h>
+#include <cstddef>
 
 /* Get SIZE_MAX.  */
-#include <limits.h>
+#include <climits>
 #if HAVE_STDINT_H
 # include <stdint.h>
 #endif

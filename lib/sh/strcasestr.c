@@ -24,8 +24,6 @@
 #include <bashansi.h>
 #include <chartypes.h>
 
-#include <stdc.h>
-
 /* Determine if s2 occurs in s1.  If so, return a pointer to the
    match in s1.  The compare is case insensitive.  This is a
    case-insensitive strstr(3). */
@@ -33,10 +31,10 @@ extern "C++" const char *
 strcasestr (const char *s1, const char *s2)
 {
   int c = TOLOWER ((unsigned char)s2[0]);
-  int len = strlen (s1);
-  int l = strlen (s2);
+  int len = std::strlen (s1);
+  int l = std::strlen (s2);
   for (int i = 0; (len - i) >= l; i++)
     if ((TOLOWER ((unsigned char)s1[i]) == c) && (strncasecmp (s1 + i, s2, l) == 0))
-      return ((char *)s1 + i);
-  return ((char *)0);
+      return (char *)s1 + i;
+  return (char *)0;
 }

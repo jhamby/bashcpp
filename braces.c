@@ -31,9 +31,8 @@
 #  include <unistd.h>
 #endif
 
-#include <errno.h>
+#include <cerrno>
 
-#include "bashansi.h"
 #include "bashintl.h"
 
 #if defined (SHELL)
@@ -51,15 +50,11 @@ typedef char **WORD_LIST;
 #include "shmbutil.h"
 #include "chartypes.h"
 
-#ifndef errno
-extern int errno;
-#endif
-
 #define brace_whitespace(c) (!(c) || (c) == ' ' || (c) == '\t' || (c) == '\n')
 
 #define BRACE_SEQ_SPECIFIER	".."
 
-extern int asprintf (char **, const char *, ...) __attribute__((__format__ (printf, 2, 3)));
+// extern int asprintf (char **, const char *, ...) __attribute__((__format__ (printf, 2, 3)));
 
 /* Basic idea:
 
@@ -150,7 +145,7 @@ brace_expand (char *text)
   /* Special case.  If we never found an exciting character, then
      the preamble is all of the text, so just return that. */
   if (c != '{')
-    return (result);
+    return result;
 
   /* Find the amble.  This is the stuff inside this set of braces. */
   int start = ++i;
@@ -184,7 +179,7 @@ brace_expand (char *text)
 #endif
       free (preamble);		/* Same as result[0]; see initialization. */
       result[0] = savestring (text);
-      return (result);
+      return result;
     }
 
 #if defined (SHELL)
@@ -241,7 +236,7 @@ brace_expand (char *text)
 	  free (amble);
 	  free (preamble);
 	  result[0] = savestring (text);
-	  return (result);
+	  return result;
 	}
     }
 #endif /* SHELL */
@@ -263,7 +258,7 @@ add_tack:
 	strvec_dispose (tack);
     }
 
-  return (result);
+  return result;
 }
 
 /* Expand the text found inside of braces.  We simply try to split the
@@ -333,7 +328,7 @@ expand_amble (char *text, size_t tlen, int flags)
 #endif
       start = i;
     }
-  return (result);
+  return result;
 }
 
 #define ST_BAD	0
@@ -356,7 +351,7 @@ mkseq (intmax_t start, intmax_t end, intmax_t incr, int type, int width)
   else if (start < end && incr < 0)
     {
       if (incr == INTMAX_MIN)		/* Don't use -INTMAX_MIN */
-	return ((char **)NULL);
+	return (char **)NULL;
       incr = -incr;
     }
 
@@ -364,16 +359,16 @@ mkseq (intmax_t start, intmax_t end, intmax_t incr, int type, int width)
      and -2, not strictly necessary, are there because of the way the number
      of elements and value passed to strvec_create() are calculated below. */
   if (SUBOVERFLOW (end, start, INTMAX_MIN+3, INTMAX_MAX-2))
-    return ((char **)NULL);
+    return (char **)NULL;
 
   prevn = sh_imaxabs (end - start);
   /* Need to check this way in case INT_MAX == INTMAX_MAX */
   if (INT_MAX == INTMAX_MAX && (ADDOVERFLOW (prevn, 2, INT_MIN, INT_MAX)))
-    return ((char **)NULL);
+    return (char **)NULL;
   /* Make sure the assignment to nelem below doesn't end up <= 0 due to
      intmax_t overflow */
   else if (ADDOVERFLOW ((prevn/sh_imaxabs(incr)), 1, INTMAX_MIN, INTMAX_MAX))
-    return ((char **)NULL);
+    return (char **)NULL;
 
   /* XXX - TOFIX: potentially allocating a lot of extra memory if
      imaxabs(incr) != 1 */
@@ -381,13 +376,13 @@ mkseq (intmax_t start, intmax_t end, intmax_t incr, int type, int width)
   	nelem = (prevn / imaxabs(incr)) + 1;
      would work */
   if ((prevn / sh_imaxabs (incr)) > INT_MAX - 3)	/* check int overflow */
-    return ((char **)NULL);
+    return (char **)NULL;
   nelem = (prevn / sh_imaxabs(incr)) + 1;
   result = strvec_mcreate (nelem + 1);
   if (result == 0)
     {
       internal_error (_("brace expansion: failed to allocate memory for %u elements"), (unsigned int)nelem);
-      return ((char **)NULL);
+      return (char **)NULL;
     }
 
   /* Make sure we go through the loop at least once, so {3..3} prints `3' */
@@ -433,7 +428,7 @@ mkseq (intmax_t start, intmax_t end, intmax_t incr, int type, int width)
 	  p = inttostr (n, lbuf, sizeof (lbuf));
 	  internal_error (_("brace expansion: failed to allocate memory for `%s'"), p);
 	  strvec_dispose (result);
-	  return ((char **)NULL);
+	  return (char **)NULL;
 	}
 
       /* Handle overflow and underflow of n+incr */
@@ -448,7 +443,7 @@ mkseq (intmax_t start, intmax_t end, intmax_t incr, int type, int width)
   while (1);
 
   result[i] = (char *)0;
-  return (result);
+  return result;
 }
 
 static char **
@@ -462,7 +457,7 @@ expand_seqterm (char *text, size_t tlen)
 
   t = strstr (text, BRACE_SEQ_SPECIFIER);
   if (t == 0)
-    return ((char **)NULL);
+    return (char **)NULL;
 
   lhs_l = t - text;		/* index of start of BRACE_SEQ_SPECIFIER */
   lhs = substring (text, 0, lhs_l);
@@ -472,7 +467,7 @@ expand_seqterm (char *text, size_t tlen)
     {
       free (lhs);
       free (rhs);
-      return ((char **)NULL);
+      return (char **)NULL;
     }
 
   /* Now figure out whether LHS and RHS are integers or letters.  Both
@@ -518,7 +513,7 @@ expand_seqterm (char *text, size_t tlen)
     {
       free (lhs);
       free (rhs);
-      return ((char **)NULL);
+      return (char **)NULL;
     }
 
   /* OK, we have something.  It's either a sequence of integers, ascending
@@ -559,7 +554,7 @@ expand_seqterm (char *text, size_t tlen)
   free (lhs);
   free (rhs);
 
-  return (result);
+  return result;
 }
 
 /* Start at INDEX, and skip characters in TEXT. Set INDEX to the
@@ -697,7 +692,7 @@ comsub:
     }
 
   *indx = i;
-  return (c);
+  return c;
 }
 
 /* Return a new array of strings which is the result of appending each
@@ -709,10 +704,10 @@ static char **
 array_concat (char **arr1, char **arr2)
 {
   if (arr1 == 0)
-    return (arr2);		/* XXX - see if we can get away without copying? */
+    return arr2;		/* XXX - see if we can get away without copying? */
 
   if (arr2 == 0)
-    return (arr1);		/* XXX - caller expects us to free arr1 */
+    return arr1;		/* XXX - caller expects us to free arr1 */
 
   /* We can only short-circuit if the array consists of a single null element;
      otherwise we need to replicate the contents of the other array and
@@ -720,18 +715,18 @@ array_concat (char **arr1, char **arr2)
   if (arr1[0] && arr1[0][0] == 0 && arr1[1] == 0)
     {
       strvec_dispose (arr1);
-      return (arr2);		/* XXX - use flags to see if we can avoid copying here */
+      return arr2;		/* XXX - use flags to see if we can avoid copying here */
     }
 
   if (arr2[0] && arr2[0][0] == 0 && arr2[1] == 0)
-    return (arr1);		/* XXX - rather than copying and freeing it */
+    return arr1;		/* XXX - rather than copying and freeing it */
 
   int len1 = strvec_len (arr1);
   int len2 = strvec_len (arr2);
 
   char **result = (char **)malloc ((1 + (len1 * len2)) * sizeof (char *));
   if (result == 0)
-    return (result);
+    return result;
 
   int len = 0;
   for (int i = 0; i < len1; i++)
@@ -750,23 +745,11 @@ array_concat (char **arr1, char **arr2)
   free (arr1);
 
   result[len] = (char *)NULL;
-  return (result);
+  return result;
 }
 
 #if defined (TEST)
-#include <stdio.h>
-
-void *
-xmalloc(size_t n)
-{
-  return (malloc (n));
-}
-
-void *
-xrealloc(void *p, size_t n)
-{
-  return (realloc (p, n));
-}
+#include <cstdio>
 
 int
 internal_error (char *format, char *arg1, char *arg2)

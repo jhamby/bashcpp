@@ -24,14 +24,17 @@
 #  include <unistd.h>
 #endif
 
-#include <bashansi.h>
-#include <stdio.h>
-#include <chartypes.h>
+#include <cstdio>
+#include <cstdlib>
 
+#include <chartypes.h>
 #include "shell.h"
 
 #include "shmbchar.h"
 #include "shmbutil.h"
+
+namespace bash
+{
 
 #ifdef ESC
 #undef ESC
@@ -48,7 +51,7 @@
    quote CTLESC and CTLNUL with CTLESC.  If (flags&4) is non-zero, we want
    to remove the backslash before any unrecognized escape sequence. */
 char *
-ansicstr (const char *string, int len, int flags, int *sawc, int *rlen)
+Shell::ansicstr (const char *string, unsigned int len, int flags, bool *sawc, unsigned int *rlen)
 {
   int c, temp;
   char *ret, *r;
@@ -60,17 +63,17 @@ ansicstr (const char *string, int len, int flags, int *sawc, int *rlen)
   wchar_t wc;
 #endif
 
-  if (string == 0 || *string == '\0')
-    return ((char *)NULL);
+  if (string == nullptr || *string == '\0')
+    return nullptr;
 
   mb_cur_max = MB_CUR_MAX;
 #if defined (HANDLE_MULTIBYTE)
-  temp = 4*len + 4;
+  temp = 4 * len + 4;
   if (temp < 12)
     temp = 12;				/* ensure enough for eventual u32cesc */
-  ret = (char *)xmalloc (temp);
+  ret = new char[temp];
 #else
-  ret = (char *)xmalloc (2*len + 1);	/* 2*len for possible CTLESC */
+  ret = new char[2 * len + 1];	/* 2 * len for possible CTLESC */
 #endif
   for (r = ret, s = string; s && *s; )
     {
@@ -82,7 +85,7 @@ ansicstr (const char *string, int len, int flags, int *sawc, int *rlen)
 	  if ((locale_utf8locale && (c & 0x80)) ||
 	      (locale_utf8locale == 0 && mb_cur_max > 0 && is_basic (c) == 0))
 	    {
-	      clen = mbrtowc (&wc, s - 1, mb_cur_max, 0);
+	      clen = std::mbrtowc (&wc, s - 1, mb_cur_max, 0);
 	      if (MB_INVALIDCH (clen))
 		clen = 1;
 	    }
@@ -121,8 +124,8 @@ ansicstr (const char *string, int len, int flags, int *sawc, int *rlen)
 		 POSIX-2001 requirement and accept 0-3 octal digits after
 		 a leading `0'. */
 	      temp = 2 + ((flags & 1) && (c == '0'));
-	      for (c -= '0'; ISOCTAL (*s) && temp--; s++)
-		c = (c * 8) + OCTVALUE (*s);
+	      for (c -= '0'; isoctal (*s) && temp--; s++)
+		c = (c * 8) + octvalue (*s);
 	      c &= 0xFF;
 	      break;
 	    case 'x':			/* Hex digit -- non-ANSI */
@@ -132,15 +135,15 @@ ansicstr (const char *string, int len, int flags, int *sawc, int *rlen)
 		  s++;
 		}
 	      /* Consume at least two hex characters */
-	      for (temp = 2, c = 0; ISXDIGIT ((unsigned char)*s) && temp--; s++)
-		c = (c * 16) + HEXVALUE (*s);
+	      for (temp = 2, c = 0; std::isxdigit ((unsigned char)*s) && temp--; s++)
+		c = (c * 16) + hexvalue (*s);
 	      /* DGK says that after a `\x{' ksh93 consumes ISXDIGIT chars
 		 until a non-xdigit or `}', so potentially more than two
 		 chars are consumed. */
 	      if (flags & 16)
 		{
-		  for ( ; ISXDIGIT ((unsigned char)*s); s++)
-		    c = (c * 16) + HEXVALUE (*s);
+		  for ( ; std::isxdigit (static_cast<unsigned char>(*s)); s++)
+		    c = (c * 16) + hexvalue (*s);
 		  flags &= ~16;
 		  if (*s == '}')
 		    s++;
@@ -157,8 +160,8 @@ ansicstr (const char *string, int len, int flags, int *sawc, int *rlen)
 	    case 'u':
 	    case 'U':
 	      temp = (c == 'u') ? 4 : 8;	/* \uNNNN \UNNNNNNNN */
-	      for (v = 0; ISXDIGIT ((unsigned char)*s) && temp--; s++)
-		v = (v * 16) + HEXVALUE (*s);
+	      for (v = 0; std::isxdigit ((unsigned char)*s) && temp--; s++)
+		v = (v * 16) + hexvalue (*s);
 	      if (temp == ((c == 'u') ? 4 : 8))
 		{
 		  *r++ = '\\';	/* c remains unchanged */
@@ -185,7 +188,7 @@ ansicstr (const char *string, int len, int flags, int *sawc, int *rlen)
 	    case 'c':
 	      if (sawc)
 		{
-		  *sawc = 1;
+		  *sawc = true;
 		  *r = '\0';
 		  if (rlen)
 		    *rlen = r - ret;
@@ -198,7 +201,7 @@ ansicstr (const char *string, int len, int flags, int *sawc, int *rlen)
 		  s++;
 		  if ((flags & 2) && c == '\\' && c == *s)
 		    s++;	/* Posix requires $'\c\\' do backslash escaping */
-		  c = TOCTRL(c);
+		  c = toctrl (c);
 		  break;
 		}
 		/*FALLTHROUGH*/
@@ -221,10 +224,10 @@ ansicstr (const char *string, int len, int flags, int *sawc, int *rlen)
 /* Take a string STR, possibly containing non-printing characters, and turn it
    into a $'...' ANSI-C style quoted string.  Returns a new string. */
 char *
-ansic_quote (const char *str, int flags, int *rlen)
+ansic_quote (const char *str, unsigned int *rlen)
 {
   char *r, *ret;
-  int l, rsize;
+  unsigned int l, rsize;
   unsigned char c;
   size_t clen;
   int b;
@@ -233,11 +236,11 @@ ansic_quote (const char *str, int flags, int *rlen)
 #endif
 
   if (str == 0 || *str == 0)
-    return ((char *)0);
+    return (char *)0;
 
-  l = strlen (str);
+  l = std::strlen (str);
   rsize = 4 * l + 4;
-  r = ret = (char *)xmalloc (rsize);
+  r = ret = new char[rsize];
 
   *r++ = '$';
   *r++ = '\'';
@@ -265,16 +268,16 @@ ansic_quote (const char *str, int flags, int *rlen)
 #if defined (HANDLE_MULTIBYTE)
 	  b = is_basic (c);
 	  /* XXX - clen comparison to 0 is dicey */
-	  if ((b == 0 && ((clen = mbrtowc (&wc, s, MB_CUR_MAX, 0)) == (size_t)(-1) ||
-	      MB_INVALIDCH (clen) || iswprint (wc) == 0)) || (b == 1 && ISPRINT (c) == 0))
+	  if ((b == 0 && ((clen = std::mbrtowc (&wc, s, MB_CUR_MAX, 0)) == (size_t)(-1) ||
+	      MB_INVALIDCH (clen) || std::iswprint (wc) == 0)) || (b == 1 && std::isprint (c) == 0))
 #else
-	  if (ISPRINT (c) == 0)
+	  if (std::isprint (c) == 0)
 #endif
 	    {
 	      *r++ = '\\';
-	      *r++ = TOCHAR ((c >> 6) & 07);
-	      *r++ = TOCHAR ((c >> 3) & 07);
-	      *r++ = TOCHAR (c & 07);
+	      *r++ = tochar ((c >> 6) & 07);
+	      *r++ = tochar ((c >> 3) & 07);
+	      *r++ = tochar (c & 07);
 	      continue;
 	    }
 	  l = 0;
@@ -291,7 +294,7 @@ ansic_quote (const char *str, int flags, int *rlen)
       else
 	{
 	  for (b = 0; b < (int)clen; b++)
-	    *r++ = (unsigned char)s[b];
+	    *r++ = static_cast<unsigned char> (s[b]);
 	  s += clen - 1;	/* -1 because of the increment above */
 	}
     }
@@ -312,22 +315,22 @@ ansic_wshouldquote (const char *string)
   wchar_t *wcstr = NULL;
   size_t slen;
 
-  slen = mbstowcs (wcstr, string, 0);
+  slen = std::mbstowcs (wcstr, string, 0);
 
-  if (slen == (size_t)-1)
+  if (slen == static_cast<size_t> (-1))
     return true;
 
-  wcstr = (wchar_t *)xmalloc (sizeof (wchar_t) * (slen + 1));
-  mbstowcs (wcstr, string, slen + 1);
+  wcstr = new wchar_t[slen + 1];
+  std::mbstowcs (wcstr, string, slen + 1);
 
   for (wcs = wcstr; (wcc = *wcs); wcs++)
-    if (iswprint(wcc) == 0)
+    if (std::iswprint(wcc) == 0)
       {
-	free (wcstr);
+	delete[] wcstr;
 	return true;
       }
 
-  free (wcstr);
+  delete[] wcstr;
   return false;
 }
 #endif
@@ -346,9 +349,9 @@ ansic_shouldquote (const char *string)
     {
 #if defined (HANDLE_MULTIBYTE)
       if (is_basic (c) == 0)
-	return (ansic_wshouldquote (s));
+	return ansic_wshouldquote (s);
 #endif
-      if (ISPRINT (c) == 0)
+      if (std::isprint (c) == 0)
 	return true;
     }
 
@@ -358,26 +361,28 @@ ansic_shouldquote (const char *string)
 /* $'...' ANSI-C expand the portion of STRING between START and END and
    return the result.  The result cannot be longer than the input string. */
 char *
-ansiexpand (const char *string, int start, int end, int *lenp)
+Shell::ansiexpand (const char *string, unsigned int start, unsigned int end, unsigned int *lenp)
 {
   char *temp, *t;
-  int len, tlen;
+  unsigned int len, tlen;
 
-  temp = (char *)xmalloc (end - start + 1);
+  temp = new char[end + 1 - start];
   for (tlen = 0, len = start; len < end; )
     temp[tlen++] = string[len++];
   temp[tlen] = '\0';
 
   if (*temp)
     {
-      t = ansicstr (temp, tlen, 2, (int *)NULL, lenp);
-      free (temp);
-      return (t);
+      t = ansicstr (temp, tlen, 2, nullptr, lenp);
+      delete[] temp;
+      return t;
     }
   else
     {
       if (lenp)
 	*lenp = 0;
-      return (temp);
+      return temp;
     }
 }
+
+}  // namespace bash

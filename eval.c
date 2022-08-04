@@ -21,16 +21,11 @@
 #include "config.h"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#include "bashansi.h"
-#include <stdio.h>
-
-#include <signal.h>
+#include <cstdio>
+#include <csignal>
 
 #include "bashintl.h"
 
@@ -44,12 +39,11 @@
 #include "input.h"
 #include "execute_cmd.h"
 
-#if defined (HISTORY)
-#  include "bashhist.h"
-#endif
+namespace bash
+{
 
-static void send_pwd_to_eterm (void);
-static sighandler alrm_catcher (int);
+static void send_pwd_to_eterm ();
+static SigHandler alrm_catcher (int);
 
 /* Read and execute commands until EOF is reached.  This assumes that
    the input source has already been initialized. */
@@ -57,11 +51,8 @@ int
 reader_loop ()
 {
   int our_indirection_level;
-  COMMAND * volatile current_command;
 
-  USE_VAR(current_command);
-
-  current_command = (COMMAND *)NULL;
+  Command *current_command = NULL;
 
   our_indirection_level = ++indirection_level;
 
@@ -189,7 +180,7 @@ reader_loop ()
 	EOF_Reached = true;
     }
   indirection_level--;
-  return (last_command_exit_value);
+  return last_command_exit_value;
 }
 
 /* Pretty print shell scripts */
@@ -207,7 +198,7 @@ pretty_print_loop ()
     {
       code = setjmp_nosigs (top_level);
       if (code)
-        return (EXECUTION_FAILURE);
+        return EXECUTION_FAILURE;
       if (read_command() == 0)
 	{
 	  current_command = global_command;
@@ -227,10 +218,10 @@ pretty_print_loop ()
 	  dispose_command (current_command);
 	}
       else
-	return (EXECUTION_FAILURE);
+	return EXECUTION_FAILURE;
     }
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 static sighandler
@@ -345,7 +336,7 @@ parse_command ()
   if (need_here_doc)
     gather_here_documents ();
 
-  return (r);
+  return r;
 }
 
 /* Read and parse a command, returning the status of the parse.  The command
@@ -392,5 +383,7 @@ read_command ()
       set_signal_handler (SIGALRM, old_alrm);
     }
 
-  return (result);
+  return result;
 }
+
+}  // namespace bash

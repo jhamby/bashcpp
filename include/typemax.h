@@ -54,14 +54,12 @@
         : ((((t) 1 << (TYPE_WIDTH (t) - 2)) - 1) * 2 + 1)))
 #endif
 
-#ifdef HAVE_LONG_LONG
-#  ifndef LLONG_MAX
-#    define LLONG_MAX   TYPE_MAXIMUM(long long int)
-#    define LLONG_MIN	TYPE_MINIMUM(long long int)
-#  endif
-#  ifndef ULLONG_MAX
-#    define ULLONG_MAX  TYPE_MAXIMUM(unsigned long long int)
-#  endif
+#ifndef LLONG_MAX
+#  define LLONG_MAX   TYPE_MAXIMUM(long long int)
+#  define LLONG_MIN	TYPE_MINIMUM(long long int)
+#endif
+#ifndef ULLONG_MAX
+#  define ULLONG_MAX  TYPE_MAXIMUM(unsigned long long int)
 #endif
 
 #ifndef ULONG_MAX
@@ -77,13 +75,6 @@
 #  define INT_MAX	TYPE_MAXIMUM(int)
 #  define INT_MIN	TYPE_MINIMUM(int)
 #  define UINT_MAX	((unsigned int) ~(unsigned int)0)
-#endif
-
-/* workaround for gcc bug in versions < 2.7 */
-#if defined (HAVE_LONG_LONG) && __GNUC__ == 2 && __GNUC_MINOR__ < 7
-static const unsigned long long int maxquad = ULLONG_MAX;
-#  undef ULLONG_MAX
-#  define ULLONG_MAX maxquad
 #endif
 
 #if !defined (INTMAX_MAX) || !defined (INTMAX_MIN)

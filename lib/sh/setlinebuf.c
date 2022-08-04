@@ -20,15 +20,14 @@
 
 #include <config.h>
 
-#include <stdio.h>
+#include <cstdio>
 
-#include <xmalloc.h>
+#include "externs.h"
 
-#if defined (USING_BASH_MALLOC)
-#  define LBUF_BUFSIZE	1008
-#else
-#  define LBUF_BUFSIZE	BUFSIZ
-#endif
+namespace bash
+{
+
+#define LBUF_BUFSIZE	BUFSIZ
 
 /* Cause STREAM to buffer lines as opposed to characters or blocks. */
 int
@@ -37,26 +36,24 @@ sh_setlinebuf (FILE *stream)
   char *local_linebuf;
 
 #if !defined (HAVE_SETLINEBUF) && !defined (HAVE_SETVBUF)
-  return (0);
+  return 0;
 #endif
 
-#if defined (USING_BASH_MALLOC)
-  local_linebuf = (char *)xmalloc (LBUF_BUFSIZE);
-#else
-  local_linebuf = (char *)NULL;
-#endif
+  local_linebuf = nullptr;
 
 #if defined (HAVE_SETVBUF)
 
 #  if defined (SETVBUF_REVERSED)
-  return (setvbuf (stream, _IOLBF, local_linebuf, LBUF_BUFSIZE));
+  return std::setvbuf (stream, _IOLBF, local_linebuf, LBUF_BUFSIZE);
 #  else /* !SETVBUF_REVERSED */
-  return (setvbuf (stream, local_linebuf, _IOLBF, LBUF_BUFSIZE));
+  return std::setvbuf (stream, local_linebuf, _IOLBF, LBUF_BUFSIZE);
 #  endif /* !SETVBUF_REVERSED */
 # else /* !HAVE_SETVBUF */
 
   setlinebuf (stream);
-  return (0);
+  return 0;
 
 #endif /* !HAVE_SETVBUF */
 }
+
+}  // namespace bash

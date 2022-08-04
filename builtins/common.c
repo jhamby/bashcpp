@@ -27,21 +27,16 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include <chartypes.h>
+#include <cstdio>
+
+#include "chartypes.h"
 #include "../bashtypes.h"
 #include "posixstat.h"
-#include <signal.h>
 
-#include <errno.h>
+#include <csignal>
+#include <cerrno>
+#include <cstdarg>
 
-#if defined (PREFER_STDARG)
-#  include <stdarg.h>
-#else
-#  include <varargs.h>
-#endif
-
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #define NEED_FPURGE_DECL
@@ -60,19 +55,12 @@
 #include "builtext.h"
 #include <tilde/tilde.h>
 
-#if defined (HISTORY)
-#  include "../bashhist.h"
-#endif
-
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
-
-extern const char *bash_getcwd_errstr;
+namespace bash
+{
 
 /* Used by some builtins and the mainline code. */
-sh_builtin_func_t *last_shell_builtin = (sh_builtin_func_t *)NULL;
-sh_builtin_func_t *this_shell_builtin = (sh_builtin_func_t *)NULL;
+// sh_builtin_func_t *last_shell_builtin = (sh_builtin_func_t *)NULL;
+// sh_builtin_func_t *this_shell_builtin = (sh_builtin_func_t *)NULL;
 
 /* **************************************************************** */
 /*								    */
@@ -164,12 +152,12 @@ no_options (WORD_LIST *list)
       if (opt == GETOPT_HELP)
 	{
 	  builtin_help ();
-	  return (2);
+	  return 2;
 	}
       builtin_usage ();
-      return (1);
+      return 1;
     }
-  return (0);
+  return 0;
 }
 
 void
@@ -314,9 +302,9 @@ sh_chkwrite (int s)
       sh_wrerror ();
       fpurge (stdout);
       clearerr (stdout);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
-  return (s);
+  return s;
 }
 
 /* **************************************************************** */
@@ -433,7 +421,7 @@ static int changed_dollar_vars;
 int
 dollar_vars_changed ()
 {
-  return (changed_dollar_vars);
+  return changed_dollar_vars;
 }
 
 void
@@ -496,7 +484,7 @@ get_numeric_arg (WORD_LIST *list, int fatal, intmax_t *count)
       no_args ((WORD_LIST *)list->next);
     }
 
-  return (1);
+  return 1;
 }
 
 /* Get an eight-bit status value from LIST */
@@ -519,8 +507,8 @@ get_exitstat (WORD_LIST *list)
 	 part of its reason for existing, and because the extended debug mode
 	 does things with the return value. */
       if (this_shell_builtin == return_builtin && running_trap > 0 && running_trap != DEBUG_TRAP+1)
-	return (trap_saved_exit_value);
-      return (last_command_exit_value);
+	return trap_saved_exit_value;
+      return last_command_exit_value;
     }
 
   arg = list->word->word;
@@ -554,7 +542,7 @@ read_octal (const char *string)
   if (digits == 0 || *string)
     result = -1;
 
-  return (result);
+  return result;
 }
 
 /* **************************************************************** */
@@ -592,7 +580,7 @@ get_working_directory (const char *for_whom)
 	}
     }
 
-  return (savestring (the_current_working_directory));
+  return savestring (the_current_working_directory);
 }
 
 /* Make NAME our internal idea of the current working directory. */
@@ -648,7 +636,7 @@ get_job_by_name (const char *name, int flags)
 	        builtin_error (_("%s: ambiguous job spec"), name);
 	      else
 	        internal_error (_("%s: ambiguous job spec"), name);
-	      return (DUP_JOB);
+	      return DUP_JOB;
 	    }
 	  else
 	    job = i;
@@ -656,7 +644,7 @@ get_job_by_name (const char *name, int flags)
       while (p != j->pipe);
     }
 
-  return (job);
+  return job;
 }
 
 /* Return the job spec found in LIST. */
@@ -664,12 +652,12 @@ int
 get_job_spec (WORD_LIST *list)
 {
   if (list == 0)
-    return (js.j_current);
+    return js.j_current;
 
   char *word = list->word->word;
 
   if (*word == '\0')
-    return (NO_JOB);
+    return NO_JOB;
 
   if (*word == '%')
     word++;
@@ -677,7 +665,7 @@ get_job_spec (WORD_LIST *list)
   if (DIGIT (*word) && all_digits (word))
     {
       int job = atoi (word);
-      return ((job < 0 || job > js.j_jobslots) ? NO_JOB : job - 1);
+      return (job < 0 || job > js.j_jobslots) ? NO_JOB : job - 1;
     }
 
   int jflags = 0;
@@ -686,10 +674,10 @@ get_job_spec (WORD_LIST *list)
     case 0:
     case '%':
     case '+':
-      return (js.j_current);
+      return js.j_current;
 
     case '-':
-      return (js.j_previous);
+      return js.j_previous;
 
     case '?':			/* Substring search requested. */
       jflags |= JM_SUBSTRING;
@@ -791,7 +779,7 @@ display_signal_list (WORD_LIST *list, int forcecols)
 	}
       list = (WORD_LIST *)list->next;
     }
-  return (result);
+  return result;
 }
 
 /* **************************************************************** */
@@ -830,16 +818,16 @@ builtin_address_internal (const char *name, int disabled_okay)
 	  if (shell_builtins[mid].function &&
 	      ((shell_builtins[mid].flags & BUILTIN_DELETED) == 0) &&
 	      ((shell_builtins[mid].flags & BUILTIN_ENABLED) || disabled_okay))
-	    return (&shell_builtins[mid]);
+	    return &shell_builtins[mid];
 	  else
-	    return ((struct builtin *)NULL);
+	    return (struct builtin *)NULL;
 	}
       if (j > 0)
 	hi = mid - 1;
       else
 	lo = mid + 1;
     }
-  return ((struct builtin *)NULL);
+  return (struct builtin *)NULL;
 }
 
 /* Return the pointer to the function implementing builtin command NAME. */
@@ -847,7 +835,7 @@ sh_builtin_func_t *
 find_shell_builtin (const char *name)
 {
   current_builtin = builtin_address_internal (name, 0);
-  return (current_builtin ? current_builtin->function : (sh_builtin_func_t *)NULL);
+  return current_builtin ? current_builtin->function : (sh_builtin_func_t *)NULL;
 }
 
 /* Return the address of builtin with NAME, whether it is enabled or not. */
@@ -855,7 +843,7 @@ sh_builtin_func_t *
 builtin_address (const char *name)
 {
   current_builtin = builtin_address_internal (name, 1);
-  return (current_builtin ? current_builtin->function : (sh_builtin_func_t *)NULL);
+  return current_builtin ? current_builtin->function : (sh_builtin_func_t *)NULL;
 }
 
 /* Return the function implementing the builtin NAME, but only if it is a
@@ -877,7 +865,7 @@ shell_builtin_compare (struct builtin *sbp1, struct builtin *sbp2)
   if ((result = sbp1->name[0] - sbp2->name[0]) == 0)
     result = strcmp (sbp1->name, sbp2->name);
 
-  return (result);
+  return result;
 }
 
 /* Sort the table of shell builtins so that the binary search will work
@@ -941,5 +929,7 @@ builtin_unbind_variable (const char *vname)
       builtin_error (_("%s: cannot unset"), vname);
       return -2;
     }
-  return (unbind_variable (vname));
+  return unbind_variable (vname);
 }
+
+}  // namespace bash

@@ -24,10 +24,10 @@
    spec.  The upper and lower case letters are translated by the code
    in smatch.c:collsym(). */
 
-typedef struct _COLLSYM {
+struct __COLLSYM {
   const XCHAR *name;
   CHAR code;
-} __COLLSYM;
+};
 
 static __COLLSYM POSIXCOLL [] =
 {
@@ -131,6 +131,5 @@ static __COLLSYM POSIXCOLL [] =
 	{  0,	0 },
 };
 
-#undef _COLLSYM
 #undef __COLLSYM
 #undef POSIXCOLL

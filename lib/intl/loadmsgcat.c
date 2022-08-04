@@ -25,8 +25,8 @@
 # include <config.h>
 #endif
 
-#include <ctype.h>
-#include <errno.h>
+#include <cctype>
+#include <cerrno>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -54,8 +54,8 @@ char *alloca ();
 # endif
 #endif
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #if defined HAVE_UNISTD_H || defined _LIBC
 # include <unistd.h>
@@ -838,11 +838,11 @@ _nl_load_domain (struct loaded_l10nfile *domain_file,
   /* We must know about the size of the file.  */
   if (
 #ifdef _LIBC
-      __builtin_expect (fstat64 (fd, &st) != 0, 0)
+      __builtin_expect (::fstat64 (fd, &st) != 0, 0)
 #else
-      __builtin_expect (fstat (fd, &st) != 0, 0)
+      __builtin_expect (::fstat (fd, &st) != 0, 0)
 #endif
-      || __builtin_expect ((size = (size_t) st.st_size) != st.st_size, 0)
+      || __builtin_expect ((size = (size_t) st.st_size) != (size_t) st.st_size, 0)
       || __builtin_expect (size < sizeof (struct mo_file_header), 0))
     /* Something went wrong.  */
     goto out;
@@ -850,7 +850,7 @@ _nl_load_domain (struct loaded_l10nfile *domain_file,
 #ifdef HAVE_MMAP
   /* Now we are ready to load the file.  If mmap() is available we try
      this first.  If not available or it failed we try to load it.  */
-  data = (struct mo_file_header *) mmap (NULL, size, PROT_READ,
+  data = (struct mo_file_header *) ::mmap (NULL, size, PROT_READ,
 					 MAP_PRIVATE, fd, 0);
 
   if (__builtin_expect (data != (struct mo_file_header *) -1, 1))
@@ -1089,7 +1089,7 @@ _nl_load_domain (struct loaded_l10nfile *domain_file,
 		    inmem_trans_sysdep_tab = (struct sysdep_string_desc *) mem;
 		    mem += n_inmem_sysdep_strings
 			   * sizeof (struct sysdep_string_desc);
-		    inmem_hash_tab = (nls_uint32 *) mem;
+		    inmem_hash_tab = reinterpret_cast<nls_uint32 *> (mem);
 		    mem += domain->hash_size * sizeof (nls_uint32);
 
 		    /* Compute the system dependent strings.  */
@@ -1101,8 +1101,8 @@ _nl_load_domain (struct loaded_l10nfile *domain_file,
 			for (j = 0; j < 2; j++)
 			  {
 			    const struct sysdep_string *sysdep_string =
-			      (const struct sysdep_string *)
-			      ((char *) data
+			      reinterpret_cast<const struct sysdep_string *>
+			      (reinterpret_cast<char *> (data)
 			       + W (domain->must_swap,
 				    j == 0
 				    ? orig_sysdep_tab[i]
@@ -1139,14 +1139,14 @@ _nl_load_domain (struct loaded_l10nfile *domain_file,
 			    for (j = 0; j < 2; j++)
 			      {
 				const struct sysdep_string *sysdep_string =
-				  (const struct sysdep_string *)
-				  ((char *) data
+				  reinterpret_cast<const struct sysdep_string *>
+				  (reinterpret_cast<char *> (data)
 				   + W (domain->must_swap,
 					j == 0
 					? orig_sysdep_tab[i]
 					: trans_sysdep_tab[i]));
 				const char *static_segments =
-				  (char *) data
+				  reinterpret_cast<char *> (data)
 				  + W (domain->must_swap, sysdep_string->offset);
 				const struct segment_pair *p =
 				  sysdep_string->segments;
@@ -1265,14 +1265,14 @@ _nl_load_domain (struct loaded_l10nfile *domain_file,
       /* This is an invalid revision.  */
     invalid:
       /* This is an invalid .mo file or we ran out of resources.  */
-      free (domain->malloced);
+      std::free (domain->malloced);
 #ifdef HAVE_MMAP
       if (use_mmap)
-	munmap ((caddr_t) data, size);
+	::munmap (data, size);
       else
 #endif
-	free (data);
-      free (domain);
+	std::free (data);
+      std::free (domain);
       domain_file->data = NULL;
       goto out;
     }
@@ -1289,7 +1289,7 @@ _nl_load_domain (struct loaded_l10nfile *domain_file,
 #else
   nullentry = _nl_find_msg (domain_file, domainbinding, "", 0, &nullentrylen);
 #endif
-  if (__builtin_expect (nullentry == (char *) -1, 0))
+  if (__builtin_expect (nullentry == reinterpret_cast<char*> (-1), 0))
     {
 #ifdef _LIBC
       __libc_rwlock_fini (domain->conversions_lock);
@@ -1300,7 +1300,7 @@ _nl_load_domain (struct loaded_l10nfile *domain_file,
 
  out:
   if (fd != -1)
-    close (fd);
+    ::close (fd);
 
   domain_file->decided = 1;
 
@@ -1324,24 +1324,24 @@ _nl_unload_domain (struct loaded_domain *domain)
     {
       struct converted_domain *convd = &domain->conversions[i];
 
-      free (convd->encoding);
+      std::free (convd->encoding);
       if (convd->conv_tab != NULL && convd->conv_tab != (char **) -1)
-	free (convd->conv_tab);
+	std::free (convd->conv_tab);
       if (convd->conv != (__gconv_t) -1)
 	__gconv_close (convd->conv);
     }
-  free (domain->conversions);
+  std::free (domain->conversions);
   __libc_rwlock_fini (domain->conversions_lock);
 
-  free (domain->malloced);
+  std::free (domain->malloced);
 
 # ifdef _POSIX_MAPPED_FILES
   if (domain->use_mmap)
-    munmap ((caddr_t) domain->data, domain->mmap_size);
+    ::munmap ((caddr_t) domain->data, domain->mmap_size);
   else
 # endif	/* _POSIX_MAPPED_FILES */
-    free ((void *) domain->data);
+    std::free ((void *) domain->data);
 
-  free (domain);
+  std::free (domain);
 }
 #endif

@@ -46,8 +46,9 @@ $END
 
 #include <config.h>
 
-#include <stdio.h>
-#include <errno.h>
+#include <cstdio>
+#include <cerrno>
+
 #if defined (HAVE_UNISTD_H)
 #  ifdef _MINIX
 #    include <sys/types.h>
@@ -55,20 +56,17 @@ $END
 #  include <unistd.h>
 #endif
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
-#include <signal.h>
+#include <csignal>
 
 #include "../shell.h"
 #include "../trap.h"
 #include "../jobs.h"
 #include "common.h"
 
-/* Not all systems declare ERRNO in errno.h... and some systems #define it! */
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
+namespace bash
+{
 
 static void kill_error (pid_t, int);
 
@@ -82,7 +80,7 @@ static void kill_error (pid_t, int);
    kill -KILL %1?  No, if you fill up the process table this way you
    can still kill some. */
 int
-kill_builtin (WORD_LIST *list)
+Shell::kill_builtin (WORD_LIST *list)
 {
   int sig, dflags;
   const char *sigspec, *word;
@@ -92,7 +90,7 @@ kill_builtin (WORD_LIST *list)
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
   CHECK_HELPOPT (list);
 
@@ -128,7 +126,7 @@ use_sigspec:
 	  else
 	    {
 	      sh_needarg (word);
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	}
       else if (word[0] == '-' && word[1] == 's' && ISALPHA (word[2]))
@@ -149,7 +147,7 @@ use_sigspec:
       else if (ISOPTION (word, '?'))
 	{
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
       /* If this is a signal specification then process it.  We only process
 	 the first one seen; other arguments may signify process groups (e.g,
@@ -166,19 +164,19 @@ use_sigspec:
     }
 
   if (listing)
-    return (display_signal_list (list, 0));
+    return display_signal_list (list, 0);
 
   /* OK, we are killing processes. */
   if (sig == NO_SIG)
     {
       sh_invalidsig (sigspec);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   while (list)
@@ -256,7 +254,7 @@ use_sigspec:
       list = (WORD_LIST *)list->next;
     }
 
-  return (any_succeeded ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+  return any_succeeded ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
 }
 
 static void
@@ -269,3 +267,5 @@ kill_error (pid_t pid, int e)
     x = _("Unknown error");
   builtin_error ("(%ld) - %s", (long)pid, x);
 }
+
+}  // namespace bash

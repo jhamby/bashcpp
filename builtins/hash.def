@@ -56,7 +56,6 @@ $END
 
 #include <errno.h>
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include "../shell.h"
@@ -67,6 +66,9 @@ $END
 #include "../hashcmd.h"
 #include "common.h"
 #include "bashgetopt.h"
+
+namespace bash
+{
 
 extern bool dot_found_in_search;
 
@@ -80,7 +82,7 @@ static int list_hashed_filename_targets (WORD_LIST *, bool);
    not empty, then rehash (or hash in the first place) the specified
    commands. */
 int
-hash_builtin (WORD_LIST *list)
+Shell::hash_builtin (WORD_LIST *list)
 {
 //   int expunge_hash_table, list_targets, list_portably, delete, opt;
 //   char *w, *pathname;
@@ -88,7 +90,7 @@ hash_builtin (WORD_LIST *list)
   if (!hashing_enabled)
     {
       builtin_error (_("hashing disabled"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   bool expunge_hash_table = false;
@@ -120,7 +122,7 @@ hash_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
@@ -129,7 +131,7 @@ hash_builtin (WORD_LIST *list)
   if (list == 0 && (delete_ || list_targets))
     {
       sh_needarg (delete_ ? "-d" : "-t");
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   /* We want hash -r to be silent, but hash -- to print hashing info, so
@@ -141,7 +143,7 @@ hash_builtin (WORD_LIST *list)
 	    (list_portably == 0 || shell_compatibility_level <= 50))
 	printf (_("%s: hash table empty\n"), this_command_name);
 
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   if (expunge_hash_table)
@@ -149,7 +151,7 @@ hash_builtin (WORD_LIST *list)
 
   /* If someone runs `hash -r -t xyz' he will be disappointed. */
   if (list_targets)
-    return (list_hashed_filename_targets (list, list_portably));
+    return list_hashed_filename_targets (list, list_portably);
 
 #if defined (RESTRICTED_SHELL)
   if (restricted && pathname)
@@ -157,7 +159,7 @@ hash_builtin (WORD_LIST *list)
       if (strchr (pathname, '/'))
 	{
           sh_restricted (pathname);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
 	}
       /* If we are changing the hash table in a restricted shell, make sure the
 	 target pathname can be found using a $PATH search. */
@@ -166,7 +168,7 @@ hash_builtin (WORD_LIST *list)
 	{
 	  sh_notfound (pathname);
 	  free (w);
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
       free (w);
     }
@@ -205,7 +207,7 @@ hash_builtin (WORD_LIST *list)
     }
 
   fflush (stdout);
-  return (opt);
+  return opt;
 }
 
 static int
@@ -229,7 +231,7 @@ add_hashed_command (char *w, int quiet)
 	}
       FREE (full_path);
     }
-  return (rv);
+  return rv;
 }
 
 /* Print information about current hashed info. */
@@ -293,5 +295,7 @@ list_hashed_filename_targets (WORD_LIST *list, bool fmt)
       free (target);
     }
 
-  return (all_found ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+  return all_found ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
 }
+
+}  // namespace bash

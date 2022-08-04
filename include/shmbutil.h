@@ -21,41 +21,46 @@
 #if !defined (_SH_MBUTIL_H_)
 #define _SH_MBUTIL_H_
 
-#include "stdc.h"
-
 /* Include config.h for HANDLE_MULTIBYTE */
 #include <config.h>
 
+#include <cstring>
+#include <cwchar>
+
 #if defined (HANDLE_MULTIBYTE)
 #include "shmbchar.h"
+#endif
 
-extern size_t xwcsrtombs (char *, const wchar_t **, size_t, mbstate_t *);
-extern size_t xmbsrtowcs (wchar_t *, const char **, size_t, mbstate_t *);
-extern size_t xdupmbstowcs (wchar_t **, char ***, const char *);
+namespace bash {
 
-extern size_t mbstrlen (const char *);
+#if defined (HANDLE_MULTIBYTE)
 
-extern char *xstrchr (const char *, int);
+size_t xwcsrtombs (char *, const wchar_t **, size_t, std::mbstate_t *);
+size_t xmbsrtowcs (wchar_t *, const char **, size_t, std::mbstate_t *);
+size_t xdupmbstowcs (wchar_t **, char ***, const char *);
 
-extern int locale_mb_cur_max;	/* XXX */
-extern int locale_utf8locale;	/* XXX */
+size_t mbstrlen (const char *);
+
+char *xstrchr (const char *, int);
 
 #ifndef MB_INVALIDCH
-#define MB_INVALIDCH(x)		((x) == (size_t)-1 || (x) == (size_t)-2)
+#define MB_INVALIDCH(x)		((x) == static_cast<size_t> (-1) || (x) == static_cast<size_t> (-2))
 #define MB_NULLWCH(x)		((x) == 0)
 #endif
 
-#define MBSLEN(s)	(((s) && (s)[0]) ? ((s)[1] ? mbstrlen (s) : 1) : 0)
-#define MB_STRLEN(s)	((MB_CUR_MAX > 1) ? MBSLEN (s) : STRLEN (s))
+// #define MBSLEN(s)	(((s) && (s)[0]) ? ((s)[1] ? mbstrlen (s) : 1) : 0)
+// #define MB_STRLEN(s)	((MB_CUR_MAX > 1) ? MBSLEN (s) : STRLEN (s))
 
-#define MBLEN(s, n)	((MB_CUR_MAX > 1) ? mblen ((s), (n)) : 1)
-#define MBRLEN(s, n, p)	((MB_CUR_MAX > 1) ? mbrlen ((s), (n), (p)) : 1)
+// #define MBLEN(s, n)	((MB_CUR_MAX > 1) ? mblen ((s), (n)) : 1)
+// #define MBRLEN(s, n, p)	((MB_CUR_MAX > 1) ? mbrlen ((s), (n), (p)) : 1)
 
-#define UTF8_SINGLEBYTE(c)	(((c) & 0x80) == 0)
-#define UTF8_MBFIRSTCHAR(c)	(((c) & 0xc0) == 0xc0)
-#define UTF8_MBCHAR(c)		(((c) & 0xc0) == 0x80)
+// #define UTF8_SINGLEBYTE(c)	(((c) & 0x80) == 0)
+// #define UTF8_MBFIRSTCHAR(c)	(((c) & 0xc0) == 0xc0)
+// #define UTF8_MBCHAR(c)		(((c) & 0xc0) == 0x80)
 
 #else /* !HANDLE_MULTIBYTE */
+
+// XXX fix this code path after the HANDLE_MULTIBYTE code path works!
 
 #undef MB_LEN_MAX
 #undef MB_CUR_MAX
@@ -63,22 +68,13 @@ extern int locale_utf8locale;	/* XXX */
 #define MB_LEN_MAX	1
 #define MB_CUR_MAX	1
 
-#undef xstrchr
-#define xstrchr(s, c)	strchr(s, c)
-
 #ifndef MB_INVALIDCH
 #define MB_INVALIDCH(x)		(0)
 #define MB_NULLWCH(x)		(0)
 #endif
 
-#define MB_STRLEN(s)		(STRLEN(s))
-
 #define MBLEN(s, n)		1
 #define MBRLEN(s, n, p)		1
-
-#ifndef wchar_t
-#  define wchar_t	int
-#endif
 
 #define UTF8_SINGLEBYTE(c)	(1)
 #define UTF8_MBFIRSTCHAR(c)	(0)
@@ -89,8 +85,8 @@ extern int locale_utf8locale;	/* XXX */
    with `;'. */
 #if defined (HANDLE_MULTIBYTE)
 #  define DECLARE_MBSTATE \
-	mbstate_t state; \
-	memset (&state, '\0', sizeof (mbstate_t))
+	std::mbstate_t state; \
+	memset (&state, '\0', sizeof (std::mbstate_t))
 #else
 #  define DECLARE_MBSTATE
 #endif  /* !HANDLE_MULTIBYTE */
@@ -98,7 +94,7 @@ extern int locale_utf8locale;	/* XXX */
 /* Initialize or reinitialize a multibyte state named `state'.  Call must be
    terminated with `;'. */
 #if defined (HANDLE_MULTIBYTE)
-#  define INITIALIZE_MBSTATE memset (&state, '\0', sizeof (mbstate_t))
+#  define INITIALIZE_MBSTATE std::memset (&state, '\0', sizeof (std::mbstate_t))
 #else
 #  define INITIALIZE_MBSTATE
 #endif  /* !HANDLE_MULTIBYTE */
@@ -111,7 +107,7 @@ extern int locale_utf8locale;	/* XXX */
       { \
 	if (locale_mb_cur_max > 1) \
 	  { \
-	    mbstate_t state_bak; \
+	    std::mbstate_t state_bak; \
 	    size_t mblength; \
 	    int _f; \
 \
@@ -123,10 +119,10 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      { \
 	        state_bak = state; \
-	        mblength = mbrlen ((_str) + (_i), (_strsize) - (_i), &state); \
+	        mblength = std::mbrlen ((_str) + (_i), (_strsize) - (_i), &state); \
 	      } \
 \
-	    if (mblength == (size_t)-2 || mblength == (size_t)-1) \
+	    if (mblength == static_cast<size_t> (-2) || mblength == static_cast<size_t> (-1)) \
 	      { \
 		state = state_bak; \
 		(_i)++; \
@@ -145,7 +141,7 @@ extern int locale_utf8locale;	/* XXX */
 #endif  /* !HANDLE_MULTIBYTE */
 
 /* Advance one (possibly multibyte) character in the string _STR of length
-   _STRSIZE.
+   _STRSIZE. FIXME: has reference to locale_utf8locale!
    SPECIAL:  assume that _STR will be incremented by 1 after this call. */
 #if defined (HANDLE_MULTIBYTE)
 #  define ADVANCE_CHAR_P(_str, _strsize) \
@@ -153,7 +149,7 @@ extern int locale_utf8locale;	/* XXX */
       { \
 	if (locale_mb_cur_max > 1) \
 	  { \
-	    mbstate_t state_bak; \
+	    std::mbstate_t state_bak; \
 	    size_t mblength; \
 	    int _f; \
 \
@@ -165,10 +161,10 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      { \
 		state_bak = state; \
-		mblength = mbrlen ((_str), (_strsize), &state); \
+		mblength = std::mbrlen ((_str), (_strsize), &state); \
 	      } \
 \
-	    if (mblength == (size_t)-2 || mblength == (size_t)-1) \
+	    if (mblength == static_cast<size_t>(-2) || mblength == static_cast<size_t>(-1)) \
 	      { \
 		state = state_bak; \
 		mblength = 1; \
@@ -190,7 +186,7 @@ extern int locale_utf8locale;	/* XXX */
       { \
 	if (locale_mb_cur_max > 1) \
 	  { \
-	    mbstate_t state_bak; \
+	    std::mbstate_t state_bak; \
 	    size_t mblength; \
 	    int _x, _p; /* _x == temp index into string, _p == prev index */ \
 \
@@ -198,9 +194,9 @@ extern int locale_utf8locale;	/* XXX */
 	    while (_x < (_i)) \
 	      { \
 	        state_bak = state; \
-	        mblength = mbrlen ((_str) + (_x), (_strsize) - (_x), &state); \
+	        mblength = std::mbrlen ((_str) + (_x), (_strsize) - (_x), &state); \
 \
-		if (mblength == (size_t)-2 || mblength == (size_t)-1) \
+		if (mblength == static_cast<size_t>(-2) || mblength == static_cast<size_t>(-1)) \
 		  { \
 		    state = state_bak; \
 		    _x++; \
@@ -232,7 +228,7 @@ extern int locale_utf8locale;	/* XXX */
       { \
 	if (locale_mb_cur_max > 1) \
 	  { \
-	    mbstate_t state_bak; \
+	    std::mbstate_t state_bak; \
 	    size_t mblength; \
 	    char *_x, _p; /* _x == temp pointer into string, _p == prev pointer */ \
 \
@@ -240,9 +236,9 @@ extern int locale_utf8locale;	/* XXX */
 	    while (_x < (_str)) \
 	      { \
 	        state_bak = state; \
-	        mblength = mbrlen (_x, (_strsize) - _x, &state); \
+	        mblength = std::mbrlen (_x, (_strsize) - _x, &state); \
 \
-		if (mblength == (size_t)-2 || mblength == (size_t)-1) \
+		if (mblength == static_cast<size_t>(-2) || mblength == static_cast<size_t>(-1)) \
 		  { \
 		    state = state_bak; \
 		    _x++; \
@@ -273,7 +269,7 @@ extern int locale_utf8locale;	/* XXX */
       { \
 	if (locale_mb_cur_max > 1) \
 	  { \
-	    mbstate_t state_bak; \
+	    std::mbstate_t state_bak; \
 	    size_t mblength; \
 	    int _k; \
 \
@@ -285,7 +281,7 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      { \
 		state_bak = state; \
-		mblength = mbrlen ((_src), (_srcend) - (_src), &state); \
+		mblength = std::mbrlen ((_src), (_srcend) - (_src), &state); \
 	      } \
 	    if (mblength == (size_t)-2 || mblength == (size_t)-1) \
 	      { \
@@ -314,7 +310,7 @@ extern int locale_utf8locale;	/* XXX */
       { \
 	if (locale_mb_cur_max > 1) \
 	  { \
-	    mbstate_t state_bak; \
+	    std::mbstate_t state_bak; \
 	    size_t mblength; \
 	    int _k; \
 \
@@ -324,9 +320,9 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      {\
 		state_bak = state; \
-		mblength = mbrlen ((_src) + (_si), (_srcend) - ((_src)+(_si)), &state); \
+		mblength = std::mbrlen ((_src) + (_si), (_srcend) - ((_src)+(_si)), &state); \
 	      } \
-	    if (mblength == (size_t)-2 || mblength == (size_t)-1) \
+	    if (mblength == static_cast<size_t>(-2) || mblength == static_cast<size_t>(-1)) \
 	      { \
 		state = state_bak; \
 		mblength = 1; \
@@ -357,7 +353,7 @@ extern int locale_utf8locale;	/* XXX */
       { \
 	if (locale_mb_cur_max > 1) \
 	  { \
-	    mbstate_t state_bak; \
+	    std::mbstate_t state_bak; \
 	    size_t mblength; \
 	    int _i; \
 \
@@ -367,9 +363,9 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      { \
 		state_bak = state; \
-		mblength = mbrlen ((_src) + (_si), (_slen) - (_si), &state); \
+		mblength = std::mbrlen ((_src) + (_si), (_slen) - (_si), &state); \
 	      } \
-	    if (mblength == (size_t)-2 || mblength == (size_t)-1) \
+	    if (mblength == static_cast<size_t>(-2) || mblength == static_cast<size_t>(-1)) \
 	      { \
 		state = state_bak; \
 		mblength = 1; \
@@ -377,7 +373,7 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      mblength = (mblength < 1) ? 1 : mblength; \
 \
-	    temp = (char *)xmalloc (mblength + 2); \
+	    temp = new char[mblength + 2]; \
 	    temp[0] = _escchar; \
 	    for (_i = 0; _i < mblength; _i++) \
 	      temp[_i + 1] = _src[_si++]; \
@@ -404,7 +400,7 @@ extern int locale_utf8locale;	/* XXX */
       { \
 	if (locale_mb_cur_max > 1) \
 	  { \
-	    mbstate_t state_bak; \
+	    std::mbstate_t state_bak; \
 	    size_t mblength; \
 	    int _i; \
 \
@@ -414,9 +410,9 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      { \
 		state_bak = state; \
-		mblength = mbrlen ((_src) + (_si), (_srcend) - ((_src) + (_si)), &state); \
+		mblength = std::mbrlen ((_src) + (_si), (_srcend) - ((_src) + (_si)), &state); \
 	      } \
-	    if (mblength == (size_t)-2 || mblength == (size_t)-1) \
+	    if (mblength == static_cast<size_t>(-2) || mblength == static_cast<size_t>(-1)) \
 	      { \
 		state = state_bak; \
 		mblength = 1; \
@@ -424,7 +420,7 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      mblength = (mblength < 1) ? 1 : mblength; \
 \
-	    FASTCOPY(((_src) + (_si)), (_dst), mblength); \
+	    std::memcpy((_dst), ((_src) + (_si)), mblength); \
 \
 	    (_dst) += mblength; \
 	    (_si) += mblength; \
@@ -443,13 +439,14 @@ extern int locale_utf8locale;	/* XXX */
 #endif  /* !HANDLE_MULTIBYTE */
 
 #if HANDLE_MULTIBYTE
+/* FIXME: has reference to locale_utf8locale. */
 #  define SADD_MBCHAR(_dst, _src, _si, _srcsize) \
     do \
       { \
 	if (locale_mb_cur_max > 1) \
 	  { \
 	    int i; \
-	    mbstate_t state_bak; \
+	    std::mbstate_t state_bak; \
 	    size_t mblength; \
 \
 	    i = is_basic (*((_src) + (_si))); \
@@ -460,9 +457,9 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      { \
 		state_bak = state; \
-		mblength = mbrlen ((_src) + (_si), (_srcsize) - (_si), &state); \
+		mblength = std::mbrlen ((_src) + (_si), (_srcsize) - (_si), &state); \
 	      } \
-	    if (mblength == (size_t)-1 || mblength == (size_t)-2) \
+	    if (mblength == static_cast<size_t>(-2) || mblength == static_cast<size_t>(-1)) \
 	      { \
 		state = state_bak; \
 		mblength = 1; \
@@ -470,7 +467,7 @@ extern int locale_utf8locale;	/* XXX */
 	    if (mblength < 1) \
 	      mblength = 1; \
 \
-	    _dst = (char *)xmalloc (mblength + 1); \
+	    _dst = new char[mblength + 1]; \
 	    for (i = 0; i < mblength; i++) \
 	      (_dst)[i] = (_src)[(_si)++]; \
 	    (_dst)[mblength] = '\0'; \
@@ -489,7 +486,7 @@ extern int locale_utf8locale;	/* XXX */
 #  define SADD_MBQCHAR_BODY(_dst, _src, _si, _srcsize) \
 \
 	    int i; \
-	    mbstate_t state_bak; \
+	    std::mbstate_t state_bak; \
 	    size_t mblength; \
 \
 	    i = is_basic (*((_src) + (_si))); \
@@ -500,9 +497,9 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      { \
 		state_bak = state; \
-		mblength = mbrlen ((_src) + (_si), (_srcsize) - (_si), &state); \
+		mblength = std::mbrlen ((_src) + (_si), (_srcsize) - (_si), &state); \
 	      } \
-	    if (mblength == (size_t)-1 || mblength == (size_t)-2) \
+	    if (mblength == static_cast<size_t>(-2) || mblength == static_cast<size_t>(-1)) \
 	      { \
 		state = state_bak; \
 		mblength = 1; \
@@ -510,7 +507,7 @@ extern int locale_utf8locale;	/* XXX */
 	    if (mblength < 1) \
 	      mblength = 1; \
 \
-	    (_dst) = (char *)xmalloc (mblength + 2); \
+	    (_dst) = new char[mblength + 2]; \
 	    (_dst)[0] = CTLESC; \
 	    for (i = 0; i < mblength; i++) \
 	      (_dst)[i+1] = (_src)[(_si)++]; \
@@ -521,7 +518,7 @@ extern int locale_utf8locale;	/* XXX */
 #  define SADD_MBCHAR_BODY(_dst, _src, _si, _srcsize) \
 \
 	    int i; \
-	    mbstate_t state_bak; \
+	    std::mbstate_t state_bak; \
 	    size_t mblength; \
 \
 	    i = is_basic (*((_src) + (_si))); \
@@ -530,9 +527,9 @@ extern int locale_utf8locale;	/* XXX */
 	    else \
 	      { \
 		state_bak = state; \
-		mblength = mbrlen ((_src) + (_si), (_srcsize) - (_si), &state); \
+		mblength = std::mbrlen ((_src) + (_si), (_srcsize) - (_si), &state); \
 	      } \
-	    if (mblength == (size_t)-1 || mblength == (size_t)-2) \
+	    if (mblength == static_cast<size_t>(-2) || mblength == static_cast<size_t>(-1)) \
 	      { \
 		state = state_bak; \
 		mblength = 1; \
@@ -540,7 +537,7 @@ extern int locale_utf8locale;	/* XXX */
 	    if (mblength < 1) \
 	      mblength = 1; \
 \
-	    (_dst) = (char *)xmalloc (mblength + 1); \
+	    (_dst) = new char[mblength + 1]; \
 	    for (i = 0; i < mblength; i++) \
 	      (_dst)[i+1] = (_src)[(_si)++]; \
 	    (_dst)[mblength+1] = '\0'; \
@@ -548,4 +545,7 @@ extern int locale_utf8locale;	/* XXX */
 	    goto add_string
 
 #endif /* HANDLE_MULTIBYTE */
+
+}  // namespace bash
+
 #endif /* _SH_MBUTIL_H_ */

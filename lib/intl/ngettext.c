@@ -18,12 +18,7 @@
 # include <config.h>
 #endif
 
-#ifdef _LIBC
-# define __need_NULL
-# include <stddef.h>
-#else
-# include <stdlib.h>		/* Just for NULL.  */
-#endif
+#include <cstdlib>		/* Just for NULL.  */
 
 #include "gettextP.h"
 #ifdef _LIBC
@@ -32,7 +27,7 @@
 # include "libgnuintl.h"
 #endif
 
-#include <locale.h>
+#include <clocale>
 
 /* @@ end of prolog @@ */
 

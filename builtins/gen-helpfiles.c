@@ -27,9 +27,6 @@
 #else	/* CROSS_COMPILING */
 /* A conservative set of defines based on POSIX/SUS3/XPG6 */
 #  define HAVE_UNISTD_H
-#  define HAVE_STRING_H
-#  define HAVE_STDLIB_H
-
 #  define HAVE_RENAME
 #endif /* CROSS_COMPILING */
 
@@ -50,26 +47,11 @@
 #include "posixstat.h"
 #include "filecntl.h"
 
-#include "../bashansi.h"
-#include <stdio.h>
-#include <errno.h>
-
-#include "stdc.h"
+#include <cstdio>
+#include <cerrno>
 
 #include "../builtins.h"
 #include "tmpbuiltins.h"
-
-#if defined (USING_BASH_MALLOC)
-#undef xmalloc
-#undef xrealloc
-#undef xfree
-
-#undef free		/* defined in xmalloc.h */
-#endif
-
-#ifndef errno
-extern int errno;
-#endif
 
 #define whitespace(c) (((c) == ' ') || ((c) == '\t'))
 
@@ -108,22 +90,22 @@ main (int argc, char **argv)
     {
       char *arg = argv[arg_index++];
 
-      if (strcmp (arg, "-noproduction") == 0)
+      if (std::strcmp (arg, "-noproduction") == 0)
 	;
-      else if (strcmp (arg, "-H") == 0)
+      else if (std::strcmp (arg, "-H") == 0)
 	helpfile_directory = argv[arg_index++];
-      else if (strcmp (arg, "-S") == 0)
+      else if (std::strcmp (arg, "-S") == 0)
 	single_longdoc_strings = 0;
       else
 	{
-	  fprintf (stderr, "%s: Unknown flag %s.\n", argv[0], arg);
-	  exit (2);
+	  std::fprintf (stderr, "%s: Unknown flag %s.\n", argv[0], arg);
+	  std::exit (2);
 	}
     }
 
   write_helpfiles(shell_builtins);
 
-  exit (0);
+  std::exit (0);
 }
 
 /* Write DOCUMENTATION to STREAM, perhaps surrounding it with double-quotes
@@ -137,7 +119,7 @@ write_documentation (FILE *stream, const char *documentation, int indentation)
     return;
 
   if (documentation)
-    fprintf (stream, "%*s%s\n", indentation, " ", documentation);
+    std::fprintf (stream, "%*s%s\n", indentation, " ", documentation);
 }
 
 int
@@ -151,11 +133,11 @@ write_helpfiles (struct builtin *builtins)
   i = mkdir ("helpfiles", 0777);
   if (i < 0 && errno != EEXIST)
     {
-      fprintf (stderr, "write_helpfiles: helpfiles: cannot create directory\n");
+      std::fprintf (stderr, "write_helpfiles: helpfiles: cannot create directory\n");
       return -1;
     }
 
-  hdlen = strlen ("helpfiles/");
+  hdlen = std::strlen ("helpfiles/");
   for (i = 0; i < num_shell_builtins; i++)
     {
       b = builtins[i];
@@ -164,24 +146,25 @@ write_helpfiles (struct builtin *builtins)
       helpfile = (char *)malloc (hdlen + strlen (fname) + 1);
       if (helpfile == 0)
 	{
-	  fprintf (stderr, "gen-helpfiles: cannot allocate memory\n");
-	  exit (1);
+	  std::fprintf (stderr, "gen-helpfiles: cannot allocate memory\n");
+	  std::exit (1);
 	}
-      sprintf (helpfile, "helpfiles/%s", fname);
 
-      helpfp = fopen (helpfile, "w");
+      std::sprintf (helpfile, "helpfiles/%s", fname);
+
+      helpfp = std::fopen (helpfile, "w");
       if (helpfp == 0)
 	{
-	  fprintf (stderr, "write_helpfiles: cannot open %s\n", helpfile);
-	  free (helpfile);
+	  std::fprintf (stderr, "write_helpfiles: cannot open %s\n", helpfile);
+	  std::free (helpfile);
 	  continue;
 	}
 
       write_documentation (helpfp, b.long_doc[0], 4);
 
-      fflush (helpfp);
-      fclose (helpfp);
-      free (helpfile);
+      std::fflush (helpfp);
+      std::fclose (helpfp);
+      std::free (helpfile);
     }
   return 0;
 }

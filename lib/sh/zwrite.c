@@ -26,11 +26,10 @@
 #  include <unistd.h>
 #endif
 
-#include <errno.h>
+#include <cerrno>
 
-#if !defined (errno)
-extern int errno;
-#endif
+namespace bash
+{
 
 /* Write NB bytes from BUF to file descriptor FD, retrying the write if
    it is interrupted.  We retry three times if we get a zero-length
@@ -42,7 +41,7 @@ zwrite (int fd, char *buf, size_t nb)
 
   for (n = nb, nt = 0;;)
     {
-      i = write (fd, buf, n);
+      i = ::write (fd, buf, n);
       if (i > 0)
 	{
 	  n -= i;
@@ -53,9 +52,11 @@ zwrite (int fd, char *buf, size_t nb)
       else if (i == 0)
 	{
 	  if (++nt > 3)
-	    return (nb - n);
+	    return nb - n;
 	}
       else if (errno != EINTR)
 	return -1;
     }
 }
+
+}  // namespace bash

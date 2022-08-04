@@ -19,53 +19,18 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define READLINE_LIBRARY
-
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
+#include "readline.h"
+#include "rlprivate.h"
 
 #include <sys/types.h>
 #include <fcntl.h>
-#include "posixjmp.h"
-
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>	   /* for _POSIX_VERSION */
-#endif /* HAVE_UNISTD_H */
-
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif /* HAVE_STDLIB_H */
-
-#include <stdio.h>
-#include <ctype.h>
-
-/* System-specific feature definitions and include files. */
-#include "rldefs.h"
-#include "rlmbutil.h"
 
 #if defined (TIOCSTAT_IN_SYS_IOCTL)
 #  include <sys/ioctl.h>
 #endif /* TIOCSTAT_IN_SYS_IOCTL */
 
-/* Some standard library routines. */
-#include "readline.h"
-
-#include "rlprivate.h"
-#include "xmalloc.h"
-
-/* Declared here so it can be shared between the readline and history
-   libraries. */
-#if defined (HANDLE_MULTIBYTE)
-bool rl_byte_oriented = false;
-#else
-bool rl_byte_oriented = true;
-#endif
-
-/* Ditto */
-int _rl_utf8locale = 0;
+namespace readline
+{
 
 /* **************************************************************** */
 /*								    */
@@ -75,91 +40,17 @@ int _rl_utf8locale = 0;
 
 #if defined(HANDLE_MULTIBYTE)
 
-/* **************************************************************** */
-/*								    */
-/*		UTF-8 specific Character Utility Functions	    */
-/*								    */
-/* **************************************************************** */
-
-/* Return the length in bytes of the possibly-multibyte character beginning
-   at S. Encoding is UTF-8. */
-static int
-_rl_utf8_mblen (const char *s, size_t n)
+unsigned int
+History::_rl_find_next_mbchar_internal (const std::string &string, unsigned int seed,
+					int count, find_mbchar_flags find_non_zero)
 {
-  unsigned char c, c1, c2, c3;
-
-  if (s == 0)
-    return (0);	/* no shift states */
-  if (n <= 0)
-    return (-1);
-
-  c = (unsigned char)*s;
-  if (c < 0x80)
-    return (c != 0);
-  if (c >= 0xc2)
-    {
-      c1 = (unsigned char)s[1];
-      if (c < 0xe0)
-	{
-	  if (n == 1)
-	    return -2;
-	  if (n >= 2 && (c1 ^ 0x80) < 0x40)
-	    return 2;
-	}
-      else if (c < 0xf0)
-	{
-	  if (n == 1)
-	    return -2;
-	  if ((c1 ^ 0x80) < 0x40
-		&& (c >= 0xe1 || c1 >= 0xa0)
-		&& (c != 0xed || c1 < 0xa0))
-	    {
-	      if (n == 2)
-		return -2;
-	      c2 = (unsigned char)s[2];
-	      if ((c2 ^ 0x80) < 0x40)
-		return 3;
-	    }
-	}
-      else if (c < 0xf4)
-	{
-	  if (n == 1)
-	    return -2;
-	  if (((c1 ^ 0x80) < 0x40)
-		&& (c >= 0xf1 || c1 >= 0x90)
-		&& (c < 0xf4 || (c == 0xf4 && c1 < 0x90)))
-	    {
-	      if (n == 2)
-		return -2;
-	      c2 = (unsigned char)s[2];
-	      if ((c2 ^ 0x80) < 0x40)
-		{
-		  if (n == 3)
-		    return -2;
-		  c3 = (unsigned char)s[3];
-		  if ((c3 ^ 0x80) < 0x40)
-		    return 4;
-		}
-	    }
-	}
-    }
-  /* invalid or incomplete multibyte character */
-  return -1;
-}
-
-static int
-_rl_find_next_mbchar_internal (char *string, int seed, int count, int find_non_zero)
-{
-  size_t tmp, len;
   mbstate_t ps;
-  int point;
+  unsigned int point;
   wchar_t wc;
 
-  tmp = 0;
+  size_t tmp = 0;
 
-  memset(&ps, 0, sizeof (mbstate_t));
-  if (seed < 0)
-    seed = 0;
+  std::memset (&ps, 0, sizeof (mbstate_t));
   if (count <= 0)
     return seed;
 
@@ -177,24 +68,24 @@ _rl_find_next_mbchar_internal (char *string, int seed, int count, int find_non_z
 
   while (count > 0)
     {
-      len = strlen (string + point);
+      size_t len = string.size () - point;
       if (len == 0)
 	break;
-      if (_rl_utf8locale && UTF8_SINGLEBYTE(string[point]))
+      if (_rl_utf8locale && UTF8_SINGLEBYTE (string[point]))
 	{
 	  tmp = 1;
-	  wc = (wchar_t) string[point];
-	  memset(&ps, 0, sizeof(mbstate_t));
+	  wc = static_cast<wchar_t> (string[point]);
+	  std::memset(&ps, 0, sizeof(mbstate_t));
 	}
       else
-	tmp = mbrtowc (&wc, string+point, len, &ps);
-      if (MB_INVALIDCH ((size_t)tmp))
+	tmp = std::mbrtowc (&wc, string.c_str () + point, len, &ps);
+      if (MB_INVALIDCH (tmp))
 	{
 	  /* invalid bytes. assume a byte represents a character */
 	  point++;
 	  count--;
 	  /* reset states. */
-	  memset(&ps, 0, sizeof(mbstate_t));
+	  std::memset(&ps, 0, sizeof(mbstate_t));
 	}
       else if (MB_NULLWCH (tmp))
 	break;			/* found wide '\0' */
@@ -216,55 +107,53 @@ _rl_find_next_mbchar_internal (char *string, int seed, int count, int find_non_z
 
   if (find_non_zero)
     {
-      tmp = mbrtowc (&wc, string + point, strlen (string + point), &ps);
+      tmp = std::mbrtowc (&wc, string.c_str () + point, string.size () - point, &ps);
       while (MB_NULLWCH (tmp) == 0 && MB_INVALIDCH (tmp) == 0 && WCWIDTH (wc) == 0)
 	{
 	  point += tmp;
-	  tmp = mbrtowc (&wc, string + point, strlen (string + point), &ps);
+	  tmp = std::mbrtowc (&wc, string.c_str () + point, string.size () - point, &ps);
 	}
     }
 
   return point;
 }
 
-static inline int
-_rl_test_nonzero (char *string, int ind, int len)
+static inline bool
+_rl_test_nonzero (const char *string, unsigned int ind, unsigned int len)
 {
-  size_t tmp;
   wchar_t wc;
   mbstate_t ps;
 
-  memset (&ps, 0, sizeof (mbstate_t));
-  tmp = mbrtowc (&wc, string + ind, len - ind, &ps);
+  std::memset (&ps, 0, sizeof (mbstate_t));
+  size_t tmp = std::mbrtowc (&wc, string + ind, len - ind, &ps);
+
   /* treat invalid multibyte sequences as non-zero-width */
-  return (MB_INVALIDCH (tmp) || MB_NULLWCH (tmp) || WCWIDTH (wc) > 0);
+  return MB_INVALIDCH (tmp) || MB_NULLWCH (tmp) || WCWIDTH (wc) > 0;
 }
 
 /* experimental -- needs to handle zero-width characters better */
-static int
-_rl_find_prev_utf8char (char *string, int seed, int find_non_zero)
+static unsigned int
+_rl_find_prev_utf8char (const std::string &string, unsigned int seed,
+			find_mbchar_flags find_non_zero)
 {
-  char *s;
   unsigned char b;
   int save, prev;
-  size_t len;
+  unsigned int len = static_cast<unsigned int> (string.size ());
 
-  if (find_non_zero)
-    len = RL_STRLEN (string);
-
-  prev = seed - 1;
+  prev = static_cast<int> (seed - 1);
   while (prev >= 0)
    {
-      b = (unsigned char)string[prev];
+      b = static_cast<unsigned char> (string[static_cast<size_t> (prev)]);
       if (UTF8_SINGLEBYTE (b))
-	return (prev);
+	return static_cast<unsigned int> (prev);
 
       save = prev;
 
       /* Move back until we're not in the middle of a multibyte char */
       if (UTF8_MBCHAR (b))
 	{
-	  while (prev > 0 && (b = (unsigned char)string[--prev]) && UTF8_MBCHAR (b))
+	  while (prev > 0 && (b = static_cast<unsigned char> (
+		string[static_cast<size_t> (--prev)])) && UTF8_MBCHAR (b))
 	    ;
 	}
 
@@ -272,38 +161,37 @@ _rl_find_prev_utf8char (char *string, int seed, int find_non_zero)
 	{
 	  if (find_non_zero)
 	    {
-	      if (_rl_test_nonzero (string, prev, len))
-		return (prev);
+	      if (_rl_test_nonzero (string.c_str (), static_cast<unsigned int> (prev), len))
+		return static_cast<unsigned int> (prev);
 	      else		/* valid but WCWIDTH (wc) == 0 */
-		prev = prev - 1;
+		--prev;
 	    }
 	  else
-	    return (prev);
+	    return static_cast<unsigned int> (prev);
 	}
       else
-	return (save);			/* invalid utf-8 multibyte sequence */
+	return static_cast<unsigned int> (save);			/* invalid utf-8 multibyte sequence */
     }
 
-  return ((prev < 0) ? 0 : prev);
+  return (prev < 0) ? 0 : static_cast<unsigned int> (prev);
 }
 
-/*static*/ int
-_rl_find_prev_mbchar_internal (char *string, int seed, int find_non_zero)
+unsigned int
+History::_rl_find_prev_mbchar_internal (const std::string &string, unsigned int seed,
+					find_mbchar_flags find_non_zero)
 {
   mbstate_t ps;
-  int prev, non_zero_prev, point, length;
+  unsigned int prev, non_zero_prev, point;
   size_t tmp;
   wchar_t wc;
 
   if (_rl_utf8locale)
-    return (_rl_find_prev_utf8char (string, seed, find_non_zero));
+    return _rl_find_prev_utf8char (string, seed, find_non_zero);
 
-  memset(&ps, 0, sizeof(mbstate_t));
-  length = strlen(string);
+  std::memset(&ps, 0, sizeof(mbstate_t));
+  unsigned int length = static_cast<unsigned int> (string.size ());
 
-  if (seed < 0)
-    return 0;
-  else if (length < seed)
+  if (length < seed)
     return length;
 
   prev = non_zero_prev = point = 0;
@@ -312,12 +200,12 @@ _rl_find_prev_mbchar_internal (char *string, int seed, int find_non_zero)
       if (_rl_utf8locale && UTF8_SINGLEBYTE(string[point]))
 	{
 	  tmp = 1;
-	  wc = (wchar_t) string[point];
-	  memset(&ps, 0, sizeof(mbstate_t));
+	  wc = static_cast<wchar_t> (string[point]);
+	  std::memset(&ps, 0, sizeof(mbstate_t));
 	}
       else
-	tmp = mbrtowc (&wc, string + point, length - point, &ps);
-      if (MB_INVALIDCH ((size_t)tmp))
+	tmp = std::mbrtowc (&wc, &string[point], length - point, &ps);
+      if (MB_INVALIDCH (tmp))
 	{
 	  /* in this case, bytes are invalid or too short to compose
 	     multibyte char, so assume that the first byte represents
@@ -325,7 +213,7 @@ _rl_find_prev_mbchar_internal (char *string, int seed, int find_non_zero)
 	  tmp = 1;
 	  /* clear the state of the byte sequence, because
 	     in this case effect of mbstate is undefined  */
-	  memset(&ps, 0, sizeof (mbstate_t));
+	  std::memset(&ps, 0, sizeof (mbstate_t));
 
 	  /* Since we're assuming that this byte represents a single
 	     non-zero-width character, don't forget about it. */
@@ -352,91 +240,68 @@ _rl_find_prev_mbchar_internal (char *string, int seed, int find_non_zero)
 
 /* return the number of bytes parsed from the multibyte sequence starting
    at src, if a non-L'\0' wide character was recognized. It returns 0,
-   if a L'\0' wide character was recognized. It  returns (size_t)(-1),
-   if an invalid multibyte sequence was encountered. It returns (size_t)(-2)
-   if it couldn't parse a complete  multibyte character.  */
+   if a L'\0' wide character was recognized. It returns -1 if an invalid
+   multibyte sequence was encountered. It returns -2 if it couldn't parse
+   a complete multibyte character. */
 int
-_rl_get_char_len (char *src, mbstate_t *ps)
+History::_rl_get_char_len (const std::string &src, mbstate_t *ps)
 {
-  size_t tmp, l;
-  int mb_cur_max;
-
   /* Look at no more than MB_CUR_MAX characters */
-  l = (size_t)strlen (src);
-  if (_rl_utf8locale && l > 0 && UTF8_SINGLEBYTE(*src))
-    tmp = (*src != 0) ? 1 : 0;
+  size_t l = src.size ();
+
+  size_t tmp;
+  if (l == 0)
+    tmp = 0;
+  else if (_rl_utf8locale && UTF8_SINGLEBYTE(src[0]))
+    tmp = 1;
   else
     {
-      mb_cur_max = MB_CUR_MAX;
-      tmp = mbrlen((const char *)src, (l < mb_cur_max) ? l : mb_cur_max, ps);
+      size_t mb_cur_max = MB_CUR_MAX;
+      tmp = std::mbrlen(src.c_str (), (l < mb_cur_max) ? l : mb_cur_max, ps);
     }
-  if (tmp == (size_t)(-2))
+
+  if (tmp == static_cast<size_t> (-2))
     {
       /* too short to compose multibyte char */
       if (ps)
-	memset (ps, 0, sizeof(mbstate_t));
+	std::memset (ps, 0, sizeof(mbstate_t));
       return -2;
     }
-  else if (tmp == (size_t)(-1))
+  else if (tmp == static_cast<size_t> (-1))
     {
       /* invalid to compose multibyte char */
       /* initialize the conversion state */
       if (ps)
-	memset (ps, 0, sizeof(mbstate_t));
+	std::memset (ps, 0, sizeof(mbstate_t));
       return -1;
     }
-  else if (tmp == (size_t)0)
-    return 0;
   else
-    return (int)tmp;
-}
-
-/* compare the specified two characters. If the characters matched,
-   return 1. Otherwise return 0. */
-int
-_rl_compare_chars (char *buf1, int pos1, mbstate_t *ps1, char *buf2, int pos2, mbstate_t *ps2)
-{
-  int i, w1, w2;
-
-  if ((w1 = _rl_get_char_len (&buf1[pos1], ps1)) <= 0 ||
-	(w2 = _rl_get_char_len (&buf2[pos2], ps2)) <= 0 ||
-	(w1 != w2) ||
-	(buf1[pos1] != buf2[pos2]))
-    return 0;
-
-  for (i = 1; i < w1; i++)
-    if (buf1[pos1+i] != buf2[pos2+i])
-      return 0;
-
-  return 1;
+    return static_cast<int> (tmp);
 }
 
 /* adjust pointed byte and find mbstate of the point of string.
    adjusted point will be point <= adjusted_point, and returns
    differences of the byte(adjusted_point - point).
-   if point is invalid (point < 0 || more than string length),
-   it returns -1 */
-int
-_rl_adjust_point (char *string, int point, mbstate_t *ps)
+   if point is invalid (greater than string length),
+   it returns (size_t)(-1). */
+unsigned int
+History::_rl_adjust_point (const std::string &string, unsigned int point, mbstate_t *ps)
 {
-  size_t tmp;
-  int length, pos;
+  size_t length = string.size ();
 
-  tmp = 0;
-  pos = 0;
-  length = strlen(string);
-  if (point < 0)
-    return -1;
-  if (length < point)
-    return -1;
+  if (point > length)
+    return static_cast<unsigned int> (-1);
 
+  unsigned int pos = 0;
   while (pos < point)
     {
+      size_t tmp;
       if (_rl_utf8locale && UTF8_SINGLEBYTE(string[pos]))
 	tmp = 1;
       else
-	tmp = mbrlen (string + pos, length - pos, ps);
-      if (MB_INVALIDCH ((size_t)tmp))
+	tmp = std::mbrlen (string.c_str () + pos, length - pos, ps);
+
+      if (MB_INVALIDCH (tmp))
 	{
 	  /* in this case, bytes are invalid or too short to compose
 	     multibyte char, so assume that the first byte represents
@@ -445,7 +310,7 @@ _rl_adjust_point (char *string, int point, mbstate_t *ps)
 	  /* clear the state of the byte sequence, because
 	     in this case effect of mbstate is undefined  */
 	  if (ps)
-	    memset (ps, 0, sizeof (mbstate_t));
+	    std::memset (ps, 0, sizeof (mbstate_t));
 	}
       else if (MB_NULLWCH (tmp))
 	pos++;
@@ -453,72 +318,33 @@ _rl_adjust_point (char *string, int point, mbstate_t *ps)
 	pos += tmp;
     }
 
-  return (pos - point);
-}
-
-bool
-_rl_is_mbchar_matched (char *string, int seed, int end, char *mbchar, int length)
-{
-  int i;
-
-  if ((end - seed) < length)
-    return false;
-
-  for (i = 0; i < length; i++)
-    if (string[seed + i] != mbchar[i])
-      return false;
-  return true;
+  return pos - point;
 }
 
 wchar_t
-_rl_char_value (char *buf, int ind)
+History::_rl_char_value (const std::string &buf, unsigned int ind)
 {
-  size_t tmp;
-  wchar_t wc;
-  mbstate_t ps;
-  int l;
-
   if (MB_LEN_MAX == 1 || rl_byte_oriented)
-    return ((wchar_t) buf[ind]);
+    return static_cast<wchar_t> (buf[ind]);
+
   if (_rl_utf8locale && UTF8_SINGLEBYTE(buf[ind]))
-    return ((wchar_t) buf[ind]);
-  l = strlen (buf);
+    return static_cast<wchar_t> (buf[ind]);
+
+  size_t l = buf.size ();
   if (ind >= l - 1)
-    return ((wchar_t) buf[ind]);
-  if (l < ind)			/* Sanity check */
-    l = strlen (buf+ind);
-  memset (&ps, 0, sizeof (mbstate_t));
-  tmp = mbrtowc (&wc, buf + ind, l - ind, &ps);
+    return static_cast<wchar_t> (buf[ind]);
+
+  mbstate_t ps;
+  std::memset (&ps, 0, sizeof (mbstate_t));
+
+  wchar_t wc;
+  size_t tmp = std::mbrtowc (&wc, buf.c_str () + ind, l - ind, &ps);
+
   if (MB_INVALIDCH (tmp) || MB_NULLWCH (tmp))
-    return ((wchar_t) buf[ind]);
+    return static_cast<wchar_t> (buf[ind]);
+
   return wc;
 }
 #endif /* HANDLE_MULTIBYTE */
 
-/* Find next `count' characters started byte point of the specified seed.
-   If flags is MB_FIND_NONZERO, we look for non-zero-width multibyte
-   characters. */
-#undef _rl_find_next_mbchar
-int
-_rl_find_next_mbchar (char *string, int seed, int count, int flags)
-{
-#if defined (HANDLE_MULTIBYTE)
-  return _rl_find_next_mbchar_internal (string, seed, count, flags);
-#else
-  return (seed + count);
-#endif
-}
-
-/* Find previous character started byte point of the specified seed.
-   Returned point will be point <= seed.  If flags is MB_FIND_NONZERO,
-   we look for non-zero-width multibyte characters. */
-#undef _rl_find_prev_mbchar
-int
-_rl_find_prev_mbchar (char *string, int seed, int flags)
-{
-#if defined (HANDLE_MULTIBYTE)
-  return _rl_find_prev_mbchar_internal (string, seed, flags);
-#else
-  return ((seed == 0) ? seed : seed - 1);
-#endif
-}
+}  // namespace readline

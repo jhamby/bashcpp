@@ -29,16 +29,14 @@
 #  include <sys/times.h>
 #endif
 
-#include <stdio.h>
-#include <stdc.h>
+#include <cstdio>
 
 #include <bashintl.h>
+#include <externs.h>
+#include <general.h>
 
-#ifndef locale_decpoint
-extern int locale_decpoint (void);
-#endif
-
-extern long get_clk_tck (void);
+namespace bash
+{
 
 void
 clock_t_to_secs (clock_t t, time_t *sp, int *sfp)
@@ -48,7 +46,7 @@ clock_t_to_secs (clock_t t, time_t *sp, int *sfp)
   if (clk_tck == -1)
     clk_tck = get_clk_tck ();
 
-  *sfp = t % clk_tck;
+  *sfp = static_cast<int> (t % clk_tck);
   *sfp = (*sfp * 1000) / clk_tck;
 
   *sp = t / clk_tck;
@@ -79,4 +77,7 @@ print_clock_t (FILE *fp, clock_t t)
 
   fprintf (fp, "%ldm%d%c%03ds",  minutes, seconds, locale_decpoint(), seconds_fraction);
 }
+
+}  // namespace bash
+
 #endif /* HAVE_TIMES */

@@ -26,13 +26,11 @@
 #include <posixtime.h>
 
 #include <bashintl.h>
-#include <stdc.h>
 
-#ifndef locale_decpoint
-extern int locale_decpoint (void);
-#endif
+#include <cstdio>
 
-#include <stdio.h>
+namespace bash
+{
 
 struct timeval *
 difftimeval (struct timeval *d, struct timeval *t1, struct timeval *t2)
@@ -122,7 +120,7 @@ timeval_to_cpu (struct timeval *rt, struct timeval *ut,
 	t2.tv_sec /= 10;
     }
 
-  return ((t2.tv_sec == 0) ? 0 : t1.tv_sec / t2.tv_sec);
+  return (t2.tv_sec == 0) ? 0 : t1.tv_sec / t2.tv_sec;
 }
 
 /* Convert a pointer to a struct timeval to seconds and thousandths of a
@@ -165,5 +163,7 @@ print_timeval (FILE *fp, struct timeval *tvp)
 
   fprintf (fp, "%ldm%d%c%03ds",  minutes, seconds, locale_decpoint (), seconds_fraction);
 }
+
+}  // namespace bash
 
 #endif /* HAVE_TIMEVAL */

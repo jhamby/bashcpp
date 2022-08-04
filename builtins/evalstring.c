@@ -27,13 +27,11 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include <signal.h>
-
-#include <errno.h>
+#include <cstdio>
+#include <csignal>
+#include <cerrno>
 
 #include "filecntl.h"
-#include "../bashansi.h"
 
 #include "../shell.h"
 #include "../jobs.h"
@@ -42,22 +40,16 @@
 #include "../parser.h"
 #include "../input.h"
 #include "../execute_cmd.h"
-#include "../redir.h"
 #include "../trap.h"
 #include "../bashintl.h"
 
 #include <y.tab.h>
 
-#if defined (HISTORY)
-#  include "../bashhist.h"
-#endif
-
 #include "common.h"
 #include "builtext.h"
 
-#if !defined (errno)
-extern int errno;
-#endif
+namespace bash
+{
 
 #define IS_BUILTIN(s)	(builtin_address_internal(s, 0) != (struct builtin *)NULL)
 
@@ -83,8 +75,8 @@ restore_lastcom (void *x)
   the_printed_command_except_trap = (char *)x;
 }
 
-int
-should_suppress_fork (COMMAND *command)
+bool
+Shell::should_suppress_fork (COMMAND *command)
 {
 #if 0 /* TAG: bash-5.2 */
   int subshell;
@@ -108,8 +100,8 @@ should_suppress_fork (COMMAND *command)
 	  ((command->flags & CMD_INVERT_RETURN) == 0));
 }
 
-int
-can_optimize_connection (COMMAND *command)
+bool
+Shell::can_optimize_connection (COMMAND *command)
 {
   return (*bash_input.location.string == '\0' &&
 	  parser_expanding_alias () == 0 &&
@@ -118,7 +110,7 @@ can_optimize_connection (COMMAND *command)
 }
 
 void
-optimize_fork (COMMAND *command)
+Shell::optimize_fork (COMMAND *command)
 {
   if (command->type == cm_connection &&
       (command->value.Connection->connector == AND_AND || command->value.Connection->connector == OR_OR || command->value.Connection->connector == ';') &&
@@ -131,7 +123,7 @@ optimize_fork (COMMAND *command)
 }
 
 void
-optimize_subshell_command (COMMAND *command)
+Shell::optimize_subshell_command (COMMAND *command)
 {
   if (running_trap == 0 &&
       command->type == cm_simple &&
@@ -151,7 +143,7 @@ optimize_subshell_command (COMMAND *command)
 }
 
 void
-optimize_shell_function (COMMAND *command)
+Shell::optimize_shell_function (COMMAND *command)
 {
   COMMAND *fc;
 
@@ -266,7 +258,7 @@ parse_prologue (char *string, int flags, const char *tag)
 */
 
 int
-parse_and_execute (char *string, const char *from_file, int flags)
+Shell::parse_and_execute (char *string, const char *from_file, int flags)
 {
   int code, lreset;
   volatile int should_jump_to_top_level, last_result;
@@ -521,7 +513,7 @@ parse_and_execute (char *string, const char *from_file, int flags)
   if (should_jump_to_top_level)
     jump_to_top_level (code);
 
-  return (last_result);
+  return last_result;
 }
 
 /* Parse a command contained in STRING according to FLAGS and return the
@@ -643,7 +635,7 @@ out:
       jump_to_top_level (code);
     }
 
-  return (nc);
+  return nc;
 }
 
 /* Handle a $( < file ) command substitution.  This expands the filename,
@@ -685,11 +677,11 @@ cat_file (REDIRECT *r)
   free (fn);
   close (fd);
 
-  return (rval);
+  return rval;
 }
 
 int
-evalstring (char *string, const char *from_file, int flags)
+Shell::evalstring (char *string, const char *from_file, int flags)
 {
   volatile int r, rflag, rcatch;
   volatile int was_trap;
@@ -734,5 +726,7 @@ evalstring (char *string, const char *from_file, int flags)
 	}
     }
 
-  return (r);
+  return r;
 }
+
+}  // namespace bash

@@ -27,13 +27,9 @@
 #  include <unistd.h>
 #endif
 
-#include <errno.h>
-#include "xmalloc.h"
+#include <cerrno>
 
-#if !defined (errno)
-extern int errno;
-#endif
-
+#if 0
 extern ssize_t zread (int, char *, size_t);
 extern ssize_t zreadc (int, char *);
 extern ssize_t zreadintr (int, char *, size_t);
@@ -41,6 +37,7 @@ extern ssize_t zreadcintr (int, char *);
 
 typedef ssize_t breadfunc_t (int, char *, size_t);
 typedef ssize_t creadfunc_t (int, char *);
+#endif
 
 /* Initial memory allocation for automatic growing buffer in zreadlinec */
 #define GET_LINE_INITIAL_ALLOCATION 16
@@ -59,7 +56,9 @@ typedef ssize_t creadfunc_t (int, char *);
 	    uses zread if UNBUFFERED_READ is non-zero.
 
    Returns number of bytes read or -1 on error. */
-
+#if 0
+// XXX this is an ugly function and only used by examples/loadables/cut.c and builtins/mapfile.def.
+// Can I replace those calls with something else and delete this?
 ssize_t
 zgetline (int fd, char **lineptr, size_t *n, int delim, bool unbuffered_read)
 {
@@ -118,3 +117,4 @@ zgetline (int fd, char **lineptr, size_t *n, int delim, bool unbuffered_read)
 
   return nr - 1;
 }
+#endif

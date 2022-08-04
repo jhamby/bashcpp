@@ -28,11 +28,7 @@
 #ifndef	_BASH_SYSTIMES_H
 #define _BASH_SYSTIMES_H	1
 
-#if defined (HAVE_SYS_TIMES_H)
-#  include <sys/times.h>
-#else /* !HAVE_SYS_TIMES_H */
-
-#include <stdc.h>
+#include <ctime>
 
 /* Structure describing CPU time used by a process and its children.  */
 struct tms
@@ -52,4 +48,3 @@ struct tms
 extern clock_t times (struct tms *buffer);
 
 #endif /* !HAVE_SYS_TIMES_H */
-#endif /* _BASH_SYSTIMES_H */

@@ -25,218 +25,96 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define READLINE_LIBRARY
-
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
+#include "readline.h"
+#include "history.h"
+#include "rlprivate.h"
 
 #include <sys/types.h>
 
-#include <stdio.h>
-
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
-#endif
-
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif
-
-#include "rldefs.h"
-#include "rlmbutil.h"
-
-#include "readline.h"
-#include "history.h"
-
-#include "rlprivate.h"
-#include "xmalloc.h"
-
-/* Variables exported to other files in the readline library. */
-char *_rl_isearch_terminators = (char *)NULL;
-
-_rl_search_cxt *_rl_iscxt = 0;
-
-/* Variables imported from other files in the readline library. */
-extern HIST_ENTRY *_rl_saved_line_for_history;
-
-static int rl_search_history (int, int);
-
-static _rl_search_cxt *_rl_isearch_init (int);
-static void _rl_isearch_fini (_rl_search_cxt *);
-
-/* Last line found by the current incremental search, so we don't `find'
-   identical lines many times in a row.  Now part of isearch context. */
-/* static char *prev_line_found; */
-
-/* Last search string and its length. */
-static char *last_isearch_string;
-static int last_isearch_string_len;
-
-static const char * const default_isearch_terminators = "\033\012";
-
-_rl_search_cxt *
-_rl_scxt_alloc (int type, int flags)
+namespace readline
 {
-  _rl_search_cxt *cxt;
 
-  cxt = (_rl_search_cxt *)xmalloc (sizeof (_rl_search_cxt));
-
-  cxt->type = type;
-  cxt->sflags = flags;
-
-  cxt->search_string = 0;
-  cxt->search_string_size = cxt->search_string_index = 0;
-
-  cxt->lines = 0;
-  cxt->allocated_line = 0;
-  cxt->hlen = cxt->hindex = 0;
-
-  cxt->save_point = rl_point;
-  cxt->save_mark = rl_mark;
-  cxt->save_line = where_history ();
-  cxt->last_found_line = cxt->save_line;
-  cxt->prev_line_found = 0;
-
-  cxt->save_undo_list = 0;
-
-  cxt->keymap = _rl_keymap;
-  cxt->okeymap = _rl_keymap;
-
-  cxt->history_pos = 0;
-  cxt->direction = 0;
-
-  cxt->prevc = cxt->lastc = 0;
-
-  cxt->sline = 0;
-  cxt->sline_len = cxt->sline_index = 0;
-
-  cxt->search_terminators = 0;
-
-  return cxt;
-}
-
-void
-_rl_scxt_dispose (_rl_search_cxt *cxt, int flags)
-{
-  FREE (cxt->search_string);
-  FREE (cxt->allocated_line);
-  FREE (cxt->lines);
-
-  xfree (cxt);
-}
+static const char *const default_isearch_terminators = "\033\012";
 
 /* Search backwards through the history looking for a string which is typed
    interactively.  Start with the current line. */
 int
-rl_reverse_search_history (int sign, int key)
+Readline::rl_reverse_search_history (int sign, int key)
 {
-  return (rl_search_history (-sign, key));
+  return rl_search_history (-sign, key);
 }
 
 /* Search forwards through the history looking for a string which is typed
    interactively.  Start with the current line. */
 int
-rl_forward_search_history (int sign, int key)
+Readline::rl_forward_search_history (int sign, int key)
 {
-  return (rl_search_history (sign, key));
+  return rl_search_history (sign, key);
 }
 
 /* Display the current state of the search in the echo-area.
    SEARCH_STRING contains the string that is being searched for,
-   DIRECTION is zero for forward, or non-zero for reverse,
-   WHERE is the history list number of the current line.  If it is
-   -1, then this line is the starting one. */
-static void
-rl_display_search (char *search_string, int flags, int where)
+   FLAGS are the rl_search_flags. */
+void
+Readline::rl_display_search (const char *search_string, rl_search_flags flags)
 {
-  char *message;
-  int msglen, searchlen;
+  size_t searchlen = search_string ? std::strlen (search_string) : 0;
 
-  searchlen = (search_string && *search_string) ? strlen (search_string) : 0;
-
-  message = (char *)xmalloc (searchlen + 64);
-  msglen = 0;
-
-#if defined (NOTDEF)
-  if (where != -1)
-    {
-      sprintf (message, "[%d]", where + history_base);
-      msglen = strlen (message);
-    }
-#endif /* NOTDEF */
+  char *message = new char[searchlen + 64];
+  size_t msglen = 0;
 
   message[msglen++] = '(';
 
   if (flags & SF_FAILED)
     {
-      strcpy (message + msglen, "failed ");
+      std::strcpy (message + msglen, "failed ");
       msglen += 7;
     }
 
   if (flags & SF_REVERSE)
     {
-      strcpy (message + msglen, "reverse-");
+      std::strcpy (message + msglen, "reverse-");
       msglen += 8;
     }
 
-  strcpy (message + msglen, "i-search)`");
+  std::strcpy (message + msglen, "i-search)`");
   msglen += 10;
 
   if (search_string && *search_string)
     {
-      strcpy (message + msglen, search_string);
+      std::strcpy (message + msglen, search_string);
       msglen += searchlen;
     }
   else
     _rl_optimize_redisplay ();
 
-  strcpy (message + msglen, "': ");
+  std::strcpy (message + msglen, "': ");
 
   rl_message ("%s", message);
-  xfree (message);
-  (*rl_redisplay_function) ();
+  delete[] message;
+
+  ((*this).*rl_redisplay_function) ();
 }
 
-static _rl_search_cxt *
-_rl_isearch_init (int direction)
+Readline::_rl_search_cxt *
+Readline::_rl_isearch_init (int direction)
 {
-  _rl_search_cxt *cxt;
-  HIST_ENTRY **hlist;
+  _rl_search_cxt *cxt = new _rl_search_cxt (RL_SEARCH_ISEARCH, SF_NONE, rl_point, rl_mark,
+					    where_history (), _rl_keymap);
 
-  cxt = _rl_scxt_alloc (RL_SEARCH_ISEARCH, 0);
   if (direction < 0)
-    cxt->sflags |= SF_REVERSE;
+    cxt->sflags = SF_REVERSE;
 
   cxt->search_terminators = _rl_isearch_terminators ? _rl_isearch_terminators
 						: default_isearch_terminators;
 
   /* Create an array of pointers to the lines that we want to search. */
-  hlist = history_list ();
   rl_maybe_replace_line ();
-  int i = 0;
-  if (hlist)
-    for (i = 0; hlist[i]; i++);
-
-  /* Allocate space for this many lines, +1 for the current input line,
-     and remember those lines. */
-  cxt->lines = (char **)xmalloc ((1 + (cxt->hlen = i)) * sizeof (char *));
-  for (i = 0; i < cxt->hlen; i++)
-    cxt->lines[i] = hlist[i]->line;
 
   if (_rl_saved_line_for_history)
-    cxt->lines[i] = _rl_saved_line_for_history->line;
+    cxt->lines.push_back (_rl_saved_line_for_history->line);
   else
-    {
-      /* Keep track of this so we can free it. */
-      cxt->allocated_line = (char *)xmalloc (1 + strlen (rl_line_buffer));
-      strcpy (cxt->allocated_line, &rl_line_buffer[0]);
-      cxt->lines[i] = cxt->allocated_line;
-    }
-
-  cxt->hlen++;
+    cxt->lines.push_back (rl_line_buffer);
 
   /* The line where we start the search. */
   cxt->history_pos = cxt->save_line;
@@ -244,15 +122,12 @@ _rl_isearch_init (int direction)
   rl_save_prompt ();
 
   /* Initialize search parameters. */
-  cxt->search_string = (char *)xmalloc (cxt->search_string_size = 128);
-  cxt->search_string[cxt->search_string_index = 0] = '\0';
 
   /* Normalize DIRECTION into 1 or -1. */
   cxt->direction = (direction >= 0) ? 1 : -1;
 
   cxt->sline = rl_line_buffer;
-  cxt->sline_len = strlen (cxt->sline);
-  cxt->sline_index = rl_point;
+  cxt->sline_index = static_cast<int> (rl_point);
 
   _rl_iscxt = cxt;		/* save globally */
 
@@ -262,8 +137,8 @@ _rl_isearch_init (int direction)
   return cxt;
 }
 
-static void
-_rl_isearch_fini (_rl_search_cxt *cxt)
+void
+Readline::_rl_isearch_fini (_rl_search_cxt *cxt)
 {
   /* First put back the original state. */
   rl_replace_line (cxt->lines[cxt->save_line], 0);
@@ -271,15 +146,13 @@ _rl_isearch_fini (_rl_search_cxt *cxt)
   rl_restore_prompt ();
 
   /* Save the search string for possible later use. */
-  FREE (last_isearch_string);
-  last_isearch_string = cxt->search_string;
-  last_isearch_string_len = cxt->search_string_index;
-  cxt->search_string = 0;
+  last_isearch_string.assign (cxt->search_string);
+  cxt->search_string.clear ();
 
   if (cxt->last_found_line < cxt->save_line)
-    rl_get_previous_history (cxt->save_line - cxt->last_found_line, 0);
+    rl_get_previous_history (static_cast<int> (cxt->save_line - cxt->last_found_line), 0);
   else
-    rl_get_next_history (cxt->last_found_line - cxt->save_line, 0);
+    rl_get_next_history (static_cast<int> (cxt->last_found_line - cxt->save_line), 0);
 
   /* If the string was not found, put point at the end of the last matching
      line.  If last_found_line == orig_line, we didn't find any matching
@@ -287,14 +160,15 @@ _rl_isearch_fini (_rl_search_cxt *cxt)
   if (cxt->sline_index < 0)
     {
       if (cxt->last_found_line == cxt->save_line)
-	cxt->sline_index = cxt->save_point;
+	cxt->sline_index = static_cast<int> (cxt->save_point);
       else
-	cxt->sline_index = strlen (rl_line_buffer);
+	cxt->sline_index = static_cast<int> (rl_line_buffer.size ());
       rl_mark = cxt->save_mark;
       rl_deactivate_mark ();
     }
 
-  rl_point = cxt->sline_index;
+  rl_point = static_cast<unsigned int> (cxt->sline_index);
+
   /* Don't worry about where to put the mark here; rl_get_previous_history
      and rl_get_next_history take care of it.
      If we want to highlight the search string, this is where to set the
@@ -308,7 +182,7 @@ _rl_isearch_fini (_rl_search_cxt *cxt)
 
 /* XXX - we could use _rl_bracketed_read_mbstring () here. */
 int
-_rl_search_getchar (_rl_search_cxt *cxt)
+Readline::_rl_search_getchar (_rl_search_cxt *cxt)
 {
   int c;
 
@@ -320,7 +194,7 @@ _rl_search_getchar (_rl_search_cxt *cxt)
 #if defined (HANDLE_MULTIBYTE)
   /* This ends up with C (and LASTC) being set to the last byte of the
      multibyte character.  In most cases c == lastc == mb[0] */
-  if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+  if (MB_CUR_MAX > 1 && !rl_byte_oriented)
     c = cxt->lastc = _rl_read_mbstring (cxt->lastc, cxt->mb, MB_LEN_MAX);
 #endif
 
@@ -335,15 +209,14 @@ _rl_search_getchar (_rl_search_cxt *cxt)
    -1 if the caller should just free the context and return, 0 if we should
    break out of the loop, and 1 if we should continue to read characters. */
 int
-_rl_isearch_dispatch (_rl_search_cxt *cxt, int c)
+Readline::_rl_isearch_dispatch (_rl_search_cxt *cxt, int c)
 {
-  int n, wstart, wlen, limit, cval, incr;
+  int n, limit;
   char *paste;
-  size_t pastelen;
+  unsigned int pastelen, wstart, tmp;
   int j;
-  rl_command_func_t *f;
 
-  f = (rl_command_func_t *)NULL;
+  rl_command_func_t f = nullptr;
 
   if (c < 0)
     {
@@ -356,7 +229,8 @@ _rl_isearch_dispatch (_rl_search_cxt *cxt, int c)
 
   /* XXX - experimental code to allow users to bracketed-paste into the search
      string even when ESC is one of the isearch-terminators. Not perfect yet. */
-  if (_rl_enable_bracketed_paste && c == ESC && strchr (cxt->search_terminators, c) && (n = _rl_nchars_available ()) > (BRACK_PASTE_SLEN-1))
+  if (_rl_enable_bracketed_paste && c == ESC && std::strchr (cxt->search_terminators, c) &&
+	(n = _rl_nchars_available ()) > (BRACK_PASTE_SLEN - 1))
     {
       j = _rl_read_bracketed_paste_prefix (c);
       if (j == 1)
@@ -373,7 +247,8 @@ _rl_isearch_dispatch (_rl_search_cxt *cxt, int c)
   /* If we are moving into a new keymap, modify cxt->keymap and go on.
      This can be a problem if c == ESC and we want to terminate the
      incremental search, so we check */
-  if (c >= 0 && cxt->keymap[c].type == ISKMAP && strchr (cxt->search_terminators, cxt->lastc) == 0)
+  if (c >= 0 && cxt->keymap[c].type == ISKMAP &&
+      std::strchr (cxt->search_terminators, cxt->lastc) == nullptr)
     {
       /* _rl_keyseq_timeout specified in milliseconds; _rl_input_queued
 	 takes microseconds, so multiply by 1000.  If we don't get any
@@ -383,12 +258,12 @@ _rl_isearch_dispatch (_rl_search_cxt *cxt, int c)
 	    RL_ISSTATE (RL_STATE_CALLBACK) == 0 &&
 	    RL_ISSTATE (RL_STATE_INPUTPENDING) == 0 &&
 	    _rl_pushed_input_available () == 0 &&
-	    ((Keymap)(cxt->keymap[c].function))[ANYOTHERKEY].function &&
-	    _rl_input_queued (_rl_keyseq_timeout*1000) == 0)
+	    (cxt->keymap[c].value.map)[ANYOTHERKEY].value.function &&
+	    _rl_input_queued (_rl_keyseq_timeout * 1000) == 0)
 	goto add_character;
 
       cxt->okeymap = cxt->keymap;
-      cxt->keymap = FUNCTION_TO_KEYMAP (cxt->keymap, c);
+      cxt->keymap = cxt->keymap[c].value.map;
       cxt->sflags |= SF_CHGKMAP;
       /* XXX - we should probably save this sequence, so we can do
 	 something useful if this doesn't end up mapping to a command we
@@ -396,15 +271,15 @@ _rl_isearch_dispatch (_rl_search_cxt *cxt, int c)
 	 that caused the index into a new keymap. */
       cxt->prevc = c;
 #if defined (HANDLE_MULTIBYTE)
-      if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+      if (MB_CUR_MAX > 1 && !rl_byte_oriented)
 	{
 	  if (cxt->mb[1] == 0)
 	    {
-	      cxt->pmb[0] = c;		/* XXX should be == cxt->mb[0] */
+	      cxt->pmb[0] = static_cast<char> (c);	/* XXX should be == cxt->mb[0] */
 	      cxt->pmb[1] = '\0';
 	    }
 	  else
-	    memcpy (cxt->pmb, cxt->mb, sizeof (cxt->pmb));
+	    std::memcpy (cxt->pmb, cxt->mb, sizeof (cxt->pmb));
 	}
 #endif
       return 1;
@@ -418,29 +293,29 @@ add_character:
       /* If we have a multibyte character, see if it's bound to something that
 	 affects the search. */
 #if defined (HANDLE_MULTIBYTE)
-      if (MB_CUR_MAX > 1 && rl_byte_oriented == 0 && cxt->mb[1])
-	f = rl_function_of_keyseq (cxt->mb, cxt->keymap, (int *)NULL);
+      if (MB_CUR_MAX > 1 && !rl_byte_oriented && cxt->mb[1])
+	f = rl_function_of_keyseq (cxt->mb, cxt->keymap, nullptr);
       else
 #endif
 	{
-	  f = cxt->keymap[c].function;
-	  if (f == rl_do_lowercase_version)
-	    f = cxt->keymap[_rl_to_lower (c)].function;
+	  f = cxt->keymap[c].value.function;
+	  if (f == &Readline::rl_do_lowercase_version)
+	    f = cxt->keymap[_rl_to_lower (c)].value.function;
 	}
 
-      if (f == rl_reverse_search_history)
+      if (f == &Readline::rl_reverse_search_history)
 	cxt->lastc = (cxt->sflags & SF_REVERSE) ? -1 : -2;
-      else if (f == rl_forward_search_history)
+      else if (f == &Readline::rl_forward_search_history)
 	cxt->lastc = (cxt->sflags & SF_REVERSE) ? -2 : -1;
-      else if (f == rl_rubout)
+      else if (f == &Readline::rl_rubout)
 	cxt->lastc = -3;
-      else if (c == CTRL ('G') || f == rl_abort)
+      else if (c == CTRL ('G') || f == &Readline::rl_abort)
 	cxt->lastc = -4;
-      else if (c == CTRL ('W') || f == rl_unix_word_rubout)	/* XXX */
+      else if (c == CTRL ('W') || f == &Readline::rl_unix_word_rubout)	/* XXX */
 	cxt->lastc = -5;
-      else if (c == CTRL ('Y') || f == rl_yank)	/* XXX */
+      else if (c == CTRL ('Y') || f == &Readline::rl_yank)	/* XXX */
 	cxt->lastc = -6;
-      else if (f == rl_bracketed_paste_begin)
+      else if (f == &Readline::rl_bracketed_paste_begin)
 	cxt->lastc = -7;
     }
 
@@ -461,7 +336,7 @@ add_character:
 	  rl_stuff_char (cxt->lastc);
 	  rl_execute_next (cxt->prevc);
 	  /* XXX - do we insert everything in cxt->pmb? */
-	  return (0);
+	  return 0;
 	}
       /* Otherwise, if the current character is mapped to self-insert or
 	 nothing (i.e., not an editing command), and the previous character
@@ -469,20 +344,22 @@ add_character:
 	 character and the current character into the search string. */
       else if (cxt->lastc > 0 && cxt->prevc > 0 &&
 	       cxt->keymap[cxt->prevc].type == ISKMAP &&
-	       (f == 0 || f == rl_insert))
+	       (f == nullptr || f == &Readline::rl_insert))
 	{
 	  /* Make lastc be the next character read */
 	  /* XXX - do we insert everything in cxt->mb? */
 	  rl_execute_next (cxt->lastc);
+
 	  /* Dispatch on the previous character (insert into search string) */
 	  cxt->lastc = cxt->prevc;
+
 #if defined (HANDLE_MULTIBYTE)
 	  /* Have to overwrite cxt->mb here because dispatch uses it below */
-	  if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+	  if (MB_CUR_MAX > 1 && !rl_byte_oriented)
 	    {
 	      if (cxt->pmb[1] == 0)
 		{
-		  cxt->mb[0] = cxt->lastc;	/* == cxt->prevc */
+		  cxt->mb[0] = static_cast<char> (cxt->lastc);	/* == cxt->prevc */
 		  cxt->mb[1] = '\0';
 		}
 	      else
@@ -491,17 +368,15 @@ add_character:
 #endif
 	  cxt->prevc = 0;
 	}
-      else if (cxt->lastc > 0 && cxt->prevc > 0 && f && f != rl_insert)
+      else if (cxt->lastc > 0 && cxt->prevc > 0 && f && f != &Readline::rl_insert)
 	{
-	  _rl_term_executing_keyseq ();		/* should this go in the caller? */
-
 	  _rl_pending_command.map = cxt->keymap;
 	  _rl_pending_command.count = 1;	/* XXX */
 	  _rl_pending_command.key = cxt->lastc;
 	  _rl_pending_command.func = f;
 	  _rl_command_to_execute = &_rl_pending_command;
 
-	  return (0);
+	  return 0;
 	}
     }
 
@@ -509,7 +384,7 @@ add_character:
      variable isearch-terminators) are used to terminate the search but
      not subsequently execute the character as a command.  The default
      value is "\033\012" (ESC and C-J). */
-  if (cxt->lastc > 0 && strchr (cxt->search_terminators, cxt->lastc))
+  if (cxt->lastc > 0 && std::strchr (cxt->search_terminators, cxt->lastc))
     {
       /* ESC still terminates the search, but if there is pending
 	 input or if input arrives within 0.1 seconds (on systems
@@ -522,18 +397,18 @@ add_character:
 	 use _rl_input_queued(100000) */
       if (cxt->lastc == ESC && (_rl_pushed_input_available () || _rl_input_available ()))
 	rl_execute_next (ESC);
-      return (0);
+      return 0;
     }
 
 #if defined (HANDLE_MULTIBYTE)
-  if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+  if (MB_CUR_MAX > 1 && !rl_byte_oriented)
     {
       if (cxt->lastc >= 0 && (cxt->mb[0] && cxt->mb[1] == '\0') && ENDSRCH_CHAR (cxt->lastc))
 	{
 	  /* This sets rl_pending_input to LASTC; it will be picked up the next
 	     time rl_read_key is called. */
 	  rl_execute_next (cxt->lastc);
-	  return (0);
+	  return 0;
 	}
     }
   else
@@ -543,7 +418,7 @@ add_character:
 	/* This sets rl_pending_input to LASTC; it will be picked up the next
 	   time rl_read_key is called. */
 	rl_execute_next (cxt->lastc);
-	return (0);
+	return 0;
       }
 
   _rl_init_executing_keyseq ();
@@ -551,27 +426,25 @@ add_character:
 opcode_dispatch:
   /* Now dispatch on the character.  `Opcodes' affect the search string or
      state.  Other characters are added to the string.  */
+  wchar_t cval;
   switch (cxt->lastc)
     {
     /* search again */
     case -1:
-      if (cxt->search_string_index == 0)
+      if (cxt->search_string.empty ())
 	{
-	  if (last_isearch_string)
+	  if (!last_isearch_string.empty ())
 	    {
-	      cxt->search_string_size = 64 + last_isearch_string_len;
-	      cxt->search_string = (char *)xrealloc (cxt->search_string, cxt->search_string_size);
-	      strcpy (cxt->search_string, last_isearch_string);
-	      cxt->search_string_index = last_isearch_string_len;
-	      rl_display_search (cxt->search_string, cxt->sflags, -1);
+	      cxt->search_string = last_isearch_string;
+	      rl_display_search (cxt->search_string.c_str (), cxt->sflags);
 	      break;
 	    }
 	  /* XXX - restore keymap here? */
-	  return (1);
+	  return 1;
 	}
       else if ((cxt->sflags & SF_REVERSE) && cxt->sline_index >= 0)
 	cxt->sline_index--;
-      else if (cxt->sline_index != cxt->sline_len)
+      else if (cxt->sline_index != static_cast<int> (cxt->sline.size ()))
 	cxt->sline_index++;
       else
 	rl_ding ();
@@ -592,20 +465,19 @@ opcode_dispatch:
 	 stack of search positions for the current search, with
 	 sentinels marking the beginning and end.  But this will
 	 do until we have a real isearch-undo. */
-      if (cxt->search_string_index == 0)
+      if (cxt->search_string.empty ())
 	rl_ding ();
       else if (MB_CUR_MAX == 1 || rl_byte_oriented)
-	cxt->search_string[--cxt->search_string_index] = '\0';
+	cxt->search_string.erase (cxt->search_string.size () - 1, 1);
       else
 	{
-	  wstart = _rl_find_prev_mbchar (cxt->search_string, cxt->search_string_index, MB_FIND_NONZERO);
-	  if (wstart >= 0)
-	    cxt->search_string[cxt->search_string_index = wstart] = '\0';
-	  else
-	    cxt->search_string[cxt->search_string_index = 0] = '\0';
+	  wstart = _rl_find_prev_mbchar (cxt->search_string,
+					 static_cast<unsigned int> (cxt->search_string.size ()),
+					 MB_FIND_NONZERO);
+	  cxt->search_string.resize (wstart);
 	}
 
-      if (cxt->search_string_index == 0)
+      if (cxt->search_string.empty ())
 	rl_ding ();
 
       break;
@@ -623,8 +495,8 @@ opcode_dispatch:
 
     case -5:	/* C-W */
       /* skip over portion of line we already matched and yank word */
-      wstart = rl_point + cxt->search_string_index;
-      if (wstart >= rl_end)
+      wstart = rl_point + static_cast<unsigned int> (cxt->search_string.size ());
+      if (wstart >= rl_end ())
 	{
 	  rl_ding ();
 	  break;
@@ -637,107 +509,86 @@ opcode_dispatch:
 	  rl_ding ();
 	  break;
 	}
-      n = MB_NEXTCHAR (rl_line_buffer, wstart, 1, MB_FIND_NONZERO);;
-      while (n < rl_end)
+
+      tmp = MB_NEXTCHAR (rl_line_buffer, wstart, 1, MB_FIND_NONZERO);
+      while (tmp < rl_end ())
 	{
-	  cval = _rl_char_value (rl_line_buffer, n);
+	  cval = _rl_char_value (rl_line_buffer, tmp);
 	  if (_rl_walphabetic (cval) == 0)
 	    break;
-	  n = MB_NEXTCHAR (rl_line_buffer, n, 1, MB_FIND_NONZERO);;
+	  tmp = MB_NEXTCHAR (rl_line_buffer, tmp, 1, MB_FIND_NONZERO);
 	}
-      wlen = n - wstart + 1;
-      if (cxt->search_string_index + wlen + 1 >= cxt->search_string_size)
-	{
-	  cxt->search_string_size += wlen + 1;
-	  cxt->search_string = (char *)xrealloc (cxt->search_string, cxt->search_string_size);
-	}
-      for (; wstart < n; wstart++)
-	cxt->search_string[cxt->search_string_index++] = rl_line_buffer[wstart];
-      cxt->search_string[cxt->search_string_index] = '\0';
+
+      cxt->search_string.append (rl_line_buffer, wstart, tmp - wstart);
       break;
 
     case -6:	/* C-Y */
       /* skip over portion of line we already matched and yank rest */
-      wstart = rl_point + cxt->search_string_index;
-      if (wstart >= rl_end)
+      wstart = rl_point + static_cast<unsigned int> (cxt->search_string.size ());
+      if (wstart >= rl_end ())
 	{
 	  rl_ding ();
 	  break;
 	}
-      n = rl_end - wstart + 1;
-      if (cxt->search_string_index + n + 1 >= cxt->search_string_size)
-	{
-	  cxt->search_string_size += n + 1;
-	  cxt->search_string = (char *)xrealloc (cxt->search_string, cxt->search_string_size);
-	}
-      for (n = wstart; n < rl_end; n++)
-	cxt->search_string[cxt->search_string_index++] = rl_line_buffer[n];
-      cxt->search_string[cxt->search_string_index] = '\0';
+
+      tmp = rl_end () + 1 - wstart;
+      cxt->search_string.append (rl_line_buffer, tmp);
       break;
 
     case -7:	/* bracketed paste */
       paste = _rl_bracketed_text (&pastelen);
-      if (paste == 0 || *paste == 0)
+      if (paste == nullptr || *paste == '\0')
 	{
-	  free (paste);
+	  delete[] paste;
 	  break;
 	}
+
       if (_rl_enable_active_region)
 	rl_activate_mark ();
-      if (cxt->search_string_index + pastelen + 1 >= cxt->search_string_size)
-	{
-	  cxt->search_string_size += pastelen + 2;
-	  cxt->search_string = (char *)xrealloc (cxt->search_string, cxt->search_string_size);
-	}
-      strcpy (cxt->search_string + cxt->search_string_index, paste);
-      cxt->search_string_index += pastelen;
-      free (paste);
+
+      cxt->search_string.append (paste, pastelen);
+
+      delete[] paste;
       break;
 
     /* Add character to search string and continue search. */
     default:
+      size_t wlen;
 #if defined (HANDLE_MULTIBYTE)
-      wlen = (cxt->mb[0] == 0 || cxt->mb[1] == 0) ? 1 : RL_STRLEN (cxt->mb);
+      wlen = (cxt->mb[0] == 0 || cxt->mb[1] == 0) ? 1 : std::strlen (cxt->mb);
 #else
       wlen = 1;
 #endif
-      if (cxt->search_string_index + wlen + 1 >= cxt->search_string_size)
-	{
-	  cxt->search_string_size += 128;	/* 128 much greater than MB_CUR_MAX */
-	  cxt->search_string = (char *)xrealloc (cxt->search_string, cxt->search_string_size);
-	}
 #if defined (HANDLE_MULTIBYTE)
-      if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+      if (MB_CUR_MAX > 1 && !rl_byte_oriented)
 	{
-	  int j;
-
 	  if (cxt->mb[0] == 0 || cxt->mb[1] == 0)
-	    cxt->search_string[cxt->search_string_index++] = cxt->mb[0];
+	    cxt->search_string.push_back (cxt->mb[0]);
 	  else
-	    for (j = 0; j < wlen; )
-	      cxt->search_string[cxt->search_string_index++] = cxt->mb[j++];
+	    cxt->search_string.append (cxt->mb, wlen);
 	}
       else
 #endif
-	cxt->search_string[cxt->search_string_index++] = cxt->lastc;	/* XXX - was c instead of lastc */
-      cxt->search_string[cxt->search_string_index] = '\0';
+	cxt->search_string.push_back (static_cast<char> (cxt->lastc));	/* XXX - was c instead of lastc */
       break;
     }
 
-  for (cxt->sflags &= ~(SF_FOUND|SF_FAILED);; )
+  for (cxt->sflags &= ~(SF_FOUND | SF_FAILED); ; )
     {
-      if (cxt->search_string_index == 0)
+      if (cxt->search_string.empty ())
 	{
 	  cxt->sflags |= SF_FAILED;
 	  break;
 	}
 
-      limit = cxt->sline_len - cxt->search_string_index + 1;
+      limit = static_cast<int> (cxt->sline.size ()) - static_cast<int> (cxt->search_string.size ()) + 1;
 
       /* Search the current line. */
       while ((cxt->sflags & SF_REVERSE) ? (cxt->sline_index >= 0) : (cxt->sline_index < limit))
 	{
-	  if (STREQN (cxt->search_string, cxt->sline + cxt->sline_index, cxt->search_string_index))
+	  if (STREQN (cxt->search_string.data (),
+		      &cxt->sline[static_cast<size_t> (cxt->sline_index)],
+		      cxt->search_string.size ()))
 	    {
 	      cxt->sflags |= SF_FOUND;
 	      break;
@@ -759,33 +610,30 @@ opcode_dispatch:
 	 searching for. */
       do
 	{
-	  /* Move to the next line. */
-	  cxt->history_pos += cxt->direction;
-
 	  /* At limit for direction? */
-	  if ((cxt->sflags & SF_REVERSE) ? (cxt->history_pos < 0) : (cxt->history_pos == cxt->hlen))
+	  if ((cxt->sflags & SF_REVERSE) ? (cxt->history_pos == 0) : ((cxt->history_pos + 1) == cxt->lines.size ()))
 	    {
 	      cxt->sflags |= SF_FAILED;
 	      break;
 	    }
 
+	  /* Move to the next line. */
+	  cxt->history_pos = static_cast<unsigned int> (
+		static_cast<int> (cxt->history_pos) + cxt->direction);
+
 	  /* We will need these later. */
 	  cxt->sline = cxt->lines[cxt->history_pos];
-	  cxt->sline_len = strlen (cxt->sline);
 	}
-      while ((cxt->prev_line_found && STREQ (cxt->prev_line_found, cxt->lines[cxt->history_pos])) ||
-	     (cxt->search_string_index > cxt->sline_len));
+      while ((!cxt->prev_line_found.empty () &&
+	     STREQ (cxt->prev_line_found.c_str (), cxt->lines[cxt->history_pos].c_str ())) ||
+	     (cxt->search_string.size () > cxt->sline.size ()));
 
       if (cxt->sflags & SF_FAILED)
-	{
-	  /* XXX - reset sline_index if < 0 */
-	  if (cxt->sline_index < 0)
-	    cxt->sline_index = 0;
 	  break;
-	}
 
       /* Now set up the line for searching... */
-      cxt->sline_index = (cxt->sflags & SF_REVERSE) ? cxt->sline_len - cxt->search_string_index : 0;
+      cxt->sline_index = static_cast<int> ((cxt->sflags & SF_REVERSE)
+				? (cxt->sline.size () - cxt->search_string.size ()) : 0);
     }
 
   /* reset the keymaps for the next time through the loop */
@@ -797,7 +645,7 @@ opcode_dispatch:
       rl_ding ();
       cxt->history_pos = cxt->last_found_line;
       rl_deactivate_mark ();
-      rl_display_search (cxt->search_string, cxt->sflags, (cxt->history_pos == cxt->save_line) ? -1 : cxt->history_pos);
+      rl_display_search (cxt->search_string.c_str (), cxt->sflags);
       return 1;
     }
 
@@ -807,38 +655,44 @@ opcode_dispatch:
   if (cxt->sflags & SF_FOUND)
     {
       cxt->prev_line_found = cxt->lines[cxt->history_pos];
+
       rl_replace_line (cxt->lines[cxt->history_pos], 0);
+
       if (_rl_enable_active_region)
 	rl_activate_mark ();
-      rl_point = cxt->sline_index;
-      if (rl_mark_active_p () && cxt->search_string_index > 0)
-	rl_mark = rl_point + cxt->search_string_index;
+
+      rl_point = static_cast<unsigned int> (cxt->sline_index);
+
+      if (rl_mark_active_p () && !cxt->search_string.empty ())
+	rl_mark = rl_point + static_cast<unsigned int> (cxt->search_string.size ());
+
       cxt->last_found_line = cxt->history_pos;
-      rl_display_search (cxt->search_string, cxt->sflags, (cxt->history_pos == cxt->save_line) ? -1 : cxt->history_pos);
+      rl_display_search (cxt->search_string.c_str (), cxt->sflags);
     }
 
   return 1;
 }
 
 int
-_rl_isearch_cleanup (_rl_search_cxt *cxt, int r)
+Readline::_rl_isearch_cleanup (_rl_search_cxt *cxt, int r)
 {
   if (r >= 0)
     _rl_isearch_fini (cxt);
-  _rl_scxt_dispose (cxt, 0);
-  _rl_iscxt = 0;
+
+  delete cxt;
+  _rl_iscxt = nullptr;
 
   RL_UNSETSTATE(RL_STATE_ISEARCH);
 
-  return (r != 0);
+  return r != 0;
 }
 
 /* Search through the history looking for an interactively typed string.
    This is analogous to i-search.  We start the search in the current line.
    DIRECTION is which direction to search; >= 0 means forward, < 0 means
    backwards. */
-static int
-rl_search_history (int direction, int invoking_key)
+int
+Readline::rl_search_history (int direction, int)
 {
   _rl_search_cxt *cxt;		/* local for now, but saved globally */
   int c, r;
@@ -846,12 +700,12 @@ rl_search_history (int direction, int invoking_key)
   RL_SETSTATE(RL_STATE_ISEARCH);
   cxt = _rl_isearch_init (direction);
 
-  rl_display_search (cxt->search_string, cxt->sflags, -1);
+  rl_display_search (cxt->search_string.c_str (), cxt->sflags);
 
   /* If we are using the callback interface, all we do is set up here and
       return.  The key is that we leave RL_STATE_ISEARCH set. */
   if (RL_ISSTATE (RL_STATE_CALLBACK))
-    return (0);
+    return 0;
 
   r = -1;
   for (;;)
@@ -867,7 +721,7 @@ rl_search_history (int direction, int invoking_key)
      was looking for, or else she may have exited a failing search.  If
      LINE_INDEX is -1, then that shows that the string searched for was
      not found.  We use this to determine where to place rl_point. */
-  return (_rl_isearch_cleanup (cxt, r));
+  return _rl_isearch_cleanup (cxt, r);
 }
 
 #if defined (READLINE_CALLBACKS)
@@ -876,7 +730,7 @@ rl_search_history (int direction, int invoking_key)
    If _rl_isearch_dispatch finishes searching, this function is responsible
    for turning off RL_STATE_ISEARCH, which it does using _rl_isearch_cleanup. */
 int
-_rl_isearch_callback (_rl_search_cxt *cxt)
+Readline::_rl_isearch_callback (_rl_search_cxt *cxt)
 {
   int c, r;
 
@@ -887,3 +741,5 @@ _rl_isearch_callback (_rl_search_cxt *cxt)
   return (r <= 0) ? _rl_isearch_cleanup (cxt, r) : 0;
 }
 #endif
+
+}  // namespace readline

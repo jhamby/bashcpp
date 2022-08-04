@@ -22,9 +22,10 @@
 
 #if !defined (HAVE_SYS_SIGLIST) && !defined (HAVE_UNDER_SYS_SIGLIST) && !defined (HAVE_STRSIGNAL)
 
-#include <stdio.h>
 #include "general.h"
-#include <signal.h>
+
+#include <cstdio>
+#include <csignal>
 
 #include "siglist.h"
 

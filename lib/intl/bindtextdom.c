@@ -19,9 +19,9 @@
 # include <config.h>
 #endif
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>
 
 #include "gettextP.h"
 #ifdef _LIBC
@@ -40,11 +40,6 @@
 # include "lock.h"
 #endif
 
-/* Some compilers, like SunOS4 cc, don't have offsetof in <stddef.h>.  */
-#ifndef offsetof
-# define offsetof(type,ident) ((size_t)&(((type*)0)->ident))
-#endif
-
 /* @@ end of prolog @@ */
 
 /* Lock variable to protect the global data in the gettext implementation.  */
@@ -58,9 +53,6 @@ gl_rwlock_define (extern, _nl_state_lock attribute_hidden)
 #ifdef _LIBC
 # define BINDTEXTDOMAIN __bindtextdomain
 # define BIND_TEXTDOMAIN_CODESET __bind_textdomain_codeset
-# ifndef strdup
-#  define strdup(str) __strdup (str)
-# endif
 #else
 # define BINDTEXTDOMAIN libintl_bindtextdomain
 # define BIND_TEXTDOMAIN_CODESET libintl_bind_textdomain_codeset
@@ -77,7 +69,6 @@ set_binding_values (const char *domainname,
 		    const char **dirnamep, const char **codesetp)
 {
   struct binding *binding;
-  int modified;
 
   /* Some sanity checks.  */
   if (domainname == NULL || domainname[0] == '\0')
@@ -91,11 +82,11 @@ set_binding_values (const char *domainname,
 
   gl_rwlock_wrlock (_nl_state_lock);
 
-  modified = 0;
+  bool modified = false;
 
   for (binding = _nl_domain_bindings; binding != NULL; binding = binding->next)
     {
-      int compare = strcmp (domainname, binding->domainname);
+      int compare = std::strcmp (domainname, binding->domainname);
       if (compare == 0)
 	/* We found it!  */
 	break;
@@ -122,29 +113,22 @@ set_binding_values (const char *domainname,
 		 one are equal we simply do nothing.  Otherwise replace the
 		 old binding.  */
 	      char *result = binding->dirname;
-	      if (strcmp (dirname, result) != 0)
+	      if (std::strcmp (dirname, result) != 0)
 		{
-		  if (strcmp (dirname, _nl_default_dirname) == 0)
-		    result = (char *) _nl_default_dirname;
+		  if (std::strcmp (dirname, _nl_default_dirname) == 0)
+		    result = const_cast<char*> (_nl_default_dirname);
 		  else
 		    {
-#if defined _LIBC || defined HAVE_STRDUP
-		      result = strdup (dirname);
-#else
-		      size_t len = strlen (dirname) + 1;
-		      result = (char *) malloc (len);
-		      if (__builtin_expect (result != NULL, 1))
-			memcpy (result, dirname, len);
-#endif
+		      result = ::strdup (dirname);
 		    }
 
 		  if (__builtin_expect (result != NULL, 1))
 		    {
 		      if (binding->dirname != _nl_default_dirname)
-			free (binding->dirname);
+			std::free (binding->dirname);
 
 		      binding->dirname = result;
-		      modified = 1;
+		      modified = true;
 		    }
 		}
 	      *dirnamep = result;
@@ -164,23 +148,16 @@ set_binding_values (const char *domainname,
 		 one are equal we simply do nothing.  Otherwise replace the
 		 old binding.  */
 	      char *result = binding->codeset;
-	      if (result == NULL || strcmp (codeset, result) != 0)
+	      if (result == NULL || std::strcmp (codeset, result) != 0)
 		{
-#if defined _LIBC || defined HAVE_STRDUP
-		  result = strdup (codeset);
-#else
-		  size_t len = strlen (codeset) + 1;
-		  result = (char *) malloc (len);
-		  if (__builtin_expect (result != NULL, 1))
-		    memcpy (result, codeset, len);
-#endif
+		  result = ::strdup (codeset);
 
 		  if (__builtin_expect (result != NULL, 1))
 		    {
-		      free (binding->codeset);
+		      std::free (binding->codeset);
 
 		      binding->codeset = result;
-		      modified = 1;
+		      modified = true;
 		    }
 		}
 	      *codesetp = result;
@@ -199,9 +176,9 @@ set_binding_values (const char *domainname,
   else
     {
       /* We have to create a new binding.  */
-      size_t len = strlen (domainname) + 1;
-      struct binding *new_binding =
-	(struct binding *) malloc (offsetof (struct binding, domainname) + len);
+      size_t len = std::strlen (domainname) + 1;
+      struct binding *new_binding = static_cast<struct binding *>
+	(std::malloc (offsetof (struct binding, domainname) + len));
 
       if (__builtin_expect (new_binding == NULL, 0))
 	goto failed;
@@ -217,31 +194,23 @@ set_binding_values (const char *domainname,
 	    dirname = _nl_default_dirname;
 	  else
 	    {
-	      if (strcmp (dirname, _nl_default_dirname) == 0)
+	      if (std::strcmp (dirname, _nl_default_dirname) == 0)
 		dirname = _nl_default_dirname;
 	      else
 		{
 		  char *result;
-#if defined _LIBC || defined HAVE_STRDUP
-		  result = strdup (dirname);
+		  result = ::strdup (dirname);
 		  if (__builtin_expect (result == NULL, 0))
 		    goto failed_dirname;
-#else
-		  size_t len = strlen (dirname) + 1;
-		  result = (char *) malloc (len);
-		  if (__builtin_expect (result == NULL, 0))
-		    goto failed_dirname;
-		  memcpy (result, dirname, len);
-#endif
 		  dirname = result;
 		}
 	    }
 	  *dirnamep = dirname;
-	  new_binding->dirname = (char *) dirname;
+	  new_binding->dirname = const_cast<char*> (dirname);
 	}
       else
 	/* The default value.  */
-	new_binding->dirname = (char *) _nl_default_dirname;
+	new_binding->dirname = const_cast<char*> (_nl_default_dirname);
 
       if (codesetp)
 	{
@@ -251,28 +220,20 @@ set_binding_values (const char *domainname,
 	    {
 	      char *result;
 
-#if defined _LIBC || defined HAVE_STRDUP
-	      result = strdup (codeset);
+	      result = ::strdup (codeset);
 	      if (__builtin_expect (result == NULL, 0))
 		goto failed_codeset;
-#else
-	      size_t len = strlen (codeset) + 1;
-	      result = (char *) malloc (len);
-	      if (__builtin_expect (result == NULL, 0))
-		goto failed_codeset;
-	      memcpy (result, codeset, len);
-#endif
 	      codeset = result;
 	    }
 	  *codesetp = codeset;
-	  new_binding->codeset = (char *) codeset;
+	  new_binding->codeset = const_cast<char*> (codeset);
 	}
       else
 	new_binding->codeset = NULL;
 
       /* Now enqueue it.  */
       if (_nl_domain_bindings == NULL
-	  || strcmp (domainname, _nl_domain_bindings->domainname) < 0)
+	  || std::strcmp (domainname, _nl_domain_bindings->domainname) < 0)
 	{
 	  new_binding->next = _nl_domain_bindings;
 	  _nl_domain_bindings = new_binding;
@@ -281,23 +242,23 @@ set_binding_values (const char *domainname,
 	{
 	  binding = _nl_domain_bindings;
 	  while (binding->next != NULL
-		 && strcmp (domainname, binding->next->domainname) > 0)
+		 && std::strcmp (domainname, binding->next->domainname) > 0)
 	    binding = binding->next;
 
 	  new_binding->next = binding->next;
 	  binding->next = new_binding;
 	}
 
-      modified = 1;
+      modified = true;
 
       /* Here we deal with memory allocation failures.  */
       if (0)
 	{
 	failed_codeset:
 	  if (new_binding->dirname != _nl_default_dirname)
-	    free (new_binding->dirname);
+	    std::free (new_binding->dirname);
 	failed_dirname:
-	  free (new_binding);
+	  std::free (new_binding);
 	failed:
 	  if (dirnamep)
 	    *dirnamep = NULL;
@@ -319,7 +280,7 @@ char *
 BINDTEXTDOMAIN (const char *domainname, const char *dirname)
 {
   set_binding_values (domainname, &dirname, NULL);
-  return (char *) dirname;
+  return const_cast<char*> (dirname);
 }
 
 /* Specify the character encoding in which the messages from the
@@ -328,7 +289,7 @@ char *
 BIND_TEXTDOMAIN_CODESET (const char *domainname, const char *codeset)
 {
   set_binding_values (domainname, NULL, &codeset);
-  return (char *) codeset;
+  return const_cast<char*> (codeset);
 }
 
 #ifdef _LIBC

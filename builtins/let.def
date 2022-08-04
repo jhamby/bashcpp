@@ -78,9 +78,12 @@ $END
 #include "../shell.h"
 #include "common.h"
 
+namespace bash
+{
+
 /* Arithmetic LET function. */
 int
-let_builtin (WORD_LIST *list)
+Shell::let_builtin (WordList *list)
 {
   intmax_t ret;
   bool expok;
@@ -89,41 +92,22 @@ let_builtin (WORD_LIST *list)
 
   /* Skip over leading `--' argument. */
   if (list && list->word && ISOPTION (list->word->word, '-'))
-    list = (WORD_LIST *)list->next;
+    list = (WordList *)list->next;
 
   if (list == 0)
     {
       builtin_error (_("expression expected"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   for (; list; list = (WORD_LIST *)list->next)
     {
       ret = evalexp (list->word->word, EXP_EXPANDED, &expok);
       if (expok == 0)
-	return (EXECUTION_FAILURE);
+	return EXECUTION_FAILURE;
     }
 
-  return ((ret == 0) ? EXECUTION_FAILURE : EXECUTION_SUCCESS);
+  return (ret == 0) ? EXECUTION_FAILURE : EXECUTION_SUCCESS;
 }
 
-#ifdef INCLUDE_UNUSED
-int
-exp_builtin (WORD_LIST *list)
-{
-  char *exp;
-  intmax_t ret;
-  bool expok;
-
-  if (list == 0)
-    {
-      builtin_error (_("expression expected"));
-      return (EXECUTION_FAILURE);
-    }
-
-  exp = string_list (list);
-  ret = evalexp (exp, EXP_EXPANDED, &expok);
-  (void)free (exp);
-  return (((ret == 0) || (expok == 0)) ? EXECUTION_FAILURE : EXECUTION_SUCCESS);
-}
-#endif
+}  // namespace bash

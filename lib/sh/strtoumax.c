@@ -24,6 +24,8 @@
 #  include <config.h>
 #endif
 
+#if !defined (HAVE_STRTOUMAX)
+
 #if HAVE_INTTYPES_H
 #  include <inttypes.h>
 #endif
@@ -32,11 +34,7 @@
 #  include <stdint.h>
 #endif
 
-#if HAVE_STDLIB_H
-#  include <stdlib.h>
-#endif
-
-#include <stdc.h>
+#include <cstdlib>
 
 /* Verify a requirement at compile-time (unlike assert, which is runtime).  */
 #define verify(name, assertion) struct name { char a[(assertion) ? 1 : -1]; }
@@ -51,7 +49,7 @@ extern unsigned long strtoul (const char *, char **, int);
 #ifndef HAVE_DECL_STRTOULL
 "this configure-time declaration test was not run"
 #endif
-#if !HAVE_DECL_STRTOULL && HAVE_UNSIGNED_LONG_LONG
+#if !HAVE_DECL_STRTOULL
 extern unsigned long long strtoull (const char *, char **, int);
 #endif
 
@@ -62,49 +60,39 @@ extern unsigned long long strtoull (const char *, char **, int);
 uintmax_t
 strtoumax (const char *ptr, char **endptr, int base)
 {
-#if HAVE_UNSIGNED_LONG_LONG
   verify (size_is_that_of_unsigned_long_or_unsigned_long_long,
 	  (sizeof (uintmax_t) == sizeof (unsigned long) ||
 	   sizeof (uintmax_t) == sizeof (unsigned long long)));
 
   if (sizeof (uintmax_t) != sizeof (unsigned long))
-    return (strtoull (ptr, endptr, base));
-#else
-  verify (size_is_that_of_unsigned_long, sizeof (uintmax_t) == sizeof (unsigned long));
-#endif
+    return strtoull (ptr, endptr, base);
 
-  return (strtoul (ptr, endptr, base));
+  return strtoul (ptr, endptr, base);
 }
 
 #ifdef TESTING
-# include <stdio.h>
+# include <cstdio>
 int
 main ()
 {
   char *p, *endptr;
   uintmax_t x;
-#if HAVE_UNSIGNED_LONG_LONG
   unsigned long long y;
-#endif
   unsigned long z;
 
-  printf ("sizeof uintmax_t: %d\n", sizeof (uintmax_t));
+  std::printf ("sizeof uintmax_t: %d\n", sizeof (uintmax_t));
 
-#if HAVE_UNSIGNED_LONG_LONG
-  printf ("sizeof unsigned long long: %d\n", sizeof (unsigned long long));
-#endif
-  printf ("sizeof unsigned long: %d\n", sizeof (unsigned long));
+  std::printf ("sizeof unsigned long long: %d\n", sizeof (unsigned long long));
+  std::printf ("sizeof unsigned long: %d\n", sizeof (unsigned long));
 
-  x = strtoumax("42", &endptr, 10);
-#if HAVE_LONG_LONG
-  y = strtoull("42", &endptr, 10);
-#else
-  y = 0;
-#endif
-  z = strtoul("42", &endptr, 10);
+  x = ::strtoumax("42", &endptr, 10);
+  y = ::strtoull("42", &endptr, 10);
+  z = ::strtoul("42", &endptr, 10);
 
-  printf ("%llu %llu %lu\n", x, y, z);
+  std::printf ("%llu %llu %lu\n", x, y, z);
 
-  exit (0);
+  std::exit (0);
 }
+#endif
+
 #endif

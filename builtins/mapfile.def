@@ -74,7 +74,6 @@ $END
 #  include <unistd.h>
 #endif
 
-#include "bashansi.h"
 #include "bashintl.h"
 
 #include <stdio.h>
@@ -85,9 +84,8 @@ $END
 #include "common.h"
 #include "bashgetopt.h"
 
-#if !defined (errno)
-extern int errno;
-#endif
+namespace bash
+{
 
 #if defined (ARRAY_VARS)
 
@@ -162,12 +160,12 @@ mapfile (int fd, long line_count_goal, long origin, long nskip,
       if (entry && readonly_p (entry))
 	err_readonly (array_name);
 
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   else if (array_p (entry) == 0)
     {
       builtin_error (_("%s: not an indexed array"), array_name);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   else if (invisible_p (entry))
     VUNSETATTR (entry, att_invisible);	/* no longer invisible */
@@ -232,7 +230,7 @@ mapfile (int fd, long line_count_goal, long origin, long nskip,
 }
 
 int
-mapfile_builtin (WORD_LIST *list)
+Shell::mapfile_builtin (WORD_LIST *list)
 {
   int opt, code, fd, flags;
   intmax_t intval;
@@ -259,7 +257,7 @@ mapfile_builtin (WORD_LIST *list)
 	  if (code == 0 || intval < 0 || intval != (int)intval)
 	    {
 	      builtin_error (_("%s: invalid file descriptor specification"), list_optarg);
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  else
 	    fd = intval;
@@ -267,7 +265,7 @@ mapfile_builtin (WORD_LIST *list)
 	  if (sh_validfd (fd) == 0)
 	    {
 	      builtin_error (_("%d: invalid file descriptor: %s"), fd, strerror (errno));
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  break;
 
@@ -276,7 +274,7 @@ mapfile_builtin (WORD_LIST *list)
 	  if (code == 0 || intval < 0 || intval != (unsigned)intval)
 	    {
 	      builtin_error (_("%s: invalid line count"), list_optarg);
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  else
 	    lines = intval;
@@ -287,7 +285,7 @@ mapfile_builtin (WORD_LIST *list)
 	  if (code == 0 || intval < 0 || intval != (unsigned)intval)
 	    {
 	      builtin_error (_("%s: invalid array origin"), list_optarg);
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  else
 	    origin = intval;
@@ -304,7 +302,7 @@ mapfile_builtin (WORD_LIST *list)
 	  if (code == 0 || intval <= 0 || intval != (unsigned)intval)
 	    {
 	      builtin_error (_("%s: invalid callback quantum"), list_optarg);
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  else
 	    callback_quantum = intval;
@@ -314,7 +312,7 @@ mapfile_builtin (WORD_LIST *list)
 	  if (code == 0 || intval < 0 || intval != (unsigned)intval)
 	    {
 	      builtin_error (_("%s: invalid line count"), list_optarg);
-	      return (EXECUTION_FAILURE);
+	      return EXECUTION_FAILURE;
 	    }
 	  else
 	    nskip = intval;
@@ -322,7 +320,7 @@ mapfile_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
@@ -332,12 +330,12 @@ mapfile_builtin (WORD_LIST *list)
   else if (list->word == 0 || list->word->word == 0)
     {
       builtin_error ("internal error: getting variable name");
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   else if (list->word->word[0] == '\0')
     {
       builtin_error (_("empty array variable name"));
-      return (EX_USAGE);
+      return EX_USAGE;
     }
   else
     array_name = list->word->word;
@@ -345,7 +343,7 @@ mapfile_builtin (WORD_LIST *list)
   if (legal_identifier (array_name) == 0)
     {
       sh_invalidid (array_name);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   return mapfile (fd, lines, origin, nskip, callback_quantum, callback, array_name, delim, flags);
@@ -354,10 +352,12 @@ mapfile_builtin (WORD_LIST *list)
 #else
 
 int
-mapfile_builtin (WORD_LIST *list)
+Shell::mapfile_builtin (WORD_LIST *list)
 {
   builtin_error (_("array variable support required"));
-  return (EXECUTION_FAILURE);
+  return EXECUTION_FAILURE;
 }
 
 #endif  /* ARRAY_VARS */
+
+}  // namespace bash

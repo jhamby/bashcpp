@@ -21,13 +21,11 @@
 #include "config.h"
 
 #include "bashtypes.h"
-#include <stdio.h>
+#include <cstdio>
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
-
-#include "bashansi.h"
 
 #include "shell.h"
 #include "pathexp.h"
@@ -37,6 +35,9 @@
 #include "bashintl.h"
 
 #include <glob/strmatch.h>
+
+namespace bash
+{
 
 static bool glob_name_is_acceptable (const char *);
 static void ignore_globbed_names (char **, sh_ignore_func_t *);
@@ -72,7 +73,7 @@ unquoted_glob_pattern_p (const char *string)
   DECLARE_MBSTATE;
 
   open = false;
-  send = string + strlen (string);
+  send = string + std::strlen (string);
 
   while ((c = *string++))
     {
@@ -205,7 +206,7 @@ quote_string_for_globbing (const char *pathname, int qflags)
   int cclass, collsym, equiv, c, last_was_backslash;
   int savei, savej;
 
-  temp = (char *)xmalloc (2 * strlen (pathname) + 1);
+  temp = new char[2 * std::strlen (pathname) + 1];
 
   if ((qflags & QGLOB_CVTNULL) && QUOTED_NULL (pathname))
     {
@@ -224,7 +225,8 @@ quote_string_for_globbing (const char *pathname, int qflags)
 	}
       /* If we are parsing regexp, turn CTLESC CTLESC into CTLESC. It's not an
 	 ERE special character, so we should just be able to pass it through. */
-      else if ((qflags & (QGLOB_REGEXP|QGLOB_CTLESC)) && pathname[i] == CTLESC && (pathname[i+1] == CTLESC || pathname[i+1] == CTLNUL))
+      else if ((qflags & (QGLOB_REGEXP|QGLOB_CTLESC)) && pathname[i] == CTLESC &&
+		(pathname[i+1] == CTLESC || pathname[i+1] == CTLNUL))
 	{
 	  i++;
 	  temp[j++] = pathname[i];
@@ -236,14 +238,16 @@ convert_to_backslash:
 	  if ((qflags & QGLOB_FILENAME) && pathname[i+1] == '/')
 	    continue;
 	  /* What to do if preceding char is backslash? */
-	  if (pathname[i+1] != CTLESC && (qflags & QGLOB_REGEXP) && ere_char (pathname[i+1]) == 0)
+	  if (pathname[i+1] != CTLESC && (qflags & QGLOB_REGEXP) &&
+		ere_char (pathname[i+1]) == 0)
 	    continue;
 	  temp[j++] = '\\';
 	  i++;
 	  if (pathname[i] == '\0')
 	    break;
 	}
-      else if ((qflags & QGLOB_REGEXP) && (i == 0 || pathname[i-1] != CTLESC) && pathname[i] == '[')	/*]*/
+      else if ((qflags & QGLOB_REGEXP) && (i == 0 || pathname[i-1] != CTLESC) &&
+		pathname[i] == '[')	/*]*/
 	{
 	  temp[j++] = pathname[i++];	/* open bracket */
 	  savej = j;
@@ -346,7 +350,8 @@ convert_to_backslash:
 	    break;
 	  /* If we are turning CTLESC CTLESC into CTLESC, we need to do that
 	     even when the first CTLESC is preceded by a backslash. */
-	  if ((qflags & QGLOB_CTLESC) && pathname[i] == CTLESC && (pathname[i+1] == CTLESC || pathname[i+1] == CTLNUL))
+	  if ((qflags & QGLOB_CTLESC) && pathname[i] == CTLESC &&
+		(pathname[i+1] == CTLESC || pathname[i+1] == CTLNUL))
 	    i++;	/* skip over the CTLESC */
 	  else if ((qflags & QGLOB_CTLESC) && pathname[i] == CTLESC)
 	    /* A little more general: if there is an unquoted backslash in the
@@ -366,7 +371,7 @@ convert_to_backslash:
 endpat:
   temp[j] = '\0';
 
-  return (temp);
+  return temp;
 }
 
 char *
@@ -377,10 +382,10 @@ quote_globbing_chars (const char *string)
   const char *s, *send;
   DECLARE_MBSTATE;
 
-  slen = strlen (string);
+  slen = std::strlen (string);
   send = string + slen;
 
-  temp = (char *)xmalloc (slen * 2 + 1);
+  temp = new char[slen * 2 + 1];
   for (t = temp, s = string; *s; )
     {
       if (glob_char_p (s))
@@ -416,16 +421,16 @@ shell_glob_filename (const char *pathname, int qflags)
 
   glob_flags |= (GLOB_ERR | GLOB_DOOFFS);
 
-  i = glob (temp, glob_flags, (posix_glob_errfunc_t *)NULL, &filenames);
+  i = glob (temp, glob_flags, NULL, &filenames);
 
   free (temp);
 
   if (i == GLOB_NOSPACE || i == GLOB_ABORTED)
-    return ((char **)NULL);
+    return NULL;
   else if (i == GLOB_NOMATCH)
-    filenames.gl_pathv = (char **)NULL;
+    filenames.gl_pathv = NULL;
   else if (i != 0)		/* other error codes not in POSIX.2 */
-    filenames.gl_pathv = (char **)NULL;
+    filenames.gl_pathv = NULL;
 
   results = filenames.gl_pathv;
 
@@ -438,11 +443,11 @@ shell_glob_filename (const char *pathname, int qflags)
       else
 	{
 	  FREE (results);
-	  results = (char **)NULL;
+	  results = NULL;
 	}
     }
 
-  return (results);
+  return results;
 
 #else /* !USE_POSIX_GLOB_LIBRARY */
 
@@ -469,7 +474,7 @@ shell_glob_filename (const char *pathname, int qflags)
 	}
     }
 
-  return (results);
+  return results;
 #endif /* !USE_POSIX_GLOB_LIBRARY */
 }
 
@@ -504,7 +509,7 @@ setup_glob_ignore (const char *name)
 bool
 should_ignore_glob_matches ()
 {
-  return !!(globignore.num_ignores);
+  return globignore.num_ignores != 0;
 }
 
 /* Return 0 if NAME matches a pattern in the globignore.ignores list. */
@@ -517,7 +522,7 @@ glob_name_is_acceptable (const char *name)
 
   /* . and .. are never matched. We extend this to the terminal component of a
      pathname. */
-  n = strrchr (name, '/');
+  n = std::strrchr (name, '/');
   if (n == 0 || n[1] == 0)
     n = (char *)name;
   else
@@ -598,7 +603,7 @@ split_ignorespec (char *s, int *ip)
   if (s[i] == 0)
     return 0;
 
-  n = skip_to_delim (s, i, ":", SD_NOJMP|SD_EXTGLOB|SD_GLOB);
+  n = skip_to_delim (s, i, ":", SD_NOJMP | SD_EXTGLOB | SD_GLOB);
   t = substring (s, i, n);
 
   if (s[n] == ':')
@@ -628,6 +633,7 @@ setup_ignore_patterns (struct ignorevar *ivp)
     {
       for (p = ivp->ignores; p->val; p++)
 	free(p->val);
+
       free (ivp->ignores);
       ivp->ignores = (struct ign *)NULL;
     }
@@ -645,11 +651,7 @@ setup_ignore_patterns (struct ignorevar *ivp)
 
   numitems = maxitems = ptr = 0;
 
-#if 0
-  while ((colon_bit = extract_colon_unit (this_ignoreval, &ptr)))
-#else
   while ((colon_bit = split_ignorespec (this_ignoreval, &ptr)))
-#endif
     {
       if (numitems + 1 >= maxitems)
 	{
@@ -666,3 +668,5 @@ setup_ignore_patterns (struct ignorevar *ivp)
   ivp->ignores[numitems].val = (char *)NULL;
   ivp->num_ignores = numitems;
 }
+
+}  // namespace bash

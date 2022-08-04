@@ -30,8 +30,6 @@
 #  include <unistd.h>
 #endif
 
-#include <stdc.h>
-
 /* Find the length of S, but scan at most MAXLEN characters.  If no '\0'
    terminator is found within the first MAXLEN characters, return MAXLEN. */
 size_t

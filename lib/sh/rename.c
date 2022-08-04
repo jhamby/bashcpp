@@ -30,13 +30,8 @@
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
-#include <errno.h>
 
-#include <stdc.h>
-
-#ifndef errno
-extern int errno;
-#endif
+#include <cerrno>
 
 int
 rename (const char *from, const char *to)
@@ -60,16 +55,16 @@ rename (const char *from, const char *to)
     }
 
   if (link (from, to) < 0)
-    return (-1);
+    return -1;
 
   if (unlink (from) < 0 && errno != ENOENT)
     {
       int e = errno;
       unlink (to);
       errno = e;
-      return (-1);
+      return -1;
     }
 
-  return (0);
+  return 0;
 }
 #endif /* !HAVE_RENAME */

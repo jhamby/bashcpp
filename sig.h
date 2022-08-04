@@ -23,24 +23,26 @@
 #if !defined (_SIG_H_)
 #  define _SIG_H_
 
-#include "stdc.h"
-
-#include <signal.h>		/* for sig_atomic_t */
+#include <csignal>		/* for sig_atomic_t */
 
 #if !defined (SIGABRT) && defined (SIGIOT)
 #  define SIGABRT SIGIOT
 #endif
 
-#define sighandler void
-typedef void SigHandler (int);
+namespace bash
+{
+
+extern "C" {
+typedef void (*SigHandler) (int sig);
+}
 
 /* Here is a definition for set_signal_handler () which simply expands to
    a call to signal () for non-Posix systems.  The code for set_signal_handler
    in the Posix case resides in general.c. */
 #if !defined (HAVE_POSIX_SIGNALS)
-#  define set_signal_handler(sig, handler) (SigHandler *)signal (sig, handler)
+#  define set_signal_handler(sig, handler) signal (sig, handler)
 #else
-extern SigHandler *set_signal_handler (int, SigHandler *);	/* in sig.c */
+sighandler_t set_signal_handler (int, sighandler_t);	/* in sig.c */
 #endif /* _POSIX_VERSION */
 
 #if !defined (SIGCHLD) && defined (SIGCLD)
@@ -81,54 +83,63 @@ extern SigHandler *set_signal_handler (int, SigHandler *);	/* in sig.c */
 
 /* These definitions are used both in POSIX and non-POSIX implementations. */
 
-#define BLOCK_SIGNAL(sig, nvar, ovar) \
-do { \
-  sigemptyset (&nvar); \
-  sigaddset (&nvar, sig); \
-  sigemptyset (&ovar); \
-  sigprocmask (SIG_BLOCK, &nvar, &ovar); \
-} while (0)
+static inline void block_signal(int signum, sigset_t &nvar, sigset_t &ovar)
+{
+  ::sigemptyset (&nvar);
+  ::sigaddset (&nvar, signum);
+  ::sigemptyset (&ovar);
+  ::sigprocmask (SIG_BLOCK, &nvar, &ovar);
+}
 
-#define UNBLOCK_SIGNAL(ovar) sigprocmask (SIG_SETMASK, &ovar, (sigset_t *) NULL)
+static inline void unblock_signal(sigset_t &ovar)
+{
+  ::sigprocmask (SIG_SETMASK, &ovar, nullptr);
+}
 
 #if defined (HAVE_POSIX_SIGNALS)
-#  define BLOCK_CHILD(nvar, ovar) BLOCK_SIGNAL (SIGCHLD, nvar, ovar)
-#  define UNBLOCK_CHILD(ovar) UNBLOCK_SIGNAL(ovar)
+#  define BLOCK_CHILD(nvar, ovar)	block_signal (SIGCHLD, nvar, ovar)
+#  define UNBLOCK_CHILD(ovar)		unblock_signal(ovar)
 #else /* !HAVE_POSIX_SIGNALS */
-#  define BLOCK_CHILD(nvar, ovar) ovar = sigblock (sigmask (SIGCHLD))
-#  define UNBLOCK_CHILD(ovar) sigsetmask (ovar)
+#  define BLOCK_CHILD(nvar, ovar)	ovar = sigblock (sigmask (SIGCHLD))
+#  define UNBLOCK_CHILD(ovar)		sigsetmask (ovar)
 #endif /* !HAVE_POSIX_SIGNALS */
 
-/* Extern variables */
-extern volatile sig_atomic_t sigwinch_received;
-extern volatile sig_atomic_t sigterm_received;
+// Declare these globals extern "C", for maximum ABI compatibility.
+extern "C" {
+  /* Signal handlers from sig.c. */
+  void termsig_sighandler (int);
+  void sigint_sighandler (int);
+  void sigwinch_sighandler (int);
+  void sigterm_sighandler (int);
 
-extern int interrupt_immediately;	/* no longer used */
-extern int terminate_immediately;
+  /* Signal handler from trap.c. */
+  void trap_handler (int);
+
+  /* Extern variables */
+  extern volatile sig_atomic_t sigwinch_received;
+  extern volatile sig_atomic_t sigterm_received;
+
+  // bool terminate_immediately;
+}
 
 /* Functions from sig.c. */
-extern sighandler termsig_sighandler (int);
-extern void termsig_handler (int);
-extern sighandler sigint_sighandler (int);
-extern void initialize_signals (int);
-extern void initialize_terminating_signals (void);
-extern void reset_terminating_signals (void);
-extern void top_level_cleanup (void);
-extern void throw_to_top_level (void);
-extern void jump_to_top_level (int) __attribute__((__noreturn__));
-extern void restore_sigmask (void);
+void termsig_handler (int) __attribute__((__noreturn__));
+void initialize_signals (int);
+void initialize_terminating_signals ();
+void reset_terminating_signals ();
+void top_level_cleanup ();
+void restore_sigmask ();
 
-extern sighandler sigwinch_sighandler (int);
-extern void set_sigwinch_handler (void);
-extern void unset_sigwinch_handler (void);
-
-extern sighandler sigterm_sighandler (int);
+void set_sigwinch_handler ();
+void unset_sigwinch_handler ();
 
 /* Functions defined in trap.c. */
-extern SigHandler *set_sigint_handler (void);
-extern SigHandler *trap_to_sighandler (int);
-extern sighandler trap_handler (int);
+sighandler_t set_sigint_handler ();
+sighandler_t trap_to_sighandler (int);
 
-extern int block_trapped_signals (sigset_t *, sigset_t *);
-extern int unblock_trapped_signals (sigset_t *);
+int block_trapped_signals (sigset_t *, sigset_t *);
+int unblock_trapped_signals (sigset_t *);
+
+}  // namespace bash
+
 #endif /* _SIG_H_ */

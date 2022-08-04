@@ -28,7 +28,7 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "shell.h"
 
@@ -59,7 +59,7 @@ copy_word (WORD_DESC *w)
 
   new_word = make_bare_word (w->word);
   new_word->flags = w->flags;
-  return (new_word);
+  return new_word;
 }
 
 /* Copy the chain of words in LIST.  Return a pointer to
@@ -80,7 +80,7 @@ copy_word_list (WORD_LIST *list)
 	}
     }
 
-  return (new_list);
+  return new_list;
 }
 
 static PATTERN_LIST *
@@ -92,7 +92,7 @@ copy_case_clause (PATTERN_LIST *clause)
   new_clause->patterns = copy_word_list (clause->patterns);
   new_clause->action = copy_command (clause->action);
   new_clause->flags = clause->flags;
-  return (new_clause);
+  return new_clause;
 }
 
 static PATTERN_LIST *
@@ -106,7 +106,7 @@ copy_case_clauses (PATTERN_LIST *clauses)
       new_clause->next = new_list;
       new_list = new_clause;
     }
-  return (REVERSE_LIST (new_list, PATTERN_LIST *));
+  return REVERSE_LIST (new_list, PATTERN_LIST *);
 }
 
 /* Copy a single redirect. */
@@ -153,7 +153,7 @@ copy_redirect (REDIRECT *redirect)
     case r_close_this:
       break;
     }
-  return (new_redirect);
+  return new_redirect;
 }
 
 REDIRECT *
@@ -167,7 +167,7 @@ copy_redirects (REDIRECT *list)
       temp->next = new_list;
       new_list = temp;
     }
-  return (REVERSE_LIST (new_list, REDIRECT *));
+  return REVERSE_LIST (new_list, REDIRECT *);
 }
 
 static FOR_COM *
@@ -181,7 +181,7 @@ copy_for_command (FOR_COM *com)
   new_for->name = copy_word (com->name);
   new_for->map_list = copy_word_list (com->map_list);
   new_for->action = copy_command (com->action);
-  return (new_for);
+  return new_for;
 }
 
 #if defined (ARITH_FOR_COMMAND)
@@ -197,7 +197,7 @@ copy_arith_for_command (ARITH_FOR_COM *com)
   new_arith_for->test = copy_word_list (com->test);
   new_arith_for->step = copy_word_list (com->step);
   new_arith_for->action = copy_command (com->action);
-  return (new_arith_for);
+  return new_arith_for;
 }
 #endif /* ARITH_FOR_COMMAND */
 
@@ -208,7 +208,7 @@ copy_group_command (GROUP_COM *com)
 
   new_group = (GROUP_COM *)xmalloc (sizeof (GROUP_COM));
   new_group->command = copy_command (com->command);
-  return (new_group);
+  return new_group;
 }
 
 static SUBSHELL_COM *
@@ -220,7 +220,7 @@ copy_subshell_command (SUBSHELL_COM *com)
   new_subshell->command = copy_command (com->command);
   new_subshell->flags = com->flags;
   new_subshell->line = com->line;
-  return (new_subshell);
+  return new_subshell;
 }
 
 static COPROC_COM *
@@ -232,7 +232,7 @@ copy_coproc_command (COPROC_COM *com)
   new_coproc->name = savestring (com->name);
   new_coproc->command = copy_command (com->command);
   new_coproc->flags = com->flags;
-  return (new_coproc);
+  return new_coproc;
 }
 
 static CASE_COM *
@@ -245,7 +245,7 @@ copy_case_command (CASE_COM *com)
   new_case->line = com->line;
   new_case->word = copy_word (com->word);
   new_case->clauses = copy_case_clauses (com->clauses);
-  return (new_case);
+  return new_case;
 }
 
 static WHILE_COM *
@@ -257,7 +257,7 @@ copy_while_command (WHILE_COM *com)
   new_while->flags = com->flags;
   new_while->test = copy_command (com->test);
   new_while->action = copy_command (com->action);
-  return (new_while);
+  return new_while;
 }
 
 static IF_COM *
@@ -270,7 +270,7 @@ copy_if_command (IF_COM *com)
   new_if->test = copy_command (com->test);
   new_if->true_case = copy_command (com->true_case);
   new_if->false_case = com->false_case ? copy_command (com->false_case) : com->false_case;
-  return (new_if);
+  return new_if;
 }
 
 #if defined (DPAREN_ARITHMETIC)
@@ -284,7 +284,7 @@ copy_arith_command (ARITH_COM *com)
   new_arith->exp = copy_word_list (com->exp);
   new_arith->line = com->line;
 
-  return (new_arith);
+  return new_arith;
 }
 #endif
 
@@ -302,7 +302,7 @@ copy_cond_command (COND_COM *com)
   new_cond->left = com->left ? copy_cond_command (com->left) : (COND_COM *)NULL;
   new_cond->right = com->right ? copy_cond_command (com->right) : (COND_COM *)NULL;
 
-  return (new_cond);
+  return new_cond;
 }
 #endif
 
@@ -316,7 +316,7 @@ copy_simple_command (SIMPLE_COM *com)
   new_simple->words = copy_word_list (com->words);
   new_simple->redirects = com->redirects ? copy_redirects (com->redirects) : (REDIRECT *)NULL;
   new_simple->line = com->line;
-  return (new_simple);
+  return new_simple;
 }
 
 FUNCTION_DEF *
@@ -327,7 +327,7 @@ copy_function_def_contents (FUNCTION_DEF *old, FUNCTION_DEF *new_def)
   new_def->flags = old->flags;
   new_def->line = old->line;
   new_def->source_file = old->source_file ? savestring (old->source_file) : old->source_file;
-  return (new_def);
+  return new_def;
 }
 
 FUNCTION_DEF *
@@ -337,7 +337,7 @@ copy_function_def (FUNCTION_DEF *com)
 
   new_def = (FUNCTION_DEF *)xmalloc (sizeof (FUNCTION_DEF));
   new_def = copy_function_def_contents (com, new_def);
-  return (new_def);
+  return new_def;
 }
 
 /* Copy the command structure in COMMAND.  Return a pointer to the
@@ -349,7 +349,7 @@ copy_command (COMMAND *command)
   COMMAND *new_command;
 
   if (command == NULL)
-    return (command);
+    return command;
 
   new_command = (COMMAND *)xmalloc (sizeof (COMMAND));
   FASTCOPY ((char *)command, (char *)new_command, sizeof (COMMAND));
@@ -435,5 +435,5 @@ copy_command (COMMAND *command)
 	new_command->value.Function_def = copy_function_def (command->value.Function_def);
 	break;
     }
-  return (new_command);
+  return new_command;
 }

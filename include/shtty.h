@@ -24,8 +24,6 @@
 #ifndef __SH_TTY_H_
 #define __SH_TTY_H_
 
-#include "stdc.h"
-
 #if defined (_POSIX_VERSION) && defined (HAVE_TERMIOS_H) && defined (HAVE_TCGETATTR) && !defined (TERMIOS_MISSING)
 #  define TERMIOS_TTY_DRIVER
 #else

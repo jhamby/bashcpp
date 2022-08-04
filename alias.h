@@ -21,15 +21,16 @@
 #if !defined (_ALIAS_H_)
 #define _ALIAS_H_
 
-#include "stdc.h"
-
 #include "hashlib.h"
 
-typedef struct alias {
+namespace bash
+{
+
+struct alias_t {
   char *name;
   char *value;
   char flags;
-} alias_t;
+};
 
 /* Values for `flags' member of struct alias. */
 #define AL_EXPANDNEXT		0x1
@@ -69,5 +70,7 @@ extern char *alias_expand (const char *);
 
 /* Helper definition for the parser */
 extern void clear_string_list_expander (alias_t *);
+
+}  // namespace bash
 
 #endif /* _ALIAS_H_ */

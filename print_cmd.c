@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 #if defined (HAVE_UNISTD_H)
 #  ifdef _MINIX
@@ -30,13 +30,16 @@
 #endif
 
 #if defined (PREFER_STDARG)
-#  include <stdarg.h>
+#  include <cstdarg>
 #else
 #  include <varargs.h>
 #endif
 
-#include "bashansi.h"
 #include "bashintl.h"
+#include "command.h"
+
+namespace bash
+{
 
 #define NEED_XTRACE_SET_DECL
 
@@ -49,28 +52,18 @@
 
 #include "builtins/common.h"
 
-#if !HAVE_DECL_PRINTF
-extern int printf (const char *, ...);	/* Yuck.  Double yuck. */
-#endif
-
 static int indentation;
 static int indentation_amount = 4;
 
-#if defined (PREFER_STDARG)
 typedef void PFUNC (const char *, ...);
 
 static void cprintf (const char *, ...)  __attribute__((__format__ (printf, 1, 2)));
 static void xprintf (const char *, ...)  __attribute__((__format__ (printf, 1, 2)));
-#else
-#define PFUNC VFunction
-static void cprintf ();
-static void xprintf ();
-#endif
 
-static void reset_locals (void);
+static void reset_locals ();
 static void newline (const char *);
 static void indent (int);
-static void semicolon (void);
+static void semicolon ();
 static void the_printed_command_resize (int);
 
 static void make_command_string_internal (COMMAND *);
@@ -157,7 +150,7 @@ make_command_string (COMMAND *command)
   command_string_index = was_heredoc = 0;
   deferred_heredocs = 0;
   make_command_string_internal (command);
-  return (the_printed_command);
+  return the_printed_command;
 }
 
 /* The internal function.  This is the real workhorse. */
@@ -421,7 +414,7 @@ indirection_level_string ()
   indirection_string[0] = '\0';
 
   if (ps4 == 0 || *ps4 == '\0')
-    return (indirection_string);
+    return indirection_string;
 
   old = change_flag ('x', FLAG_OFF);
   ps4 = decode_prompt_string (ps4);
@@ -429,7 +422,7 @@ indirection_level_string ()
     change_flag ('x', FLAG_ON);
 
   if (ps4 == 0 || *ps4 == '\0')
-    return (indirection_string);
+    return indirection_string;
 
 #if defined (HANDLE_MULTIBYTE)
   ps4_len = strnlen (ps4, MB_CUR_MAX);
@@ -468,7 +461,7 @@ indirection_level_string ()
 
   indirection_string[i] = '\0';
   free (ps4);
-  return (indirection_string);
+  return indirection_string;
 }
 
 void
@@ -1371,7 +1364,7 @@ named_function_string (const char *name, COMMAND *command, int flags)
   if (flags & FUNC_EXTERNAL)
     result = remove_quoted_escapes (result);
 
-  return (result);
+  return result;
 }
 
 static void
@@ -1529,3 +1522,5 @@ xprintf (const char *format, ...)
   vfprintf (stdout, format, args);
   va_end (args);
 }
+
+}  // namespace bash

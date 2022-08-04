@@ -21,18 +21,17 @@
 #if !defined (_INPUT_H_)
 #define _INPUT_H_
 
-#include "stdc.h"
+#include <string>
+using std::string;
 
 /* Function pointers can be declared as (Function *)foo. */
-#if !defined (_FUNCTION_DEF)
-#  define _FUNCTION_DEF
-typedef int Function ();
-typedef void VFunction ();
-typedef char *CPFunction ();		/* no longer used */
-typedef char **CPPFunction ();		/* no longer used */
-#endif /* _FUNCTION_DEF */
+// #if !defined (_FUNCTION_DEF)
+// #  define _FUNCTION_DEF
+// typedef int Function ();
+// typedef void VFunction ();
+// #endif /* _FUNCTION_DEF */
 
-typedef int sh_cget_func_t (void);		/* sh_ivoidfunc_t */
+typedef int sh_cget_func_t ();		/* sh_ivoidfunc_t */
 typedef int sh_cunget_func_t (int);	/* sh_intfunc_t */
 
 enum stream_type {st_none, st_stdin, st_stream, st_string, st_bstream};
@@ -53,7 +52,7 @@ enum stream_type {st_none, st_stdin, st_stream, st_string, st_bstream};
 
 /* A buffered stream.  Like a FILE *, but with our own buffering and
    synchronization.  Look in input.c for the implementation. */
-typedef struct BSTREAM
+struct BufferedStream
 {
   int	 b_fd;
   char	*b_buffer;		/* The buffer that holds characters read. */
@@ -61,52 +60,48 @@ typedef struct BSTREAM
   size_t b_used;		/* How much of the buffer we're using, */
   int	 b_flag;		/* Flag values. */
   size_t b_inputp;		/* The input pointer, index into b_buffer. */
-} BUFFERED_STREAM;
-
-#if 0
-extern BUFFERED_STREAM **buffers;
-#endif
+};
 
 extern int default_buffered_input;
 extern int bash_input_fd_changed;
 
 #endif /* BUFFERED_INPUT */
 
-typedef union {
+union InputStream {
   FILE *file;
   char *string;			/* written to by the parser */
 #if defined (BUFFERED_INPUT)
   int buffered_fd;
 #endif
-} INPUT_STREAM;
+};
 
-typedef struct {
+struct BashInput {
   enum stream_type type;
   char *name;			/* freed by the parser */
-  INPUT_STREAM location;
+  InputStream location;
   sh_cget_func_t *getter;
   sh_cunget_func_t *ungetter;
-} BASH_INPUT;
+};
 
-extern BASH_INPUT bash_input;
+extern BashInput bash_input;
 
 /* Functions from parse.y whose use directly or indirectly depends on the
    definitions in this file. */
-extern void initialize_bash_input (void);
-extern void init_yy_io (sh_cget_func_t *, sh_cunget_func_t *, enum stream_type, const char *, INPUT_STREAM);
-extern const char *yy_input_name (void);
-extern void with_input_from_stdin (void);
-extern void with_input_from_string (char *, const char *);
-extern void with_input_from_stream (FILE *, const char *);
+extern void initialize_bash_input ();
+extern void init_yy_io (sh_cget_func_t *, sh_cunget_func_t *, enum stream_type, const char *, InputStream);
+extern const char *yy_input_name ();
+extern void with_input_from_stdin ();
+extern void with_input_from_string (const string &, const string &);
+extern void with_input_from_stream (FILE *, const string &);
 extern void push_stream (int);
-extern void pop_stream (void);
+extern void pop_stream ();
 extern int stream_on_stack (enum stream_type);
 extern char *read_secondary_line (int);
-extern int find_reserved_word (const char *);
-extern void gather_here_documents (void);
-extern void execute_variable_command (char *, const char *);
+extern int find_reserved_word (const string &);
+extern void gather_here_documents ();
+extern void execute_variable_command (const string &, const string &);
 
-extern int *save_token_state (void);
+extern int *save_token_state ();
 extern void restore_token_state (int *);
 
 /* Functions from input.c */
@@ -120,16 +115,16 @@ extern int set_bash_input_fd (int);
 extern int save_bash_input (int, int);
 extern int check_bash_input (int);
 extern int duplicate_buffered_stream (int, int);
-extern BUFFERED_STREAM *fd_to_buffered_stream (int);
-extern BUFFERED_STREAM *set_buffered_stream (int, BUFFERED_STREAM *);
-extern BUFFERED_STREAM *open_buffered_stream (char *);
-extern void free_buffered_stream (BUFFERED_STREAM *);
-extern int close_buffered_stream (BUFFERED_STREAM *);
+extern BufferedStream *fd_to_buffered_stream (int);
+extern BufferedStream *set_buffered_stream (int, BufferedStream *);
+extern BufferedStream *open_buffered_stream (string);
+extern void free_buffered_stream (BufferedStream *);
+extern int close_buffered_stream (BufferedStream *);
 extern int close_buffered_fd (int);
 extern int sync_buffered_stream (int);
-extern int buffered_getchar (void);
+extern int buffered_getchar ();
 extern int buffered_ungetchar (int);
-extern void with_input_from_buffered_stream (int, char *);
+extern void with_input_from_buffered_stream (int, string);
 #endif /* BUFFERED_INPUT */
 
 #endif /* _INPUT_H_ */

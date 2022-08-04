@@ -27,15 +27,8 @@
 #  include <unistd.h>
 #endif
 
-#include <bashansi.h>
-#include <errno.h>
+#include <cerrno>
 #include <shell.h>
-
-#ifndef errno
-extern int errno;
-#endif
-
-extern char **environ;
 
 /* We supply our own version of getenv () because we want library
    routines to get the changed values of exported variables. */
@@ -52,7 +45,7 @@ getenv (const char *name)
   SHELL_VAR *var;
 
   if (name == 0 || *name == '\0')
-    return ((char *)NULL);
+    return (char *)NULL;
 
   var = find_tempenv_variable ((char *)name);
   if (var)
@@ -60,13 +53,13 @@ getenv (const char *name)
       FREE (last_tempenv_value);
 
       last_tempenv_value = value_cell (var) ? savestring (value_cell (var)) : (char *)NULL;
-      return (last_tempenv_value);
+      return last_tempenv_value;
     }
   else if (shell_variables)
     {
       var = find_variable ((char *)name);
       if (var && exported_p (var))
-	return (value_cell (var));
+	return value_cell (var);
     }
   else if (environ)
     {
@@ -80,18 +73,18 @@ getenv (const char *name)
       for (i = 0, len = strlen (name); environ[i]; i++)
 	{
 	  if ((STREQN (environ[i], name, len)) && (environ[i][len] == '='))
-	    return (environ[i] + len + 1);
+	    return environ[i] + len + 1;
 	}
     }
 
-  return ((char *)NULL);
+  return (char *)NULL;
 }
 
 /* Some versions of Unix use _getenv instead. */
 char *
 _getenv (const char *name)
 {
-  return (getenv (name));
+  return getenv (name);
 }
 
 /* SUSv3 says argument is a `char *'; BSD implementations disagree */

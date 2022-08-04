@@ -67,15 +67,13 @@ $END
 #include <config.h>
 
 #include "../bashtypes.h"
-#include <signal.h>
+#include <csignal>
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
 #include <chartypes.h>
-
-#include "../bashansi.h"
 
 #include "../shell.h"
 #include "../execute_cmd.h"
@@ -84,6 +82,9 @@ $END
 #include "../sig.h"
 #include "common.h"
 #include "bashgetopt.h"
+
+namespace bash
+{
 
 extern int wait_signal_received;
 
@@ -105,7 +106,7 @@ static void unset_waitlist (void);
     { \
       wait_signal_received = false; \
       wait_intr_flag = false; \
-      return (s);\
+      return s;\
     } \
   while (0)
 
@@ -142,7 +143,7 @@ wait_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
@@ -194,8 +195,8 @@ wait_builtin (WORD_LIST *list)
   /* We special case SIGCHLD when not in posix mode because we don't break
      out of the wait even when the signal is trapped; we run the trap after
      the wait completes. See how it's handled in jobs.c:waitchld(). */
-  if (opt == SIGCHLD && posixly_correct == 0)
-    opt = next_pending_trap (opt+1);
+  if (opt == SIGCHLD && !posixly_correct)
+    opt = next_pending_trap (opt + 1);
 #endif
   if (opt != -1)
     {
@@ -348,7 +349,7 @@ set_waitlist (WORD_LIST *list)
 	}
     }
   UNBLOCK_CHILD (oset);
-  return (njob);
+  return njob;
 }
 
 /* Clean up after a call to wait -n jobs */
@@ -364,3 +365,5 @@ unset_waitlist ()
   UNBLOCK_CHILD (oset);
 }
 #endif
+
+}  // namespace bash

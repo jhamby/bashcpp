@@ -30,34 +30,32 @@
 #  include <unistd.h>
 #endif
 
-#include "bashansi.h"
-
-#include <stdio.h>
+#include <cstdio>
 #include <regex.h>
 
 #include "shell.h"
 #include "variables.h"
 #include "externs.h"
 
-extern bool glob_ignore_case, match_ignore_case;
+namespace bash
+{
 
 int
-sh_regmatch (const char *string, const char *pattern, int flags)
+Shell::sh_regmatch (const char *string, const char *pattern, int flags)
 {
-  regex_t regex = { 0 };
+  regex_t regex;
   regmatch_t *matches;
   int rflags;
 #if defined (ARRAY_VARS)
   SHELL_VAR *rematch;
   ARRAY *amatch;
-  int subexp_ind;
   char *subexp_str;
   int subexp_len;
 #endif
   int result;
 
 #if defined (ARRAY_VARS)
-  rematch = (SHELL_VAR *)NULL;
+  rematch = NULL;
 #endif
 
   rflags = REG_EXTENDED;
@@ -67,54 +65,52 @@ sh_regmatch (const char *string, const char *pattern, int flags)
   rflags |= REG_NOSUB;
 #endif
 
-  if (regcomp (&regex, pattern, rflags))
+  if (::regcomp (&regex, pattern, rflags))
     return 2;		/* flag for printing a warning here. */
 
 #if defined (ARRAY_VARS)
-  matches = (regmatch_t *)malloc (sizeof (regmatch_t) * (regex.re_nsub + 1));
+  matches = new regmatch_t[regex.re_nsub + 1];
 #else
   matches = NULL;
 #endif
 
   /* man regexec: NULL PMATCH ignored if NMATCH == 0 */
-  if (regexec (&regex, string, matches ? regex.re_nsub + 1 : 0, matches, 0))
+  if (::regexec (&regex, string, matches ? regex.re_nsub + 1 : 0, matches, 0))
     result = EXECUTION_FAILURE;
   else
     result = EXECUTION_SUCCESS;		/* match */
 
 #if defined (ARRAY_VARS)
-  subexp_len = strlen (string) + 10;
-  subexp_str = (char *)malloc (subexp_len + 1);
+  subexp_len = std::strlen (string) + 10;
+  subexp_str = new char[subexp_len + 1];
 
   /* Store the parenthesized subexpressions in the array BASH_REMATCH.
      Element 0 is the portion that matched the entire regexp.  Element 1
      is the part that matched the first subexpression, and so on. */
   unbind_variable_noref ("BASH_REMATCH");
   rematch = make_new_array_variable ("BASH_REMATCH");
-  amatch = array_cell (rematch);
+  amatch = rematch->array();
 
   if (matches && (flags & SHMAT_SUBEXP) && result == EXECUTION_SUCCESS && subexp_str)
     {
-      for (subexp_ind = 0; subexp_ind <= regex.re_nsub; subexp_ind++)
+      for (size_t subexp_ind = 0; subexp_ind <= regex.re_nsub; subexp_ind++)
 	{
-	  memset (subexp_str, 0, subexp_len);
-	  strncpy (subexp_str, string + matches[subexp_ind].rm_so,
-		     matches[subexp_ind].rm_eo - matches[subexp_ind].rm_so);
+	  std::memset (subexp_str, 0, subexp_len);
+	  std::strncpy (subexp_str, string + matches[subexp_ind].rm_so,
+			matches[subexp_ind].rm_eo - matches[subexp_ind].rm_so);
 	  array_insert (amatch, subexp_ind, subexp_str);
 	}
     }
 
-#if 0
-  VSETATTR (rematch, att_readonly);
-#endif
-
-  free (subexp_str);
-  free (matches);
+  delete[] subexp_str;
+  delete[] matches;
 #endif /* ARRAY_VARS */
 
-  regfree (&regex);
+  ::regfree (&regex);
 
   return result;
 }
+
+}  // namespace bash
 
 #endif /* HAVE_POSIX_REGEXP */

@@ -22,53 +22,18 @@
 #if !defined (_RL_MBUTIL_H_)
 #define _RL_MBUTIL_H_
 
-#include "rlstdc.h"
-
 /************************************************/
 /* check multibyte capability for I18N code     */
 /************************************************/
 
 /* For platforms which support the ISO C amendment 1 functionality we
    support user defined character classes.  */
-   /* Solaris 2.5 has a bug: <wchar.h> must be included before <wctype.h>.  */
-#if defined (HAVE_WCTYPE_H) && defined (HAVE_WCHAR_H) && defined (HAVE_LOCALE_H)
-#  include <wchar.h>
-#  include <wctype.h>
-#  if defined (HAVE_ISWCTYPE) && \
-      defined (HAVE_ISWLOWER) && \
-      defined (HAVE_ISWUPPER) && \
-      defined (HAVE_MBSRTOWCS) && \
-      defined (HAVE_MBRTOWC) && \
-      defined (HAVE_MBRLEN) && \
-      defined (HAVE_TOWLOWER) && \
-      defined (HAVE_TOWUPPER) && \
-      defined (HAVE_WCHAR_T) && \
-      defined (HAVE_WCWIDTH)
-     /* system is supposed to support XPG5 */
-#    define HANDLE_MULTIBYTE      1
-#  endif
-#endif
-
-/* If we don't want multibyte chars even on a system that supports them, let
-   the configuring user turn multibyte support off. */
-#if defined (NO_MULTIBYTE_SUPPORT)
-#  undef HANDLE_MULTIBYTE
-#endif
-
-/* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
-#if HANDLE_MULTIBYTE && !defined (HAVE_MBSTATE_T)
-#  define wcsrtombs(dest, src, len, ps) (wcsrtombs) (dest, src, len, 0)
-#  define mbsrtowcs(dest, src, len, ps) (mbsrtowcs) (dest, src, len, 0)
-#  define wcrtomb(s, wc, ps) (wcrtomb) (s, wc, 0)
-#  define mbrtowc(pwc, s, n, ps) (mbrtowc) (pwc, s, n, 0)
-#  define mbrlen(s, n, ps) (mbrlen) (s, n, 0)
-#  define mbstate_t int
-#endif
+#define HANDLE_MULTIBYTE      1
 
 /* Make sure MB_LEN_MAX is at least 16 on systems that claim to be able to
    handle multibyte chars (some systems define MB_LEN_MAX as 1) */
 #ifdef HANDLE_MULTIBYTE
-#  include <limits.h>
+#  include <climits>
 #  if defined(MB_LEN_MAX) && (MB_LEN_MAX < 16)
 #    undef MB_LEN_MAX
 #  endif
@@ -81,47 +46,61 @@
 /* end of multibyte capability checks for I18N  */
 /************************************************/
 
-/*
- * Flags for _rl_find_prev_mbchar and _rl_find_next_mbchar:
- *
- * MB_FIND_ANY		find any multibyte character
- * MB_FIND_NONZERO	find a non-zero-width multibyte character
- */
+namespace readline
+{
 
-#define MB_FIND_ANY	0x00
-#define MB_FIND_NONZERO	0x01
-
-extern int _rl_find_prev_mbchar (char *, int, int);
-extern int _rl_find_next_mbchar (char *, int, int, int);
+enum find_mbchar_flags {
+  MB_FIND_ANY =		0,		// find any multibyte character
+  MB_FIND_NONZERO =	0x01		// find a non-zero-width multibyte character
+};
 
 #ifdef HANDLE_MULTIBYTE
 
-extern int _rl_compare_chars (char *, int, mbstate_t *, char *, int, mbstate_t *);
-extern int _rl_get_char_len (char *, mbstate_t *);
-extern int _rl_adjust_point (char *, int, mbstate_t *);
+int _rl_get_char_len (const char *, mbstate_t *);
+int _rl_adjust_point (const char *, int, mbstate_t *);
 
-extern int _rl_read_mbchar (char *, int);
-extern int _rl_read_mbstring (int, char *, int);
+int _rl_read_mbchar (char *, int);
+int _rl_read_mbstring (int, char *, int);
 
-extern bool _rl_is_mbchar_matched (char *, int, int, char *, int);
+wchar_t _rl_char_value (char *, int);
+int _rl_walphabetic (wchar_t);
 
-extern wchar_t _rl_char_value (char *, int);
-extern int _rl_walphabetic (wchar_t);
+static inline wint_t
+_rl_to_wupper (wint_t wc) {
+  return std::iswlower (wc) ? std::towupper (wc) : wc;
+}
 
-#define _rl_to_wupper(wc)	(iswlower (wc) ? towupper (wc) : (wc))
-#define _rl_to_wlower(wc)	(iswupper (wc) ? towlower (wc) : (wc))
+static inline wint_t
+_rl_to_wlower (wint_t wc) {
+  return std::iswupper (wc) ? std::towlower (wc) : wc;
+}
+
+static inline bool
+_rl_is_mbchar_matched (const char *string, size_t seed, size_t end,
+		       const char *mbchar, size_t length)
+{
+  if ((end - seed) < length)
+    return false;
+
+  for (size_t i = 0; i < length; i++)
+    if (string[seed + i] != mbchar[i])
+      return false;
+  return true;
+}
 
 #define MB_NEXTCHAR(b,s,c,f) \
-	((MB_CUR_MAX > 1 && rl_byte_oriented == 0) \
+	((MB_CUR_MAX > 1 && !rl_byte_oriented) \
 		? _rl_find_next_mbchar ((b), (s), (c), (f)) \
 		: ((s) + (c)))
 #define MB_PREVCHAR(b,s,f) \
-	((MB_CUR_MAX > 1 && rl_byte_oriented == 0) \
+	((MB_CUR_MAX > 1 && !rl_byte_oriented) \
 		? _rl_find_prev_mbchar ((b), (s), (f)) \
 		: ((s) - 1))
 
-#define MB_INVALIDCH(x)		((x) == (size_t)-1 || (x) == (size_t)-2)
+#ifndef MB_INVALIDCH
+#define MB_INVALIDCH(x)		((x) == static_cast<size_t> (-1) || (x) == static_cast<size_t> (-2))
 #define MB_NULLWCH(x)		((x) == 0)
+#endif
 
 /* Try and shortcut the printable ascii characters to cut down the number of
    calls to a libc wcwidth() */
@@ -152,7 +131,7 @@ _rl_wcwidth (wchar_t wc)
     case 'z': case '{': case '|': case '}': case '~':
       return 1;
     default:
-      return wcwidth (wc);
+      return ::wcwidth (wc);
     }
 }
 
@@ -207,6 +186,6 @@ _rl_wcwidth (wchar_t wc)
 
 #endif /* !HANDLE_MULTIBYTE */
 
-extern bool rl_byte_oriented;
+}  // namespace readline
 
 #endif /* _RL_MBUTIL_H_ */

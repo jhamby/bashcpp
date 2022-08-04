@@ -20,9 +20,9 @@
 # include <config.h>
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 /* Handle multi-threaded applications.  */
 #ifdef _LIBC

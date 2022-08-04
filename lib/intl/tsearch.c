@@ -93,7 +93,7 @@
 # include <search.h>
 #endif
 
-#include <stdlib.h>
+#include <cstdlib>
 
 typedef int (*__compar_fn_t) (const void *, const void *);
 typedef void (*__action_fn_t) (const void *, VISIT, int);
@@ -128,7 +128,7 @@ typedef const struct node_t *const_node;
 
 /* Routines to check tree invariants.  */
 
-#include <assert.h>
+#include <cassert>
 
 #define CHECK_TREE(a) check_tree(a)
 

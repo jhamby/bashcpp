@@ -29,24 +29,17 @@
 #  include <unistd.h>
 #endif
 
-#include <signal.h>
-
-#if defined (PREFER_STDARG)
-#  include <stdarg.h>
-#else
-#  include <varargs.h>
-#endif
+#include <csignal>
+#include <cstdarg>
+#include <cstdio>
 
 #include "posixtime.h"
 
-#include <stdio.h>
-#include "bashansi.h"
 #include "bashintl.h"
 
 #include "shell.h"
 #include "pcomplete.h"
 #include "alias.h"
-#include "bashline.h"
 #include "execute_cmd.h"
 #include "pathexp.h"
 
@@ -71,10 +64,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#ifdef STRDUP
-#  undef STRDUP
-#endif
-#define STRDUP(x)	((x) ? savestring (x) : (char *)NULL)
+namespace bash
+{
 
 typedef SHELL_VAR **SVFUNC ();
 
@@ -562,19 +553,19 @@ it_init_joblist (ITEMLIST *itp, int jstate)
 static int
 it_init_jobs (ITEMLIST *itp)
 {
-  return (it_init_joblist (itp, -1));
+  return it_init_joblist (itp, -1);
 }
 
 static int
 it_init_running (ITEMLIST *itp)
 {
-  return (it_init_joblist (itp, 0));
+  return it_init_joblist (itp, 0);
 }
 
 static int
 it_init_stopped (ITEMLIST *itp)
 {
-  return (it_init_joblist (itp, 1));
+  return it_init_joblist (itp, 1);
 }
 
 static int
@@ -661,7 +652,7 @@ gen_matches_from_itemlist (ITEMLIST *itp, const char *text)
 	initialize_itemlist (itp);
     }
   if (itp->slist == 0)
-    return ((STRINGLIST *)NULL);
+    return (STRINGLIST *)NULL;
   ret = strlist_create (itp->slist->list_len+1);
   sl = itp->slist;
 
@@ -745,7 +736,7 @@ pcomp_filename_completion_function (const char *text, int state)
 	dfn = savestring (text);
     }
 
-  return (rl_filename_completion_function (dfn, state));
+  return rl_filename_completion_function (dfn, state);
 }
 
 #define GEN_COMPS(bmap, flag, it, text, glist, tlist) \
@@ -862,7 +853,7 @@ gen_wordlist_matches (COMPSPEC *cs, const char *text)
   char *ntxt;		/* dequoted TEXT to use in comparisons */
 
   if (cs->words == 0 || cs->words[0] == '\0')
-    return ((STRINGLIST *)NULL);
+    return (STRINGLIST *)NULL;
 
   /* This used to be a simple expand_string(cs->words, 0), but that won't
      do -- there's no way to split a simple list into individual words
@@ -873,7 +864,7 @@ gen_wordlist_matches (COMPSPEC *cs, const char *text)
   /* XXX - this is where this function spends most of its time */
   l = split_at_delims (cs->words, strlen (cs->words), (char *)NULL, -1, 0, (int *)NULL, (int *)NULL);
   if (l == 0)
-    return ((STRINGLIST *)NULL);
+    return (STRINGLIST *)NULL;
   /* This will jump back to the top level if the expansion fails... */
   l2 = expand_words_shellexp (l);
   dispose_words (l);
@@ -1067,11 +1058,11 @@ gen_shell_function_matches (COMPSPEC *cs, const char *cmd, const char *text,
       internal_error (_("completion: function `%s' not found"), funcname);
       rl_ding ();
       rl_on_new_line ();
-      return ((STRINGLIST *)NULL);
+      return (STRINGLIST *)NULL;
     }
 
 #if !defined (ARRAY_VARS)
-  return ((STRINGLIST *)NULL);
+  return (STRINGLIST *)NULL;
 #else
 
   /* We pass cw - 1 because command_line_to_word_list returns indices that are
@@ -1105,7 +1096,7 @@ gen_shell_function_matches (COMPSPEC *cs, const char *cmd, const char *text,
   /* The list of completions is returned in the array variable COMPREPLY. */
   v = find_variable ("COMPREPLY");
   if (v == 0)
-    return ((STRINGLIST *)NULL);
+    return (STRINGLIST *)NULL;
   if (array_p (v) == 0 && assoc_p (v) == 0)
     v = convert_var_to_array (v);
 
@@ -1126,7 +1117,7 @@ gen_shell_function_matches (COMPSPEC *cs, const char *cmd, const char *text,
   /* XXX - should we unbind COMPREPLY here? */
   unbind_variable_noref ("COMPREPLY");
 
-  return (sl);
+  return sl;
 #endif
 }
 
@@ -1191,7 +1182,7 @@ gen_command_matches (COMPSPEC *cs, const char *cmd, const char *text,
   if (csbuf == 0 || *csbuf == '\0')
     {
       FREE (csbuf);
-      return ((STRINGLIST *)NULL);
+      return (STRINGLIST *)NULL;
     }
 
   /* Now break CSBUF up at newlines, with backslash allowed to escape a
@@ -1216,7 +1207,7 @@ gen_command_matches (COMPSPEC *cs, const char *cmd, const char *text,
   sl->list[sl->list_len] = (char *)NULL;
 
   free (csbuf);
-  return (sl);
+  return sl;
 }
 
 static WORD_LIST *
@@ -1231,7 +1222,7 @@ command_line_to_word_list (char *line, int llen, int sentinel, int *nwp, int *cw
   delims = rl_completer_word_break_characters;
 #endif
   ret = split_at_delims (line, llen, delims, sentinel, SD_NOQUOTEDELIM|SD_COMPLETE, nwp, cwp);
-  return (ret);
+  return ret;
 }
 
 /* Evaluate COMPSPEC *cs and return all matches for WORD. */
@@ -1438,7 +1429,7 @@ gen_compspec_completions (COMPSPEC *cs, const char *cmd, const char *word,
       compspec_dispose (tcs);
     }
 
-  return (ret);
+  return ret;
 }
 
 void
@@ -1489,7 +1480,7 @@ gen_progcomp_completions (const char *ocmd, const char *cmd, const char *word,
       if (foundp)
 	*foundp = 0;
 #endif
-      return (NULL);
+      return NULL;
     }
 
   if (*lastcs)
@@ -1662,7 +1653,9 @@ programmable_completions (const char *cmd, const char *word,
   pcomp_line = rl_line_buffer;
   pcomp_ind = rl_point;
 
-  return (rmatches);
+  return rmatches;
 }
 
 #endif /* PROGRAMMABLE_COMPLETION */
+
+}  // namespace bash

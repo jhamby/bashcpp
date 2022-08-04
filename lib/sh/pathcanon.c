@@ -31,20 +31,20 @@
 #endif
 
 #include <filecntl.h>
-#include <bashansi.h>
-#include <stdio.h>
+#include <cstdio>
 #include <chartypes.h>
-#include <errno.h>
+#include <cerrno>
 
 #include "shell.h"
 
-#if !defined (errno)
-extern int errno;
-#endif
-
 #if defined (__CYGWIN__)
 #include <sys/cygwin.h>
+#endif /* __CYGWIN__ */
 
+namespace bash
+{
+
+#if defined (__CYGWIN__)
 static int
 _is_cygdrive (const char *path)
 {
@@ -114,7 +114,7 @@ sh_canonpath (const char *path, int flags)
     {
       stub_char = DIRSEP;
 #if defined (__CYGWIN__)
-      base = (ISALPHA((unsigned char)result[0]) && result[1] == ':') ? result + 3 : result + 1;
+      base = (std::isalpha ((unsigned char)result[0]) && result[1] == ':') ? result + 3 : result + 1;
 #else
       base = result + 1;
 #endif
@@ -125,7 +125,7 @@ sh_canonpath (const char *path, int flags)
     {
       stub_char = '.';
 #if defined (__CYGWIN__)
-      base = (ISALPHA((unsigned char)result[0]) && result[1] == ':') ? result + 2 : result;
+      base = (std::isalpha ((unsigned char)result[0]) && result[1] == ':') ? result + 2 : result;
 #else
       base = result;
 #endif
@@ -164,8 +164,8 @@ sh_canonpath (const char *path, int flags)
 		  if (_path_isdir (result) == 0)
 		    {
 		      if ((flags & PATH_NOALLOC) == 0)
-			free (result);
-		      return ((char *)NULL);
+			delete[] result;
+		      return (char *)NULL;
 		    }
 		  *q = c;
 		}
@@ -202,8 +202,8 @@ sh_canonpath (const char *path, int flags)
 	      if (_path_isdir (result) == 0)
 		{
 		  if ((flags & PATH_NOALLOC) == 0)
-		    free (result);
-		  return ((char *)NULL);
+		    delete[] result;
+		  return NULL;
 		}
 	      *q = c;
 	    }
@@ -223,8 +223,10 @@ sh_canonpath (const char *path, int flags)
       if (result[2] == '\0')	/* short-circuit for bare `//' */
 	result[1] = '\0';
       else
-	memmove (result, result + 1, strlen (result + 1) + 1);
+	std::memmove (result, result + 1, strlen (result + 1) + 1);
     }
 
-  return (result);
+  return result;
 }
+
+}  // namespace bash

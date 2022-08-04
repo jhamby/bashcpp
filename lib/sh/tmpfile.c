@@ -31,16 +31,14 @@
 #  include <unistd.h>
 #endif
 
-#include <bashansi.h>
-
-#include <stdio.h>
-#include <errno.h>
+#include <cstdio>
+#include <cerrno>
+#include <cstdlib>
 
 #include <shell.h>
 
-#ifndef errno
-extern int errno;
-#endif
+namespace bash
+{
 
 #define BASEOPENFLAGS	(O_CREAT | O_TRUNC | O_EXCL | O_BINARY)
 
@@ -51,8 +49,6 @@ extern int errno;
 #if !HAVE_RANDOM
 #define random() rand()
 #endif
-
-extern pid_t dollar_dollar_pid;
 
 static const char *get_sys_tmpdir (void);
 static const char *get_tmpdir (int);
@@ -91,13 +87,13 @@ get_sys_tmpdir ()
   return sys_tmpdir;
 }
 
-static const char *
-get_tmpdir (int flags)
+const char *
+Shell::get_tmpdir (int flags)
 {
   const char *tdir;
 
   tdir = (flags & MT_USETMPDIR) ? get_string_value ("TMPDIR") : (char *)NULL;
-  if (tdir && (file_iswdir (tdir) == 0 || strlen (tdir) > PATH_MAX))
+  if (tdir && (file_iswdir (tdir) == 0 || std::strlen (tdir) > PATH_MAX))
     tdir = 0;
 
   if (tdir == 0)
@@ -105,7 +101,7 @@ get_tmpdir (int flags)
 
 #if defined (HAVE_PATHCONF) && defined (_PC_NAME_MAX)
   if (tmpnamelen == -1)
-    tmpnamelen = pathconf (tdir, _PC_NAME_MAX);
+    tmpnamelen = ::pathconf (tdir, _PC_NAME_MAX);
 #else
   tmpnamelen = 0;
 #endif
@@ -123,8 +119,8 @@ sh_seedrand ()
     {
       struct timeval tv;
 
-      gettimeofday (&tv, NULL);
-      srandom (tv.tv_sec ^ tv.tv_usec ^ (getpid () << 16) ^ (uintptr_t)&d);
+      ::gettimeofday (&tv, NULL);
+      ::srandom (tv.tv_sec ^ tv.tv_usec ^ (::getpid () << 16) ^ (uintptr_t)&d);
       seeded = 1;
     }
 #endif
@@ -138,25 +134,25 @@ sh_mktmpname (char *nameroot, int flags)
   int r, tdlen;
   static int seeded = 0;
 
-  filename = (char *)xmalloc (PATH_MAX + 1);
+  filename = new char[PATH_MAX + 1];
   const char *tdir = get_tmpdir (flags);
-  tdlen = strlen (tdir);
+  tdlen = std::strlen (tdir);
 
   const char *lroot = nameroot ? nameroot : DEFAULT_NAMEROOT;
   if (nameroot == 0)
     flags &= ~MT_TEMPLATE;
 
-  if ((flags & MT_TEMPLATE) && strlen (nameroot) > PATH_MAX)
+  if ((flags & MT_TEMPLATE) && std::strlen (nameroot) > PATH_MAX)
     flags &= ~MT_TEMPLATE;
 
 #ifdef USE_MKTEMP
   if (flags & MT_TEMPLATE)
-    strcpy (filename, nameroot);
+    std::strcpy (filename, nameroot);
   else
-    sprintf (filename, "%s/%s.XXXXXX", tdir, lroot);
-  if (mktemp (filename) == 0)
+    std::sprintf (filename, "%s/%s.XXXXXX", tdir, lroot);
+  if (::mktemp (filename) == 0)
     {
-      free (filename);
+      delete[] filename;
       filename = NULL;
     }
 #else  /* !USE_MKTEMP */
@@ -164,16 +160,16 @@ sh_mktmpname (char *nameroot, int flags)
   while (1)
     {
       filenum = (filenum << 1) ^
-		(unsigned long) time ((time_t *)0) ^
+		(unsigned long) std::time (NULL) ^
 		(unsigned long) dollar_dollar_pid ^
-		(unsigned long) ((flags & MT_USERANDOM) ? random () : ntmpfiles++);
-      sprintf (filename, "%s/%s-%lu", tdir, lroot, filenum);
+		(unsigned long) ((flags & MT_USERANDOM) ? std::random () : ntmpfiles++);
+      std::sprintf (filename, "%s/%s-%lu", tdir, lroot, filenum);
       if (tmpnamelen > 0 && tmpnamelen < 32)
 	filename[tdlen + 1 + tmpnamelen] = '\0';
 #  ifdef HAVE_LSTAT
-      r = lstat (filename, &sb);
+      r = ::lstat (filename, &sb);
 #  else
-      r = stat (filename, &sb);
+      r = ::stat (filename, &sb);
 #  endif
       if (r < 0 && errno == ENOENT)
 	break;
@@ -188,26 +184,26 @@ sh_mktmpfd (const char *nameroot, int flags, char **namep)
 {
   int fd, tdlen;
 
-  char *filename = (char *)xmalloc (PATH_MAX + 1);
+  char *filename = new char[PATH_MAX + 1];
   const char *tdir = get_tmpdir (flags);
-  tdlen = strlen (tdir);
+  tdlen = std::strlen (tdir);
 
   const char *lroot = nameroot ? nameroot : DEFAULT_NAMEROOT;
   if (nameroot == 0)
     flags &= ~MT_TEMPLATE;
 
-  if ((flags & MT_TEMPLATE) && strlen (nameroot) > PATH_MAX)
+  if ((flags & MT_TEMPLATE) && std::strlen (nameroot) > PATH_MAX)
     flags &= ~MT_TEMPLATE;
 
 #ifdef USE_MKSTEMP
   if (flags & MT_TEMPLATE)
-    strcpy (filename, nameroot);
+    std::strcpy (filename, nameroot);
   else
-    sprintf (filename, "%s/%s.XXXXXX", tdir, lroot);
-  fd = mkstemp (filename);
+    std::sprintf (filename, "%s/%s.XXXXXX", tdir, lroot);
+  fd = ::mkstemp (filename);
   if (fd < 0 || namep == 0)
     {
-      free (filename);
+      delete[] filename;
       filename = NULL;
     }
   if (namep)
@@ -218,20 +214,20 @@ sh_mktmpfd (const char *nameroot, int flags, char **namep)
   do
     {
       filenum = (filenum << 1) ^
-		(unsigned long) time ((time_t *)0) ^
+		(unsigned long) std::time (NULL) ^
 		(unsigned long) dollar_dollar_pid ^
-		(unsigned long) ((flags & MT_USERANDOM) ? random () : ntmpfiles++);
-      sprintf (filename, "%s/%s-%lu", tdir, lroot, filenum);
+		(unsigned long) ((flags & MT_USERANDOM) ? std::random () : ntmpfiles++);
+      std::sprintf (filename, "%s/%s-%lu", tdir, lroot, filenum);
       if (tmpnamelen > 0 && tmpnamelen < 32)
 	filename[tdlen + 1 + tmpnamelen] = '\0';
-      fd = open (filename, BASEOPENFLAGS | ((flags & MT_READWRITE) ? O_RDWR : O_WRONLY), 0600);
+      fd = ::open (filename, BASEOPENFLAGS | ((flags & MT_READWRITE) ? O_RDWR : O_WRONLY), 0600);
     }
   while (fd < 0 && errno == EEXIST);
 
   if (namep)
     *namep = filename;
   else
-    free (filename);
+    delete[] filename;
 
   return fd;
 #endif /* !USE_MKSTEMP */
@@ -245,10 +241,10 @@ sh_mktmpfp (const char *nameroot, int flags, char **namep)
 
   fd = sh_mktmpfd (nameroot, flags, namep);
   if (fd < 0)
-    return ((FILE *)NULL);
-  fp = fdopen (fd, (flags & MT_READWRITE) ? "w+" : "w");
+    return NULL;
+  fp = ::fdopen (fd, (flags & MT_READWRITE) ? "w+" : "w");
   if (fp == 0)
-    close (fd);
+    ::close (fd);
   return fp;
 }
 
@@ -256,42 +252,44 @@ char *
 sh_mktmpdir (char *nameroot, int flags)
 {
 #ifdef USE_MKDTEMP
-  char *filename = (char *)xmalloc (PATH_MAX + 1);
+  char *filename = new char[PATH_MAX + 1];
   const char *tdir = get_tmpdir (flags);
-  int tdlen = strlen (tdir);
+  int tdlen = std::strlen (tdir);
 
   const char *lroot = nameroot ? nameroot : DEFAULT_NAMEROOT;
   if (nameroot == 0)
     flags &= ~MT_TEMPLATE;
 
-  if ((flags & MT_TEMPLATE) && strlen (nameroot) > PATH_MAX)
+  if ((flags & MT_TEMPLATE) && std::strlen (nameroot) > PATH_MAX)
     flags &= ~MT_TEMPLATE;
 
   if (flags & MT_TEMPLATE)
-    strcpy (filename, nameroot);
+    std::strcpy (filename, nameroot);
   else
-    sprintf (filename, "%s/%s.XXXXXX", tdir, lroot);
-  char *dirname = mkdtemp (filename);
+    std::sprintf (filename, "%s/%s.XXXXXX", tdir, lroot);
+  char *dirname = ::mkdtemp (filename);
   if (dirname == 0)
     {
-      free (filename);
+      delete[] filename;
       filename = NULL;
     }
   return dirname;
 #else /* !USE_MKDTEMP */
-  char *filename = (char *)NULL;
+  char *filename = NULL;
   int fd;
   do
     {
       filename = sh_mktmpname (nameroot, flags);
-      fd = mkdir (filename, 0700);
+      fd = ::mkdir (filename, 0700);
       if (fd == 0)
 	break;
-      free (filename);
-      filename = (char *)NULL;
+      delete[] filename;
+      filename = NULL;
     }
   while (fd < 0 && errno == EEXIST);
 
-  return (filename);
+  return filename;
 #endif /* !USE_MKDTEMP */
 }
+
+}  // namespace bash

@@ -30,46 +30,45 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
+
 #ifndef _MINIX
 #include "../bashtypes.h"
 #endif
-#include <signal.h>
-#include <errno.h>
+
+#include <csignal>
+#include <cerrno>
 
 #include "../command.h"
 #include "../general.h"
 #include "../sig.h"
 
-#ifndef errno
-extern int errno;
-#endif
+static int nw;
 
-int nw;
+static void sigpipe (int)  __attribute__((__noreturn__));
 
-sighandler
-sigpipe (int sig)
+static void
+sigpipe (int)
 {
-  fprintf (stderr, "%d\n", nw);
-  exit (0);
+  std::fprintf (stderr, "%d\n", nw);
+  std::exit (0);
 }
 
 int
-main (int argc, char **argv)
+main (int, char **)
 {
   char buf[128];
 
   for (int i = 0; i < 128; i++)
     buf[i] = ' ';
 
-  signal (SIGPIPE, sigpipe);
+  ::signal (SIGPIPE, &sigpipe);
 
   nw = 0;
   for (;;)
     {
-      int n;
-      n = write (1, buf, 128);
-      nw += n;
+      ssize_t n;
+      n = ::write (1, buf, 128);
+      nw += static_cast<int> (n);
     }
-  return (0);
 }

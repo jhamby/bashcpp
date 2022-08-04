@@ -27,17 +27,18 @@
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include <stdc.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include "syntax.h"
-#include <xmalloc.h>
 
 #include "shmbchar.h"
 #include "shmbutil.h"
 
-extern char *ansic_quote (const char *, int, int *);
-extern int ansic_shouldquote (const char *);
+#include "shell.h"
+
+namespace bash
+{
 
 /* Default set of characters that should be backslash-quoted in strings */
 static const char bstab[256] =
@@ -98,7 +99,7 @@ sh_single_quote (const char *string)
   char *result, *r;
   const char *s;
 
-  result = (char *)xmalloc (3 + (4 * strlen (string)));
+  result = new char[3 + (4 * std::strlen (string))];
   r = result;
 
   if (string[0] == '\'' && string[1] == 0)
@@ -126,12 +127,12 @@ sh_single_quote (const char *string)
   *r++ = '\'';
   *r = '\0';
 
-  return (result);
+  return result;
 }
 
 /* Quote STRING using double quotes.  Return a new string. */
 char *
-sh_double_quote (const char *string)
+Shell::sh_double_quote (const char *string)
 {
   unsigned char c;
   int mb_cur_max;
@@ -144,7 +145,7 @@ sh_double_quote (const char *string)
   send = string + slen;
   mb_cur_max = MB_CUR_MAX;
 
-  result = (char *)xmalloc (3 + (2 * strlen (string)));
+  result = new char[3 + (2 * std::strlen (string))];
   r = result;
   *r++ = '"';
 
@@ -172,13 +173,13 @@ sh_double_quote (const char *string)
   *r++ = '"';
   *r = '\0';
 
-  return (result);
+  return result;
 }
 
 /* Turn S into a simple double-quoted string.  If FLAGS is non-zero, quote
    double quote characters in S with backslashes. */
 char *
-sh_mkdoublequoted (const char *s, int slen, int flags)
+Shell::sh_mkdoublequoted (const char *s, int slen, int flags)
 {
   char *r, *ret;
   const char *send;
@@ -188,7 +189,7 @@ sh_mkdoublequoted (const char *s, int slen, int flags)
   send = s + slen;
   mb_cur_max = flags ? MB_CUR_MAX : 1;
   rlen = (flags == 0) ? slen + 3 : (2 * slen) + 1;
-  ret = r = (char *)xmalloc (rlen);
+  ret = r = new char[rlen];
 
   *r++ = '"';
   while (*s)
@@ -216,9 +217,9 @@ sh_mkdoublequoted (const char *s, int slen, int flags)
    double quotes.  Return a new string.  XXX - should this handle CTLESC
    and CTLNUL? */
 char *
-sh_un_double_quote (const char *string)
+Shell::sh_un_double_quote (const char *string)
 {
-  char *result = (char *)xmalloc (strlen (string) + 1);
+  char *result = new char[std::strlen (string) + 1];
   char *r = result;
 
   bool pass_next = false;
@@ -254,13 +255,13 @@ sh_un_double_quote (const char *string)
    other shell blank characters. */
 
 char *
-sh_backslash_quote (const char *string, const char *table, int flags)
+Shell::sh_backslash_quote (const char *string, const char *table, int flags)
 {
   DECLARE_MBSTATE;
 
   size_t slen = strlen (string);
   const char *send = string + slen;
-  char *result = (char *)xmalloc (2 * slen + 1);
+  char *result = new char[2 * slen + 1];
 
   const char *backslash_table = table ? table : bstab;
   int mb_cur_max = MB_CUR_MAX;
@@ -299,22 +300,22 @@ sh_backslash_quote (const char *string, const char *table, int flags)
     }
 
   *r = '\0';
-  return (result);
+  return result;
 }
 
 #if defined (PROMPT_STRING_DECODE)
 /* Quote characters that get special treatment when in double quotes in STRING
    using backslashes.  Return a new string. */
 char *
-sh_backslash_quote_for_double_quotes (const char *string)
+Shell::sh_backslash_quote_for_double_quotes (const char *string)
 {
   int mb_cur_max;
   DECLARE_MBSTATE;
 
-  size_t slen = strlen (string);
+  size_t slen = std::strlen (string);
   const char *send = string + slen;
   mb_cur_max = MB_CUR_MAX;
-  char *result = (char *)xmalloc (2 * slen + 1);
+  char *result = new char[2 * slen + 1];
 
   char *r = result;
   char c;
@@ -341,7 +342,7 @@ sh_backslash_quote_for_double_quotes (const char *string)
     }
 
   *r = '\0';
-  return (result);
+  return result;
 }
 #endif /* PROMPT_STRING_DECODE */
 
@@ -355,12 +356,12 @@ sh_quote_reusable (const char *s, int flags)
 
   else if (*s == 0)
     {
-      ret = (char *)xmalloc (3);
+      ret = new char[3];
       ret[0] = ret[1] = '\'';
       ret[2] = '\0';
     }
   else if (ansic_shouldquote (s))
-    ret = ansic_quote (s, 0, (int *)0);
+    ret = ansic_quote (s, nullptr);
   else if (flags)
     ret = sh_backslash_quote (s, 0, 1);
   else
@@ -369,7 +370,7 @@ sh_quote_reusable (const char *s, int flags)
   return ret;
 }
 
-int
+bool
 sh_contains_shell_metas (const char *string)
 {
   const char *s;
@@ -386,24 +387,24 @@ sh_contains_shell_metas (const char *string)
 	case '*': case '[': case '?': case ']':	/* globbing chars */
 	case '^':
 	case '$': case '`':			/* expansion chars */
-	  return (1);
+	  return true;
 	case '~':				/* tilde expansion */
 	  if (s == string || s[-1] == '=' || s[-1] == ':')
-	    return (1);
+	    return true;
 	  break;
 	case '#':
 	  if (s == string)			/* comment char */
-	    return (1);
+	    return true;
 	  /* FALLTHROUGH */
 	default:
 	  break;
 	}
     }
 
-  return (0);
+  return false;
 }
 
-int
+bool
 sh_contains_quotes (const char *string)
 {
   const char *s;
@@ -411,7 +412,9 @@ sh_contains_quotes (const char *string)
   for (s = string; s && *s; s++)
     {
       if (*s == '\'' || *s == '"' || *s == '\\')
-	return 1;
+	return true;
     }
-  return 0;
+  return false;
 }
+
+}  // namespace bash

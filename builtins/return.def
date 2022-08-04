@@ -50,11 +50,14 @@ $END
 #include "common.h"
 #include "bashgetopt.h"
 
+namespace bash
+{
+
 /* If we are executing a user-defined function then exit with the value
    specified as an argument.  if no argument is given, then the last
    exit status is used. */
 int
-return_builtin (WORD_LIST *list)
+Shell::return_builtin (WORD_LIST *list)
 {
   CHECK_HELPOPT (list);
 
@@ -65,6 +68,8 @@ return_builtin (WORD_LIST *list)
   else
     {
       builtin_error (_("can only `return' from a function or sourced script"));
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 }
+
+}  // namespace bash

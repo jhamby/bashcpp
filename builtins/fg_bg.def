@@ -37,7 +37,8 @@ $END
 #include <config.h>
 
 #include "../bashtypes.h"
-#include <signal.h>
+
+#include <csignal>
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
@@ -51,23 +52,26 @@ $END
 #include "common.h"
 #include "bashgetopt.h"
 
+namespace bash
+{
+
 #if defined (JOB_CONTROL)
 static int fg_bg (WORD_LIST *, bool);
 
 /* How to bring a job into the foreground. */
 int
-fg_builtin (WORD_LIST *list)
+Shell::fg_builtin (WORD_LIST *list)
 {
   CHECK_HELPOPT (list);
 
   if (job_control == 0)
     {
       sh_nojobs ((char *)NULL);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (no_options (list))
-    return (EX_USAGE);
+    return EX_USAGE;
   list = loptend;
 
   /* If the last arg on the line is '&', then start this job in the
@@ -78,9 +82,11 @@ fg_builtin (WORD_LIST *list)
 
   bool fg_bit = (t && t->word->word[0] == '&' && t->word->word[1] == '\0') == 0;
 
-  return (fg_bg (list, fg_bit));
+  return fg_bg (list, fg_bit);
 }
 #endif /* JOB_CONTROL */
+
+}  // namespace bash
 
 $BUILTIN bg
 $FUNCTION bg_builtin
@@ -96,21 +102,24 @@ Exit Status:
 Returns success unless job control is not enabled or an error occurs.
 $END
 
+namespace bash
+{
+
 #if defined (JOB_CONTROL)
 /* How to put a job into the background. */
 int
-bg_builtin (WORD_LIST *list)
+Shell::bg_builtin (WORD_LIST *list)
 {
   CHECK_HELPOPT (list);
 
   if (job_control == 0)
     {
       sh_nojobs ((char *)NULL);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (no_options (list))
-    return (EX_USAGE);
+    return EX_USAGE;
   list = loptend;
 
   /* This relies on the fact that fg_bg() takes a WORD_LIST *, but only acts
@@ -167,7 +176,7 @@ fg_bg (WORD_LIST *list, bool foreground)
     {
     /* win: */
       UNBLOCK_CHILD (oset);
-      return (foreground ? status : EXECUTION_SUCCESS);
+      return foreground ? status : EXECUTION_SUCCESS;
     }
   else
     {
@@ -176,7 +185,9 @@ fg_bg (WORD_LIST *list, bool foreground)
 
     failure:
       UNBLOCK_CHILD (oset);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 }
 #endif /* JOB_CONTROL */
+
+}  // namespace bash

@@ -38,7 +38,6 @@ $PRODUCES cd.c
 
 #include <stdio.h>
 
-#include "../bashansi.h"
 #include "../bashintl.h"
 
 #include <errno.h>
@@ -113,6 +112,9 @@ Returns 0 if the directory is changed, and if $PWD is set successfully when
 -P is used; non-zero otherwise.
 $END
 
+namespace bash
+{
+
 /* Just set $PWD, don't change OLDPWD.  Used by `pwd -P' in posix mode. */
 static int
 setpwd (const char *dirname)
@@ -171,7 +173,7 @@ bindpwd (bool no_symlinks)
   if (dirname && dirname != the_current_working_directory)
     free (dirname);
 
-  return (r);
+  return r;
 }
 
 /* Call get_working_directory to reset the value of
@@ -184,7 +186,7 @@ resetpwd (const char *caller)
   FREE (the_current_working_directory);
   the_current_working_directory = (char *)NULL;
   tdir = get_working_directory (caller);
-  return (tdir);
+  return tdir;
 }
 
 static int
@@ -257,7 +259,7 @@ resetxattr ()
    so the programming interface is simple, and it handles errors and
    restrictions properly. */
 int
-cd_builtin (WORD_LIST *list)
+Shell::cd_builtin (WORD_LIST *list)
 {
   char *dirname, *cdpath, *path, *temp;
   int path_index, no_symlinks, opt, lflag, e;
@@ -266,7 +268,7 @@ cd_builtin (WORD_LIST *list)
   if (restricted)
     {
       sh_restricted ((char *)NULL);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 #endif /* RESTRICTED_SHELL */
 
@@ -299,7 +301,7 @@ cd_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
@@ -317,7 +319,7 @@ cd_builtin (WORD_LIST *list)
       if (dirname == 0)
 	{
 	  builtin_error (_("HOME not set"));
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
       lflag = 0;
     }
@@ -325,14 +327,14 @@ cd_builtin (WORD_LIST *list)
   else if (list->next)
     {
       builtin_error (_("too many arguments"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 #endif
 #if 0
   else if (list->word->word[0] == '\0')
     {
       builtin_error (_("null directory"));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 #endif
   else if (list->word->word[0] == '-' && list->word->word[1] == '\0')
@@ -343,7 +345,7 @@ cd_builtin (WORD_LIST *list)
       if (dirname == 0)
 	{
 	  builtin_error (_("OLDPWD not set"));
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
 #if 0
       lflag = interactive ? LCD_PRINTPATH : 0;
@@ -379,9 +381,9 @@ cd_builtin (WORD_LIST *list)
 #if 0
 	      /* Posix.2 says that after using CDPATH, the resultant
 		 value of $PWD will not contain `.' or `..'. */
-	      return (bindpwd (posixly_correct || no_symlinks));
+	      return bindpwd (posixly_correct || no_symlinks);
 #else
-	      return (bindpwd (no_symlinks));
+	      return bindpwd (no_symlinks);
 #endif
 	    }
 	  else
@@ -398,7 +400,7 @@ cd_builtin (WORD_LIST *list)
       if (posixly_correct && cdpath[0])
 	{
 	  builtin_error ("%s: %s", dirname, strerror (ENOENT));
-	  return (EXECUTION_FAILURE);
+	  return EXECUTION_FAILURE;
 	}
 #endif
     }
@@ -411,7 +413,7 @@ cd_builtin (WORD_LIST *list)
     {
       if (lflag & LCD_PRINTPATH)
 	printf ("%s\n", dirname);
-      return (bindpwd (no_symlinks));
+      return bindpwd (no_symlinks);
     }
 
   /* If the user requests it, then perhaps this is the name of
@@ -423,7 +425,7 @@ cd_builtin (WORD_LIST *list)
       if (temp && change_to_directory (temp, no_symlinks, xattrflag))
 	{
 	  printf ("%s\n", temp);
-	  return (bindpwd (no_symlinks));
+	  return bindpwd (no_symlinks);
 	}
     }
 
@@ -437,7 +439,7 @@ cd_builtin (WORD_LIST *list)
 	{
 	  printf ("%s\n", temp);
 	  free (temp);
-	  return (bindpwd (no_symlinks));
+	  return bindpwd (no_symlinks);
 	}
       else
 	FREE (temp);
@@ -448,7 +450,7 @@ cd_builtin (WORD_LIST *list)
   builtin_error ("%s: %s", temp, strerror (e));
   if (temp != dirname)
     free (temp);
-  return (EXECUTION_FAILURE);
+  return EXECUTION_FAILURE;
 }
 
 $BUILTIN pwd
@@ -474,7 +476,7 @@ static int verbatim_pwd;
 
 /* Print the name of the current working directory. */
 int
-pwd_builtin (WORD_LIST *list)
+Shell::pwd_builtin (WORD_LIST *list)
 {
   char *directory;
   int opt, pflag;
@@ -495,7 +497,7 @@ pwd_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
@@ -526,10 +528,10 @@ pwd_builtin (WORD_LIST *list)
 	opt = setpwd (directory);
       if (directory != the_current_working_directory)
 	free (directory);
-      return (sh_chkwrite (opt));
+      return sh_chkwrite (opt);
     }
   else
-    return (EXECUTION_FAILURE);
+    return EXECUTION_FAILURE;
 }
 
 /* Do the work of changing to the directory NEWDIR.  Handle symbolic
@@ -670,3 +672,5 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
   free (tdir);
   return (bool)r;
 }
+
+}  // namespace bash

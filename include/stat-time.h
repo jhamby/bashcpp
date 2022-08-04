@@ -23,7 +23,7 @@
 #include <sys/stat.h>
 
 #if defined (TIME_H_DEFINES_STRUCT_TIMESPEC)
-#  include <time.h>
+#  include <ctime>
 #elif defined (SYS_TIME_H_DEFINES_STRUCT_TIMESPEC)
 #  include <sys/time.h>
 #elif defined (PTHREAD_H_DEFINES_STRUCT_TIMESPEC)

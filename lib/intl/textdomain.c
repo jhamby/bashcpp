@@ -18,8 +18,8 @@
 # include <config.h>
 #endif
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #include "gettextP.h"
 #ifdef _LIBC

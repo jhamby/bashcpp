@@ -18,7 +18,7 @@
 #ifndef _GETTEXTP_H
 #define _GETTEXTP_H
 
-#include <stddef.h>		/* Get size_t.  */
+#include <cstddef>		/* Get size_t.  */
 
 #ifdef _LIBC
 # include "../iconv/gconv_int.h"

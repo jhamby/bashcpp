@@ -9275,4 +9275,3 @@ AC_DEFUN([AM_SUBST_NOTMAKE], [_AM_SUBST_NOTMAKE($@)])
 
 m4_include([m4/gettext.m4])
 m4_include([m4/iconv.m4])
-m4_include([m4/longlong.m4])

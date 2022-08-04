@@ -31,22 +31,18 @@
 #endif
 
 #include <filecntl.h>
-#include <bashansi.h>
-#include <stdio.h>
+#include <cstdio>
 #include <chartypes.h>
-#include <errno.h>
+#include <cerrno>
 
 #include "shell.h"
+
+namespace bash
+{
 
 #if !defined (MAXSYMLINKS)
 #  define MAXSYMLINKS 32
 #endif
-
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
-
-extern char *get_working_directory (const char *);
 
 static int
 _path_readlink (const char *path, char *buf, int bufsiz)
@@ -75,16 +71,16 @@ sh_physpath (const char *path, int flags)
   char *result, *p, *q, *qsave, *qbase, *workpath;
   int double_slash_path, linklen, nlink;
 
-  linklen = strlen (path);
+  linklen = std::strlen (path);
 
 #if 0
   /* First sanity check -- punt immediately if the name is too long. */
   if (linklen >= PATH_MAX)
-    return (savestring (path));
+    return savestring (path);
 #endif
 
   nlink = 0;
-  q = result = (char *)xmalloc (PATH_MAX + 1);
+  q = result = new char[PATH_MAX + 1];
 
   /* Even if we get something longer than PATH_MAX, we might be able to
      shorten it, so we try. */
@@ -92,8 +88,8 @@ sh_physpath (const char *path, int flags)
     workpath = savestring (path);
   else
     {
-      workpath = (char *)xmalloc (PATH_MAX + 1);
-      strcpy (workpath, path);
+      workpath = new char[PATH_MAX + 1];
+      std::strcpy (workpath, path);
     }
 
   /* This always gets an absolute pathname. */
@@ -101,7 +97,7 @@ sh_physpath (const char *path, int flags)
   /* POSIX.2 says to leave a leading `//' alone.  On cygwin, we skip over any
      leading `x:' (dos drive name). */
 #if defined (__CYGWIN__)
-  qbase = (ISALPHA((unsigned char)workpath[0]) && workpath[1] == ':') ? workpath + 3 : workpath + 1;
+  qbase = (std::isalpha ((unsigned char)workpath[0]) && workpath[1] == ':') ? workpath + 3 : workpath + 1;
 #else
   qbase = workpath + 1;
 #endif
@@ -177,15 +173,15 @@ sh_physpath (const char *path, int flags)
 	      errno = EINVAL;
 #endif
 error:
-	      free (result);
-	      free (workpath);
-	      return ((char *)NULL);
+	      delete[] result;
+	      delete[] workpath;
+	      return NULL;
 	    }
 
 	  linkbuf[linklen] = '\0';
 
 	  /* If the new path length would overrun PATH_MAX, punt now. */
-	  if ((strlen (p) + linklen + 2) >= PATH_MAX)
+	  if ((std::strlen (p) + linklen + 2) >= PATH_MAX)
 	    {
 #ifdef ENAMETOOLONG
 	      errno = ENAMETOOLONG;
@@ -200,17 +196,17 @@ error:
 	     to the start of the rest of the path.  If the link value is an
 	     absolute pathname, reset p, q, and qbase.  If not, reset p
 	     and q. */
-	  strcpy (tbuf, linkbuf);
+	  std::strcpy (tbuf, linkbuf);
 	  tbuf[linklen] = '/';
-	  strcpy (tbuf + linklen, p);
-	  strcpy (workpath, tbuf);
+	  std::strcpy (tbuf + linklen, p);
+	  std::strcpy (workpath, tbuf);
 
 	  if (ABSPATH(linkbuf))
 	    {
 	      q = result;
 	      /* Duplicating some code here... */
 #if defined (__CYGWIN__)
-	      qbase = (ISALPHA((unsigned char)workpath[0]) && workpath[1] == ':') ? workpath + 3 : workpath + 1;
+	      qbase = (std::isalpha ((unsigned char)workpath[0]) && workpath[1] == ':') ? workpath + 3 : workpath + 1;
 #else
 	      qbase = workpath + 1;
 #endif
@@ -230,7 +226,7 @@ error:
     }
 
   *q = '\0';
-  free (workpath);
+  delete[] workpath;
 
   /* If the result starts with `//', but the original path does not, we
      can turn the // into /.  Because of how we set `qbase', this should never
@@ -240,10 +236,10 @@ error:
       if (result[2] == '\0')	/* short-circuit for bare `//' */
 	result[1] = '\0';
       else
-	memmove (result, result + 1, strlen (result + 1) + 1);
+	std::memmove (result, result + 1, strlen (result + 1) + 1);
     }
 
-  return (result);
+  return result;
 }
 
 char *
@@ -254,31 +250,31 @@ sh_realpath (const char *pathname, char *resolved)
   if (pathname == 0 || *pathname == '\0')
     {
       errno = (pathname == 0) ? EINVAL : ENOENT;
-      return ((char *)NULL);
+      return (char *)NULL;
     }
 
   if (ABSPATH (pathname) == 0)
     {
       wd = get_working_directory ("sh_realpath");
       if (wd == 0)
-	return ((char *)NULL);
+	return (char *)NULL;
       tdir = sh_makepath (wd, (char *)pathname, 0);
-      free (wd);
+      delete[] wd;
     }
   else
     tdir = savestring (pathname);
 
   wd = sh_physpath (tdir, 0);
-  free (tdir);
+  delete[] tdir;
 
   if (resolved == 0)
-    return (wd);
+    return wd;
 
   if (wd)
     {
-      strncpy (resolved, wd, PATH_MAX - 1);
+      std::strncpy (resolved, wd, PATH_MAX - 1);
       resolved[PATH_MAX - 1] = '\0';
-      free (wd);
+      delete[] wd;
       return resolved;
     }
   else
@@ -287,3 +283,5 @@ sh_realpath (const char *pathname, char *resolved)
       return wd;
     }
 }
+
+}  // namespace bash

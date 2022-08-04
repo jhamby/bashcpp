@@ -27,7 +27,7 @@ EXTGLOB_PATTERN_P (const CHAR *pat)
     case L('!'):
     case L('@'):
     case L('?'):
-      return (pat[1] == L('('));	/* ) */
+      return pat[1] == L('(');	/* ) */
     default:
       return false;
     }
@@ -44,24 +44,24 @@ MATCH_PATTERN_CHAR (const CHAR *pat, const CHAR *string, int flags)
   CHAR c;
 
   if (*string == 0)
-    return (*pat == L('*'));	/* XXX  - allow only * to match empty string */
+    return *pat == L('*');	/* XXX  - allow only * to match empty string */
 
   switch (c = *pat++)
     {
     default:
-      return (FOLD(*string) == FOLD(c));
+      return FOLD(*string) == FOLD(c);
     case L('\\'):
-      return (FOLD(*string) == FOLD(*pat));
+      return FOLD(*string) == FOLD(*pat);
     case L('?'):
-      return (*pat == L('(') ? 1 : (*string != L'\0'));
+      return *pat == L('(') ? 1 : (*string != L'\0');
     case L('*'):
-      return (1);
+      return 1;
     case L('+'):
     case L('!'):
     case L('@'):
-      return (*pat ==  L('(') ? 1 : (FOLD(*string) == FOLD(c)));
+      return *pat ==  L('(') ? 1 : (FOLD(*string) == FOLD(c));
     case L('['):
-      return (*string != L('\0'));
+      return *string != L('\0');
     }
 }
 
@@ -72,7 +72,7 @@ MATCHLEN (const CHAR *pat, size_t max)
   int matlen, bracklen, t, in_cclass, in_collsym, in_equiv;
 
   if (*pat == 0)
-    return (0);
+    return 0;
 
   matlen = in_cclass = in_collsym = in_equiv = 0;
   while ((c = *pat++))

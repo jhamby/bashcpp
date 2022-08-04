@@ -26,19 +26,19 @@
 #  include <unistd.h>
 #endif
 
-#include "bashansi.h"
 #include "shmbutil.h"
 #include "chartypes.h"
-
-#include "stdc.h"
 
 #ifndef FNM_CASEFOLD
 #  include "strmatch.h"
 #endif
 #include "glob.h"
 
+namespace bash
+{
+
 /* Make sure these names continue to agree with what's in smatch.c */
-extern const unsigned char *glob_patscan (const unsigned char *, const unsigned char *, int);
+const unsigned char *glob_patscan (const unsigned char *, const unsigned char *, int);
 
 /* Compile `gm_loop.c' for single-byte characters. */
 #define CHAR	char
@@ -48,7 +48,7 @@ extern const unsigned char *glob_patscan (const unsigned char *, const unsigned 
 #define MATCH_PATTERN_CHAR match_pattern_char
 #define MATCHLEN umatchlen
 #define FOLD(c) ((flags & FNM_CASEFOLD) \
-	? TOLOWER ((unsigned char)c) \
+	? std::tolower ((unsigned char)c) \
 	: ((unsigned char)c))
 #ifndef LPAREN
 #define LPAREN '('
@@ -66,7 +66,7 @@ extern const unsigned char *glob_patscan (const unsigned char *, const unsigned 
 #define MATCH_PATTERN_CHAR match_pattern_wchar
 #define MATCHLEN wmatchlen
 
-#define FOLD(c) ((flags & FNM_CASEFOLD) && iswupper (c) ? towlower (c) : (c))
+#define FOLD(c) ((flags & FNM_CASEFOLD) && std::iswupper (c) ? std::towlower (c) : (c))
 #define LPAREN L'('
 #define RPAREN L')'
 #include "gm_loop.c"
@@ -79,7 +79,7 @@ extern const unsigned char *glob_patscan (const unsigned char *, const unsigned 
    is only called when extended_glob is set, so we have to skip over extglob
    patterns x(...) */
 const char *
-glob_dirscan (const char *pat, int dirsep)
+glob_dirscan (const char *pat, char dirsep)
 {
   const char *p, *d, *pe, *se;
 
@@ -89,7 +89,7 @@ glob_dirscan (const char *pat, int dirsep)
       if (extglob_pattern_p (p))
 	{
 	  if (se == 0)
-	    se = p + strlen (p) - 1;
+	    se = p + std::strlen (p) - 1;
 	  pe = (char *)glob_patscan ((unsigned char *)(p + 2),
 				     (unsigned char *)se, 0);
 	  if (pe == 0)
@@ -105,3 +105,5 @@ glob_dirscan (const char *pat, int dirsep)
   return d;
 }
 #endif /* EXTENDED_GLOB */
+
+}  // namespace bash

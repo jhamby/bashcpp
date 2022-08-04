@@ -51,14 +51,16 @@ $END
 #  include <unistd.h>
 #endif
 
-#  include "../bashansi.h"
 #  include "../bashintl.h"
 
-#  include <stdio.h>
+#  include <cstdio>
 #  include "../shell.h"
 #  include "../alias.h"
 #  include "common.h"
 #  include "bashgetopt.h"
+
+namespace bash
+{
 
 /* Flags for print_alias */
 #define AL_REUSABLE	0x01
@@ -67,7 +69,7 @@ static void print_alias (alias_t *, int);
 
 /* Hack the alias command in a Korn shell way. */
 int
-alias_builtin (WORD_LIST *list)
+Shell::alias_builtin (WORD_LIST *list)
 {
   int any_failed, offset, pflag, dflags;
   alias_t **alias_list, *t;
@@ -87,7 +89,7 @@ alias_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
 
@@ -96,12 +98,12 @@ alias_builtin (WORD_LIST *list)
   if (list == 0 || pflag)
     {
       if (aliases == 0)
-	return (EXECUTION_SUCCESS);
+	return EXECUTION_SUCCESS;
 
       alias_list = all_aliases ();
 
       if (alias_list == 0)
-	return (EXECUTION_SUCCESS);
+	return EXECUTION_SUCCESS;
 
       for (offset = 0; alias_list[offset]; offset++)
 	print_alias (alias_list[offset], dflags);
@@ -109,7 +111,7 @@ alias_builtin (WORD_LIST *list)
       free (alias_list);	/* XXX - Do not free the strings. */
 
       if (list == 0)
-	return (sh_chkwrite (EXECUTION_SUCCESS));
+	return sh_chkwrite (EXECUTION_SUCCESS);
     }
 
   any_failed = 0;
@@ -147,8 +149,9 @@ alias_builtin (WORD_LIST *list)
       list = (WORD_LIST *)list->next;
     }
 
-  return (any_failed ? EXECUTION_FAILURE : EXECUTION_SUCCESS);
+  return any_failed ? EXECUTION_FAILURE : EXECUTION_SUCCESS;
 }
+}  // namespace bash
 #endif /* ALIAS */
 
 $BUILTIN unalias
@@ -164,9 +167,13 @@ Return success unless a NAME is not an existing alias.
 $END
 
 #if defined (ALIAS)
+
+namespace bash
+{
+
 /* Remove aliases named in LIST from the aliases database. */
 int
-unalias_builtin (WORD_LIST *list)
+Shell::unalias_builtin (WORD_LIST *list)
 {
   int opt, aflag;
 
@@ -182,7 +189,7 @@ unalias_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
 
@@ -191,13 +198,13 @@ unalias_builtin (WORD_LIST *list)
   if (aflag)
     {
       delete_all_aliases ();
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   aflag = 0;
@@ -216,7 +223,7 @@ unalias_builtin (WORD_LIST *list)
       list = (WORD_LIST *)list->next;
     }
 
-  return (aflag ? EXECUTION_FAILURE : EXECUTION_SUCCESS);
+  return aflag ? EXECUTION_FAILURE : EXECUTION_SUCCESS;
 }
 
 /* Output ALIAS in such a way as to allow it to be read back in. */
@@ -227,10 +234,14 @@ print_alias (alias_t *alias, int flags)
 
   value = sh_single_quote (alias->value);
   if (flags & AL_REUSABLE)
-    printf ("alias %s", (alias->name && alias->name[0] == '-') ? "-- " : "");
-  printf ("%s=%s\n", alias->name, value);
-  free (value);
+    std::printf ("alias %s", (alias->name && alias->name[0] == '-') ? "-- " : "");
+  std::printf ("%s=%s\n", alias->name, value);
 
-  fflush (stdout);
+  delete[] value;
+
+  std::fflush (stdout);
 }
+
+}  // namespace bash
+
 #endif /* ALIAS */

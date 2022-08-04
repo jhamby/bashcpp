@@ -21,8 +21,6 @@
 #if !defined (_GENERAL_H_)
 #define _GENERAL_H_
 
-#include "stdc.h"
-
 #include "bashtypes.h"
 #include "chartypes.h"
 
@@ -33,51 +31,50 @@
 #  include <sys/resource.h>
 #endif
 
-#if defined (HAVE_STRING_H)
-#  include <string.h>
-#else
-#  include <strings.h>
-#endif /* !HAVE_STRING_H */
+#include <cstddef>
+#include <cstring>
+#include <climits>
 
-#if defined (HAVE_LIMITS_H)
-#  include <limits.h>
-#endif
+#include <string>
+#include <list>
+#include <exception>
 
-#include "xmalloc.h"
+namespace bash
+{
 
-/* Hardly used anymore */
-#define pointer_to_int(x)	(int)((char *)x - (char *)0)
+/* Shared exceptions to replace setjmp and longjmp. */
 
-#if !defined (strcpy) && (defined (HAVE_DECL_STRCPY) && !HAVE_DECL_STRCPY)
-extern char *strcpy (char *, const char *);
-#endif
+/* We want to stop parsing. */
+class force_eof_exception : public std::exception {};
 
-#if !defined (savestring)
-#  define savestring(x) (char *)strcpy ((char *)xmalloc (1 + strlen (x)), (x))
-#endif
+/* Discard current command. */
+class discard_exception : public std::exception {};
 
-#ifndef member
-#  define member(c, s) ((c) ? ((char *)mbschr ((s), (c)) != (char *)NULL) : 0)
-#endif
+/* Unconditionally exit the program now. */
+class exit_exception : public std::exception {};
 
-#ifndef whitespace
-#define whitespace(c) (((c) == ' ') || ((c) == '\t'))
-#endif
+/* Exit due to error condition (inherits from exit_exception). */
+class error_exit_exception : public exit_exception {};
 
-#ifndef CHAR_MAX
-#  ifdef __CHAR_UNSIGNED__
-#    define CHAR_MAX	0xff
-#  else
-#    define CHAR_MAX	0x7f
-#  endif
-#endif
+/* String extraction error. */
+class extract_string_error : public std::exception {};
 
-#ifndef CHAR_BIT
-#  define CHAR_BIT 8
-#endif
+/* Global inline functions, previously C preprocessor macros. */
+
+// Create a new copy of null-terminated string s. Free with delete[].
+static inline char *
+savestring(const char *s) {
+  return std::strcpy(new char[1 + std::strlen(s)], s);
+}
+
+// Create a new copy of C++ string s. Free with delete[].
+static inline char *
+savestring(const std::string &s) {
+  return std::strcpy(new char[1 + s.size()], s.c_str());
+}
 
 /* Nonzero if the integer type T is signed.  */
-#define TYPE_SIGNED(t) (! ((t) 0 < (t) -1))
+#define TYPE_SIGNED(t) (! (static_cast<t> (0) < static_cast<t> (-1)))
 
 /* The width in bits of the integer type or expression T.
    Padding bits are not supported; this is checked at compile-time below.  */
@@ -97,151 +94,196 @@ extern char *strcpy (char *, const char *);
   ((TYPE_WIDTH (t) - TYPE_SIGNED (t)) * 302 / 1000 \
    + 1 + TYPE_SIGNED (t))
 
-/* Updated version adapted from gnulib/intprops.h, not used right now.
-   Changes the approximation of log10(2) from 302/1000 to 146/485. */
-#if 0
-#define INT_STRLEN_BOUND(t) \
-  (INT_BITS_STRLEN_BOUND (TYPE_WIDTH (t) - TYPE_SIGNED (t)) + TYPE_SIGNED(t))
-#endif
-
 /* Bound on buffer size needed to represent an integer type or expression T,
    including the terminating null.  */
 #define INT_BUFSIZE_BOUND(t) (INT_STRLEN_BOUND (t) + 1)
 
 /* Define exactly what a legal shell identifier consists of. */
-#define legal_variable_starter(c) (ISALPHA(c) || (c == '_'))
-#define legal_variable_char(c)	(ISALNUM(c) || c == '_')
+#define legal_variable_starter(c) (std::isalpha(c) || (c == '_'))
+#define legal_variable_char(c)  (std::isalnum(c) || c == '_')
 
 /* Definitions used in subst.c and by the `read' builtin for field
    splitting. */
-#define spctabnl(c)	((c) == ' ' || (c) == '\t' || (c) == '\n')
+#define spctabnl(c)     ((c) == ' ' || (c) == '\t' || (c) == '\n')
 
 /* Here is a generic structure for associating character strings
    with integers.  It is used in the parser for shell tokenization. */
-typedef struct {
+struct STRING_INT_ALIST {
   const char *word;
   int token;
-} STRING_INT_ALIST;
+};
 
-/* A macro to avoid making an unnecessary function call. */
-#define REVERSE_LIST(list, type) \
-  ((list && list->next) ? (type)list_reverse ((GENERIC_LIST *)list) \
-			: (type)(list))
+// Compare two strings for equality.
+static inline bool
+STREQ (const char *a, const char *b) {
+  return (std::strcmp (a, b) == 0);
+}
 
-#if __GNUC__ > 1
-#  define FASTCOPY(s, d, n)  __builtin_memcpy ((d), (s), (n))
-#else /* !__GNUC__ */
-#  if !defined (HAVE_BCOPY)
-#    if !defined (HAVE_MEMMOVE)
-#      define FASTCOPY(s, d, n)  memcpy ((d), (s), (n))
-#    else
-#      define FASTCOPY(s, d, n)  memmove ((d), (s), (n))
-#    endif /* !HAVE_MEMMOVE */
-#  else /* HAVE_BCOPY */
-#    define FASTCOPY(s, d, n)  bcopy ((s), (d), (n))
-#  endif /* HAVE_BCOPY */
-#endif /* !__GNUC__ */
+// Compare two strings for equality, up to n characters.
+static inline bool
+STREQN (const char *a, const char *b, size_t n) {
+  return (std::strncmp (a, b, n) == 0);
+}
 
-/* String comparisons that possibly save a function call each. */
-#define STREQ(a, b) ((a)[0] == (b)[0] && strcmp(a, b) == 0)
-#define STREQN(a, b, n) ((n == 0) ? (1) \
-				  : ((a)[0] == (b)[0] && strncmp(a, b, n) == 0))
+static inline bool
+whitespace (char c) {
+  return (c == ' ') || (c == '\t');
+}
 
-/* More convenience definitions that possibly save system or libc calls. */
-#define STRLEN(s) (((s) && (s)[0]) ? ((s)[1] ? ((s)[2] ? strlen(s) : 2) : 1) : 0)
-#define FREE(s)  do { if (s) free (s); } while (0)
-#define MEMBER(c, s) (((c) && c == (s)[0] && !(s)[1]) || (member(c, s)))
+static inline bool
+member (char c, const char *s) {
+  return c ? (std::strchr (s, c) != nullptr) : false;
+}
 
-/* A fairly hairy macro to check whether an allocated string has more room,
-   and to resize it using xrealloc if it does not.
-   STR is the string (char *)
-   CIND is the current index into the string (int)
-   ROOM is the amount of additional room we need in the string (int)
-   CSIZE is the currently-allocated size of STR (int)
-   SINCR is how much to increment CSIZE before calling xrealloc (int) */
+/* UTF-8 functions, inlined from lib/sh/utf8.c. */
 
-#define RESIZE_MALLOCED_BUFFER(str, cind, room, csize, sincr) \
-  do { \
-    if ((cind) + (room) >= csize) \
-      { \
-	while ((cind) + (room) >= csize) \
-	  csize += (sincr); \
-	str = (char *) xrealloc (str, csize); \
-      } \
-  } while (0)
+#if defined (HANDLE_MULTIBYTE)
 
-/* Function pointers can be declared as (Function *)foo. */
-#if !defined (_FUNCTION_DEF)
-#  define _FUNCTION_DEF
-typedef int Function ();
-typedef void VFunction ();
-typedef char *CPFunction ();		/* no longer used */
-typedef char **CPPFunction ();		/* no longer used */
-#endif /* _FUNCTION_DEF */
+static inline const char *
+utf8_mbschr (const char *s, int c)
+{
+  return std::strchr (s, c);		/* for now */
+}
 
-#ifndef SH_FUNCTION_TYPEDEF
-#  define SH_FUNCTION_TYPEDEF
+static inline char *
+utf8_mbschr (char *s, int c)
+{
+  return std::strchr (s, c);		/* for now */
+}
 
-/* Shell function typedefs with prototypes */
-/* `Generic' function pointer typedefs */
+static inline int
+utf8_mbscmp (const char *s1, const char *s2)
+{
+  /* Use the fact that the UTF-8 encoding preserves lexicographic order.  */
+  return std::strcmp (s1, s2);
+}
 
-typedef int sh_intfunc_t (int);
-typedef int sh_ivoidfunc_t ();
-typedef int sh_icpfunc_t (char *);
-typedef int sh_icppfunc_t (char **);
-typedef int sh_iptrfunc_t (PTR_T);
+static inline const char *
+utf8_mbsmbchar (const char *str)
+{
+  for (const char *s = str; *s; s++)
+    if ((*s & 0xc0) == 0x80)
+      return s;
+  return nullptr;
+}
 
-typedef void sh_voidfunc_t ();
-typedef void sh_vintfunc_t (int);
-typedef void sh_vcpfunc_t (char *);
-typedef void sh_vcppfunc_t (char **);
-typedef void sh_vptrfunc_t (PTR_T);
+static inline char *
+utf8_mbsmbchar (char *str)
+{
+  return const_cast<char *> (utf8_mbsmbchar (const_cast<const char *> (str)));
+}
 
-typedef int sh_wdesc_func_t (WORD_DESC *);
-typedef int sh_wlist_func_t (WORD_LIST *);
+/* Adapted from GNU gnulib. Handles UTF-8 characters up to 4 bytes long */
+static inline int
+utf8_mblen (const char *s, size_t n)
+{
+  unsigned char c, c1, c2, c3;
 
-typedef int sh_glist_func_t (GENERIC_LIST *);
+  if (s == 0)
+    return 0;	/* no shift states */
+  if (n <= 0)
+    return -1;
 
-typedef char *sh_string_func_t (const char *);	/* like savestring, et al. */
+  c = static_cast<unsigned char> (*s);
+  if (c < 0x80)
+    return c != 0;
+  if (c >= 0xc2)
+    {
+      c1 = static_cast<unsigned char> (s[1]);
+      if (c < 0xe0)
+	{
+	  if (n == 1)
+	    return -2;
 
-typedef int sh_msg_func_t (const char *, ...);		/* printf(3)-like */
-typedef void sh_vmsg_func_t (const char *, ...);	/* printf(3)-like */
+	  /*
+	   *				c	c1
+	   *
+	   *    U+0080..U+07FF       C2..DF   80..BF
+	   */
 
-/* Specific function pointer typedefs.  Most of these could be done
-   with #defines. */
-typedef void sh_sv_func_t (const char *);	/* sh_vcpfunc_t */
-typedef void sh_free_func_t (PTR_T);		/* sh_vptrfunc_t */
-typedef void sh_resetsig_func_t (int);		/* sh_vintfunc_t */
+	  if (n >= 2 && (c1 ^ 0x80) < 0x40)		/* 0x80..0xbf */
+	    return 2;
+	}
+      else if (c < 0xf0)
+	{
+	  if (n == 1)
+	    return -2;
 
-typedef bool sh_ignore_func_t (const char *);	/* sh_icpfunc_t */
+	  /*
+	   *				c	c1	c2
+	   *
+	   *    U+0800..U+0FFF       E0       A0..BF   80..BF
+	   *    U+1000..U+CFFF       E1..EC   80..BF   80..BF
+	   *    U+D000..U+D7FF       ED       80..9F   80..BF
+	   *    U+E000..U+FFFF       EE..EF   80..BF   80..BF
+	   */
 
-typedef int sh_assign_func_t (const char *);
-typedef int sh_wassign_func_t (WORD_DESC *, int);
+	  if ((c1 ^ 0x80) < 0x40
+		&& (c >= 0xe1 || c1 >= 0xa0)
+		&& (c != 0xed || c1 < 0xa0))
+	    {
+	      if (n == 2)
+		return -2;		/* incomplete */
 
-typedef int sh_load_func_t (const char *);
-typedef void sh_unload_func_t (const char *);
+	      c2 = static_cast<unsigned char> (s[2]);
+	      if ((c2 ^ 0x80) < 0x40)
+		 return 3;
+	    }
+	}
+      else if (c <= 0xf4)
+	{
+	  if (n == 1)
+	    return -2;
 
-typedef int sh_builtin_func_t (WORD_LIST *); /* sh_wlist_func_t */
+	  /*
+	   *				c	c1	c2	c3
+	   *
+	   *    U+10000..U+3FFFF     F0       90..BF   80..BF   80..BF
+	   *    U+40000..U+FFFFF     F1..F3   80..BF   80..BF   80..BF
+	   *    U+100000..U+10FFFF   F4       80..8F   80..BF   80..BF
+	   */
+	  if (((c1 ^ 0x80) < 0x40)
+		&& (c >= 0xf1 || c1 >= 0x90)
+		&& (c < 0xf4 || (c == 0xf4 && c1 < 0x90)))
+	    {
+	      if (n == 2)
+		return -2;		/* incomplete */
 
-#endif /* SH_FUNCTION_TYPEDEF */
+	      c2 = static_cast<unsigned char> (s[2]);
+	      if ((c2 ^ 0x80) < 0x40)
+		{
+		  if (n == 3)
+		    return -2;
 
-#define NOW	((time_t) time ((time_t *) 0))
-#define GETTIME(tv)	gettimeofday(&(tv), NULL)
+		  c3 = static_cast<unsigned char> (s[3]);
+		  if ((c3 ^ 0x80) < 0x40)
+		    return 4;
+		}
+	    }
+	}
+    }
+  /* invalid or incomplete multibyte character */
+  return -1;
+}
+
+#endif  // HANDLE_MULTIBYTE
+
+#define NOW		(std::time (nullptr))
+#define GETTIME(tv)	(::gettimeofday(&(tv), nullptr))
 
 /* Some defines for calling file status functions. */
-#define FS_EXISTS	  0x1
-#define FS_EXECABLE	  0x2
-#define FS_EXEC_PREFERRED 0x4
-#define FS_EXEC_ONLY	  0x8
-#define FS_DIRECTORY	  0x10
-#define FS_NODIRS	  0x20
-#define FS_READABLE	  0x40
+enum file_stat_flags {
+  FS_EXISTS =		0x01,
+  FS_EXECABLE =		0x02,
+  FS_EXEC_PREFERRED =	0x04,
+  FS_EXEC_ONLY =	0x08,
+  FS_DIRECTORY =	0x10,
+  FS_NODIRS =		0x20,
+  FS_READABLE =		0x40
+};
 
 /* Default maximum for move_to_high_fd */
-#define HIGH_FD_MAX	256
-
-/* The type of function passed as the fourth argument to qsort(3). */
-typedef int QSFUNC (const void *, const void *);
+constexpr int HIGH_FD_MAX = 256;
 
 /* Some useful definitions for Unix pathnames.  Argument convention:
    x == string, c == character */
@@ -269,83 +311,80 @@ typedef int QSFUNC (const void *, const void *);
 #define WDOT_OR_DOTDOT(w)	(w[0] == L'.' && (w[1] == L'\0' || (w[1] == L'.' && w[2] == L'\0')))
 #endif
 
-#if 0
-/* Declarations for functions defined in xmalloc.c */
-extern PTR_T xmalloc (size_t);
-extern PTR_T xrealloc (void *, size_t);
-extern void xfree (void *);
-#endif
-
 /* Declarations for functions defined in general.c */
-extern void posix_initialize (bool);
+void posix_initialize (bool);
 
-extern int num_posix_options ();
-extern char *get_posix_options (char *);
-extern void set_posix_options (const char *);
+int num_posix_options ();
+char *get_posix_options (char *);
+void set_posix_options (const char *);
 
-extern void save_posix_options ();
+void save_posix_options ();
 
 #if defined (RLIMTYPE)
-extern RLIMTYPE string_to_rlimtype (char *);
-extern void print_rlimtype (RLIMTYPE, int);
+// for use from builtins.c
+struct RLIMTYPE;
+RLIMTYPE string_to_rlimtype (char *);
+void print_rlimtype (RLIMTYPE, int);
 #endif
 
-extern bool all_digits (const char *);
-extern bool legal_number (const char *, intmax_t *);
-extern bool legal_identifier (const char *);
-extern bool importable_function_name (const char *, size_t);
-extern bool exportable_function_name (const char *);
-extern bool check_identifier (WORD_DESC *, int);
-extern bool valid_nameref_value (const char *, int);
-extern bool check_selfref (const char *, const char *, int);
-extern bool legal_alias_name (const char *, int);
-extern bool line_isblank (const char *);
-extern int assignment (const char *, int);
+// forward declaration for prototype below
+class WORD_DESC;
 
-extern int sh_unset_nodelay_mode (int);
-extern int sh_setclexec (int);
-extern int sh_validfd (int);
-extern int fd_ispipe (int);
-#if 0
-extern void check_dev_tty ();
-#endif
-extern int move_to_high_fd (int, int, int);
-extern int check_binary_file (const char *, int);
+bool all_digits (const char *);
+bool legal_number (const char *, intmax_t *);
+bool legal_identifier (const char *);
+bool importable_function_name (const char *, size_t);
+bool exportable_function_name (const char *);
+bool check_identifier (WORD_DESC *, int);
+bool valid_nameref_value (const char *, int);
+bool check_selfref (const char *, const char *, int);
+bool legal_alias_name (const char *, int);
+bool line_isblank (const char *);
+int assignment (const char *, int);
+
+int sh_unset_nodelay_mode (int);
+int sh_setclexec (int);
+int sh_validfd (int);
+int fd_ispipe (int);
+int move_to_high_fd (int, int, int);
+int check_binary_file (const char *, int);
 
 #ifdef _POSIXSTAT_H_
-extern int same_file (const char *, const char *, struct stat *, struct stat *);
+bool same_file (const char *, const char *, struct stat *, struct stat *);
 #endif
 
-extern int sh_openpipe (int *);
-extern int sh_closepipe (int *);
+int sh_openpipe (int *);
+int sh_closepipe (int *);
 
-extern bool file_exists (const char *);
-extern bool file_isdir (const char  *);
-extern bool file_iswdir (const char  *);
-extern bool path_dot_or_dotdot (const char *);
-extern bool absolute_pathname (const char *);
-extern bool absolute_program (const char *);
+bool file_exists (const char *);
+bool file_isdir (const char  *);
+bool file_iswdir (const char  *);
+bool path_dot_or_dotdot (const char *);
+bool absolute_pathname (const char *);
+bool absolute_program (const char *);
 
-extern char *make_absolute (const char *, const char *);
-extern const char *base_pathname (const char *);
-extern char *full_pathname (char *);
-extern const char *polite_directory_format (const char *);
-extern char *trim_pathname (char *, int);
-extern char *printable_filename (const char *, int);
+char *make_absolute (const char *, const char *);
+const char *base_pathname (const char *);
+char *full_pathname (char *);
+const char *polite_directory_format (const char *);
+char *trim_pathname (char *, int);
+char *printable_filename (const char *, int);
 
-extern char *extract_colon_unit (char *, int *);
+char *extract_colon_unit (char *, int *);
 
-extern void tilde_initialize ();
-extern char *bash_tilde_find_word (const char *, int, int *);
-extern char *bash_tilde_expand (const char *, int);
+void tilde_initialize ();
+char *bash_tilde_find_word (const char *, int, int *);
+char *bash_tilde_expand (const char *, int);
 
 #if !defined(HAVE_GROUP_MEMBER)
-extern int group_member (gid_t);
+int group_member (gid_t);
 #endif
-extern char **get_group_list (int *);
-extern int *get_group_array (int *);
+char **get_group_list (int *);
+int *get_group_array (int *);
 
-extern char *conf_standard_path ();
-extern int default_columns ();
+char *conf_standard_path ();
+int default_columns ();
+
+}  // namespace bash
 
 #endif	/* _GENERAL_H_ */

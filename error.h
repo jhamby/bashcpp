@@ -21,8 +21,6 @@
 #if !defined (_ERROR_H_)
 #define _ERROR_H_
 
-#include "stdc.h"
-
 /* Get the name of the shell or shell script for an error message. */
 extern const char *get_name_for_error (void);
 

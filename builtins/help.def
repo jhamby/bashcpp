@@ -72,9 +72,8 @@ $END
 #include <glob/strmatch.h>
 #include <glob/glob.h>
 
-#ifndef errno
-extern int errno;
-#endif
+namespace bash
+{
 
 extern const char * const bash_copyright;
 extern const char * const bash_license;
@@ -89,7 +88,7 @@ static void show_longdoc (int);
    If LIST is supplied, print out the list which matches for each pattern
    specified. */
 int
-help_builtin (WORD_LIST *list)
+Shell::help_builtin (WORD_LIST *list)
 {
   int i;
   const char *pattern, *name;
@@ -113,7 +112,7 @@ help_builtin (WORD_LIST *list)
 	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
-	  return (EX_USAGE);
+	  return EX_USAGE;
 	}
     }
   list = loptend;
@@ -122,7 +121,7 @@ help_builtin (WORD_LIST *list)
     {
       show_shell_version (0);
       show_builtin_command_help ();
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   /* We should consider making `help bash' do something. */
@@ -182,11 +181,11 @@ help_builtin (WORD_LIST *list)
   if (match_found == 0)
     {
       builtin_error (_("no help topics match `%s'.  Try `help help' or `man -k %s' or `info %s'."), pattern, pattern, pattern);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   fflush (stdout);
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 void
@@ -513,4 +512,7 @@ A star (*) next to a name means that the command is disabled.\n\
 	dispcolumn (i, blurb, sizeof (blurb), width, height);
     }
 }
+
+}  // namespace bash
+
 #endif /* HELP_BUILTIN */

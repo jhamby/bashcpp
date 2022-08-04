@@ -25,8 +25,8 @@
 # include <config.h>
 #endif
 
-#include <ctype.h>
-#include <stdio.h>
+#include <cctype>
+#include <cstdio>
 #if defined _LIBC || defined HAVE___FSETLOCKING
 # include <stdio_ext.h>
 #endif
@@ -55,8 +55,8 @@ char *alloca ();
 # endif
 #endif
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #include "gettextP.h"
 

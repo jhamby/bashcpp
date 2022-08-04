@@ -19,39 +19,14 @@
    along with History.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define READLINE_LIBRARY
-
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
-
-#include <stdio.h>
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif /* HAVE_STDLIB_H */
-
-#if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
-#  include <unistd.h>
-#endif
+#include "history.h"
 
 #if defined (HAVE_FNMATCH)
 #  include <fnmatch.h>
 #endif
 
-#include "history.h"
-#include "histlib.h"
-#include "xmalloc.h"
-
-/* The list of alternate characters that can delimit a history search
-   string. */
-const char *history_search_delimiter_chars = (char *)NULL;
-
-static int history_search_internal (const char *, int, int);
+namespace readline
+{
 
 /* Search the history for STRING, starting at history_offset.
    If DIRECTION < 0, then the search is through previous entries, else
@@ -63,11 +38,11 @@ static int history_search_internal (const char *, int, int);
    string was found in.  Otherwise, nothing is changed, and a -1 is
    returned. */
 
-static int
-history_search_internal (const char *string, int direction, int flags)
+unsigned int
+History::history_search_internal (const std::string &string, int direction, hist_search_flags flags)
 {
-  int i = history_offset;
-  int reverse = (direction < 0);
+  int i = static_cast<int> (where_history ());
+  bool reverse = (direction < 0);
   int anchored = (flags & ANCHORED_SEARCH);
 #if defined (HAVE_FNMATCH)
   bool patsearch = (flags & PATTERN_SEARCH);
@@ -76,32 +51,28 @@ history_search_internal (const char *string, int direction, int flags)
 #endif
 
   /* Take care of trivial cases first. */
-  if (string == 0 || *string == '\0')
-    return (-1);
+  if (string.empty ())
+    return static_cast<unsigned int> (-1);
 
-  if (!history_length || ((i >= history_length) && !reverse))
-    return (-1);
-
-  if (reverse && (i >= history_length))
-    i = history_length - 1;
+  if (!history_length () || ((i >= static_cast<int> (history_length ())) && !reverse))
+    return static_cast<unsigned int> (-1);
 
 #define NEXT_LINE() do { if (reverse) i--; else i++; } while (0)
 
-  HIST_ENTRY **the_history = history_list ();
-  size_t string_len = strlen (string);
   while (1)
     {
       /* Search each line in the history list for STRING. */
 
       /* At limit for direction? */
-      if ((reverse && i < 0) || (!reverse && i == history_length))
-	return (-1);
+      if ((reverse && i < 0) || (!reverse && i == static_cast<int> (history_length ())))
+	return static_cast<unsigned int> (-1);
 
-      char *line = the_history[i]->line;
-      ssize_t line_index = strlen (line);
+      HIST_ENTRY *entry = get_history (static_cast<unsigned int> (i));
+      const char *line = entry->line.c_str ();
+      int line_index = static_cast<int> (entry->line.size ());
 
       /* If STRING is longer than line, no match. */
-      if (!patsearch && (string_len > line_index))
+      if (!patsearch && (static_cast<int> (string.size ()) > line_index))
 	{
 	  NEXT_LINE ();
 	  continue;
@@ -113,18 +84,18 @@ history_search_internal (const char *string, int direction, int flags)
 #if defined (HAVE_FNMATCH)
 	  if (patsearch)
 	    {
-	      if (fnmatch (string, line, 0) == 0)
+	      if (::fnmatch (string.c_str (), line, 0) == 0)
 		{
-		  history_offset = i;
-		  return (0);
+		  history_offset = static_cast<unsigned int> (i);
+		  return 0;
 		}
 	    }
 	  else
 #endif
-	  if (STREQN (string, line, string_len))
+	  if (STREQN (string.c_str (), line, string.size ()))
 	    {
-	      history_offset = i;
-	      return (0);
+	      history_offset = static_cast<unsigned int> (i);
+	      return 0;
 	    }
 
 	  NEXT_LINE ();
@@ -134,25 +105,25 @@ history_search_internal (const char *string, int direction, int flags)
       /* Do substring search. */
       if (reverse)
 	{
-	  line_index -= (!patsearch) ? string_len : 1;
+	  line_index -= (!patsearch) ? string.size () : 1;
 
 	  while (line_index >= 0)
 	    {
 #if defined (HAVE_FNMATCH)
 	      if (patsearch)
 		{
-		  if (fnmatch (string, line + line_index, 0) == 0)
+		  if (::fnmatch (string.c_str (), line + line_index, 0) == 0)
 		    {
-		      history_offset = i;
-		      return (line_index);
+		      history_offset = static_cast<unsigned int> (i);
+		      return static_cast<unsigned int> (line_index);
 		    }
 		}
 	      else
 #endif
-	      if (STREQN (string, line + line_index, string_len))
+	      if (STREQN (string.c_str (), line + line_index, string.size ()))
 		{
-		  history_offset = i;
-		  return (line_index);
+		  history_offset = static_cast<unsigned int> (i);
+		  return static_cast<unsigned int> (line_index);
 		}
 	      line_index--;
 	    }
@@ -161,7 +132,7 @@ history_search_internal (const char *string, int direction, int flags)
 	{
 	  int limit;
 
-	  limit = line_index - string_len + 1;
+	  limit = line_index - static_cast<int> (string.size ()) + 1;
 	  line_index = 0;
 
 	  while (line_index < limit)
@@ -169,18 +140,18 @@ history_search_internal (const char *string, int direction, int flags)
 #if defined (HAVE_FNMATCH)
 	      if (patsearch)
 		{
-		  if (fnmatch (string, line + line_index, 0) == 0)
+		  if (::fnmatch (string.c_str (), line + line_index, 0) == 0)
 		    {
-		      history_offset = i;
-		      return (line_index);
+		      history_offset = static_cast<unsigned int> (i);
+		      return static_cast<unsigned int> (line_index);
 		    }
 		}
 	      else
 #endif
-	      if (STREQN (string, line + line_index, string_len))
+	      if (STREQN (string.c_str (), line + line_index, string.size ()))
 		{
-		  history_offset = i;
-		  return (line_index);
+		  history_offset = static_cast<unsigned int> (i);
+		  return static_cast<unsigned int> (line_index);
 		}
 	      line_index++;
 	    }
@@ -189,19 +160,18 @@ history_search_internal (const char *string, int direction, int flags)
     }
 }
 
-int
-_hs_history_patsearch (const char *string, int direction, int flags)
+unsigned int
+History::_hs_history_patsearch (const char *string, int direction, hist_search_flags flags)
 {
-  char *pat;
   size_t len, start;
-  int ret;
+  unsigned int ret;
   bool unescaped_backslash;
 
 #if defined (HAVE_FNMATCH)
   /* Assume that the string passed does not have a leading `^' and any
      anchored search request is captured in FLAGS */
-  len = strlen (string);
-  ret = len - 1;
+  len = std::strlen (string);
+  ret = static_cast<unsigned int> (len - 1);
   /* fnmatch is required to reject a pattern that ends with an unescaped
      backslash */
   if ((unescaped_backslash = (string[ret] == '\\')))
@@ -210,8 +180,9 @@ _hs_history_patsearch (const char *string, int direction, int flags)
 	unescaped_backslash = !unescaped_backslash;
     }
   if (unescaped_backslash)
-    return -1;
-  pat = (char *)xmalloc (len + 3);
+    return static_cast<unsigned int> (-1);
+
+  char *pat = new char[len + 3];
   /* If the search string is not anchored, we'll be calling fnmatch (assuming
      we have it). Prefix a `*' to the front of the search string so we search
      anywhere in the line. */
@@ -230,53 +201,41 @@ _hs_history_patsearch (const char *string, int direction, int flags)
      of a pattern that doesn't have one.  Assume a pattern that ends in a
      backslash contains an even number of trailing backslashes; we check
      above */
-  strcpy (pat + start, string);
+  std::strcpy (pat + start, string);
   if (pat[len - 1] != '*')
     {
       pat[len] = '*';		/* XXX */
       pat[len+1] = '\0';
     }
 #else
-  pat = (char *)string;
+  pat = const_cast<char *> (string);
 #endif
 
-  ret = history_search_internal (pat, direction, flags|PATTERN_SEARCH);
+  ret = history_search_internal (pat, direction, static_cast<hist_search_flags> (flags | PATTERN_SEARCH));
 
   if (pat != string)
-    free (pat);
+    delete[] pat;
   return ret;
-}
-
-/* Do a non-anchored search for STRING through the history in DIRECTION. */
-int
-history_search (const char *string, int direction)
-{
-  return (history_search_internal (string, direction, NON_ANCHORED_SEARCH));
-}
-
-/* Do an anchored search for string through the history in DIRECTION. */
-int
-history_search_prefix (const char *string, int direction)
-{
-  return (history_search_internal (string, direction, ANCHORED_SEARCH));
 }
 
 /* Search for STRING in the history list.  DIR is < 0 for searching
    backwards.  POS is an absolute index into the history list at
    which point to begin searching. */
-int
-history_search_pos (const char *string, int dir, int pos)
+unsigned int
+History::history_search_pos (const std::string &string, int dir, unsigned int pos)
 {
-  int ret, old;
+  unsigned int ret, old;
 
   old = where_history ();
   history_set_pos (pos);
-  if (history_search (string, dir) == -1)
+  if (history_search (string, dir) == static_cast<unsigned int> (-1))
     {
       history_set_pos (old);
-      return (-1);
+      return static_cast<unsigned int> (-1);
     }
   ret = where_history ();
   history_set_pos (old);
   return ret;
 }
+
+}  // namespace readline

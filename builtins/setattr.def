@@ -29,8 +29,8 @@ $PRODUCES setattr.c
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include "../bashansi.h"
+#include <cstdio>
+
 #include "../bashintl.h"
 
 #include "../shell.h"
@@ -40,10 +40,6 @@ $PRODUCES setattr.c
 #include "bashgetopt.h"
 
 extern sh_builtin_func_t *this_shell_builtin;
-
-#ifdef ARRAY_VARS
-extern int declare_builtin (WORD_LIST *);
-#endif
 
 #define READONLY_OR_EXPORT \
   (this_shell_builtin == readonly_builtin || this_shell_builtin == export_builtin)
@@ -67,16 +63,21 @@ Exit Status:
 Returns success unless an invalid option is given or NAME is invalid.
 $END
 
+namespace bash
+{
+
 /* For each variable name in LIST, make that variable appear in the
    environment passed to simple commands.  If there is no LIST, then
    print all such variables.  An argument of `-n' says to remove the
    exported attribute from variables named in LIST.  An argument of
   -f indicates that the names present in LIST refer to functions. */
 int
-export_builtin (WORD_LIST *list)
+Shell::export_builtin (WORD_LIST *list)
 {
-  return (set_or_show_attributes (list, att_exported, 0));
+  return set_or_show_attributes (list, att_exported, 0);
 }
+
+}  // namespace bash
 
 $BUILTIN readonly
 $FUNCTION readonly_builtin
@@ -100,12 +101,15 @@ Exit Status:
 Returns success unless an invalid option is given or NAME is invalid.
 $END
 
+namespace bash
+{
+
 /* For each variable name in LIST, make that variable readonly.  Given an
    empty LIST, print out all existing readonly variables. */
 int
-readonly_builtin (WORD_LIST *list)
+Shell::readonly_builtin (WORD_LIST *list)
 {
-  return (set_or_show_attributes (list, att_readonly, 0));
+  return set_or_show_attributes (list, att_readonly, 0);
 }
 
 #if defined (ARRAY_VARS)
@@ -118,7 +122,7 @@ readonly_builtin (WORD_LIST *list)
    ATTRIBUTE.  An arg of `-n' says to remove the attribute from the the
    remaining names in LIST (doesn't work for readonly). */
 int
-set_or_show_attributes (WORD_LIST *list, int attribute, int nodefs)
+Shell::set_or_show_attributes (WORD_LIST *list, int attribute, int nodefs)
 {
   int assign, undo, any_failed, assign_error, opt;
   int functions_only, arrays_only, assoc_only;
@@ -158,7 +162,7 @@ set_or_show_attributes (WORD_LIST *list, int attribute, int nodefs)
 	  CASE_HELPOPT;
 	  default:
 	    builtin_usage ();
-	    return (EX_USAGE);
+	    return EX_USAGE;
 	}
     }
   list = loptend;
@@ -354,7 +358,7 @@ show_all_var_attributes (int v, int nodefs)
 
   variable_list = v ? all_shell_variables () : all_shell_functions ();
   if (variable_list == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
   for (i = any_failed = 0; (var = variable_list[i]); i++)
     {
@@ -363,7 +367,7 @@ show_all_var_attributes (int v, int nodefs)
         break;
     }
   free (variable_list);
-  return (any_failed == 0 ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+  return any_failed == 0 ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
 }
 
 /* Show all local variable variables with their attributes. This shows unset
@@ -377,7 +381,7 @@ show_local_var_attributes (int v, int nodefs)
 
   variable_list = all_local_variables (0);
   if (variable_list == 0)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
   for (i = any_failed = 0; (var = variable_list[i]); i++)
     {
@@ -386,7 +390,7 @@ show_local_var_attributes (int v, int nodefs)
         break;
     }
   free (variable_list);
-  return (any_failed == 0 ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+  return any_failed == 0 ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
 }
 
 int
@@ -507,7 +511,7 @@ show_var_attributes (SHELL_VAR *var, int pattr, int nodefs)
       printf ("%s=%s\n", var->name, x);
       free (x);
     }
-  return (0);
+  return 0;
 }
 
 int
@@ -520,10 +524,10 @@ show_name_attributes (const char *name, int nodefs)
   if (var)	/* show every variable with attributes, even unset ones */
     {
       show_var_attributes (var, READONLY_OR_EXPORT, nodefs);
-      return (0);
+      return 0;
     }
   else
-    return (1);
+    return 1;
 }
 
 int
@@ -536,10 +540,10 @@ show_localname_attributes (const char *name, int nodefs)
   if (var && local_p (var) && var->context == variable_context)	/* show every variable with attributes, even unset ones */
     {
       show_var_attributes (var, READONLY_OR_EXPORT, nodefs);
-      return (0);
+      return 0;
     }
   else
-    return (1);
+    return 1;
 }
 
 int
@@ -552,10 +556,10 @@ show_func_attributes (const char *name, int nodefs)
   if (var)
     {
       show_var_attributes (var, READONLY_OR_EXPORT, nodefs);
-      return (0);
+      return 0;
     }
   else
-    return (1);
+    return 1;
 }
 
 void
@@ -640,3 +644,5 @@ set_var_attribute (const char *name, int attribute, int undo)
   if (var && (exported_p (var) || (attribute & att_exported)))
     array_needs_making = true;	/* XXX */
 }
+
+}  // namespace bash

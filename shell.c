@@ -33,10 +33,11 @@
 #endif
 #include "posixstat.h"
 #include "posixtime.h"
-#include "bashansi.h"
-#include <stdio.h>
-#include <signal.h>
-#include <errno.h>
+
+#include <cstdio>
+#include <csignal>
+#include <cerrno>
+
 #include "filecntl.h"
 #if defined (HAVE_PWD_H)
 #  include <pwd.h>
@@ -54,7 +55,6 @@
 #include "parser.h"
 #include "flags.h"
 #include "trap.h"
-#include "mailcheck.h"
 #include "builtins.h"
 #include "builtins/common.h"
 
@@ -69,13 +69,11 @@
 #endif
 
 #if defined (HISTORY)
-#  include "bashhist.h"
 #  include <readline/history.h>
 #endif
 
 #if defined (READLINE)
 #  include <readline/readline.h>
-#  include "bashline.h"
 #endif
 
 #include <tilde/tilde.h>
@@ -97,137 +95,27 @@ extern int errno;
 extern char **environ;	/* used if no third argument to main() */
 #endif
 
-extern char gnu_error_format;
 
-/* Non-zero means that this shell has already been run; i.e. you should
-   call shell_reinitialize () if you need to start afresh. */
-bool shell_initialized = false;
-bool bash_argv_initialized = false;
-
-COMMAND *global_command = NULL;
-
-/* Information about the current user. */
-struct user_info current_user =
+#if defined (NO_MAIN_ENV_ARG)
+/* systems without third argument to main() */
+int
+main (int argc, char **argv)
 {
-  (uid_t)-1, (uid_t)-1, (gid_t)-1, (gid_t)-1,
-  (char *)NULL, (char *)NULL, (char *)NULL
-};
+  bash::the_shell = new bash::Shell (argc, argv, env);
+}
+#else /* !NO_MAIN_ENV_ARG */
+int
+main (int argc, char **argv, char **env)
+{
+  bash::the_shell = new bash::Shell (argc, argv, env);
+}
+#endif /* !NO_MAIN_ENV_ARG */
 
-/* The current host's name. */
-const char *current_host_name = NULL;
 
-/* Non-zero means that this shell is a login shell.
-   Specifically:
-   0 = not login shell.
-   1 = login shell from getty (or equivalent fake out)
-  -1 = login shell from "--login" (or -l) flag.
-  -2 = both from getty, and from flag.
- */
-int login_shell = 0;
+namespace bash
+{
 
-/* Non-zero means that at this moment, the shell is interactive.  In
-   general, this means that the shell is at this moment reading input
-   from the keyboard. */
-bool interactive = false;
-
-/* Non-zero means that the shell was started as an interactive shell. */
-bool interactive_shell = false;
-
-/* Non-zero means to send a SIGHUP to all jobs when an interactive login
-   shell exits. */
-char hup_on_exit = 0;
-
-/* Non-zero means to list status of running and stopped jobs at shell exit */
-char check_jobs_at_exit = 0;
-
-/* Non-zero means to change to a directory name supplied as a command name */
-char autocd = 0;
-
-/* Tells what state the shell was in when it started:
-	0 = non-interactive shell script
-	1 = interactive
-	2 = -c command
-	3 = wordexp evaluation
-   This is a superset of the information provided by interactive_shell.
-*/
-int startup_state = 0;
-
-bool reading_shell_script = false;
-
-/* Special debugging helper. */
-bool debugging_login_shell = false;
-
-/* The environment that the shell passes to other commands. */
-char **shell_environment;
-
-/* Non-zero when we are executing a top-level command. */
-bool executing = false;
-
-/* The number of commands executed so far. */
-int current_command_number = 1;
-
-/* Non-zero is the recursion depth for commands. */
-int indirection_level = 0;
-
-/* The name of this shell, as taken from argv[0]. */
-const char *shell_name = NULL;
-
-/* time in seconds when the shell was started */
-time_t shell_start_time;
-struct timeval shellstart;
-
-/* Are we running in an emacs shell window? (== 2 for `eterm`) */
-int running_under_emacs;
-
-/* Do we have /dev/fd? */
-#ifdef HAVE_DEV_FD
-bool have_devfd = HAVE_DEV_FD;
-#else
-bool have_devfd = 0;
-#endif
-
-/* The name of the .(shell)rc file. */
-static const char *bashrc_file = DEFAULT_BASHRC;
-
-/* Non-zero means to act more like the Bourne shell on startup. */
-static bool act_like_sh;
-
-/* Non-zero if this shell is being run by `su'. */
-static bool su_shell;
-
-/* Non-zero if we have already expanded and sourced $ENV. */
-static bool sourced_env;
-
-/* Is this shell running setuid? */
-static bool running_setuid;
-
-/* Values for the long-winded argument names. */
-static bool debugging;			/* Do debugging things. */
-static bool no_rc;			/* Don't execute ~/.bashrc */
-static bool no_profile;			/* Don't execute .profile */
-static bool do_version;			/* Display interesting version info. */
-static bool make_login_shell;		/* Make this shell be a `-bash' shell. */
-static bool want_initial_help;		/* --help option */
-
-char debugging_mode = 0;	/* In debugging mode with --debugger */
-#if defined (READLINE)
-bool no_line_editing = false;	/* non-zero -> don't do fancy line editing. */
-#else
-bool no_line_editing = true;	/* can't have line editing without readline */
-#endif
-bool dump_translatable_strings;	/* Dump strings in $"...", don't execute. */
-bool dump_po_strings;		/* Dump strings in $"..." in po format */
-bool wordexp_only = false;	/* Do word expansion only */
-bool protected_mode = false;	/* No command substitution with --wordexp */
-
-bool pretty_print_mode = false;	/* pretty-print a shell script */
-
-#if defined (STRICT_POSIX)
-char posixly_correct = 1;	/* Non-zero means posix.2 superset. */
-#else
-char posixly_correct = 0;	/* Non-zero means posix.2 superset. */
-#endif
-
+#if 0
 /* Some long-winded argument names. */
 typedef enum { Bool, Flag, Charp } arg_type;
 
@@ -286,70 +174,38 @@ static const LongArg long_args[] = {
 #endif
   LongArg()	/* empty LongArg to end the list */
 };
-
-/* These are extern so execute_simple_command can set them, and then
-   longjmp back to main to execute a shell script, instead of calling
-   main () again and resulting in indefinite, possibly fatal, stack
-   growth. */
-procenv_t subshell_top_level;
-int subshell_argc;
-char **subshell_argv;
-char **subshell_envp;
-
-char *exec_argv0;
-
-#if defined (BUFFERED_INPUT)
-/* The file descriptor from which the shell is reading input. */
-int default_buffered_input = -1;
 #endif
-
-/* The following two variables are not static so they can show up in $-. */
-bool read_from_stdin;		/* -s flag supplied */
-bool want_pending_command;	/* -c flag supplied */
-
-/* This variable is not static so it can be bound to $BASH_EXECUTION_STRING */
-const char *command_execution_string;	/* argument to -c option */
-const char *shell_script_filename; 	/* shell script */
-
-bool malloc_trace_at_exit = 0;
-
-static int shell_reinitialized = 0;
-
-static FILE *default_input;
-
-static STRING_INT_ALIST *shopt_alist;
-static int shopt_ind = 0, shopt_len = 0;
 
 static int parse_long_options (char **, int, int);
 static int parse_shell_options (char **, int, int);
 static int bind_args (char **, int, int, int);
 
-static void start_debugger (void);
+static void start_debugger ();
 
 static void add_shopt_to_alist (char *, int);
-static void run_shopt_alist (void);
+static void run_shopt_alist ();
 
 static void execute_env_file (char *);
-static void run_startup_files (void);
+static void run_startup_files ();
 static int open_shell_script (const char *);
-static void set_bash_input (void);
+static void set_bash_input ();
 static int run_one_command (const char *);
 #if defined (WORDEXP_OPTION)
 static int run_wordexp (const char *);
 #endif
 
-static bool uidget (void);
+static bool uidget ();
 
-static void set_option_defaults (void);
-static void reset_option_defaults (void);
+static void set_option_defaults ();
+static void reset_option_defaults ();
 
-static void init_interactive (void);
-static void init_noninteractive (void);
-static void init_interactive_script (void);
+static void init_interactive ();
+static void init_noninteractive ();
+static void init_interactive_script ();
 
 static void set_shell_name (char *);
-static void shell_initialize (void);
-static void shell_reinitialize (void);
+static void shell_initialize ();
+static void shell_reinitialize ();
 
 static void show_shell_usage (FILE *, int);
 
@@ -369,51 +225,71 @@ _cygwin32_check_tmp ()
 }
 #endif /* __CYGWIN__ */
 
-#if defined (NO_MAIN_ENV_ARG)
-/* systems without third argument to main() */
-int
-main (int argc, char **argv)
-#else /* !NO_MAIN_ENV_ARG */
-int
-main (int argc, char **argv, char **env)
-#endif /* !NO_MAIN_ENV_ARG */
+// Initialize the simple shell variables to default values.
+SimpleState::SimpleState () :
+	shell_tty (-1),
+	shell_pgrp (NO_PID),
+	terminal_pgrp (NO_PID),
+	original_pgrp (NO_PID),
+#if defined (PGRP_PIPE)
+	pgrp_pipe ({-1, -1}),
+#endif
+	last_made_pid (NO_PID),
+	last_asynchronous_pid (NO_PID),
+	current_command_number (1),
+#if defined (BUFFERED_INPUT)
+	default_buffered_input (-1),
+#endif
+	rseed (1),
+	rseed32 (1073741823),
+#if defined (JOB_CONTROL)
+	job_control (true),
+#endif
+	check_window_size (CHECKWINSIZE_DEFAULT),
+	hashing_enabled (1),
+#if defined (BANG_HISTORY)
+	history_expansion (HISTEXPAND_DEFAULT),
+#endif
+	interactive_comments (1),
+#if defined (BRACE_EXPANSION)
+	brace_expansion (1),
+#endif
+#ifdef HAVE_DEV_FD
+	have_devfd (HAVE_DEV_FD),
+#endif
+#if !defined (READLINE)
+	no_line_editing (true),	/* can't have line editing without readline */
+#endif
+#if defined (STRICT_POSIX)
+	posixly_correct (1)
+#else
+	posixly_correct (0)
+#endif
+{
+}
+
+// Everything happens when we construct the Shell.
+Shell::Shell (int argc, char **argv, char **env) : SimpleState ()
 {
   int i;
   int code, old_errexit_flag;
 #if defined (RESTRICTED_SHELL)
   int saverst;
 #endif
-  volatile bool locally_skip_execution;
-  volatile int arg_index, top_level_arg_index;
+  bool locally_skip_execution;
+  int arg_index, top_level_arg_index;
 #ifdef __OPENNT
   char **env;
 
   env = environ;
 #endif /* __OPENNT */
 
-  USE_VAR(argc);
-  USE_VAR(argv);
-  USE_VAR(env);
-  USE_VAR(code);
-  USE_VAR(old_errexit_flag);
-#if defined (RESTRICTED_SHELL)
-  USE_VAR(saverst);
-#endif
-
   /* Catch early SIGINTs. */
-  code = setjmp_nosigs (top_level);
+// FIXME: start of try block?  code = setjmp_nosigs (top_level);
   if (code)
     exit (2);
 
   xtrace_init ();
-
-#if defined (USING_BASH_MALLOC) && defined (DEBUG) && !defined (DISABLE_MALLOC_WRAPPERS)
-  malloc_set_register (1);	/* XXX - change to 1 for malloc debugging */
-#endif
-
-#if 0
-  check_dev_tty ();
-#endif
 
 #ifdef __CYGWIN__
   _cygwin32_check_tmp ();
@@ -426,12 +302,8 @@ main (int argc, char **argv, char **env)
 
   running_setuid = uidget ();
 
-  if (getenv ("POSIXLY_CORRECT") || getenv ("POSIX_PEDANTIC"))
+  if (std::getenv ("POSIXLY_CORRECT") || std::getenv ("POSIX_PEDANTIC"))
     posixly_correct = true;
-
-#if defined (USE_GNU_MALLOC_LIBRARY)
-  mcheck (programming_error, (void (*) ())0);
-#endif /* USE_GNU_MALLOC_LIBRARY */
 
   if (setjmp_sigs (subshell_top_level))
     {
@@ -468,7 +340,7 @@ main (int argc, char **argv, char **env)
 
       shell_reinitialize ();
       if (setjmp_nosigs (top_level))
-	exit (2);
+	std::exit (2);
     }
 
   shell_environment = env;
@@ -485,13 +357,13 @@ main (int argc, char **argv, char **env)
   if (want_initial_help)
     {
       show_shell_usage (stdout, 1);
-      exit (EXECUTION_SUCCESS);
+      std::exit (EXECUTION_SUCCESS);
     }
 
   if (do_version)
     {
       show_shell_version (1);
-      exit (EXECUTION_SUCCESS);
+      std::exit (EXECUTION_SUCCESS);
     }
 
   echo_input_at_read = verbose_flag;	/* --verbose given */
@@ -545,7 +417,7 @@ main (int argc, char **argv, char **env)
 
   if (forced_interactive ||		/* -i flag */
       (!command_execution_string &&	/* No -c command and ... */
-       wordexp_only == 0 &&		/* No --wordexp and ... */
+       !wordexp_only &&			/* No --wordexp and ... */
        ((arg_index == argc) ||		/*   no remaining args or... */
 	read_from_stdin) &&		/*   -s flag with args, and */
        isatty (fileno (stdin)) &&	/* Input is a terminal and */
@@ -553,23 +425,6 @@ main (int argc, char **argv, char **env)
     init_interactive ();
   else
     init_noninteractive ();
-
-#if 0
-  /*
-   * Some systems have the bad habit of starting login shells with lots of open
-   * file descriptors.  For instance, most systems that have picked up the
-   * pre-4.0 Sun YP code leave a file descriptor open each time you call one
-   * of the getpw* functions, and it's set to be open across execs.  That
-   * means one for login, one for xterm, one for shelltool, etc.  There are
-   * also systems that open persistent FDs to other agents or files as part
-   * of process startup; these need to be set to be close-on-exec.
-   */
-  if (login_shell && interactive_shell)
-    {
-      for (i = 3; i < 20; i++)
-	SET_CLOSE_ON_EXEC (i);
-    }
-#endif
 
   /* If we're in a strict Posix.2 mode, turn on interactive comments,
      alias expansion in non-interactive shells, and other Posix.2 things. */
@@ -611,13 +466,13 @@ main (int argc, char **argv, char **env)
 
       if (inside_emacs)
 	{
-	  emacs_term = strstr (inside_emacs, ",term:") != 0;
+	  emacs_term = std::strstr (inside_emacs, ",term:") != 0;
 	  in_emacs = 1;
 	}
       else if (emacs)
 	{
 	  /* Infer whether we are in an older Emacs. */
-	  emacs_term = strstr (emacs, " (term:") != 0;
+	  emacs_term = std::strstr (emacs, " (term:") != 0;
 	  in_emacs = emacs_term || STREQ (emacs, "t");
 	}
       else
@@ -663,11 +518,11 @@ main (int argc, char **argv, char **env)
 
   /* Execute the start-up scripts. */
 
-  if (interactive_shell == 0)
+  if (!interactive_shell)
     {
       unbind_variable ("PS1");
       unbind_variable ("PS2");
-      interactive = 0;
+      interactive = false;
 #if 0
       /* This has already been done by init_noninteractive */
       expand_aliases = posixly_correct;
@@ -676,7 +531,7 @@ main (int argc, char **argv, char **env)
   else
     {
       change_flag ('i', FLAG_ON);
-      interactive = 1;
+      interactive = true;
     }
 
 #if defined (RESTRICTED_SHELL)
@@ -756,7 +611,7 @@ main (int argc, char **argv, char **env)
 	start_debugger ();
 
 #if defined (ONESHOT)
-      executing = 1;
+      executing = true;
       run_one_command (command_execution_string);
       exit_shell (last_command_exit_value);
 #else /* ONESHOT */
@@ -778,12 +633,12 @@ main (int argc, char **argv, char **env)
 #else
       setbuf (default_input, (char *)NULL);
 #endif /* !BUFFERED_INPUT */
-      read_from_stdin = 1;
+      read_from_stdin = true;
     }
   else if (top_level_arg_index == argc)		/* arg index before startup files */
     /* "If there are no operands and the -c option is not specified, the -s
        option shall be assumed." */
-    read_from_stdin = 1;
+    read_from_stdin = true;
 
   set_bash_input ();
 
@@ -803,7 +658,7 @@ main (int argc, char **argv, char **env)
       /* Don't load the history from the history file if we've already
 	 saved some lines in this session (e.g., by putting `history -s xx'
 	 into one of the startup files). */
-      if (shell_initialized == 0 && history_lines_this_session == 0)
+      if (!shell_initialized && history_lines_this_session == 0)
 	load_history ();
 #endif /* HISTORY */
 
@@ -816,12 +671,12 @@ main (int argc, char **argv, char **env)
  read_and_execute:
 #endif /* !ONESHOT */
 
-  shell_initialized = 1;
+  shell_initialized = true;
 
   if (pretty_print_mode && interactive_shell)
     {
       internal_warning (_("pretty-printing mode ignored in interactive shells"));
-      pretty_print_mode = 0;
+      pretty_print_mode = false;
     }
   if (pretty_print_mode)
     exit_shell (pretty_print_loop ());
@@ -830,6 +685,9 @@ main (int argc, char **argv, char **env)
   reader_loop ();
   exit_shell (last_command_exit_value);
 }
+
+// Empty virtual destructor.
+Shell::~Shell() {}
 
 static int
 parse_long_options (char **argv, int arg_start, int arg_end)
@@ -875,7 +733,7 @@ parse_long_options (char **argv, int arg_start, int arg_end)
 	    {
 	      report_error (_("%s: invalid option"), argv[arg_index]);
 	      show_shell_usage (stderr, 0);
-	      exit (EX_BADUSAGE);
+	      std::exit (EX_BADUSAGE);
 	    }
 	  break;		/* No such argument.  Maybe flag arg. */
 	}
@@ -883,7 +741,7 @@ parse_long_options (char **argv, int arg_start, int arg_end)
       arg_index++;
     }
 
-  return (arg_index);
+  return arg_index;
 }
 
 static int
@@ -904,7 +762,7 @@ parse_shell_options (char **argv, int arg_start, int arg_end)
       if (arg_string[0] == '-' &&
 	   (arg_string[1] == '\0' ||
 	     (arg_string[1] == '-' && arg_string[2] == '\0')))
-	return (next_arg);
+	return next_arg;
 
       int i = 1;
       char arg_character;
@@ -937,7 +795,7 @@ parse_shell_options (char **argv, int arg_start, int arg_end)
 		  break;
 		}
 	      if (set_minus_o_option (on_or_off, o_option) != EXECUTION_SUCCESS)
-		exit (EX_BADUSAGE);
+		std::exit (EX_BADUSAGE);
 	      next_arg++;
 	      break;
 
@@ -965,7 +823,7 @@ parse_shell_options (char **argv, int arg_start, int arg_end)
 		{
 		  report_error (_("%c%c: invalid option"), on_or_off, arg_character);
 		  show_shell_usage (stderr, 0);
-		  exit (EX_BADUSAGE);
+		  std::exit (EX_BADUSAGE);
 		}
 	    }
 	}
@@ -974,15 +832,15 @@ parse_shell_options (char **argv, int arg_start, int arg_end)
       arg_index = next_arg;
     }
 
-  return (arg_index);
+  return arg_index;
 }
 
 /* Exit the shell with status S. */
 void
-exit_shell (int s)
+Shell::exit_shell (int s)
 {
-  fflush (stdout);		/* XXX */
-  fflush (stderr);
+  std::fflush (stdout);		/* XXX */
+  std::fflush (stderr);
 
   /* Clean up the terminal if we are in a state where it's been modified. */
 #if defined (READLINE)
@@ -1041,7 +899,7 @@ sh_exit (int s)
   /* mlocation_write_table (); */
 #endif
 
-  exit (s);
+  std::exit (s);
 }
 
 /* Exit a subshell, which includes calling the exit trap.  We don't want to
@@ -1050,8 +908,8 @@ sh_exit (int s)
 void
 subshell_exit (int s)
 {
-  fflush (stdout);
-  fflush (stderr);
+  std::fflush (stdout);
+  std::fflush (stderr);
 
   /* Do trap[0] if defined.  Allow it to override the exit status
      passed to us. */
@@ -1062,7 +920,7 @@ subshell_exit (int s)
 }
 
 void
-set_exit_status (int s)
+Shell::set_exit_status (int s)
 {
   set_pipestatus_from_exit (last_command_exit_value = s);
 }
@@ -1104,12 +962,12 @@ execute_env_file (char *env_file)
       fn = expand_string_unsplit_to_string (env_file, Q_DOUBLE_QUOTES);
       if (fn && *fn)
 	maybe_execute_file (fn, 1);
-      FREE (fn);
+      delete[] fn;
     }
 }
 
-static void
-run_startup_files ()
+void
+Shell::run_startup_files ()
 {
 #if defined (JOB_CONTROL)
   bool old_job_control;
@@ -1123,7 +981,7 @@ run_startup_files ()
       run_by_ssh = (find_variable ("SSH_CLIENT") != (SHELL_VAR *)0) ||
 		   (find_variable ("SSH2_CLIENT") != (SHELL_VAR *)0);
 #else
-      run_by_ssh = 0;
+      run_by_ssh = false;
 #endif
 
       /* If we were run by sshd or we think we were run by rshd, execute
@@ -1175,7 +1033,7 @@ run_startup_files ()
 	    maybe_execute_file ("~/.profile", true);
 	}
 
-      sourced_login = 1;
+      sourced_login = true;
     }
 
   /* A non-interactive shell not named `sh' and not in posix mode reads and
@@ -1261,7 +1119,7 @@ shell_is_restricted (const char *name)
   temp = base_pathname (name);
   if (*temp == '-')
     temp++;
-  return (STREQ (temp, RESTRICTED_SHELL_NAME));
+  return STREQ (temp, RESTRICTED_SHELL_NAME);
 }
 
 /* Perhaps make this shell a `restricted' one, based on NAME.  If the
@@ -1272,7 +1130,7 @@ shell_is_restricted (const char *name)
    Do this also if `restricted' is already set to 1; maybe the shell was
    started with -r. */
 bool
-maybe_make_restricted (const char *name)
+Shell::maybe_make_restricted (const char *name)
 {
   const char *temp;
 
@@ -1292,7 +1150,7 @@ maybe_make_restricted (const char *name)
       set_var_read_only ("HISTFILE");
       restricted = 1;
     }
-  return (restricted);
+  return restricted;
 }
 #endif /* RESTRICTED_SHELL */
 
@@ -1303,18 +1161,19 @@ uidget ()
 {
   uid_t u;
 
-  u = getuid ();
+  u = ::getuid ();
   if (current_user.uid != u)
     {
-      FREE (current_user.user_name);
-      FREE (current_user.shell);
-      FREE (current_user.home_dir);
-      current_user.user_name = current_user.shell = current_user.home_dir = (char *)NULL;
+      delete[] current_user.user_name;
+      delete[] current_user.shell;
+      delete[] current_user.home_dir;
+      current_user.user_name = current_user.shell = current_user.home_dir = NULL;
     }
+
   current_user.uid = u;
-  current_user.gid = getgid ();
-  current_user.euid = geteuid ();
-  current_user.egid = getegid ();
+  current_user.gid = ::getgid ();
+  current_user.euid = ::geteuid ();
+  current_user.egid = ::getegid ();
 
   /* See whether or not we are running setuid or setgid. */
   return (current_user.uid != current_user.euid) ||
@@ -1336,7 +1195,7 @@ disable_priv_mode ()
       sys_error (_("cannot set uid to %d: effective uid %d"), current_user.uid, current_user.euid);
 #if defined (EXIT_ON_SETUID_FAILURE)
       if (e == EAGAIN)
-	exit (e);
+	std::exit (e);
 #endif
     }
 #if HAVE_SETRESGID
@@ -1381,14 +1240,14 @@ run_wordexp (char *words)
     {
       with_input_from_string (words, "--wordexp");
       if (parse_command () != 0)
-	return (126);
+	return 126;
       if (global_command == 0)
 	{
 	  printf ("0\n0\n");
-	  return (0);
+	  return 0;
 	}
       if (global_command->type != cm_simple)
-	return (126);
+	return 126;
       wl = global_command->value.Simple->words;
       if (protected_mode)
 	for (tl = wl; tl; tl = tl->next)
@@ -1402,8 +1261,8 @@ run_wordexp (char *words)
 
   if (result == 0)
     {
-      printf ("0\n0\n");
-      return (0);
+      std::printf ("0\n0\n");
+      return 0;
     }
 
   /* Count up the number of words and bytes, and print them.  Don't count
@@ -1411,15 +1270,15 @@ run_wordexp (char *words)
   for (nw = nb = 0, wl = result; wl; wl = wl->next)
     {
       nw++;
-      nb += strlen (wl->word->word);
+      nb += std::strlen (wl->word->word);
     }
-  printf ("%u\n%u\n", nw, nb);
+  std::printf ("%u\n%u\n", nw, nb);
   /* Print each word on a separate line.  This will have to be changed when
      the interface to glibc is completed. */
   for (wl = result; wl; wl = wl->next)
-    printf ("%s\n", wl->word->word);
+    std::printf ("%s\n", wl->word->word);
 
-  return (0);
+  return 0;
 }
 #endif
 
@@ -1452,7 +1311,7 @@ run_one_command (const char *command)
 	  command_error ("run_one_command", CMDERR_BADJUMP, code, 0);
 	}
     }
-   return (parse_and_execute (savestring (command), "-c", SEVAL_NOHIST|SEVAL_RESETLINE));
+   return parse_and_execute (savestring (command), "-c", SEVAL_NOHIST|SEVAL_RESETLINE);
 }
 #endif /* ONESHOT */
 
@@ -1505,7 +1364,7 @@ bind_args (char **argv, int arg_start, int arg_end, int start_index)
       dispose_words (args);
     }
 
-  return (i);
+  return i;
 }
 
 void
@@ -1564,7 +1423,7 @@ open_shell_script (const char *script_name)
       path_filename = find_path_file (script_name);
       if (path_filename)
 	{
-	  free (filename);
+	  std::free (filename);
 	  filename = path_filename;
 	  fd = open (filename, O_RDONLY);
 	}
@@ -1582,11 +1441,11 @@ open_shell_script (const char *script_name)
       sh_exit ((e == ENOENT) ? EX_NOTFOUND : EX_NOINPUT);
     }
 
-  free (dollar_vars[0]);
+  std::free (dollar_vars[0]);
   dollar_vars[0] = exec_argv0 ? savestring (exec_argv0) : savestring (script_name);
   if (exec_argv0)
     {
-      free (exec_argv0);
+      std::free (exec_argv0);
       exec_argv0 = (char *)NULL;
     }
 
@@ -1614,7 +1473,7 @@ open_shell_script (const char *script_name)
     {
       t = itos (executing_line_number ());
       array_push (bash_lineno_a, t);
-      free (t);
+      std::free (t);
     }
   array_push (funcname_a, "main");
 #endif
@@ -1652,7 +1511,7 @@ open_shell_script (const char *script_name)
 #if defined (JOB_CONTROL)
 	  end_job_control ();	/* just in case we were run as bash -i script */
 #endif
-	  exit (EX_NOEXEC);
+	  std::exit (EX_NOEXEC);
 	}
       else if (sample_len > 0 && (check_binary_file (sample, sample_len)))
 	{
@@ -1660,7 +1519,7 @@ open_shell_script (const char *script_name)
 #if defined (JOB_CONTROL)
 	  end_job_control ();	/* just in case we were run as bash -i script */
 #endif
-	  exit (EX_BINARY_FILE);
+	  std::exit (EX_BINARY_FILE);
 	}
       /* Now rewind the file back to the beginning. */
       lseek (fd, 0L, 0);
@@ -1680,7 +1539,7 @@ open_shell_script (const char *script_name)
   if (default_input == 0)
     {
       file_error (filename);
-      exit (EX_NOTFOUND);
+      std::exit (EX_NOTFOUND);
     }
 
   SET_CLOSE_ON_EXEC (fd);
@@ -1698,7 +1557,7 @@ open_shell_script (const char *script_name)
 #if defined (BUFFERED_INPUT)
       default_buffered_input = 0;
 #else
-      fclose (default_input);
+      std::fclose (default_input);
       default_input = stdin;
 #endif
     }
@@ -1708,10 +1567,10 @@ open_shell_script (const char *script_name)
        before. */
     init_interactive_script ();
 
-  free (filename);
+  std::free (filename);
 
-  reading_shell_script = 1;
-  return (fd);
+  reading_shell_script = true;
+  return fd;
 }
 
 /* Initialize the input routines for the parser. */
@@ -1721,17 +1580,17 @@ set_bash_input ()
   /* Make sure the fd from which we are reading input is not in
      no-delay mode. */
 #if defined (BUFFERED_INPUT)
-  if (interactive == 0)
+  if (!interactive)
     sh_unset_nodelay_mode (default_buffered_input);
   else
 #endif /* !BUFFERED_INPUT */
     sh_unset_nodelay_mode (fileno (stdin));
 
   /* with_input_from_stdin really means `with_input_from_readline' */
-  if (interactive && no_line_editing == 0)
+  if (interactive && !no_line_editing)
     with_input_from_stdin ();
 #if defined (BUFFERED_INPUT)
-  else if (interactive == 0)
+  else if (!interactive)
     with_input_from_buffered_stream (default_buffered_input, dollar_vars[0]);
 #endif /* BUFFERED_INPUT */
   else
@@ -1756,7 +1615,7 @@ unset_bash_input (int check_zero)
 #else /* !BUFFERED_INPUT */
   if (default_input)
     {
-      fclose (default_input);
+      std::fclose (default_input);
       default_input = (FILE *)NULL;
     }
 #endif /* !BUFFERED_INPUT */
@@ -1821,8 +1680,8 @@ reset_option_defaults ()
 static void
 init_interactive ()
 {
-  expand_aliases = interactive_shell = startup_state = 1;
-  interactive = 1;
+  expand_aliases = startup_state = 1;
+  interactive_shell = interactive = true;
 #if defined (HISTORY)
   if (enable_history_list == -1)
     enable_history_list = 1;				/* set default  */
@@ -1841,13 +1700,14 @@ init_noninteractive ()
     enable_history_list = 0;
   bash_history_reinit (0);
 #endif /* HISTORY */
-  interactive_shell = startup_state = interactive = 0;
+  interactive_shell = interactive = false;
+  startup_state = 0;
   expand_aliases = posixly_correct;	/* XXX - was 0 not posixly_correct */
-  no_line_editing = 1;
+  no_line_editing = true;
 #if defined (JOB_CONTROL)
   /* Even if the shell is not interactive, enable job control if the -i or
      -m option is supplied at startup. */
-  set_job_control (forced_interactive||jobs_m_flag);
+  set_job_control (forced_interactive || jobs_m_flag);
 #endif /* JOB_CONTROL */
 }
 
@@ -1859,7 +1719,8 @@ init_interactive_script ()
     enable_history_list = 1;
 #endif
   init_noninteractive ();
-  expand_aliases = interactive_shell = startup_state = 1;
+  expand_aliases = startup_state = 1;
+  interactive_shell = true;
 #if defined (HISTORY)
   remember_on_history = enable_history_list;	/* XXX */
 #endif
@@ -1900,8 +1761,7 @@ get_current_user_info ()
 
 /* Do whatever is necessary to initialize the shell.
    Put new initializations in here. */
-static void
-shell_initialize ()
+Shell::Shell () : bashrc_file (DEFAULT_BASHRC)
 {
   char hostname[256];
   int should_be_restricted;
@@ -1951,9 +1811,10 @@ shell_initialize ()
      functions from the environment if we are running in privileged or
      restricted mode or if the shell is running setuid. */
 #if defined (RESTRICTED_SHELL)
-  initialize_shell_variables (shell_environment, privileged_mode||restricted||should_be_restricted||running_setuid);
+  initialize_shell_variables (shell_environment, privileged_mode || restricted ||
+						 should_be_restricted || running_setuid);
 #else
-  initialize_shell_variables (shell_environment, privileged_mode||running_setuid);
+  initialize_shell_variables (shell_environment, privileged_mode || running_setuid);
 #endif
 
   /* Initialize the data structures for storing and running jobs. */
@@ -1969,11 +1830,11 @@ shell_initialize ()
      running in privileged or restricted mode or if the shell is running
      setuid. */
 #if defined (RESTRICTED_SHELL)
-  initialize_shell_options (privileged_mode||restricted||should_be_restricted||running_setuid);
-  initialize_bashopts (privileged_mode||restricted||should_be_restricted||running_setuid);
+  initialize_shell_options (privileged_mode || restricted || should_be_restricted || running_setuid);
+  initialize_bashopts (privileged_mode || restricted || should_be_restricted || running_setuid);
 #else
-  initialize_shell_options (privileged_mode||running_setuid);
-  initialize_bashopts (privileged_mode||running_setuid);
+  initialize_shell_options (privileged_mode || running_setuid);
+  initialize_bashopts (privileged_mode || running_setuid);
 #endif
 }
 
@@ -1994,7 +1855,7 @@ shell_reinitialize ()
      for the invocation of each shell script.  If the variable $ENV
      (or $BASH_ENV) is set, its value is used as the name of a file
      to source. */
-  no_rc = no_profile = 1;
+  no_rc = no_profile = true;
 
   /* Things that get 0. */
   login_shell = make_login_shell = interactive = executing = 0;
@@ -2039,15 +1900,15 @@ show_shell_usage (FILE *fp, int extra)
   char *set_opts, *s, *t;
 
   if (extra)
-    fprintf (fp, _("GNU bash, version %s-(%s)\n"), shell_version_string (), MACHTYPE);
-  fprintf (fp, _("Usage:\t%s [GNU long option] [option] ...\n\t%s [GNU long option] [option] script-file ...\n"),
+    std::fprintf (fp, _("GNU bash, version %s-(%s)\n"), shell_version_string (), MACHTYPE);
+  std::fprintf (fp, _("Usage:\t%s [GNU long option] [option] ...\n\t%s [GNU long option] [option] script-file ...\n"),
 	     shell_name, shell_name);
-  fputs (_("GNU long options:\n"), fp);
+  std::fputs (_("GNU long options:\n"), fp);
   for (i = 0; long_args[i].name; i++)
-    fprintf (fp, "\t--%s\n", long_args[i].name);
+    std::fprintf (fp, "\t--%s\n", long_args[i].name);
 
-  fputs (_("Shell options:\n"), fp);
-  fputs (_("\t-ilrsD or -c command or -O shopt_option\t\t(invocation only)\n"), fp);
+  std::fputs (_("Shell options:\n"), fp);
+  std::fputs (_("\t-ilrsD or -c command or -O shopt_option\t\t(invocation only)\n"), fp);
 
   for (i = 0, set_opts = 0; shell_builtins[i].name; i++)
     if (STREQ (shell_builtins[i].name, "set"))
@@ -2058,26 +1919,26 @@ show_shell_usage (FILE *fp, int extra)
 
   if (set_opts)
     {
-      s = strchr (set_opts, '[');
+      s = std::strchr (set_opts, '[');
       if (s == 0)
 	s = set_opts;
       while (*++s == '-')
 	;
-      t = strchr (s, ']');
+      t = std::strchr (s, ']');
       if (t)
 	*t = '\0';
-      fprintf (fp, _("\t-%s or -o option\n"), s);
-      free (set_opts);
+      std::fprintf (fp, _("\t-%s or -o option\n"), s);
+      std::free (set_opts);
     }
 
   if (extra)
     {
-      fprintf (fp, _("Type `%s -c \"help set\"' for more information about shell options.\n"), shell_name);
-      fprintf (fp, _("Type `%s -c help' for more information about shell builtin commands.\n"), shell_name);
-      fprintf (fp, _("Use the `bashbug' command to report bugs.\n"));
-      fprintf (fp, "\n");
-      fprintf (fp, _("bash home page: <http://www.gnu.org/software/bash>\n"));
-      fprintf (fp, _("General help using GNU software: <http://www.gnu.org/gethelp/>\n"));
+      std::fprintf (fp, _("Type `%s -c \"help set\"' for more information about shell options.\n"), shell_name);
+      std::fprintf (fp, _("Type `%s -c help' for more information about shell builtin commands.\n"), shell_name);
+      std::fprintf (fp, _("Use the `bashbug' command to report bugs.\n"));
+      std::fprintf (fp, "\n");
+      std::fprintf (fp, _("bash home page: <http://www.gnu.org/software/bash>\n"));
+      std::fprintf (fp, _("General help using GNU software: <http://www.gnu.org/gethelp/>\n"));
     }
 }
 
@@ -2101,8 +1962,10 @@ run_shopt_alist ()
 
   for (i = 0; i < shopt_ind; i++)
     if (shopt_setopt (shopt_alist[i].word, (shopt_alist[i].token == '-')) != EXECUTION_SUCCESS)
-      exit (EX_BADUSAGE);
-  free (shopt_alist);
+      std::exit (EX_BADUSAGE);
+  std::free (shopt_alist);
   shopt_alist = 0;
   shopt_ind = shopt_len = 0;
 }
+
+}  // namespace bash

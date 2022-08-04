@@ -21,6 +21,13 @@
 #if !defined (_CONFTYPES_H_)
 #define _CONFTYPES_H_
 
+namespace bash
+{
+
+/* Shared between version.c and bashversion.c */
+extern const char * const dist_version;
+extern const int patch_level;
+
 /* Placeholder for future modifications if cross-compiling or building a
    `fat' binary, e.g. on Apple Rhapsody.  These values are used in multiple
    files, so they appear here. */
@@ -54,5 +61,7 @@
 #ifndef MACHTYPE
 #  define MACHTYPE "unknown"
 #endif
+
+}  // namespace bash
 
 #endif /* _CONFTYPES_H_ */

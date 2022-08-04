@@ -57,9 +57,12 @@ $END
 
 #include "common.h"
 
+namespace bash
+{
+
 /* Print the totals for system and user time used. */
 int
-times_builtin (WORD_LIST *list)
+Shell::times_builtin (WORD_LIST *list)
 {
 #if defined (HAVE_GETRUSAGE) && defined (HAVE_TIMEVAL) && defined (RUSAGE_SELF)
   struct rusage self, kids;
@@ -67,7 +70,7 @@ times_builtin (WORD_LIST *list)
   USE_VAR(list);
 
   if (no_options (list))
-    return (EX_USAGE);
+    return EX_USAGE;
 
   getrusage (RUSAGE_SELF, &self);
   getrusage (RUSAGE_CHILDREN, &kids);	/* terminated child processes */
@@ -90,7 +93,7 @@ times_builtin (WORD_LIST *list)
   USE_VAR(list);
 
   if (no_options (list))
-    return (EX_USAGE);
+    return EX_USAGE;
 
   times (&t);
 
@@ -108,11 +111,13 @@ times_builtin (WORD_LIST *list)
   USE_VAR(list);
 
   if (no_options (list))
-    return (EX_USAGE);
+    return EX_USAGE;
   printf ("0.00 0.00\n0.00 0.00\n");
 
 #  endif /* HAVE_TIMES */
 #endif /* !HAVE_TIMES */
 
-  return (sh_chkwrite (EXECUTION_SUCCESS));
+  return sh_chkwrite (EXECUTION_SUCCESS);
 }
+
+}  // namespace bash

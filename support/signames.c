@@ -20,16 +20,12 @@
 
 #include <config.h>
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <sys/types.h>
-#include <signal.h>
+#include <csignal>
 
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif /* HAVE_STDLIB_H */
+#include <cstdlib>
 
 #if !defined (NSIG)
 #  define NSIG 64
@@ -44,9 +40,13 @@
  */
 #define LASTSIG NSIG+2
 
+/* exported to mksignames.c */
+extern void initialize_signames ();
+extern const char *signal_names[];
+
 const char *signal_names[2 * (LASTSIG)];
 
-#define signal_names_size (sizeof(signal_names)/sizeof(signal_names[0]))
+#define signal_names_size (sizeof(signal_names) / sizeof(signal_names[0]))
 
 /* AIX 4.3 defines SIGRTMIN and SIGRTMAX as 888 and 999 respectively.
    I don't want to allocate so much unused space for the intervening signal
@@ -73,8 +73,8 @@ initialize_signames ()
   int rtmin, rtmax, rtcnt;
 #endif
 
-  for (int i = 1; i < signal_names_size; i++)
-    signal_names[i] = (char *)NULL;
+  for (size_t i = 1; i < signal_names_size; i++)
+    signal_names[i] = nullptr;
 
   /* `signal' 0 is what we do on exit. */
   signal_names[0] = "EXIT";
@@ -108,31 +108,31 @@ initialize_signames ()
     {
       rtcnt = (rtmax - rtmin - 1) / 2;
       /* croak if there are too many RT signals */
-      if (rtcnt >= RTLIM/2)
+      if (rtcnt >= RTLIM / 2)
 	{
-	  rtcnt = RTLIM/2-1;
+	  rtcnt = RTLIM / 2 - 1;
 #ifdef BUILDTOOL
-	  fprintf(stderr, "%s: error: more than %d real time signals, fix `%s'\n",
-		  progname, RTLIM, progname);
+	  std::fprintf(stderr, "%s: error: more than %d real time signals, fix `%s'\n",
+			progname, RTLIM, progname);
 #endif
 	}
 
       for (int i = 1; i <= rtcnt; i++)
 	{
-	  signal_names[rtmin+i] = (char *)malloc(RTLEN);
-	  if (signal_names[rtmin+i])
-	    sprintf ((char *)signal_names[rtmin+i], "SIGRTMIN+%d", i);
-	  signal_names[rtmax-i] = (char *)malloc(RTLEN);
-	  if (signal_names[rtmax-i])
-	    sprintf ((char *)signal_names[rtmax-i], "SIGRTMAX-%d", i);
+	  signal_names[rtmin + i] = new char[RTLEN];
+	  if (signal_names[rtmin + i])
+	    std::sprintf (const_cast<char *> (signal_names[rtmin + i]), "SIGRTMIN+%d", i);
+	  signal_names[rtmax - i] = new char[RTLEN];
+	  if (signal_names[rtmax - i])
+	    std::sprintf (const_cast<char *> (signal_names[rtmax - i]), "SIGRTMAX-%d", i);
 	}
 
-      if (rtcnt < RTLIM/2-1 && rtcnt != (rtmax-rtmin)/2)
+      if (rtcnt < RTLIM / 2 - 1 && rtcnt != (rtmax - rtmin) / 2)
 	{
 	  /* Need an extra RTMIN signal */
-	  signal_names[rtmin+rtcnt+1] = (char *)malloc(RTLEN);
-	  if (signal_names[rtmin+rtcnt+1])
-	    sprintf ((char *)signal_names[rtmin+rtcnt+1], "SIGRTMIN+%d", rtcnt+1);
+	  signal_names[rtmin + rtcnt + 1] = new char[RTLEN];
+	  if (signal_names[rtmin + rtcnt + 1])
+	    std::sprintf (const_cast<char *> (signal_names[rtmin + rtcnt + 1]), "SIGRTMIN+%d", rtcnt + 1);
 	}
     }
 #endif /* SIGRTMIN && SIGRTMAX */
@@ -432,11 +432,11 @@ initialize_signames ()
 #endif
 
   for (int i = 0; i < NSIG; i++)
-    if (signal_names[i] == (char *)NULL)
+    if (signal_names[i] == nullptr)
       {
-	signal_names[i] = (char *)malloc (18);
+	signal_names[i] = new char[18];
 	if (signal_names[i])
-	  sprintf ((char *)signal_names[i], "SIGJUNK(%d)", i);
+	  std::sprintf (const_cast<char *> (signal_names[i]), "SIGJUNK(%d)", i);
       }
 
   signal_names[NSIG] = "DEBUG";

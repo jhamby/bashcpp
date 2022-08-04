@@ -18,7 +18,7 @@
 #include <stdio.h>
 
 /* Specification.  */
-#include <string.h>
+#include <cstring>
 
 /* Find the first occurrence of C in S or the final NUL byte.  */
 extern "C++" const char *
@@ -29,5 +29,5 @@ strchrnul (const char *s, int c_in)
 
   for (c = c_in, s1 = (char *)s; s1 && *s1 && *s1 != c; s1++)
     ;
-  return (s1);
+  return s1;
 }

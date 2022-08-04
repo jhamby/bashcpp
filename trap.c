@@ -26,14 +26,12 @@
 #endif
 
 #include "bashtypes.h"
-#include "bashansi.h"
 
-#include <stdio.h>
-#include <errno.h>
+#include <cstdio>
+#include <cerrno>
+#include <csignal>
 
 #include "bashintl.h"
-
-#include <signal.h>
 
 #include "trap.h"
 
@@ -50,12 +48,10 @@
 
 #if defined (READLINE)
 #  include <readline/readline.h>
-#  include "bashline.h"
 #endif
 
-#ifndef errno
-extern int errno;
-#endif
+namespace bash
+{
 
 /* Flags which describe the current handling state of a signal. */
 #define SIG_INHERITED   0x0	/* Value inherited from parent. */
@@ -87,15 +83,15 @@ static void reset_or_restore_signal_handlers (sh_resetsig_func_t *);
 static void trap_if_untrapped (int, char *);
 
 /* Variables used here but defined in other files. */
-extern procenv_t alrmbuf;
+// extern procenv_t alrmbuf;
 
-extern volatile bool from_return_trap;
+extern bool from_return_trap;
 extern bool waiting_for_child;
 
-extern WORD_LIST *subst_assign_varlist;
+extern WordList *subst_assign_varlist;
 
 /* The list of things to do originally, before we started trapping. */
-SigHandler *original_signals[NSIG];
+sighandler_t original_signals[NSIG];
 
 /* For each signal, a slot for a string, which is a command to be
    executed when that signal is received.  The slot can also contain
@@ -126,7 +122,7 @@ bool suppress_debug_trap_verbose = false;
 
 #define GETORIGSIG(sig) \
   do { \
-    original_signals[sig] = (SigHandler *)set_signal_handler (sig, SIG_DFL); \
+    original_signals[sig] = set_signal_handler (sig, SIG_DFL); \
     set_signal_handler (sig, original_signals[sig]); \
     if (original_signals[sig] == SIG_IGN) \
       sigmodes[sig] |= SIG_HARD_IGNORE; \
@@ -170,12 +166,6 @@ initialize_traps ()
 
   GETORIGSIG (SIGINT);
   sigmodes[SIGINT] |= SIG_SPECIAL;
-
-#if defined (__BEOS__)
-  /* BeOS sets SIGINT to SIG_IGN! */
-  original_signals[SIGINT] = SIG_DFL;
-  sigmodes[SIGINT] &= ~SIG_HARD_IGNORE;
-#endif
 
   GETORIGSIG (SIGQUIT);
   sigmodes[SIGQUIT] |= SIG_SPECIAL;
@@ -231,20 +221,22 @@ decode_signal (const char *string, int flags)
   intmax_t sig;
 
   if (legal_number (string, &sig))
-    return ((sig >= 0 && sig < NSIG) ? (int)sig : NO_SIG);
+    return (sig >= 0 && sig < NSIG) ? (int)sig : NO_SIG;
 
 #if defined (SIGRTMIN) && defined (SIGRTMAX)
-  if (STREQN (string, "SIGRTMIN+", 9) || ((flags & DSIG_NOCASE) && strncasecmp (string, "SIGRTMIN+", 9) == 0))
+  if (STREQN (string, "SIGRTMIN+", 9) || ((flags & DSIG_NOCASE) &&
+		::strncasecmp (string, "SIGRTMIN+", 9) == 0))
     {
       if (legal_number (string+9, &sig) && sig >= 0 && sig <= SIGRTMAX - SIGRTMIN)
-	return (SIGRTMIN + sig);
+	return SIGRTMIN + sig;
       else
 	return NO_SIG;
     }
-  else if (STREQN (string, "RTMIN+", 6) || ((flags & DSIG_NOCASE) && strncasecmp (string, "RTMIN+", 6) == 0))
+  else if (STREQN (string, "RTMIN+", 6) || ((flags & DSIG_NOCASE) &&
+		::strncasecmp (string, "RTMIN+", 6) == 0))
     {
-      if (legal_number (string+6, &sig) && sig >= 0 && sig <= SIGRTMAX - SIGRTMIN)
-	return (SIGRTMIN + sig);
+      if (legal_number (string + 6, &sig) && sig >= 0 && sig <= SIGRTMAX - SIGRTMIN)
+	return SIGRTMIN + sig;
       else
 	return NO_SIG;
     }
@@ -263,10 +255,10 @@ decode_signal (const char *string, int flags)
 	{
 	  name += 3;
 
-	  if ((flags & DSIG_NOCASE) && strcasecmp (string, name) == 0)
-	    return ((int)sig);
-	  else if ((flags & DSIG_NOCASE) == 0 && strcmp (string, name) == 0)
-	    return ((int)sig);
+	  if ((flags & DSIG_NOCASE) && ::strcasecmp (string, name) == 0)
+	    return (int)sig;
+	  else if ((flags & DSIG_NOCASE) == 0 && std::strcmp (string, name) == 0)
+	    return (int)sig;
 	  /* If we can't use the `SIG' prefix to match, punt on this
 	     name now. */
 	  else if ((flags & DSIG_SIGPREFIX) == 0)
@@ -276,13 +268,13 @@ decode_signal (const char *string, int flags)
       /* Check name with SIG prefix case sensitively or insensitively
 	 depending on whether flags includes DSIG_NOCASE */
       name = signal_names[sig];
-      if ((flags & DSIG_NOCASE) && strcasecmp (string, name) == 0)
-	return ((int)sig);
-      else if ((flags & DSIG_NOCASE) == 0 && strcmp (string, name) == 0)
-	return ((int)sig);
+      if ((flags & DSIG_NOCASE) && ::strcasecmp (string, name) == 0)
+	return (int)sig;
+      else if ((flags & DSIG_NOCASE) == 0 && std::strcmp (string, name) == 0)
+	return (int)sig;
     }
 
-  return (NO_SIG);
+  return NO_SIG;
 }
 
 /* Non-zero when we catch a trapped signal. */
@@ -294,11 +286,11 @@ run_pending_traps ()
   int sig;
   int old_exit_value, x;
   int old_running;
-  WORD_LIST *save_subst_varlist;
-  HASH_TABLE *save_tempenv;
+  WordList *save_subst_varlist;
+  HashTable *save_tempenv;
   sh_parser_state_t pstate;
 #if defined (ARRAY_VARS)
-  ARRAY *ps;
+  Array *ps;
 #endif
 
   if (catch_flag == 0)		/* simple optimization */
@@ -461,7 +453,7 @@ set_trap_state (int sig)
   trapped_signal_received = sig;
 }
 
-sighandler
+extern "C" void
 trap_handler (int sig)
 {
   int oerrno;
@@ -549,7 +541,7 @@ next_pending_trap (int start)
 int
 first_pending_trap ()
 {
-  return (next_pending_trap (1));
+  return next_pending_trap (1);
 }
 
 /* Return > 0 if any of the "real" signals (not fake signals like EXIT) are
@@ -591,15 +583,6 @@ check_signals_and_traps ()
 }
 
 #if defined (JOB_CONTROL) && defined (SIGCHLD)
-
-#ifdef INCLUDE_UNUSED
-/* Make COMMAND_STRING be executed when SIGCHLD is caught. */
-void
-set_sigchld_trap (char *command_string)
-{
-  set_signal (SIGCHLD, command_string);
-}
-#endif
 
 /* Make COMMAND_STRING be executed when SIGCHLD is caught iff SIGCHLD
    is not already trapped.  IMPOSSIBLE_TRAP_HANDLER is used as a sentinel
@@ -694,14 +677,6 @@ maybe_set_return_trap (void *arg)
   trap_if_untrapped (RETURN_TRAP, command);
 }
 
-#ifdef INCLUDE_UNUSED
-void
-set_sigint_trap (char *command)
-{
-  set_signal (SIGINT, command);
-}
-#endif
-
 /* Reset the SIGINT handler so that subshells that are doing `shellsy'
    things, like waiting for command substitution or executing commands
    in explicit subshells ( ( cmd ) ), can catch interrupts properly. */
@@ -709,20 +684,20 @@ SigHandler *
 set_sigint_handler ()
 {
   if (sigmodes[SIGINT] & SIG_HARD_IGNORE)
-    return ((SigHandler *)SIG_IGN);
+    return (SigHandler *)SIG_IGN;
 
   else if (sigmodes[SIGINT] & SIG_IGNORED)
-    return ((SigHandler *)set_signal_handler (SIGINT, SIG_IGN)); /* XXX */
+    return (SigHandler *)set_signal_handler (SIGINT, SIG_IGN); /* XXX */
 
   else if (sigmodes[SIGINT] & SIG_TRAPPED)
-    return ((SigHandler *)set_signal_handler (SIGINT, trap_handler));
+    return (SigHandler *)set_signal_handler (SIGINT, trap_handler);
 
   /* The signal is not trapped, so set the handler to the shell's special
      interrupt handler. */
   else if (interactive)	/* XXX - was interactive_shell */
-    return (set_signal_handler (SIGINT, sigint_sighandler));
+    return set_signal_handler (SIGINT, sigint_sighandler);
   else
-    return (set_signal_handler (SIGINT, termsig_sighandler));
+    return set_signal_handler (SIGINT, termsig_sighandler);
 }
 
 /* Return the correct handler for signal SIG according to the values in
@@ -731,11 +706,11 @@ SigHandler *
 trap_to_sighandler (int sig)
 {
   if (sigmodes[sig] & (SIG_IGNORED|SIG_HARD_IGNORE))
-    return (SIG_IGN);
+    return SIG_IGN;
   else if (sigmodes[sig] & SIG_TRAPPED)
-    return (trap_handler);
+    return trap_handler;
   else
-    return (SIG_DFL);
+    return SIG_DFL;
 }
 
 /* Set SIG to call STRING as a command. */
@@ -971,7 +946,7 @@ run_exit_trap ()
 #if defined (ARRAY_VARS)
   restore_pipestatus_array (ps);
 #endif
-  return (trap_saved_exit_value);
+  return trap_saved_exit_value;
 }
 
 void
@@ -1355,40 +1330,40 @@ maybe_call_trap_handler (int sig)
 	  trap_handler (sig);
 	  break;
 	}
-      return (1);
+      return 1;
     }
   else
-    return (0);
+    return 0;
 }
 
 int
 signal_is_trapped (int sig)
 {
-  return (sigmodes[sig] & SIG_TRAPPED);
+  return sigmodes[sig] & SIG_TRAPPED;
 }
 
 int
 signal_is_pending (int sig)
 {
-  return (pending_traps[sig]);
+  return pending_traps[sig];
 }
 
 int
 signal_is_special (int sig)
 {
-  return (sigmodes[sig] & SIG_SPECIAL);
+  return sigmodes[sig] & SIG_SPECIAL;
 }
 
 int
 signal_is_ignored (int sig)
 {
-  return (sigmodes[sig] & SIG_IGNORED);
+  return sigmodes[sig] & SIG_IGNORED;
 }
 
 int
 signal_is_hard_ignored (int sig)
 {
-  return (sigmodes[sig] & SIG_HARD_IGNORE);
+  return sigmodes[sig] & SIG_HARD_IGNORE;
 }
 
 void
@@ -1407,7 +1382,7 @@ set_signal_ignored (int sig)
 int
 signal_in_progress (int sig)
 {
-  return (sigmodes[sig] & SIG_INPROGRESS);
+  return sigmodes[sig] & SIG_INPROGRESS;
 }
 
 #if 0 /* TAG: bash-5.2 */
@@ -1420,12 +1395,14 @@ block_trapped_signals (sigset_t *maskp, sigset_t *omaskp)
   for (i = 1; i < NSIG; i++)
     if (sigmodes[i] & SIG_TRAPPED)
       sigaddset (maskp, i);
-  return (sigprocmask (SIG_BLOCK, maskp, omaskp));
+  return sigprocmask (SIG_BLOCK, maskp, omaskp);
 }
 
 int
 unblock_trapped_signals (sigset_t *maskp)
 {
-  return (sigprocmask (SIG_SETMASK, maskp, 0));
+  return sigprocmask (SIG_SETMASK, maskp, 0);
 }
 #endif
+
+}  // namespace bash

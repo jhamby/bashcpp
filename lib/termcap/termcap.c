@@ -35,15 +35,11 @@
 #endif
 
 #ifdef HAVE_STDLIB_H
-#  include <stdlib.h>
-#else
-extern char *getenv ();
-extern char *malloc ();
-extern char *realloc ();
+#  include <cstdlib>
 #endif
 
 #if defined (HAVE_STRING_H)
-#include <string.h>
+#include <cstring>
 #endif
 
 #if !defined (HAVE_BCOPY)
@@ -52,8 +48,8 @@ extern char *realloc ();
 
 #else /* not HAVE_CONFIG_H */
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 /* Do this after the include, in case string.h prototypes bcopy.  */
 #if !defined(bcopy)
@@ -112,7 +108,7 @@ static char *
 xmalloc (size)
      unsigned size;
 {
-  register char *tem = malloc (size);
+  char *tem = malloc (size);
 
   if (!tem)
     memory_out ();
@@ -124,14 +120,14 @@ xrealloc (ptr, size)
      char *ptr;
      unsigned size;
 {
-  register char *tem = realloc (ptr, size);
+  char *tem = realloc (ptr, size);
 
   if (!tem)
     memory_out ();
   return tem;
 }
 #endif /* not emacs */
-
+
 /* Looking up capabilities in the entry already found.  */
 
 /* The pointer to the data made by tgetent is left here
@@ -146,7 +142,7 @@ static char *tgetst1 ();
 
 static char *
 find_capability (bp, cap)
-     register char *bp, *cap;
+     char *bp, *cap;
 {
   for (; *bp; bp++)
     if (bp[0] == ':'
@@ -161,7 +157,7 @@ int
 tgetnum (cap)
      char *cap;
 {
-  register char *ptr = find_capability (term_entry, cap);
+  char *ptr = find_capability (term_entry, cap);
   if (!ptr || ptr[-1] != '#')
     return -1;
   return atoi (ptr);
@@ -172,7 +168,7 @@ int
 tgetflag (cap)
      char *cap;
 {
-  register char *ptr = find_capability (term_entry, cap);
+  char *ptr = find_capability (term_entry, cap);
   return ptr && ptr[-1] == ':';
 }
 
@@ -187,7 +183,7 @@ tgetstr (cap, area)
      char *cap;
      char **area;
 {
-  register char *ptr = find_capability (term_entry, cap);
+  char *ptr = find_capability (term_entry, cap);
   if (!ptr || (ptr[-1] != '=' && ptr[-1] != '~'))
     return NULL;
   return tgetst1 (ptr, area);
@@ -215,11 +211,11 @@ tgetst1 (ptr, area)
      char *ptr;
      char **area;
 {
-  register char *p, *r;
-  register int c;
-  register int size;
+  char *p, *r;
+  int c;
+  int size;
   char *ret;
-  register int c1;
+  int c1;
 
   if (!ptr)
     return NULL;
@@ -305,12 +301,12 @@ static int speeds[] =
 __private_extern__
 int
 tputs (str, nlines, outfun)
-     register char *str;
+     char *str;
      int nlines;
-     register int (*outfun) ();
+     int (*outfun) ();
 {
-  register int padcount = 0;
-  register int speed;
+  int padcount = 0;
+  int speed;
 
 #ifdef emacs
   extern baud_rate;
@@ -445,14 +441,14 @@ int
 tgetent (bp, name)
      char *bp, *name;
 {
-  register char *termcap_name;
-  register int fd;
+  char *termcap_name;
+  int fd;
   struct buffer buf;
-  register char *bp1;
+  char *bp1;
   char *bp2;
   char *term;
   int malloc_size = 0;
-  register int c;
+  int c;
   char *tcenv;			/* TERMCAP value, if it contains :tc=.  */
   char *indirect = NULL;	/* Terminal type in :tc= in TERMCAP value.  */
   int filep;
@@ -612,9 +608,9 @@ static int
 scan_file (str, fd, bufp)
      char *str;
      int fd;
-     register struct buffer *bufp;
+     struct buffer *bufp;
 {
-  register char *end;
+  char *end;
 
   bufp->ptr = bufp->beg;
   bufp->full = 0;
@@ -652,7 +648,7 @@ static int
 name_match (line, name)
      char *line, *name;
 {
-  register char *tem;
+  char *tem;
 
   if (!compare_contin (line, name))
     return 1;
@@ -666,9 +662,9 @@ name_match (line, name)
 
 static int
 compare_contin (str1, str2)
-     register char *str1, *str2;
+     char *str1, *str2;
 {
-  register int c1, c2;
+  int c1, c2;
   while (1)
     {
       c1 = *str1++;
@@ -708,13 +704,13 @@ compare_contin (str1, str2)
 static char *
 gobble_line (fd, bufp, append_end)
      int fd;
-     register struct buffer *bufp;
+     struct buffer *bufp;
      char *append_end;
 {
-  register char *end;
-  register int nread;
-  register char *buf = bufp->beg;
-  register char *tem;
+  char *end;
+  int nread;
+  char *buf = bufp->beg;
+  char *tem;
 
   if (!append_end)
     append_end = bufp->ptr;
@@ -791,7 +787,7 @@ tprint (cap)
      char *cap;
 {
   char *x = tgetstr (cap, 0);
-  register char *y;
+  char *y;
 
   printf ("%s: ", cap);
   if (x)

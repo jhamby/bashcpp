@@ -30,17 +30,10 @@
 #  include <unistd.h>
 #endif
 
-#if defined (HAVE_STRING_H)
-#  include <string.h>
-#else /* !HAVE_STRING_H */
-#  include <strings.h>
-#endif /* !HAVE_STRING_H */
+#include <cstring>
+#include <cstdlib>
 
-#if defined (HAVE_STDLIB_H)
-#  include <stdlib.h>
-#else
-#  include "ansi_stdlib.h"
-#endif /* HAVE_STDLIB_H */
+#include <string>
 
 #include <sys/types.h>
 #if defined (HAVE_PWD_H)
@@ -48,12 +41,6 @@
 #endif
 
 #include "tilde.h"
-
-#if defined (TEST) || defined (STATIC_MALLOC)
-static void *xmalloc (), *xrealloc ();
-#else
-#  include "xmalloc.h"
-#endif /* TEST || STATIC_MALLOC */
 
 #if !defined (HAVE_GETPW_DECLS)
 #  if defined (HAVE_GETPWUID)
@@ -63,10 +50,6 @@ extern struct passwd *getpwuid (uid_t);
 extern struct passwd *getpwnam (const char *);
 #  endif
 #endif /* !HAVE_GETPW_DECLS */
-
-#if !defined (savestring)
-#define savestring(x) strcpy ((char *)xmalloc (1 + strlen (x)), (x))
-#endif /* !savestring */
 
 /* If being compiled as part of bash, these will be satisfied from
    variables.o.  If being compiled as part of readline, they will
@@ -78,80 +61,92 @@ extern char *sh_get_env_value (const char *);
    whitespace preceding a tilde so that simple programs which do not
    perform any word separation get desired behaviour. */
 static const char *default_prefixes[] =
-  { " ~", "\t~", (const char *)NULL };
+  { " ~", "\t~", NULL };
 
 /* The default value of tilde_additional_suffixes.  This is set to
    whitespace or newline so that simple programs which do not
    perform any word separation get desired behaviour. */
 static const char *default_suffixes[] =
-  { " ", "\n", (const char *)NULL };
+  { " ", "\n", NULL };
 
 /* If non-null, this contains the address of a function that the application
    wants called before trying the standard tilde expansions.  The function
-   is called with the text sans tilde, and returns a malloc()'ed string
+   is called with the text sans tilde, and returns a new'd string
    which is the expansion, or a NULL pointer if the expansion fails. */
-tilde_hook_func_t *tilde_expansion_preexpansion_hook = (tilde_hook_func_t *)NULL;
+tilde_hook_func_t *tilde_expansion_preexpansion_hook = NULL;
 
 /* If non-null, this contains the address of a function to call if the
    standard meaning for expanding a tilde fails.  The function is called
-   with the text (sans tilde, as in "foo"), and returns a malloc()'ed string
+   with the text (sans tilde, as in "foo"), and returns a new'd string
    which is the expansion, or a NULL pointer if there is no expansion. */
-tilde_hook_func_t *tilde_expansion_failure_hook = (tilde_hook_func_t *)NULL;
+tilde_hook_func_t *tilde_expansion_failure_hook = NULL;
 
 /* When non-null, this is a NULL terminated array of strings which
    are duplicates for a tilde prefix.  Bash uses this to expand
    `=~' and `:~'. */
-char **tilde_additional_prefixes = (char **)default_prefixes;
+char **tilde_additional_prefixes = const_cast<char **> (default_prefixes);
 
 /* When non-null, this is a NULL terminated array of strings which match
    the end of a username, instead of just "/".  Bash sets this to
    `:' and `=~'. */
-char **tilde_additional_suffixes = (char **)default_suffixes;
+char **tilde_additional_suffixes = const_cast<char **> (default_suffixes);
 
-static int tilde_find_prefix (const char *, int *);
-static int tilde_find_suffix (const char *);
-static char *isolate_tilde_prefix (const char *, int *);
-static char *glue_prefix_and_suffix (char *, const char *, int);
+static size_t tilde_find_prefix (const char *, size_t *);
+static size_t tilde_find_suffix (const char *);
+static char *isolate_tilde_prefix (const char *, size_t *);
+static char *glue_prefix_and_suffix (char *, const char *, size_t);
+
+// Create a new copy of null-terminated string s. Free with delete[].
+// Copied from general.h.
+static inline char *savestring(const char *s) {
+  return std::strcpy(new char[1 + std::strlen(s)], s);
+}
+
+// Create a new copy of C++ string s. Free with delete[].
+// Copied from general.h.
+static inline char *savestring(const std::string &s) {
+  return std::strcpy(new char[1 + s.size()], s.c_str());
+}
 
 /* Find the start of a tilde expansion in STRING, and return the index of
    the tilde which starts the expansion.  Place the length of the text
    which identified this tilde starter in LEN, excluding the tilde itself. */
-static int
-tilde_find_prefix (const char *string, int *len)
+static size_t
+tilde_find_prefix (const char *string, size_t *len)
 {
   char **prefixes = tilde_additional_prefixes;
 
-  size_t string_len = strlen (string);
+  size_t string_len = std::strlen (string);
   *len = 0;
 
   if (*string == '\0' || *string == '~')
-    return (0);
+    return 0;
 
   if (prefixes)
     {
-      for (int i = 0; i < string_len; i++)
+      for (size_t i = 0; i < string_len; i++)
 	{
-	  for (int j = 0; prefixes[j]; j++)
+	  for (size_t j = 0; prefixes[j]; j++)
 	    {
-	      if (strncmp (string + i, prefixes[j], strlen (prefixes[j])) == 0)
+	      if (std::strncmp (string + i, prefixes[j], std::strlen (prefixes[j])) == 0)
 		{
-		  *len = strlen (prefixes[j]) - 1;
+		  *len = std::strlen (prefixes[j]) - 1;
 		  return (i + *len);
 		}
 	    }
 	}
     }
-  return (string_len);
+  return string_len;
 }
 
 /* Find the end of a tilde expansion in STRING, and return the index of
    the character which ends the tilde definition.  */
-static int
+static size_t
 tilde_find_suffix (const char *string)
 {
   char **suffixes = tilde_additional_suffixes;
-  size_t string_len = strlen (string);
-  int i;
+  size_t string_len = std::strlen (string);
+  size_t i;
 
   for (i = 0; i < string_len; i++)
     {
@@ -162,9 +157,9 @@ tilde_find_suffix (const char *string)
 #endif
 	break;
 
-      for (int j = 0; suffixes && suffixes[j]; j++)
+      for (size_t j = 0; suffixes && suffixes[j]; j++)
 	{
-	  if (strncmp (string + i, suffixes[j], strlen (suffixes[j])) == 0)
+	  if (std::strncmp (string + i, suffixes[j], std::strlen (suffixes[j])) == 0)
 	    return (i);
 	}
     }
@@ -173,88 +168,71 @@ tilde_find_suffix (const char *string)
 
 /* Return a new string which is the result of tilde expanding STRING. */
 char *
-tilde_expand (const char *string)
+tilde_expand (const char *str)
 {
-  char *result;
-  int result_size, result_index;
-
-  result_index = result_size = 0;
-  if (strchr (string, '~'))
-    result = (char *)xmalloc (result_size = (strlen (string) + 16));
-  else
-    result = (char *)xmalloc (result_size = (strlen (string) + 1));
+  std::string result;
 
   /* Scan through STRING expanding tildes as we come to them. */
   while (1)
     {
       char *tilde_word, *expansion;
-      int len;
+      size_t len;
 
       /* Make START point to the tilde which starts the expansion. */
-      int start = tilde_find_prefix (string, &len);
+      size_t start = tilde_find_prefix (str, &len);
 
       /* Copy the skipped text into the result. */
-      if ((result_index + start + 1) > result_size)
-	result = (char *)xrealloc (result, 1 + (result_size += (start + 20)));
-
-      strncpy (result + result_index, string, start);
-      result_index += start;
+      result.append(str, start);
 
       /* Advance STRING to the starting tilde. */
-      string += start;
+      str += start;
 
       /* Make END be the index of one after the last character of the
 	 username. */
-      int end = tilde_find_suffix (string);
+      size_t end = tilde_find_suffix (str);
 
       /* If both START and END are zero, we are all done. */
       if (!start && !end)
 	break;
 
       /* Expand the entire tilde word, and copy it into RESULT. */
-      tilde_word = (char *)xmalloc (1 + end);
-      strncpy (tilde_word, string, end);
+      tilde_word = new char[1 + end];
+      std::strncpy (tilde_word, str, end);
       tilde_word[end] = '\0';
-      string += end;
+      str += end;
 
       expansion = tilde_expand_word (tilde_word);
 
-      if (expansion == 0)
+      if (expansion == NULL)
 	expansion = tilde_word;
       else
-	xfree (tilde_word);
+	delete[] tilde_word;
 
-      len = strlen (expansion);
+      len = std::strlen (expansion);
 #ifdef __CYGWIN__
       /* Fix for Cygwin to prevent ~user/xxx from expanding to //xxx when
 	 $HOME for `user' is /.  On cygwin, // denotes a network drive. */
       if (len > 1 || *expansion != '/' || *string != '/')
 #endif
 	{
-	  if ((result_index + len + 1) > result_size)
-	    result = (char *)xrealloc (result, 1 + (result_size += (len + 20)));
-
-	  strcpy (result + result_index, expansion);
-	  result_index += len;
+	  result += expansion;
 	}
-      xfree (expansion);
+      delete[] expansion;
     }
 
-  result[result_index] = '\0';
-
-  return (result);
+  return savestring(result);
 }
 
 /* Take FNAME and return the tilde prefix we want expanded.  If LENP is
    non-null, the index of the end of the prefix into FNAME is returned in
    the location it points to. */
 static char *
-isolate_tilde_prefix (const char *fname, int *lenp)
+isolate_tilde_prefix (const char *fname, size_t *lenp)
 {
   char *ret;
-  int i;
+  size_t i;
 
-  ret = (char *)xmalloc (strlen (fname));
+  ret = new char[std::strlen (fname)];
 #if defined (__MSDOS__)
   for (i = 1; fname[i] && fname[i] != '/' && fname[i] != '\\'; i++)
 #else
@@ -264,54 +242,21 @@ isolate_tilde_prefix (const char *fname, int *lenp)
   ret[i - 1] = '\0';
   if (lenp)
     *lenp = i;
+
   return ret;
 }
-
-#if 0
-/* Public function to scan a string (FNAME) beginning with a tilde and find
-   the portion of the string that should be passed to the tilde expansion
-   function.  Right now, it just calls tilde_find_suffix and allocates new
-   memory, but it can be expanded to do different things later. */
-char *
-tilde_find_word (const char *fname, int flags, int *lenp)
-{
-  int x;
-  char *r;
-
-  x = tilde_find_suffix (fname);
-  if (x == 0)
-    {
-      r = savestring (fname);
-      if (lenp)
-	*lenp = 0;
-    }
-  else
-    {
-      r = (char *)xmalloc (1 + x);
-      strncpy (r, fname, x);
-      r[x] = '\0';
-      if (lenp)
-	*lenp = x;
-    }
-
-  return r;
-}
-#endif
 
 /* Return a string that is PREFIX concatenated with SUFFIX starting at
    SUFFIND. */
 static char *
-glue_prefix_and_suffix (char *prefix, const char *suffix, int suffind)
+glue_prefix_and_suffix (char *prefix, const char *suffix, size_t suffind)
 {
-  char *ret;
-  int plen, slen;
-
-  plen = (prefix && *prefix) ? strlen (prefix) : 0;
-  slen = strlen (suffix + suffind);
-  ret = (char *)xmalloc (plen + slen + 1);
+  size_t plen = (prefix && *prefix) ? std::strlen (prefix) : 0;
+  size_t slen = std::strlen (suffix + suffind);
+  char *ret = new char[plen + slen + 1];
   if (plen)
-    strcpy (ret, prefix);
-  strcpy (ret + plen, suffix + suffind);
+    std::strcpy (ret, prefix);
+  std::strcpy (ret + plen, suffix + suffind);
   return ret;
 }
 
@@ -322,11 +267,10 @@ char *
 tilde_expand_word (const char *filename)
 {
   char *dirname, *expansion, *username;
-  int user_len;
   struct passwd *user_entry;
 
-  if (filename == 0)
-    return ((char *)NULL);
+  if (filename == NULL)
+    return NULL;
 
   if (*filename != '~')
     return (savestring (filename));
@@ -339,18 +283,19 @@ tilde_expand_word (const char *filename)
       /* Prefix $HOME to the rest of the string. */
       expansion = sh_get_env_value ("HOME");
 #if defined (_WIN32)
-      if (expansion == 0)
+      if (expansion == NULL)
 	expansion = sh_get_env_value ("APPDATA");
 #endif
 
       /* If there is no HOME variable, look up the directory in
 	 the password database. */
-      if (expansion == 0)
+      if (expansion == NULL)
 	expansion = sh_get_home_dir ();
 
       return (glue_prefix_and_suffix (expansion, filename, 1));
     }
 
+  size_t user_len;
   username = isolate_tilde_prefix (filename, &user_len);
 
   if (tilde_expansion_preexpansion_hook)
@@ -359,21 +304,23 @@ tilde_expand_word (const char *filename)
       if (expansion)
 	{
 	  dirname = glue_prefix_and_suffix (expansion, filename, user_len);
-	  xfree (username);
-	  xfree (expansion);
+	  delete[] username;
+	  delete[] expansion;
 	  return (dirname);
 	}
     }
 
   /* No preexpansion hook, or the preexpansion hook failed.  Look in the
      password database. */
-  dirname = (char *)NULL;
+  dirname = NULL;
+
 #if defined (HAVE_GETPWNAM)
-  user_entry = getpwnam (username);
+  user_entry = ::getpwnam (username);
 #else
   user_entry = 0;
 #endif
-  if (user_entry == 0)
+
+  if (user_entry == NULL)
     {
       /* If the calling program has a special syntax for expanding tildes,
 	 and we couldn't find a standard expansion, then let them try. */
@@ -383,12 +330,12 @@ tilde_expand_word (const char *filename)
 	  if (expansion)
 	    {
 	      dirname = glue_prefix_and_suffix (expansion, filename, user_len);
-	      xfree (expansion);
+	      delete[] expansion;
 	    }
 	}
       /* If we don't have a failure hook, or if the failure hook did not
 	 expand the tilde, return a copy of what we were passed. */
-      if (dirname == 0)
+      if (dirname == NULL)
 	dirname = savestring (filename);
     }
 #if defined (HAVE_GETPWENT)
@@ -396,9 +343,9 @@ tilde_expand_word (const char *filename)
     dirname = glue_prefix_and_suffix (user_entry->pw_dir, filename, user_len);
 #endif
 
-  xfree (username);
+  delete[] username;
 #if defined (HAVE_GETPWENT)
-  endpwent ();
+  ::endpwent ();
 #endif
   return (dirname);
 }
@@ -414,60 +361,25 @@ main (int argc, char **argv)
 
   while (!done)
     {
-      printf ("~expand: ");
-      fflush (stdout);
+      std::printf ("~expand: ");
+      std::fflush (stdout);
 
-      if (!gets (line))
-	strcpy (line, "done");
+      if (!std::gets (line))
+	std::strcpy (line, "done");
 
-      if ((strcmp (line, "done") == 0) ||
-	  (strcmp (line, "quit") == 0) ||
-	  (strcmp (line, "exit") == 0))
+      if ((std::strcmp (line, "done") == 0) ||
+	  (std::strcmp (line, "quit") == 0) ||
+	  (std::strcmp (line, "exit") == 0))
 	{
 	  done = 1;
 	  break;
 	}
 
       result = tilde_expand (line);
-      printf ("  --> %s\n", result);
-      free (result);
+      std::printf ("  --> %s\n", result);
+      delete[] result;
     }
-  exit (0);
-}
-
-static void memory_error_and_abort (void);
-
-static void *
-xmalloc (size_t bytes)
-{
-  void *temp = (char *)malloc (bytes);
-
-  if (!temp)
-    memory_error_and_abort ();
-  return (temp);
-}
-
-static void *
-xrealloc (void *pointer, int bytes)
-{
-  void *temp;
-
-  if (!pointer)
-    temp = malloc (bytes);
-  else
-    temp = realloc (pointer, bytes);
-
-  if (!temp)
-    memory_error_and_abort ();
-
-  return (temp);
-}
-
-static void
-memory_error_and_abort (void)
-{
-  fprintf (stderr, "readline: out of virtual memory\n");
-  abort ();
+  std::exit (0);
 }
 
 /*
