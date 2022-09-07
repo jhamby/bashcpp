@@ -924,6 +924,9 @@ public:
 
   // end of builtin definitions
 
+  /* callback from lib/sh/getenv.cc */
+  char *getenv (const char *);
+
 protected:
 
   int internal_getopt (WORD_LIST *, const char *);
@@ -1230,16 +1233,16 @@ protected:
   ps_index_t bgp_getindex ();
   void bgp_resize ();	/* XXX */
 
-  /* from lib/sh/casemod.c */
+  /* from lib/sh/casemod.cc */
   char *sh_modcase (const char *, const char *, sh_modcase_flags);
 
-  /* from lib/sh/eaccess.c */
+  /* from lib/sh/eaccess.cc */
   int sh_stataccess (const char *, int);
 
-  /* from lib/sh/makepath.c */
+  /* from lib/sh/makepath.cc */
   char *sh_makepath (const char *, const char *, int);
 
-  /* from lib/sh/mbschr.c */
+  /* from lib/sh/mbschr.cc */
   const char *mbschr (const char *, int);
 
   /* from lib/sh/random.c */

@@ -46,12 +46,18 @@ static char *last_tempenv_value = (char *)NULL;
 char *
 getenv (const char *name)
 {
+  return the_shell->getenv (name);
+}
+
+char *
+Shell::getenv (const char *name)
+{
   SHELL_VAR *var;
 
   if (name == 0 || *name == '\0')
     return (char *)NULL;
 
-  var = find_tempenv_variable ((char *)name);
+  var = find_tempenv_variable (name);
   if (var)
     {
       FREE (last_tempenv_value);

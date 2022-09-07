@@ -55,6 +55,9 @@
 /* Define to 1 if using 'alloca.c'. */
 #undef C_ALLOCA
 
+/* Define for extra debugging checks (enabled for non-release builds). */
+#undef DEBUG
+
 /* Define if you want to compile in some features used only by the bash
    debugger. */
 #undef DEBUGGER

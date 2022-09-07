@@ -21,8 +21,8 @@
 
 #include "readline.hh"
 
-#include "emacs_keymap.cc"
+#include "emacs_keymap.hh"
 
 #if defined (VI_MODE)
-#include "vi_keymap.cc"
+#include "vi_keymap.hh"
 #endif

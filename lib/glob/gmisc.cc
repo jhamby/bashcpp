@@ -18,21 +18,21 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "shmbutil.h"
-#include "chartypes.h"
+#include "shmbutil.hh"
+#include "chartypes.hh"
 
 #ifndef FNM_CASEFOLD
-#  include "strmatch.h"
+#  include "strmatch.hh"
 #endif
-#include "glob.h"
+#include "glob.hh"
 
 namespace bash
 {
@@ -40,7 +40,7 @@ namespace bash
 /* Make sure these names continue to agree with what's in smatch.c */
 const unsigned char *glob_patscan (const unsigned char *, const unsigned char *, int);
 
-/* Compile `gm_loop.c' for single-byte characters. */
+/* Compile `gm_loop.hh' for single-byte characters. */
 #define CHAR	char
 #define INT	int
 #define L(CS)	CS
@@ -54,9 +54,9 @@ const unsigned char *glob_patscan (const unsigned char *, const unsigned char *,
 #define LPAREN '('
 #define RPAREN ')'
 #endif
-#include "gm_loop.c"
+#include "gm_loop.hh"
 
-/* Compile `gm_loop.c' again for multibyte characters. */
+/* Compile `gm_loop.hh' again for multibyte characters. */
 #if HANDLE_MULTIBYTE
 
 #define CHAR	wchar_t
@@ -69,7 +69,7 @@ const unsigned char *glob_patscan (const unsigned char *, const unsigned char *,
 #define FOLD(c) ((flags & FNM_CASEFOLD) && std::iswupper (c) ? std::towlower (c) : (c))
 #define LPAREN L'('
 #define RPAREN L')'
-#include "gm_loop.c"
+#include "gm_loop.hh"
 
 #endif /* HANDLE_MULTIBYTE */
 

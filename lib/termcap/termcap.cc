@@ -19,9 +19,7 @@
 */
 
 /* Emacs config.h may rename various library functions such as malloc.  */
-#ifdef HAVE_CONFIG_H
-
-#include <config.h>
+#include "config.hh"
 
 /* Get the O_* definitions for open et al.  */
 #if !defined (_MINIX) && defined (HAVE_SYS_FILE_H)
@@ -46,33 +44,6 @@
 #  define bcopy(s, d, n)	memcpy ((d), (s), (n))
 #endif
 
-#else /* not HAVE_CONFIG_H */
-
-#include <cstdlib>
-#include <cstring>
-
-/* Do this after the include, in case string.h prototypes bcopy.  */
-#if !defined(bcopy)
-#define bcopy(s, d, n) memcpy ((d), (s), (n))
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef _POSIX_VERSION
-#include <fcntl.h>
-#endif
-
-#endif /* not HAVE_CONFIG_H */
-
-#ifndef NULL
-#define NULL (char *) 0
-#endif
-
-#ifndef O_RDONLY
-#define O_RDONLY 0
-#endif
-
 /* BUFSIZE is the initial size allocated for the buffer
    for reading the termcap file.
    It is not a limit.
@@ -90,7 +61,7 @@ int bufsize = 128;
 #endif
 #endif
 
-#include "ltcap.h"
+#include "ltcap.hh"
 
 #ifndef TERMCAP_FILE
 #define TERMCAP_FILE "/etc/termcap"

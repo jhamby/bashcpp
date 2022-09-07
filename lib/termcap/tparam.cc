@@ -19,8 +19,7 @@
 */
 
 /* Emacs config.h may rename various library functions such as malloc.  */
-#ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.hh"
 
 #ifdef HAVE_STDLIB_H
 #  include <cstdlib>
@@ -34,18 +33,7 @@
 #  define bcopy(s, d, n)	memcpy ((d), (s), (n))
 #endif
 
-#else /* not HAVE_CONFIG_H */
-
-#if !defined(bcopy)
-#define bcopy(s, d, n) memcpy ((d), (s), (n))
-#endif
-
-#include <stdlib.h>
-#include <string.h>
-
-#endif /* not HAVE_CONFIG_H */
-
-#include "ltcap.h"
+#include "ltcap.hh"
 
 #ifndef NULL
 #define NULL (char *) 0

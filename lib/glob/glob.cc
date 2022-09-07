@@ -22,33 +22,30 @@
    Unix programs use to perform this function.  I wrote this from scratch
    based on specifications for the pattern matching.  --RMS.  */
 
-#include <config.h>
-#include "bashtypes.h"
+#include "config.hh"
+
+#include "bashtypes.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "posixdir.h"
-#include "posixstat.h"
-#include "shmbutil.h"
+#include "posixdir.hh"
+#include "posixstat.hh"
+#include "shmbutil.hh"
 
-#include "filecntl.h"
+#include "filecntl.hh"
 #if !defined (F_OK)
 #  define F_OK 0
 #endif
 
 #include <csignal>
 
-#include "shell.h"
-#include "general.h"
+#include "shell.hh"
+#include "general.hh"
 
-#include "glob.h"
-#include "strmatch.h"
-
-#include <vector>
-#include <string>
-using std::vector;
+#include "glob.hh"
+#include "strmatch.hh"
 
 namespace bash
 {
@@ -105,20 +102,20 @@ static char **glob_dir_to_array (const char *, char **, glob_flags);
 extern const unsigned char *glob_patscan (unsigned const char *, unsigned const char *, int);
 extern const wchar_t *glob_patscan_wc (const wchar_t *, const wchar_t *, wint_t);
 
-/* And this from gmisc.c/gm_loop.c */
+/* And this from gmisc.cc/gm_loop.hh */
 extern int wextglob_pattern_p (const wchar_t *);
 
 extern char *glob_dirscan (const char *, char);
 
-/* Compile `glob_loop.c' for single-byte characters. */
+/* Compile `glob_loop.hh' for single-byte characters. */
 #define GCHAR	unsigned char
 #define CHAR	char
 #define INT	int
 #define L(CS)	CS
 #define INTERNAL_GLOB_PATTERN_P internal_glob_pattern_p
-#include "glob_loop.c"
+#include "glob_loop.hh"
 
-/* Compile `glob_loop.c' again for multibyte characters. */
+/* Compile `glob_loop.hh' again for multibyte characters. */
 #if HANDLE_MULTIBYTE
 
 #define GCHAR	wchar_t
@@ -126,7 +123,7 @@ extern char *glob_dirscan (const char *, char);
 #define INT	wint_t
 #define L(CS)	L##CS
 #define INTERNAL_GLOB_PATTERN_P internal_glob_wpattern_p
-#include "glob_loop.c"
+#include "glob_loop.hh"
 
 #endif /* HANDLE_MULTIBYTE */
 

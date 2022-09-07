@@ -19,15 +19,15 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #include <cstdio>	/* for debugging */
 #include <cstdlib>
 
-#include "strmatch.h"
-#include <chartypes.h>
+#include "strmatch.hh"
+#include "chartypes.hh"
 
-#include "shmbutil.h"
+#include "shmbutil.hh"
 
 #include <cerrno>
 
@@ -35,7 +35,10 @@
 #include <fnmatch.h>
 #endif
 
-/* First, compile `sm_loop.c' for single-byte characters. */
+namespace bash
+{
+
+/* First, compile `sm_loop.hh' for single-byte characters. */
 #define CHAR	unsigned char
 #define U_CHAR	unsigned char
 #define XCHAR	char
@@ -47,8 +50,10 @@
 #  define GLOBASCII_DEFAULT 0
 #endif
 
+#if 0
 // FIXME: map this to ShellOptions.
 bool glob_asciirange = GLOBASCII_DEFAULT;
+#endif
 
 #if FNMATCH_EQUIV_FALLBACK
 /* Construct a string w1 = "c1" and a pattern w2 = "[[=c2=]]" and pass them
@@ -146,7 +151,7 @@ collequiv (int c, int equiv)
 
 #define __COLLSYM	__collsym
 #define POSIXCOLL	posix_collsyms
-#include "collsyms.h"
+#include "collsyms.hh"
 
 static int
 collsym (const CHAR *s, size_t len)
@@ -269,7 +274,7 @@ is_cclass (int c, const char *name)
   return result;
 }
 
-/* Now include `sm_loop.c' for single-byte characters. */
+/* Now include `sm_loop.hh' for single-byte characters. */
 /* The result of FOLD is an `unsigned char' */
 # define FOLD(c) ((flags & FNM_CASEFOLD) \
 	? std::tolower ((unsigned char)c) \
@@ -294,7 +299,7 @@ is_cclass (int c, const char *name)
 #define COLLEQUIV(C1, C2)	collequiv((C1), (C2))
 #define CTYPE_T			char_class
 #define IS_CCLASS(C, S)		is_cclass((C), (S))
-#include "sm_loop.c"
+#include "sm_loop.hh"
 
 #if HANDLE_MULTIBYTE
 
@@ -393,7 +398,7 @@ collequiv_wc (wint_t c, wint_t equiv)
 /* Helper function for collating symbol. */
 #  define __COLLSYM	__collwcsym
 #  define POSIXCOLL	posix_collwcsyms
-#  include "collsyms.h"
+#  include "collsyms.hh"
 
 static wint_t
 collwcsym (const wchar_t *s, int len)
@@ -500,7 +505,7 @@ posix_cclass_only (const char *pattern)
   return true;			/* no char class names or only posix */
 }
 
-/* Now include `sm_loop.c' for multibyte characters. */
+/* Now include `sm_loop.hh' for multibyte characters. */
 #define FOLD(c) ((flags & FNM_CASEFOLD) && std::iswupper (c) ? std::towlower (c) : (c))
 #define FCT			internal_wstrmatch
 #define GMATCH			gmatch_wc
@@ -521,7 +526,7 @@ posix_cclass_only (const char *pattern)
 #define COLLEQUIV(C1, C2)	collequiv_wc((C1), (C2))
 #define CTYPE_T			char_class
 #define IS_CCLASS(C, S)		is_wcclass((C), (S))
-#include "sm_loop.c"
+#include "sm_loop.hh"
 
 #endif /* HAVE_MULTIBYTE */
 
@@ -561,3 +566,5 @@ xstrmatch (const char *pattern, const char *string, int flags)
   return internal_strmatch ((unsigned char *)pattern, (unsigned char *)string, flags);
 #endif /* !HANDLE_MULTIBYTE */
 }
+
+}  // namespace bash

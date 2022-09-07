@@ -42,23 +42,14 @@ bash_SOURCES = shell.cc eval.cc parse.y general.cc y.tab.cc \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
 	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
-	include/unionwait.hh pathnames.hh \
-	lib/readline/chardefs.hh lib/readline/colors.hh \
-	lib/readline/history.hh lib/readline/parse-colors.hh \
-	lib/readline/posixdir.hh lib/readline/posixselect.hh \
-	lib/readline/posixstat.hh lib/readline/readline.hh \
-	lib/readline/rlconf.hh lib/readline/rldefs.hh \
-	lib/readline/rlmbutil.hh lib/readline/rlprivate.hh \
-	lib/readline/rlshell.hh lib/readline/rltty.hh \
-	lib/readline/rlwinsize.hh lib/readline/tcap.hh \
-	lib/readline/tilde.hh
-
+	include/unionwait.hh pathnames.hh
 
 bash_LDADD = lib/readline/libreadlinecpp.a lib/sh/libsh.a \
 	lib/tilde/libtilde.a lib/glob/libglob.a
 
-SUBDIRS = $(RLDIRS) $(SHDIR) $(TLDIR) $(GLOBDIR) doc include po tests
+SUBDIRS = $(RLDIRS) $(SHDIR) $(TLDIR) $(GLOBDIR) doc po tests
 
 ACLOCAL_AMFLAGS = -I m4
 
-AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob -I$(srcdir)/lib/tilde
+AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
+	-I$(srcdir)/lib/tilde

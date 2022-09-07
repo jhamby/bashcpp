@@ -45,8 +45,8 @@ RELSTATUS=relstatus
 
 dnl defaults for debug settings
 case "$RELSTATUS" in
-alp*|bet*|dev*|rc*|releng*|maint*)	DEBUG='-DDEBUG' ;;
-*)	DEBUG= ;;
+alp*|bet*|dev*|rc*|releng*|maint*)	opt_debug=yes ;;
+*)	opt_debug=no ;;
 esac
 
 dnl canonicalize the host and os so we can do some tricky things before
@@ -301,6 +301,10 @@ fi
 
 if test $opt_with_vfork_subshell = yes; then
 AC_DEFINE([VFORK_SUBSHELL], [1], [Define to prefer vfork to fork when both are supported by the OS.])
+fi
+
+if test $opt_debug = yes; then
+AC_DEFINE([DEBUG], [1], [Define for extra debugging checks (enabled for non-release builds).])
 fi
 
 if test "$opt_minimal_config" = yes; then

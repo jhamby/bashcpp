@@ -21,8 +21,8 @@ noinst_LIBRARIES = libreadlinecpp.a
 libreadlinecpp_a_SOURCES = readline.cc funmap.cc keymaps.cc \
 	vi_mode.cc parens.cc rltty.cc \
 	complete.cc bind.cc isearch.cc \
-	display.cc signals.cc emacs_keymap.cc \
-	vi_keymap.cc util.cc kill.cc \
+	display.cc signals.cc emacs_keymap.hh \
+	vi_keymap.hh util.cc kill.cc \
 	undo.cc macro.cc input.cc \
 	callback.cc terminal.cc \
 	history.cc histsearch.cc histexpand.cc \

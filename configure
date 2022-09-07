@@ -4401,8 +4401,8 @@ BASHVERS=5.1
 RELSTATUS=dev
 
 case "$RELSTATUS" in
-alp*|bet*|dev*|rc*|releng*|maint*)	DEBUG='-DDEBUG' ;;
-*)	DEBUG= ;;
+alp*|bet*|dev*|rc*|releng*|maint*)	opt_debug=yes ;;
+*)	opt_debug=no ;;
 esac
 
 
@@ -4992,6 +4992,12 @@ fi
 if test $opt_with_vfork_subshell = yes; then
 
 printf "%s\n" "#define VFORK_SUBSHELL 1" >>confdefs.h
+
+fi
+
+if test $opt_debug = yes; then
+
+printf "%s\n" "#define DEBUG 1" >>confdefs.h
 
 fi
 

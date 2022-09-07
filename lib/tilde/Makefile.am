@@ -18,6 +18,6 @@
 
 noinst_LIBRARIES = libtilde.a
 
-libtilde_a_SOURCES = tilde.c
+libtilde_a_SOURCES = tilde.cc
 
 AM_CPPFLAGS = -I$(srcdir)/../.. -I$(srcdir)/../../include

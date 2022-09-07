@@ -235,7 +235,7 @@ _rl_trace (const char *format, ...)
   va_list args;
   va_start (args, format);
 
-  if (_rl_tracefp == 0)
+  if (_rl_tracefp == nullptr)
     _rl_tropen ();
 
   std::vfprintf (_rl_tracefp, format, args);
@@ -262,7 +262,7 @@ _rl_tropen ()
   std::snprintf (fnbuf, sizeof (fnbuf), "%s/rltrace.%ld", x, static_cast<long> (::getpid()));
   ::unlink(fnbuf);
   _rl_tracefp = std::fopen (fnbuf, "w+");
-  return _rl_tracefp != 0;
+  return _rl_tracefp != nullptr;
 }
 
 int
@@ -271,7 +271,7 @@ _rl_trclose ()
   int r;
 
   r = std::fclose (_rl_tracefp);
-  _rl_tracefp = 0;
+  _rl_tracefp = nullptr;
   return r;
 }
 

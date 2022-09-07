@@ -24,14 +24,14 @@
 #  define _GNU_SOURCE 1
 #endif
 
-#include <config.h>
+#include "config.hh"
 
 /* <wchar.h>, <wctype.h> and <stdlib.h> are included in "shmbutil.h".
    If <wchar.h>, <wctype.h>, mbsrtowcs(), exist, HANDLE_MULTIBYTE
    is defined as 1. */
-#include <shmbutil.h>
+#include "shmbutil.hh"
 
-#if HANDLE_MULTIBYTE
+#if defined (HANDLE_MULTIBYTE)
 
 #include <cerrno>
 #include <cstdlib>	// for MB_CUR_MAX
@@ -40,7 +40,7 @@
 
 const size_t WSBUF_INC = 32;
 
-#if ! HAVE_STRCHRNUL
+#if !defined (HAVE_STRCHRNUL)
 extern "C" char *strchrnul (const char *, int);
 #endif
 
