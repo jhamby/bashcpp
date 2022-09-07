@@ -43,8 +43,17 @@ size_t mbstrlen (const char *);
 
 char *xstrchr (const char *, int);
 
-#ifndef MB_INVALIDCH
-#define MB_INVALIDCH(x)		((x) == static_cast<size_t> (-1) || (x) == static_cast<size_t> (-2))
+#if !defined (MB_NULLWCH)
+static inline bool
+MB_INVALIDCH (int size) {
+  return size == -1 || size == -2;
+}
+
+static inline bool
+MB_INVALIDCH (size_t size) {
+  return size == static_cast<size_t> (-1) || size == static_cast<size_t> (-2);
+}
+
 #define MB_NULLWCH(x)		((x) == 0)
 #endif
 
@@ -86,7 +95,7 @@ char *xstrchr (const char *, int);
 #if defined (HANDLE_MULTIBYTE)
 #  define DECLARE_MBSTATE \
 	std::mbstate_t state; \
-	memset (&state, '\0', sizeof (std::mbstate_t))
+	std::memset (&state, '\0', sizeof (std::mbstate_t))
 #else
 #  define DECLARE_MBSTATE
 #endif  /* !HANDLE_MULTIBYTE */
@@ -108,29 +117,29 @@ char *xstrchr (const char *, int);
 	if (locale_mb_cur_max > 1) \
 	  { \
 	    std::mbstate_t state_bak; \
-	    size_t mblength; \
+	    size_t _mblength; \
 	    int _f; \
 \
 	    _f = is_basic ((_str)[_i]); \
 	    if (_f) \
-	      mblength = 1; \
+	      _mblength = 1; \
 	    else if (locale_utf8locale && (((_str)[_i] & 0x80) == 0)) \
-	      mblength = (_str)[_i] != 0; \
+	      _mblength = (_str)[_i] != 0; \
 	    else \
 	      { \
 	        state_bak = state; \
-	        mblength = std::mbrlen ((_str) + (_i), (_strsize) - (_i), &state); \
+	        _mblength = std::mbrlen ((_str) + (_i), (_strsize) - (_i), &state); \
 	      } \
 \
-	    if (mblength == static_cast<size_t> (-2) || mblength == static_cast<size_t> (-1)) \
+	    if (_mblength == static_cast<size_t> (-2) || _mblength == static_cast<size_t> (-1)) \
 	      { \
 		state = state_bak; \
 		(_i)++; \
 	      } \
-	    else if (mblength == 0) \
+	    else if (_mblength == 0) \
 	      (_i)++; \
 	    else \
-	      (_i) += mblength; \
+	      (_i) += _mblength; \
 	  } \
 	else \
 	  (_i)++; \
@@ -312,7 +321,7 @@ char *xstrchr (const char *, int);
 	  { \
 	    std::mbstate_t state_bak; \
 	    size_t mblength; \
-	    int _k; \
+	    size_t _k; \
 \
 	    _k = is_basic (*((_src) + (_si))); \
 	    if (_k) \
@@ -320,7 +329,8 @@ char *xstrchr (const char *, int);
 	    else \
 	      {\
 		state_bak = state; \
-		mblength = std::mbrlen ((_src) + (_si), (_srcend) - ((_src)+(_si)), &state); \
+		mblength = std::mbrlen ((_src) + (_si), static_cast<size_t> (\
+					(_srcend) - ((_src) + (_si))), &state); \
 	      } \
 	    if (mblength == static_cast<size_t>(-2) || mblength == static_cast<size_t>(-1)) \
 	      { \

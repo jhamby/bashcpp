@@ -27,8 +27,9 @@
 #include <cstring>
 
 #include "bashtypes.h"
-
 #include "bashintl.h"
+
+#include "externs.h"
 
 #if defined (HAVE_ICONV)
 #  include <iconv.h>
@@ -36,13 +37,14 @@
 
 #if defined (HAVE_LOCALE_CHARSET)
 extern "C" const char *locale_charset (void);
-#else
-extern char *get_locale_var (const char *);
 #endif
 
-#if defined (HAVE_ICONV)
-static iconv_t conv_fromfs = (iconv_t)-1;
-static iconv_t conv_tofs = (iconv_t)-1;
+namespace bash
+{
+
+#ifdef MACOSX
+static iconv_t conv_fromfs = reinterpret_cast<iconv_t> (-1);
+static iconv_t conv_tofs = reinterpret_cast<iconv_t> (-1);
 
 #define OUTLEN_MAX 4096
 
@@ -96,14 +98,13 @@ init_fromfs ()
 char *
 fnx_tofs (char *string, size_t len)
 {
-#ifdef MACOSX
   char *inbuf;
   char *tempbuf;
   size_t templen;
 
-  if (conv_tofs == (iconv_t)-1)
+  if (conv_tofs == reinterpret_cast<iconv_t> (-1))
     init_tofs ();
-  if (conv_tofs == (iconv_t)-1)
+  if (conv_tofs == reinterpret_cast<iconv_t> (-1))
     return string;
 
   /* Free and reallocate outbuf if it's *too* big */
@@ -130,22 +131,18 @@ fnx_tofs (char *string, size_t len)
 
   *tempbuf = '\0';
   return outbuf;
-#else
-  return string;
-#endif
 }
 
 char *
 fnx_fromfs (char *string, size_t len)
 {
-#ifdef MACOSX
   char *inbuf;
   char *tempbuf;
   size_t templen;
 
-  if (conv_fromfs == (iconv_t)-1)
+  if (conv_fromfs == reinterpret_cast<iconv_t> (-1))
     init_fromfs ();
-  if (conv_fromfs == (iconv_t)-1)
+  if (conv_fromfs == reinterpret_cast<iconv_t> (-1))
     return string;
 
   /* Free and reallocate outbuf if it's *too* big */
@@ -172,21 +169,7 @@ fnx_fromfs (char *string, size_t len)
 
   *tempbuf = '\0';
   return outbuf;
-#else
-  return string;
-#endif
-}
-
-#else
-char *
-fnx_tofs (char *string)
-{
-  return string;
-}
-
-char *
-fnx_fromfs (char *string)
-{
-  return string;
 }
 #endif
+
+}  // namespace bash

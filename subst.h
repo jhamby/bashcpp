@@ -96,15 +96,11 @@ operator & (const sx_flags &a, const sx_flags &b) {
   return static_cast<sx_flags> (static_cast<uint32_t> (a) & static_cast<uint32_t> (b));
 }
 
-/* Evaluates to 1 if C is a character in $IFS. */
-// FIXME: needs to be a member of Shell or something with a reference to ifs_cmap.
-// static inline bool isifs(char c) { return (ifs_cmap[(unsigned char)(c)]); }
-
 /* How to determine the quoted state of the character C. */
-static inline bool quoted_char(char c) { return (c == CTLESC); }
+static inline bool QUOTED_CHAR (char c) { return (c == CTLESC); }
 
 /* Is the first character of STRING a quoted NULL character? */
-static inline bool quoted_null(char *str) { return (str[0] == CTLNUL && str[1] == '\0'); }
+static inline bool QUOTED_NULL (const char *str) { return (str[0] == CTLNUL && str[1] == '\0'); }
 
 }  // namespace bash
 

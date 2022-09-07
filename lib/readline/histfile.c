@@ -385,7 +385,7 @@ int
 History::history_truncate_file (const char *fname, unsigned int lines)
 {
   char *buffer, *filename, *tempname, *bp, *bp1;		/* bp1 == bp+1 */
-  int file, rv, exists, r;
+  int file, rv, exists;
   unsigned int orig_lines = 0;
   struct stat finfo, nfinfo;
   ssize_t chars_read;
@@ -510,7 +510,7 @@ History::history_truncate_file (const char *fname, unsigned int lines)
      with a shared history file, we don't want to leave the history file
      owned by root. */
   if (rv == 0 && exists && SHOULD_CHOWN (finfo, nfinfo))
-    r = ::chown (filename, finfo.st_uid, finfo.st_gid);
+    (void) ::chown (filename, finfo.st_uid, finfo.st_gid);
 #endif
 
   delete[] filename;

@@ -386,7 +386,7 @@ Readline::rl_redisplay ()
   unsigned int out;
   unsigned int inv_botlin, lb_botlin, lb_linenum;
   unsigned int o_cpos, lpos;
-  unsigned int newlines, num, prompt_lines_estimate;
+  unsigned int newlines;
   char cur_face;
   unsigned int hl_begin, hl_end;
   size_t mb_cur_max = MB_CUR_MAX;
@@ -514,17 +514,14 @@ Readline::rl_redisplay ()
   lpos = local_prompt.physical_chars + modmark;
 
 #if defined (HANDLE_MULTIBYTE)
-  std::memset (line_state_invisible->wrapped_line, 0, line_state_invisible->wbsize * sizeof (int));
-  num = 0;
+  std::memset (line_state_invisible->wrapped_line, 0,
+	       line_state_invisible->wbsize * sizeof (int));
 #endif
 
   /* prompt_invis_chars_first_line is the number of invisible characters (bytes)
      in the first physical line of the prompt.
      wrap_offset - prompt_invis_chars_first_line is usually the number of
      invis chars on the second (or, more generally, last) line. */
-
-  /* This is zero-based, used to set the newlines */
-  prompt_lines_estimate = lpos / _rl_screenwidth;
 
   /* what if lpos is already >= _rl_screenwidth before we start drawing the
      contents of the command line? */

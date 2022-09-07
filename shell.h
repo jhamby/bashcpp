@@ -63,6 +63,10 @@
 #include <readline/readline.h>
 #endif
 
+#if HAVE_ICONV
+#  include <iconv.h>
+#endif
+
 namespace bash
 {
 
@@ -141,6 +145,11 @@ enum sd_flags {
   SD_ARITHEXP =		0x400	/* skip_to_delim during arithmetic expansion */
 };
 
+static inline sd_flags
+operator | (const sd_flags &a, const sd_flags &b) {
+  return static_cast<sd_flags> (static_cast<uint32_t> (a) | static_cast<uint32_t> (b));
+}
+
 /* Information about the current user. */
 struct UserInfo {
   UserInfo() : uid(static_cast<uid_t> (-1)), euid(static_cast<uid_t> (-1)),
@@ -159,7 +168,9 @@ struct UserInfo {
 class SimpleState
 {
 public:
-  SimpleState ();		// Initialize with default values
+  // Initialize with default values (defined in shell.c).
+  SimpleState ();
+
 #if defined (VFORK_SUBSHELL)
   SimpleState (int fd);		// TODO: Load initial values from pipe
 #endif
@@ -180,7 +191,9 @@ protected:
   /*		Bash Variables (size_t: 32/64-bit)		    */
   /* ************************************************************** */
 
-
+#if defined (HANDLE_MULTIBYTE)
+  size_t ifs_firstc_len;
+#endif
 
   /* ************************************************************** */
   /*		Bash Variables (32-bit int types)		    */
@@ -293,6 +306,30 @@ protected:
      Used to print a reasonable error message. */
   int heredoc_errno;
 
+  /* variables from subst.c */
+
+  /* Process ID of the last command executed within command substitution. */
+  pid_t last_command_subst_pid;
+  pid_t current_command_subst_pid;
+
+  /* Variables used to keep track of the characters in IFS. */
+  bool ifs_cmap[UCHAR_MAX + 1];
+  bool ifs_is_set;
+  bool ifs_is_null;
+
+#if defined (HANDLE_MULTIBYTE)
+  unsigned char ifs_firstc[MB_LEN_MAX];
+#else
+  unsigned char ifs_firstc;
+#endif
+
+  /* Set by expand_word_unsplit and several of the expand_string_XXX functions;
+     used to inhibit splitting and re-joining $* on $IFS, primarily when doing
+     assignment statements.  The idea is that if we're in a context where this
+     is set, we're not going to be performing word splitting, so we use the same
+     rules to expand $* as we would if it appeared within double quotes. */
+  bool expand_no_split_dollar_star;
+
   /* ************************************************************** */
   /*		Bash Variables (8-bit bool/char types)		    */
   /* ************************************************************** */
@@ -360,6 +397,27 @@ protected:
 
   /* EOF reached. */
   bool EOF_Reached;
+
+  /* If non-zero, command substitution inherits the value of errexit option.
+     Managed by builtins/shopt.def. */
+  char inherit_errexit;
+
+  /* Sentinel to tell when we are performing variable assignments preceding a
+     command name and putting them into the environment.  Used to make sure
+     we use the temporary environment when looking up variable values. */
+  bool assigning_in_environment;
+
+  /* Tell the expansion functions to not longjmp back to top_level on fatal
+     errors.  Enabled when doing completion and prompt string expansion. */
+  bool no_throw_on_fatal_error;
+
+  /* Non-zero means to allow unmatched globbed filenames to expand to
+     a null file. Managed by builtins/shopt.def. */
+  char allow_null_glob_expansion;
+
+  /* Non-zero means to throw an error when globbing fails to match anything.
+     Managed by builtins/shopt.def. */
+  char fail_glob_expansion;
 
   /* ************************************************************** */
   /*								    */
@@ -482,7 +540,6 @@ protected:
   /*								    */
   /* ************************************************************** */
 
-  char allow_null_glob_expansion;
 #if defined (ARRAY_VARS)
   char array_expand_once;
   char assoc_expand_once;
@@ -495,12 +552,10 @@ protected:
   char extended_glob;
 #endif
   char extended_quote;
-  char fail_glob_expansion;
   char glob_asciirange;
   char glob_dot_filenames;
   char glob_ignore_case;
   char glob_star;
-  char inherit_errexit;
   char lastpipe_opt;
   char localvar_inherit;
   char localvar_unset;
@@ -547,7 +602,7 @@ protected:
     -1 = login shell from "--login" (or -l) flag.
     -2 = both from getty, and from flag.
   */
-  int8_t login_shell;
+  char login_shell;
 
   /* Non-zero means that at this moment, the shell is interactive.  In
      general, this means that the shell is at this moment reading input
@@ -574,7 +629,7 @@ protected:
 	3 = wordexp evaluation
      This is a superset of the information provided by interactive_shell.
   */
-  int8_t startup_state;
+  char startup_state;
 
   bool reading_shell_script;
 
@@ -585,7 +640,7 @@ protected:
   bool executing;
 
   /* Are we running in an emacs shell window? (== 2 for `eterm`) */
-  uint8_t running_under_emacs;
+  char running_under_emacs;
 
   /* Do we have /dev/fd? */
   bool have_devfd;
@@ -628,9 +683,16 @@ protected:
 
   bool shell_reinitialized;
 
-  bool no_throw_on_fatal_error;
+  /* from lib/sh/unicode.c */
 
-  char _pad[4];				// silence clang -Wpadded warning
+  bool u32init;
+  bool utf8locale;
+
+#ifndef HAVE_LOCALE_CHARSET
+  char charsetbuf[40];
+#endif
+
+  char _pad[6];				// silence clang -Wpadded warning
 };
 
 
@@ -654,6 +716,8 @@ public:
 
   typedef int (Shell::*sh_builtin_func_t) (WORD_LIST *);	/* sh_wlist_func_t */
   typedef void (Shell::*sh_vptrfunc_t) (void *);
+
+  typedef char *(Shell::*tilde_hook_func_t) (char *);
 
   struct JOB {
     char *wd;			/* The working directory at time of invocation. */
@@ -1159,29 +1223,8 @@ protected:
   ps_index_t bgp_getindex ();
   void bgp_resize ();	/* XXX */
 
-  jobstats js;
-
-  PROCESS *last_procsub_child;
-
-//  ps_index_t *pidstat_table;	// FIXME: what type is this
-
-  bgpids bgpids;
-
-  procchain procsubs;
-
-  /* The array of known jobs. */
-  std::vector<JOB*> jobs;
-
-  /* The pipeline currently being built. */
-  PROCESS *the_pipeline;
-
-#if defined (ARRAY_VARS)
-  static int *pstatuses;		/* list of pipeline statuses */
-  static int statsize;
-#endif
-
   /* from lib/sh/casemod.c */
-  char *sh_modcase (const char *, const char *, int);
+  char *sh_modcase (const char *, const char *, sh_modcase_flags);
 
   /* from lib/sh/eaccess.c */
   int sh_stataccess (const char *, int);
@@ -1239,7 +1282,7 @@ protected:
 
   /* from lib/sh/shmbchar.c */
   const char *mbsmbchar (const char *);
-  int sh_mbsnlen (const char *, size_t, int);
+  size_t sh_mbsnlen (const char *, size_t, size_t);
 
   /* from lib/sh/shquote.c */
   char *sh_double_quote (const char *);
@@ -1256,7 +1299,15 @@ protected:
   const char *get_tmpdir (int);
 
   /* from lib/sh/unicode.c */
-  int u32cconv (unsigned long, char *);
+  char *stub_charset ();
+  void u32reset ();
+  int u32cconv (u_bits32_t, char *);
+
+  /* from lib/sh/winsize.c */
+  void get_new_window_size (int, int *, int *);
+
+  /* from lib/sh/zcatfd.c */
+  ssize_t zcatfd (int, int, const char *);
 
   /* from lib/sh/zread.c */
 
@@ -1348,6 +1399,36 @@ protected:
   ssize_t zreadc (int, char *);
   ssize_t zreadcintr (int, char *);
   ssize_t zreadn (int, char *, size_t);
+
+  /* function moved from lib/sh/zwrite.c */
+
+  /* Write NB bytes from BUF to file descriptor FD, retrying the write if
+     it is interrupted.  We retry three times if we get a zero-length
+     write.  Any other signal causes this function to return prematurely. */
+  static inline ssize_t
+  zwrite (int fd, char *buf, size_t nb)
+  {
+    size_t n, nt;
+
+    for (n = nb, nt = 0;;)
+      {
+	ssize_t i = ::write (fd, buf, n);
+	if (i > 0)
+	  {
+	    n -= static_cast<size_t> (i);
+	    if (n <= 0)
+	      return static_cast<ssize_t> (nb);
+	    buf += i;
+	  }
+	else if (i == 0)
+	  {
+	    if (++nt > 3)
+	      return static_cast<ssize_t> (nb - n);
+	  }
+	else if (errno != EINTR)
+	  return -1;
+      }
+  }
 
   /* from bashhist.c */
 #if defined (BANG_HISTORY)
@@ -1526,13 +1607,22 @@ protected:
   /* Extract the $[ construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "$[".
      Make (SINDEX) get the position just after the matching "]". */
-  char *extract_arithmetic_subst (const char *, size_t *);
+  inline char *
+  extract_arithmetic_subst (const char *string, size_t *sindex)
+  {
+    return extract_delimited_string (string, sindex, "$[", "[", "]", SX_NOFLAGS); /*]*/
+  }
 
 #if defined (PROCESS_SUBSTITUTION)
   /* Extract the <( or >( construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "<(".
      Make (SINDEX) get the position just after the matching ")". */
-  char *extract_process_subst (const char *, const char *, size_t *, sx_flags);
+  inline char *
+  extract_process_subst (const char *string, size_t *sindex, sx_flags xflags)
+  {
+    xflags |= (no_throw_on_fatal_error ? SX_NOTHROW : SX_NOFLAGS);
+    return xparse_dolparen (string, const_cast<char *> (string + *sindex), sindex, xflags);
+  }
 #endif /* PROCESS_SUBSTITUTION */
 
   /* Return a single string of all the words present in LIST, separating
@@ -1553,7 +1643,7 @@ protected:
      the various subtleties of using the first character of $IFS as the
      separator.  Calls string_list_dollar_at, string_list_dollar_star, and
      string_list as appropriate. */
-  char *string_list_pos_params (char, WORD_LIST *, int, int);
+  char *string_list_pos_params (char, WORD_LIST *, quoted_flags, param_flags);
 
   /* Perform quoted null character removal on each element of LIST.
      This modifies LIST. */
@@ -1723,16 +1813,18 @@ protected:
   char *cond_expand_word (WORD_DESC *, int);
 #endif
 
-  int skip_to_delim (const char *, int, const char *, int);
+  size_t
+  skip_to_delim (const char *, size_t, const char *, sd_flags);
 
 #if defined (BANG_HISTORY)
-  int skip_to_histexp (const char *, int, const char *, int);
+  size_t
+  skip_to_histexp (const char *, size_t, const char *, sd_flags);
 #endif
 
 #if defined (READLINE)
-  int char_is_quoted (char *, int);	/* rl_linebuf_func_t */
+  unsigned int char_is_quoted (const std::string &, int);	/* rl_linebuf_func_t */
   bool unclosed_pair (const char *, int, const char *);
-  WORD_LIST *split_at_delims (const char *, int, const char *, int, int, int *, int *);
+  WORD_LIST *split_at_delims (const char *, int, const char *, int, sd_flags, int *, int *);
 #endif
 
   void invalidate_cached_quoted_dollar_at ();
@@ -1768,7 +1860,26 @@ protected:
   skip_matched_pair (const char *, size_t, char, char, int);
 
   void
-  exp_jump_to_top_level (const std::exception &);
+  exp_throw_to_top_level (const std::exception &);
+
+#if defined (ARRAY_VARS)
+  /* Flags has 1 as a reserved value, since skip_matched_pair uses it for
+     skipping over quoted strings and taking the first instance of the
+     closing character. */
+  size_t
+  skipsubscript (const char *string, size_t start, int flags)
+  {
+    return skip_matched_pair (string, start, '[', ']', flags);
+  }
+#endif
+
+  /* Evaluates to true if C is a character in $IFS. */
+  inline bool isifs (char c) {
+    return ifs_cmap[static_cast<unsigned char> (c)];
+  }
+
+  SHELL_VAR *
+  do_compound_assignment (const char *, const char *, assign_flags);
 
   // from variables.c
 
@@ -1980,9 +2091,36 @@ protected:
   // Methods in parse.y / y.tab.c.
   char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
 
+  // Methods in lib/tilde/tilde.c.
+  size_t tilde_find_prefix (const char *, size_t *);
+  char *tilde_expand_word (const char *);
+  size_t tilde_find_suffix (const char *);
+  char *tilde_expand (const char *);
+
 private:
 
   // Here are the variables we can't trivially send to a different memory space.
+
+  jobstats js;
+
+  PROCESS *last_procsub_child;
+
+//  ps_index_t *pidstat_table;	// FIXME: what type is this
+
+  bgpids bgpids;
+
+  procchain procsubs;
+
+  /* The array of known jobs. */
+  std::vector<JOB*> jobs;
+
+  /* The pipeline currently being built. */
+  PROCESS *the_pipeline;
+
+#if defined (ARRAY_VARS)
+  int *pstatuses;		/* list of pipeline statuses */
+  size_t statsize;
+#endif
 
   VAR_CONTEXT *global_variables;
   VAR_CONTEXT *shell_variables;
@@ -2009,19 +2147,62 @@ private:
   const char *this_command_name;
   SHELL_VAR *this_shell_function;
 
-  uint16_t *sh_syntaxtab;
+  char_flags *sh_syntaxtab;
 
   char *list_optarg;
 
   WORD_LIST *lcurrent;
   WORD_LIST *loptend;
 
-#ifndef ZBUFSIZ
-#  define ZBUFSIZ 4096
-#endif
+  /* private variables from subst.c */
+
+  /* Variables used to keep track of the characters in IFS. */
+  SHELL_VAR *ifs_var;
+  const char *ifs_value;
+
+  /* Used to hold a list of variable assignments preceding a command.  Global
+     so the SIGCHLD handler in jobs.c can unwind-protect it when it runs a
+     SIGCHLD trap and so it can be saved and restored by the trap handlers. */
+  WORD_LIST *subst_assign_varlist;
+
+  WORD_LIST *cached_quoted_dollar_at;
+
+  /* A WORD_LIST of words to be expanded by expand_word_list_internal,
+     without any leading variable assignments. */
+  WORD_LIST *garglist;
 
   /* local buffer for lib/sh/zread.c functions */
-  char zread_lbuf[ZBUFSIZ];
+  char *zread_lbuf;
+
+  /* moved from lib/tilde/tilde.c */
+
+  /* If non-null, this contains the address of a function that the application
+     wants called before trying the standard tilde expansions.  The function
+     is called with the text sans tilde, and returns a malloc()'ed string
+     which is the expansion, or a NULL pointer if the expansion fails. */
+  tilde_hook_func_t tilde_expansion_preexpansion_hook;
+
+  /* If non-null, this contains the address of a function to call if the
+     standard meaning for expanding a tilde fails.  The function is called
+     with the text (sans tilde, as in "foo"), and returns a malloc()'ed string
+     which is the expansion, or a NULL pointer if there is no expansion. */
+  tilde_hook_func_t tilde_expansion_failure_hook;
+
+  /* When non-null, this is a nullptr-terminated array of strings which
+     are duplicates for a tilde prefix.  Bash uses this to expand
+     `=~' and `:~'. */
+  char **tilde_additional_prefixes;
+
+  /* When non-null, this is a nullptr-terminated array of strings which match
+     the end of a username, instead of just "/".  Bash sets this to
+     `:' and `=~'. */
+  char **tilde_additional_suffixes;
+
+#if defined (HAVE_ICONV)
+  iconv_t localconv;
+#endif
+
+  // 32-bit variables here (before I move them to SimpleState)
 
   unsigned int zread_lind;	// read index in zread_lbuf
   unsigned int zread_lused;	// bytes used in zread_lbuf
@@ -2081,8 +2262,8 @@ struct ShellParserState {
   ARRAY *pipestatus;
 #endif
 
-  Shell::sh_builtin_func_t *last_shell_builtin;
-  Shell::sh_builtin_func_t *this_shell_builtin;
+  Shell::sh_builtin_func_t last_shell_builtin;
+  Shell::sh_builtin_func_t this_shell_builtin;
 
   /* flags state affecting the parser */
   int expand_aliases;

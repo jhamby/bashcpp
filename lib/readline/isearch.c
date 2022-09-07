@@ -695,7 +695,7 @@ int
 Readline::rl_search_history (int direction, int)
 {
   _rl_search_cxt *cxt;		/* local for now, but saved globally */
-  int c, r;
+  int r;
 
   RL_SETSTATE(RL_STATE_ISEARCH);
   cxt = _rl_isearch_init (direction);
@@ -710,7 +710,7 @@ Readline::rl_search_history (int direction, int)
   r = -1;
   for (;;)
     {
-      c = _rl_search_getchar (cxt);
+      (void) _rl_search_getchar (cxt);
       /* We might want to handle EOF here (c == 0) */
       r = _rl_isearch_dispatch (cxt, cxt->lastc);
       if (r <= 0)
@@ -732,9 +732,9 @@ Readline::rl_search_history (int direction, int)
 int
 Readline::_rl_isearch_callback (_rl_search_cxt *cxt)
 {
-  int c, r;
+  int r;
 
-  c = _rl_search_getchar (cxt);
+  (void) _rl_search_getchar (cxt);
   /* We might want to handle EOF here */
   r = _rl_isearch_dispatch (cxt, cxt->lastc);
 

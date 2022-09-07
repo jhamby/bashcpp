@@ -39,9 +39,6 @@ typedef ssize_t breadfunc_t (int, char *, size_t);
 typedef ssize_t creadfunc_t (int, char *);
 #endif
 
-/* Initial memory allocation for automatic growing buffer in zreadlinec */
-#define GET_LINE_INITIAL_ALLOCATION 16
-
 /* Derived from GNU libc's getline.
    The behavior is almost the same as getline. See man getline.
    The differences are

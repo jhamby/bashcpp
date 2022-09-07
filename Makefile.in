@@ -201,7 +201,7 @@ SHLIB_SOURCE =	${SH_LIBSRC}/clktck.c ${SH_LIBSRC}/getcwd.c \
 		${SH_LIBSRC}/strtod.c ${SH_LIBSRC}/strtol.c \
 		${SH_LIBSRC}/strtoul.c ${SH_LIBSRC}/vprint.c \
 		${SH_LIBSRC}/itos.c ${SH_LIBSRC}/rename.c \
-		${SH_LIBSRC}/zread.c ${SH_LIBSRC}/zwrite.c \
+		${SH_LIBSRC}/zread.c \
 		${SH_LIBSRC}/shtty.c ${SH_LIBSRC}/inet_aton.c \
 		${SH_LIBSRC}/netopen.c ${SH_LIBSRC}/strpbrk.c \
 		${SH_LIBSRC}/timeval.c ${SH_LIBSRC}/clock.c \
@@ -220,10 +220,10 @@ SHLIB_SOURCE =	${SH_LIBSRC}/clktck.c ${SH_LIBSRC}/getcwd.c \
 		${SH_LIBSRC}/strnlen.c ${SH_LIBSRC}/winsize.c \
 		${SH_LIBSRC}/eaccess.c ${SH_LIBSRC}/wcsdup.c \
 		${SH_LIBSRC}/zmapfd.c ${SH_LIBSRC}/fpurge.c \
-		${SH_LIBSRC}/zgetline.c ${SH_LIBSRC}/mbscmp.c \
+		${SH_LIBSRC}/zgetline.c \
 		${SH_LIBSRC}/casemod.c ${SH_LIBSRC}/uconvert.c \
 		${SH_LIBSRC}/ufuncs.c ${SH_LIBSRC}/dprintf.c \
-		${SH_LIBSRC}/input_avail.c ${SH_LIBSRC}/mbscasecmp.c \
+		${SH_LIBSRC}/input_avail.c \
 		${SH_LIBSRC}/fnxform.c ${SH_LIBSRC}/unicode.c \
 		${SH_LIBSRC}/wcswidth.c ${SH_LIBSRC}/wcsnwidth.c \
 		${SH_LIBSRC}/shmbchar.c \
@@ -349,7 +349,7 @@ TILDE_LIBRARY = $(TILDE_LIBDIR)/libtilde.a
 TILDE_LDFLAGS = -L$(TILDE_LIBDIR)
 TILDE_DEP = $(TILDE_LIBRARY)
 
-TILDE_SOURCE	= $(TILDE_LIBSRC)/tilde.c $(TILDE_LIBSRC)/tilde.h
+TILDE_SOURCE	= $(TILDE_LIBSRC)/tilde.c
 TILDE_OBJ	= $(TILDE_LIBDIR)/tilde.o
 
 # libintl
@@ -1300,17 +1300,6 @@ variables.o: $(RL_LIBSRC)/chardefs.h
 variables.o: $(RL_LIBSRC)/readline.h
 jobs.o: $(RL_LIBSRC)/chardefs.h
 jobs.o: $(RL_LIBSRC)/readline.h
-
-bashline.o: $(TILDE_LIBSRC)/tilde.h
-bracecomp.o: $(TILDE_LIBSRC)/tilde.h
-execute_cmd.o: $(TILDE_LIBSRC)/tilde.h
-general.o: $(TILDE_LIBSRC)/tilde.h
-mailcheck.o: $(TILDE_LIBSRC)/tilde.h
-shell.o: $(TILDE_LIBSRC)/tilde.h
-subst.o: $(TILDE_LIBSRC)/tilde.h
-variables.o: $(TILDE_LIBSRC)/tilde.h
-jobs.o: $(TILDE_LIBSRC)/tilde.h
-y.tab.o: $(TILDE_LIBSRC)/tilde.h
 
 # libintl dependencies
 arrayfunc.o: bashintl.h ${LIBINTL_H} $(BASHINCDIR)/gettext.h

@@ -65,7 +65,7 @@ LIBRARY_NAME = libtilde.a
 CSOURCES = $(srcdir)/tilde.c
 
 # The header files for this library.
-HSOURCES = $(srcdir)/tilde.h
+HSOURCES =
 
 OBJECTS = tilde.o
 
@@ -119,5 +119,5 @@ mostlyclean: clean
 #								     #
 ######################################################################
 
-tilde.o: tilde.h
 tilde.o: $(BUILD_DIR)/config.h
+tilde.o: ../../shell.h

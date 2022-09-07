@@ -28,17 +28,15 @@
 
 #include <cerrno>
 
-#ifndef ZBUFSIZ
-#  define ZBUFSIZ 4096
-#endif
+#include "shell.h"
 
-extern ssize_t zread (int, char *, size_t);
-extern int zwrite (int, char *, size_t);
+namespace bash
+{
 
 /* Dump contents of file descriptor FD to OFD.  FN is the filename for
    error messages (not used right now). */
-int
-zcatfd (int fd, int ofd, const char *fn)
+ssize_t
+Shell::zcatfd (int fd, int ofd, const char *)
 {
   ssize_t nr;
   int rval;
@@ -55,7 +53,7 @@ zcatfd (int fd, int ofd, const char *fn)
 	  rval = -1;
 	  break;
 	}
-      else if (zwrite (ofd, lbuf, nr) < 0)
+      else if (zwrite (ofd, lbuf, static_cast<size_t> (nr)) < 0)
 	{
 	  rval = -1;
 	  break;
@@ -64,3 +62,5 @@ zcatfd (int fd, int ofd, const char *fn)
 
   return rval;
 }
+
+}  // namespace bash

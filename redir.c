@@ -716,14 +716,6 @@ redir_open (char *filename, int flags, int mode, enum r_instruction ri)
 	  errno = e;
 	}
       while (fd < 0 && errno == EINTR);
-
-#if defined (AFS)
-      if ((fd < 0) && (errno == EACCES))
-	{
-	  fd = open (filename, flags & ~O_CREAT, mode);
-	  errno = EACCES;	/* restore errno */
-	}
-#endif /* AFS */
     }
 
   return fd;

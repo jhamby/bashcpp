@@ -79,7 +79,7 @@ Shell::genseed ()
   struct timeval tv;
   u_bits32_t iv;
 
-  ::gettimeofday (&tv, NULL);
+  ::gettimeofday (&tv, nullptr);
   iv = static_cast<u_bits32_t> (
 	reinterpret_cast<uintptr_t> (&intrand32));	// include a function ptr in the seed
   iv = static_cast<u_bits32_t> (

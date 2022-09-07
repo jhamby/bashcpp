@@ -163,7 +163,7 @@ timespec_cmp (struct timespec a, struct timespec b)
   	    ? -1
 	    : (a.tv_sec > b.tv_sec
 		 ? 1
-		 : (int) (a.tv_nsec - b.tv_nsec)));
+		 : static_cast<int> (a.tv_nsec - b.tv_nsec)));
 }
 
 /* Return *ST's birth time, if available; otherwise return a value
@@ -187,7 +187,7 @@ get_stat_birthtime (struct stat const *st)
   t.tv_nsec = 0;
 #else
   /* Birth time is not supported.  */
-  t.tv_sec = (time_t)-1;
+  t.tv_sec = static_cast<time_t> (-1);
   t.tv_nsec = -1;
   /* Avoid a "parameter unused" warning.  */
   (void) st;

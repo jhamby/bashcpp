@@ -453,7 +453,7 @@ Readline::readline_internal_charloop ()
 	}
 
       lastc = c;
-      int r = _rl_dispatch (static_cast<unsigned char> (c), _rl_keymap);
+      (void) _rl_dispatch (static_cast<unsigned char> (c), _rl_keymap);
       RL_CHECK_SIGNALS ();
 
       if (_rl_command_to_execute)
@@ -465,7 +465,8 @@ Readline::readline_internal_charloop ()
 
 	  rl_dispatching = 1;
 	  RL_SETSTATE(RL_STATE_DISPATCHING);
-	  r = ((*this).*(_rl_command_to_execute->func)) (_rl_command_to_execute->count, _rl_command_to_execute->key);
+	  // ignore return value
+	  (void) ((*this).*(_rl_command_to_execute->func)) (_rl_command_to_execute->count, _rl_command_to_execute->key);
 	  _rl_command_to_execute = nullptr;
 	  RL_UNSETSTATE(RL_STATE_DISPATCHING);
 	  rl_dispatching = 0;

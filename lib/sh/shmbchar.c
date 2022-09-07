@@ -54,12 +54,15 @@ constexpr unsigned int is_basic_table [UCHAR_MAX / 32 + 1] =
 size_t
 mbstrlen (const char *s)
 {
-  size_t clen, nc;
-  mbstate_t mbs = { 0 }, mbsbak = { 0 };
-  int f, mb_cur_max;
+  size_t clen;
+  bool f;
 
-  nc = 0;
-  mb_cur_max = MB_CUR_MAX;
+  mbstate_t mbs, mbsbak;
+  std::memset (&mbs, '\0', sizeof (std::mbstate_t));
+  std::memset (&mbsbak, '\0', sizeof (std::mbstate_t));
+
+  size_t nc = 0;
+  size_t mb_cur_max = MB_CUR_MAX;
   while (*s && (clen = (f = is_basic (*s)) ? 1 : std::mbrlen(s, mb_cur_max, &mbs)) != 0)
     {
       if (MB_INVALIDCH(clen))
@@ -83,16 +86,17 @@ mbstrlen (const char *s)
 const char *
 Shell::mbsmbchar (const char *s)
 {
-  char *t;
-  size_t clen;
-  mbstate_t mbs = { 0 };
-  int mb_cur_max;
-
   if (locale_utf8locale)
     return utf8_mbsmbchar (s);	/* XXX */
 
-  mb_cur_max = MB_CUR_MAX;
-  for (t = (char *)s; *t; t++)
+  mbstate_t mbs;
+  std::memset (&mbs, '\0', sizeof (std::mbstate_t));
+
+  const char *t;
+  size_t clen;
+
+  size_t mb_cur_max = MB_CUR_MAX;
+  for (t = s; *t; t++)
     {
       if (is_basic (*t))
 	continue;
@@ -103,21 +107,22 @@ Shell::mbsmbchar (const char *s)
 	clen = std::mbrlen (t, mb_cur_max, &mbs);
 
       if (clen == 0)
-        return 0;
+        return nullptr;
+
       if (MB_INVALIDCH(clen))
 	continue;
 
       if (clen > 1)
 	return t;
     }
-  return 0;
+  return nullptr;
 }
 
-int
-Shell::sh_mbsnlen(const char *src, size_t srclen, int maxlen)
+size_t
+Shell::sh_mbsnlen(const char *src, size_t srclen, size_t maxlen)
 {
-  int count;
-  int sind;
+  size_t count;
+  size_t sind;
   DECLARE_MBSTATE;
 
   for (sind = count = 0; src[sind]; )
@@ -130,6 +135,7 @@ Shell::sh_mbsnlen(const char *src, size_t srclen, int maxlen)
 
   return count;
 }
-#endif
 
 }  // namespace bash
+
+#endif  // HANDLE_MULTIBYTE

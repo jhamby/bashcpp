@@ -56,25 +56,23 @@
 
 #include <cstdio>
 
+#include "shell.h"
+
+namespace bash
+{
+
 /* Return the fd from which we are actually getting input. */
 #define input_tty() (shell_tty != -1) ? shell_tty : fileno (stderr)
 
-extern int shell_tty;
-
-#if defined (READLINE)
-extern "C" void rl_set_screen_size (int, int);
-#endif
-extern void sh_set_lines_and_columns (int, int);
-
 void
-get_new_window_size (int from_sig, int *rp, int *cp)
+Shell::get_new_window_size (int from_sig, int *rp, int *cp)
 {
 #if defined (TIOCGWINSZ)
   struct winsize win;
   int tty;
 
   tty = input_tty ();
-  if (tty >= 0 && (ioctl (tty, TIOCGWINSZ, &win) == 0) &&
+  if (tty >= 0 && (::ioctl (tty, TIOCGWINSZ, &win) == 0) &&
       win.ws_row > 0 && win.ws_col > 0)
     {
       sh_set_lines_and_columns (win.ws_row, win.ws_col);
@@ -88,3 +86,5 @@ get_new_window_size (int from_sig, int *rp, int *cp)
     }
 #endif
 }
+
+}  // namespace bash

@@ -40,79 +40,28 @@
 #include <pwd.h>
 #endif
 
-#include "tilde.h"
-
 #if !defined (HAVE_GETPW_DECLS)
 #  if defined (HAVE_GETPWUID)
-extern struct passwd *getpwuid (uid_t);
+extern "C" struct passwd *getpwuid (uid_t);
 #  endif
 #  if defined (HAVE_GETPWNAM)
-extern struct passwd *getpwnam (const char *);
+extern "C" struct passwd *getpwnam (const char *);
 #  endif
 #endif /* !HAVE_GETPW_DECLS */
 
-/* If being compiled as part of bash, these will be satisfied from
-   variables.o.  If being compiled as part of readline, they will
-   be satisfied from shell.o. */
-extern char *sh_get_home_dir (void);
-extern char *sh_get_env_value (const char *);
+#include "shell.h"
 
-/* The default value of tilde_additional_prefixes.  This is set to
-   whitespace preceding a tilde so that simple programs which do not
-   perform any word separation get desired behaviour. */
-static const char *default_prefixes[] =
-  { " ~", "\t~", NULL };
+namespace bash
+{
 
-/* The default value of tilde_additional_suffixes.  This is set to
-   whitespace or newline so that simple programs which do not
-   perform any word separation get desired behaviour. */
-static const char *default_suffixes[] =
-  { " ", "\n", NULL };
-
-/* If non-null, this contains the address of a function that the application
-   wants called before trying the standard tilde expansions.  The function
-   is called with the text sans tilde, and returns a new'd string
-   which is the expansion, or a NULL pointer if the expansion fails. */
-tilde_hook_func_t *tilde_expansion_preexpansion_hook = NULL;
-
-/* If non-null, this contains the address of a function to call if the
-   standard meaning for expanding a tilde fails.  The function is called
-   with the text (sans tilde, as in "foo"), and returns a new'd string
-   which is the expansion, or a NULL pointer if there is no expansion. */
-tilde_hook_func_t *tilde_expansion_failure_hook = NULL;
-
-/* When non-null, this is a NULL terminated array of strings which
-   are duplicates for a tilde prefix.  Bash uses this to expand
-   `=~' and `:~'. */
-char **tilde_additional_prefixes = const_cast<char **> (default_prefixes);
-
-/* When non-null, this is a NULL terminated array of strings which match
-   the end of a username, instead of just "/".  Bash sets this to
-   `:' and `=~'. */
-char **tilde_additional_suffixes = const_cast<char **> (default_suffixes);
-
-static size_t tilde_find_prefix (const char *, size_t *);
-static size_t tilde_find_suffix (const char *);
 static char *isolate_tilde_prefix (const char *, size_t *);
 static char *glue_prefix_and_suffix (char *, const char *, size_t);
-
-// Create a new copy of null-terminated string s. Free with delete[].
-// Copied from general.h.
-static inline char *savestring(const char *s) {
-  return std::strcpy(new char[1 + std::strlen(s)], s);
-}
-
-// Create a new copy of C++ string s. Free with delete[].
-// Copied from general.h.
-static inline char *savestring(const std::string &s) {
-  return std::strcpy(new char[1 + s.size()], s.c_str());
-}
 
 /* Find the start of a tilde expansion in STRING, and return the index of
    the tilde which starts the expansion.  Place the length of the text
    which identified this tilde starter in LEN, excluding the tilde itself. */
-static size_t
-tilde_find_prefix (const char *string, size_t *len)
+size_t
+Shell::tilde_find_prefix (const char *string, size_t *len)
 {
   char **prefixes = tilde_additional_prefixes;
 
@@ -141,8 +90,8 @@ tilde_find_prefix (const char *string, size_t *len)
 
 /* Find the end of a tilde expansion in STRING, and return the index of
    the character which ends the tilde definition.  */
-static size_t
-tilde_find_suffix (const char *string)
+size_t
+Shell::tilde_find_suffix (const char *string)
 {
   char **suffixes = tilde_additional_suffixes;
   size_t string_len = std::strlen (string);
@@ -168,7 +117,7 @@ tilde_find_suffix (const char *string)
 
 /* Return a new string which is the result of tilde expanding STRING. */
 char *
-tilde_expand (const char *str)
+Shell::tilde_expand (const char *str)
 {
   std::string result;
 
@@ -203,7 +152,7 @@ tilde_expand (const char *str)
 
       expansion = tilde_expand_word (tilde_word);
 
-      if (expansion == NULL)
+      if (expansion == nullptr)
 	expansion = tilde_word;
       else
 	delete[] tilde_word;
@@ -226,7 +175,7 @@ tilde_expand (const char *str)
 /* Take FNAME and return the tilde prefix we want expanded.  If LENP is
    non-null, the index of the end of the prefix into FNAME is returned in
    the location it points to. */
-static char *
+static inline char *
 isolate_tilde_prefix (const char *fname, size_t *lenp)
 {
   char *ret;
@@ -264,13 +213,13 @@ glue_prefix_and_suffix (char *prefix, const char *suffix, size_t suffind)
    tilde.  If there is no expansion, call tilde_expansion_failure_hook.
    This always returns a newly-allocated string, never static storage. */
 char *
-tilde_expand_word (const char *filename)
+Shell::tilde_expand_word (const char *filename)
 {
   char *dirname, *expansion, *username;
   struct passwd *user_entry;
 
-  if (filename == NULL)
-    return NULL;
+  if (filename == nullptr)
+    return nullptr;
 
   if (*filename != '~')
     return (savestring (filename));
@@ -283,13 +232,13 @@ tilde_expand_word (const char *filename)
       /* Prefix $HOME to the rest of the string. */
       expansion = sh_get_env_value ("HOME");
 #if defined (_WIN32)
-      if (expansion == NULL)
+      if (expansion == nullptr)
 	expansion = sh_get_env_value ("APPDATA");
 #endif
 
       /* If there is no HOME variable, look up the directory in
 	 the password database. */
-      if (expansion == NULL)
+      if (expansion == nullptr)
 	expansion = sh_get_home_dir ();
 
       return (glue_prefix_and_suffix (expansion, filename, 1));
@@ -300,7 +249,7 @@ tilde_expand_word (const char *filename)
 
   if (tilde_expansion_preexpansion_hook)
     {
-      expansion = (*tilde_expansion_preexpansion_hook) (username);
+      expansion = ((*this).*tilde_expansion_preexpansion_hook) (username);
       if (expansion)
 	{
 	  dirname = glue_prefix_and_suffix (expansion, filename, user_len);
@@ -312,7 +261,7 @@ tilde_expand_word (const char *filename)
 
   /* No preexpansion hook, or the preexpansion hook failed.  Look in the
      password database. */
-  dirname = NULL;
+  dirname = nullptr;
 
 #if defined (HAVE_GETPWNAM)
   user_entry = ::getpwnam (username);
@@ -320,13 +269,13 @@ tilde_expand_word (const char *filename)
   user_entry = 0;
 #endif
 
-  if (user_entry == NULL)
+  if (user_entry == nullptr)
     {
       /* If the calling program has a special syntax for expanding tildes,
 	 and we couldn't find a standard expansion, then let them try. */
       if (tilde_expansion_failure_hook)
 	{
-	  expansion = (*tilde_expansion_failure_hook) (username);
+	  expansion = ((*this).*tilde_expansion_failure_hook) (username);
 	  if (expansion)
 	    {
 	      dirname = glue_prefix_and_suffix (expansion, filename, user_len);
@@ -335,7 +284,7 @@ tilde_expand_word (const char *filename)
 	}
       /* If we don't have a failure hook, or if the failure hook did not
 	 expand the tilde, return a copy of what we were passed. */
-      if (dirname == NULL)
+      if (dirname == nullptr)
 	dirname = savestring (filename);
     }
 #if defined (HAVE_GETPWENT)
@@ -350,8 +299,10 @@ tilde_expand_word (const char *filename)
   return (dirname);
 }
 
+}  // namespace bash
+
 #if defined (TEST)
-#undef NULL
+#undef nullptr
 #include <stdio.h>
 
 main (int argc, char **argv)

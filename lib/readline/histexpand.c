@@ -601,7 +601,7 @@ History::history_expand_internal (const char *string, unsigned int start, char q
 	    char *new_event;
 	    char delimiter;
 	    bool failed;
-	    unsigned int si, ws, we;
+	    unsigned int si, we;
 
 	    if (c == 's')
 	      {
@@ -699,7 +699,6 @@ History::history_expand_internal (const char *string, unsigned int start, char q
 		  {
 		    for (; temp[si] && fielddelim (temp[si]); si++)
 		      ;
-		    ws = si;
 		    we = history_tokenize_word (temp, si);
 		  }
 

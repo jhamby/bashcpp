@@ -54,37 +54,39 @@ static const char *shell_glob_chars = "*?[]^";
 
 /* Values for character flags in syntax tables */
 
-const uint16_t CWORD =		0x0000;	/* nothing special; an ordinary character */
-const uint16_t CSHMETA =	0x0001;	/* shell meta character */
-const uint16_t CSHBRK =		0x0002;	/* shell break character */
-const uint16_t CBACKQ =		0x0004;	/* back quote */
-const uint16_t CQUOTE =		0x0008;	/* shell quote character */
-const uint16_t CSPECL =		0x0010;	/* special character that needs quoting */
-const uint16_t CEXP =		0x0020;	/* shell expansion character */
-const uint16_t CBSDQUOTE =	0x0040;	/* characters escaped by backslash in double quotes */
-const uint16_t CBSHDOC =	0x0080;	/* characters escaped by backslash in here doc */
-const uint16_t CGLOB =		0x0100;	/* globbing characters */
-const uint16_t CXGLOB =		0x0200;	/* extended globbing characters */
-const uint16_t CXQUOTE =	0x0400;	/* cquote + backslash */
-const uint16_t CSPECVAR =	0x0800;	/* single-character shell variable name */
-const uint16_t CSUBSTOP =	0x1000;	/* values of OP for ${word[:]OPstuff} */
-const uint16_t CBLANK =		0x2000;	/* whitespace (blank) character */
+enum char_flags {
+  CWORD =		0x0000,	/* nothing special; an ordinary character */
+  CSHMETA =		0x0001,	/* shell meta character */
+  CSHBRK =		0x0002,	/* shell break character */
+  CBACKQ =		0x0004,	/* back quote */
+  CQUOTE =		0x0008,	/* shell quote character */
+  CSPECL =		0x0010,	/* special character that needs quoting */
+  CEXP =		0x0020,	/* shell expansion character */
+  CBSDQUOTE =		0x0040,	/* characters escaped by backslash in double quotes */
+  CBSHDOC =		0x0080,	/* characters escaped by backslash in here doc */
+  CGLOB =		0x0100,	/* globbing characters */
+  CXGLOB =		0x0200,	/* extended globbing characters */
+  CXQUOTE =		0x0400,	/* cquote + backslash */
+  CSPECVAR =		0x0800,	/* single-character shell variable name */
+  CSUBSTOP =		0x1000,	/* values of OP for ${word[:]OPstuff} */
+  CBLANK =		0x2000	/* whitespace (blank) character */
+};
 
 /* Defines for use by the rest of the shell. */
 // extern int sh_syntaxtab[];
 // extern int sh_syntabsiz;
 
-#define shellmeta(c)	(sh_syntaxtab[(unsigned char)(c)] & CSHMETA)
-#define shellbreak(c)	(sh_syntaxtab[(unsigned char)(c)] & CSHBRK)
-#define shellquote(c)	(sh_syntaxtab[(unsigned char)(c)] & CQUOTE)
-#define shellxquote(c)	(sh_syntaxtab[(unsigned char)(c)] & CXQUOTE)
+#define shellmeta(c)	(sh_syntaxtab[static_cast<unsigned char> (c)] & CSHMETA)
+#define shellbreak(c)	(sh_syntaxtab[static_cast<unsigned char> (c)] & CSHBRK)
+#define shellquote(c)	(sh_syntaxtab[static_cast<unsigned char> (c)] & CQUOTE)
+#define shellxquote(c)	(sh_syntaxtab[static_cast<unsigned char> (c)] & CXQUOTE)
 
-#define shellblank(c)	(sh_syntaxtab[(unsigned char)(c)] & CBLANK)
+#define shellblank(c)	(sh_syntaxtab[static_cast<unsigned char> (c)] & CBLANK)
 
 #define parserblank(c)	((c) == ' ' || (c) == '\t')
 
-#define issyntype(c, t)	((sh_syntaxtab[(unsigned char)(c)] & (t)) != 0)
-#define notsyntype(c,t) ((sh_syntaxtab[(unsigned char)(c)] & (t)) == 0)
+#define issyntype(c, t)	((sh_syntaxtab[static_cast<unsigned char> (c)] & (t)) != 0)
+#define notsyntype(c,t) ((sh_syntaxtab[static_cast<unsigned char> (c)] & (t)) == 0)
 
 #if defined (PROCESS_SUBSTITUTION)
 #  define shellexp(c)	((c) == '$' || (c) == '<' || (c) == '>')

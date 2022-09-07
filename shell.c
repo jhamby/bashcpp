@@ -76,7 +76,6 @@
 #  include <readline/readline.h>
 #endif
 
-#include <tilde/tilde.h>
 #include <glob/strmatch.h>
 
 #if defined (__OPENNT)
@@ -231,9 +230,6 @@ SimpleState::SimpleState () :
 	shell_pgrp (NO_PID),
 	terminal_pgrp (NO_PID),
 	original_pgrp (NO_PID),
-#if defined (PGRP_PIPE)
-	pgrp_pipe ({-1, -1}),
-#endif
 	last_made_pid (NO_PID),
 	last_asynchronous_pid (NO_PID),
 	current_command_number (1),
@@ -242,6 +238,8 @@ SimpleState::SimpleState () :
 #endif
 	rseed (1),
 	rseed32 (1073741823),
+	last_command_subst_pid (NO_PID),
+	current_command_subst_pid (NO_PID),
 #if defined (JOB_CONTROL)
 	job_control (true),
 #endif
@@ -266,11 +264,19 @@ SimpleState::SimpleState () :
 	posixly_correct (0)
 #endif
 {
+#if defined (PGRP_PIPE)
+  // initialize the array here for strict C++03 compatibility
+  pgrp_pipe[0] = -1;
+  pgrp_pipe[1] = -1;
+#endif
 }
 
 // Everything happens when we construct the Shell.
 Shell::Shell (int argc, char **argv, char **env) : SimpleState ()
 {
+  // alloc this 4K read buffer from the heap to keep the class size small
+  zread_lbuf = new char[ZBUFSIZ];
+
   int i;
   int code, old_errexit_flag;
 #if defined (RESTRICTED_SHELL)

@@ -45,14 +45,14 @@ Shell::zreadc (int fd, char *cp)
 
   if (zread_lind == zread_lused || zread_lused == 0)
     {
-      nr = zread (fd, zread_lbuf, sizeof (zread_lbuf));
+      nr = zread (fd, zread_lbuf, ZBUFSIZ);
       zread_lind = 0;
       if (nr <= 0)
 	{
 	  zread_lused = 0;
 	  return nr;
 	}
-      zread_lused = nr;
+      zread_lused = static_cast<unsigned int> (nr);
     }
   if (cp)
     *cp = zread_lbuf[zread_lind++];
@@ -68,14 +68,14 @@ Shell::zreadcintr (int fd, char *cp)
 
   if (zread_lind == zread_lused || zread_lused == 0)
     {
-      nr = zreadintr (fd, zread_lbuf, sizeof (zread_lbuf));
+      nr = zreadintr (fd, zread_lbuf, ZBUFSIZ);
       zread_lind = 0;
       if (nr <= 0)
 	{
 	  zread_lused = 0;
 	  return nr;
 	}
-      zread_lused = nr;
+      zread_lused = static_cast<unsigned int> (nr);
     }
   if (cp)
     *cp = zread_lbuf[zread_lind++];
@@ -91,8 +91,8 @@ Shell::zreadn (int fd, char *cp, size_t len)
 
   if (zread_lind == zread_lused || zread_lused == 0)
     {
-      if (len > sizeof (zread_lbuf))
-	len = sizeof (zread_lbuf);
+      if (len > ZBUFSIZ)
+	len = ZBUFSIZ;
       nr = zread (fd, zread_lbuf, len);
       zread_lind = 0;
       if (nr <= 0)
@@ -100,7 +100,7 @@ Shell::zreadn (int fd, char *cp, size_t len)
 	  zread_lused = 0;
 	  return nr;
 	}
-      zread_lused = nr;
+      zread_lused = static_cast<unsigned int> (nr);
     }
   if (cp)
     *cp = zread_lbuf[zread_lind++];

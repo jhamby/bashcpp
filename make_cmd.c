@@ -45,6 +45,9 @@
 
 #include "shmbutil.h"
 
+namespace bash
+{
+
 // int here_doc_first_line = 0;
 
 WORD_DESC *
@@ -787,3 +790,5 @@ connect_async_list (COMMAND *command, COMMAND *command2, int connector)
   t1->value.Connection->second = t2;
   return command;
 }
+
+}  // namespace bash

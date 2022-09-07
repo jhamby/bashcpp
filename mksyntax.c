@@ -43,7 +43,7 @@ namespace bash
 #pragma clang diagnostic ignored "-Wpadded"
 
 static struct wordflag {
-	uint16_t	flag;
+	char_flags	flag;
 	const char	*fstr;
 } wordflags[] = {
 	{ CWORD,	"CWORD" },

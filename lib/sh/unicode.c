@@ -31,22 +31,8 @@
 #include <climits>
 #include <cstring>
 
-#if HAVE_ICONV
-#  include <iconv.h>
-#endif
-
-#ifndef USHORT_MAX
-#  ifdef USHRT_MAX
-#    define USHORT_MAX USHRT_MAX
-#  else
-#    define USHORT_MAX ((unsigned short) ~(unsigned short)0)
-#  endif
-#endif
-
 #if defined (HAVE_LOCALE_CHARSET)
 extern "C" const char *locale_charset (void);
-#else
-extern char *get_locale_var (const char *);
 #endif
 
 #include "shell.h"
@@ -54,22 +40,15 @@ extern char *get_locale_var (const char *);
 namespace bash
 {
 
-static int u32init = 0;
-static int utf8locale = 0;
-#if defined (HAVE_ICONV)
-static iconv_t localconv;
-#endif
-
 #ifndef HAVE_LOCALE_CHARSET
-static char charsetbuf[40];
 
-static char *
-stub_charset ()
+char *
+Shell::stub_charset ()
 {
   const char *locale, *s;
 
   locale = get_locale_var ("LC_CTYPE");
-  if (locale == 0 || *locale == 0)
+  if (locale == nullptr || *locale == 0)
     {
       std::strcpy (charsetbuf, "ASCII");
       return charsetbuf;
@@ -91,46 +70,20 @@ stub_charset ()
 #endif
 
 void
-u32reset ()
+Shell::u32reset ()
 {
 #if defined (HAVE_ICONV)
-  if (u32init && localconv != (iconv_t)-1)
+  if (u32init && localconv != reinterpret_cast<iconv_t> (-1))
     {
       ::iconv_close (localconv);
-      localconv = (iconv_t)-1;
+      localconv = reinterpret_cast<iconv_t> (-1);
     }
 #endif
-  u32init = 0;
-  utf8locale = 0;
+  u32init = false;
+  utf8locale = false;
 }
 
-/* u32toascii ? */
-int
-u32tochar (unsigned long x, char *s)
-{
-  int l;
-
-  l = (x <= UCHAR_MAX) ? 1 : ((x <= USHORT_MAX) ? 2 : 4);
-
-  if (x <= UCHAR_MAX)
-    s[0] = x & 0xFF;
-  else if (x <= USHORT_MAX)	/* assume unsigned short = 16 bits */
-    {
-      s[0] = (x >> 8) & 0xFF;
-      s[1] = x & 0xFF;
-    }
-  else
-    {
-      s[0] = (x >> 24) & 0xFF;
-      s[1] = (x >> 16) & 0xFF;
-      s[2] = (x >> 8) & 0xFF;
-      s[3] = x & 0xFF;
-    }
-  s[l] = '\0';
-  return l;
-}
-
-int
+static inline int
 u32tocesc (u_bits32_t wc, char *s)
 {
   int l;
@@ -143,7 +96,7 @@ u32tocesc (u_bits32_t wc, char *s)
 }
 
 /* Convert unsigned 32-bit int to utf-8 character string */
-int
+static inline int
 u32toutf8 (u_bits32_t wc, char *s)
 {
   int l;
@@ -155,44 +108,44 @@ u32toutf8 (u_bits32_t wc, char *s)
     }
   else if (wc < 0x0800)
     {
-      s[0] = (wc >> 6) | 0xc0;
-      s[1] = (wc & 0x3f) | 0x80;
+      s[0] = static_cast<char> ((wc >> 6) | 0xc0);
+      s[1] = static_cast<char> ((wc & 0x3f) | 0x80);
       l = 2;
     }
   else if (wc < 0x10000)
     {
       /* Technically, we could return 0 here if 0xd800 <= wc <= 0x0dfff */
-      s[0] = (wc >> 12) | 0xe0;
-      s[1] = ((wc >> 6) & 0x3f) | 0x80;
-      s[2] = (wc & 0x3f) | 0x80;
+      s[0] = static_cast<char> ((wc >> 12) | 0xe0);
+      s[1] = static_cast<char> (((wc >> 6) & 0x3f) | 0x80);
+      s[2] = static_cast<char> ((wc & 0x3f) | 0x80);
       l = 3;
     }
   else if (wc < 0x200000)
     {
-      s[0] = (wc >> 18) | 0xf0;
-      s[1] = ((wc >> 12) & 0x3f) | 0x80;
-      s[2] = ((wc >>  6) & 0x3f) | 0x80;
-      s[3] = (wc & 0x3f) | 0x80;
+      s[0] = static_cast<char> ((wc >> 18) | 0xf0);
+      s[1] = static_cast<char> (((wc >> 12) & 0x3f) | 0x80);
+      s[2] = static_cast<char> (((wc >>  6) & 0x3f) | 0x80);
+      s[3] = static_cast<char> ((wc & 0x3f) | 0x80);
       l = 4;
     }
   /* Strictly speaking, UTF-8 doesn't have characters longer than 4 bytes */
   else if (wc < 0x04000000)
     {
-      s[0] = (wc >> 24) | 0xf8;
-      s[1] = ((wc >> 18) & 0x3f) | 0x80;
-      s[2] = ((wc >> 12) & 0x3f) | 0x80;
-      s[3] = ((wc >>  6) & 0x3f) | 0x80;
-      s[4] = (wc & 0x3f) | 0x80;
+      s[0] = static_cast<char> ((wc >> 24) | 0xf8);
+      s[1] = static_cast<char> (((wc >> 18) & 0x3f) | 0x80);
+      s[2] = static_cast<char> (((wc >> 12) & 0x3f) | 0x80);
+      s[3] = static_cast<char> (((wc >>  6) & 0x3f) | 0x80);
+      s[4] = static_cast<char> ((wc & 0x3f) | 0x80);
       l = 5;
     }
   else if (wc < 0x080000000)
     {
-      s[0] = (wc >> 30) | 0xfc;
-      s[1] = ((wc >> 24) & 0x3f) | 0x80;
-      s[2] = ((wc >> 18) & 0x3f) | 0x80;
-      s[3] = ((wc >> 12) & 0x3f) | 0x80;
-      s[4] = ((wc >>  6) & 0x3f) | 0x80;
-      s[5] = (wc & 0x3f) | 0x80;
+      s[0] = static_cast<char> ((wc >> 30) | 0xfc);
+      s[1] = static_cast<char> (((wc >> 24) & 0x3f) | 0x80);
+      s[2] = static_cast<char> (((wc >> 18) & 0x3f) | 0x80);
+      s[3] = static_cast<char> (((wc >> 12) & 0x3f) | 0x80);
+      s[4] = static_cast<char> (((wc >>  6) & 0x3f) | 0x80);
+      s[5] = static_cast<char> ((wc & 0x3f) | 0x80);
       l = 6;
     }
   else
@@ -204,7 +157,7 @@ u32toutf8 (u_bits32_t wc, char *s)
 
 /* Convert a 32-bit unsigned int (unicode) to a UTF-16 string.  Rarely used,
    only if sizeof(wchar_t) == 2. */
-int
+static inline int
 u32toutf16 (u_bits32_t c, wchar_t *s)
 {
   int l;
@@ -229,12 +182,12 @@ u32toutf16 (u_bits32_t c, wchar_t *s)
 /* convert a single unicode-32 character into a multibyte string and put the
    result in S, which must be large enough (at least max(10,MB_LEN_MAX) bytes) */
 int
-Shell::u32cconv (unsigned long c, char *s)
+Shell::u32cconv (u_bits32_t c, char *s)
 {
   wchar_t wc;
   wchar_t ws[3];
   int n;
-#if HAVE_ICONV
+#if defined (HAVE_ICONV)
   const char *charset;
   char obuf[25], *optr;
   size_t obytesleft;
@@ -242,8 +195,8 @@ Shell::u32cconv (unsigned long c, char *s)
   size_t sn;
 #endif
 
-#if __STDC_ISO_10646__
-  wc = c;
+#if defined (__STDC_ISO_10646__)
+  wc = static_cast<wchar_t> (c);
   if (sizeof (wchar_t) == 4 && c <= 0x7fffffff)
     n = std::wctomb (s, wc);
   else if (sizeof (wchar_t) == 2 && c <= 0x10ffff && u32toutf16 (c, ws))
@@ -254,17 +207,17 @@ Shell::u32cconv (unsigned long c, char *s)
     return n;
 #endif
 
-#if HAVE_ICONV
+#if defined (HAVE_ICONV)
   /* this is mostly from coreutils-8.5/lib/unicodeio.c */
-  if (u32init == 0)
+  if (!u32init)
     {
       utf8locale = locale_utf8locale;
       localconv = reinterpret_cast<iconv_t> (-1);
-      if (utf8locale == 0)
+      if (!utf8locale)
 	{
-#if HAVE_LOCALE_CHARSET
+#if defined (HAVE_LOCALE_CHARSET)
 	  charset = locale_charset ();
-#elif HAVE_NL_LANGINFO
+#elif defined (HAVE_NL_LANGINFO)
 	  charset = nl_langinfo (CODESET);
 #else
 	  charset = stub_charset ();
@@ -274,7 +227,7 @@ Shell::u32cconv (unsigned long c, char *s)
 	    /* We assume ASCII when presented with an unknown encoding. */
 	    localconv = iconv_open ("ASCII", "UTF-8");
 	}
-      u32init = 1;
+      u32init = true;
     }
 
   /* NL_LANGINFO and locale_charset used when setting locale_utf8locale */
@@ -287,17 +240,18 @@ Shell::u32cconv (unsigned long c, char *s)
   /* If the conversion is not supported, even the ASCII requested above, we
      bail now.  Currently we return the UTF-8 conversion.  We could return
      u32tocesc(). */
-  if (localconv == (iconv_t)-1)
+  if (localconv == reinterpret_cast<iconv_t> (-1))
     return n;
 
   optr = obuf;
   obytesleft = sizeof (obuf);
   iptr = s;
-  sn = n;
+  sn = static_cast<size_t> (n);
 
-  ::iconv (localconv, NULL, NULL, NULL, NULL);
+  ::iconv (localconv, nullptr, nullptr, nullptr, nullptr);
 
-  if (::iconv (localconv, (char **)&iptr, &sn, &optr, &obytesleft) == (size_t)-1)
+  if (::iconv (localconv, const_cast<char **> (&iptr), &sn, &optr, &obytesleft) ==
+		static_cast<size_t> (-1))
     {
       /* You get ISO C99 escape sequences if iconv fails */
       n = u32tocesc (c, s);
@@ -308,15 +262,16 @@ Shell::u32cconv (unsigned long c, char *s)
 
   /* number of chars to be copied is optr - obuf if we want to do bounds
      checking */
-  strcpy (s, obuf);
-  return optr - obuf;
-#endif	/* HAVE_ICONV */
+  std::strcpy (s, obuf);
+  return static_cast<int> (optr - obuf);
 
+#else	/* !HAVE_ICONV */
   if (locale_utf8locale)
     n = u32toutf8 (c, s);
   else
     n = u32tocesc (c, s);	/* fallback is ISO C99 escape sequences */
   return n;
+#endif	/* HAVE_ICONV */
 }
 #else
 void

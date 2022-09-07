@@ -59,6 +59,12 @@ class error_exit_exception : public exit_exception {};
 /* String extraction error. */
 class extract_string_error : public std::exception {};
 
+/* Exceptions used by expansion functions in subst.c. */
+
+class subst_expand_error : public std::exception {};
+
+class subst_expand_fatal : public subst_expand_error {};
+
 /* Global inline functions, previously C preprocessor macros. */
 
 // Create a new copy of null-terminated string s. Free with delete[].
@@ -151,13 +157,6 @@ utf8_mbschr (char *s, int c)
   return std::strchr (s, c);		/* for now */
 }
 
-static inline int
-utf8_mbscmp (const char *s1, const char *s2)
-{
-  /* Use the fact that the UTF-8 encoding preserves lexicographic order.  */
-  return std::strcmp (s1, s2);
-}
-
 static inline const char *
 utf8_mbsmbchar (const char *str)
 {
@@ -174,15 +173,15 @@ utf8_mbsmbchar (char *str)
 }
 
 /* Adapted from GNU gnulib. Handles UTF-8 characters up to 4 bytes long */
-static inline int
+static inline size_t
 utf8_mblen (const char *s, size_t n)
 {
   unsigned char c, c1, c2, c3;
 
-  if (s == 0)
+  if (s == nullptr)
     return 0;	/* no shift states */
   if (n <= 0)
-    return -1;
+    return static_cast<size_t> (-1);
 
   c = static_cast<unsigned char> (*s);
   if (c < 0x80)
@@ -193,7 +192,7 @@ utf8_mblen (const char *s, size_t n)
       if (c < 0xe0)
 	{
 	  if (n == 1)
-	    return -2;
+	    return static_cast<size_t> (-2);
 
 	  /*
 	   *				c	c1
@@ -207,7 +206,7 @@ utf8_mblen (const char *s, size_t n)
       else if (c < 0xf0)
 	{
 	  if (n == 1)
-	    return -2;
+	    return static_cast<size_t> (-2);
 
 	  /*
 	   *				c	c1	c2
@@ -223,7 +222,7 @@ utf8_mblen (const char *s, size_t n)
 		&& (c != 0xed || c1 < 0xa0))
 	    {
 	      if (n == 2)
-		return -2;		/* incomplete */
+		return static_cast<size_t> (-2);		/* incomplete */
 
 	      c2 = static_cast<unsigned char> (s[2]);
 	      if ((c2 ^ 0x80) < 0x40)
@@ -233,7 +232,7 @@ utf8_mblen (const char *s, size_t n)
       else if (c <= 0xf4)
 	{
 	  if (n == 1)
-	    return -2;
+	    return static_cast<size_t> (-2);
 
 	  /*
 	   *				c	c1	c2	c3
@@ -247,13 +246,13 @@ utf8_mblen (const char *s, size_t n)
 		&& (c < 0xf4 || (c == 0xf4 && c1 < 0x90)))
 	    {
 	      if (n == 2)
-		return -2;		/* incomplete */
+		return static_cast<size_t> (-2);		/* incomplete */
 
 	      c2 = static_cast<unsigned char> (s[2]);
 	      if ((c2 ^ 0x80) < 0x40)
 		{
 		  if (n == 3)
-		    return -2;
+		    return static_cast<size_t> (-2);
 
 		  c3 = static_cast<unsigned char> (s[3]);
 		  if ((c3 ^ 0x80) < 0x40)
@@ -263,7 +262,7 @@ utf8_mblen (const char *s, size_t n)
 	}
     }
   /* invalid or incomplete multibyte character */
-  return -1;
+  return static_cast<size_t> (-1);
 }
 
 #endif  // HANDLE_MULTIBYTE

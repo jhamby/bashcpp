@@ -97,8 +97,17 @@ _rl_is_mbchar_matched (const char *string, size_t seed, size_t end,
 		? _rl_find_prev_mbchar ((b), (s), (f)) \
 		: ((s) - 1))
 
-#ifndef MB_INVALIDCH
-#define MB_INVALIDCH(x)		((x) == static_cast<size_t> (-1) || (x) == static_cast<size_t> (-2))
+#if !defined (MB_NULLWCH)
+static inline bool
+MB_INVALIDCH (int size) {
+  return size == -1 || size == -2;
+}
+
+static inline bool
+MB_INVALIDCH (size_t size) {
+  return size == static_cast<size_t> (-1) || size == static_cast<size_t> (-2);
+}
+
 #define MB_NULLWCH(x)		((x) == 0)
 #endif
 

@@ -94,18 +94,31 @@ void set_working_directory (const char *);
 /* declarations for functions defined in lib/sh/casemod.c */
 char *sh_modcase (const char *, const char *, int);
 
-/* Defines for flags argument to sh_modcase.  These need to agree with what's
-   in lib/sh/casemode.c */
-#define CASE_LOWER	0x0001
-#define CASE_UPPER	0x0002
-#define CASE_CAPITALIZE	0x0004
-#define CASE_UNCAP	0x0008
-#define CASE_TOGGLE	0x0010
-#define CASE_TOGGLEALL	0x0020
-#define CASE_UPFIRST	0x0040
-#define CASE_LOWFIRST	0x0080
+/* Enum type for the flags argument to sh_modcase. */
+enum sh_modcase_flags {
+  CASE_NOOP =		     0,
+  CASE_LOWER =		0x0001,
+  CASE_UPPER =		0x0002,
+  CASE_CAPITALIZE =	0x0004,
+  CASE_UNCAP =		0x0008,
+  CASE_TOGGLE =		0x0010,
+  CASE_TOGGLEALL =	0x0020,
+  CASE_UPFIRST =	0x0040,
+  CASE_LOWFIRST =	0x0080,
 
-#define CASE_USEWORDS	0x1000
+  CASE_USEWORDS =	0x1000
+};
+
+static inline sh_modcase_flags&
+operator &= (sh_modcase_flags &a, const sh_modcase_flags &b) {
+  a = static_cast<sh_modcase_flags> (static_cast<uint32_t> (a) & static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline sh_modcase_flags
+operator ~ (const sh_modcase_flags &a) {
+  return static_cast<sh_modcase_flags> (~static_cast<uint32_t> (a));
+}
 
 /* declarations for functions defined in lib/sh/clktck.c */
 long get_clk_tck ();
@@ -132,8 +145,14 @@ char *fmtullong (unsigned long long int, int, char *, size_t, int);
 char *fmtumax (uintmax_t, int, char *, size_t, int);
 
 /* Declarations for functions defined in lib/sh/fnxform.c */
+
+#if defined (MACOSX)
 char *fnx_fromfs (char *, size_t);
 char *fnx_tofs (char *, size_t);
+#else
+static inline char *fnx_fromfs (char *fname, size_t) { return fname; }
+static inline char *fnx_tofs (char *fname, size_t) { return fname; }
+#endif
 
 /* Declarations for functions defined in lib/sh/input_avail.c */
 int input_avail (int);
@@ -198,9 +217,6 @@ char *mbscasecmp (const char *, const char *);
 
 /* declarations for functions defined in lib/sh/mbschr.c */
 char *mbschr (const char *, int);
-
-/* declarations for functions defined in lib/sh/mbscmp.c */
-char *mbscmp (const char *, const char *);
 
 /* declarations for functions defined in lib/sh/netconn.c */
 bool isnetconn (int);
@@ -361,27 +377,11 @@ ssize_t wcsnwidth (const wchar_t *, size_t, size_t);
 /* declarations for functions defined in lib/sh/winsize.c */
 void get_new_window_size (int, int *, int *);
 
-/* declarations for functions defined in lib/sh/zcatfd.c */
-int zcatfd (int, int, const char *);
-
 /* declarations for functions defined in lib/sh/zgetline.c */
 ssize_t zgetline (int, char **, size_t *, int, bool);
 
 /* declarations for functions defined in lib/sh/zmapfd.c */
 int zmapfd (int, char **, const char *);
-
-/* declarations for functions defined in lib/sh/zread.c */
-ssize_t zread (int, char *, size_t);
-ssize_t zreadretry (int, char *, size_t);
-ssize_t zreadintr (int, char *, size_t);
-ssize_t zreadc (int, char *);
-ssize_t zreadcintr (int, char *);
-ssize_t zreadn (int, char *, size_t);
-void zreset ();
-void zsyncfd (int);
-
-/* declarations for functions defined in lib/sh/zwrite.c */
-int zwrite (int, char *, size_t);
 
 /* declarations for functions defined in lib/glob/gmisc.c */
 bool match_pattern_char (const char *, const char *, int);
@@ -474,6 +474,11 @@ intmax_t strtoimax (const char *, char **, int);
 /* declarations for functions defined in lib/sh/strumax.c */
 #if !defined (HAVE_DECL_STRTOUMAX)
 uintmax_t strtoumax (const char *, char **, int);
+#endif
+
+// This value was previously stored in lib/sh/zread.c.
+#ifndef ZBUFSIZ
+#  define ZBUFSIZ 4096
 #endif
 
 #endif /* _EXTERNS_H_ */

@@ -86,7 +86,7 @@ public:
 
   /* Generic function that takes a character buffer (which could be the readline
      line buffer) and an index into it (which could be rl_point) and returns
-     an int. Also used for the inhibit history expansion callback. */
+     unsigned int (or -1). Also used for the inhibit history expansion callback. */
   typedef unsigned int (History::*rl_linebuf_func_t) (const std::string &, int);
 
   /* Initialization and state management. */

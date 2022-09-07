@@ -83,15 +83,15 @@ LIBRARY_NAME = libsh.a
 # The C code source files for this library.
 CSOURCES = clktck.c clock.c getcwd.c getenv.c oslib.c setlinebuf.c \
 	   strcasecmp.c strerror.c \
-	   vprint.c rename.c zread.c zwrite.c shtty.c \
+	   vprint.c rename.c zread.c shtty.c \
 	   inet_aton.c netconn.c netopen.c strpbrk.c timeval.c makepath.c \
 	   pathcanon.c pathphys.c tmpfile.c spell.c \
 	   shquote.c strtrans.c strcasestr.c snprintf.c mailstat.c \
 	   fmtulong.c fmtullong.c fmtumax.c shmatch.c strnlen.c \
 	   strtoimax.c strtoumax.c \
 	   mktime.c mbschr.c zcatfd.c zmapfd.c winsize.c eaccess.c \
-	   wcsdup.c fpurge.c zgetline.c mbscmp.c uconvert.c ufuncs.c \
-	   casemod.c dprintf.c input_avail.c mbscasecmp.c fnxform.c \
+	   fpurge.c zgetline.c uconvert.c ufuncs.c \
+	   casemod.c dprintf.c input_avail.c fnxform.c \
 	   strchrnul.c unicode.c wcswidth.c wcsnwidth.c shmbchar.c strdup.c \
 	   random.c gettimeofday.c
 
@@ -101,14 +101,14 @@ HSOURCES =
 # The object files contained in $(LIBRARY_NAME)
 LIBOBJS = @LIBOBJS@
 OBJECTS = clktck.o clock.o getenv.o oslib.o setlinebuf.o strnlen.o \
-	  zread.o zwrite.o shtty.o shmatch.o eaccess.o \
+	  zread.o shtty.o shmatch.o eaccess.o \
 	  netconn.o netopen.o timeval.o makepath.o pathcanon.o \
 	  pathphys.o tmpfile.o spell.o shquote.o \
 	  strtrans.o snprintf.o mailstat.o fmtulong.o \
 	  fmtullong.o fmtumax.o \
-	  mktime.o mbschr.o zcatfd.o zmapfd.o winsize.o wcsdup.o \
-	  fpurge.o zgetline.o mbscmp.o uconvert.o ufuncs.o casemod.o \
-	  input_avail.o mbscasecmp.o fnxform.o unicode.o shmbchar.o \
+	  mktime.o mbschr.o zcatfd.o zmapfd.o winsize.o \
+	  fpurge.o zgetline.o uconvert.o ufuncs.o casemod.o \
+	  input_avail.o fnxform.o unicode.o shmbchar.o \
 	  random.o gettimeofday.o wcsnwidth.o ${LIBOBJS}
 
 SUPPORT = Makefile
@@ -161,9 +161,7 @@ inet_aton.o: inet_aton.c
 input_avail.o: input_avail.c
 mailstat.o: mailstat.c
 makepath.o: makepath.c
-mbscasecmp.o: mbscasecmp.c
 mbschr.o: mbschr.c
-mbscmp.o: mbscmp.c
 memset.o: memset.c
 mktime.o: mktime.c
 netconn.o: netconn.c
@@ -196,7 +194,6 @@ uconvert.o: uconvert.c
 ufuncs.o: ufuncs.c
 unicode.o: unicode.c
 vprint.o: vprint.c
-wcsdup.o: wcsdup.c
 wcsnwidth.o: wcsnwidth.c
 wcswidth.o: wcswidth.c
 winsize.o: winsize.c
@@ -204,7 +201,6 @@ zcatfd.o: zcatfd.c
 zmapfd.o: zmapfd.c
 zgetline.o: zgetline.c
 zread.o: zread.c
-zwrite.o: zwrite.c
 
 # dependencies for c files that include other c files
 fmtullong.o: fmtulong.c
@@ -228,9 +224,7 @@ inet_aton.o: ${BUILD_DIR}/config.h
 input_avail.o: ${BUILD_DIR}/config.h
 mailstat.o: ${BUILD_DIR}/config.h
 makepath.o: ${BUILD_DIR}/config.h
-mbscasecmp.o: ${BUILD_DIR}/config.h
 mbschr.o: ${BUILD_DIR}/config.h
-mbscmp.o: ${BUILD_DIR}/config.h
 memset.o: ${BUILD_DIR}/config.h
 mktime.o: ${BUILD_DIR}/config.h
 netconn.o: ${BUILD_DIR}/config.h
@@ -263,7 +257,6 @@ uconvert.o: ${BUILD_DIR}/config.h
 ufuncs.o: ${BUILD_DIR}/config.h
 unicode.o: ${BUILD_DIR}/config.h
 vprint.o: ${BUILD_DIR}/config.h
-wcsdup.o: ${BUILD_DIR}/config.h
 wcsnwidth.o: ${BUILD_DIR}/config.h
 wcswidth.o: ${BUILD_DIR}/config.h
 winsize.o: ${BUILD_DIR}/config.h
@@ -271,7 +264,6 @@ zcatfd.o: ${BUILD_DIR}/config.h
 zgetline.o: ${BUILD_DIR}/config.h
 zmapfd.o: ${BUILD_DIR}/config.h
 zread.o: ${BUILD_DIR}/config.h
-zwrite.o: ${BUILD_DIR}/config.h
 
 clktck.o: ${topdir}/bashtypes.h
 

@@ -34,7 +34,6 @@
 #include <cstdio>
 #include <cctype>
 #include <cstdlib>
-#include <new>
 
 #include <shmbchar.h>
 #include <shmbutil.h>
@@ -43,40 +42,53 @@
 
 #include <glob/strmatch.h>
 
+#include "externs.h"
+
 namespace bash
 {
 
-#define _to_wupper(wc)	(std::iswlower (wc) ? std::towupper (wc) : (wc))
-#define _to_wlower(wc)	(std::iswupper (wc) ? std::towlower (wc) : (wc))
-
 #if !defined (HANDLE_MULTIBYTE)
+// XXX the non-multibyte code path will need updating
 #  define cval(s, i)	((s)[(i)])
-#  define iswalnum(c)	(std::isalnum(c))
+#  define iswalnum(c)	isalnum(c)
 #  define TOGGLE(x)	(std::isupper (x) ? std::tolower ((unsigned char)x) : (std::toupper (x)))
 #else
-#  define TOGGLE(x)	(std::iswupper (x) ? std::towlower (x) : (_to_wupper(x)))
+
+static inline wchar_t
+_to_wupper(wchar_t x)
+{
+  wint_t wc = static_cast<wint_t> (x);
+  return static_cast<wchar_t> (std::iswlower (wc) ? std::towupper (wc) : wc);
+}
+
+static inline wchar_t
+_to_wlower(wchar_t x)
+{
+  wint_t wc = static_cast<wint_t> (x);
+  return static_cast<wchar_t> (std::iswupper (wc) ? std::towlower (wc) : wc);
+}
+
+static inline wchar_t
+TOGGLE (wchar_t x)
+{
+  wint_t wc = static_cast<wint_t> (x);
+  if (std::iswupper (wc))
+    return static_cast<wchar_t> (std::towlower (wc));
+  else if (std::iswlower (wc))
+    return static_cast<wchar_t> (std::towupper (wc));
+  else
+    return x;
+}
+
 #endif
-
-/* These must agree with the defines in externs.h */
-#define CASE_NOOP	0x0000
-#define CASE_LOWER	0x0001
-#define CASE_UPPER	0x0002
-#define CASE_CAPITALIZE	0x0004
-#define CASE_UNCAP	0x0008
-#define CASE_TOGGLE	0x0010
-#define CASE_TOGGLEALL	0x0020
-#define CASE_UPFIRST	0x0040
-#define CASE_LOWFIRST	0x0080
-
-#define CASE_USEWORDS	0x1000		/* modify behavior to act on words in passed string */
 
 #if defined (HANDLE_MULTIBYTE)
 static inline wchar_t
-cval (const char *s, int i)
+cval (const char *s, size_t i)
 {
   size_t tmp;
   wchar_t wc;
-  int l;
+  size_t l;
   mbstate_t mps;
 
   if (MB_CUR_MAX == 1 || is_basic (s[i]))
@@ -96,17 +108,20 @@ cval (const char *s, int i)
 }
 #endif
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+
 /* Modify the case of characters in STRING matching PAT based on the value of
    FLAGS.  If PAT is null, modify the case of each character */
 char *
-Shell::sh_modcase (const char *string, const char *pat, int flags)
+Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
 {
 #if defined (HANDLE_MULTIBYTE)
-  char mb[MB_LEN_MAX+1];
+  char mb[MB_LEN_MAX + 1];
   mbstate_t state;
 #endif
 
-  if (string == 0 || *string == 0)
+  if (string == nullptr || *string == 0)
     {
       char *ret = new char[1];
       ret[0] = '\0';
@@ -114,18 +129,18 @@ Shell::sh_modcase (const char *string, const char *pat, int flags)
     }
 
 #if defined (HANDLE_MULTIBYTE)
-  memset (&state, 0, sizeof (mbstate_t));
+  std::memset (&state, 0, sizeof (mbstate_t));
 #endif
 
   size_t start = 0;
   size_t end = std::strlen (string);
-  int mb_cur_max = MB_CUR_MAX;
+  size_t mb_cur_max = MB_CUR_MAX;
 
   char *ret = new char[2 * end + 1];
   int retind = 0;
 
   /* See if we are supposed to split on alphanumerics and operate on each word */
-  int usewords = (flags & CASE_USEWORDS);
+  bool usewords = (flags & CASE_USEWORDS);
   flags &= ~CASE_USEWORDS;
 
   bool inword = false;
@@ -133,7 +148,7 @@ Shell::sh_modcase (const char *string, const char *pat, int flags)
     {
       wchar_t wc = cval (string, start);
 
-      if (iswalnum (wc) == 0)
+      if (std::iswalnum (static_cast<wint_t> (wc)) == 0)
 	inword = false;
 
       if (pat)
@@ -142,19 +157,19 @@ Shell::sh_modcase (const char *string, const char *pat, int flags)
 	  ADVANCE_CHAR (string, end, next);
 	  char *s = substring (string, start, next);
 	  bool match = (strmatch (pat, s, FNM_EXTMATCH) != FNM_NOMATCH);
-	  free (s);
+	  delete[] s;
 	  if (!match)
             {
               /* copy unmatched portion */
-              memcpy (ret + retind, string + start, next - start);
+              std::memcpy (ret + retind, string + start, next - start);
               retind += next - start;
               start = next;
-              inword = 1;
+              inword = true;
               continue;
             }
 	}
 
-      int nop;
+      sh_modcase_flags nop;
 
       /* XXX - for now, the toggling operators work on the individual
 	 words in the string, breaking on alphanumerics.  Should I
@@ -214,7 +229,7 @@ singlebyte:
 	    case CASE_TOGGLEALL:
 	    case CASE_TOGGLE: nc = TOGGLE (wc); break;
 	    }
-	  ret[retind++] = nc;
+	  ret[retind++] = static_cast<char> (nc);
 	}
 #if defined (HANDLE_MULTIBYTE)
       else
@@ -235,20 +250,20 @@ singlebyte:
 	  switch (nop)
 	    {
 	    default:
-	    case CASE_NOOP:  nwc = wc; break;
-	    case CASE_UPPER:  nwc = _to_wupper (wc); break;
-	    case CASE_LOWER:  nwc = _to_wlower (wc); break;
+	    case CASE_NOOP:	nwc = wc; break;
+	    case CASE_UPPER:	nwc = _to_wupper (wc); break;
+	    case CASE_LOWER:	nwc = _to_wlower (wc); break;
 	    case CASE_TOGGLEALL:
-	    case CASE_TOGGLE: nwc = TOGGLE (wc); break;
+	    case CASE_TOGGLE:	nwc = TOGGLE (wc); break;
 	    }
 
 	  /* We don't have to convert `wide' characters that are in the
 	     unsigned char range back to single-byte `multibyte' characters. */
-	  if ((int)nwc <= UCHAR_MAX && is_basic ((int)nwc))
-	    ret[retind++] = nwc;
+	  if (static_cast<int> (nwc) <= UCHAR_MAX && is_basic (static_cast<char> (nwc)))
+	    ret[retind++] = static_cast<char> (nwc);
 	  else
 	    {
-	      size_t mlen = wcrtomb (mb, nwc, &state);
+	      size_t mlen = std::wcrtomb (mb, nwc, &state);
 	      if (mlen > 0)
 		mb[mlen] = '\0';
 	      /* Don't assume the same width */
@@ -264,5 +279,7 @@ singlebyte:
   ret[retind] = '\0';
   return ret;
 }
+
+#pragma clang diagnostic pop	// ignore -Wswitch-enum
 
 }  // namespace bash

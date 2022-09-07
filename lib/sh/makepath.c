@@ -30,8 +30,6 @@
 #include "shell.h"
 #include "externs.h"
 
-#include <tilde/tilde.h>
-
 namespace bash
 {
 

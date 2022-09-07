@@ -37,6 +37,11 @@
 #  include "stat-time.h"
 #endif
 
+#include "externs.h"
+
+namespace bash
+{
+
 /* A version of `alarm' using setitimer if it's available. */
 
 #if defined (HAVE_SETITIMER)
@@ -51,27 +56,27 @@ falarm(unsigned int secs, unsigned int usecs)
   it.it_value.tv_sec = secs;
   it.it_value.tv_usec = usecs;
 
-  if (setitimer(ITIMER_REAL, &it, &oit) < 0)
-    return (unsigned int)(-1);
+  if (::setitimer(ITIMER_REAL, &it, &oit) < 0)
+    return static_cast<unsigned int> (-1);
 
   /* Backwards compatibility with alarm(3) */
   if (oit.it_value.tv_usec)
     oit.it_value.tv_sec++;
-  return oit.it_value.tv_sec;
+  return static_cast<unsigned int> (oit.it_value.tv_sec);
 }
 #else
 int
 falarm (unsigned int secs, unsigned int usecs)
 {
   if (secs == 0 && usecs == 0)
-    return alarm (0);
+    return ::alarm (0);
 
   if (secs == 0 || usecs >= 500000)
     {
       secs++;
       usecs = 0;
     }
-  return alarm (secs);
+  return ::alarm (secs);
 }
 #endif /* !HAVE_SETITIMER */
 
@@ -79,27 +84,28 @@ falarm (unsigned int secs, unsigned int usecs)
    `usleep', but it's already taken */
 
 #if defined (HAVE_TIMEVAL) && (defined (HAVE_SELECT) || defined (HAVE_PSELECT))
-int
+unsigned int
 fsleep(unsigned int secs, unsigned int usecs)
 {
   int e, r;
-  sigset_t blocked_sigs, prevmask;
+  sigset_t blocked_sigs;
 #if defined (HAVE_PSELECT)
   struct timespec ts;
 #else
+  sigset_t prevmask;
   struct timeval tv;
 #endif
 
-  sigemptyset (&blocked_sigs);
+  ::sigemptyset (&blocked_sigs);
 #  if defined (SIGCHLD)
-  sigaddset (&blocked_sigs, SIGCHLD);
+  ::sigaddset (&blocked_sigs, SIGCHLD);
 #  endif
 
 #if defined (HAVE_PSELECT)
   ts.tv_sec = secs;
   ts.tv_nsec = usecs * 1000;
 #else
-  sigemptyset (&prevmask);
+  ::sigemptyset (&prevmask);
   tv.tv_sec = secs;
   tv.tv_usec = usecs;
 #endif /* !HAVE_PSELECT */
@@ -107,20 +113,20 @@ fsleep(unsigned int secs, unsigned int usecs)
   do
     {
 #if defined (HAVE_PSELECT)
-      r = pselect(0, (fd_set *)0, (fd_set *)0, (fd_set *)0, &ts, &blocked_sigs);
+      r = ::pselect(0, nullptr, nullptr, nullptr, &ts, &blocked_sigs);
 #else
-      sigprocmask (SIG_SETMASK, &blocked_sigs, &prevmask);
-      r = select(0, (fd_set *)0, (fd_set *)0, (fd_set *)0, &tv);
-      sigprocmask (SIG_SETMASK, &prevmask, NULL);
+      ::sigprocmask (SIG_SETMASK, &blocked_sigs, &prevmask);
+      r = ::select(0, nullptr, nullptr, nullptr, &tv);
+      ::sigprocmask (SIG_SETMASK, &prevmask, NULL);
 #endif
       e = errno;
       if (r < 0 && errno == EINTR)
-	return -1;		/* caller will handle */
+	return static_cast<unsigned int> (-1);		/* caller will handle */
       errno = e;
     }
   while (r < 0 && errno == EINTR);
 
-  return r;
+  return static_cast<unsigned int> (r);
 }
 #else /* !HAVE_TIMEVAL || !HAVE_SELECT */
 int
@@ -128,6 +134,8 @@ fsleep(long sec, long usec)
 {
   if (usec >= 500000)	/* round */
    sec++;
-  return sleep(sec);
+  return ::sleep(sec);
 }
 #endif /* !HAVE_TIMEVAL || !HAVE_SELECT */
+
+}  // namespace bash
