@@ -22,4 +22,4 @@ libglob_a_SOURCES = glob.cc smatch.cc gmisc.cc xmbsrtowcs.cc \
 	collsyms.hh glob.hh glob_loop.hh gm_loop.hh ndir.hh \
 	sm_loop.hh strmatch.hh
 
-AM_CPPFLAGS = -I$(srcdir)/../.. -I$(srcdir)/../../include
+AM_CPPFLAGS = -I$(srcdir)/../.. -I$(srcdir)/../../include -I$(srcdir)/../../lib/readline
