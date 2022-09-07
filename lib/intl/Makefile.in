@@ -65,7 +65,7 @@ mkdir_p = @mkdir_p@
 l =
 
 AR = @AR@
-ARFLAGS = @ARFLAGS@
+ARFLAGS = @AR_FLAGS@
 CXX = @CXX@
 LIBTOOL = @LIBTOOL@
 RANLIB = @RANLIB@
