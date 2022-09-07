@@ -110,13 +110,13 @@ namespace readline
 // Primary readline/libhistory exception class.
 class rl_exception : public std::exception {
 public:
-  ~rl_exception () noexcept override;
+  virtual const char *what() const noexcept override;
 };
 
 // Special exception thrown to handle "word not found" error.
 class word_not_found : public rl_exception {
 public:
-  ~word_not_found () noexcept override;
+  virtual const char *what() const noexcept override;
 };
 
 enum editing_mode {
@@ -170,7 +170,7 @@ operator | (const rl_qf_flags &a, const rl_qf_flags &b) {
 }
 
 /* Default readline line buffer length. */
-const int DEFAULT_BUFFER_SIZE = 256;
+constexpr int DEFAULT_BUFFER_SIZE = 256;
 
 #ifndef BRACKETED_PASTE_DEFAULT
 #  define BRACKETED_PASTE_DEFAULT	1	/* XXX - for now */

@@ -140,11 +140,17 @@ Readline::~Readline ()
   // TODO: add anything else we need to delete
 }
 
-// Exception destructor.
-rl_exception::~rl_exception () noexcept {}
+// Human-readable description for rl_exception, which also
+// stops the class vtable from being emitted in every .o file.
+const char *rl_exception::what() const noexcept {
+  return "readline::rl_exception";
+}
 
-// Exception destructor.
-word_not_found::~word_not_found () noexcept {}
+// Human-readable description for word_not_found exception,
+// which is defined as a subclass of readline::rl_exception.
+const char *word_not_found::what() const noexcept {
+  return "readline::word_not_found";
+}
 
 /* Set up the prompt and expand it.  Called from readline() and
    rl_callback_handler_install (). */

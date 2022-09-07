@@ -223,67 +223,6 @@ _rl_strpbrk (const char *string1, const char *string2)
 }
 #endif
 
-#if defined (DEBUG)
-#if defined (USE_VARARGS)
-static FILE *_rl_tracefp;	// XXX static global variable for debug builds
-
-static int _rl_tropen ();
-
-void
-_rl_trace (const char *format, ...)
-{
-  va_list args;
-  va_start (args, format);
-
-  if (_rl_tracefp == nullptr)
-    _rl_tropen ();
-
-  std::vfprintf (_rl_tracefp, format, args);
-  std::fprintf (_rl_tracefp, "\n");
-  std::fflush (_rl_tracefp);
-
-  va_end (args);
-}
-
-static inline int
-_rl_tropen ()
-{
-  char fnbuf[128], *x;
-
-  if (_rl_tracefp)
-    std::fclose (_rl_tracefp);
-#if defined (_WIN32) && !defined (__CYGWIN__)
-  x = sh_get_env_value ("TEMP");
-  if (x == 0)
-    x = ".";
-#else
-  x = "/var/tmp";
-#endif
-  std::snprintf (fnbuf, sizeof (fnbuf), "%s/rltrace.%ld", x, static_cast<long> (::getpid()));
-  ::unlink(fnbuf);
-  _rl_tracefp = std::fopen (fnbuf, "w+");
-  return _rl_tracefp != nullptr;
-}
-
-int
-_rl_trclose ()
-{
-  int r;
-
-  r = std::fclose (_rl_tracefp);
-  _rl_tracefp = nullptr;
-  return r;
-}
-
-void
-_rl_settracefp (FILE *fp)
-{
-  _rl_tracefp = fp;
-}
-#endif
-#endif /* DEBUG */
-
-
 #if HAVE_DECL_AUDIT_USER_TTY && defined (HAVE_LIBAUDIT_H) && defined (ENABLE_TTY_AUDIT_SUPPORT)
 #include <sys/socket.h>
 #include <libaudit.h>
@@ -292,7 +231,7 @@ _rl_settracefp (FILE *fp)
 
 /* Report STRING to the audit system. */
 void
-_rl_audit_tty (char *string)
+Shell::_rl_audit_tty (char *string)
 {
   struct audit_message req;
   struct sockaddr_nl addr;

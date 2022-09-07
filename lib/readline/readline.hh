@@ -2742,8 +2742,10 @@ private:
   /* util.c */
   void _rl_ttymsg (const char *, ...) __attribute__((__format__ (printf, 2, 3)));
   void _rl_errmsg (const char *, ...) __attribute__((__format__ (printf, 2, 3)));
-  void _rl_trace (const char *, ...) __attribute__((__format__ (printf, 2, 3)));
+
+#if HAVE_DECL_AUDIT_USER_TTY && defined (HAVE_LIBAUDIT_H) && defined (ENABLE_TTY_AUDIT_SUPPORT)
   void _rl_audit_tty (char *);
+#endif
 
   int _rl_tropen ();
 

@@ -40,7 +40,7 @@ const int build_version = BUILDVERSION;
 #ifdef RELSTATUS
 const char * const release_status = RELSTATUS;
 #else
-const char * const release_status = (char *)0;
+const char * const release_status = nullptr;
 #endif
 
 // A version string for use by the what command. Use a separate

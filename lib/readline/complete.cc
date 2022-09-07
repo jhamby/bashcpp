@@ -80,7 +80,7 @@ Readline::rl_complete (int count, int invoking_key)
 
   if (rl_inhibit_completion)
     return _rl_insert_char (count, invoking_key);
-  else if (rl_last_func == &Readline::rl_complete && _rl_cmpl_changed_buffer == 0)
+  else if (rl_last_func == &Readline::rl_complete && !_rl_cmpl_changed_buffer)
     return rl_complete_internal ('?');
   else if (_rl_complete_show_all)
     return rl_complete_internal ('!');
