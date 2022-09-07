@@ -68,7 +68,9 @@ struct PROCESS {
   pid_t pid;		/* Process ID. */
   WAIT status;		/* The status of this command as returned by wait. */
   int running;		/* Non-zero if this process is running. */
-  int _pad;		// silence clang -Wpadded warning
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  int _pad;			// silence clang -Wpadded warning
+#endif
 };
 
 /* PALIVE really means `not exited' */
@@ -131,8 +133,7 @@ struct pidstat {
   ps_index_t bucket_prev;
 
   pid_t pid;
-  bits16_t status;		/* only 8 bits really needed */
-  char _pad[2];			// silence clang -Wpadded warning
+  int status;
 };
 
 struct bgpids {
@@ -142,7 +143,9 @@ struct bgpids {
   ps_index_t nalloc;
 
   int npid;
+#if SIZEOF_INT != SIZEOF_CHAR_P
   int _pad;			// silence clang -Wpadded warning
+#endif
 };
 
 #define NO_PIDSTAT (static_cast<ps_index_t> (-1))
@@ -150,7 +153,7 @@ struct bgpids {
 /* standalone process status struct, without bgpids indexes */
 struct procstat {
   pid_t pid;
-  bits16_t status;
+  int status;
 };
 
 /* A standalone linked list of PROCESS *, used in various places

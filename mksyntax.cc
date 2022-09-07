@@ -20,7 +20,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #include <cstdio>
 #include <cstdlib>
@@ -28,19 +28,21 @@
 #include <cerrno>
 #include <inttypes.h>
 
-#include "chartypes.h"
+#include "chartypes.hh"
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
 
-#include "syntax.h"
+#include "syntax.hh"
 
 namespace bash
 {
 
+#if defined (__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"
+#endif
 
 static struct wordflag {
 	char_flags	flag;
@@ -63,7 +65,9 @@ static struct wordflag {
 	{ CBLANK,	"CBLANK" },
 };
 
+#if defined (__clang__)
 #pragma clang diagnostic pop
+#endif
 
 #define N_WFLAGS	static_cast<int>(sizeof (wordflags) / sizeof (wordflags[0]))
 #define SYNSIZE		256

@@ -479,9 +479,6 @@
 /* Define to 1 if you have the `locale_charset' function. */
 #undef HAVE_LOCALE_CHARSET
 
-/* Define to 1 if the system has the type `long double'. */
-#undef HAVE_LONG_DOUBLE
-
 /* Define to 1 if the system has the type 'long long int'. */
 #undef HAVE_LONG_LONG_INT
 
@@ -1568,21 +1565,6 @@
 /* Define to rpl_realloc if the replacement function should be used. */
 #undef realloc
 
-/* Define to the equivalent of the C99 'restrict' keyword, or to
-   nothing if this is not supported.  Do not define if restrict is
-   supported only directly.  */
-#undef restrict
-/* Work around a bug in older versions of Sun C++, which did not
-   #define __restrict__ or support _Restrict or __restrict__
-   even though the corresponding Sun C compiler ended up with
-   "#define restrict _Restrict" or "#define restrict __restrict__"
-   in the previous line.  This workaround can be removed once
-   we assume Oracle Developer Studio 12.5 (2016) or later.  */
-#if defined __SUNPRO_CC && !defined __RESTRICT && !defined __restrict__
-# define _Restrict
-# define __restrict__
-#endif
-
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
 
@@ -1629,10 +1611,6 @@
 
 /* Define as `fork' if `vfork' does not work. */
 #undef vfork
-
-/* Define to empty if the keyword `volatile' does not work. Warning: valid
-   code using `volatile' can become incorrect without. Disable with care. */
-#undef volatile
 
 #include "config-bot.hh"
 

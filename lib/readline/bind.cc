@@ -1639,8 +1639,10 @@ Readline::hack_special_boolean_var (int i)
 #define	V_STRING	1
 #define V_INT		2
 
+#if defined (__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"
+#endif
 
 static const struct {
   const char *name;
@@ -1662,7 +1664,9 @@ static const struct {
   { "vi-ins-mode-string", 	V_STRING,	&Readline::sv_viins_modestr },
 };
 
+#if defined (__clang__)
 #pragma clang diagnostic pop
+#endif
 
 static int
 find_string_var (const char *name)
@@ -2013,8 +2017,10 @@ Readline::sv_vicmd_modestr (const char *value)
   return 1;
 }
 
+#if defined (__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"
+#endif
 
 /* Return the character which matches NAME.
    For example, `Space' returns ' '. */
@@ -2024,7 +2030,9 @@ struct assoc_list {
   int value;
 };
 
+#if defined (__clang__)
 #pragma clang diagnostic pop
+#endif
 
 // Keep this list sorted in case-insensitive order for binary search.
 static const assoc_list name_key_alist[] = {

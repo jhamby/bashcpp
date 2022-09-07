@@ -76,7 +76,7 @@ enum hist_search_flags {
 
 
 /* history file version; currently unused */
-static const int history_file_version = 1;
+static constexpr int history_file_version = 1;
 
 // Parent class for Readline and Shell.
 
@@ -644,7 +644,11 @@ private:
      entries. Used by read_history_range */
   bool history_multiline_entries;
 
-  char _pad2[6];		// for alignment and future expansion
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  unsigned char _pad2[6];	// padding for alignment (64-bit pointers)
+#else
+  unsigned char _pad2[2];	// padding for alignment (32-bit pointers)
+#endif
 };
 
 }  // namespace readline

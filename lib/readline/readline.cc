@@ -747,10 +747,10 @@ Readline::_rl_dispatch_subseq (int key, Keymap map, int got_subseq)
 	  _rl_abort_internal ();	/* XXX */
 	  return -1;
 	}
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunreachable-code-break"
-      break;
-#pragma clang diagnostic pop
+
+#if !defined (__clang__)
+      break;		// clang knows that this is unreachable
+#endif
 
     case ISMACR:
       if (map[key].value.macro != nullptr)

@@ -238,8 +238,11 @@ rl_sigwinch_handler (int sig) {
   Readline::the_app->_rl_sigwinch_handler_internal (sig);
 }
 
+#if defined (__clang__)
+// On Linux, 'sa_handler' is a recursive macro expansion.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
+#endif
 
 void
 Readline::_rl_sigwinch_handler_internal (int sig)
@@ -340,7 +343,9 @@ rl_maybe_restore_sighandler (int sig, sighandler_cxt *handler)
     rl_sigaction (sig, handler, &dummy);
 }
 
-#pragma clang diagnostic pop  // "-Wdisabled-macro-expansion"
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 int
 Readline::rl_set_signals ()

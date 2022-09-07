@@ -92,9 +92,6 @@ enum undo_code {
     UNDO_END
 };
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpadded"
-
 /* What an element of the undo_list looks like. */
 class UNDO_ENTRY {
 public:
@@ -108,9 +105,8 @@ public:
   std::string text;		/* The text to insert, if undoing a delete. */
   unsigned int start, end;	/* Where the change took place. */
   undo_code what;		/* Delete, Insert, Begin, End. */
+  int _pad;			// silence clang -Wpadded warning
 };
-
-#pragma clang diagnostic pop
 
 /* Wrapper for a vector of UNDO_ENTRY that history can delete. */
 class UNDO_LIST : public hist_data {
@@ -323,9 +319,6 @@ public:
   /* typedef from bind.c */
   typedef int (Readline::*_rl_parser_func_t) (char *);
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpadded"
-
   /* fill in more as needed */
   /* `Generic' callback data and functions */
   struct _rl_callback_generic_arg
@@ -334,6 +327,9 @@ public:
     int count;
     int i1, i2;
     /* add here as needed */
+#if SIZEOF_INT != SIZEOF_CHAR_P
+    int _pad;			// silence clang -Wpadded warning
+#endif
   };
 
   typedef int (Readline::*_rl_callback_func_t) (_rl_callback_generic_arg *);
@@ -352,7 +348,10 @@ public:
 
     const char *name;
     bool *value;
-    int flags;
+    int flags;			// XXX should this be an enum type?
+#if SIZEOF_INT != SIZEOF_CHAR_P
+    int _pad;			// silence clang -Wpadded warning
+#endif
   };
 
   typedef boolean_var_t bvt;
@@ -384,6 +383,9 @@ public:
 		  value (macro) {}
 
     keymap_entry_type type;
+#if SIZEOF_INT != SIZEOF_CHAR_P
+    int _pad;			// silence clang -Wpadded warning
+#endif
     union _keymap_value_type {
       _keymap_value_type () : function (nullptr) {}
       _keymap_value_type (rl_command_func_t func_) : function (func_) {}
@@ -397,8 +399,6 @@ public:
   };
 
   typedef KEYMAP_ENTRY KME;	// convenience typedef
-
-#pragma clang diagnostic pop
 
   /* bind.c: auxiliary functions to manage keymaps. */
 
@@ -1430,7 +1430,9 @@ private:
     rl_search_type type;
     rl_search_flags sflags;
 
-    int _pad;		// silence clang -Wpadded warning
+#if SIZEOF_INT != SIZEOF_CHAR_P
+    int _pad;			// silence clang -Wpadded warning
+#endif
   };
 
   struct _rl_cmd {
@@ -1452,7 +1454,9 @@ private:
     _rl_keyseq_cxt *ocxt;
     int childval;
 
-    int _pad;		// silence clang -Wpadded warning
+#if SIZEOF_INT != SIZEOF_CHAR_P
+    int _pad;			// silence clang -Wpadded warning
+#endif
   };
 
   typedef int _rl_arg_cxt;
@@ -1804,7 +1808,9 @@ private:
 #if defined (HANDLE_MULTIBYTE)
     unsigned int *wrapped_line;
     unsigned int wbsize;
-    int _pad;		// silence clang -Wpadded warning
+#if SIZEOF_INT != SIZEOF_CHAR_P
+    int _pad;			// silence clang -Wpadded warning
+#endif
 #endif
   };
 
@@ -3313,7 +3319,9 @@ private:
     struct saved_macro *next;
     char *string;
     unsigned int sindex;
-    int _pad;
+#if SIZEOF_INT != SIZEOF_CHAR_P
+    int _pad;			// silence clang -Wpadded warning
+#endif
   };
 
   /* The list of saved macros. */
@@ -3497,7 +3505,9 @@ private:
     /* Number of visible chars in the prompt prefix. */
     unsigned int prefix_length;
 
-    int _pad;		// silence clang -Wpadded warning
+#if SIZEOF_INT != SIZEOF_CHAR_P
+    int _pad;			// silence clang -Wpadded warning
+#endif
   };
 
   /* The current local prompt state. */
@@ -4203,8 +4213,12 @@ private:
 
   char _rl_vi_last_replacement[MB_LEN_MAX + 1];	/* reserve for trailing '\0' */
 
-  unsigned char _pad2[7];	// Padding for alignment and future growth
-  int _pad3[2];
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  unsigned char _pad2[7];	// padding for alignment (64-bit pointers)
+#else
+  unsigned char _pad2[3];	// padding for alignment (32-bit pointers)
+#endif
+  int _pad3[2];			// padding for future object growth
 };
 
 /* **************************************************************** */

@@ -16,7 +16,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-RLDIRS = lib/readline
+RLDIR = lib/readline
 SHDIR = lib/sh
 TLDIR = lib/tilde
 GLOBDIR = lib/glob
@@ -44,10 +44,10 @@ bash_SOURCES = shell.cc eval.cc parse.y general.cc y.tab.cc \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
 	include/unionwait.hh pathnames.hh
 
-bash_LDADD = lib/readline/libreadlinecpp.a lib/sh/libsh.a \
-	lib/tilde/libtilde.a lib/glob/libglob.a
+bash_LDADD = $(RLDIR)/libreadlinecpp.a $(SHDIR)/libsh.a \
+	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a
 
-SUBDIRS = $(RLDIRS) $(SHDIR) $(TLDIR) $(GLOBDIR) doc po tests
+SUBDIRS = $(RLDIR) $(SHDIR) $(TLDIR) $(GLOBDIR) doc po tests
 
 ACLOCAL_AMFLAGS = -I m4
 

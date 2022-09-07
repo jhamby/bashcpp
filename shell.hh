@@ -61,7 +61,7 @@
 #include "readline.hh"
 #endif
 
-#if HAVE_ICONV
+#if defined (HAVE_ICONV)
 #  include <iconv.h>
 #endif
 

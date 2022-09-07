@@ -163,8 +163,8 @@ am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	redir.$(OBJEXT) pcomplete.$(OBJEXT) pcomplib.$(OBJEXT) \
 	syntax.$(OBJEXT)
 bash_OBJECTS = $(am_bash_OBJECTS)
-bash_DEPENDENCIES = lib/readline/libreadlinecpp.a lib/sh/libsh.a \
-	lib/tilde/libtilde.a lib/glob/libglob.a
+bash_DEPENDENCIES = $(RLDIR)/libreadlinecpp.a $(SHDIR)/libsh.a \
+	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -500,7 +500,6 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 POSUB = @POSUB@
-POW_LIB = @POW_LIB@
 PRI_MACROS_BROKEN = @PRI_MACROS_BROKEN@
 PROFILE_FLAGS = @PROFILE_FLAGS@
 PTHREAD_H_DEFINES_STRUCT_TIMESPEC = @PTHREAD_H_DEFINES_STRUCT_TIMESPEC@
@@ -603,7 +602,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-RLDIRS = lib/readline
+RLDIR = lib/readline
 SHDIR = lib/sh
 TLDIR = lib/tilde
 GLOBDIR = lib/glob
@@ -628,10 +627,10 @@ bash_SOURCES = shell.cc eval.cc parse.y general.cc y.tab.cc \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
 	include/unionwait.hh pathnames.hh
 
-bash_LDADD = lib/readline/libreadlinecpp.a lib/sh/libsh.a \
-	lib/tilde/libtilde.a lib/glob/libglob.a
+bash_LDADD = $(RLDIR)/libreadlinecpp.a $(SHDIR)/libsh.a \
+	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a
 
-SUBDIRS = $(RLDIRS) $(SHDIR) $(TLDIR) $(GLOBDIR) doc po tests
+SUBDIRS = $(RLDIR) $(SHDIR) $(TLDIR) $(GLOBDIR) doc po tests
 ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
 	-I$(srcdir)/lib/tilde

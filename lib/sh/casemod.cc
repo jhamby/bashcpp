@@ -106,9 +106,6 @@ cval (const char *s, size_t i)
 }
 #endif
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-
 /* Modify the case of characters in STRING matching PAT based on the value of
    FLAGS.  If PAT is null, modify the case of each character */
 char *
@@ -277,7 +274,5 @@ singlebyte:
   ret[retind] = '\0';
   return ret;
 }
-
-#pragma clang diagnostic pop	// ignore -Wswitch-enum
 
 }  // namespace bash

@@ -41,7 +41,7 @@ namespace bash
    This screws our scheme.  However, Bash will run on the NeXT using
    the C library getenv (), since right now the only environment variable
    that we care about is HOME, and that is already defined.  */
-static char *last_tempenv_value = (char *)NULL;
+static char *last_tempenv_value = nullptr;
 
 char *
 getenv (const char *name)
@@ -55,14 +55,14 @@ Shell::getenv (const char *name)
   SHELL_VAR *var;
 
   if (name == 0 || *name == '\0')
-    return (char *)NULL;
+    return nullptr;
 
   var = find_tempenv_variable (name);
   if (var)
     {
       FREE (last_tempenv_value);
 
-      last_tempenv_value = value_cell (var) ? savestring (value_cell (var)) : (char *)NULL;
+      last_tempenv_value = value_cell (var) ? savestring (value_cell (var)) : nullptr;
       return last_tempenv_value;
     }
   else if (shell_variables)
@@ -87,7 +87,7 @@ Shell::getenv (const char *name)
 	}
     }
 
-  return (char *)NULL;
+  return nullptr;
 }
 
 /* Some versions of Unix use _getenv instead. */

@@ -21,10 +21,10 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
-#include "trap.h"
+#include "bashtypes.hh"
+#include "trap.hh"
 
 #include <cstdio>
 #include <csignal>
@@ -34,7 +34,7 @@
 #  include <unistd.h>
 #endif
 
-#include "posixtime.h"
+#include "posixtime.hh"
 
 #if defined (HAVE_SYS_RESOURCE_H) && defined (HAVE_WAIT3) && \
 	!defined (_POSIX_VERSION) && !defined (RLIMTYPE)
@@ -45,18 +45,19 @@
 #  include <sys/file.h>
 #endif
 
-#include "filecntl.h"
+#include "filecntl.hh"
+
 #include <sys/ioctl.h>
 #if defined (HAVE_SYS_PARAM_H)
 #include <sys/param.h>
 #endif
 
 #if defined (BUFFERED_INPUT)
-#  include "input.h"
+#  include "input.hh"
 #endif
 
 /* Need to include this up here for *_TTY_DRIVER definitions. */
-#include "shtty.h"
+#include "shtty.hh"
 
 /* Define this if your output is getting swallowed.  It's a no-op on
    machines with the termio or termios tty drivers. */
@@ -67,17 +68,17 @@
 #  include <bsdtty.h>
 #endif /* hpux && !TERMIOS_TTY_DRIVER */
 
-#include "bashintl.h"
-#include "shell.h"
-#include "parser.h"
-#include "jobs.h"
-#include "execute_cmd.h"
-#include "flags.h"
+#include "bashintl.hh"
+#include "shell.hh"
+#include "parser.hh"
+#include "jobs.hh"
+#include "execute_cmd.hh"
+#include "flags.hh"
 
-#include "typemax.h"
+#include "typemax.hh"
 
-#include "builtins/builtext.h"
-#include "builtins/common.h"
+#include "builtins/builtext.hh"
+#include "builtins/common.hh"
 
 #if defined (READLINE)
 # include <readline/readline.h>

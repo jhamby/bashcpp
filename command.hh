@@ -186,7 +186,9 @@ public:
 
   std::string word;			/* C++ string. */
   word_desc_flags flags;		/* Flags associated with this word. */
+#if SIZEOF_INT != SIZEOF_CHAR_P
   int _pad;				// silence clang -Wpadded warning
+#endif
 };
 
 /* A vector of pointers to words. */
@@ -218,7 +220,9 @@ struct REDIRECT {
   uint32_t rflags;		/* Private flags for this redirection */
   uint32_t flags;		/* Flag value for `open'. */
   r_instruction instruction;	/* What to do with the information. */
+#if SIZEOF_INT != SIZEOF_CHAR_P
   int _pad;			// silence clang -Wpadded warning
+#endif
 };
 
 /* An element used in parsing.  A single word or a single redirection.
@@ -282,7 +286,9 @@ struct PATTERN_LIST {
   WORD_LIST *patterns;		/* Linked list of patterns to test. */
   COMMAND *action;		/* Thing to execute if a pattern matches. */
   pattern_list_flags flags;
-  int _pad;
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  int _pad;			// silence clang -Wpadded warning
+#endif
 };
 
 /* The CASE command. */
