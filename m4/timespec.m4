@@ -30,8 +30,8 @@ AC_DEFUN([BASH_CHECK_TYPE_STRUCT_TIMESPEC],
   SYS_TIME_H_DEFINES_STRUCT_TIMESPEC=0
   PTHREAD_H_DEFINES_STRUCT_TIMESPEC=0
   if test $bash_cv_sys_struct_timespec_in_time_h = yes; then
-    AC_DEFINE([HAVE_STRUCT_TIMESPEC])
-    AC_DEFINE([TIME_H_DEFINES_STRUCT_TIMESPEC])
+    AC_DEFINE([HAVE_STRUCT_TIMESPEC], 1, [Define if you have struct timespec.])
+    AC_DEFINE([TIME_H_DEFINES_STRUCT_TIMESPEC], 1, [Define if your struct timespec is defined in time.h.])
     TIME_H_DEFINES_STRUCT_TIMESPEC=1
   else
     AC_CACHE_CHECK([for struct timespec in <sys/time.h>],
@@ -45,8 +45,8 @@ AC_DEFUN([BASH_CHECK_TYPE_STRUCT_TIMESPEC],
          [bash_cv_sys_struct_timespec_in_sys_time_h=no])])
     if test $bash_cv_sys_struct_timespec_in_sys_time_h = yes; then
       SYS_TIME_H_DEFINES_STRUCT_TIMESPEC=1
-      AC_DEFINE([HAVE_STRUCT_TIMESPEC])
-      AC_DEFINE([SYS_TIME_H_DEFINES_STRUCT_TIMESPEC])
+      AC_DEFINE([HAVE_STRUCT_TIMESPEC], 1, [Define if you have struct timespec.])
+      AC_DEFINE([SYS_TIME_H_DEFINES_STRUCT_TIMESPEC], 1, [Define if your struct timespec is defined in sys/time.h.])
     else
       AC_CACHE_CHECK([for struct timespec in <pthread.h>],
         [bash_cv_sys_struct_timespec_in_pthread_h],
@@ -59,8 +59,8 @@ AC_DEFUN([BASH_CHECK_TYPE_STRUCT_TIMESPEC],
            [bash_cv_sys_struct_timespec_in_pthread_h=no])])
       if test $bash_cv_sys_struct_timespec_in_pthread_h = yes; then
         PTHREAD_H_DEFINES_STRUCT_TIMESPEC=1
-	AC_DEFINE([HAVE_STRUCT_TIMESPEC])
-	AC_DEFINE([PTHREAD_H_DEFINES_STRUCT_TIMESPEC])
+	AC_DEFINE([HAVE_STRUCT_TIMESPEC], 1, [Define if you have struct timespec.])
+	AC_DEFINE([PTHREAD_H_DEFINES_STRUCT_TIMESPEC], 1, [Define if your struct timespec is defined in pthread.h.])
       fi
     fi
   fi

@@ -1,7 +1,7 @@
 dnl
-dnl Configure script for bash-5.1
+dnl Configure script for bashcpp-5.1
 dnl
-dnl report bugs to chet@po.cwru.edu
+dnl report bugs to jake.hamby@gmail.com
 dnl
 dnl Process this file with autoconf to produce a configure script.
 
@@ -21,17 +21,18 @@ dnl Process this file with autoconf to produce a configure script.
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-AC_REVISION([for Bash 5.1, version 5.022])dnl
+AC_REVISION([for Bash 5.1, version 5.022-cpp])dnl
 
 define(bashvers, 5.1)
-define(relstatus, release)
+define(relstatus, dev)
 
-AC_INIT([bash],[bashvers-relstatus],[bug-bash@gnu.org])
+AC_INIT([bash],[bashvers-relstatus],[jake.hamby@gmail.com])
 
 dnl make sure we are using a recent autoconf version
 AC_PREREQ([2.71])
 
 AC_CONFIG_SRCDIR(shell.h)
+
 dnl where to find install.sh, config.sub, and config.guess
 AC_CONFIG_AUX_DIR(./support)
 AC_CONFIG_HEADERS(config.h)
@@ -53,7 +54,6 @@ AC_CANONICAL_HOST
 AC_CANONICAL_BUILD
 
 dnl configure defaults
-opt_afs=no
 opt_curses=no
 opt_with_installed_readline=no
 opt_with_vfork_subshell=no
@@ -66,16 +66,16 @@ dnl
 dnl AM_PATH_LISPDIR
 AC_ARG_VAR(DEBUGGER_START_FILE, [location of bash debugger initialization file])
 
+dnl autoheader support
+AH_TOP([#include "config-top.h"])
+AH_BOTTOM([#include "config-bot.h"])
+
 dnl arguments to configure
 dnl packages
-AC_ARG_WITH(afs, AS_HELP_STRING([--with-afs],[if you are running AFS]), opt_afs=$withval)
+
 AC_ARG_WITH(curses, AS_HELP_STRING([--with-curses],[use the curses library instead of the termcap library]), opt_curses=$withval)
 AC_ARG_WITH(installed-readline, AS_HELP_STRING([--with-installed-readline],[use a version of the readline library that is already installed]), opt_with_installed_readline=$withval)
 AC_ARG_WITH(vfork-subshell, AS_HELP_STRING([--with-vfork-subshell],[prefer vfork to fork when both are available]), opt_with_vfork_subshell=$withval)
-
-if test "$opt_afs" = yes; then
-	AC_DEFINE(AFS)
-fi
 
 if test "$opt_curses" = yes; then
 	prefer_curses=yes
@@ -202,102 +202,102 @@ dnl to be run before we can check the version of an already-installed readline
 dnl library
 
 if test $opt_alias = yes; then
-AC_DEFINE(ALIAS)
+AC_DEFINE([ALIAS], [1], [Define if you want the alias feature.])
 fi
 if test $opt_dirstack = yes; then
-AC_DEFINE(PUSHD_AND_POPD)
+AC_DEFINE([PUSHD_AND_POPD], [1], [Define if you want pushd, popd, and dirs commands.])
 fi
 if test $opt_restricted = yes; then
-AC_DEFINE(RESTRICTED_SHELL)
+AC_DEFINE([RESTRICTED_SHELL], [1], [Define if you want restricted shell support ("rbash" or the -r flag).])
 fi
 if test $opt_process_subst = yes; then
-AC_DEFINE(PROCESS_SUBSTITUTION)
+AC_DEFINE([PROCESS_SUBSTITUTION], [1], [Define if you want ksh-like process substitution features with "<(file)". Requires FIFO support.])
 fi
 if test $opt_prompt_decoding = yes; then
-AC_DEFINE(PROMPT_STRING_DECODE)
+AC_DEFINE([PROMPT_STRING_DECODE], [1], [Define if you want to expand backslash-escaped special characters in PS1 and PS2. Variable expansion will still be performed.])
 fi
 if test $opt_select = yes; then
-AC_DEFINE(SELECT_COMMAND)
+AC_DEFINE([SELECT_COMMAND], [1], [Define if you want the ksh-style `select' command: select word in word_list; do command_list; done.])
 fi
 if test $opt_help = yes; then
-AC_DEFINE(HELP_BUILTIN)
+AC_DEFINE([HELP_BUILTIN], [1], [Define if you want the `help' shell builtin and long documentation strings compiled into the shell.])
 fi
 if test $opt_array_variables = yes; then
-AC_DEFINE(ARRAY_VARS)
+AC_DEFINE([ARRAY_VARS], [1], [Define if you want ksh-style one-dimensional array variables.])
 fi
 if test $opt_dparen_arith = yes; then
-AC_DEFINE(DPAREN_ARITHMETIC)
+AC_DEFINE([DPAREN_ARITHMETIC], [1], [Define if you want the ksh-style ((...)) arithmetic evaluation command.])
 fi
 if test $opt_brace_expansion = yes; then
-AC_DEFINE(BRACE_EXPANSION)
+AC_DEFINE([BRACE_EXPANSION], [1], [Define if you want csh-style curly brace expansion: foo{a,b} -> fooa foob. This feature can be turned off at shell startup with `-nobraceexpansion', or during execution with `set +o braceexpand'.])
 fi
 if test $opt_disabled_builtins = yes; then
-AC_DEFINE(DISABLED_BUILTINS)
+AC_DEFINE([DISABLED_BUILTINS], [1], [Define if you want "builtin foo" to always run the shell builtin "foo", even if it has been disabled with "enable -n foo".])
 fi
 if test $opt_command_timing = yes; then
-AC_DEFINE(COMMAND_TIMING)
+AC_DEFINE([COMMAND_TIMING], [1], [Define if you want the ksh-style `time' reserved word and the ability to time pipelines, functions, and builtins.])
 fi
 if test $opt_xpg_echo = yes ; then
-AC_DEFINE(DEFAULT_ECHO_TO_XPG)
+AC_DEFINE([DEFAULT_ECHO_TO_XPG], [1], [Define if you want the echo builtin to interpret the backslash-escape characters by default, like the XPG Single Unix Spec V2 for echo. This requires V9_ECHO to be defined.])
 fi
 if test $opt_strict_posix = yes; then
-AC_DEFINE(STRICT_POSIX)
+AC_DEFINE([STRICT_POSIX], [1], [Define if you want bash to be strictly POSIX.2 conformant by default (except for echo, which is controlled separately).])
 fi
 if test $opt_extended_glob = yes ; then
-AC_DEFINE(EXTENDED_GLOB)
+AC_DEFINE([EXTENDED_GLOB], [1], [Define if you want ksh-style [*+@?!](patlist) extended pattern matching.])
 fi
 if test $opt_extglob_default = yes; then
-AC_DEFINE(EXTGLOB_DEFAULT, 1)
+AC_DEFINE([EXTGLOB_DEFAULT], [1], [Define to the value you'd like the extglob shell option to have by default.])
 else
-AC_DEFINE(EXTGLOB_DEFAULT, 0)
+AC_DEFINE([EXTGLOB_DEFAULT], [0], [Define to the value you'd like the extglob shell option to have by default.])
 fi
 if test $opt_cond_command = yes ; then
-AC_DEFINE(COND_COMMAND)
+AC_DEFINE([COND_COMMAND], [1], [Define if you want the ksh-style [[...]] conditional command.])
 fi
 if test $opt_cond_regexp = yes ; then
-AC_DEFINE(COND_REGEXP)
+AC_DEFINE([COND_REGEXP], [1], [Define if you want extended regular expression matching and the =~ binary operator in the [[..]] conditional command.])
 fi
 if test $opt_coproc = yes; then
-AC_DEFINE(COPROCESS_SUPPORT)
+AC_DEFINE([COPROCESS_SUPPORT], [1], [Define if you want support for ksh-like coprocesses and the `coproc' reserved word.])
 fi
 if test $opt_arith_for_command = yes; then
-AC_DEFINE(ARITH_FOR_COMMAND)
+AC_DEFINE([ARITH_FOR_COMMAND], [1], [Define if you want the ksh93-style for (( init; test; step )) do list; done arithmetic for command.])
 fi
 if test $opt_net_redirs = yes; then
-AC_DEFINE(NETWORK_REDIRECTIONS)
+AC_DEFINE([NETWORK_REDIRECTIONS], [1], [Define if you want /dev/(tcp|udp)/host/port to open socket connections when used in redirections.])
 fi
 if test $opt_progcomp = yes; then
-AC_DEFINE(PROGRAMMABLE_COMPLETION)
+AC_DEFINE([PROGRAMMABLE_COMPLETION], [1], [Define for the programmable completion features and the complete builtin.])
 fi
 if test $opt_multibyte = no; then
-AC_DEFINE(NO_MULTIBYTE_SUPPORT)
+AC_DEFINE([NO_MULTIBYTE_SUPPORT], [1], [Define to not compile in support for multibyte characters, even if the OS supports them.])
 fi
 if test $opt_debugger = yes; then
-AC_DEFINE(DEBUGGER)
+AC_DEFINE([DEBUGGER], [1], [Define if you want to compile in some features used only by the bash debugger.])
 fi
 if test $opt_casemod_attrs = yes; then
-AC_DEFINE(CASEMOD_ATTRS)
+AC_DEFINE([CASEMOD_ATTRS], [1], [Define for case-modifying variable attributes; variables modified on assignment.])
 fi
 if test $opt_casemod_expansions = yes; then
-AC_DEFINE(CASEMOD_EXPANSIONS)
+AC_DEFINE([CASEMOD_EXPANSIONS], [1], [Define for case-modifying word expansions.])
 fi
 if test $opt_dircomplete_expand_default = yes; then
-AC_DEFINE(DIRCOMPLETE_EXPAND_DEFAULT)
+AC_DEFINE([DIRCOMPLETE_EXPAND_DEFAULT], [1], [Define to make the `direxpand' shopt option enabled by default.])
 fi
 if test $opt_globascii_default = yes; then
-AC_DEFINE(GLOBASCII_DEFAULT, 1)
+AC_DEFINE([GLOBASCII_DEFAULT], [1], [Define to 1 to make the `globasciiranges' shopt option enabled by default.])
 else
-AC_DEFINE(GLOBASCII_DEFAULT, 0)
+AC_DEFINE([GLOBASCII_DEFAULT], [0], [Define to 1 to make the `globasciiranges' shopt option enabled by default.])
 fi
 if test $opt_function_import = yes; then
-AC_DEFINE(FUNCTION_IMPORT)
+AC_DEFINE([FUNCTION_IMPORT], [1], [Define to allow functions to be imported from the environment.])
 fi
 if test $opt_dev_fd_stat_broken = yes; then
-AC_DEFINE(DEV_FD_STAT_BROKEN)
+AC_DEFINE([DEV_FD_STAT_BROKEN], [1], [Define if stat on /dev/fd/N and fstat on file descriptor N don't return the same results.])
 fi
 
 if test $opt_with_vfork_subshell = yes; then
-AC_DEFINE(VFORK_SUBSHELL)
+AC_DEFINE([VFORK_SUBSHELL], [1], [Define to prefer vfork to fork when both are supported by the OS.])
 fi
 
 if test "$opt_minimal_config" = yes; then
@@ -344,7 +344,18 @@ echo ""
 
 dnl compilation checks
 AC_LANG(C++)
+
+dnl Checks for programs.
 AC_PROG_CXX
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_MKDIR_P
+AC_PROG_YACC
+
 AC_USE_SYSTEM_EXTENSIONS
 
 if test -n "$want_auto_cflags"; then
@@ -498,7 +509,7 @@ fi
 
 TILDE_LIB=-ltilde
 if test $opt_readline = yes; then
-	AC_DEFINE(READLINE)
+	AC_DEFINE([READLINE], [1], [Define to get the nifty/glitzy editing features. This is on by default. You can turn it off interactively with the -nolineediting flag.])
 	if test "$opt_with_installed_readline" != "no" ; then
 		case "$opt_with_installed_readline" in
 		yes)	RL_INCLUDE= ;;
@@ -533,10 +544,10 @@ else
 fi
 if test $opt_history = yes || test $opt_bang_history = yes; then
 	if test $opt_history = yes; then
-		AC_DEFINE(HISTORY)
+		AC_DEFINE([HISTORY], [1], [Define if you want to have access to previously typed commands. If both HISTORY and READLINE are defined, you can manipulate the history with line editing commands. If only HISTORY is defined, the `fc' and `history' builtins are available.])
 	fi
 	if test $opt_bang_history = yes; then
-		AC_DEFINE(BANG_HISTORY)
+		AC_DEFINE([BANG_HISTORY], [1], [Define if you want csh-style "!" history expansion. This is unrelated to READLINE.])
 	fi
  	if test "$opt_with_installed_readline" != "no"; then
 		HIST_LIBDIR=$RL_LIBDIR
@@ -580,11 +591,7 @@ dnl END READLINE and HISTORY LIBRARY SECTION
 
 dnl programs needed by the build and install process
 AC_PROG_INSTALL
-AC_CHECK_TOOL(AR, ar)
-dnl Set default for ARFLAGS, since autoconf does not have a macro for it.
-dnl This allows people to set it when running configure or make
-test -n "$ARFLAGS" || ARFLAGS="cr"
-AC_PROG_RANLIB
+
 AC_PROG_YACC
 AC_PROG_MAKE_SET
 
@@ -664,7 +671,7 @@ m4_include([m4/wint_t.m4])
 m4_include([m4/xsize.m4])
 
 dnl Turn on any extensions available in the GNU C library.
-AC_DEFINE(_GNU_SOURCE, 1)
+AC_DEFINE([_GNU_SOURCE], [1], [Enable any available GNU C library extensions.])
 
 dnl C compiler characteristics
 AC_C_CONST
@@ -696,10 +703,10 @@ AC_CACHE_CHECK(
   [ac_cv_langinfo_codeset=no])]
 )
 if test x$ac_cv_langinfo_codeset = xyes; then
-  AC_DEFINE(HAVE_LANGINFO_CODESET,1,[have nl_langinfo (CODESET)])
+  AC_DEFINE([HAVE_LANGINFO_CODESET], [1], [have nl_langinfo (CODESET)])
 fi
 
-AM_GNU_GETTEXT([use-libtool], [need-ngettext], [lib/intl])
+AM_GNU_GETTEXT([external], [need-ngettext])
 AM_GNU_GETTEXT_VERSION([0.19])
 AM_GNU_GETTEXT_INTL_SUBDIR([lib/intl])
 IT_PROG_INTLTOOL
@@ -715,7 +722,7 @@ AC_CHECK_HEADERS(unistd.h termcap.h termio.h termios.h dlfcn.h \
 		 regex.h syslog.h ulimit.h)
 AC_CHECK_HEADERS(sys/pte.h sys/stream.h sys/select.h sys/file.h sys/ioctl.h \
 		 sys/mman.h sys/param.h sys/random.h sys/socket.h sys/stat.h \
-		 sys/time.h sys/times.h sys/types.h sys/wait.h)
+		 sys/time.h sys/times.h sys/types.h sys/wait.h sys/resource.h)
 AC_CHECK_HEADERS(netinet/in.h arpa/inet.h)
 
 dnl sys/ptem.h requires definitions from sys/stream.h on systems where it
@@ -723,14 +730,6 @@ dnl exists
 AC_CHECK_HEADER(sys/ptem.h, , ,[[
 #if HAVE_SYS_STREAM_H
 #  include <sys/stream.h>
-#endif
-]])
-
-dnl SunOS 4 needs to include <sys/time.h> before <sys/resource.h> to compile
-dnl autoconf complains about presence but inability to compile
-AC_CHECK_HEADER(sys/resource.h, AC_DEFINE(HAVE_SYS_RESOURCE_H), [], [[
-#if HAVE_SYS_TIME_H
-#  include <sys/time.h>
 #endif
 ]])
 
@@ -745,7 +744,7 @@ if test "$ac_cv_func_vprintf" = no; then
     AC_EGREP_HEADER([[int[ 	]*vprintf[^a-zA-Z0-9]]],stdio.h,ac_cv_func_vprintf=yes)
     AC_MSG_RESULT($ac_cv_func_vprintf)
     if test $ac_cv_func_vprintf = yes; then
-	AC_DEFINE(HAVE_VPRINTF)
+	AC_DEFINE([HAVE_VPRINTF], 1, [Define if you have the vprintf function in stdio.h.])
     fi
 fi
 
@@ -754,11 +753,11 @@ if test "$ac_cv_func_vprintf" = no && test "$ac_cv_func__doprnt" = "yes"; then
 fi
 
 dnl checks for certain version-specific system calls and libc functions
-AC_CHECK_FUNC(__setostype, AC_DEFINE(HAVE_SETOSTYPE))
-AC_CHECK_FUNC(wait3, AC_DEFINE(HAVE_WAIT3))
+AC_CHECK_FUNC(__setostype, AC_DEFINE([HAVE_SETOSTYPE], 1, [Define if you have the __setostype function.]))
+AC_CHECK_FUNC(wait3, AC_DEFINE([HAVE_WAIT3], 1, [Define if you have the wait3 function (used only if you don't have waitpid).]))
 
 dnl checks for missing libc functions
-AC_CHECK_FUNC(mkfifo,AC_DEFINE(HAVE_MKFIFO),AC_DEFINE(MKFIFO_MISSING))
+AC_CHECK_FUNC(mkfifo, AC_DEFINE([HAVE_MKFIFO], 1, [Define if you have the mkfifo function.]), AC_DEFINE([MKFIFO_MISSING], 1, [Define if you are missing the mkfifo function.]))
 
 dnl checks for system calls
 AC_CHECK_FUNCS(dup2 eaccess fcntl fork getdtablesize getentropy getgroups \
@@ -831,15 +830,6 @@ AC_CHECK_LIB(dl, dlopen)
 AC_CHECK_FUNCS(dlopen dlclose dlsym)
 fi
 
-dnl this defines HAVE_DECL_SYS_SIGLIST
-AC_CHECK_DECLS([sys_siglist],[],[],[#include <signal.h>
-/* NetBSD declares sys_siglist in unistd.h.  */
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-])
-
-
 dnl network functions -- check for inet_aton again
 if test "$ac_cv_func_inet_aton" != 'yes'; then
 BASH_FUNC_INET_ATON
@@ -897,7 +887,7 @@ AC_HEADER_STAT
 dnl system services
 AC_SYS_INTERPRETER
 if test $ac_cv_sys_interpreter = yes; then
-AC_DEFINE(HAVE_HASH_BANG_EXEC)
+AC_DEFINE([HAVE_HASH_BANG_EXEC], [1], [Define if the kernel can exec files beginning with #!.])
 fi
 
 dnl Miscellaneous Bash tests
@@ -929,6 +919,60 @@ fi
 BASH_TYPE_RLIMIT
 
 AC_CHECK_SIZEOF(intmax_t, 8)
+
+dnl additional checks recommended by autoscan
+
+AC_CHECK_DECLS([sys_siglist])
+AC_CHECK_FUNCS([alarm])
+AC_CHECK_FUNCS([endgrent])
+AC_CHECK_FUNCS([endpwent])
+AC_CHECK_FUNCS([ftruncate])
+dnl the inet_ntoa function is only wanted by examples/loadables/accept.c.
+AC_CHECK_FUNCS([inet_ntoa])
+dnl the iswprint function is only wanted by lib/sh/strtrans.c.
+AC_CHECK_FUNCS([iswprint])
+AC_CHECK_FUNCS([mblen])
+AC_CHECK_FUNCS([mbrlen])
+AC_CHECK_FUNCS([memchr])
+AC_CHECK_FUNCS([memset])
+AC_CHECK_FUNCS([mkdir])
+AC_CHECK_FUNCS([mkfifo])
+AC_CHECK_FUNCS([nl_langinfo])
+AC_CHECK_FUNCS([rmdir])
+AC_CHECK_FUNCS([socket])
+AC_CHECK_FUNCS([strerror])
+AC_CHECK_FUNCS([strncasecmp])
+AC_CHECK_FUNCS([strpbrk])
+AC_CHECK_FUNCS([strrchr])
+dnl the strspn function is only wanted by examples/loadables/seq.c.
+AC_CHECK_FUNCS([strspn])
+AC_CHECK_FUNCS([strstr])
+AC_CHECK_FUNCS([strtol])
+AC_CHECK_FUNCS([strtoull])
+AC_CHECK_FUNCS([strtoumax])
+AC_CHECK_FUNCS([wcwidth])
+AC_CHECK_HEADERS([libintl.h])
+AC_CHECK_HEADERS([malloc.h])
+AC_CHECK_HEADERS([sgtty.h])
+AC_CHECK_HEADERS([strings.h])
+AC_CHECK_HEADER_STDBOOL
+AC_CHECK_MEMBERS([struct stat.st_blksize])
+AC_CHECK_MEMBERS([struct stat.st_rdev])
+AC_CHECK_TYPES([ptrdiff_t])
+AC_FUNC_ALLOCA
+AC_FUNC_ERROR_AT_LINE
+AC_FUNC_FORK
+AC_FUNC_GETGROUPS
+AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
+AC_FUNC_STRNLEN
+AC_FUNC_STRTOD
+AC_STRUCT_ST_BLOCKS
+AC_TYPE_SSIZE_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT8_T
 
 dnl presence and contents of structures used by system calls
 BASH_STRUCT_TERMIOS_LDISC
@@ -967,12 +1011,12 @@ dnl prototype and declaration in lib/sh/getenv.c will be standard-conformant
 if test "$ac_cv_func_putenv" = "yes"; then
 BASH_FUNC_STD_PUTENV
 else
-AC_DEFINE(HAVE_STD_PUTENV)
+AC_DEFINE([HAVE_STD_PUTENV])
 fi
 if test "$ac_cv_func_unsetenv" = "yes"; then
 BASH_FUNC_STD_UNSETENV
 else
-AC_DEFINE(HAVE_STD_UNSETENV)
+AC_DEFINE([HAVE_STD_UNSETENV])
 fi
 
 BASH_FUNC_PRINTF_A_FORMAT
@@ -1021,7 +1065,7 @@ if test "$bash_cv_job_control_missing" = missing; then
 fi
 
 if test "$opt_job_control" = yes; then
-AC_DEFINE(JOB_CONTROL)
+AC_DEFINE([JOB_CONTROL], [1], [Define if your operating system supports BSD-like job control.])
 JOBS_O=jobs.o
 else
 JOBS_O=nojobs.o
@@ -1040,10 +1084,10 @@ dnl
 dnl most of these are really old; this should really go away someday
 
 case "${host_os}" in
-sysv4.2*)	AC_DEFINE(SVR4_2)
-		AC_DEFINE(SVR4) ;;
-sysv4*)		AC_DEFINE(SVR4) ;;
-sysv5*)		AC_DEFINE(SVR5) ;;
+sysv4.2*)	AC_DEFINE([SVR4_2], [1], [Are we running SVR4.2?])
+		AC_DEFINE([SVR4], [1], [Are we running some verson of SVR4?]) ;;
+sysv4*)		AC_DEFINE([SVR4], [1], [Are we running some verson of SVR4?]) ;;
+sysv5*)		AC_DEFINE([SVR5], [1], [Are we running SVR5 (UnixWare 7)?]) ;;
 hpux9*)		LOCAL_CFLAGS="-DHPUX9 -DHPUX -DTGETENT_BROKEN -DTGETFLAG_BROKEN" ;;
 hpux*)		LOCAL_CFLAGS="-DHPUX -DTGETENT_BROKEN -DTGETFLAG_BROKEN" ;;
 dgux*)		LOCAL_CFLAGS=-D_DGUX_SOURCE; LOCAL_LIBS=-ldgc ;;
@@ -1063,7 +1107,7 @@ lynxos*)	LOCAL_CFLAGS=-DRECYCLES_PIDS ;;
 linux*)		LOCAL_LDFLAGS=-rdynamic		 # allow dynamic loading
 		case "`uname -r`" in
 		1.*|2.[[0123]]*)	: ;;
-		*)	AC_DEFINE(PGRP_PIPE) ;;
+		*)	AC_DEFINE([PGRP_PIPE], [1], [Linux 2.4 and newer pgrp pipe support.]) ;;
 		esac ;;
 netbsd*|openbsd*)	LOCAL_CFLAGS="-DDEV_FD_STAT_BROKEN" ;;
 freebsd*)	LOCAL_CFLAGS='-DHEREDOC_PIPESIZE=4096' ;;
@@ -1194,9 +1238,6 @@ AC_SUBST(LOCAL_LIBS)
 AC_SUBST(LOCAL_CFLAGS)
 AC_SUBST(LOCAL_LDFLAGS)
 AC_SUBST(LOCAL_DEFS)
-
-#AC_SUBST(ALLOCA_SOURCE)
-#AC_SUBST(ALLOCA_OBJECT)
 
 AC_CONFIG_FILES([Makefile builtins/Makefile lib/readline/Makefile lib/glob/Makefile \
 	  lib/intl/Makefile \
