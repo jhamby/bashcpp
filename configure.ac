@@ -26,17 +26,18 @@ AC_REVISION([for Bash 5.1, version 5.022-cpp])dnl
 define(bashvers, 5.1)
 define(relstatus, dev)
 
-AC_INIT([bash],[bashvers-relstatus],[jake.hamby@gmail.com])
-
 dnl make sure we are using a recent autoconf version
 AC_PREREQ([2.71])
 
-AC_CONFIG_SRCDIR(shell.h)
+AC_CONFIG_SRCDIR(shell.hh)
 
 dnl where to find install.sh, config.sub, and config.guess
 AC_CONFIG_AUX_DIR(./support)
-AC_CONFIG_HEADERS(config.h)
+AC_CONFIG_HEADERS(config.hh)
 AC_CONFIG_MACRO_DIRS([m4])
+
+AC_INIT([bash],[bashvers-relstatus],[jake.hamby@gmail.com])
+AM_INIT_AUTOMAKE
 
 dnl checks for version info
 BASHVERS=bashvers
@@ -67,14 +68,16 @@ dnl AM_PATH_LISPDIR
 AC_ARG_VAR(DEBUGGER_START_FILE, [location of bash debugger initialization file])
 
 dnl autoheader support
-AH_TOP([#include "config-top.h"])
-AH_BOTTOM([#include "config-bot.h"])
+AH_TOP([#include "config-top.hh"])
+AH_BOTTOM([#include "config-bot.hh"])
 
 dnl arguments to configure
 dnl packages
 
 AC_ARG_WITH(curses, AS_HELP_STRING([--with-curses],[use the curses library instead of the termcap library]), opt_curses=$withval)
 AC_ARG_WITH(installed-readline, AS_HELP_STRING([--with-installed-readline],[use a version of the readline library that is already installed]), opt_with_installed_readline=$withval)
+
+dnl this is for my future vfork() refactoring work.
 AC_ARG_WITH(vfork-subshell, AS_HELP_STRING([--with-vfork-subshell],[prefer vfork to fork when both are available]), opt_with_vfork_subshell=$withval)
 
 if test "$opt_curses" = yes; then
@@ -705,9 +708,8 @@ if test x$ac_cv_langinfo_codeset = xyes; then
   AC_DEFINE([HAVE_LANGINFO_CODESET], [1], [have nl_langinfo (CODESET)])
 fi
 
-AM_GNU_GETTEXT([external], [need-ngettext])
+AM_GNU_GETTEXT([external], [need-ngettext], [intl])
 AM_GNU_GETTEXT_VERSION([0.19])
-AM_GNU_GETTEXT_INTL_SUBDIR([lib/intl])
 IT_PROG_INTLTOOL
 
 dnl header files
@@ -996,6 +998,7 @@ BASH_FUNC_STRSIGNAL
 BASH_FUNC_OPENDIR_CHECK
 BASH_FUNC_ULIMIT_MAXFDS
 BASH_FUNC_FPURGE
+BASH_FUNC_GETENV
 BASH_FUNC_STRCOLL
 BASH_FUNC_SNPRINTF
 BASH_FUNC_VSNPRINTF
@@ -1234,12 +1237,10 @@ AC_SUBST(LOCAL_CFLAGS)
 AC_SUBST(LOCAL_LDFLAGS)
 AC_SUBST(LOCAL_DEFS)
 
-AC_CONFIG_FILES([Makefile builtins/Makefile lib/readline/Makefile lib/glob/Makefile \
-	  lib/intl/Makefile \
-	  lib/sh/Makefile lib/termcap/Makefile \
-	  lib/tilde/Makefile doc/Makefile support/Makefile po/Makefile.in \
+AC_CONFIG_FILES([Makefile intl/Makefile doc/Makefile po/Makefile.in \
+	  lib/glob/Makefile lib/readline/Makefile lib/sh/Makefile lib/tilde/Makefile \
 	  examples/loadables/Makefile examples/loadables/Makefile.inc \
-	  examples/loadables/perl/Makefile \
+	  examples/loadables/perl/Makefile pathnames.hh \
 	  support/bash.pc support/bashbug.sh])
 AC_CONFIG_COMMANDS([default],[
 # Makefile uses this timestamp file to record whether config.h is up to date.
