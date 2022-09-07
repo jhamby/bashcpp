@@ -225,7 +225,9 @@ _rl_strpbrk (const char *string1, const char *string2)
 
 #if defined (DEBUG)
 #if defined (USE_VARARGS)
-static FILE *_rl_tracefp;
+static FILE *_rl_tracefp;	// XXX static global variable for debug builds
+
+static int _rl_tropen ();
 
 void
 _rl_trace (const char *format, ...)
@@ -235,6 +237,7 @@ _rl_trace (const char *format, ...)
 
   if (_rl_tracefp == 0)
     _rl_tropen ();
+
   std::vfprintf (_rl_tracefp, format, args);
   std::fprintf (_rl_tracefp, "\n");
   std::fflush (_rl_tracefp);
@@ -242,7 +245,7 @@ _rl_trace (const char *format, ...)
   va_end (args);
 }
 
-int
+static inline int
 _rl_tropen ()
 {
   char fnbuf[128], *x;

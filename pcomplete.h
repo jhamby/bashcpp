@@ -146,14 +146,14 @@ extern ITEMLIST it_stopped;
 extern ITEMLIST it_users;
 extern ITEMLIST it_variables;
 
-extern CompSpec *pcomp_curcs;
+extern COMPSPEC *pcomp_curcs;
 extern const char *pcomp_curcmd;
 #endif
 
 /* Functions from pcomplib.c */
-extern CompSpec *compspec_create (void);
-extern void compspec_dispose (CompSpec *);
-extern CompSpec *compspec_copy (CompSpec *);
+extern COMPSPEC *compspec_create (void);
+extern void compspec_dispose (COMPSPEC *);
+extern COMPSPEC *compspec_copy (COMPSPEC *);
 
 extern void progcomp_create (void);
 extern void progcomp_flush (void);
@@ -161,23 +161,25 @@ extern void progcomp_dispose (void);
 
 extern int progcomp_size (void);
 
-extern int progcomp_insert (char *, CompSpec *);
+extern int progcomp_insert (char *, COMPSPEC *);
 extern int progcomp_remove (char *);
 
-extern CompSpec *progcomp_search (const string &);
+extern COMPSPEC *progcomp_search (const std::string &);
 
 extern void progcomp_walk (hash_wfunc *);
 
 /* Functions from pcomplete.c */
 extern void set_itemlist_dirty (ITEMLIST *);
 
-extern STRINGLIST *completions_to_stringlist (string *);
+extern STRINGLIST *completions_to_stringlist (const std::string &);
 
-extern STRINGLIST *gen_compspec_completions (CompSpec *, const string &, const string &, int, int, int *);
-extern char **programmable_completions (const string &, const string &, int, int, int *);
+extern STRINGLIST *
+gen_compspec_completions (COMPSPEC *, const std::string &, const std::string &, int, int, int *);
+
+extern char **programmable_completions (const std::string &, const std::string &, int, int, int *);
 
 extern void pcomp_set_readline_variables (int, int);
-extern void pcomp_set_compspec_options (CompSpec *, int, int);
+extern void pcomp_set_compspec_options (COMPSPEC *, int, int);
 
 }  // namespace bash
 

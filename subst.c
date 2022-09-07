@@ -32,6 +32,7 @@
 #include "filecntl.h"
 #include "trap.h"
 #include "pathexp.h"
+#include "subst.h"
 
 #include "shmbutil.h"
 #if defined (HAVE_MBSTR_H) && defined (HAVE_MBSCHR)
@@ -1811,7 +1812,7 @@ Shell::split_at_delims (const char *string, int slen, const char *delims,
 {
   int ts, te, i, nw, cw;
   sd_flags dflags;
-  WORD_LIST *ret, *tl;
+//   WORD_LIST *ret, *tl;
 
   if (string == 0 || *string == '\0')
     {
@@ -1864,7 +1865,7 @@ Shell::split_at_delims (const char *string, int slen, const char *delims,
       d2[ts] = '\0';
     }
 
-  ret = nullptr;
+  WORD_LIST *ret = new WORD_LIST ();
 
   /* Remove sequences of whitespace characters at the start of the string, as
      long as those characters are delimiters. */
@@ -1904,7 +1905,7 @@ Shell::split_at_delims (const char *string, int slen, const char *delims,
 
       char *token = substring (string, ts, te);
 
-      ret = add_string_to_list (token, ret);	/* XXX */
+      ret->push_back (new WORD_DESC (token));
       delete[] token;
       nw++;
 
@@ -1917,12 +1918,10 @@ Shell::split_at_delims (const char *string, int slen, const char *delims,
 	cw = nw;
 
       /* If the cursor is at whitespace between two words, make a new, empty
-	 word, add it before (well, after, since the list is in reverse order)
-	 the word we just added, and set the current word to that one. */
+	 word and insert it before the word that we just added. */
       if (cwp && cw == -1 && sentinel < ts)
 	{
-	  tl = make_word_list (make_word (""), (WORD_LIST *)(ret->next));
-	  ret->next = tl;
+	  ret->insert (ret->end () - 1, new WORD_DESC ());
 	  cw = nw;
 	  nw++;
 	}
@@ -1951,7 +1950,7 @@ Shell::split_at_delims (const char *string, int slen, const char *delims,
     {
       if (whitespace (string[sentinel - 1]))
 	{
-	  ret = add_string_to_list ("", ret);
+	  ret->push_back (new WORD_DESC ());
 	  nw++;
 	}
       cw = nw;
@@ -1962,9 +1961,9 @@ Shell::split_at_delims (const char *string, int slen, const char *delims,
   if (cwp)
     *cwp = cw;
 
-  FREE (d2);
+  delete[] d2;
 
-  return REVERSE_LIST (ret, WORD_LIST *);
+  return ret;
 }
 #endif /* READLINE */
 
@@ -1976,61 +1975,36 @@ Shell::split_at_delims (const char *string, int slen, const char *delims,
 
 /* Return a single string of all the words in LIST.  SEP is the separator
    to put between individual elements of LIST in the output string. */
-static char *
+char *
 string_list_internal (WORD_LIST *list, const char *sep)
 {
-  WORD_LIST *t;
-  char *result, *r;
-  size_t word_len, sep_len, result_size;
-
-  if (list == 0)
+  if (list == nullptr)
     return nullptr;
 
   /* Short-circuit quickly if we don't need to separate anything. */
-  if (list->next == 0)
-    return savestring (list->word->word);
+  if (list->size () == 1)
+    return savestring ((*list)[0]->word);
 
   /* This is nearly always called with either sep[0] == 0 or sep[1] == 0. */
-  sep_len = STRLEN (sep);
-  result_size = 0;
+  size_t sep_len = std::strlen (sep);
 
-  for (t = list; t; t = (WORD_LIST *)(t->next))
+  std::string ret;
+
+  WORD_LIST::iterator t;
+  for (t = list->begin (); t != list->end (); ++t)
     {
-      if (t != list)
-	result_size += sep_len;
-      result_size += strlen (t->word->word);
-    }
-
-  r = result = (char *)xmalloc (result_size + 1);
-
-  for (t = list; t; t = (WORD_LIST *)(t->next))
-    {
-      if (t != list && sep_len)
+      if (t != list->begin () && sep_len)
 	{
 	  if (sep_len > 1)
-	    {
-	      FASTCOPY (sep, r, sep_len);
-	      r += sep_len;
-	    }
+	    ret += sep;
 	  else
-	    *r++ = sep[0];
+	    ret.push_back (sep[0]);
 	}
 
-      word_len = strlen (t->word->word);
-      FASTCOPY (t->word->word, r, word_len);
-      r += word_len;
+      ret += (*t)->word;
     }
 
-  *r = '\0';
-  return result;
-}
-
-/* Return a single string of all the words present in LIST, separating
-   each word with a space. */
-char *
-string_list (WORD_LIST *list)
-{
-  return string_list_internal (list, " ");
+  return savestring (ret);
 }
 
 /* An external interface that can be used by the rest of the shell to
@@ -2053,7 +2027,7 @@ Shell::ifs_firstchar (int *lenp)
     }
   else
     {
-      memcpy (ret, ifs_firstc, ifs_firstc_len);
+      std::memcpy (ret, ifs_firstc, ifs_firstc_len);
       ret[len = ifs_firstc_len] = '\0';
     }
 #else
@@ -2078,41 +2052,18 @@ Shell::ifs_firstchar (int *lenp)
 char *
 Shell::string_list_dollar_star (const WORD_LIST *list, int quoted, int flags)
 {
-  char *ret;
-#if defined (HANDLE_MULTIBYTE)
-#  if defined (__GNUC__)
-  char sep[MB_CUR_MAX + 1];
-#  else
-  char *sep = 0;
-#  endif
-#else
-  char sep[2];
-#endif
+  std::string sep;
 
 #if defined (HANDLE_MULTIBYTE)
-#  if !defined (__GNUC__)
-  sep = (char *)xmalloc (MB_CUR_MAX + 1);
-#  endif /* !__GNUC__ */
   if (ifs_firstc_len == 1)
-    {
-      sep[0] = ifs_firstc[0];
-      sep[1] = '\0';
-    }
+    sep = ifs_firstc[0];
   else
-    {
-      memcpy (sep, ifs_firstc, ifs_firstc_len);
-      sep[ifs_firstc_len] = '\0';
-    }
+    sep.assign (ifs_firstc, ifs_firstc_len);
 #else
-  sep[0] = ifs_firstc;
-  sep[1] = '\0';
+  sep = ifs_firstc;
 #endif
 
-  ret = string_list_internal (list, sep);
-#if defined (HANDLE_MULTIBYTE) && !defined (__GNUC__)
-  free (sep);
-#endif
-  return ret;
+  return string_list_internal (list, sep.c_str ());
 }
 
 /* Turn $@ into a string.  If (quoted & (Q_HERE_DOCUMENT | Q_DOUBLE_QUOTES))
@@ -2146,7 +2097,7 @@ Shell::string_list_dollar_at (WORD_LIST *list, int quoted, int flags)
   WORD_LIST *tlist;
 
   /* XXX this could just be ifs = ifs_value; */
-  ifs = ifs_var ? value_cell (ifs_var) : (char *)0;
+  ifs = ifs_var ? ifs_var->value () : nullptr;
 
 #if defined (HANDLE_MULTIBYTE)
 #  if !defined (__GNUC__)
@@ -2223,9 +2174,11 @@ Shell::string_list_pos_params (char pchar, WORD_LIST *list,
       ret = string_list (tlist);
     }
   else if (pchar == '*' && quoted == 0 && ifs_is_null)	/* XXX */
-    ret = expand_no_split_dollar_star ? string_list_dollar_star (list, quoted, 0) : string_list_dollar_at (list, quoted, 0);	/* Posix interp 888 */
+    ret = expand_no_split_dollar_star ? string_list_dollar_star (list, quoted, 0)
+				      : string_list_dollar_at (list, quoted, 0);	/* Posix interp 888 */
   else if (pchar == '*' && quoted == 0 && (pflags & PF_ASSIGNRHS))	/* XXX */
-    ret = expand_no_split_dollar_star ? string_list_dollar_star (list, quoted, 0) : string_list_dollar_at (list, quoted, 0);	/* Posix interp 888 */
+    ret = expand_no_split_dollar_star ? string_list_dollar_star (list, quoted, 0)
+				      : string_list_dollar_at (list, quoted, 0);	/* Posix interp 888 */
   else if (pchar == '*')
     {
       /* Even when unquoted, string_list_dollar_star does the right thing
@@ -2294,7 +2247,7 @@ Shell::string_list_pos_params (char pchar, WORD_LIST *list,
 							     : ifs_whitespace (c))
 
 WORD_LIST *
-Shell::list_string (const char *string, const char *separators, int quoted)
+Shell::list_string (const char *string, const char *separators, quoted_flags quoted)
 {
   if (!string || !*string)
     return nullptr;
@@ -2329,7 +2282,7 @@ Shell::list_string (const char *string, const char *separators, int quoted)
       for (s = string; *s && issep (*s) && ifs_whitespace (*s); s++);
 
       if (!*s)
-	return (WORD_LIST *)NULL;
+	return nullptr;
 
       string = s;
     }
@@ -2341,8 +2294,8 @@ Shell::list_string (const char *string, const char *separators, int quoted)
      This obeys the field splitting rules in Posix.2. */
   size_t slen = std::strlen (string);
   size_t sindex;
-  WORD_LIST *result;
-  for (result = (WORD_LIST *)NULL, sindex = 0; string[sindex]; )
+  WORD_LIST *result = new WORD_LIST ();
+  for (sindex = 0; string[sindex]; )
     {
       /* Don't need string length in ADVANCE_CHAR unless multibyte chars are
 	 possible, but need it in string_extract_verbatim for bounds checking */
@@ -2358,10 +2311,10 @@ Shell::list_string (const char *string, const char *separators, int quoted)
 	 below. */
       if (QUOTED_NULL (current_word))
 	{
-	  WORD_DESC *t = alloc_word_desc ();
+	  WORD_DESC *t = new WORD_DESC ();
 	  t->word = make_quoted_char ('\0');
 	  t->flags |= (W_QUOTED | W_HASQUOTEDNULL);
-	  result = make_word_list (t, result);
+	  result->push_back (t);
 	}
       else if (current_word[0] != '\0')
 	{
@@ -2373,31 +2326,30 @@ Shell::list_string (const char *string, const char *separators, int quoted)
 	     here -- that's mostly for the parser -- so we just allocate a
 	     WORD_DESC *, assign current_word (noting that we don't want to
 	     free it), and skip all of make_word. */
-	  WORD_DESC *t = alloc_word_desc ();
-	  t->word = current_word;
-	  result = make_word_list (t, result);
+	  WORD_DESC *t = new WORD_DESC (current_word);
 	  free_word = false;
-	  result->word->flags &= ~W_HASQUOTEDNULL;	/* just to be sure */
+	  t->flags &= ~W_HASQUOTEDNULL;	/* just to be sure */
 	  if (quoted & (Q_DOUBLE_QUOTES | Q_HERE_DOCUMENT))
-	    result->word->flags |= W_QUOTED;
+	    t->flags |= W_QUOTED;
 	  /* If removing quoted null characters leaves an empty word, note
 	     that we saw this for the caller to act on. */
 	  if (current_word == 0 || current_word[0] == '\0')
-	    result->word->flags |= W_SAWQUOTEDNULL;
+	    t->flags |= W_SAWQUOTEDNULL;
+	  result->push_back (t);
 	}
 
       /* If we're not doing sequences of separators in the traditional
 	 Bourne shell style, then add a quoted null argument. */
       else if (!sh_style_split && !ifs_whitespace (string[sindex]))
 	{
-	  WORD_DESC *t = alloc_word_desc ();
+	  WORD_DESC *t = new WORD_DESC ();
 	  t->word = make_quoted_char ('\0');
-	  t->flags |= (W_QUOTED | W_HASQUOTEDNULL);
-	  result = make_word_list (t, result);
+	  t->flags = (W_QUOTED | W_HASQUOTEDNULL);
+	  result->push_back (t);
 	}
 
       if (free_word)
-	free (current_word);
+	delete[] current_word;
 
       /* Note whether or not the separator is IFS whitespace, used later. */
       bool whitesep = string[sindex] && ifs_whitesep (string[sindex]);
@@ -2427,7 +2379,7 @@ Shell::list_string (const char *string, const char *separators, int quoted)
 	    sindex++;
 	}
     }
-  return REVERSE_LIST (result, WORD_LIST *);
+  return result;
 }
 
 /* Parse a single word from STRING, using SEPARATORS to separate fields.
@@ -2454,14 +2406,14 @@ Shell::get_word_from_string (char **stringp, const char *separators, char **endp
 				      separators[3] == '\0';
 
   unsigned char local_cmap[UCHAR_MAX+1];	/* really only need single-byte chars here */
-  memset (local_cmap, '\0', sizeof (local_cmap));
+  std::memset (local_cmap, '\0', sizeof (local_cmap));
 
   sx_flags xflags = SX_NOFLAGS;
   for (const char *sep = separators; sep && *sep; sep++)
     {
       if (*sep == CTLESC) xflags |= SX_NOCTLESC;
       if (*sep == CTLNUL) xflags |= SX_NOESCCTLNUL;
-      local_cmap[(unsigned char)*sep] = 1;	/* local charmap of separators */
+      local_cmap[static_cast<unsigned char> (*sep)] = 1;	/* local charmap of separators */
     }
 
   char *s = *stringp;
@@ -2469,7 +2421,7 @@ Shell::get_word_from_string (char **stringp, const char *separators, char **endp
   /* Remove sequences of whitespace at the beginning of STRING, as
      long as those characters appear in SEPARATORS.  This happens if
      SEPARATORS == $' \t\n' or if IFS is unset. */
-  if (sh_style_split || separators == 0)
+  if (sh_style_split || separators == nullptr)
     for (; *s && spctabnl (*s) && islocalsep (*s); s++);
   else
     for (; *s && ifs_whitespace (*s) && islocalsep (*s); s++);
@@ -2798,7 +2750,7 @@ list_rest_of_args ()
   int i;
 
   /* Break out of the loop as soon as one of the dollar variables is null. */
-  for (i = 1, list = (WORD_LIST *)NULL; i < 10 && dollar_vars[i]; i++)
+  for (i = 1, list = nullptr; i < 10 && dollar_vars[i]; i++)
     list = make_word_list (make_bare_word (dollar_vars[i]), list);
 
   for (args = rest_of_args; args; args = (WORD_LIST *)(args->next))
@@ -2864,7 +2816,7 @@ pos_params (const char *string, int start, int end, int quoted, int pflags)
       t = params;
       params = (WORD_LIST *)(params->next);
     }
-  t->next = (WORD_LIST *)NULL;
+  t->next = nullptr;
 
   ret = string_list_pos_params (string[0], h, quoted, pflags);
 
@@ -3138,7 +3090,7 @@ expand_string_internal (const char *string, int quoted)
   WORD_LIST *tresult;
 
   if (string == 0 || *string == 0)
-    return (WORD_LIST *)NULL;
+    return nullptr;
 
   td.flags = 0;
   td.word = savestring (string);
@@ -3160,7 +3112,7 @@ expand_string_unsplit (const char *string, int quoted)
   WORD_LIST *value;
 
   if (string == 0 || *string == '\0')
-    return (WORD_LIST *)NULL;
+    return nullptr;
 
   expand_no_split_dollar_star = 1;
   value = expand_string_internal (string, quoted);
@@ -3186,7 +3138,7 @@ expand_string_assignment (const char *string, int quoted)
   WORD_LIST *value;
 
   if (string == 0 || *string == '\0')
-    return (WORD_LIST *)NULL;
+    return nullptr;
 
   expand_no_split_dollar_star = true;
 
@@ -3231,7 +3183,7 @@ expand_prompt_string (const char *string, int quoted, int wflags)
   WORD_DESC td;
 
   if (string == 0 || *string == 0)
-    return (WORD_LIST *)NULL;
+    return nullptr;
 
   td.flags = wflags;
   td.word = savestring (string);
@@ -3242,7 +3194,7 @@ expand_prompt_string (const char *string, int quoted, int wflags)
 
   if (value == &expand_word_error || value == &expand_word_fatal)
     {
-      value = make_word_list (make_bare_word (string), (WORD_LIST *)NULL);
+      value = make_word_list (make_bare_word (string), nullptr);
       return value;
     }
 
@@ -3271,7 +3223,7 @@ expand_string_leave_quoted (const char *string, int quoted)
   WORD_LIST *tresult;
 
   if (string == 0 || *string == '\0')
-    return (WORD_LIST *)NULL;
+    return nullptr;
 
   tlist = expand_string_internal (string, quoted);
 
@@ -3281,7 +3233,7 @@ expand_string_leave_quoted (const char *string, int quoted)
       dispose_words (tlist);
       return tresult;
     }
-  return (WORD_LIST *)NULL;
+  return nullptr;
 }
 
 /* This does not perform word splitting or dequote the WORD_LIST
@@ -3291,7 +3243,7 @@ expand_string_for_rhs (char *string, int quoted, int op, int pflags,
                        bool *dollar_at_p, bool *expanded_p)
 {
   if (string == 0 || *string == '\0')
-    return (WORD_LIST *)NULL;
+    return nullptr;
 
   /* We want field splitting to be determined by what is going to be done with
      the entire ${parameterOPword} expansion, so we don't want to split the RHS
@@ -3334,7 +3286,7 @@ static WORD_LIST *
 expand_string_for_pat (char *string, int quoted, bool *dollar_at_p, bool *expanded_p)
 {
   if (string == 0 || *string == '\0')
-    return (WORD_LIST *)NULL;
+    return nullptr;
 
   bool oexp = expand_no_split_dollar_star;
   expand_no_split_dollar_star = true;
@@ -3356,7 +3308,7 @@ WORD_LIST *
 expand_string (const char *string, int quoted)
 {
   if (string == 0 || *string == '\0')
-    return (WORD_LIST *)NULL;
+    return nullptr;
 
   WORD_LIST *result = expand_string_leave_quoted (string, quoted);
   return result ? dequote_list (result) : result;
@@ -3515,7 +3467,7 @@ dequote_escapes (const char *string)
   DECLARE_MBSTATE;
 
   if (string == 0)
-    return (char *)0;
+    return nullptr;
 
   size_t slen = strlen (string);
   const char *send = string + slen;
@@ -4437,7 +4389,7 @@ list_remove_pattern (WORD_LIST *list, const char *pattern, int patspec,
   WORD_DESC *w;
   char *tword;
 
-  for (new_ = (WORD_LIST *)NULL, l = list; l; l = (WORD_LIST *)(l->next))
+  for (new_ = nullptr, l = list; l; l = (WORD_LIST *)(l->next))
     {
       tword = remove_pattern (l->word->word, savestring (pattern), patspec);
       w = alloc_word_desc ();
@@ -6538,7 +6490,7 @@ verify_substring_values (SHELL_VAR *v, const char *value, const char *substr,
   if (*t && *t == ':')
     *t = '\0';
   else
-    t = (char *)0;
+    t = nullptr;
 
   char *temp1 = expand_arith_string (substr, Q_DOUBLE_QUOTES);
   bool expok;
@@ -6903,7 +6855,7 @@ list_transform (char xc, SHELL_VAR *v, WORD_LIST *list, int itype, int quoted)
 {
   WORD_LIST *newlist, *l;
 
-  for (newlist = (WORD_LIST *)NULL, l = list; l; l = (WORD_LIST *)(l->next))
+  for (newlist = nullptr, l = list; l; l = (WORD_LIST *)(l->next))
     {
       char *tword = string_transform (xc, v, l->word->word);
       WORD_DESC *w = alloc_word_desc ();
@@ -8168,7 +8120,7 @@ parameter_brace_expand (const char *string, size_t *indexp, quoted_flags quoted,
     }
 #endif
 
-  var_is_set = temp != (char *)0;
+  var_is_set = temp != nullptr;
   var_is_null = check_nullness && (!var_is_set || *temp == 0);
   /* XXX - this may not need to be restricted to special variables */
   if (check_nullness)
@@ -8789,7 +8741,7 @@ param_expand (const char *string, int *sindex, int quoted, bool *expanded_someth
 
       if (tdesc == &expand_wdesc_error || tdesc == &expand_wdesc_fatal)
 	return tdesc;
-      temp = tdesc ? tdesc->word : (char *)0;
+      temp = tdesc ? tdesc->word : nullptr;
 
       /* XXX */
       /* Quoted nulls should be removed if there is anything else
@@ -9189,7 +9141,7 @@ add_string:
 	  if (temp)
 	    {
 	      istring = sub_append_string (temp, istring, &istring_index, &istring_size);
-	      temp = (char *)0;
+	      temp = nullptr;
 	    }
 
 	  break;
@@ -9217,7 +9169,7 @@ add_string:
 	       open the pipe for writing in the child and produce output; if
 	       it is `>()', we want to open the pipe for reading in the child
 	       and consume input. */
-	    temp = temp1 ? process_substitute (temp1, (c == '>')) : (char *)0;
+	    temp = temp1 ? process_substitute (temp1, (c == '>')) : nullptr;
 
 	    FREE (temp1);
 
@@ -9598,7 +9550,7 @@ add_twochars:
 	    {
 	      /* What we have is "".  This is a minor optimization. */
 	      FREE (temp);
-	      list = (WORD_LIST *)NULL;
+	      list = nullptr;
 	      had_quoted_null = true;	/* note for later */
 	    }
 
@@ -9846,7 +9798,7 @@ finished_with_string:
 	  istring = 0;		/* avoid later free() */
 
 	  tword->flags |= W_HASQUOTEDNULL;		/* XXX */
-	  list = make_word_list (tword, (WORD_LIST *)NULL);
+	  list = make_word_list (tword, nullptr);
 
 	  if (quoted & (Q_HERE_DOCUMENT | Q_DOUBLE_QUOTES))
 	    tword->flags |= W_QUOTED;
@@ -9857,9 +9809,9 @@ finished_with_string:
       /* XXX - exception appears to be that quoted null strings result in
 	 null arguments */
       else if (quoted_state == UNQUOTED || quoted_dollar_at)
-	list = (WORD_LIST *)NULL;
+	list = nullptr;
       else
-	list = (WORD_LIST *)NULL;
+	list = nullptr;
     }
   else if (word->flags & W_NOSPLIT)
     {
@@ -9878,7 +9830,7 @@ finished_with_string:
 	tword->flags |= W_NOBRACE;	/* XXX */
       if (quoted & (Q_HERE_DOCUMENT | Q_DOUBLE_QUOTES))
 	tword->flags |= W_QUOTED;
-      list = make_word_list (tword, (WORD_LIST *)NULL);
+      list = make_word_list (tword, nullptr);
     }
   else if (word->flags & W_ASSIGNRHS)
     {
@@ -9985,7 +9937,7 @@ set_word_flags:
 	    tword->flags |= W_NOGLOB;
 	  if (word->flags & W_NOBRACE)
 	    tword->flags |= W_NOBRACE;
-	  list = make_word_list (tword, (WORD_LIST *)NULL);
+	  list = make_word_list (tword, nullptr);
 	}
     }
 
@@ -10144,20 +10096,20 @@ word_split (WORD_DESC *w, const char *ifs_chars)
       result = list_string (w->word, xifs, w->flags & W_QUOTED);
     }
   else
-    result = (WORD_LIST *)NULL;
+    result = nullptr;
 
   return result;
 }
 
 /* Perform word splitting on LIST and return the RESULT.  It is possible
-   to return (WORD_LIST *)NULL. */
+   to return nullptr. */
 static WORD_LIST *
 word_list_split (WORD_LIST *list)
 {
   WORD_LIST *result, *t, *tresult, *e;
   WORD_DESC *w;
 
-  for (t = list, result = (WORD_LIST *)NULL; t; t = (WORD_LIST *)(t->next))
+  for (t = list, result = nullptr; t; t = (WORD_LIST *)(t->next))
     {
       tresult = word_split (t->word, ifs_value);
       /* POSIX 2.6: "If the complete expansion appropriate for a word results
@@ -10171,7 +10123,7 @@ word_list_split (WORD_LIST *list)
 	  w = alloc_word_desc ();
 	  w->word = (char *)xmalloc (1);
 	  w->word[0] = '\0';
-	  tresult = make_word_list (w, (WORD_LIST *)NULL);
+	  tresult = make_word_list (w, nullptr);
 	}
       if (result == 0)
         result = e = tresult;
@@ -10781,7 +10733,7 @@ expand_declaration_argument (WORD_LIST *tlist, WORD_LIST *wcmd)
   bool skip = false;
   if (opti > 0)
     {
-      int t = make_internal_declare (tlist->word->word, opts, wcmd ? wcmd->word->word : (char *)0);
+      int t = make_internal_declare (tlist->word->word, opts, wcmd ? wcmd->word->word : nullptr);
       if (t != EXECUTION_SUCCESS)
 	{
 	  last_command_exit_value = t;

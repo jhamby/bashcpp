@@ -271,6 +271,8 @@ SimpleState::SimpleState () :
 #endif
 }
 
+#if 0
+
 // Everything happens when we construct the Shell.
 Shell::Shell (int argc, char **argv, char **env) : SimpleState ()
 {
@@ -1973,5 +1975,7 @@ run_shopt_alist ()
   shopt_alist = 0;
   shopt_ind = shopt_len = 0;
 }
+
+#endif  // disaster area above
 
 }  // namespace bash

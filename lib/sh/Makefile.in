@@ -83,7 +83,7 @@ LIBRARY_NAME = libsh.a
 # The C code source files for this library.
 CSOURCES = clktck.c clock.c getcwd.c getenv.c oslib.c setlinebuf.c \
 	   strcasecmp.c strerror.c \
-	   vprint.c rename.c zread.c shtty.c \
+	   vprint.c rename.c zread.c \
 	   inet_aton.c netconn.c netopen.c strpbrk.c timeval.c makepath.c \
 	   pathcanon.c pathphys.c tmpfile.c spell.c \
 	   shquote.c strtrans.c strcasestr.c snprintf.c mailstat.c \
@@ -101,7 +101,7 @@ HSOURCES =
 # The object files contained in $(LIBRARY_NAME)
 LIBOBJS = @LIBOBJS@
 OBJECTS = clktck.o clock.o getenv.o oslib.o setlinebuf.o strnlen.o \
-	  zread.o shtty.o shmatch.o eaccess.o \
+	  zread.o shmatch.o eaccess.o \
 	  netconn.o netopen.o timeval.o makepath.o pathcanon.o \
 	  pathphys.o tmpfile.o spell.o shquote.o \
 	  strtrans.o snprintf.o mailstat.o fmtulong.o \
@@ -175,7 +175,6 @@ setlinebuf.o: setlinebuf.c
 shmatch.o: shmatch.c
 shmbchar.o: shmbchar.c
 shquote.o: shquote.c
-shtty.o: shtty.c
 snprintf.o: snprintf.c
 spell.o: spell.c
 strcasecmp.o: strcasecmp.c
@@ -238,7 +237,6 @@ setlinebuf.o: ${BUILD_DIR}/config.h
 shmatch.o: ${BUILD_DIR}/config.h
 shmbchar.o: ${BUILD_DIR}/config.h
 shquote.o: ${BUILD_DIR}/config.h
-shtty.o: ${BUILD_DIR}/config.h
 snprintf.o: ${BUILD_DIR}/config.h
 spell.o: ${BUILD_DIR}/config.h
 strcasecmp.o: ${BUILD_DIR}/config.h
@@ -357,8 +355,6 @@ shmatch.o: ${topdir}/subst.h ${topdir}/sig.h
 shmatch.o: ${BUILD_DIR}/pathnames.h ${topdir}/externs.h
 
 shquote.o: ${BASHINCDIR}/shmbutil.h ${BASHINCDIR}/shmbchar.h
-
-shtty.o: ${BASHINCDIR}/shtty.h
 
 snprintf.o: ${BASHINCDIR}/chartypes.h
 snprintf.o: ${BASHINCDIR}/shmbutil.h ${BASHINCDIR}/shmbchar.h

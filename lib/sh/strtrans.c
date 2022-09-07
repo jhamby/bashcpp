@@ -340,9 +340,9 @@ bool
 ansic_shouldquote (const char *string)
 {
   const char *s;
-  unsigned char c;
+  char c;
 
-  if (string == 0)
+  if (string == nullptr)
     return false;
 
   for (s = string; (c = *s); s++)

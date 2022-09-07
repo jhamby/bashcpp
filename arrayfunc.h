@@ -21,7 +21,7 @@
 #if !defined (_ARRAYFUNC_H_)
 #define _ARRAYFUNC_H_
 
-/* Must include variables.h before including this file. */
+#include "variables.h"
 
 #if defined (ARRAY_VARS)
 

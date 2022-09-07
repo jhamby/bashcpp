@@ -49,7 +49,6 @@
 #include "command.h"
 #include "syntax.h"
 #include "error.h"
-#include "variables.h"
 #include "arrayfunc.h"
 #include "quit.h"
 #include "maxpath.h"
@@ -58,6 +57,7 @@
 #include "pathnames.h"
 #include "externs.h"
 #include "jobs.h"
+#include "shtty.h"
 
 #if defined (READLINE)
 #include <readline/readline.h>
@@ -71,11 +71,13 @@ namespace bash
 {
 
 /* Flag values for history_control */
-const int HC_IGNSPACE =		0x01;
-const int HC_IGNDUPS =		0x02;
-const int HC_ERASEDUPS =	0x04;
+enum hist_ctl_flags {
+  HC_IGNSPACE =		0x01,
+  HC_IGNDUPS =		0x02,
+  HC_ERASEDUPS =	0x04,
 
-const int HC_IGNBOTH =	(HC_IGNSPACE | HC_IGNDUPS);
+  HC_IGNBOTH =	(HC_IGNSPACE | HC_IGNDUPS)
+};
 
 #if defined (STRICT_POSIX)
 #  undef HISTEXPAND_DEFAULT
@@ -312,15 +314,19 @@ protected:
   pid_t last_command_subst_pid;
   pid_t current_command_subst_pid;
 
+  /* variables from lib/sh/shtty.c */
+
+  TTYSTRUCT ttin, ttout;
+
   /* Variables used to keep track of the characters in IFS. */
   bool ifs_cmap[UCHAR_MAX + 1];
   bool ifs_is_set;
   bool ifs_is_null;
 
 #if defined (HANDLE_MULTIBYTE)
-  unsigned char ifs_firstc[MB_LEN_MAX];
+  char ifs_firstc[MB_LEN_MAX];
 #else
-  unsigned char ifs_firstc;
+  char ifs_firstc;
 #endif
 
   /* Set by expand_word_unsplit and several of the expand_string_XXX functions;
@@ -683,6 +689,9 @@ protected:
 
   bool shell_reinitialized;
 
+  /* Used by ttsave()/ttrestore() to check if there are valid saved settings. */
+  bool ttsaved;
+
   /* from lib/sh/unicode.c */
 
   bool u32init;
@@ -692,7 +701,7 @@ protected:
   char charsetbuf[40];
 #endif
 
-  char _pad[6];				// silence clang -Wpadded warning
+  char _pad[5];				// silence clang -Wpadded warning
 };
 
 
@@ -1291,6 +1300,271 @@ protected:
   char *sh_backslash_quote (const char *, const char *, int);
   char *sh_backslash_quote_for_double_quotes (const char *);
 
+  /* include all functions from lib/sh/shtty.c here: they're very small. */
+  /* shtty.c -- abstract interface to the terminal, focusing on capabilities. */
+
+  static inline int
+  ttgetattr(int fd, TTYSTRUCT *ttp)
+  {
+#ifdef TERMIOS_TTY_DRIVER
+    return ::tcgetattr(fd, ttp);
+#else
+#  ifdef TERMIO_TTY_DRIVER
+    return ::ioctl(fd, TCGETA, ttp);
+#  else
+    return ::ioctl(fd, TIOCGETP, ttp);
+#  endif
+#endif
+  }
+
+  static inline int
+  ttsetattr(int fd, TTYSTRUCT *ttp)
+  {
+#ifdef TERMIOS_TTY_DRIVER
+    return ::tcsetattr(fd, TCSADRAIN, ttp);
+#else
+#  ifdef TERMIO_TTY_DRIVER
+    return ::ioctl(fd, TCSETAW, ttp);
+#  else
+    return ::ioctl(fd, TIOCSETN, ttp);
+#  endif
+#endif
+  }
+
+  inline void
+  ttsave()
+  {
+    if (ttsaved)
+     return;
+    (void) ttgetattr (0, &ttin);
+    (void) ttgetattr (1, &ttout);
+    ttsaved = true;
+  }
+
+  inline void
+  ttrestore()
+  {
+    if (!ttsaved)
+      return;
+    (void) ttsetattr (0, &ttin);
+    (void) ttsetattr (1, &ttout);
+    ttsaved = false;
+  }
+
+  /* Retrieve the internally-saved attributes associated with tty fd FD. */
+  inline TTYSTRUCT *
+  ttattr (int fd)
+  {
+    if (!ttsaved)
+      return nullptr;
+    if (fd == 0)
+      return &ttin;
+    else if (fd == 1)
+      return &ttout;
+    else
+      return nullptr;
+  }
+
+  /*
+   * Change attributes in ttp so that when it is installed using
+   * ttsetattr, the terminal will be in one-char-at-a-time mode.
+   */
+  static inline void
+  tt_setonechar(TTYSTRUCT *ttp)
+  {
+#if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
+
+    /* XXX - might not want this -- it disables erase and kill processing. */
+    ttp->c_lflag &= ~(static_cast<tcflag_t> (ICANON));
+
+    ttp->c_lflag |= ISIG;
+#  ifdef IEXTEN
+    ttp->c_lflag |= IEXTEN;
+#  endif
+
+    ttp->c_iflag |= ICRNL;	/* make sure we get CR->NL on input */
+    ttp->c_iflag &= ~(static_cast<tcflag_t> (INLCR));	/* but no NL->CR */
+
+#  ifdef OPOST
+    ttp->c_oflag |= OPOST;
+#  endif
+#  ifdef ONLCR
+    ttp->c_oflag |= ONLCR;
+#  endif
+#  ifdef OCRNL
+    ttp->c_oflag &= ~(static_cast<tcflag_t> (OCRNL));
+#  endif
+#  ifdef ONOCR
+    ttp->c_oflag &= ~(static_cast<tcflag_t> (ONOCR));
+#  endif
+#  ifdef ONLRET
+    ttp->c_oflag &= ~(static_cast<tcflag_t> (ONLRET));
+#  endif
+
+    ttp->c_cc[VMIN] = 1;
+    ttp->c_cc[VTIME] = 0;
+
+#else
+
+    ttp->sg_flags |= CBREAK;
+
+#endif
+  }
+
+  /* Set the tty associated with FD and TTP into one-character-at-a-time mode */
+  static inline int
+  ttfd_onechar (int fd, TTYSTRUCT *ttp)
+  {
+    tt_setonechar(ttp);
+    return ttsetattr (fd, ttp);
+  }
+
+  /* Set the terminal into one-character-at-a-time mode */
+  inline int
+  ttonechar ()
+  {
+    TTYSTRUCT tt;
+
+    if (!ttsaved)
+      return -1;
+    tt = ttin;
+    return ttfd_onechar (0, &tt);
+  }
+
+  /*
+   * Change attributes in ttp so that when it is installed using
+   * ttsetattr, the terminal will be in no-echo mode.
+   */
+  static inline void
+  tt_setnoecho(TTYSTRUCT *ttp)
+  {
+#if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
+    ttp->c_lflag &= ~(static_cast<tcflag_t> (ECHO | ECHOK | ECHONL));
+#else
+    ttp->sg_flags &= ~ECHO;
+#endif
+  }
+
+  /* Set the tty associated with FD and TTP into no-echo mode */
+  static inline int
+  ttfd_noecho (int fd, TTYSTRUCT *ttp)
+  {
+    tt_setnoecho (ttp);
+    return ttsetattr (fd, ttp);
+  }
+
+  /* Set the terminal into no-echo mode */
+  inline int
+  ttnoecho ()
+  {
+    TTYSTRUCT tt;
+
+    if (!ttsaved)
+      return -1;
+    tt = ttin;
+    return ttfd_noecho (0, &tt);
+  }
+
+  /*
+   * Change attributes in ttp so that when it is installed using
+   * ttsetattr, the terminal will be in eight-bit mode (pass8).
+   */
+  static inline void
+  tt_seteightbit (TTYSTRUCT *ttp)
+  {
+#if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
+    ttp->c_iflag &= ~(static_cast<tcflag_t> (ISTRIP));
+    ttp->c_cflag |= CS8;
+    ttp->c_cflag &= ~(static_cast<tcflag_t> (PARENB));
+#else
+    ttp->sg_flags |= ANYP;
+#endif
+  }
+
+  /* Set the tty associated with FD and TTP into eight-bit mode */
+  static inline int
+  ttfd_eightbit (int fd, TTYSTRUCT *ttp)
+  {
+    tt_seteightbit (ttp);
+    return ttsetattr (fd, ttp);
+  }
+
+  /* Set the terminal into eight-bit mode */
+  inline int
+  tteightbit ()
+  {
+    TTYSTRUCT tt;
+
+    if (!ttsaved)
+      return -1;
+    tt = ttin;
+    return ttfd_eightbit (0, &tt);
+  }
+
+  /*
+   * Change attributes in ttp so that when it is installed using
+   * ttsetattr, the terminal will be in non-canonical input mode.
+   */
+  static inline void
+  tt_setnocanon (TTYSTRUCT *ttp)
+  {
+#if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
+    ttp->c_lflag &= ~(static_cast<tcflag_t> (ICANON));
+#endif
+  }
+
+  /* Set the tty associated with FD and TTP into non-canonical mode */
+  static inline int
+  ttfd_nocanon (int fd, TTYSTRUCT *ttp)
+  {
+    tt_setnocanon (ttp);
+    return ttsetattr (fd, ttp);
+  }
+
+  /* Set the terminal into non-canonical mode */
+  inline int
+  ttnocanon ()
+  {
+    TTYSTRUCT tt;
+
+    if (!ttsaved)
+      return -1;
+    tt = ttin;
+    return ttfd_nocanon (0, &tt);
+  }
+
+  /*
+   * Change attributes in ttp so that when it is installed using
+   * ttsetattr, the terminal will be in cbreak, no-echo mode.
+   */
+  static inline void
+  tt_setcbreak(TTYSTRUCT *ttp)
+  {
+    tt_setonechar (ttp);
+    tt_setnoecho (ttp);
+  }
+
+  /* Set the tty associated with FD and TTP into cbreak (no-echo,
+     one-character-at-a-time) mode */
+  static inline int
+  ttfd_cbreak (int fd, TTYSTRUCT *ttp)
+  {
+    tt_setcbreak (ttp);
+    return ttsetattr (fd, ttp);
+  }
+
+  /* Set the terminal into cbreak (no-echo, one-character-at-a-time) mode */
+  inline int
+  ttcbreak ()
+  {
+    TTYSTRUCT tt;
+
+    if (!ttsaved)
+      return -1;
+    tt = ttin;
+    return ttfd_cbreak (0, &tt);
+  }
+
   /* from lib/sh/strtrans.c */
   char *ansicstr (const char *, unsigned int, int, bool *, unsigned int *);
   char *ansiexpand (const char *, unsigned int, unsigned int, unsigned int *);
@@ -1651,7 +1925,7 @@ protected:
 
   /* This performs word splitting and quoted null character removal on
      STRING. */
-  WORD_LIST *list_string (const char *, const char *, int);
+  WORD_LIST *list_string (const char *, const char *, quoted_flags);
 
   char *ifs_firstchar (int *);
   char *get_word_from_string (char **, const char *, char **);

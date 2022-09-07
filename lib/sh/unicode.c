@@ -22,17 +22,22 @@
 
 #if defined (HANDLE_MULTIBYTE)
 
-#include <cwchar>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+
 #include <cstdio>
 #include <cstdlib>
 #include <climits>
 #include <cstring>
+#include <cwchar>
 
 #if defined (HAVE_LOCALE_CHARSET)
 extern "C" const char *locale_charset (void);
+#endif
+
+#if defined (HAVE_LANGINFO_CODESET)
+#  include <langinfo.h>
 #endif
 
 #include "shell.h"

@@ -202,7 +202,7 @@ SHLIB_SOURCE =	${SH_LIBSRC}/clktck.c ${SH_LIBSRC}/getcwd.c \
 		${SH_LIBSRC}/strtoul.c ${SH_LIBSRC}/vprint.c \
 		${SH_LIBSRC}/itos.c ${SH_LIBSRC}/rename.c \
 		${SH_LIBSRC}/zread.c \
-		${SH_LIBSRC}/shtty.c ${SH_LIBSRC}/inet_aton.c \
+		${SH_LIBSRC}/inet_aton.c \
 		${SH_LIBSRC}/netopen.c ${SH_LIBSRC}/strpbrk.c \
 		${SH_LIBSRC}/timeval.c ${SH_LIBSRC}/clock.c \
 		${SH_LIBSRC}/makepath.c ${SH_LIBSRC}/pathcanon.c \
