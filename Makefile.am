@@ -29,10 +29,11 @@ SUBDIRS = po
 
 bin_PROGRAMS = bash
 
+# FIXME: substitute nojobs.cc for jobs.cc for no job control builds
 bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc \
 	expr.cc copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc mailcheck.cc \
-	test.cc trap.cc alias.cc jobs.cc nojobs.cc braces.cc \
+	test.cc trap.cc alias.cc jobs.cc braces.cc \
 	input.cc bashhist.cc array.cc arrayfunc.cc assoc.cc sig.cc pathexp.cc \
 	siglist.cc bashline.cc bracecomp.cc error.cc \
 	stringlib.cc locale.cc findcmd.cc redir.cc \

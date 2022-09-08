@@ -671,10 +671,8 @@ LOCAL_DEFS
 LOCAL_LDFLAGS
 LOCAL_CFLAGS
 LOCAL_LIBS
-DEBUG
 RELSTATUS
 BASHVERS
-AR_FLAGS
 headersdir
 loadablesdir
 BUILD_DIR
@@ -687,7 +685,7 @@ SHOBJ_LDFLAGS
 SHOBJ_LD
 SHOBJ_CFLAGS
 SHOBJ_CC
-JOBS_O
+JOBS_CC
 TERMCAP_DEP
 TERMCAP_LIB
 SIGLIST_O
@@ -748,7 +746,6 @@ GETTEXT_MACRO_VERSION
 USE_NLS
 LTLIBICONV
 LIBICONV
-SIZE
 MAKE_SHELL
 CXXCPP
 LT_SYS_LIBRARY_PATH
@@ -772,20 +769,6 @@ EGREP
 GREP
 SED
 LIBTOOL
-TILDE_LIB
-HIST_LIBDIR
-HISTORY_DEP
-HISTORY_LIB
-RL_INCLUDE
-RL_INCLUDEDIR
-RL_LIBDIR
-READLINE_DEP
-READLINE_LIB
-LIBS_FOR_BUILD
-STATIC_LD
-SIGNAMES_O
-SIGNAMES_H
-CROSS_COMPILE
 YFLAGS
 YACC
 LN_S
@@ -4455,8 +4438,6 @@ opt_curses=no
 opt_with_installed_readline=no
 opt_with_vfork_subshell=no
 
-#htmldir=
-
 
 
 
@@ -4991,8 +4972,6 @@ HELPSTRINGS=
 if test "$opt_single_longdoc_strings" != "yes"; then
 	HELPSTRINGS='-S'
 fi
-
-
 
 
 
@@ -8409,214 +8388,25 @@ rm -rf conftest*
 fi
 
 
-
-SIGNAMES_O=
-SIGNAMES_H=lsignames.h
-
-
-
-CROSS_COMPILE=
-if test "x$cross_compiling" = "xyes"; then
-    case "${host}" in
-    *-cygwin*)
-	cross_cache=${srcdir}/cross-build/cygwin32.cache
-	;;
-    *-mingw*)
-	cross_cache=${srcdir}/cross-build/cygwin32.cache
-	;;
-    i[3456]86-*-beos*)
-	cross_cache=${srcdir}/cross-build/x86-beos.cache
-	;;
-    *-qnx*)
-	cross_cache=${srcdir}/cross-build/qnx.cache
-	;;
-    *)	echo "configure: cross-compiling for $host is not supported" >&2
-	;;
-    esac
-    if test -n "${cross_cache}" && test -r "${cross_cache}"; then
-	echo "loading cross-build cache file ${cross_cache}"
-	. ${cross_cache}
-    fi
-    unset cross_cache
-    SIGNAMES_O='signames.o'
-    CROSS_COMPILE='-DCROSS_COMPILING'
-
-fi
-
-
-
-
-CXXFLAGS=${CXXFLAGS-"$AUTO_CXXFLAGS"}
-# LDFLAGS=${LDFLAGS="$AUTO_LDFLAGS"}	# XXX
-
-if test "$opt_profiling" = "yes"; then
-	PROFILE_FLAGS=-pg
-	case "$host_os" in
-	solaris2*|linux*)	;;
-	*)		opt_static_link=yes ;;
-	esac
-	DEBUG=
-fi
-
-prefer_shared=yes
-prefer_static=no
-
-if test "$opt_static_link" = yes; then
-	prefer_static=yes
-	prefer_shared=no
-	# if we're using gcc, add `-static' to LDFLAGS, except on Solaris >= 2
-	if test -n "$GCC" || test "$ac_cv_c_compiler_gnu" = "yes"; then
-		STATIC_LD="-static"
-		case "$host_os" in
-		solaris2*|linux*)	;;
-		*)		LDFLAGS="$LDFLAGS -static" ;;	# XXX experimental
-		esac
-	fi
-fi
-
-# set the appropriate make variables for building the "build tools"
-# modify defaults based on whether or not we are cross compiling, since the
-# options for the target host may not be appropriate for the build host
-if test "X$cross_compiling" = "Xno"; then
-	CXX_FOR_BUILD=${CXX_FOR_BUILD-'$(CXX)'}
-	CPPFLAGS_FOR_BUILD=${CPPFLAGS_FOR_BUILD-"$CPPFLAGS"}	# XXX - should it be '$(CPPFLAGS)'
-	if test X"$opt_profiling" = Xyes; then
-		LDFLAGS_FOR_BUILD=${LDFLAGS_FOR_BUILD-'$(BASE_LDFLAGS)'}
-	else
-		LDFLAGS_FOR_BUILD=${LDFLAGS_FOR_BUILD-'$(LDFLAGS)'}
-	fi
-	# CXXFLAGS set above to default value if not passed in environment
-	if test -n "$want_auto_cflags" ; then
-		CXXFLAGS_FOR_BUILD="${CXXFLAGS} ${STYLE_CXXFLAGS}"
-	else
-		CXXFLAGS_FOR_BUILD=${CXXFLAGS-'$(CXXFLAGS)'}
-	fi
-	LIBS_FOR_BUILD=${LIBS_FOR_BUILD-'$(LIBS)'}
-else
-	CXX_FOR_BUILD=${CXX_FOR_BUILD-"gcc"}
-	CPPFLAGS_FOR_BUILD=${CPPFLAGS_FOR_BUILD-""}
-	LDFLAGS_FOR_BUILD=${LDFLAGS_FOR_BUILD-""}
-	CXXFLAGS_FOR_BUILD=${CXXFLAGS_FOR_BUILD="-g"}
-	LIBS_FOR_BUILD=${LIBS_FOR_BUILD-""}
-fi
-
-
-
-
-
-
-
-
-
-
-
-
-
-if test "$opt_readline" = yes && test "$opt_with_installed_readline" != "no"
-then
-	# If the user specified --with-installed-readline=PREFIX and PREFIX
-	# is not `yes', set ac_cv_rl_prefix to PREFIX
-	test $opt_with_installed_readline != "yes" && ac_cv_rl_prefix=$opt_with_installed_readline
-
-	RL_LIB_READLINE_VERSION
-
-	case "$ac_cv_rl_version" in
-	9*)	;;
-	*)	opt_with_installed_readline=no
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: installed readline library is too old to be linked with bash" >&5
-printf "%s\n" "$as_me: WARNING: installed readline library is too old to be linked with bash" >&2;}
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using private bash version" >&5
-printf "%s\n" "$as_me: WARNING: using private bash version" >&2;}
-		;;
-	esac
-fi
-
-TILDE_LIB=-ltilde
 if test $opt_readline = yes; then
 
 printf "%s\n" "#define READLINE 1" >>confdefs.h
 
-	if test "$opt_with_installed_readline" != "no" ; then
-		case "$opt_with_installed_readline" in
-		yes)	RL_INCLUDE= ;;
-		*)	case "$RL_INCLUDEDIR" in
-			/usr/include)	;;
-			*)		RL_INCLUDE='-I${RL_INCLUDEDIR}' ;;
-			esac
-			;;
-		esac
-		READLINE_DEP=
-		READLINE_LIB=-lreadlinecpp
-		# section for OS versions that don't allow unresolved symbols
-		# to be compiled into dynamic libraries.
-		case "$host_os" in
-		cygwin*)	TILDE_LIB= ;;
-		esac
-	else
-		RL_LIBDIR='$(dot)/$(LIBSUBDIR)/readline'
-		READLINE_DEP='$(READLINE_LIBRARY)'
-		# section for OS versions that ship an older/broken version of
-		# readline as a standard dynamic library and don't allow a
-		# static version specified as -llibname to override the
-		# dynamic version
-		case "${host_os}" in
-		darwin[89]*|darwin10*) READLINE_LIB='${READLINE_LIBRARY}' ;;
-		*)		READLINE_LIB=-lreadlinecpp ;;
-		esac
-	fi
-else
-	RL_LIBDIR='$(dot)/$(LIBSUBDIR)/readline'
-	READLINE_LIB= READLINE_DEP=
 fi
+
 if test $opt_history = yes || test $opt_bang_history = yes; then
 	if test $opt_history = yes; then
 
 printf "%s\n" "#define HISTORY 1" >>confdefs.h
 
 	fi
+
 	if test $opt_bang_history = yes; then
 
 printf "%s\n" "#define BANG_HISTORY 1" >>confdefs.h
 
 	fi
- 	if test "$opt_with_installed_readline" != "no"; then
-		HIST_LIBDIR=$RL_LIBDIR
-		HISTORY_DEP=
-		HISTORY_LIB=-lhistorycpp
-		case "$opt_with_installed_readline" in
-		yes)	RL_INCLUDE= ;;
-		*)	case "$RL_INCLUDEDIR" in
-			/usr/include)	;;
-			*)		RL_INCLUDE='-I${RL_INCLUDEDIR}' ;;
-			esac
-			;;
-		esac
-	else
-		HIST_LIBDIR='$(dot)/$(LIBSUBDIR)/readline'
-		HISTORY_DEP='$(HISTORY_LIBRARY)'
-		# section for OS versions that ship an older version of
-		# readline as a standard dynamic library and don't allow a
-		# static version specified as -llibname to override the
-		# dynamic version
-		case "${host_os}" in
-		darwin[89]*|darwin10*) HISTORY_LIB='${HISTORY_LIBRARY}' ;;
-		*)		HISTORY_LIB=-lhistorycpp ;;
-		esac
-	fi
-else
-	HIST_LIBDIR='$(dot)/$(LIBSUBDIR)/readline'
-	HISTORY_LIB= HISTORY_DEP=
 fi
-
-
-
-
-
-
-
-
-
-
 
 
 for ac_prog in 'bison -y' byacc
@@ -19979,35 +19769,14 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 case "$ac_cv_prog_YACC" in
 *bison*)	;;
-*)	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: bison not available; needed to process parse.y" >&5
-printf "%s\n" "$as_me: WARNING: bison not available; needed to process parse.y" >&2;} ;;
+*)	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: bison not available; needed to process parse.yy" >&5
+printf "%s\n" "$as_me: WARNING: bison not available; needed to process parse.yy" >&2;} ;;
 esac
 
 case "$host_os" in
 opennt*|interix*)	MAKE_SHELL="$INTERIX_ROOT/bin/sh" ;;
 *)			MAKE_SHELL=/bin/sh ;;
 esac
-
-
-if test x$SIZE = x; then
-	if test x$ac_tool_prefix = x; then
-		SIZE=size
-	else
-		SIZE=${ac_tool_prefix}size
-		save_IFS=$IFS ; IFS=:
-		size_found=0
-		for dir in $PATH; do
-			if test -x $dir/$SIZE ; then
-				size_found=1
-				break
-			fi
-		done
-		if test $size_found -eq 0; then
-			SIZE=:
-		fi
-		IFS=$save_IFS
-	fi
-fi
 
 
 
@@ -34307,15 +34076,12 @@ if test "$opt_job_control" = yes; then
 
 printf "%s\n" "#define JOB_CONTROL 1" >>confdefs.h
 
-JOBS_O=jobs.o
+JOBS_CC=jobs.cc
 else
-JOBS_O=nojobs.o
+JOBS_CC=nojobs.cc
 fi
 
 
-
-
-LOCAL_DEFS=-DSHELL
 
 
 case "${host_os}" in
@@ -34465,11 +34231,6 @@ fi
 if test -z "$headersdir"; then
 	headersdir='$(includedir)/$(PACKAGE_NAME)'
 fi
-
-
-
-
-
 
 
 
