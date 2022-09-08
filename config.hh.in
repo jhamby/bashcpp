@@ -1406,7 +1406,7 @@
    broken. */
 #undef WCONTINUED_BROKEN
 
-/* wcwidth is usually not broken */
+/* Define for broken wcwidth with unicode combining chars, e.g. MINIX 3.4. */
 #undef WCWIDTH_BROKEN
 
 /* Offset of exit status in wait status word */

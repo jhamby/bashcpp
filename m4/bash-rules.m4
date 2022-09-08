@@ -1494,7 +1494,7 @@ main(int c, char **v)
 }
 ]])],[bash_cv_wcwidth_broken=yes],[bash_cv_wcwidth_broken=no],[bash_cv_wcwidth_broken=no])])
 if test "$bash_cv_wcwidth_broken" = yes; then
-        AC_DEFINE([WCWIDTH_BROKEN], 1, [wcwidth is usually not broken])
+        AC_DEFINE([WCWIDTH_BROKEN], 1, [Define for broken wcwidth with unicode combining chars, e.g. MINIX 3.4.])
 fi
 
 if test "$am_cv_func_iconv" = yes; then

@@ -6,7 +6,7 @@ dnl with or without modifications, as long as this notice is preserved.
 
 dnl From Bruno Haible.
 
-AC_PREREQ([2.71])
+AC_PREREQ([2.69])
 
 dnl gl_THREADLIB
 dnl ------------

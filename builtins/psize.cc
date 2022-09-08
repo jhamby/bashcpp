@@ -30,6 +30,7 @@
 
 #include "bashtypes.hh"
 
+#include <cstdlib>
 #include <csignal>
 
 #include "command.hh"
