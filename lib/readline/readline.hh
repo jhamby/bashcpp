@@ -1779,6 +1779,7 @@ private:
   int stat_char (const char *);
 #endif
   char *printable_part (char *);
+  int fnwidth (const char *string);
   int fnprint (const char *, int, const char *);
   int print_filename (char *, const char *, int);
   char **gen_completion_matches (const char *, unsigned int, unsigned int,

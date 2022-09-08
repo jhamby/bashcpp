@@ -510,6 +510,25 @@ private:
   unsigned int _rl_find_prev_mbchar_internal (const std::string &string, unsigned int seed,
 					      find_mbchar_flags find_non_zero);
 
+  // helper function
+  unsigned int
+  _rl_find_prev_utf8char (const std::string &string, unsigned int seed,
+			  find_mbchar_flags find_non_zero);
+
+  // helper function
+  inline bool
+  _rl_test_nonzero (const char *string, unsigned int ind, unsigned int len)
+  {
+    wchar_t wc;
+    mbstate_t ps;
+
+    std::memset (&ps, 0, sizeof (mbstate_t));
+    size_t tmp = std::mbrtowc (&wc, string + ind, len - ind, &ps);
+
+    /* treat invalid multibyte sequences as non-zero-width */
+    return MB_INVALIDCH (tmp) || MB_NULLWCH (tmp) || WCWIDTH (wc) > 0;
+  }
+
 public:
 
   /* ************************************************************** */

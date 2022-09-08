@@ -316,7 +316,7 @@ Readline::printable_part (char *pathname)
 
   temp = std::strrchr (pathname, '/');
 #if defined (__MSDOS__) || defined (_WIN32)
-  if (temp == 0 && ISALPHA ((unsigned char)pathname[0]) && pathname[1] == ':')
+  if (temp == 0 && std::isalpha (static_cast<unsigned char> (pathname[0])) && pathname[1] == ':')
     temp = pathname + 1;
 #endif
 
@@ -340,8 +340,8 @@ Readline::printable_part (char *pathname)
 }
 
 /* Compute width of STRING when displayed on screen by print_filename */
-static int
-fnwidth (const char *string)
+int
+Readline::fnwidth (const char *string)
 {
   int width, pos;
 #if defined (HANDLE_MULTIBYTE)
