@@ -93,7 +93,7 @@ string helpfile_directory;
 
 /* The name of a directory to precede the filename when reporting
    errors. */
-string error_directory;
+string source_directory;
 
 /* The name of the structure file. */
 string struct_filename;
@@ -229,9 +229,9 @@ main (int argc, char **argv)
 	}
       else if (std::strcmp (arg, "-D") == 0)
 	{
-	  bash::error_directory = argv[arg_index];
+	  bash::source_directory = argv[arg_index];
 
-	  string &tmp = bash::error_directory;
+	  string &tmp = bash::source_directory;
 	  if (tmp[tmp.size() - 1] != '/')
 	    tmp += '/';
 
@@ -302,7 +302,11 @@ main (int argc, char **argv)
 
       arg = argv[arg_index++];
 
-      bash::extract_info (arg, structfile, externfile);
+      string fname (arg);
+      if (fname[0] != '/' && !bash::source_directory.empty())
+	fname.insert (0, bash::source_directory);
+
+      bash::extract_info (fname, structfile, externfile);
     }
 
   /* Close the files. */
@@ -498,7 +502,7 @@ extract_info (const string &filename, ofstream &structfile, ofstream &externfile
 			<< defs.filename << "\"\n";
 		  else
 		    defs.output << "#line " << (defs.line_number + 1) << " \""
-			<< (error_directory.empty() ? "./" : error_directory.c_str())
+			<< (source_directory.empty() ? "./" : source_directory.c_str())
 			<< defs.filename << "\"\n";
 
 		  output_cpp_line_info = false;
@@ -771,7 +775,7 @@ void
 line_error (DefFile &defs, const string &msg)
 {
   if (defs.filename[0] != '/')
-    cerr << (error_directory.empty() ? "./" : error_directory.c_str());
+    cerr << (source_directory.empty() ? "./" : source_directory.c_str());
 
   cerr << defs.filename << ':' << (defs.line_number + 1) << ':';
   cerr << msg << '\n';
