@@ -18,11 +18,11 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-RLDIR = $(srcdir)/lib/readline
-SHDIR = $(srcdir)/lib/sh
-TLDIR = $(srcdir)/lib/tilde
-GLBDIR = $(srcdir)/lib/glob
-BLTDIR = $(srcdir)/builtins
+RLDIR = lib/readline
+SHDIR = lib/sh
+TLDIR = lib/tilde
+GLBDIR = lib/glob
+BLTDIR = builtins
 
 # TODO: add docs and tests subdirs
 SUBDIRS = po
@@ -83,6 +83,7 @@ libbuiltins_a_SOURCES = $(DEFSRC) \
 	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh \
 	$(BLTDIR)/builtins.cc
 
+# programs for generating sources and used by the test cases
 noinst_PROGRAMS = mkbuiltins psize
 
 mkbuiltins_SOURCES = $(BLTDIR)/mkbuiltins.cc
