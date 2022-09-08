@@ -96,16 +96,16 @@ fsleep(unsigned int secs, unsigned int usecs)
   struct timeval tv;
 #endif
 
-  ::sigemptyset (&blocked_sigs);
+  sigemptyset (&blocked_sigs);
 #  if defined (SIGCHLD)
-  ::sigaddset (&blocked_sigs, SIGCHLD);
+  sigaddset (&blocked_sigs, SIGCHLD);
 #  endif
 
 #if defined (HAVE_PSELECT)
   ts.tv_sec = secs;
   ts.tv_nsec = usecs * 1000;
 #else
-  ::sigemptyset (&prevmask);
+  sigemptyset (&prevmask);
   tv.tv_sec = secs;
   tv.tv_usec = usecs;
 #endif /* !HAVE_PSELECT */
@@ -115,9 +115,9 @@ fsleep(unsigned int secs, unsigned int usecs)
 #if defined (HAVE_PSELECT)
       r = ::pselect(0, nullptr, nullptr, nullptr, &ts, &blocked_sigs);
 #else
-      ::sigprocmask (SIG_SETMASK, &blocked_sigs, &prevmask);
+      sigprocmask (SIG_SETMASK, &blocked_sigs, &prevmask);
       r = ::select(0, nullptr, nullptr, nullptr, &tv);
-      ::sigprocmask (SIG_SETMASK, &prevmask, NULL);
+      sigprocmask (SIG_SETMASK, &prevmask, NULL);
 #endif
       e = errno;
       if (r < 0 && errno == EINTR)

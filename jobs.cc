@@ -134,7 +134,7 @@ enum delete_job_flags {
 /* If the system needs it, REINSTALL_SIGCHLD_HANDLER will reinstall the
    handler for SIGCHLD. */
 #if defined (MUST_REINSTALL_SIGHANDLERS)
-#  define REINSTALL_SIGCHLD_HANDLER ::signal (SIGCHLD, sigchld_handler)
+#  define REINSTALL_SIGCHLD_HANDLER signal (SIGCHLD, sigchld_handler)
 #else
 #  define REINSTALL_SIGCHLD_HANDLER
 #endif /* !MUST_REINSTALL_SIGHANDLERS */
@@ -2062,7 +2062,7 @@ make_child (char *command, int flags)
       /* Unblock SIGTERM, SIGINT, and SIGCHLD unless creating a pipeline, in
 	 which case SIGCHLD remains blocked until all commands in the pipeline
 	 have been created (execute_cmd.c:execute_pipeline()). */
-      ::sigprocmask (SIG_SETMASK, &oset, (sigset_t *)NULL);
+      sigprocmask (SIG_SETMASK, &oset, (sigset_t *)NULL);
     }
 
   return pid;
@@ -4313,12 +4313,12 @@ give_terminal_to (pid_t pgrp, int force)
   r = 0;
   if (job_control || force)
     {
-      ::sigemptyset (&set);
-      ::sigaddset (&set, SIGTTOU);
-      ::sigaddset (&set, SIGTTIN);
-      ::sigaddset (&set, SIGTSTP);
-      ::sigaddset (&set, SIGCHLD);
-      ::sigemptyset (&oset);
+      sigemptyset (&set);
+      sigaddset (&set, SIGTTOU);
+      sigaddset (&set, SIGTTIN);
+      sigaddset (&set, SIGTSTP);
+      sigaddset (&set, SIGCHLD);
+      sigemptyset (&oset);
       sigprocmask (SIG_BLOCK, &set, &oset);
 
       if (tcsetpgrp (shell_tty, pgrp) < 0)

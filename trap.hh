@@ -46,9 +46,6 @@
 #define DSIG_SIGPREFIX	0x01		/* don't allow `SIG' PREFIX */
 #define DSIG_NOCASE	0x02		/* case-insensitive comparison */
 
-/* A value which can never be the target of a trap handler. */
-#define IMPOSSIBLE_TRAP_HANDLER (sighandler_t *)initialize_traps
-
 namespace bash
 {
 

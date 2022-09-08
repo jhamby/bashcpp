@@ -231,7 +231,7 @@ Readline::get_term_capabilities (char **bp)
 
   for (std::vector<_tc_string>::iterator it = _tc_strings.begin();
        it != _tc_strings.end(); ++it)
-    *((*it).tc_value) = ::tgetstr ((*it).tc_var, bp);
+    *((*it).tc_value) = ::tgetstr (const_cast<char *> ((*it).tc_var), bp);
 
   tcap_initialized = true;
 }

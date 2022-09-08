@@ -225,7 +225,7 @@ initialize_terminating_signals ()
 {
   int i;
 #if defined (HAVE_POSIX_SIGNALS)
-  struct ::sigaction act, oact;
+  struct sigaction act, oact;
 #endif
 
   if (termsigs_initialized)
@@ -238,17 +238,17 @@ initialize_terminating_signals ()
 #if defined (HAVE_POSIX_SIGNALS)
   act.sa_handler = termsig_sighandler;
   act.sa_flags = 0;
-  ::sigemptyset (&act.sa_mask);
-  ::sigemptyset (&oact.sa_mask);
+  sigemptyset (&act.sa_mask);
+  sigemptyset (&oact.sa_mask);
   for (i = 0; i < TERMSIGS_LENGTH; i++)
-    ::sigaddset (&act.sa_mask, XSIG (i));
+    sigaddset (&act.sa_mask, XSIG (i));
   for (i = 0; i < TERMSIGS_LENGTH; i++)
     {
       /* If we've already trapped it, don't do anything. */
       if (signal_is_trapped (XSIG (i)))
 	continue;
 
-      ::sigaction (XSIG (i), &act, &oact);
+      sigaction (XSIG (i), &act, &oact);
       XHANDLER(i) = oact.sa_handler;
       XSAFLAGS(i) = oact.sa_flags;
 
@@ -259,7 +259,7 @@ initialize_terminating_signals ()
       /* XXX - should we do this for interactive shells, too? */
       if (interactive_shell == 0 && XHANDLER (i) == SIG_IGN)
 	{
-	  ::sigaction (XSIG (i), &oact, &act);
+	  sigaction (XSIG (i), &oact, &act);
 	  set_signal_hard_ignored (XSIG (i));
 	}
 #if defined (SIGPROF)
@@ -305,13 +305,13 @@ initialize_shell_signals ()
 #if defined (JOB_CONTROL) || defined (HAVE_POSIX_SIGNALS)
   /* All shells use the signal mask they inherit, and pass it along
      to child processes.  Children will never block SIGCHLD, though. */
-  ::sigemptyset (&top_level_mask);
-  ::sigprocmask (SIG_BLOCK, (sigset_t *)NULL, &top_level_mask);
+  sigemptyset (&top_level_mask);
+  sigprocmask (SIG_BLOCK, (sigset_t *)NULL, &top_level_mask);
 #  if defined (SIGCHLD)
-  if (::sigismember (&top_level_mask, SIGCHLD))
+  if (sigismember (&top_level_mask, SIGCHLD))
     {
-      ::sigdelset (&top_level_mask, SIGCHLD);
-      ::sigprocmask (SIG_SETMASK, &top_level_mask, (sigset_t *)NULL);
+      sigdelset (&top_level_mask, SIGCHLD);
+      sigprocmask (SIG_SETMASK, &top_level_mask, (sigset_t *)NULL);
     }
 #  endif
 #endif /* JOB_CONTROL || HAVE_POSIX_SIGNALS */
@@ -341,7 +341,7 @@ reset_terminating_signals ()
 
 #if defined (HAVE_POSIX_SIGNALS)
   act.sa_flags = 0;
-  ::sigemptyset (&act.sa_mask);
+  sigemptyset (&act.sa_mask);
   for (i = 0; i < TERMSIGS_LENGTH; i++)
     {
       /* Skip a signal if it's trapped or handled specially, because the
@@ -351,7 +351,7 @@ reset_terminating_signals ()
 
       act.sa_handler = XHANDLER (i);
       act.sa_flags = XSAFLAGS (i);
-      ::sigaction (XSIG (i), &act, (struct sigaction *) NULL);
+      sigaction (XSIG (i), &act, (struct sigaction *) NULL);
     }
 #else /* !HAVE_POSIX_SIGNALS */
   for (i = 0; i < TERMSIGS_LENGTH; i++)
@@ -465,7 +465,7 @@ void
 restore_sigmask ()
 {
 #if defined (JOB_CONTROL) || defined (HAVE_POSIX_SIGNALS)
-  ::sigprocmask (SIG_SETMASK, &top_level_mask, (sigset_t *)NULL);
+  sigprocmask (SIG_SETMASK, &top_level_mask, (sigset_t *)NULL);
 #endif
 }
 
@@ -620,15 +620,15 @@ termsig_handler (int sig)
      determine whether or not we should have generated a core dump with the
      kill call and attempt to trick the kernel into generating one if
      necessary. */
-  ::sigprocmask (SIG_SETMASK, (sigset_t *)NULL, &mask);
+  sigprocmask (SIG_SETMASK, (sigset_t *)NULL, &mask);
   for (i = core = 0; i < TERMSIGS_LENGTH; i++)
     {
       set_signal_handler (XSIG (i), SIG_DFL);
-      ::sigdelset (&mask, XSIG (i));
+      sigdelset (&mask, XSIG (i));
       if (sig == XSIG (i))
 	core = XCOREDUMP (i);
     }
-  ::sigprocmask (SIG_SETMASK, &mask, (sigset_t *)NULL);
+  sigprocmask (SIG_SETMASK, &mask, (sigset_t *)NULL);
 
   if (core)
     std::abort();
@@ -759,7 +759,7 @@ sigprocmask (int operation, int *newset, int *oldset)
 sighandler_t
 set_signal_handler (int sig, sighandler_t handler)
 {
-  struct ::sigaction act, oact;
+  struct sigaction act, oact;
 
   act.sa_handler = handler;
   act.sa_flags = 0;
@@ -782,9 +782,9 @@ set_signal_handler (int sig, sighandler_t handler)
   if (sig == SIGTERM && handler == sigterm_sighandler)
     act.sa_flags |= SA_RESTART;		/* XXX */
 
-  ::sigemptyset (&act.sa_mask);
-  ::sigemptyset (&oact.sa_mask);
-  if (::sigaction (sig, &act, &oact) == 0)
+  sigemptyset (&act.sa_mask);
+  sigemptyset (&oact.sa_mask);
+  if (sigaction (sig, &act, &oact) == 0)
     return oact.sa_handler;
   else
     return SIG_DFL;

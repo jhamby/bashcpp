@@ -55,7 +55,7 @@ main (int, char **)
   for (int i = 0; i < 128; i++)
     buf[i] = ' ';
 
-  ::signal (SIGPIPE, &sigpipe);
+  signal (SIGPIPE, &sigpipe);
 
   nw = 0;
   for (;;)

@@ -42,7 +42,7 @@ typedef void (*SigHandler) (int sig);
 #if !defined (HAVE_POSIX_SIGNALS)
 #  define set_signal_handler(sig, handler) signal (sig, handler)
 #else
-sighandler_t set_signal_handler (int, sighandler_t);	/* in sig.c */
+SigHandler set_signal_handler (int, SigHandler);	/* in sig.cc */
 #endif /* _POSIX_VERSION */
 
 #if !defined (SIGCHLD) && defined (SIGCLD)
@@ -85,15 +85,15 @@ sighandler_t set_signal_handler (int, sighandler_t);	/* in sig.c */
 
 static inline void block_signal(int signum, sigset_t &nvar, sigset_t &ovar)
 {
-  ::sigemptyset (&nvar);
-  ::sigaddset (&nvar, signum);
-  ::sigemptyset (&ovar);
-  ::sigprocmask (SIG_BLOCK, &nvar, &ovar);
+  sigemptyset (&nvar);
+  sigaddset (&nvar, signum);
+  sigemptyset (&ovar);
+  sigprocmask (SIG_BLOCK, &nvar, &ovar);
 }
 
 static inline void unblock_signal(sigset_t &ovar)
 {
-  ::sigprocmask (SIG_SETMASK, &ovar, nullptr);
+  sigprocmask (SIG_SETMASK, &ovar, nullptr);
 }
 
 #if defined (HAVE_POSIX_SIGNALS)
@@ -134,8 +134,8 @@ void set_sigwinch_handler ();
 void unset_sigwinch_handler ();
 
 /* Functions defined in trap.c. */
-sighandler_t set_sigint_handler ();
-sighandler_t trap_to_sighandler (int);
+SigHandler set_sigint_handler ();
+SigHandler trap_to_sighandler (int);
 
 int block_trapped_signals (sigset_t *, sigset_t *);
 int unblock_trapped_signals (sigset_t *);

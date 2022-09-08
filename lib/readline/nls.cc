@@ -24,6 +24,8 @@
 
 #include <sys/types.h>
 
+#include <clocale>
+
 #if defined (HAVE_LANGINFO_CODESET)
 #  include <langinfo.h>
 #endif

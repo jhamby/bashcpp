@@ -251,7 +251,7 @@ typedef void (*SigHandler) (int sig);
 
 #if defined (HAVE_POSIX_SIGNALS)
 typedef struct sigaction sighandler_cxt;
-#  define rl_sigaction(s, nh, oh)	::sigaction(s, nh, oh)
+#  define rl_sigaction(s, nh, oh)	sigaction(s, nh, oh)
 #else
 typedef struct { SigHandler sa_handler; int sa_mask, sa_flags; } sighandler_cxt;
 #  define sigemptyset(m)

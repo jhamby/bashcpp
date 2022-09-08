@@ -385,8 +385,8 @@ Readline::rl_getc (FILE *stream)
       result = ::pselect (::fileno (stream) + 1, &readfds, nullptr, nullptr,
 			  nullptr, &_rl_orig_sigset);
 #  else
-      ::sigemptyset (&empty_set);
-      ::sigprocmask (SIG_BLOCK, NULL, &empty_set);
+      sigemptyset (&empty_set);
+      sigprocmask (SIG_BLOCK, NULL, &empty_set);
       result = ::pselect (::fileno (stream) + 1, &readfds, nullptr, nullptr,
 			  nullptr, &empty_set);
 #  endif /* HANDLE_SIGNALS */
