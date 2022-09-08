@@ -687,7 +687,7 @@ AC_C_STRINGIZE
 AC_C_PROTOTYPES
 AC_C_CHAR_UNSIGNED
 
-dnl libtool for bundled lib/intl
+dnl initialize libtool
 LT_INIT
 
 dnl initialize GNU gettext
@@ -711,7 +711,6 @@ fi
 
 AM_GNU_GETTEXT([external], [need-ngettext], [intl])
 AM_GNU_GETTEXT_VERSION([0.19])
-IT_PROG_INTLTOOL
 
 dnl header files
 AC_HEADER_DIRENT
