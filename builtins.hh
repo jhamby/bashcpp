@@ -21,21 +21,18 @@
 #ifndef BUILTINS_H
 #define BUILTINS_H
 
-#include "config.h"
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#include "command.h"
-#include "general.h"
-#include "shell.h"
+#include "command.hh"
+#include "general.hh"
+#include "shell.hh"
 
 #if defined (ALIAS)
-#include "alias.h"
+#include "alias.hh"
 #endif
 
 namespace bash

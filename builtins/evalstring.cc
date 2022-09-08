@@ -18,12 +18,9 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
@@ -31,22 +28,23 @@
 #include <csignal>
 #include <cerrno>
 
-#include "filecntl.h"
+#include "filecntl.hh"
 
-#include "../shell.h"
-#include "../jobs.h"
-#include "../builtins.h"
-#include "../flags.h"
-#include "../parser.h"
-#include "../input.h"
-#include "../execute_cmd.h"
-#include "../trap.h"
-#include "../bashintl.h"
+#include "shell.hh"
+#include "jobs.hh"
+#include "builtins.hh"
+#include "flags.hh"
+#include "parser.hh"
+#include "input.hh"
+#include "execute_cmd.hh"
+#include "trap.hh"
+#include "bashintl.hh"
 
-#include <y.tab.h>
+#include "y.tab.hh"
 
-#include "common.h"
-#include "builtext.h"
+#include "common.hh"
+
+#include "builtext.hh"
 
 namespace bash
 {

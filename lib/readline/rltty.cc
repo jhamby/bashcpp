@@ -456,11 +456,7 @@ Readline::rl_restart_output (int, int)
 
   int fildes = ::fileno (rl_outstream);
 #if defined (TIOCSTART)
-#if defined (apollo)
-  ::ioctl (&fildes, TIOCSTART, 0);
-#else
   ::ioctl (fildes, TIOCSTART, 0);
-#endif /* apollo */
 
 #else /* !TIOCSTART */
 #  if defined (TERMIOS_TTY_DRIVER)
@@ -486,11 +482,7 @@ Readline::rl_stop_output (int, int)
   int fildes = ::fileno (rl_instream);
 
 #if defined (TIOCSTOP)
-# if defined (apollo)
-  ::ioctl (&fildes, TIOCSTOP, 0);
-# else
   ::ioctl (fildes, TIOCSTOP, 0);
-# endif /* apollo */
 #else /* !TIOCSTOP */
 # if defined (TERMIOS_TTY_DRIVER)
   ::tcflow (fildes, TCOOFF);

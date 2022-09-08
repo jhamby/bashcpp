@@ -21,27 +21,20 @@
 /*  Write output in 128-byte chunks until we get a sigpipe or write gets an
     EPIPE.  Then report how many bytes we wrote.  We assume that this is the
     pipe size. */
-#include <config.h>
+
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#include <cstdio>
-
-#ifndef _MINIX
-#include "../bashtypes.h"
-#endif
+#include "bashtypes.hh"
 
 #include <csignal>
-#include <cerrno>
 
-#include "../command.h"
-#include "../general.h"
-#include "../sig.h"
+#include "command.hh"
+#include "general.hh"
+#include "sig.hh"
 
 static int nw;
 

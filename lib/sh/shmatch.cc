@@ -53,7 +53,7 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
   int result;
 
 #if defined (ARRAY_VARS)
-  rematch = NULL;
+  rematch = nullptr;
 #endif
 
   rflags = REG_EXTENDED;
@@ -69,10 +69,10 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
 #if defined (ARRAY_VARS)
   matches = new regmatch_t[regex.re_nsub + 1];
 #else
-  matches = NULL;
+  matches = nullptr;
 #endif
 
-  /* man regexec: NULL PMATCH ignored if NMATCH == 0 */
+  /* man regexec: nullptr PMATCH ignored if NMATCH == 0 */
   if (::regexec (&regex, string, matches ? regex.re_nsub + 1 : 0, matches, 0))
     result = EXECUTION_FAILURE;
   else

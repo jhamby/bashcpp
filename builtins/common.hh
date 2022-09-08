@@ -21,7 +21,7 @@
 #if  !defined (__COMMON_H)
 #  define __COMMON_H
 
-#include "../command.h"
+#include "command.hh"
 
 namespace bash
 {

@@ -22,36 +22,26 @@
    the long_doc members of each struct builtin element and writes those to
    the file named by the `handle' member of the struct builtin element. */
 
-#if !defined (CROSS_COMPILING)
-#  include <config.h>
-#else	/* CROSS_COMPILING */
-/* A conservative set of defines based on POSIX/SUS3/XPG6 */
-#  define HAVE_UNISTD_H
-#  define HAVE_RENAME
-#endif /* CROSS_COMPILING */
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#ifndef _MINIX
-#  include "../bashtypes.h"
-#  if defined (HAVE_SYS_FILE_H)
-#    include <sys/file.h>
-#  endif
+#include "bashtypes.hh"
+
+#if defined (HAVE_SYS_FILE_H)
+#  include <sys/file.h>
 #endif
 
-#include "posixstat.h"
-#include "filecntl.h"
+#include "posixstat.hh"
+#include "filecntl.hh"
 
 #include <cstdio>
 #include <cerrno>
 
-#include "../builtins.h"
-#include "tmpbuiltins.h"
+#include "builtins.hh"
+#include "tmpbuiltins.hh"
 
 #define whitespace(c) (((c) == ' ') || ((c) == '\t'))
 

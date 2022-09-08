@@ -18,36 +18,36 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "../bashtypes.h"
-#include "posixstat.h"
-#include "filecntl.h"
+#include "bashtypes.hh"
+#include "posixstat.hh"
+#include "filecntl.hh"
 
 #include <cstdio>
 #include <csignal>
 #include <cerrno>
 
-#include "../bashintl.h"
+#include "bashintl.hh"
 
-#include "../shell.h"
-#include "../parser.h"
-#include "../jobs.h"
-#include "../builtins.h"
-#include "../flags.h"
-#include "../input.h"
-#include "../execute_cmd.h"
-#include "../trap.h"
+#include "shell.hh"
+#include "parser.hh"
+#include "jobs.hh"
+#include "builtins.hh"
+#include "flags.hh"
+#include "input.hh"
+#include "execute_cmd.hh"
+#include "trap.hh"
 
-#include <y.tab.h>
+#include "y.tab.hh"
 
-#include <typemax.h>
+#include "typemax.hh"
 
-#include "common.h"
+#include "common.hh"
 
 namespace bash
 {

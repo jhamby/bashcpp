@@ -2747,8 +2747,6 @@ private:
   void _rl_audit_tty (char *);
 #endif
 
-  int _rl_tropen ();
-
   int _rl_abort_internal ();
   int _rl_null_function (int, int);
   char *_rl_strindex (const char *, const char *);

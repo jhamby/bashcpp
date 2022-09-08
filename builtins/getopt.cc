@@ -18,19 +18,15 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#include <stdio.h>
-#include "../bashintl.h"
-#include "../shell.h"
-#include "getopt.h"
+#include "bashintl.hh"
+#include "shell.hh"
+#include "getopt.hh"
 
 namespace bash
 {

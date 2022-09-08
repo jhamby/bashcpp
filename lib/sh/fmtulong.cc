@@ -18,9 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
@@ -36,15 +34,16 @@
 #ifdef HAVE_INTTYPES_H
 #  include <inttypes.h>
 #endif
-#include <chartypes.h>
+
 #include <cerrno>
 
-#include <bashintl.h>
+#include "chartypes.hh"
+#include "bashintl.hh"
 
-#include <typemax.h>
+#include "typemax.hh"
 
-const char *x_digs = "0123456789abcdef";
-const char *X_digs = "0123456789ABCDEF";
+static const char *x_digs = "0123456789abcdef";
+static const char *X_digs = "0123456789ABCDEF";
 
 /* XXX -- assumes uppercase letters, lowercase letters, and digits are
    contiguous */

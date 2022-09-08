@@ -18,9 +18,15 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "hashlib.h"
+#if !defined (_HASHCMD_H_)
+#define _HASHCMD_H_
 
-const int FILENAME_HASH_BUCKETS = 256;	/* must be power of two */
+#include "hashlib.hh"
+
+namespace bash
+{
+
+constexpr int FILENAME_HASH_BUCKETS = 256;	/* must be power of two */
 
 // extern HASH_TABLE *hashed_filenames;
 
@@ -40,3 +46,7 @@ extern void phash_flush (void);
 extern void phash_insert (const char *, const char *, bool, int);
 extern int phash_remove (const char *);
 extern char *phash_search (const char *);
+
+}  // namespace bash
+
+#endif /* _HASHCMD_H */

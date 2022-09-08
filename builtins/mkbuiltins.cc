@@ -1,5 +1,5 @@
-/* mkbuiltins.c - Create builtins.c, builtext.h, and builtdoc.c from
-   a single source file called builtins.def. */
+/* mkbuiltins.c - Create builtext.hh and builtdoc.cc from
+   a single source file called builtins.cc. */
 
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
@@ -19,25 +19,20 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (CROSS_COMPILING)
-#  include <config.h>
-#else	/* CROSS_COMPILING */
-/* A conservative set of defines based on POSIX/SUS3/XPG6 */
-#  define HAVE_UNISTD_H
-#  define HAVE_RENAME
-#endif /* CROSS_COMPILING */
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "../bashtypes.h"
+#include "bashtypes.hh"
+
 #if defined (HAVE_SYS_FILE_H)
 #  include <sys/file.h>
 #endif
 
-#include "posixstat.h"
-#include "filecntl.h"
+#include "posixstat.hh"
+#include "filecntl.hh"
 
 #include <iostream>
 #include <fstream>
@@ -55,7 +50,7 @@ using std::cerr;
 namespace bash
 {
 
-const char *DOCFILE = "builtins.texi";
+constexpr char *DOCFILE = "builtins.texi";
 
 static inline bool whitespace(char c)
 {
@@ -63,12 +58,12 @@ static inline bool whitespace(char c)
 }
 
 /* Flag values that builtins can have. */
-const int BUILTIN_FLAG_SPECIAL =	0x01;
-const int BUILTIN_FLAG_ASSIGNMENT =	0x02;
-const int BUILTIN_FLAG_LOCALVAR =	0x04;
-const int BUILTIN_FLAG_POSIX_BUILTIN =	0x08;
+constexpr int BUILTIN_FLAG_SPECIAL =		0x01;
+constexpr int BUILTIN_FLAG_ASSIGNMENT =		0x02;
+constexpr int BUILTIN_FLAG_LOCALVAR =		0x04;
+constexpr int BUILTIN_FLAG_POSIX_BUILTIN =	0x08;
 
-const int BASE_INDENT = 4;
+constexpr int BASE_INDENT = 4;
 
 /* If this stream descriptor is non-zero, then write
    texinfo documentation to it. */
@@ -129,10 +124,6 @@ typedef std::vector<Builtin *> BltArray;
 
 /* Here is a structure which defines a DEF file. */
 struct DefFile {
-  ~DefFile()
-    {
-
-    }
   string filename;	/* The name of the input def file. */
   int line_number;	/* The current line number. */
   StrArray lines;	/* The contents of the file. */
@@ -149,19 +140,19 @@ const char *special_builtins[] =
 {
   ":", ".", "source", "break", "continue", "eval", "exec", "exit",
   "export", "readonly", "return", "set", "shift", "times", "trap", "unset",
-  NULL
+  nullptr
 };
 
 /* The builtin commands that take assignment statements as arguments. */
 const char *assignment_builtins[] =
 {
   "alias", "declare", "export", "local", "readonly", "typeset",
-  NULL
+  nullptr
 };
 
 const char *localvar_builtins[] =
 {
-  "declare", "local", "typeset", NULL
+  "declare", "local", "typeset", nullptr
 };
 
 /* The builtin commands that are special to the POSIX search order. */
@@ -169,7 +160,7 @@ const char *posix_builtins[] =
 {
   "alias", "bg", "cd", "command", "false", "fc", "fg", "getopts", "jobs",
   "kill", "newgrp", "pwd", "read", "true", "umask", "unalias", "wait",
-  NULL
+  nullptr
 };
 
 /* Forward declarations. */
@@ -343,12 +334,12 @@ namespace bash {
 /* **************************************************************** */
 
 /* The definition of a function. */
-typedef void mk_handler_func_t (const string &, DefFile &, const string &);
+typedef void (*mk_handler_func_t) (const string &, DefFile &, const string &);
 
 /* Structure handles processor directives. */
 struct HandlerEntry {
   const char *directive;
-  mk_handler_func_t *function;
+  mk_handler_func_t function;
 };
 
 static void builtin_handler (const string &, DefFile &, const string &);
@@ -361,16 +352,16 @@ static void end_handler (const string &, DefFile &, const string &);
 static void docname_handler (const string &, DefFile &, const string &);
 
 static HandlerEntry handlers[] = {
-  { "BUILTIN", builtin_handler },
-  { "DOCNAME", docname_handler },
-  { "FUNCTION", function_handler },
-  { "SHORT_DOC", short_doc_handler },
-  { "$", comment_handler },
-  { "COMMENT", comment_handler },
-  { "DEPENDS_ON", depends_on_handler },
-  { "PRODUCES", produces_handler },
-  { "END", end_handler },
-  { NULL, NULL }
+  { "BUILTIN",		&builtin_handler },
+  { "DOCNAME",		&docname_handler },
+  { "FUNCTION",		&function_handler },
+  { "SHORT_DOC",	&short_doc_handler },
+  { "$",		&comment_handler },
+  { "COMMENT",		&comment_handler },
+  { "DEPENDS_ON",	&depends_on_handler },
+  { "PRODUCES",		&produces_handler },
+  { "END",		&end_handler },
+  { nullptr, nullptr }
 };
 
 /* Return the entry in the table of handlers for NAME. */
@@ -381,7 +372,7 @@ find_directive (const char *directive)
     if (std::strcmp (handlers[i].directive, directive) == 0)
       return &handlers[i];
 
-  return NULL;
+  return nullptr;
 }
 
 /* Non-zero indicates that a $BUILTIN has been seen, but not
@@ -516,8 +507,7 @@ extract_info (const string &filename, ofstream &structfile, ofstream &externfile
 	}
     }
 
-  /* The file has been processed.  Write the accumulated builtins to
-     the builtins.c file, and write the extern definitions to the
+  /* The file has been processed.  Write the extern definitions to the
      builtext.h file. */
   write_builtins (defs, structfile, externfile);
 
@@ -801,12 +791,12 @@ file_error (const string &filename)
 /* **************************************************************** */
 
 /* Flags that mean something to write_documentation (). */
-const int STRING_ARRAY =	0x01;
-const int TEXINFO =		0x02;
-const int PLAINTEXT =		0x04;
-const int HELPFILE =		0x08;
+constexpr int STRING_ARRAY =	0x01;
+constexpr int TEXINFO =		0x02;
+constexpr int PLAINTEXT =	0x04;
+constexpr int HELPFILE =	0x08;
 
-const char *structfile_header[] = {
+constexpr char *structfile_header[] = {
   "/* builtins.c -- the built in shell commands. */",
   "",
   "/* This file is manufactured by ./mkbuiltins, and should not be",
@@ -838,18 +828,18 @@ const char *structfile_header[] = {
   "",
   "   Functions which need to look at only the simple commands (e.g.",
   "   the enable_builtin ()), should ignore entries where",
-  "   (array[i].function == NULL).  Such entries are for",
+  "   (array[i].function == nullptr).  Such entries are for",
   "   the list of shell reserved control structures, like `if' and `while'.",
-  "   The end of the list is denoted with a NULL name field. */",
+  "   The end of the list is denoted with a nullptr name field. */",
   "",
   "/* TRANSLATORS: Please do not translate command names in descriptions */",
   "",
-  "#include \"../builtins.h\"",
-  (const char *)NULL
+  "#include \"builtins.hh\"",
+  nullptr
   };
 
-const char *structfile_footer[] = {
-  "  { NULL, NULL, 0, NULL, NULL, NULL }",
+constexpr char *structfile_footer[] = {
+  "  { nullptr, nullptr, 0, nullptr, nullptr, nullptr }",
   "};",
   "",
 //   "bash::Builtin *shell_builtins = static_shell_builtins;",
@@ -858,7 +848,7 @@ const char *structfile_footer[] = {
   "int num_shell_builtins =",
   "\tsizeof (static_shell_builtins) / sizeof (Builtin) - 1;",
   "}",
-  (const char *)NULL
+  nullptr
 };
 
 /* Write out any necessary opening information for
@@ -871,7 +861,8 @@ write_file_headers (ofstream &structfile, ofstream &externfile)
       for (int i = 0; structfile_header[i]; i++)
         structfile << structfile_header[i] << '\n';
 
-      structfile << "#include \"" << (extern_filename.empty() ? "builtext.h" : extern_filename.c_str())
+      structfile << "#include \"" << (extern_filename.empty() ? "builtext.hh"
+							: extern_filename.c_str())
 		 << "\"\n#include \"bashintl.h\"\n"
 		 << "\nnamespace bash {\n"
 		 << "\nbash::Builtin static_shell_builtins[] = {\n";
@@ -941,7 +932,7 @@ write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
 		  if (!builtin->function.empty() && !inhibit_functions)
 		    structfile << "&Shell::" << builtin->function << ", ";
 		  else
-		    structfile << "NULL, ";
+		    structfile << "nullptr, ";
 
 		  structfile << "BUILTIN_ENABLED | STATIC_BUILTIN"
 			     << ((builtin->flags & BUILTIN_FLAG_SPECIAL) ? " | SPECIAL_BUILTIN" : "")
@@ -961,7 +952,7 @@ write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
 		      else
 			structfile << "     \""
 			  << (!builtin->shortdoc.empty() ? builtin->shortdoc : builtin->name)
-			  << "\", NULL },\n";
+			  << "\", nullptr },\n";
 		    }
 		  else
 		    {
@@ -972,7 +963,7 @@ write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
 		      else
 			structfile << "     N_(\""
 			  << (!builtin->shortdoc.empty() ? builtin->shortdoc : builtin->name)
-			  << "\"), NULL },\n";
+			  << "\"), nullptr },\n";
 		    }
 		}
 
@@ -1234,7 +1225,7 @@ write_documentation (ofstream &stream, const StrArray &documentation, int indent
     }
 
   if (string_array)
-    stream << "#endif /* HELP_BUILTIN */\n  NULL\n};\n";
+    stream << "#endif /* HELP_BUILTIN */\n  nullptr\n};\n";
 }
 
 int

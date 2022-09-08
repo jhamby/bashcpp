@@ -22,8 +22,8 @@
 #if !defined (_PARSER_H_)
 #  define _PARSER_H_
 
-#  include "command.h"
-#  include "input.h"
+#  include "command.hh"
+#  include "input.hh"
 
 /* Possible states for the parser that require it to do special things. */
 enum parser_state_flags {

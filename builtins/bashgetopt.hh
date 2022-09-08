@@ -27,3 +27,5 @@
 #define GETOPT_HELP	-99
 
 #endif /* !__BASH_GETOPT_H */
+
+// XXX REMOVE THIS FILE

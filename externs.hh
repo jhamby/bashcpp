@@ -36,9 +36,8 @@
 
 #include "general.hh"
 
-// Everything below here is in namespace bash
-
-namespace bash {
+namespace bash
+{
 
 /* Miscellaneous functions from parse.y */
 #if 0
@@ -392,8 +391,6 @@ bool match_pattern_wchar (const wchar_t *, const wchar_t *, int);
 int wmatchlen (const wchar_t *, size_t);
 #endif
 
-}  // namespace bash
-
 /* Declarations for functions defined in lib/sh/dprintf.c */
 #if !defined (HAVE_DPRINTF)
 void dprintf (int, const char *, ...)  __attribute__((__format__ (printf, 2, 3)));
@@ -401,10 +398,10 @@ void dprintf (int, const char *, ...)  __attribute__((__format__ (printf, 2, 3))
 
 /* Declarations for functions defined in lib/sh/fpurge.c */
 
-#if defined NEED_FPURGE_DECL
+#if defined (NEED_FPURGE_DECL)
 #if !defined (HAVE_DECL_FPURGE)
 
-#if HAVE_FPURGE
+#if defined (HAVE_FPURGE)
 #  define fpurge _bash_fpurge
 #endif
 int fpurge (FILE *stream);
@@ -430,6 +427,7 @@ int getdtablesize ();
 #if !defined (HAVE_GETHOSTNAME)
 int gethostname (char *, int);
 #endif /* !HAVE_GETHOSTNAME */
+
 /* declarations for functions defined in lib/sh/strcasecmp.c */
 #if !defined (HAVE_STRCASECMP)
 int strncasecmp (const char *, const char *, size_t);
@@ -480,5 +478,7 @@ uintmax_t strtoumax (const char *, char **, int);
 #ifndef ZBUFSIZ
 #  define ZBUFSIZ 4096
 #endif
+
+}  // namespace bash
 
 #endif /* _EXTERNS_H_ */

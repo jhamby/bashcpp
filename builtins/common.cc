@@ -18,42 +18,40 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
 #include <cstdio>
 
-#include "chartypes.h"
-#include "../bashtypes.h"
-#include "posixstat.h"
+#include "chartypes.hh"
+#include "bashtypes.hh"
+#include "posixstat.hh"
 
 #include <csignal>
 #include <cerrno>
 #include <cstdarg>
 
-#include "../bashintl.h"
+#include "bashintl.hh"
 
-#define NEED_FPURGE_DECL
+// #define NEED_FPURGE_DECL
 
-#include "../shell.h"
-#include "maxpath.h"
-#include "../flags.h"
-#include "../parser.h"
-#include "../jobs.h"
-#include "../builtins.h"
-#include "../input.h"
-#include "../execute_cmd.h"
-#include "../trap.h"
-#include "bashgetopt.h"
-#include "common.h"
-#include "builtext.h"
-#include <tilde/tilde.h>
+#include "shell.hh"
+#include "maxpath.hh"
+#include "flags.hh"
+#include "parser.hh"
+#include "jobs.hh"
+#include "builtins.hh"
+#include "input.hh"
+#include "execute_cmd.hh"
+#include "trap.hh"
+#include "bashgetopt.hh"
+#include "common.hh"
+#include "tilde.hh"
+
+#include "builtext.hh"
 
 namespace bash
 {

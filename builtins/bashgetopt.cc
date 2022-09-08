@@ -18,19 +18,20 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <chartypes.h>
+#include "chartypes.hh"
+
 #include <cerrno>
 
-#include "../shell.h"
-#include "common.h"
+#include "shell.hh"
+#include "common.hh"
 
-#include "bashgetopt.h"
+#include "bashgetopt.hh"
 
 namespace bash
 {
