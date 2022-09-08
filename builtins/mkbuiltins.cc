@@ -436,6 +436,8 @@ extract_info (const string &filename, ofstream &structfile, ofstream &externfile
 	i++;
 
       buffer[i] = '\0';
+      if (!std::strncmp (buffer, "// ", 3))	// skip C++ comment prefix
+        start += 3;
       defs.lines.push_back(&buffer[start]);
     }
 
@@ -797,7 +799,7 @@ constexpr int PLAINTEXT =	0x04;
 constexpr int HELPFILE =	0x08;
 
 constexpr char *structfile_header[] = {
-  "/* builtins.c -- the built in shell commands. */",
+  "/* builtins.cc -- the built in shell commands. */",
   "",
   "/* This file is manufactured by ./mkbuiltins, and should not be",
   "   edited by hand.  See the source to mkbuiltins for details. */",

@@ -349,6 +349,8 @@ echo ""
 echo "Beginning configuration for bash-$BASHVERS-$RELSTATUS for ${host_cpu}-${host_vendor}-${host_os}"
 echo ""
 
+AC_USE_SYSTEM_EXTENSIONS
+
 dnl compilation checks
 AC_LANG(C++)
 
@@ -362,8 +364,6 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_MKDIR_P
 AC_PROG_YACC
-
-AC_USE_SYSTEM_EXTENSIONS
 
 if test -n "$want_auto_cflags"; then
 	AUTO_CXXFLAGS="-g ${GCC+-O2}"
@@ -1237,7 +1237,7 @@ AC_SUBST(LOCAL_DEFS)
 AC_CONFIG_FILES([Makefile intl/Makefile doc/Makefile po/Makefile.in \
 	  lib/glob/Makefile lib/readline/Makefile lib/sh/Makefile lib/tilde/Makefile \
 	  examples/loadables/Makefile examples/loadables/Makefile.inc \
-	  examples/loadables/perl/Makefile pathnames.hh \
+	  examples/loadables/perl/Makefile builtins/Makefile pathnames.hh \
 	  support/bash.pc support/bashbug.sh])
 AC_CONFIG_COMMANDS([default],[
 # Makefile uses this timestamp file to record whether config.h is up to date.

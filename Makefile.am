@@ -23,7 +23,7 @@ GLOBDIR = lib/glob
 
 bin_PROGRAMS = bash
 
-bash_SOURCES = shell.cc eval.cc parse.y general.cc y.tab.cc \
+bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc \
 	expr.cc copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc mailcheck.cc \
 	test.cc trap.cc alias.cc jobs.cc nojobs.cc braces.cc \
@@ -36,7 +36,7 @@ bash_SOURCES = shell.cc eval.cc parse.y general.cc y.tab.cc \
 	conftypes.hh error.hh execute_cmd.hh externs.hh findcmd.hh flags.hh \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
 	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
-	siglist.hh subst.hh syntax.hh test.hh trap.hh variables.hh y.tab.hh \
+	siglist.hh subst.hh syntax.hh test.hh trap.hh variables.hh \
 	include/chartypes.hh include/filecntl.hh include/gettext.hh \
 	include/maxpath.hh include/posixdir.hh include/posixselect.hh \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
@@ -45,9 +45,13 @@ bash_SOURCES = shell.cc eval.cc parse.y general.cc y.tab.cc \
 	include/unionwait.hh pathnames.hh
 
 bash_LDADD = $(RLDIR)/libreadlinecpp.a $(SHDIR)/libsh.a \
-	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a
+	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a \
+	builtins/libbuiltins.a
 
-SUBDIRS = $(RLDIR) $(SHDIR) $(TLDIR) $(GLOBDIR) doc po tests
+BUILT_SOURCES = parse.hh
+AM_YFLAGS = -d
+
+SUBDIRS = $(RLDIR) $(SHDIR) $(TLDIR) $(GLOBDIR) builtins doc po tests
 
 ACLOCAL_AMFLAGS = -I m4
 

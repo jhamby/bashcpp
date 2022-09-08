@@ -149,22 +149,22 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
-	general.$(OBJEXT) y.tab.$(OBJEXT) dispose_cmd.$(OBJEXT) \
-	execute_cmd.$(OBJEXT) variables.$(OBJEXT) version.$(OBJEXT) \
-	expr.$(OBJEXT) copy_cmd.$(OBJEXT) flags.$(OBJEXT) \
-	subst.$(OBJEXT) hashcmd.$(OBJEXT) hashlib.$(OBJEXT) \
-	mailcheck.$(OBJEXT) test.$(OBJEXT) trap.$(OBJEXT) \
-	alias.$(OBJEXT) jobs.$(OBJEXT) nojobs.$(OBJEXT) \
-	braces.$(OBJEXT) input.$(OBJEXT) bashhist.$(OBJEXT) \
-	array.$(OBJEXT) arrayfunc.$(OBJEXT) assoc.$(OBJEXT) \
-	sig.$(OBJEXT) pathexp.$(OBJEXT) siglist.$(OBJEXT) \
-	bashline.$(OBJEXT) bracecomp.$(OBJEXT) error.$(OBJEXT) \
-	stringlib.$(OBJEXT) locale.$(OBJEXT) findcmd.$(OBJEXT) \
-	redir.$(OBJEXT) pcomplete.$(OBJEXT) pcomplib.$(OBJEXT) \
-	syntax.$(OBJEXT)
+	general.$(OBJEXT) dispose_cmd.$(OBJEXT) execute_cmd.$(OBJEXT) \
+	variables.$(OBJEXT) version.$(OBJEXT) expr.$(OBJEXT) \
+	copy_cmd.$(OBJEXT) flags.$(OBJEXT) subst.$(OBJEXT) \
+	hashcmd.$(OBJEXT) hashlib.$(OBJEXT) mailcheck.$(OBJEXT) \
+	test.$(OBJEXT) trap.$(OBJEXT) alias.$(OBJEXT) jobs.$(OBJEXT) \
+	nojobs.$(OBJEXT) braces.$(OBJEXT) input.$(OBJEXT) \
+	bashhist.$(OBJEXT) array.$(OBJEXT) arrayfunc.$(OBJEXT) \
+	assoc.$(OBJEXT) sig.$(OBJEXT) pathexp.$(OBJEXT) \
+	siglist.$(OBJEXT) bashline.$(OBJEXT) bracecomp.$(OBJEXT) \
+	error.$(OBJEXT) stringlib.$(OBJEXT) locale.$(OBJEXT) \
+	findcmd.$(OBJEXT) redir.$(OBJEXT) pcomplete.$(OBJEXT) \
+	pcomplib.$(OBJEXT) syntax.$(OBJEXT)
 bash_OBJECTS = $(am_bash_OBJECTS)
 bash_DEPENDENCIES = $(RLDIR)/libreadlinecpp.a $(SHDIR)/libsh.a \
-	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a
+	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a \
+	builtins/libbuiltins.a
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -202,26 +202,8 @@ am__depfiles_remade = ./$(DEPDIR)/alias.Po ./$(DEPDIR)/array.Po \
 	./$(DEPDIR)/siglist.Po ./$(DEPDIR)/stringlib.Po \
 	./$(DEPDIR)/subst.Po ./$(DEPDIR)/syntax.Po ./$(DEPDIR)/test.Po \
 	./$(DEPDIR)/trap.Po ./$(DEPDIR)/variables.Po \
-	./$(DEPDIR)/version.Po ./$(DEPDIR)/y.tab.Po
+	./$(DEPDIR)/version.Po
 am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
-	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CFLAGS) $(CFLAGS)
-AM_V_CC = $(am__v_CC_@AM_V@)
-am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
-am__v_CC_0 = @echo "  CC      " $@;
-am__v_CC_1 = 
-CCLD = $(CC)
-LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-AM_V_CCLD = $(am__v_CCLD_@AM_V@)
-am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
-am__v_CCLD_0 = @echo "  CCLD    " $@;
-am__v_CCLD_1 = 
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
@@ -250,6 +232,24 @@ am__v_YACC_ = $(am__v_YACC_@AM_DEFAULT_V@)
 am__v_YACC_0 = @echo "  YACC    " $@;
 am__v_YACC_1 = 
 YLWRAP = $(top_srcdir)/./support/ylwrap
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
+AM_V_CC = $(am__v_CC_@AM_V@)
+am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
+am__v_CC_0 = @echo "  CC      " $@;
+am__v_CC_1 = 
+CCLD = $(CC)
+LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+AM_V_CCLD = $(am__v_CCLD_@AM_V@)
+am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
+am__v_CCLD_0 = @echo "  CCLD    " $@;
+am__v_CCLD_1 = 
 SOURCES = $(bash_SOURCES)
 DIST_SOURCES = $(bash_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
@@ -313,7 +313,7 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.hh.in \
 	./support/config.sub ./support/depcomp ./support/install-sh \
 	./support/ltmain.sh ./support/missing ./support/mkinstalldirs \
 	./support/ylwrap ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL \
-	NEWS README parse.c
+	NEWS README parse.cc parse.hh
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -606,7 +606,7 @@ RLDIR = lib/readline
 SHDIR = lib/sh
 TLDIR = lib/tilde
 GLOBDIR = lib/glob
-bash_SOURCES = shell.cc eval.cc parse.y general.cc y.tab.cc \
+bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc \
 	expr.cc copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc mailcheck.cc \
 	test.cc trap.cc alias.cc jobs.cc nojobs.cc braces.cc \
@@ -619,7 +619,7 @@ bash_SOURCES = shell.cc eval.cc parse.y general.cc y.tab.cc \
 	conftypes.hh error.hh execute_cmd.hh externs.hh findcmd.hh flags.hh \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
 	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
-	siglist.hh subst.hh syntax.hh test.hh trap.hh variables.hh y.tab.hh \
+	siglist.hh subst.hh syntax.hh test.hh trap.hh variables.hh \
 	include/chartypes.hh include/filecntl.hh include/gettext.hh \
 	include/maxpath.hh include/posixdir.hh include/posixselect.hh \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
@@ -628,18 +628,21 @@ bash_SOURCES = shell.cc eval.cc parse.y general.cc y.tab.cc \
 	include/unionwait.hh pathnames.hh
 
 bash_LDADD = $(RLDIR)/libreadlinecpp.a $(SHDIR)/libsh.a \
-	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a
+	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a \
+	builtins/libbuiltins.a
 
-SUBDIRS = $(RLDIR) $(SHDIR) $(TLDIR) $(GLOBDIR) doc po tests
+BUILT_SOURCES = parse.hh
+AM_YFLAGS = -d
+SUBDIRS = $(RLDIR) $(SHDIR) $(TLDIR) $(GLOBDIR) builtins doc po tests
 ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
 	-I$(srcdir)/lib/tilde
 
-all: config.hh
+all: $(BUILT_SOURCES) config.hh
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .c .cc .lo .o .obj .y
+.SUFFIXES: .cc .lo .o .obj .yy
 am--refresh: Makefile
 	@:
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -753,6 +756,9 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+parse.hh: parse.cc
+	@if test ! -f $@; then rm -f parse.cc; else :; fi
+	@if test ! -f $@; then $(MAKE) $(AM_MAKEFLAGS) parse.cc; else :; fi
 
 bash$(EXEEXT): $(bash_OBJECTS) $(bash_DEPENDENCIES) $(EXTRA_bash_DEPENDENCIES) 
 	@rm -f bash$(EXEEXT)
@@ -803,34 +809,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trap.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/variables.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/version.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/y.tab.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
 	@echo '# dummy' >$@-t && $(am__mv) $@-t $@
 
 am--depfiles: $(am__depfiles_remade)
-
-.c.o:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ $<
-
-.c.obj:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
-
-.c.lo:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -853,7 +837,7 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
 
-.y.c:
+.yy.cc:
 	$(AM_V_YACC)$(am__skipyacc) $(SHELL) $(YLWRAP) $< y.tab.c $@ y.tab.h `echo $@ | $(am__yacc_c2h)` y.output $*.output -- $(YACCCOMPILE)
 
 mostlyclean-libtool:
@@ -1168,15 +1152,18 @@ distcleancheck: distclean
 	       $(distcleancheck_listfiles) ; \
 	       exit 1; } >&2
 check-am: all-am
-check: check-recursive
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-recursive
 all-am: Makefile $(PROGRAMS) config.hh
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(bindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-recursive
-install-exec: install-exec-recursive
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-recursive
+install-exec: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-exec-recursive
 install-data: install-data-recursive
 uninstall: uninstall-recursive
 
@@ -1205,7 +1192,9 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-rm -f parse.c
+	-rm -f parse.cc
+	-rm -f parse.hh
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
@@ -1251,7 +1240,6 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/trap.Po
 	-rm -f ./$(DEPDIR)/variables.Po
 	-rm -f ./$(DEPDIR)/version.Po
-	-rm -f ./$(DEPDIR)/y.tab.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -1338,7 +1326,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/trap.Po
 	-rm -f ./$(DEPDIR)/variables.Po
 	-rm -f ./$(DEPDIR)/version.Po
-	-rm -f ./$(DEPDIR)/y.tab.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1357,7 +1344,8 @@ ps-am:
 
 uninstall-am: uninstall-binPROGRAMS
 
-.MAKE: $(am__recursive_targets) all install-am install-strip
+.MAKE: $(am__recursive_targets) all check install install-am \
+	install-exec install-strip
 
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am \
 	am--depfiles am--refresh check check-am clean \
