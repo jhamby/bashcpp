@@ -18,42 +18,31 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
-
-#include <cstdio>
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#if defined (PREFER_STDARG)
-#  include <cstdarg>
-#else
-#  include <varargs.h>
-#endif
+#include <cstdarg>
 
-#include "bashintl.h"
-#include "command.h"
+#include "bashintl.hh"
+#include "command.hh"
+
+#define NEED_XTRACE_SET_DECL
+
+#include "shell.hh"
+#include "flags.hh"
+#include "parse.hh"
+#include "input.hh"
+
+#include "shmbutil.hh"
 
 namespace bash
 {
 
-#define NEED_XTRACE_SET_DECL
-
-#include "shell.h"
-#include "flags.h"
-#include <y.tab.h>	/* use <...> so we pick it up from the build directory */
-#include "input.h"
-
-#include "shmbutil.h"
-
-#include "builtins/common.h"
-
-static int indentation;
-static int indentation_amount = 4;
+static constexpr int indentation;
+static constexpr int indentation_amount = 4;
 
 typedef void PFUNC (const char *, ...);
 
@@ -99,12 +88,14 @@ static void print_function_def (FUNCTION_DEF *);
 #define PRINTED_COMMAND_INITIAL_SIZE 64
 #define PRINTED_COMMAND_GROW_SIZE 128
 
+#if 0
 char *the_printed_command = (char *)NULL;
 int the_printed_command_size = 0;
 int command_string_index = 0;
 
 int xtrace_fd = -1;
 FILE *xtrace_fp = 0;
+#endif
 
 #define CHECK_XTRACE_FP	xtrace_fp = (xtrace_fp ? xtrace_fp : stderr)
 
@@ -117,6 +108,7 @@ FILE *xtrace_fp = 0;
       print_deferred_heredocs (x); \
   } while (0)
 
+#if 0
 /* Non-zero means the stuff being printed is inside of a function def. */
 static int inside_function_def;
 static int skip_this_indent;
@@ -131,6 +123,7 @@ static int group_command_nesting;
 /* A buffer to indicate the indirection level (PS4) when set -x is enabled. */
 static char *indirection_string = 0;
 static int indirection_stringsiz = 0;
+#endif
 
 /* Print COMMAND (a command tree) on standard output. */
 void

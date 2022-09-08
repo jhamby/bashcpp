@@ -18,32 +18,34 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include <cstdio>
-#include "chartypes.h"
-#include "bashtypes.h"
-#if !defined (_MINIX) && defined (HAVE_SYS_FILE_H)
+#include "chartypes.hh"
+#include "bashtypes.hh"
+
+#if defined (HAVE_SYS_FILE_H)
 #  include <sys/file.h>
 #endif
-#include "filecntl.h"
-#include "posixstat.h"
+
+#include "filecntl.hh"
+#include "posixstat.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <cerrno>
+#include "shell.hh"
+#include "execute_cmd.hh"
+#include "flags.hh"
+#include "hashlib.hh"
+#include "pathexp.hh"
+#include "hashcmd.hh"
+#include "findcmd.hh"	/* matching prototypes and declarations */
 
-#include "shell.h"
-#include "execute_cmd.h"
-#include "flags.h"
-#include "hashlib.h"
-#include "pathexp.h"
-#include "hashcmd.h"
-#include "findcmd.h"	/* matching prototypes and declarations */
+#include "strmatch.hh"
 
-#include <glob/strmatch.h>
+namespace bash
+{
 
 /* Static functions defined and used in this file. */
 static char *_find_user_command_internal (const char *, int);
@@ -651,3 +653,5 @@ find_in_path (const char *name, char *path_list, int flags)
 {
   return find_user_command_in_path (name, path_list, flags);
 }
+
+}  // namespace bash

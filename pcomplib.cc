@@ -18,23 +18,18 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined (PROGRAMMABLE_COMPLETION)
 
-#include <cstdio>
-
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#include "bashintl.h"
+#include "bashintl.hh"
 
-#include "shell.h"
-#include "pcomplete.h"
+#include "shell.hh"
+#include "pcomplete.hh"
 
 namespace bash
 {

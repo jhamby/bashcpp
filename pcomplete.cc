@@ -18,51 +18,48 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined (PROGRAMMABLE_COMPLETION)
 
-#include "bashtypes.h"
-#include "posixstat.h"
+#include "bashtypes.hh"
+#include "posixstat.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <csignal>
 #include <cstdarg>
-#include <cstdio>
 
-#include "posixtime.h"
+#include "posixtime.hh"
 
-#include "bashintl.h"
+#include "bashintl.hh"
 
-#include "shell.h"
-#include "pcomplete.h"
-#include "alias.h"
-#include "execute_cmd.h"
-#include "pathexp.h"
+#include "shell.hh"
+#include "pcomplete.hh"
+#include "alias.hh"
+#include "execute_cmd.hh"
+#include "pathexp.hh"
 
 #if defined (JOB_CONTROL)
-#  include "jobs.h"
+#  include "jobs.hh"
 #endif
 
 #if !defined (NSIG)
-#  include "trap.h"
+#  include "trap.hh"
 #endif
 
-#include "shmbutil.h"
+#include "shmbutil.hh"
 
-#include "builtins.h"
-#include "builtins/common.h"
-#include "builtins/builtext.h"
+#include "builtins.hh"
+#include "builtins/common.hh"
+#include "builtins/builtext.hh"
 
-#include <glob/glob.h>
-#include <glob/strmatch.h>
+#include "glob.hh"
+#include "strmatch.hh"
 
-#include <readline/rlconf.h>
-#include <readline/readline.h>
-#include <readline/history.h>
+#include "readline.hh"
+#include "history.hh"
 
 namespace bash
 {
@@ -1656,6 +1653,6 @@ programmable_completions (const char *cmd, const char *word,
   return rmatches;
 }
 
-#endif /* PROGRAMMABLE_COMPLETION */
-
 }  // namespace bash
+
+#endif /* PROGRAMMABLE_COMPLETION */

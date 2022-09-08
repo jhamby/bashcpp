@@ -26,10 +26,6 @@
 #include "bashtypes.hh"
 #include "trap.hh"
 
-#include <cstdio>
-#include <csignal>
-#include <cerrno>
-
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
@@ -81,7 +77,7 @@
 #include "builtins/common.hh"
 
 #if defined (READLINE)
-# include <readline/readline.h>
+# include "readline.hh"
 #endif
 
 #if !defined (HAVE_KILLPG)

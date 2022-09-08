@@ -18,36 +18,32 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#include <cstdio>
-#include <csignal>
+#include "bashintl.hh"
 
-#include "bashintl.h"
+#include "shell.hh"
+#include "execute_cmd.hh"
 
-#include "shell.h"
-#include "execute_cmd.h"
 #if defined (JOB_CONTROL)
-#include "jobs.h"
+#include "jobs.hh"
 #endif /* JOB_CONTROL */
-#include "siglist.h"
-#include "sig.h"
-#include "trap.h"
 
-#include "builtins/common.h"
-#include "builtins/builtext.h"
+#include "siglist.hh"
+#include "sig.hh"
+#include "trap.hh"
+
+#include "builtins/common.hh"
+#include "builtins/builtext.hh"
 
 #if defined (READLINE)
-#  include <readline/readline.h>
+#  include "readline.hh"
 #endif
 
 namespace bash
@@ -266,10 +262,10 @@ initialize_terminating_signals ()
 	  ::sigaction (XSIG (i), &oact, &act);
 	  set_signal_hard_ignored (XSIG (i));
 	}
-#if defined (SIGPROF) && !defined (_MINIX)
+#if defined (SIGPROF)
       if (XSIG (i) == SIGPROF && XHANDLER (i) != SIG_DFL && XHANDLER (i) != SIG_IGN)
 	sigaction (XSIG (i), &oact, (struct sigaction *)NULL);
-#endif /* SIGPROF && !_MINIX */
+#endif /* SIGPROF */
     }
 #else /* !HAVE_POSIX_SIGNALS */
 

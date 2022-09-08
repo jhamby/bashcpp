@@ -18,33 +18,27 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
-#if !defined (_MINIX) && defined (HAVE_SYS_FILE_H)
+#include "bashtypes.hh"
+
+#if defined (HAVE_SYS_FILE_H)
 #  include <sys/file.h>
 #endif
-#include "filecntl.h"
-#include "posixstat.h"
 
-#include <cstdio>
-#include <cerrno>
+#include "filecntl.hh"
+#include "posixstat.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "bashansi.h"
-#include "bashintl.h"
+#include "bashintl.hh"
 
-#include "shell.h"
-#include "input.h"
-#include "externs.h"
-#include "trap.h"
-
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
+#include "shell.hh"
+#include "input.hh"
+#include "externs.hh"
+#include "trap.hh"
 
 #if defined (EAGAIN)
 #  define X_EAGAIN EAGAIN
@@ -58,6 +52,10 @@ extern int errno;
 #  define X_EWOULDBLOCK -99
 #endif
 
+namespace bash
+{
+
+#if 0
 extern void termsig_handler (int);
 
 /* Functions to handle reading input on systems that don't restart read(2)
@@ -65,6 +63,7 @@ extern void termsig_handler (int);
 
 static char localbuf[1024];
 static int local_index = 0, local_bufused = 0;
+#endif
 
 /* Posix and USG systems do not guarantee to restart read () if it is
    interrupted by a signal.  We do the read ourselves, and restart it
@@ -629,3 +628,5 @@ main(int argc, char **argv)
 }
 #endif /* TEST */
 #endif /* BUFFERED_INPUT */
+
+}  // namespace bash

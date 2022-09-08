@@ -18,42 +18,43 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #if defined (READLINE)
 
-#include "shell.h"
-#include "input.h"
-#include "parser.h"
-#include "builtins.h"
-#include "execute_cmd.h"
-#include "findcmd.h"
-#include "pathexp.h"
-#include "shmbutil.h"
-#include "trap.h"
-#include "flags.h"
+#include "shell.hh"
+#include "input.hh"
+#include "parser.hh"
+#include "builtins.hh"
+#include "execute_cmd.hh"
+#include "findcmd.hh"
+#include "pathexp.hh"
+#include "shmbutil.hh"
+#include "trap.hh"
+#include "flags.hh"
 
 #if defined (HAVE_MBSTR_H) && defined (HAVE_MBSCHR)
 #  include <mbstr.h>		/* mbschr */
 #endif
 
-#include "builtins/common.h"
-#include "builtins/builtext.h"		/* for read_builtin */
+#include "builtins/common.hh"
+#include "builtins/builtext.hh"		/* for read_builtin */
 
-#include <readline/rlconf.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-#include <readline/rlmbutil.h>
+#include "readline.hh"
+#include "history.hh"
 
-#include <glob/glob.h>
+#include "glob.hh"
 
 #if defined (ALIAS)
-#  include "alias.h"
+#  include "alias.hh"
 #endif
 
 #if defined (PROGRAMMABLE_COMPLETION)
-#  include "pcomplete.h"
+#  include "pcomplete.hh"
 #endif
+
+namespace bash
+{
 
 /* These should agree with the defines for emacs_mode and vi_mode in
    rldefs.h, even though that's not a public readline header file. */
@@ -164,11 +165,7 @@ static char *quote_word_break_chars (char *);
 static void set_filename_bstab (const char *);
 static char *bash_quote_filename (char *, int, char *);
 
-#ifdef _MINIX
-static void putx (int);
-#else
 static int putx (int);
-#endif
 static int readline_get_char_offset (int);
 static void readline_set_char_offset (int, int *);
 
@@ -4082,18 +4079,12 @@ static Keymap vi_insert_cmd_xmap;
 static Keymap vi_movement_cmd_xmap;
 #endif
 
-#ifdef _MINIX
-static void
-#else
 static int
-#endif
 putx(int c)
 {
   int x;
   x = putc (c, rl_outstream);
-#ifndef _MINIX
   return x;
-#endif
 }
 
 static int
@@ -4489,5 +4480,7 @@ bash_event_hook ()
   check_signals_and_traps ();	/* XXX */
   return 0;
 }
+
+}  // namespace bash
 
 #endif /* READLINE */

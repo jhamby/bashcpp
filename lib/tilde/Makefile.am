@@ -20,4 +20,4 @@ noinst_LIBRARIES = libtilde.a
 
 libtilde_a_SOURCES = tilde.cc
 
-AM_CPPFLAGS = -I$(srcdir)/../.. -I$(srcdir)/../../include
+AM_CPPFLAGS = -I$(srcdir)/../.. -I$(srcdir)/../../include -I$(srcdir)/../../lib/readline

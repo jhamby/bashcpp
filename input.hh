@@ -21,8 +21,8 @@
 #if !defined (_INPUT_H_)
 #define _INPUT_H_
 
-#include <string>
-using std::string;
+namespace bash
+{
 
 /* Function pointers can be declared as (Function *)foo. */
 // #if !defined (_FUNCTION_DEF)
@@ -51,8 +51,8 @@ enum stream_type {st_none, st_stdin, st_stream, st_string, st_bstream};
 #define B_SHAREDBUF	0x20	/* shared input buffer */
 
 /* A buffered stream.  Like a FILE *, but with our own buffering and
-   synchronization.  Look in input.c for the implementation. */
-struct BufferedStream
+   synchronization.  Look in input.cc for the implementation. */
+struct BUFFERED_STREAM
 {
   int	 b_fd;
   char	*b_buffer;		/* The buffer that holds characters read. */
@@ -62,12 +62,14 @@ struct BufferedStream
   size_t b_inputp;		/* The input pointer, index into b_buffer. */
 };
 
+#if 0
 extern int default_buffered_input;
 extern int bash_input_fd_changed;
+#endif
 
 #endif /* BUFFERED_INPUT */
 
-union InputStream {
+union INPUT_STREAM {
   FILE *file;
   char *string;			/* written to by the parser */
 #if defined (BUFFERED_INPUT)
@@ -75,15 +77,15 @@ union InputStream {
 #endif
 };
 
-struct BashInput {
+struct BASH_INPUT {
   enum stream_type type;
   char *name;			/* freed by the parser */
-  InputStream location;
+  INPUT_STREAM location;
   sh_cget_func_t *getter;
   sh_cunget_func_t *ungetter;
 };
 
-extern BashInput bash_input;
+// extern BASH_INPUT bash_input;
 
 /* Functions from parse.y whose use directly or indirectly depends on the
    definitions in this file. */
@@ -91,15 +93,15 @@ extern void initialize_bash_input ();
 extern void init_yy_io (sh_cget_func_t *, sh_cunget_func_t *, enum stream_type, const char *, InputStream);
 extern const char *yy_input_name ();
 extern void with_input_from_stdin ();
-extern void with_input_from_string (const string &, const string &);
-extern void with_input_from_stream (FILE *, const string &);
+extern void with_input_from_string (const std::string &, const std::string &);
+extern void with_input_from_stream (FILE *, const std::string &);
 extern void push_stream (int);
 extern void pop_stream ();
 extern int stream_on_stack (enum stream_type);
 extern char *read_secondary_line (int);
-extern int find_reserved_word (const string &);
+extern int find_reserved_word (const std::string &);
 extern void gather_here_documents ();
-extern void execute_variable_command (const string &, const string &);
+extern void execute_variable_command (const std::string &, const std::string &);
 
 extern int *save_token_state ();
 extern void restore_token_state (int *);
@@ -115,16 +117,18 @@ extern int set_bash_input_fd (int);
 extern int save_bash_input (int, int);
 extern int check_bash_input (int);
 extern int duplicate_buffered_stream (int, int);
-extern BufferedStream *fd_to_buffered_stream (int);
-extern BufferedStream *set_buffered_stream (int, BufferedStream *);
-extern BufferedStream *open_buffered_stream (string);
-extern void free_buffered_stream (BufferedStream *);
-extern int close_buffered_stream (BufferedStream *);
+extern BUFFERED_STREAM *fd_to_buffered_stream (int);
+extern BUFFERED_STREAM *set_buffered_stream (int, BUFFERED_STREAM *);
+extern BUFFERED_STREAM *open_buffered_stream (std::string);
+extern void free_buffered_stream (BUFFERED_STREAM *);
+extern int close_buffered_stream (BUFFERED_STREAM *);
 extern int close_buffered_fd (int);
 extern int sync_buffered_stream (int);
 extern int buffered_getchar ();
 extern int buffered_ungetchar (int);
-extern void with_input_from_buffered_stream (int, string);
+extern void with_input_from_buffered_stream (int, std::string);
 #endif /* BUFFERED_INPUT */
+
+}  // namespace bash
 
 #endif /* _INPUT_H_ */

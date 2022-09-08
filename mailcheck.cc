@@ -18,23 +18,29 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include <cstdio>
-#include "bashtypes.h"
-#include "posixstat.h"
+#include "bashtypes.hh"
+#include "posixstat.hh"
+
 #if defined (HAVE_SYS_PARAM_H)
 #  include <sys/param.h>
 #endif
+
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
-#include "posixtime.h"
-#include "bashintl.h"
 
-#include "shell.h"
-#include "execute_cmd.h"
-#include <tilde/tilde.h>
+#include "posixtime.hh"
+#include "bashintl.hh"
+
+#include "shell.hh"
+#include "execute_cmd.hh"
+
+#include "tilde.hh"
+
+namespace bash
+{
 
 /* Values for flags word in struct _fileinfo */
 #define MBOX_INITIALIZED	0x01
@@ -475,3 +481,5 @@ check_mail ()
   else
     unbind_variable ("_");
 }
+
+}  // namespace bash

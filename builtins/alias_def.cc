@@ -150,17 +150,17 @@ Shell::alias_builtin (WORD_LIST *list)
 }  // namespace bash
 #endif /* ALIAS */
 
-$BUILTIN unalias
-$FUNCTION unalias_builtin
-$DEPENDS_ON ALIAS
-$SHORT_DOC unalias [-a] name [name ...]
-Remove each NAME from the list of defined aliases.
+// $BUILTIN unalias
+// $FUNCTION unalias_builtin
+// $DEPENDS_ON ALIAS
+// $SHORT_DOC unalias [-a] name [name ...]
+// Remove each NAME from the list of defined aliases.
 
-Options:
-  -a	remove all alias definitions
+// Options:
+//   -a	remove all alias definitions
 
-Return success unless a NAME is not an existing alias.
-$END
+// Return success unless a NAME is not an existing alias.
+// $END
 
 #if defined (ALIAS)
 

@@ -18,19 +18,17 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#include <cstdio>
+#include "shell.hh"
+#include "hashlib.hh"
 
-#include "shell.h"
-#include "hashlib.h"
+namespace bash
+{
 
 /* tunable constants for rehashing */
 #define HASH_REHASH_MULTIPLIER	4
@@ -512,3 +510,5 @@ main ()
 }
 
 #endif /* TEST_HASHING */
+
+}  // namespace bash

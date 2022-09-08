@@ -25,23 +25,21 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #if defined (ARRAY_VARS)
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#include <cstdio>
+#include "shell.hh"
+#include "array.hh"
+#include "assoc.hh"
+#include "builtins/common.hh"
 
-#include "shell.h"
-#include "array.h"
-#include "assoc.h"
-#include "builtins/common.h"
+namespace bash
+{
 
 static WordList *assoc_to_word_list_internal (HashTable *, int);
 
@@ -549,5 +547,7 @@ assoc_to_string (HASH_TABLE *h, const char *sep, int quoted)
 
   return result;
 }
+
+}  // namespace bash
 
 #endif /* ARRAY_VARS */

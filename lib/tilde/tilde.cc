@@ -22,18 +22,9 @@
 #include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#include <cstring>
-#include <cstdlib>
-
-#include <string>
-
-#include <sys/types.h>
 #if defined (HAVE_PWD_H)
 #include <pwd.h>
 #endif

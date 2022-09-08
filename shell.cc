@@ -25,20 +25,19 @@
 */
 #define INSTALL_DEBUG_MODE
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
-#if !defined (_MINIX) && defined (HAVE_SYS_FILE_H)
+#include "bashtypes.hh"
+
+#if defined (HAVE_SYS_FILE_H)
 #  include <sys/file.h>
 #endif
-#include "posixstat.h"
-#include "posixtime.h"
 
-#include <cstdio>
-#include <csignal>
-#include <cerrno>
+#include "posixstat.hh"
+#include "posixtime.hh"
 
-#include "filecntl.h"
+#include "filecntl.hh"
+
 #if defined (HAVE_PWD_H)
 #  include <pwd.h>
 #endif
@@ -47,36 +46,30 @@
 #  include <unistd.h>
 #endif
 
-#include "bashintl.h"
+#include "bashintl.hh"
 
-#define NEED_SH_SETLINEBUF_DECL		/* used in externs.h */
+#include "shell.hh"
+#include "parser.hh"
+#include "flags.hh"
+#include "trap.hh"
+#include "builtins.hh"
+#include "builtins/common.hh"
 
-#include "shell.h"
-#include "parser.h"
-#include "flags.h"
-#include "trap.h"
-#include "builtins.h"
-#include "builtins/common.h"
+#include "jobs.hh"
 
-#include "jobs.h"
-
-#include "input.h"
-#include "execute_cmd.h"
-#include "findcmd.h"
-
-#if defined (USING_BASH_MALLOC) && defined (DEBUG) && !defined (DISABLE_MALLOC_WRAPPERS)
-#  include <malloc/shmalloc.h>
-#endif
+#include "input.hh"
+#include "execute_cmd.hh"
+#include "findcmd.hh"
 
 #if defined (HISTORY)
-#  include <readline/history.h>
+#  include "history.hh"
 #endif
 
 #if defined (READLINE)
-#  include <readline/readline.h>
+#  include "readline.hh"
 #endif
 
-#include <glob/strmatch.h>
+#include "strmatch.hh"
 
 #if defined (__OPENNT)
 #  include <opennt/opennt.h>
@@ -85,10 +78,6 @@
 #if !defined (HAVE_GETPW_DECLS)
 extern struct passwd *getpwuid ();
 #endif /* !HAVE_GETPW_DECLS */
-
-#if !defined (errno)
-extern int errno;
-#endif
 
 #if defined (NO_MAIN_ENV_ARG)
 extern char **environ;	/* used if no third argument to main() */

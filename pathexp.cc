@@ -18,23 +18,29 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
-#include <cstdio>
+#include "bashtypes.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "shell.h"
-#include "pathexp.h"
-#include "flags.h"
+#include "shell.hh"
+#include "pathexp.hh"
+#include "flags.hh"
 
-#include "shmbutil.h"
-#include "bashintl.h"
+#include "shmbutil.hh"
+#include "bashintl.hh"
 
-#include <glob/strmatch.h>
+#include "strmatch.hh"
+
+#if defined (USE_POSIX_GLOB_LIBRARY)
+#  include <glob.h>
+typedef int posix_glob_errfunc_t (const char *, int);
+#else
+#  include "glob.hh"
+#endif
 
 namespace bash
 {
@@ -43,13 +49,7 @@ static bool glob_name_is_acceptable (const char *);
 static void ignore_globbed_names (char **, sh_ignore_func_t *);
 static char *split_ignorespec (char *, int *);
 
-#if defined (USE_POSIX_GLOB_LIBRARY)
-#  include <glob.h>
-typedef int posix_glob_errfunc_t (const char *, int);
-#else
-#  include <glob/glob.h>
-#endif
-
+#if 0
 /* Control whether * matches .files in globbing. */
 bool glob_dot_filenames;
 
@@ -58,6 +58,7 @@ bool extended_glob = EXTGLOB_DEFAULT;
 
 /* Control enabling special handling of `**' */
 bool glob_star = false;
+#endif
 
 /* Return nonzero if STRING has any unquoted special globbing chars in it.
    This is supposed to be called when pathname expansion is performed, so

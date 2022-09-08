@@ -20,11 +20,9 @@
 */
 
 #include "config.hh"
+#include "general.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 
@@ -32,6 +30,9 @@
 #include <cstring>
 
 #include <pwd.h>
+
+namespace bash
+{
 
 #if !defined (HAVE_GETPW_DECLS)
 extern struct passwd *getpwuid ();
@@ -66,3 +67,5 @@ get_home_dir (void)
 
   return (home_dir);
 }
+
+}  // namespace bash

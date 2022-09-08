@@ -21,35 +21,31 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
-#include "filecntl.h"
+#include "bashtypes.hh"
+#include "filecntl.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <cstdio>
-#include <csignal>
-#include <cerrno>
-
 #if defined (BUFFERED_INPUT)
-#  include "input.h"
+#  include "input.hh"
 #endif
 
 /* Need to include this up here for *_TTY_DRIVER definitions. */
-#include "shtty.h"
+#include "shtty.hh"
 
-#include "bashintl.h"
+#include "bashintl.hh"
 
-#include "shell.h"
-#include "jobs.h"
-#include "execute_cmd.h"
-#include "trap.h"
+#include "shell.hh"
+#include "jobs.hh"
+#include "execute_cmd.hh"
+#include "trap.hh"
 
-#include "builtins/builtext.h"	/* for wait_builtin */
-#include "builtins/common.h"
+#include "builtins/builtext.hh"	/* for wait_builtin */
+#include "builtins/common.hh"
 
 namespace bash
 {

@@ -22,7 +22,6 @@
 
 // $BUILTIN ulimit
 // $FUNCTION ulimit_builtin
-// $DEPENDS_ON !_MINIX
 // $SHORT_DOC ulimit [-SHabcdefiklmnpqrstuvxPT] [limit]
 // Modify shell resource limits.
 

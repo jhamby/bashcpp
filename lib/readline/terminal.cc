@@ -427,19 +427,11 @@ Readline::rl_get_termcap (const char *cap)
 }
 
 /* An extern "C" callback function for the use of tputs () */
-#ifdef _MINIX
-void
-_rl_output_character_function (int c)
-{
-  std::putc (c, _rl_out_stream);
-}
-#else /* !_MINIX */
 int
 _rl_output_character_function (int c)
 {
   return std::putc (c, _rl_out_stream);
 }
-#endif /* !_MINIX */
 
 /* Ring the terminal bell. */
 int

@@ -20,23 +20,22 @@
 
 /* Stuff in curly braces gets expanded before all other shell expansions. */
 
-#include "config.h"
+#include "config.hh"
 
 #if defined (BRACE_EXPANSION)
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#include <cerrno>
+#include "bashintl.hh"
 
-#include "bashintl.h"
+#ifndef SHELL
+#define SHELL
+#endif
 
 #if defined (SHELL)
-#  include "shell.h"
+#  include "shell.hh"
 #else
 #  if defined (TEST)
 typedef char *WORD_DESC;
@@ -45,10 +44,10 @@ typedef char **WORD_LIST;
 #  endif /* TEST */
 #endif /* SHELL */
 
-#include "typemax.h"		/* INTMAX_MIN, INTMAX_MAX */
-#include "general.h"
-#include "shmbutil.h"
-#include "chartypes.h"
+#include "typemax.hh"		/* INTMAX_MIN, INTMAX_MAX */
+#include "general.hh"
+#include "shmbutil.hh"
+#include "chartypes.hh"
 
 #define brace_whitespace(c) (!(c) || (c) == ' ' || (c) == '\t' || (c) == '\n')
 

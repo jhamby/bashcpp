@@ -436,7 +436,7 @@ extract_info (const string &filename, ofstream &structfile, ofstream &externfile
 	i++;
 
       buffer[i] = '\0';
-      if (!std::strncmp (buffer, "// ", 3))	// skip C++ comment prefix
+      if (!std::strncmp (&buffer[start], "// ", 3))	// skip C++ comment prefix
         start += 3;
       defs.lines.push_back(&buffer[start]);
     }

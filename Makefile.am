@@ -48,7 +48,7 @@ bash_LDADD = $(RLDIR)/libreadlinecpp.a $(SHDIR)/libsh.a \
 	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a \
 	builtins/libbuiltins.a
 
-BUILT_SOURCES = parse.hh
+BUILT_SOURCES = parse.hh builtins/pipesize.hh
 AM_YFLAGS = -d
 
 SUBDIRS = $(RLDIR) $(SHDIR) $(TLDIR) $(GLOBDIR) builtins doc po tests
@@ -56,4 +56,4 @@ SUBDIRS = $(RLDIR) $(SHDIR) $(TLDIR) $(GLOBDIR) builtins doc po tests
 ACLOCAL_AMFLAGS = -I m4
 
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
-	-I$(srcdir)/lib/tilde
+	-I$(srcdir)/lib/tilde -I$(srcdir)/builtins

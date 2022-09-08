@@ -18,9 +18,9 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
@@ -30,13 +30,11 @@
 #  include <langinfo.h>
 #endif
 
-#include "bashintl.h"
-#include <cstdio>
-#include "chartypes.h"
-#include <cerrno>
+#include "bashintl.hh"
+#include "chartypes.hh"
 
-#include "shell.h"
-#include "input.h"	/* For bash_input */
+#include "shell.hh"
+#include "input.hh"	/* For bash_input */
 
 namespace bash
 {

@@ -21,6 +21,9 @@
 #if !defined (_PATHEXP_H_)
 #define _PATHEXP_H_
 
+namespace bash
+{
+
 #if defined (USE_POSIX_GLOB_LIBRARY)
 #  define GLOB_FAILED(glist)	!(glist)
 #else /* !USE_POSIX_GLOB_LIBRARY */
@@ -47,10 +50,12 @@ extern char *glob_error_return;
 #define FNMATCH_IGNCASE		(match_ignore_case ? FNM_CASEFOLD : 0)
 #define FNMATCH_NOCASEGLOB	(glob_ignore_case ? FNM_CASEFOLD : 0)
 
+#if 0
 extern bool glob_dot_filenames;
 extern bool extended_glob;
 extern bool glob_star;
 extern bool match_ignore_case;	/* doesn't really belong here */
+#endif
 
 extern bool unquoted_glob_pattern_p (const char *);
 
@@ -103,5 +108,7 @@ extern void setup_ignore_patterns (struct ignorevar *);
 extern void setup_glob_ignore (const char *);
 extern bool should_ignore_glob_matches (void);
 extern void ignore_glob_matches (char **);
+
+}  // namespace bash
 
 #endif

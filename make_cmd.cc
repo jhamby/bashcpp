@@ -19,31 +19,33 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include <cstdio>
-#include "bashtypes.h"
-#if !defined (_MINIX) && defined (HAVE_SYS_FILE_H)
+#include "bashtypes.hh"
+
+#if defined (HAVE_SYS_FILE_H)
 #  include <sys/file.h>
 #endif
-#include "filecntl.h"
+
+#include "filecntl.hh"
+
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "bashintl.h"
+#include "bashintl.hh"
 
-#include "shell.h"
-#include "execute_cmd.h"
-#include "parser.h"
-#include "flags.h"
-#include "input.h"
+#include "shell.hh"
+#include "execute_cmd.hh"
+#include "parser.hh"
+#include "flags.hh"
+#include "input.hh"
 
 #if defined (JOB_CONTROL)
-#include "jobs.h"
+#include "jobs.hh"
 #endif
 
-#include "shmbutil.h"
+#include "shmbutil.hh"
 
 namespace bash
 {

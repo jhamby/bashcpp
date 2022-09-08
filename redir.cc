@@ -18,36 +18,34 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include <cstdio>
-#include "bashtypes.h"
-#if !defined (_MINIX) && defined (HAVE_SYS_FILE_H)
+#include "bashtypes.hh"
+
+#if defined (HAVE_SYS_FILE_H)
 #  include <sys/file.h>
 #endif
-#include "filecntl.h"
-#include "posixstat.h"
+
+#include "filecntl.hh"
+#include "posixstat.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <cerrno>
+#include "bashintl.hh"
 
-#include "bashintl.h"
-
-#define NEED_FPURGE_DECL
-
-#include "shell.h"
-#include "flags.h"
-#include "execute_cmd.h"
-#include "trap.h"
+#include "shell.hh"
+#include "flags.hh"
+#include "execute_cmd.hh"
+#include "trap.hh"
 
 #if defined (BUFFERED_INPUT)
-#  include "input.h"
+#  include "input.hh"
 #endif
 
-#include "builtins/pipesize.h"
+// Note: use path to the generated header file in objdir
+#include "builtins/pipesize.hh"
 
 namespace bash
 {

@@ -66,28 +66,21 @@
  chet@po.cwru.edu
 */
 
-#include "config.h"
-
-#include <cstdio>
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
-#  ifdef _MINIX
-#    include <sys/types.h>
-#  endif
 #  include <unistd.h>
 #endif
 
-#include <cstring>
+#include "chartypes.hh"
+#include "bashintl.hh"
 
-#include "chartypes.h"
-#include "bashintl.h"
-
-#include "shell.h"
-#include "arrayfunc.h"
-#include "execute_cmd.h"
-#include "flags.h"
-#include "subst.h"
-#include "typemax.h"		/* INTMAX_MAX, INTMAX_MIN */
+#include "shell.hh"
+#include "arrayfunc.hh"
+#include "execute_cmd.hh"
+#include "flags.hh"
+#include "subst.hh"
+#include "typemax.hh"		/* INTMAX_MAX, INTMAX_MIN */
 
 namespace bash
 {

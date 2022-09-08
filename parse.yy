@@ -23,53 +23,51 @@
 %define api.value.type variant
 
 %{
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
-#include "filecntl.h"
+#include "filecntl.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
 #include <clocale>
-#include <cstdio>
-#include <csignal>
 
-#include "chartypes.h"
+#include "chartypes.hh"
 
-#include "bashintl.h"
+#include "bashintl.hh"
 
-#include "shell.h"
-#include "execute_cmd.h"
-#include "typemax.h"		/* SIZE_MAX if needed */
-#include "trap.h"
-#include "flags.h"
-#include "parser.h"
-#include "test.h"
-#include "builtins.h"
-#include "builtins/common.h"
-#include "builtins/builtext.h"
+#include "shell.hh"
+#include "execute_cmd.hh"
+#include "typemax.hh"		/* SIZE_MAX if needed */
+#include "trap.hh"
+#include "flags.hh"
+#include "parser.hh"
+#include "test.hh"
+#include "builtins.hh"
+#include "builtins/common.hh"
+#include "builtins/builtext.hh"
 
-#include "shmbutil.h"
+#include "shmbutil.hh"
 
 #if defined (READLINE)
-#  include <readline/readline.h>
+#  include "readline.hh"
 #endif /* READLINE */
 
 #if defined (HISTORY)
-#  include <readline/history.h>
+#  include "history.hh"
 #endif /* HISTORY */
 
-#include "jobs.h"
+#include "jobs.hh"
 
 #if !defined (JOB_CONTROL)
-extern int cleanup_dead_jobs ();
+// extern int cleanup_dead_jobs ();
 #endif /* !JOB_CONTROL */
 
 #if defined (ALIAS)
-#  include "alias.h"
+#  include "alias.hh"
 #else
 typedef void *alias_t;
 #endif /* ALIAS */
@@ -81,7 +79,7 @@ typedef void *alias_t;
 #    include <sys/types.h>
 #    include <sys/time.h>
 #  endif /* TM_IN_SYS_TIME */
-#  include "maxpath.h"
+#  include "maxpath.hh"
 #endif /* PROMPT_STRING_DECODE */
 
 namespace bash
