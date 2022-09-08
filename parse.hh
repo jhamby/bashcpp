@@ -42,8 +42,8 @@
 // especially those whose name start with YY_ or yy_.  They are
 // private implementation details that can be changed or removed.
 
-#ifndef YY_YY_Y_TAB_H_INCLUDED
-# define YY_YY_Y_TAB_H_INCLUDED
+#ifndef YY_YY_PARSE_HH_INCLUDED
+# define YY_YY_PARSE_HH_INCLUDED
 
 
 # include <cstdlib> // std::abort
@@ -178,7 +178,7 @@
 #endif
 
 namespace yy {
-#line 182 "y.tab.h"
+#line 182 "parse.hh"
 
 
 
@@ -2168,9 +2168,9 @@ switch (yykind)
 
 
 } // yy
-#line 2172 "y.tab.h"
+#line 2172 "parse.hh"
 
 
 
 
-#endif // !YY_YY_Y_TAB_H_INCLUDED
+#endif // !YY_YY_PARSE_HH_INCLUDED
