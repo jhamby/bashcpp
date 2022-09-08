@@ -37,7 +37,7 @@ AC_CONFIG_HEADERS(config.hh)
 AC_CONFIG_MACRO_DIRS([m4])
 
 AC_INIT([bash],[bashvers-relstatus],[jake.hamby@gmail.com])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 
 dnl checks for version info
 BASHVERS=bashvers
@@ -1235,12 +1235,7 @@ AC_SUBST(LOCAL_LDFLAGS)
 AC_SUBST(LOCAL_DEFS)
 
 AC_CONFIG_FILES([Makefile intl/Makefile doc/Makefile po/Makefile.in \
-	  lib/glob/Makefile lib/readline/Makefile lib/sh/Makefile lib/tilde/Makefile \
 	  examples/loadables/Makefile examples/loadables/Makefile.inc \
-	  examples/loadables/perl/Makefile builtins/Makefile pathnames.hh \
+	  examples/loadables/perl/Makefile pathnames.hh \
 	  support/bash.pc support/bashbug.sh])
-AC_CONFIG_COMMANDS([default],[
-# Makefile uses this timestamp file to record whether config.h is up to date.
-echo timestamp > stamp-h
-],[])
 AC_OUTPUT

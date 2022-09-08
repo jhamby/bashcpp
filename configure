@@ -35081,9 +35081,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile intl/Makefile doc/Makefile po/Makefile.in lib/glob/Makefile lib/readline/Makefile lib/sh/Makefile lib/tilde/Makefile examples/loadables/Makefile examples/loadables/Makefile.inc examples/loadables/perl/Makefile builtins/Makefile pathnames.hh support/bash.pc support/bashbug.sh"
-
-ac_config_commands="$ac_config_commands default"
+ac_config_files="$ac_config_files Makefile intl/Makefile doc/Makefile po/Makefile.in examples/loadables/Makefile examples/loadables/Makefile.inc examples/loadables/perl/Makefile pathnames.hh support/bash.pc support/bashbug.sh"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -36214,18 +36212,12 @@ do
     "intl/Makefile") CONFIG_FILES="$CONFIG_FILES intl/Makefile" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "po/Makefile.in") CONFIG_FILES="$CONFIG_FILES po/Makefile.in" ;;
-    "lib/glob/Makefile") CONFIG_FILES="$CONFIG_FILES lib/glob/Makefile" ;;
-    "lib/readline/Makefile") CONFIG_FILES="$CONFIG_FILES lib/readline/Makefile" ;;
-    "lib/sh/Makefile") CONFIG_FILES="$CONFIG_FILES lib/sh/Makefile" ;;
-    "lib/tilde/Makefile") CONFIG_FILES="$CONFIG_FILES lib/tilde/Makefile" ;;
     "examples/loadables/Makefile") CONFIG_FILES="$CONFIG_FILES examples/loadables/Makefile" ;;
     "examples/loadables/Makefile.inc") CONFIG_FILES="$CONFIG_FILES examples/loadables/Makefile.inc" ;;
     "examples/loadables/perl/Makefile") CONFIG_FILES="$CONFIG_FILES examples/loadables/perl/Makefile" ;;
-    "builtins/Makefile") CONFIG_FILES="$CONFIG_FILES builtins/Makefile" ;;
     "pathnames.hh") CONFIG_FILES="$CONFIG_FILES pathnames.hh" ;;
     "support/bash.pc") CONFIG_FILES="$CONFIG_FILES support/bash.pc" ;;
     "support/bashbug.sh") CONFIG_FILES="$CONFIG_FILES support/bashbug.sh" ;;
-    "default") CONFIG_COMMANDS="$CONFIG_COMMANDS default" ;;
     "po/stamp-it") CONFIG_COMMANDS="$CONFIG_COMMANDS po/stamp-it" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
@@ -37742,10 +37734,6 @@ _LT_EOF
         ;;
       esac
     done ;;
-    "default":C)
-# Makefile uses this timestamp file to record whether config.h is up to date.
-echo timestamp > stamp-h
- ;;
     "po/stamp-it":C)
     if  ! grep "^# INTLTOOL_MAKEFILE$" "po/Makefile.in" > /dev/null ; then
        as_fn_error $? "po/Makefile.in.in was not created by intltoolize." "$LINENO" 5

@@ -17,6 +17,9 @@
 .build
 .made
 
+**/.deps
+**/.dirstamp
+
 config.h
 config.status
 config.cache

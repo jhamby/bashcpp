@@ -16,10 +16,16 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-RLDIR = lib/readline
-SHDIR = lib/sh
-TLDIR = lib/tilde
-GLOBDIR = lib/glob
+ACLOCAL_AMFLAGS = -I m4
+
+RLDIR = $(srcdir)/lib/readline
+SHDIR = $(srcdir)/lib/sh
+TLDIR = $(srcdir)/lib/tilde
+GLBDIR = $(srcdir)/lib/glob
+BLTDIR = $(srcdir)/builtins
+
+# TODO: add docs and tests subdirs
+SUBDIRS = po
 
 bin_PROGRAMS = bash
 
@@ -32,7 +38,7 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	stringlib.cc locale.cc findcmd.cc redir.cc \
 	pcomplete.cc pcomplib.cc syntax.cc \
 	alias.hh arrayfunc.hh array.hh assoc.hh bashintl.hh \
-	bashtypes.hh builtins.hh command.hh config-bot.hh config-top.hh config.hh \
+	bashtypes.hh builtins.hh command.hh config-bot.hh config-top.hh \
 	conftypes.hh error.hh execute_cmd.hh externs.hh findcmd.hh flags.hh \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
 	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
@@ -44,16 +50,117 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
 	include/unionwait.hh pathnames.hh
 
-bash_LDADD = $(RLDIR)/libreadlinecpp.a $(SHDIR)/libsh.a \
-	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a \
-	builtins/libbuiltins.a
+bash_LDADD = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
 
-BUILT_SOURCES = parse.hh builtins/pipesize.hh
+BUILT_SOURCES = parse.hh pipesize.hh builtext.hh builtins.cc
+
 AM_YFLAGS = -d
-
-SUBDIRS = $(RLDIR) $(SHDIR) $(TLDIR) $(GLOBDIR) builtins doc po tests
-
-ACLOCAL_AMFLAGS = -I m4
 
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
 	-I$(srcdir)/lib/tilde -I$(srcdir)/builtins
+
+noinst_LIBRARIES = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
+
+DEFSRC = $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
+	$(BLTDIR)/builtin_def.cc $(BLTDIR)/caller_def.cc $(BLTDIR)/cd_def.cc \
+	$(BLTDIR)/colon_def.cc $(BLTDIR)/command_def.cc \
+	$(BLTDIR)/declare_def.cc $(BLTDIR)/echo_def.cc \
+	$(BLTDIR)/enable_def.cc $(BLTDIR)/eval_def.cc $(BLTDIR)/getopts_def.cc \
+	$(BLTDIR)/exec_def.cc $(BLTDIR)/exit_def.cc $(BLTDIR)/fc_def.cc \
+	$(BLTDIR)/fg_bg_def.cc $(BLTDIR)/hash_def.cc $(BLTDIR)/help_def.cc \
+	$(BLTDIR)/history_def.cc $(BLTDIR)/jobs_def.cc $(BLTDIR)/kill_def.cc \
+	$(BLTDIR)/let_def.cc $(BLTDIR)/read_def.cc $(BLTDIR)/return_def.cc \
+	$(BLTDIR)/set_def.cc $(BLTDIR)/setattr_def.cc $(BLTDIR)/shift_def.cc \
+	$(BLTDIR)/source_def.cc $(BLTDIR)/suspend_def.cc $(BLTDIR)/test_def.cc \
+	$(BLTDIR)/times_def.cc $(BLTDIR)/trap_def.cc $(BLTDIR)/type_def.cc \
+	$(BLTDIR)/ulimit_def.cc $(BLTDIR)/umask_def.cc $(BLTDIR)/wait_def.cc \
+	$(BLTDIR)/reserved_def.cc $(BLTDIR)/pushd_def.cc $(BLTDIR)/shopt_def.cc \
+	$(BLTDIR)/printf_def.cc $(BLTDIR)/complete_def.cc $(BLTDIR)/mapfile_def.cc
+
+libbuiltins_a_SOURCES = $(DEFSRC) \
+	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
+	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh \
+	$(BLTDIR)/builtins.cc
+
+noinst_PROGRAMS = mkbuiltins psize
+
+mkbuiltins_SOURCES = $(BLTDIR)/mkbuiltins.cc
+
+psize_SOURCES = $(BLTDIR)/psize.cc
+
+PSIZE = psize$(EXEEXT)
+MKBUILTINS = mkbuiltins$(EXEEXT)
+
+DIRECTDEFINE = -D $(srcdir)
+HELPDIRDEFINE = @HELPDIRDEFINE@
+HELPSTRINGS = @HELPSTRINGS@
+
+# link to a known filename for shell script to expect
+psize.aux: $(CONFIG_HEADER) $(PSIZE)
+	-$(LN_S) $(PSIZE) psize.aux
+
+pipesize.hh: psize.aux $(srcdir)/builtins/psize.sh
+	$(SHELL) $(srcdir)/builtins/psize.sh > $@
+
+builtext.hh builtins.cc: $(CONFIG_HEADER) $(MKBUILTINS) $(DEFSRC)
+	@-if test -f builtins.cc; then mv -f builtins.cc old-builtins.cc; fi
+	@-if test -f builtext.hh; then mv -f builtext.hh old-builtext.hh; fi
+	./$(MKBUILTINS) -externfile builtext.hh -structfile builtins.cc \
+	    -noproduction $(DIRECTDEFINE) $(HELPDIRDEFINE) $(HELPSTRINGS) $(DEFSRC)
+	@-if cmp -s old-builtext.hh builtext.hh 2>/dev/null; then \
+		mv old-builtext.hh builtext.hh; \
+	 else \
+		$(RM) old-builtext.hh; \
+	 fi
+	@-if cmp -s old-builtins.cc builtins.cc 2>/dev/null; then \
+		mv old-builtins.cc builtins.cc; \
+	 else \
+		$(RM) old-builtins.cc; \
+	 fi
+
+libglob_a_SOURCES = $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc $(GLBDIR)/gmisc.cc \
+	$(GLBDIR)/xmbsrtowcs.cc $(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh \
+	$(GLBDIR)/glob_loop.hh $(GLBDIR)/gm_loop.hh $(GLBDIR)/ndir.hh \
+	$(GLBDIR)/sm_loop.hh $(GLBDIR)/strmatch.hh
+
+# TODO: add a separate libhistorycpp_a_SOURCES rule for non-readline builds.
+libreadlinecpp_a_SOURCES = $(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
+	$(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc $(RLDIR)/rltty.cc \
+	$(RLDIR)/complete.cc $(RLDIR)/bind.cc $(RLDIR)/isearch.cc \
+	$(RLDIR)/display.cc $(RLDIR)/signals.cc $(RLDIR)/emacs_keymap.hh \
+	$(RLDIR)/vi_keymap.hh $(RLDIR)/util.cc $(RLDIR)/kill.cc \
+	$(RLDIR)/undo.cc $(RLDIR)/macro.cc $(RLDIR)/input.cc \
+	$(RLDIR)/callback.cc $(RLDIR)/terminal.cc \
+	$(RLDIR)/history.cc $(RLDIR)/histsearch.cc $(RLDIR)/histexpand.cc \
+	$(RLDIR)/histfile.cc $(RLDIR)/nls.cc $(RLDIR)/search.cc \
+	$(RLDIR)/shell.cc $(RLDIR)/tilde.cc $(RLDIR)/text.cc $(RLDIR)/misc.cc \
+	$(RLDIR)/colors.cc $(RLDIR)/parse-colors.cc $(RLDIR)/mbutil.cc \
+	$(RLDIR)/chardefs.hh $(RLDIR)/colors.hh $(RLDIR)/history.hh \
+	$(RLDIR)/parse-colors.hh $(RLDIR)/posixdir.hh $(RLDIR)/posixselect.hh \
+	$(RLDIR)/posixstat.hh $(RLDIR)/readline.hh $(RLDIR)/rlconf.hh \
+	$(RLDIR)/rldefs.hh $(RLDIR)/rlmbutil.hh $(RLDIR)/rlprivate.hh \
+	$(RLDIR)/rlshell.hh $(RLDIR)/rltty.hh $(RLDIR)/rlwinsize.hh \
+	$(RLDIR)/tcap.hh $(RLDIR)/tilde.hh
+
+libsh_a_SOURCES = $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
+	$(SHDIR)/getenv.cc $(SHDIR)/oslib.cc $(SHDIR)/setlinebuf.cc \
+	$(SHDIR)/strcasecmp.cc $(SHDIR)/strerror.cc \
+	$(SHDIR)/vprint.cc $(SHDIR)/rename.cc $(SHDIR)/zread.cc \
+	$(SHDIR)/inet_aton.cc $(SHDIR)/netconn.cc $(SHDIR)/netopen.cc \
+	$(SHDIR)/strpbrk.cc $(SHDIR)/timeval.cc $(SHDIR)/makepath.cc \
+	$(SHDIR)/pathcanon.cc $(SHDIR)/pathphys.cc $(SHDIR)/tmpfile.cc \
+	$(SHDIR)/spell.cc $(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
+	$(SHDIR)/strcasestr.cc $(SHDIR)/snprintf.cc $(SHDIR)/mailstat.cc \
+	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
+	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc \
+	$(SHDIR)/strtoimax.cc $(SHDIR)/strtoumax.cc \
+	$(SHDIR)/mktime.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
+	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
+	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
+	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
+	$(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc $(SHDIR)/wcswidth.cc \
+	$(SHDIR)/wcsnwidth.cc $(SHDIR)/shmbchar.cc \
+	$(SHDIR)/random.cc $(SHDIR)/gettimeofday.cc
+
+libtilde_a_SOURCES = $(TLDIR)/tilde.cc

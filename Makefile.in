@@ -32,6 +32,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 VPATH = @srcdir@
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
@@ -107,6 +108,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = bash$(EXEEXT)
+noinst_PROGRAMS = mkbuiltins$(EXEEXT) psize$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
@@ -147,7 +149,105 @@ CONFIG_CLEAN_FILES = intl/Makefile doc/Makefile \
 	support/bashbug.sh
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
-PROGRAMS = $(bin_PROGRAMS)
+PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
+LIBRARIES = $(noinst_LIBRARIES)
+ARFLAGS = cru
+AM_V_AR = $(am__v_AR_@AM_V@)
+am__v_AR_ = $(am__v_AR_@AM_DEFAULT_V@)
+am__v_AR_0 = @echo "  AR      " $@;
+am__v_AR_1 = 
+libbuiltins_a_AR = $(AR) $(ARFLAGS)
+libbuiltins_a_LIBADD =
+am__dirstamp = $(am__leading_dot)dirstamp
+am__objects_1 = $(BLTDIR)/alias_def.$(OBJEXT) \
+	$(BLTDIR)/bind_def.$(OBJEXT) $(BLTDIR)/break_def.$(OBJEXT) \
+	$(BLTDIR)/builtin_def.$(OBJEXT) $(BLTDIR)/caller_def.$(OBJEXT) \
+	$(BLTDIR)/cd_def.$(OBJEXT) $(BLTDIR)/colon_def.$(OBJEXT) \
+	$(BLTDIR)/command_def.$(OBJEXT) \
+	$(BLTDIR)/declare_def.$(OBJEXT) $(BLTDIR)/echo_def.$(OBJEXT) \
+	$(BLTDIR)/enable_def.$(OBJEXT) $(BLTDIR)/eval_def.$(OBJEXT) \
+	$(BLTDIR)/getopts_def.$(OBJEXT) $(BLTDIR)/exec_def.$(OBJEXT) \
+	$(BLTDIR)/exit_def.$(OBJEXT) $(BLTDIR)/fc_def.$(OBJEXT) \
+	$(BLTDIR)/fg_bg_def.$(OBJEXT) $(BLTDIR)/hash_def.$(OBJEXT) \
+	$(BLTDIR)/help_def.$(OBJEXT) $(BLTDIR)/history_def.$(OBJEXT) \
+	$(BLTDIR)/jobs_def.$(OBJEXT) $(BLTDIR)/kill_def.$(OBJEXT) \
+	$(BLTDIR)/let_def.$(OBJEXT) $(BLTDIR)/read_def.$(OBJEXT) \
+	$(BLTDIR)/return_def.$(OBJEXT) $(BLTDIR)/set_def.$(OBJEXT) \
+	$(BLTDIR)/setattr_def.$(OBJEXT) $(BLTDIR)/shift_def.$(OBJEXT) \
+	$(BLTDIR)/source_def.$(OBJEXT) $(BLTDIR)/suspend_def.$(OBJEXT) \
+	$(BLTDIR)/test_def.$(OBJEXT) $(BLTDIR)/times_def.$(OBJEXT) \
+	$(BLTDIR)/trap_def.$(OBJEXT) $(BLTDIR)/type_def.$(OBJEXT) \
+	$(BLTDIR)/ulimit_def.$(OBJEXT) $(BLTDIR)/umask_def.$(OBJEXT) \
+	$(BLTDIR)/wait_def.$(OBJEXT) $(BLTDIR)/reserved_def.$(OBJEXT) \
+	$(BLTDIR)/pushd_def.$(OBJEXT) $(BLTDIR)/shopt_def.$(OBJEXT) \
+	$(BLTDIR)/printf_def.$(OBJEXT) \
+	$(BLTDIR)/complete_def.$(OBJEXT) \
+	$(BLTDIR)/mapfile_def.$(OBJEXT)
+am_libbuiltins_a_OBJECTS = $(am__objects_1) $(BLTDIR)/common.$(OBJEXT) \
+	$(BLTDIR)/evalstring.$(OBJEXT) $(BLTDIR)/evalfile.$(OBJEXT) \
+	$(BLTDIR)/getopt.$(OBJEXT) $(BLTDIR)/bashgetopt.$(OBJEXT) \
+	$(BLTDIR)/builtins.$(OBJEXT)
+libbuiltins_a_OBJECTS = $(am_libbuiltins_a_OBJECTS)
+libglob_a_AR = $(AR) $(ARFLAGS)
+libglob_a_LIBADD =
+am_libglob_a_OBJECTS = $(GLBDIR)/glob.$(OBJEXT) \
+	$(GLBDIR)/smatch.$(OBJEXT) $(GLBDIR)/gmisc.$(OBJEXT) \
+	$(GLBDIR)/xmbsrtowcs.$(OBJEXT)
+libglob_a_OBJECTS = $(am_libglob_a_OBJECTS)
+libreadlinecpp_a_AR = $(AR) $(ARFLAGS)
+libreadlinecpp_a_LIBADD =
+am_libreadlinecpp_a_OBJECTS = $(RLDIR)/readline.$(OBJEXT) \
+	$(RLDIR)/funmap.$(OBJEXT) $(RLDIR)/keymaps.$(OBJEXT) \
+	$(RLDIR)/vi_mode.$(OBJEXT) $(RLDIR)/parens.$(OBJEXT) \
+	$(RLDIR)/rltty.$(OBJEXT) $(RLDIR)/complete.$(OBJEXT) \
+	$(RLDIR)/bind.$(OBJEXT) $(RLDIR)/isearch.$(OBJEXT) \
+	$(RLDIR)/display.$(OBJEXT) $(RLDIR)/signals.$(OBJEXT) \
+	$(RLDIR)/util.$(OBJEXT) $(RLDIR)/kill.$(OBJEXT) \
+	$(RLDIR)/undo.$(OBJEXT) $(RLDIR)/macro.$(OBJEXT) \
+	$(RLDIR)/input.$(OBJEXT) $(RLDIR)/callback.$(OBJEXT) \
+	$(RLDIR)/terminal.$(OBJEXT) $(RLDIR)/history.$(OBJEXT) \
+	$(RLDIR)/histsearch.$(OBJEXT) $(RLDIR)/histexpand.$(OBJEXT) \
+	$(RLDIR)/histfile.$(OBJEXT) $(RLDIR)/nls.$(OBJEXT) \
+	$(RLDIR)/search.$(OBJEXT) $(RLDIR)/shell.$(OBJEXT) \
+	$(RLDIR)/tilde.$(OBJEXT) $(RLDIR)/text.$(OBJEXT) \
+	$(RLDIR)/misc.$(OBJEXT) $(RLDIR)/colors.$(OBJEXT) \
+	$(RLDIR)/parse-colors.$(OBJEXT) $(RLDIR)/mbutil.$(OBJEXT)
+libreadlinecpp_a_OBJECTS = $(am_libreadlinecpp_a_OBJECTS)
+libsh_a_AR = $(AR) $(ARFLAGS)
+libsh_a_LIBADD =
+am_libsh_a_OBJECTS = $(SHDIR)/clktck.$(OBJEXT) \
+	$(SHDIR)/clock.$(OBJEXT) $(SHDIR)/getcwd.$(OBJEXT) \
+	$(SHDIR)/getenv.$(OBJEXT) $(SHDIR)/oslib.$(OBJEXT) \
+	$(SHDIR)/setlinebuf.$(OBJEXT) $(SHDIR)/strcasecmp.$(OBJEXT) \
+	$(SHDIR)/strerror.$(OBJEXT) $(SHDIR)/vprint.$(OBJEXT) \
+	$(SHDIR)/rename.$(OBJEXT) $(SHDIR)/zread.$(OBJEXT) \
+	$(SHDIR)/inet_aton.$(OBJEXT) $(SHDIR)/netconn.$(OBJEXT) \
+	$(SHDIR)/netopen.$(OBJEXT) $(SHDIR)/strpbrk.$(OBJEXT) \
+	$(SHDIR)/timeval.$(OBJEXT) $(SHDIR)/makepath.$(OBJEXT) \
+	$(SHDIR)/pathcanon.$(OBJEXT) $(SHDIR)/pathphys.$(OBJEXT) \
+	$(SHDIR)/tmpfile.$(OBJEXT) $(SHDIR)/spell.$(OBJEXT) \
+	$(SHDIR)/shquote.$(OBJEXT) $(SHDIR)/strtrans.$(OBJEXT) \
+	$(SHDIR)/strcasestr.$(OBJEXT) $(SHDIR)/snprintf.$(OBJEXT) \
+	$(SHDIR)/mailstat.$(OBJEXT) $(SHDIR)/fmtulong.$(OBJEXT) \
+	$(SHDIR)/fmtullong.$(OBJEXT) $(SHDIR)/fmtumax.$(OBJEXT) \
+	$(SHDIR)/shmatch.$(OBJEXT) $(SHDIR)/strnlen.$(OBJEXT) \
+	$(SHDIR)/strtoimax.$(OBJEXT) $(SHDIR)/strtoumax.$(OBJEXT) \
+	$(SHDIR)/mktime.$(OBJEXT) $(SHDIR)/mbschr.$(OBJEXT) \
+	$(SHDIR)/zcatfd.$(OBJEXT) $(SHDIR)/zmapfd.$(OBJEXT) \
+	$(SHDIR)/winsize.$(OBJEXT) $(SHDIR)/eaccess.$(OBJEXT) \
+	$(SHDIR)/fpurge.$(OBJEXT) $(SHDIR)/zgetline.$(OBJEXT) \
+	$(SHDIR)/uconvert.$(OBJEXT) $(SHDIR)/ufuncs.$(OBJEXT) \
+	$(SHDIR)/casemod.$(OBJEXT) $(SHDIR)/dprintf.$(OBJEXT) \
+	$(SHDIR)/input_avail.$(OBJEXT) $(SHDIR)/fnxform.$(OBJEXT) \
+	$(SHDIR)/strchrnul.$(OBJEXT) $(SHDIR)/unicode.$(OBJEXT) \
+	$(SHDIR)/wcswidth.$(OBJEXT) $(SHDIR)/wcsnwidth.$(OBJEXT) \
+	$(SHDIR)/shmbchar.$(OBJEXT) $(SHDIR)/random.$(OBJEXT) \
+	$(SHDIR)/gettimeofday.$(OBJEXT)
+libsh_a_OBJECTS = $(am_libsh_a_OBJECTS)
+libtilde_a_AR = $(AR) $(ARFLAGS)
+libtilde_a_LIBADD =
+am_libtilde_a_OBJECTS = $(TLDIR)/tilde.$(OBJEXT)
+libtilde_a_OBJECTS = $(am_libtilde_a_OBJECTS)
 am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	general.$(OBJEXT) dispose_cmd.$(OBJEXT) execute_cmd.$(OBJEXT) \
 	variables.$(OBJEXT) version.$(OBJEXT) expr.$(OBJEXT) \
@@ -162,13 +262,18 @@ am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	findcmd.$(OBJEXT) redir.$(OBJEXT) pcomplete.$(OBJEXT) \
 	pcomplib.$(OBJEXT) syntax.$(OBJEXT)
 bash_OBJECTS = $(am_bash_OBJECTS)
-bash_DEPENDENCIES = $(RLDIR)/libreadlinecpp.a $(SHDIR)/libsh.a \
-	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a \
-	builtins/libbuiltins.a
+bash_DEPENDENCIES = libreadlinecpp.a libsh.a libtilde.a libglob.a \
+	libbuiltins.a
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am_mkbuiltins_OBJECTS = $(BLTDIR)/mkbuiltins.$(OBJEXT)
+mkbuiltins_OBJECTS = $(am_mkbuiltins_OBJECTS)
+mkbuiltins_LDADD = $(LDADD)
+am_psize_OBJECTS = $(BLTDIR)/psize.$(OBJEXT)
+psize_OBJECTS = $(am_psize_OBJECTS)
+psize_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -184,7 +289,101 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/./support/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/alias.Po ./$(DEPDIR)/array.Po \
+am__depfiles_remade = $(BLTDIR)/$(DEPDIR)/alias_def.Po \
+	$(BLTDIR)/$(DEPDIR)/bashgetopt.Po \
+	$(BLTDIR)/$(DEPDIR)/bind_def.Po \
+	$(BLTDIR)/$(DEPDIR)/break_def.Po \
+	$(BLTDIR)/$(DEPDIR)/builtin_def.Po \
+	$(BLTDIR)/$(DEPDIR)/builtins.Po \
+	$(BLTDIR)/$(DEPDIR)/caller_def.Po \
+	$(BLTDIR)/$(DEPDIR)/cd_def.Po $(BLTDIR)/$(DEPDIR)/colon_def.Po \
+	$(BLTDIR)/$(DEPDIR)/command_def.Po \
+	$(BLTDIR)/$(DEPDIR)/common.Po \
+	$(BLTDIR)/$(DEPDIR)/complete_def.Po \
+	$(BLTDIR)/$(DEPDIR)/declare_def.Po \
+	$(BLTDIR)/$(DEPDIR)/echo_def.Po \
+	$(BLTDIR)/$(DEPDIR)/enable_def.Po \
+	$(BLTDIR)/$(DEPDIR)/eval_def.Po \
+	$(BLTDIR)/$(DEPDIR)/evalfile.Po \
+	$(BLTDIR)/$(DEPDIR)/evalstring.Po \
+	$(BLTDIR)/$(DEPDIR)/exec_def.Po \
+	$(BLTDIR)/$(DEPDIR)/exit_def.Po $(BLTDIR)/$(DEPDIR)/fc_def.Po \
+	$(BLTDIR)/$(DEPDIR)/fg_bg_def.Po $(BLTDIR)/$(DEPDIR)/getopt.Po \
+	$(BLTDIR)/$(DEPDIR)/getopts_def.Po \
+	$(BLTDIR)/$(DEPDIR)/hash_def.Po \
+	$(BLTDIR)/$(DEPDIR)/help_def.Po \
+	$(BLTDIR)/$(DEPDIR)/history_def.Po \
+	$(BLTDIR)/$(DEPDIR)/jobs_def.Po \
+	$(BLTDIR)/$(DEPDIR)/kill_def.Po $(BLTDIR)/$(DEPDIR)/let_def.Po \
+	$(BLTDIR)/$(DEPDIR)/mapfile_def.Po \
+	$(BLTDIR)/$(DEPDIR)/mkbuiltins.Po \
+	$(BLTDIR)/$(DEPDIR)/printf_def.Po $(BLTDIR)/$(DEPDIR)/psize.Po \
+	$(BLTDIR)/$(DEPDIR)/pushd_def.Po \
+	$(BLTDIR)/$(DEPDIR)/read_def.Po \
+	$(BLTDIR)/$(DEPDIR)/reserved_def.Po \
+	$(BLTDIR)/$(DEPDIR)/return_def.Po \
+	$(BLTDIR)/$(DEPDIR)/set_def.Po \
+	$(BLTDIR)/$(DEPDIR)/setattr_def.Po \
+	$(BLTDIR)/$(DEPDIR)/shift_def.Po \
+	$(BLTDIR)/$(DEPDIR)/shopt_def.Po \
+	$(BLTDIR)/$(DEPDIR)/source_def.Po \
+	$(BLTDIR)/$(DEPDIR)/suspend_def.Po \
+	$(BLTDIR)/$(DEPDIR)/test_def.Po \
+	$(BLTDIR)/$(DEPDIR)/times_def.Po \
+	$(BLTDIR)/$(DEPDIR)/trap_def.Po \
+	$(BLTDIR)/$(DEPDIR)/type_def.Po \
+	$(BLTDIR)/$(DEPDIR)/ulimit_def.Po \
+	$(BLTDIR)/$(DEPDIR)/umask_def.Po \
+	$(BLTDIR)/$(DEPDIR)/wait_def.Po $(GLBDIR)/$(DEPDIR)/glob.Po \
+	$(GLBDIR)/$(DEPDIR)/gmisc.Po $(GLBDIR)/$(DEPDIR)/smatch.Po \
+	$(GLBDIR)/$(DEPDIR)/xmbsrtowcs.Po $(RLDIR)/$(DEPDIR)/bind.Po \
+	$(RLDIR)/$(DEPDIR)/callback.Po $(RLDIR)/$(DEPDIR)/colors.Po \
+	$(RLDIR)/$(DEPDIR)/complete.Po $(RLDIR)/$(DEPDIR)/display.Po \
+	$(RLDIR)/$(DEPDIR)/funmap.Po $(RLDIR)/$(DEPDIR)/histexpand.Po \
+	$(RLDIR)/$(DEPDIR)/histfile.Po $(RLDIR)/$(DEPDIR)/history.Po \
+	$(RLDIR)/$(DEPDIR)/histsearch.Po $(RLDIR)/$(DEPDIR)/input.Po \
+	$(RLDIR)/$(DEPDIR)/isearch.Po $(RLDIR)/$(DEPDIR)/keymaps.Po \
+	$(RLDIR)/$(DEPDIR)/kill.Po $(RLDIR)/$(DEPDIR)/macro.Po \
+	$(RLDIR)/$(DEPDIR)/mbutil.Po $(RLDIR)/$(DEPDIR)/misc.Po \
+	$(RLDIR)/$(DEPDIR)/nls.Po $(RLDIR)/$(DEPDIR)/parens.Po \
+	$(RLDIR)/$(DEPDIR)/parse-colors.Po \
+	$(RLDIR)/$(DEPDIR)/readline.Po $(RLDIR)/$(DEPDIR)/rltty.Po \
+	$(RLDIR)/$(DEPDIR)/search.Po $(RLDIR)/$(DEPDIR)/shell.Po \
+	$(RLDIR)/$(DEPDIR)/signals.Po $(RLDIR)/$(DEPDIR)/terminal.Po \
+	$(RLDIR)/$(DEPDIR)/text.Po $(RLDIR)/$(DEPDIR)/tilde.Po \
+	$(RLDIR)/$(DEPDIR)/undo.Po $(RLDIR)/$(DEPDIR)/util.Po \
+	$(RLDIR)/$(DEPDIR)/vi_mode.Po $(SHDIR)/$(DEPDIR)/casemod.Po \
+	$(SHDIR)/$(DEPDIR)/clktck.Po $(SHDIR)/$(DEPDIR)/clock.Po \
+	$(SHDIR)/$(DEPDIR)/dprintf.Po $(SHDIR)/$(DEPDIR)/eaccess.Po \
+	$(SHDIR)/$(DEPDIR)/fmtullong.Po $(SHDIR)/$(DEPDIR)/fmtulong.Po \
+	$(SHDIR)/$(DEPDIR)/fmtumax.Po $(SHDIR)/$(DEPDIR)/fnxform.Po \
+	$(SHDIR)/$(DEPDIR)/fpurge.Po $(SHDIR)/$(DEPDIR)/getcwd.Po \
+	$(SHDIR)/$(DEPDIR)/getenv.Po \
+	$(SHDIR)/$(DEPDIR)/gettimeofday.Po \
+	$(SHDIR)/$(DEPDIR)/inet_aton.Po \
+	$(SHDIR)/$(DEPDIR)/input_avail.Po \
+	$(SHDIR)/$(DEPDIR)/mailstat.Po $(SHDIR)/$(DEPDIR)/makepath.Po \
+	$(SHDIR)/$(DEPDIR)/mbschr.Po $(SHDIR)/$(DEPDIR)/mktime.Po \
+	$(SHDIR)/$(DEPDIR)/netconn.Po $(SHDIR)/$(DEPDIR)/netopen.Po \
+	$(SHDIR)/$(DEPDIR)/oslib.Po $(SHDIR)/$(DEPDIR)/pathcanon.Po \
+	$(SHDIR)/$(DEPDIR)/pathphys.Po $(SHDIR)/$(DEPDIR)/random.Po \
+	$(SHDIR)/$(DEPDIR)/rename.Po $(SHDIR)/$(DEPDIR)/setlinebuf.Po \
+	$(SHDIR)/$(DEPDIR)/shmatch.Po $(SHDIR)/$(DEPDIR)/shmbchar.Po \
+	$(SHDIR)/$(DEPDIR)/shquote.Po $(SHDIR)/$(DEPDIR)/snprintf.Po \
+	$(SHDIR)/$(DEPDIR)/spell.Po $(SHDIR)/$(DEPDIR)/strcasecmp.Po \
+	$(SHDIR)/$(DEPDIR)/strcasestr.Po \
+	$(SHDIR)/$(DEPDIR)/strchrnul.Po $(SHDIR)/$(DEPDIR)/strerror.Po \
+	$(SHDIR)/$(DEPDIR)/strnlen.Po $(SHDIR)/$(DEPDIR)/strpbrk.Po \
+	$(SHDIR)/$(DEPDIR)/strtoimax.Po \
+	$(SHDIR)/$(DEPDIR)/strtoumax.Po $(SHDIR)/$(DEPDIR)/strtrans.Po \
+	$(SHDIR)/$(DEPDIR)/timeval.Po $(SHDIR)/$(DEPDIR)/tmpfile.Po \
+	$(SHDIR)/$(DEPDIR)/uconvert.Po $(SHDIR)/$(DEPDIR)/ufuncs.Po \
+	$(SHDIR)/$(DEPDIR)/unicode.Po $(SHDIR)/$(DEPDIR)/vprint.Po \
+	$(SHDIR)/$(DEPDIR)/wcsnwidth.Po $(SHDIR)/$(DEPDIR)/wcswidth.Po \
+	$(SHDIR)/$(DEPDIR)/winsize.Po $(SHDIR)/$(DEPDIR)/zcatfd.Po \
+	$(SHDIR)/$(DEPDIR)/zgetline.Po $(SHDIR)/$(DEPDIR)/zmapfd.Po \
+	$(SHDIR)/$(DEPDIR)/zread.Po $(TLDIR)/$(DEPDIR)/tilde.Po \
+	./$(DEPDIR)/alias.Po ./$(DEPDIR)/array.Po \
 	./$(DEPDIR)/arrayfunc.Po ./$(DEPDIR)/assoc.Po \
 	./$(DEPDIR)/bashhist.Po ./$(DEPDIR)/bashline.Po \
 	./$(DEPDIR)/bracecomp.Po ./$(DEPDIR)/braces.Po \
@@ -250,8 +449,14 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(bash_SOURCES)
-DIST_SOURCES = $(bash_SOURCES)
+SOURCES = $(libbuiltins_a_SOURCES) $(libglob_a_SOURCES) \
+	$(libreadlinecpp_a_SOURCES) $(libsh_a_SOURCES) \
+	$(libtilde_a_SOURCES) $(bash_SOURCES) $(mkbuiltins_SOURCES) \
+	$(psize_SOURCES)
+DIST_SOURCES = $(libbuiltins_a_SOURCES) $(libglob_a_SOURCES) \
+	$(libreadlinecpp_a_SOURCES) $(libsh_a_SOURCES) \
+	$(libtilde_a_SOURCES) $(bash_SOURCES) $(mkbuiltins_SOURCES) \
+	$(psize_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -602,10 +807,15 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-RLDIR = lib/readline
-SHDIR = lib/sh
-TLDIR = lib/tilde
-GLOBDIR = lib/glob
+ACLOCAL_AMFLAGS = -I m4
+RLDIR = $(srcdir)/lib/readline
+SHDIR = $(srcdir)/lib/sh
+TLDIR = $(srcdir)/lib/tilde
+GLBDIR = $(srcdir)/lib/glob
+BLTDIR = $(srcdir)/builtins
+
+# TODO: add docs and tests subdirs
+SUBDIRS = po
 bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc \
 	expr.cc copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc mailcheck.cc \
@@ -615,7 +825,7 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	stringlib.cc locale.cc findcmd.cc redir.cc \
 	pcomplete.cc pcomplib.cc syntax.cc \
 	alias.hh arrayfunc.hh array.hh assoc.hh bashintl.hh \
-	bashtypes.hh builtins.hh command.hh config-bot.hh config-top.hh config.hh \
+	bashtypes.hh builtins.hh command.hh config-bot.hh config-top.hh \
 	conftypes.hh error.hh execute_cmd.hh externs.hh findcmd.hh flags.hh \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
 	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
@@ -627,17 +837,86 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
 	include/unionwait.hh pathnames.hh
 
-bash_LDADD = $(RLDIR)/libreadlinecpp.a $(SHDIR)/libsh.a \
-	$(TLDIR)/libtilde.a $(GLOBDIR)/libglob.a \
-	builtins/libbuiltins.a
-
-BUILT_SOURCES = parse.hh builtins/pipesize.hh
+bash_LDADD = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
+BUILT_SOURCES = parse.hh pipesize.hh builtext.hh builtins.cc
 AM_YFLAGS = -d
-SUBDIRS = $(RLDIR) $(SHDIR) $(TLDIR) $(GLOBDIR) builtins doc po tests
-ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
 	-I$(srcdir)/lib/tilde -I$(srcdir)/builtins
 
+noinst_LIBRARIES = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
+DEFSRC = $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
+	$(BLTDIR)/builtin_def.cc $(BLTDIR)/caller_def.cc $(BLTDIR)/cd_def.cc \
+	$(BLTDIR)/colon_def.cc $(BLTDIR)/command_def.cc \
+	$(BLTDIR)/declare_def.cc $(BLTDIR)/echo_def.cc \
+	$(BLTDIR)/enable_def.cc $(BLTDIR)/eval_def.cc $(BLTDIR)/getopts_def.cc \
+	$(BLTDIR)/exec_def.cc $(BLTDIR)/exit_def.cc $(BLTDIR)/fc_def.cc \
+	$(BLTDIR)/fg_bg_def.cc $(BLTDIR)/hash_def.cc $(BLTDIR)/help_def.cc \
+	$(BLTDIR)/history_def.cc $(BLTDIR)/jobs_def.cc $(BLTDIR)/kill_def.cc \
+	$(BLTDIR)/let_def.cc $(BLTDIR)/read_def.cc $(BLTDIR)/return_def.cc \
+	$(BLTDIR)/set_def.cc $(BLTDIR)/setattr_def.cc $(BLTDIR)/shift_def.cc \
+	$(BLTDIR)/source_def.cc $(BLTDIR)/suspend_def.cc $(BLTDIR)/test_def.cc \
+	$(BLTDIR)/times_def.cc $(BLTDIR)/trap_def.cc $(BLTDIR)/type_def.cc \
+	$(BLTDIR)/ulimit_def.cc $(BLTDIR)/umask_def.cc $(BLTDIR)/wait_def.cc \
+	$(BLTDIR)/reserved_def.cc $(BLTDIR)/pushd_def.cc $(BLTDIR)/shopt_def.cc \
+	$(BLTDIR)/printf_def.cc $(BLTDIR)/complete_def.cc $(BLTDIR)/mapfile_def.cc
+
+libbuiltins_a_SOURCES = $(DEFSRC) \
+	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
+	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh \
+	$(BLTDIR)/builtins.cc
+
+mkbuiltins_SOURCES = $(BLTDIR)/mkbuiltins.cc
+psize_SOURCES = $(BLTDIR)/psize.cc
+PSIZE = psize$(EXEEXT)
+MKBUILTINS = mkbuiltins$(EXEEXT)
+DIRECTDEFINE = -D $(srcdir)
+libglob_a_SOURCES = $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc $(GLBDIR)/gmisc.cc \
+	$(GLBDIR)/xmbsrtowcs.cc $(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh \
+	$(GLBDIR)/glob_loop.hh $(GLBDIR)/gm_loop.hh $(GLBDIR)/ndir.hh \
+	$(GLBDIR)/sm_loop.hh $(GLBDIR)/strmatch.hh
+
+
+# TODO: add a separate libhistorycpp_a_SOURCES rule for non-readline builds.
+libreadlinecpp_a_SOURCES = $(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
+	$(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc $(RLDIR)/rltty.cc \
+	$(RLDIR)/complete.cc $(RLDIR)/bind.cc $(RLDIR)/isearch.cc \
+	$(RLDIR)/display.cc $(RLDIR)/signals.cc $(RLDIR)/emacs_keymap.hh \
+	$(RLDIR)/vi_keymap.hh $(RLDIR)/util.cc $(RLDIR)/kill.cc \
+	$(RLDIR)/undo.cc $(RLDIR)/macro.cc $(RLDIR)/input.cc \
+	$(RLDIR)/callback.cc $(RLDIR)/terminal.cc \
+	$(RLDIR)/history.cc $(RLDIR)/histsearch.cc $(RLDIR)/histexpand.cc \
+	$(RLDIR)/histfile.cc $(RLDIR)/nls.cc $(RLDIR)/search.cc \
+	$(RLDIR)/shell.cc $(RLDIR)/tilde.cc $(RLDIR)/text.cc $(RLDIR)/misc.cc \
+	$(RLDIR)/colors.cc $(RLDIR)/parse-colors.cc $(RLDIR)/mbutil.cc \
+	$(RLDIR)/chardefs.hh $(RLDIR)/colors.hh $(RLDIR)/history.hh \
+	$(RLDIR)/parse-colors.hh $(RLDIR)/posixdir.hh $(RLDIR)/posixselect.hh \
+	$(RLDIR)/posixstat.hh $(RLDIR)/readline.hh $(RLDIR)/rlconf.hh \
+	$(RLDIR)/rldefs.hh $(RLDIR)/rlmbutil.hh $(RLDIR)/rlprivate.hh \
+	$(RLDIR)/rlshell.hh $(RLDIR)/rltty.hh $(RLDIR)/rlwinsize.hh \
+	$(RLDIR)/tcap.hh $(RLDIR)/tilde.hh
+
+libsh_a_SOURCES = $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
+	$(SHDIR)/getenv.cc $(SHDIR)/oslib.cc $(SHDIR)/setlinebuf.cc \
+	$(SHDIR)/strcasecmp.cc $(SHDIR)/strerror.cc \
+	$(SHDIR)/vprint.cc $(SHDIR)/rename.cc $(SHDIR)/zread.cc \
+	$(SHDIR)/inet_aton.cc $(SHDIR)/netconn.cc $(SHDIR)/netopen.cc \
+	$(SHDIR)/strpbrk.cc $(SHDIR)/timeval.cc $(SHDIR)/makepath.cc \
+	$(SHDIR)/pathcanon.cc $(SHDIR)/pathphys.cc $(SHDIR)/tmpfile.cc \
+	$(SHDIR)/spell.cc $(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
+	$(SHDIR)/strcasestr.cc $(SHDIR)/snprintf.cc $(SHDIR)/mailstat.cc \
+	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
+	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc \
+	$(SHDIR)/strtoimax.cc $(SHDIR)/strtoumax.cc \
+	$(SHDIR)/mktime.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
+	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
+	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
+	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
+	$(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc $(SHDIR)/wcswidth.cc \
+	$(SHDIR)/wcsnwidth.cc $(SHDIR)/shmbchar.cc \
+	$(SHDIR)/random.cc $(SHDIR)/gettimeofday.cc
+
+libtilde_a_SOURCES = $(TLDIR)/tilde.cc
 all: $(BUILT_SOURCES) config.hh
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -756,6 +1035,351 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
+
+clean-noinstLIBRARIES:
+	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+$(BLTDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(BLTDIR)
+	@: > $(BLTDIR)/$(am__dirstamp)
+$(BLTDIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(BLTDIR)/$(DEPDIR)
+	@: > $(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/alias_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/bind_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/break_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/builtin_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/caller_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/cd_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/colon_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/command_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/declare_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/echo_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/enable_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/eval_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/getopts_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/exec_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/exit_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/fc_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/fg_bg_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/hash_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/help_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/history_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/jobs_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/kill_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/let_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/read_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/return_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/set_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/setattr_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/shift_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/source_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/suspend_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/test_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/times_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/trap_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/type_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/ulimit_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/umask_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/wait_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/reserved_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/pushd_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/shopt_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/printf_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/complete_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/mapfile_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/common.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/evalstring.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/evalfile.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/getopt.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/bashgetopt.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/builtins.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+
+libbuiltins.a: $(libbuiltins_a_OBJECTS) $(libbuiltins_a_DEPENDENCIES) $(EXTRA_libbuiltins_a_DEPENDENCIES) 
+	$(AM_V_at)-rm -f libbuiltins.a
+	$(AM_V_AR)$(libbuiltins_a_AR) libbuiltins.a $(libbuiltins_a_OBJECTS) $(libbuiltins_a_LIBADD)
+	$(AM_V_at)$(RANLIB) libbuiltins.a
+$(GLBDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(GLBDIR)
+	@: > $(GLBDIR)/$(am__dirstamp)
+$(GLBDIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(GLBDIR)/$(DEPDIR)
+	@: > $(GLBDIR)/$(DEPDIR)/$(am__dirstamp)
+$(GLBDIR)/glob.$(OBJEXT): $(GLBDIR)/$(am__dirstamp) \
+	$(GLBDIR)/$(DEPDIR)/$(am__dirstamp)
+$(GLBDIR)/smatch.$(OBJEXT): $(GLBDIR)/$(am__dirstamp) \
+	$(GLBDIR)/$(DEPDIR)/$(am__dirstamp)
+$(GLBDIR)/gmisc.$(OBJEXT): $(GLBDIR)/$(am__dirstamp) \
+	$(GLBDIR)/$(DEPDIR)/$(am__dirstamp)
+$(GLBDIR)/xmbsrtowcs.$(OBJEXT): $(GLBDIR)/$(am__dirstamp) \
+	$(GLBDIR)/$(DEPDIR)/$(am__dirstamp)
+
+libglob.a: $(libglob_a_OBJECTS) $(libglob_a_DEPENDENCIES) $(EXTRA_libglob_a_DEPENDENCIES) 
+	$(AM_V_at)-rm -f libglob.a
+	$(AM_V_AR)$(libglob_a_AR) libglob.a $(libglob_a_OBJECTS) $(libglob_a_LIBADD)
+	$(AM_V_at)$(RANLIB) libglob.a
+$(RLDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(RLDIR)
+	@: > $(RLDIR)/$(am__dirstamp)
+$(RLDIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(RLDIR)/$(DEPDIR)
+	@: > $(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/readline.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/funmap.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/keymaps.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/vi_mode.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/parens.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/rltty.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/complete.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/bind.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/isearch.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/display.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/signals.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/util.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/kill.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/undo.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/macro.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/input.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/callback.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/terminal.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/history.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/histsearch.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/histexpand.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/histfile.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/nls.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/search.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/shell.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/tilde.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/text.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/misc.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/colors.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/parse-colors.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RLDIR)/mbutil.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
+	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+
+libreadlinecpp.a: $(libreadlinecpp_a_OBJECTS) $(libreadlinecpp_a_DEPENDENCIES) $(EXTRA_libreadlinecpp_a_DEPENDENCIES) 
+	$(AM_V_at)-rm -f libreadlinecpp.a
+	$(AM_V_AR)$(libreadlinecpp_a_AR) libreadlinecpp.a $(libreadlinecpp_a_OBJECTS) $(libreadlinecpp_a_LIBADD)
+	$(AM_V_at)$(RANLIB) libreadlinecpp.a
+$(SHDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(SHDIR)
+	@: > $(SHDIR)/$(am__dirstamp)
+$(SHDIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(SHDIR)/$(DEPDIR)
+	@: > $(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/clktck.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/clock.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/getcwd.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/getenv.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/oslib.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/setlinebuf.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/strcasecmp.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/strerror.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/vprint.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/rename.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/zread.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/inet_aton.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/netconn.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/netopen.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/strpbrk.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/timeval.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/makepath.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/pathcanon.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/pathphys.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/tmpfile.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/spell.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/shquote.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/strtrans.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/strcasestr.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/snprintf.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/mailstat.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/fmtulong.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/fmtullong.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/fmtumax.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/shmatch.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/strnlen.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/strtoimax.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/strtoumax.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/mktime.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/mbschr.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/zcatfd.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/zmapfd.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/winsize.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/eaccess.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/fpurge.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/zgetline.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/uconvert.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/ufuncs.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/casemod.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/dprintf.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/input_avail.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/fnxform.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/strchrnul.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/unicode.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/wcswidth.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/wcsnwidth.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/shmbchar.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/random.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/gettimeofday.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+
+libsh.a: $(libsh_a_OBJECTS) $(libsh_a_DEPENDENCIES) $(EXTRA_libsh_a_DEPENDENCIES) 
+	$(AM_V_at)-rm -f libsh.a
+	$(AM_V_AR)$(libsh_a_AR) libsh.a $(libsh_a_OBJECTS) $(libsh_a_LIBADD)
+	$(AM_V_at)$(RANLIB) libsh.a
+$(TLDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(TLDIR)
+	@: > $(TLDIR)/$(am__dirstamp)
+$(TLDIR)/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) $(TLDIR)/$(DEPDIR)
+	@: > $(TLDIR)/$(DEPDIR)/$(am__dirstamp)
+$(TLDIR)/tilde.$(OBJEXT): $(TLDIR)/$(am__dirstamp) \
+	$(TLDIR)/$(DEPDIR)/$(am__dirstamp)
+
+libtilde.a: $(libtilde_a_OBJECTS) $(libtilde_a_DEPENDENCIES) $(EXTRA_libtilde_a_DEPENDENCIES) 
+	$(AM_V_at)-rm -f libtilde.a
+	$(AM_V_AR)$(libtilde_a_AR) libtilde.a $(libtilde_a_OBJECTS) $(libtilde_a_LIBADD)
+	$(AM_V_at)$(RANLIB) libtilde.a
 parse.hh: parse.cc
 	@if test ! -f $@; then rm -f parse.cc; else :; fi
 	@if test ! -f $@; then $(MAKE) $(AM_MAKEFLAGS) parse.cc; else :; fi
@@ -763,13 +1387,171 @@ parse.hh: parse.cc
 bash$(EXEEXT): $(bash_OBJECTS) $(bash_DEPENDENCIES) $(EXTRA_bash_DEPENDENCIES) 
 	@rm -f bash$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(bash_OBJECTS) $(bash_LDADD) $(LIBS)
+$(BLTDIR)/mkbuiltins.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+
+mkbuiltins$(EXEEXT): $(mkbuiltins_OBJECTS) $(mkbuiltins_DEPENDENCIES) $(EXTRA_mkbuiltins_DEPENDENCIES) 
+	@rm -f mkbuiltins$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(mkbuiltins_OBJECTS) $(mkbuiltins_LDADD) $(LIBS)
+$(BLTDIR)/psize.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+
+psize$(EXEEXT): $(psize_OBJECTS) $(psize_DEPENDENCIES) $(EXTRA_psize_DEPENDENCIES) 
+	@rm -f psize$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(psize_OBJECTS) $(psize_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f $(BLTDIR)/*.$(OBJEXT)
+	-rm -f $(GLBDIR)/*.$(OBJEXT)
+	-rm -f $(RLDIR)/*.$(OBJEXT)
+	-rm -f $(SHDIR)/*.$(OBJEXT)
+	-rm -f $(TLDIR)/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/alias_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/bashgetopt.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/bind_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/break_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/builtin_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/builtins.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/caller_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/cd_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/colon_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/command_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/common.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/complete_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/declare_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/echo_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/enable_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/eval_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/evalfile.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/evalstring.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/exec_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/exit_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/fc_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/fg_bg_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/getopt.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/getopts_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/hash_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/help_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/history_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/jobs_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/kill_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/let_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/mapfile_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/mkbuiltins.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/printf_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/psize.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/pushd_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/read_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/reserved_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/return_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/set_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/setattr_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/shift_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/shopt_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/source_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/suspend_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/test_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/times_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/trap_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/type_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/ulimit_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/umask_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(BLTDIR)/$(DEPDIR)/wait_def.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(GLBDIR)/$(DEPDIR)/glob.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(GLBDIR)/$(DEPDIR)/gmisc.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(GLBDIR)/$(DEPDIR)/smatch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(GLBDIR)/$(DEPDIR)/xmbsrtowcs.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/bind.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/callback.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/colors.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/complete.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/display.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/funmap.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/histexpand.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/histfile.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/history.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/histsearch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/input.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/isearch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/keymaps.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/kill.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/macro.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/mbutil.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/misc.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/nls.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/parens.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/parse-colors.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/readline.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/rltty.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/search.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/shell.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/signals.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/terminal.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/text.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/tilde.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/undo.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/util.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RLDIR)/$(DEPDIR)/vi_mode.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/casemod.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/clktck.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/clock.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/dprintf.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/eaccess.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/fmtullong.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/fmtulong.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/fmtumax.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/fnxform.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/fpurge.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/getcwd.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/getenv.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/gettimeofday.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/inet_aton.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/input_avail.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/mailstat.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/makepath.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/mbschr.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/mktime.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/netconn.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/netopen.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/oslib.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/pathcanon.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/pathphys.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/random.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/rename.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/setlinebuf.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/shmatch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/shmbchar.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/shquote.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/snprintf.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/spell.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strcasecmp.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strcasestr.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strchrnul.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strerror.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strnlen.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strpbrk.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strtoimax.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strtoumax.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strtrans.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/timeval.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/tmpfile.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/uconvert.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/ufuncs.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/unicode.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/vprint.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/wcsnwidth.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/wcswidth.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/winsize.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/zcatfd.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/zgetline.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/zmapfd.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/zread.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(TLDIR)/$(DEPDIR)/tilde.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alias.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/array.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/arrayfunc.Po@am__quote@ # am--include-marker
@@ -817,22 +1599,25 @@ $(am__depfiles_remade):
 am--depfiles: $(am__depfiles_remade)
 
 .cc.o:
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ $<
 
 .cc.obj:
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 .cc.lo:
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+@am__fastdepCXX_TRUE@	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
@@ -1154,7 +1939,7 @@ distcleancheck: distclean
 check-am: all-am
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-recursive
-all-am: Makefile $(PROGRAMS) config.hh
+all-am: Makefile $(PROGRAMS) $(LIBRARIES) config.hh
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(bindir)"; do \
@@ -1188,6 +1973,16 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-test -z "$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(BLTDIR)/$(am__dirstamp)" || rm -f $(BLTDIR)/$(am__dirstamp)
+	-test -z "$(GLBDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(GLBDIR)/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(GLBDIR)/$(am__dirstamp)" || rm -f $(GLBDIR)/$(am__dirstamp)
+	-test -z "$(RLDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(RLDIR)/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(RLDIR)/$(am__dirstamp)" || rm -f $(RLDIR)/$(am__dirstamp)
+	-test -z "$(SHDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(SHDIR)/$(am__dirstamp)" || rm -f $(SHDIR)/$(am__dirstamp)
+	-test -z "$(TLDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(TLDIR)/$(DEPDIR)/$(am__dirstamp)
+	-test -z "$(TLDIR)/$(am__dirstamp)" || rm -f $(TLDIR)/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1197,11 +1992,153 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-recursive
 
-clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libtool \
+	clean-noinstLIBRARIES clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-		-rm -f ./$(DEPDIR)/alias.Po
+		-rm -f $(BLTDIR)/$(DEPDIR)/alias_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/bashgetopt.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/bind_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/break_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/builtin_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/builtins.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/caller_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/cd_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/colon_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/command_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/common.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/complete_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/declare_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/echo_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/enable_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/eval_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/evalfile.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/evalstring.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/exec_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/exit_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/fc_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/fg_bg_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/getopt.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/getopts_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/hash_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/help_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/history_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/jobs_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/kill_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/let_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/mapfile_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/mkbuiltins.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/printf_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/psize.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/pushd_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/read_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/reserved_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/return_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/set_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/setattr_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/shift_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/shopt_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/source_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/suspend_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/test_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/times_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/trap_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/type_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/ulimit_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/umask_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/wait_def.Po
+	-rm -f $(GLBDIR)/$(DEPDIR)/glob.Po
+	-rm -f $(GLBDIR)/$(DEPDIR)/gmisc.Po
+	-rm -f $(GLBDIR)/$(DEPDIR)/smatch.Po
+	-rm -f $(GLBDIR)/$(DEPDIR)/xmbsrtowcs.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/bind.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/callback.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/colors.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/complete.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/display.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/funmap.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/histexpand.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/histfile.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/history.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/histsearch.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/input.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/isearch.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/keymaps.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/kill.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/macro.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/mbutil.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/misc.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/nls.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/parens.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/parse-colors.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/readline.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/rltty.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/search.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/shell.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/signals.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/terminal.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/text.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/tilde.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/undo.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/util.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/vi_mode.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/casemod.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/clktck.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/clock.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/dprintf.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/eaccess.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/fmtullong.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/fmtulong.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/fmtumax.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/fnxform.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/fpurge.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/getcwd.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/getenv.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/gettimeofday.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/inet_aton.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/input_avail.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/mailstat.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/makepath.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/mbschr.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/mktime.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/netconn.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/netopen.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/oslib.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/pathcanon.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/pathphys.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/random.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/rename.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/setlinebuf.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/shmatch.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/shmbchar.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/shquote.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/snprintf.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/spell.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strcasecmp.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strcasestr.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strchrnul.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strerror.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strnlen.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strpbrk.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strtoimax.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strtoumax.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strtrans.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/timeval.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/tmpfile.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/uconvert.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/ufuncs.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/unicode.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/vprint.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/wcsnwidth.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/wcswidth.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/winsize.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/zcatfd.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/zgetline.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/zmapfd.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/zread.Po
+	-rm -f $(TLDIR)/$(DEPDIR)/tilde.Po
+	-rm -f ./$(DEPDIR)/alias.Po
 	-rm -f ./$(DEPDIR)/array.Po
 	-rm -f ./$(DEPDIR)/arrayfunc.Po
 	-rm -f ./$(DEPDIR)/assoc.Po
@@ -1287,7 +2224,148 @@ installcheck-am:
 maintainer-clean: maintainer-clean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-		-rm -f ./$(DEPDIR)/alias.Po
+		-rm -f $(BLTDIR)/$(DEPDIR)/alias_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/bashgetopt.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/bind_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/break_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/builtin_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/builtins.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/caller_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/cd_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/colon_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/command_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/common.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/complete_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/declare_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/echo_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/enable_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/eval_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/evalfile.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/evalstring.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/exec_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/exit_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/fc_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/fg_bg_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/getopt.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/getopts_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/hash_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/help_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/history_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/jobs_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/kill_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/let_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/mapfile_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/mkbuiltins.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/printf_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/psize.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/pushd_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/read_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/reserved_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/return_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/set_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/setattr_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/shift_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/shopt_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/source_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/suspend_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/test_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/times_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/trap_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/type_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/ulimit_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/umask_def.Po
+	-rm -f $(BLTDIR)/$(DEPDIR)/wait_def.Po
+	-rm -f $(GLBDIR)/$(DEPDIR)/glob.Po
+	-rm -f $(GLBDIR)/$(DEPDIR)/gmisc.Po
+	-rm -f $(GLBDIR)/$(DEPDIR)/smatch.Po
+	-rm -f $(GLBDIR)/$(DEPDIR)/xmbsrtowcs.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/bind.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/callback.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/colors.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/complete.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/display.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/funmap.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/histexpand.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/histfile.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/history.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/histsearch.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/input.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/isearch.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/keymaps.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/kill.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/macro.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/mbutil.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/misc.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/nls.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/parens.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/parse-colors.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/readline.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/rltty.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/search.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/shell.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/signals.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/terminal.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/text.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/tilde.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/undo.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/util.Po
+	-rm -f $(RLDIR)/$(DEPDIR)/vi_mode.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/casemod.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/clktck.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/clock.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/dprintf.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/eaccess.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/fmtullong.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/fmtulong.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/fmtumax.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/fnxform.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/fpurge.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/getcwd.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/getenv.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/gettimeofday.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/inet_aton.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/input_avail.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/mailstat.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/makepath.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/mbschr.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/mktime.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/netconn.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/netopen.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/oslib.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/pathcanon.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/pathphys.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/random.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/rename.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/setlinebuf.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/shmatch.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/shmbchar.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/shquote.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/snprintf.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/spell.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strcasecmp.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strcasestr.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strchrnul.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strerror.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strnlen.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strpbrk.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strtoimax.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strtoumax.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strtrans.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/timeval.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/tmpfile.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/uconvert.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/ufuncs.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/unicode.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/vprint.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/wcsnwidth.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/wcswidth.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/winsize.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/zcatfd.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/zgetline.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/zmapfd.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/zread.Po
+	-rm -f $(TLDIR)/$(DEPDIR)/tilde.Po
+	-rm -f ./$(DEPDIR)/alias.Po
 	-rm -f ./$(DEPDIR)/array.Po
 	-rm -f ./$(DEPDIR)/arrayfunc.Po
 	-rm -f ./$(DEPDIR)/assoc.Po
@@ -1350,7 +2428,8 @@ uninstall-am: uninstall-binPROGRAMS
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am \
 	am--depfiles am--refresh check check-am clean \
 	clean-binPROGRAMS clean-cscope clean-generic clean-libtool \
-	cscope cscopelist-am ctags ctags-am dist dist-all dist-bzip2 \
+	clean-noinstLIBRARIES clean-noinstPROGRAMS cscope \
+	cscopelist-am ctags ctags-am dist dist-all dist-bzip2 \
 	dist-gzip dist-lzip dist-shar dist-tarZ dist-xz dist-zip \
 	dist-zstd distcheck distclean distclean-compile \
 	distclean-generic distclean-hdr distclean-libtool \
@@ -1368,6 +2447,29 @@ uninstall-am: uninstall-binPROGRAMS
 
 .PRECIOUS: Makefile
 
+
+# link to a known filename for shell script to expect
+psize.aux: $(CONFIG_HEADER) $(PSIZE)
+	-$(LN_S) $(PSIZE) psize.aux
+
+pipesize.hh: psize.aux $(srcdir)/builtins/psize.sh
+	$(SHELL) $(srcdir)/builtins/psize.sh > $@
+
+builtext.hh builtins.cc: $(CONFIG_HEADER) $(MKBUILTINS) $(DEFSRC)
+	@-if test -f builtins.cc; then mv -f builtins.cc old-builtins.cc; fi
+	@-if test -f builtext.hh; then mv -f builtext.hh old-builtext.hh; fi
+	./$(MKBUILTINS) -externfile builtext.hh -structfile builtins.cc \
+	    -noproduction $(DIRECTDEFINE) $(HELPDIRDEFINE) $(HELPSTRINGS) $(DEFSRC)
+	@-if cmp -s old-builtext.hh builtext.hh 2>/dev/null; then \
+		mv old-builtext.hh builtext.hh; \
+	 else \
+		$(RM) old-builtext.hh; \
+	 fi
+	@-if cmp -s old-builtins.cc builtins.cc 2>/dev/null; then \
+		mv old-builtins.cc builtins.cc; \
+	 else \
+		$(RM) old-builtins.cc; \
+	 fi
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
