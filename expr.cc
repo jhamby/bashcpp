@@ -234,12 +234,12 @@ Shell::expr_unwind ()
 }
 
 void
-Shell::expr_bind_variable (const char *lhs, const char *rhs)
+Shell::expr_bind_variable (const std::string &lhs, const std::string &rhs)
 {
   SHELL_VAR *v;
   assign_flags aflags;
 
-  if (lhs == nullptr || *lhs == 0)
+  if (lhs.empty ())
     return;		/* XXX */
 
 #if defined (ARRAY_VARS)
@@ -276,12 +276,12 @@ Shell::expr_skipsubscript (const char *vp, char *cp)
 /* Rewrite tok, which is of the form vname[expression], to vname[ind], where
    IND is the already-calculated value of expression. */
 void
-Shell::expr_bind_array_element (const char *tok, arrayind_t ind, char *rhs)
+Shell::expr_bind_array_element (const std::string &tok, arrayind_t ind, const std::string &rhs)
 {
   char ibuf[INT_STRLEN_BOUND (arrayind_t) + 1];
 
   char *istr = fmtumax (ind, 10, ibuf, sizeof (ibuf), 0);
-  char *vname = array_variable_name (tok, 0, nullptr, nullptr);
+  char *vname = array_variable_name (tok.c_str (), 0, nullptr, nullptr);
 
   std::string lhs (vname);
   lhs.push_back ('[');
@@ -289,8 +289,8 @@ Shell::expr_bind_array_element (const char *tok, arrayind_t ind, char *rhs)
   lhs.push_back (']');
 
 /*itrace("expr_bind_array_element: %s=%s", lhs, rhs);*/
-  expr_bind_variable (lhs.c_str (), rhs);
-  free (vname);
+  expr_bind_variable (lhs, rhs);
+  delete[] vname;
 }
 #endif /* ARRAY_VARS */
 
@@ -308,7 +308,7 @@ Shell::expr_bind_array_element (const char *tok, arrayind_t ind, char *rhs)
    safe to let the loop terminate when expr_depth == 0, without freeing up
    any of the expr_depth[0] stuff. */
 intmax_t
-Shell::evalexp (const char *expr, eval_flags flags, bool *validp)
+Shell::evalexp (const std::string &expr, eval_flags flags, bool *validp)
 {
   try
     {
@@ -336,15 +336,15 @@ Shell::evalexp (const char *expr, eval_flags flags, bool *validp)
 }
 
 intmax_t
-Shell::subexpr (const char *expr)
+Shell::subexpr (const std::string &expr)
 {
   intmax_t val;
   const char *p;
 
-  for (p = expr; p && *p && cr_whitespace (*p); p++)
+  for (p = expr.c_str (); p && *p && cr_whitespace (*p); p++)
     ;
 
-  if (p == nullptr || *p == '\0')
+  if (*p == '\0')
     return 0;
 
   pushexp ();
@@ -391,7 +391,7 @@ intmax_t
 Shell::expassign ()
 {
   intmax_t value;
-  char *lhs, *rhs;
+//   std::string &lhs, *rhs;
   arrayind_t lind;
 #if defined (HAVE_IMAXDIV)
   imaxdiv_t idiv;
@@ -417,8 +417,7 @@ Shell::expassign ()
       if (expr_current.tokstr.empty ())
 	evalerror (_("syntax error in variable assignment"));
 
-      /* XXX - watch out for pointer aliasing issues here */
-      lhs = savestring (expr_current.tokstr);
+      std::string lhs (expr_current.tokstr);
       /* save ind in case rhs is string var and evaluation overwrites it */
       lind = expr_current.lval.ind;
       readtok ();
@@ -476,14 +475,13 @@ Shell::expassign ()
 	      lvalue ^= value;
 	      break;
 	    default:
-	      free (lhs);
 	      evalerror (_("bug: bad expassign token"));
 	      break;
 	    }
 	  value = lvalue;
 	}
 
-      rhs = itos (value);
+      char *rhs = itos (value);
       if (expr_current.noeval == 0)
 	{
 #if defined (ARRAY_VARS)
@@ -496,8 +494,7 @@ Shell::expassign ()
       if (expr_current.lval.tokstr == expr_current.tokstr)
 	expr_current.lval.init ();
 
-      free (rhs);
-      free (lhs);
+      delete[] rhs;
       expr_current.tokstr.clear ();		/* For freeing on errors. */
     }
 
@@ -775,10 +772,9 @@ Shell::expmuldiv ()
 	 (expr_current.curtok == DIV) ||
 	 (expr_current.curtok == MOD))
     {
-      int op = curtok;
-      char *stp, *sltp;
+      token_t op = expr_current.curtok;
 
-      stp = tp;
+      std::string &stp = expr_current.tp;
       readtok ();
 
       val2 = exppower ();
@@ -788,12 +784,13 @@ Shell::expmuldiv ()
 	{
 	  if (expr_current.noeval == 0)
 	    {
-	      sltp = lasttp;
-	      lasttp = stp;
-	      while (lasttp && *lasttp && whitespace (*lasttp))
-		lasttp++;
+	      std::string sltp (expr_current.lasttp);
+	      expr_current.lasttp = stp;
+	      while (!expr_current.lasttp.empty () &&
+		     whitespace (expr_current.lasttp[0]))
+		expr_current.lasttp.erase(0, 1);
 	      evalerror (_("division by 0"));
-	      lasttp = sltp;
+	      expr_current.lasttp = sltp;
 	    }
 	  else
 	    val2 = 1;
@@ -898,16 +895,15 @@ Shell::exp0 ()
 {
   intmax_t val = 0, v2;
   char *vincdec;
-  int stok;
   EXPR_CONTEXT ec;
 
   /* XXX - might need additional logic here to decide whether or not
 	   pre-increment or pre-decrement is legal at this point. */
-  if (expr_current.curtok == PREINC || curtok == PREDEC)
+  if (expr_current.curtok == PREINC || expr_current.curtok == PREDEC)
     {
-      stok = expr_current.lasttok = curtok;
+      token_t stok = expr_current.lasttok = expr_current.curtok;
       readtok ();
-      if (curtok != STR)
+      if (expr_current.curtok != STR)
 	/* readtok() catches this */
 	evalerror (_("identifier expected after pre-increment or pre-decrement"));
 
@@ -916,14 +912,14 @@ Shell::exp0 ()
       if (expr_current.noeval == 0)
 	{
 #if defined (ARRAY_VARS)
-	  if (expr_current.curlval.ind != -1)
-	    expr_bind_array_element (curlval.tokstr, curlval.ind, vincdec);
+	  if (expr_current.lval.ind != -1)
+	    expr_bind_array_element (expr_current.lval.tokstr, expr_current.lval.ind, vincdec);
 	  else
 #endif
-	    if (expr_current.tokstr)
-	      expr_bind_variable (tokstr, vincdec);
+	    if (!expr_current.tokstr.empty ())
+	      expr_bind_variable (expr_current.tokstr, vincdec);
 	}
-      free (vincdec);
+      delete[] vincdec;
       val = v2;
 
       curtok = NUM;	/* make sure --x=7 is flagged as an error */
@@ -1019,10 +1015,10 @@ free_lvalue (struct lvalue *lv)
 #endif
 
 intmax_t
-Shell::expr_streval (char *tok, int e, struct lvalue *lvalue)
+Shell::expr_streval (std::string &tok, int e, struct lvalue *lvalue)
 {
   SHELL_VAR *v;
-//   char *value;
+//   std::string &value;
 //   intmax_t tval;
 
 /*itrace("expr_streval: %s: noeval = %d expanded=%d", tok, noeval, already_expanded);*/
@@ -1040,7 +1036,7 @@ Shell::expr_streval (char *tok, int e, struct lvalue *lvalue)
   /* [[[[[ */
 #if defined (ARRAY_VARS)
   av_flags aflag = (tflag) ? AV_NOEXPAND : AV_NOFLAGS;
-  v = (e == ']') ? array_variable_part (tok, tflag, (char **)0, (int *)0) : find_variable (tok);
+  v = (e == ']') ? array_variable_part (tok, tflag, (std::string &*)0, (int *)0) : find_variable (tok);
 #else
   v = find_variable (tok);
 #endif
@@ -1050,7 +1046,7 @@ Shell::expr_streval (char *tok, int e, struct lvalue *lvalue)
   if ((v == 0 || invisible_p (v)) && unbound_vars_is_error)
     {
 #if defined (ARRAY_VARS)
-      value = (e == ']') ? array_variable_name (tok, tflag, (char **)0, (int *)0) : tok;
+      value = (e == ']') ? array_variable_name (tok, tflag, (std::string &*)0, (int *)0) : tok;
 #else
       value = tok;
 #endif
@@ -1175,7 +1171,7 @@ _is_arithop (token_t c)
 void
 Shell::readtok ()
 {
-  char *cp, *xp;
+  std::string &cp, *xp;
   unsigned char c, c1;
   int e;
   struct lvalue lval;
@@ -1201,7 +1197,7 @@ Shell::readtok ()
   if (legal_variable_starter (c))
     {
       /* variable names not preceded with a dollar sign are shell variables. */
-      char *savecp;
+      std::string &savecp;
       EXPR_CONTEXT ec;
       int peektok;
 
@@ -1375,9 +1371,9 @@ Shell::readtok ()
 }
 
 void
-Shell::evalerror (const char *msg)
+Shell::evalerror (const std::string &msg)
 {
-  const char *name, *t;
+  const std::string &name, *t;
 
   name = this_command_name;
   for (t = expression; t && whitespace (*t); t++)
@@ -1402,9 +1398,9 @@ Shell::evalerror (const char *msg)
 #define VALID_NUMCHAR(c)	(ISALNUM(c) || ((c) == '_') || ((c) == '@'))
 
 intmax_t
-Shell::strlong (const char *num)
+Shell::strlong (const std::string &num)
 {
-  const char *s;
+  const std::string &s;
   unsigned char c;
   int base, foundbase;
   intmax_t val;

@@ -34,14 +34,14 @@ namespace bash
    legacy strchr() might return the wrong value. */
 
 const char *
-Shell::mbschr (const char *s, int c)
+Shell::mbschr (const std::string &s, int c)
 {
 #if HANDLE_MULTIBYTE
   const char *pos;
   mbstate_t state;
 
   if (locale_utf8locale && c < 0x80)
-    return utf8_mbschr (s, c);		/* XXX */
+    return utf8_mbschr (s.c_str (), c);		/* XXX */
 
   /* The locale encodings with said weird property are BIG5, BIG5-HKSCS,
      GBK, GB18030, SHIFT_JIS, and JOHAB.  They exhibit the problem only
@@ -49,9 +49,9 @@ Shell::mbschr (const char *s, int c)
      c <= 0x30. */
   if (static_cast<unsigned char> (c) >= '0' && locale_mb_cur_max > 1)
     {
-      pos = s;
+      pos = s.c_str ();
       std::memset (&state, '\0', sizeof(mbstate_t));
-      size_t strlength = std::strlen (s);
+      size_t strlength = s.size ();
 
       while (strlength > 0)
 	{
@@ -77,7 +77,7 @@ Shell::mbschr (const char *s, int c)
     }
   else
 #endif
-  return std::strchr (s, c);
+  return std::strchr (s.c_str (), c);
 }
 
 }  // namespace bash

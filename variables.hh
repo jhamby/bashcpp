@@ -65,6 +65,7 @@ struct VAR_CONTEXT {
 /* The various attributes that a given variable can have. */
 /* First, the user-visible attributes */
 enum var_att_flags {
+  att_noflags =			0,
   att_exported =	0x0000001,	/* export to environment */
   att_readonly =	0x0000002,	/* cannot change */
   att_array =		0x0000004,	/* value is an array */
@@ -173,7 +174,7 @@ private:
   sh_var_assign_func_t assign_func;	// Function called when this `special
 					// variable' is assigned a value in
 					// bind_variable.
-  int attributes;			// export, readonly, array, invisible...
+  var_att_flags attributes;		// export, readonly, array, invisible...
   int context;				// Which context this variable belongs to.
 };
 

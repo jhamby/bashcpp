@@ -18,10 +18,10 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #define LONG		long long
 #define UNSIGNED_LONG	unsigned long long
 #define fmtulong	fmtullong
 
-#include "fmtulong.c"
+#include "fmtulong.cc"

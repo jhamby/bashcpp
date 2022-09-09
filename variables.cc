@@ -319,9 +319,8 @@ static inline void push_posix_tempvar_internal (SHELL_VAR *, int);
 static inline int find_special_var (const char *);
 #endif  // #if 0
 
-
 void
-Variables::create_variable_tables ()
+Shell::create_variable_tables ()
 {
   if (shell_variables == 0)
     {
@@ -342,7 +341,8 @@ Variables::create_variable_tables ()
 /* Initialize the shell variables from the current environment.
    If PRIVMODE is true, don't import functions from ENV or
    parse $SHELLOPTS. */
-Variables::Variables (char **env, bool privmode)
+void
+Shell::init_variables (char **env, bool privmode)
 {
   create_variable_tables ();
 
@@ -4207,7 +4207,7 @@ int tvlist_ind;
    is called from merge_temporary_env, which is only called when in posix
    mode. */
 static void
-push_posix_temp_var (void * data)
+push_posix_temp_var (SHELL_VAR *data)
 {
   SHELL_VAR *var, *v;
   HashTable *binding_table;
@@ -4218,7 +4218,7 @@ push_posix_temp_var (void * data)
      special builtins act like standalone assignment statements when in
      posix mode, satisfying the posix requirement that this affect the
      "current execution environment." */
-  v = bind_variable (var->name, value_cell (var), ASS_FORCE|ASS_NOLONGJMP);
+  v = bind_variable (var->name, value_cell (var), ASS_FORCE | ASS_NOLONGJMP);
 
   /* XXX - do we need to worry about array variables here? */
 

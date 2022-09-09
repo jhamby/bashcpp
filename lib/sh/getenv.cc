@@ -27,30 +27,25 @@
 #  include <unistd.h>
 #endif
 
-#include <cerrno>
-
 #include "shell.hh"
 
-namespace bash
+extern "C" char *
+getenv (const char *name)
 {
+  return bash::the_shell->getenv (name);
+}
+
+/* Some versions of Unix use _getenv instead. */
+extern "C" char *
+_getenv (const char *name)
+{
+  return bash::the_shell->getenv (name);
+}
 
 /* We supply our own version of getenv () because we want library
    routines to get the changed values of exported variables. */
-
-/* The NeXT C library has getenv () defined and used in the same file.
-   This screws our scheme.  However, Bash will run on the NeXT using
-   the C library getenv (), since right now the only environment variable
-   that we care about is HOME, and that is already defined.  */
-static char *last_tempenv_value = nullptr;
-
 char *
-getenv (const char *name)
-{
-  return the_shell->getenv (name);
-}
-
-char *
-Shell::getenv (const char *name)
+bash::Shell::getenv (const char *name)
 {
   SHELL_VAR *var;
 
@@ -67,7 +62,7 @@ Shell::getenv (const char *name)
     }
   else if (shell_variables)
     {
-      var = find_variable ((char *)name);
+      var = find_variable (name);
       if (var && exported_p (var))
 	return value_cell (var);
     }
@@ -80,7 +75,7 @@ Shell::getenv (const char *name)
 	 shell_variables will be 0 when this is invoked.  We look up the
 	 variable in the real environment in that case. */
 
-      for (i = 0, len = strlen (name); environ[i]; i++)
+      for (i = 0, len = std::strlen (name); environ[i]; i++)
 	{
 	  if ((STREQN (environ[i], name, len)) && (environ[i][len] == '='))
 	    return environ[i] + len + 1;
@@ -88,13 +83,6 @@ Shell::getenv (const char *name)
     }
 
   return nullptr;
-}
-
-/* Some versions of Unix use _getenv instead. */
-char *
-_getenv (const char *name)
-{
-  return getenv (name);
 }
 
 /* SUSv3 says argument is a `char *'; BSD implementations disagree */
@@ -222,7 +210,5 @@ unsetenv (const char *name)
 
   UNSETENV_RETURN(0);
 }
-
-}  // namespace bash
 
 #endif /* CAN_REDEFINE_GETENV */

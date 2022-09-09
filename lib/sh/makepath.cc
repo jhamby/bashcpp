@@ -34,7 +34,7 @@ static const char *nullpath = "";
 
 /* Take PATH, an element from, e.g., $CDPATH, and DIR, a directory name,
    and paste them together into PATH/DIR.  Tilde expansion is performed on
-   PATH if (flags & MP_DOTILDE) is non-zero.  If PATH is NULL or the empty
+   PATH if (flags & MP_DOTILDE) is non-zero.  If PATH is the empty
    string, it is converted to the current directory.  A full pathname is
    used if (flags & MP_DOCWD) is non-zero, otherwise `./' is used.  If
    (flags & MP_RMDOT) is non-zero, any `./' is removed from the beginning
@@ -50,23 +50,24 @@ static const char *nullpath = "";
   } while (0)
 
 char *
-Shell::sh_makepath (const char *path, const char *dir, int flags)
+Shell::sh_makepath (const std::string &path, const std::string &dir, mp_flags flags)
 {
-  int dirlen, pathlen;
-  char *ret, *xpath, *xdir, *r, *s;
+  size_t dirlen, pathlen;
+  const char *xdir, *s;
+  char *ret, *xpath, *r;
 
-  if (path == 0 || *path == '\0')
+  if (path.empty ())
     {
       if (flags & MP_DOCWD)
 	{
 	  xpath = get_working_directory ("sh_makepath");
-	  if (xpath == 0)
+	  if (xpath == nullptr)
 	    {
 	      ret = get_string_value ("PWD");
 	      if (ret)
 		xpath = savestring (ret);
 	    }
-	  if (xpath == 0)
+	  if (xpath == nullptr)
 	    MAKEDOT();
 	  else
 	    pathlen = std::strlen (xpath);
@@ -77,17 +78,18 @@ Shell::sh_makepath (const char *path, const char *dir, int flags)
   else if ((flags & MP_IGNDOT) && path[0] == '.' && (path[1] == '\0' ||
 						     (path[1] == '/' && path[2] == '\0')))
     {
-      xpath = const_cast<char*> (nullpath);
+      xpath = const_cast<char*> (nullpath);	// hopefully 'nullpath' is always the same pointer
       pathlen = 0;
     }
   else
     {
-      xpath = ((flags & MP_DOTILDE) && *path == '~') ? bash_tilde_expand (path, 0) : const_cast<char*> (path);
+      xpath = ((flags & MP_DOTILDE) && path[0] == '~')
+			? bash_tilde_expand (path.c_str (), 0) : const_cast<char*> (path.c_str ());
       pathlen = std::strlen (xpath);
     }
 
-  xdir = const_cast<char*> (dir);
-  dirlen = std::strlen (xdir);
+  xdir = dir.c_str ();
+  dirlen = dir.size ();
   if ((flags & MP_RMDOT) && dir[0] == '.' && dir[1] == '/')
     {
       xdir += 2;
@@ -108,7 +110,9 @@ Shell::sh_makepath (const char *path, const char *dir, int flags)
   while ((*r++ = *s++))
     ;
 
-  if (xpath != path && xpath != nullpath)
+  // hopefully we don't get a different pointer value for path.c_str () than
+  // we did earlier in the function.
+  if (xpath != path.c_str () && xpath != nullpath)
     delete[] xpath;
 
   return ret;

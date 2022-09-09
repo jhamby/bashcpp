@@ -18,10 +18,10 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
-#define LONG	intmax_t
+#define LONG		intmax_t
 #define UNSIGNED_LONG	uintmax_t
 #define fmtulong	fmtumax
 
-#include "fmtulong.c"
+#include "fmtulong.cc"

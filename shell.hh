@@ -875,24 +875,24 @@ protected:
   typedef int (Shell::*sh_wdesc_func_t) (WORD_DESC *);
   typedef int (Shell::*sh_wlist_func_t) (WORD_LIST *);
 
-  typedef char *(Shell::*sh_string_func_t) (const char *);	/* like savestring, et al. */
+  typedef char *(Shell::*sh_string_func_t) (const std::string &);	/* like savestring, et al. */
 
-  typedef int (Shell::*sh_msg_func_t) (const char *, ...);	/* printf(3)-like */
-  typedef void (Shell::*sh_vmsg_func_t) (const char *, ...);	/* printf(3)-like */
+  typedef int (Shell::*sh_msg_func_t) (const std::string &, ...);	/* printf(3)-like */
+  typedef void (Shell::*sh_vmsg_func_t) (const std::string &, ...);	/* printf(3)-like */
 
   /* Specific function pointer typedefs.  Most of these could be done
      with #defines. */
-  typedef void (Shell::*sh_sv_func_t) (const char *);		/* sh_vcpfunc_t */
+  typedef void (Shell::*sh_sv_func_t) (const std::string &);		/* sh_vcpfunc_t */
   typedef void (Shell::*sh_free_func_t) (void *);			/* sh_vptrfunc_t */
   typedef void (Shell::*sh_resetsig_func_t) (int);		/* sh_vintfunc_t */
 
-  typedef bool (Shell::*sh_ignore_func_t) (const char *);		/* sh_icpfunc_t */
+  typedef bool (Shell::*sh_ignore_func_t) (const std::string &);		/* sh_icpfunc_t */
 
-  typedef int (Shell::*sh_assign_func_t) (const char *);
+  typedef int (Shell::*sh_assign_func_t) (const std::string &);
   typedef int (Shell::*sh_wassign_func_t) (WORD_DESC *, int);
 
-  typedef int (Shell::*sh_load_func_t) (const char *);
-  typedef void (Shell::*sh_unload_func_t) (const char *);
+  typedef int (Shell::*sh_load_func_t) (const std::string &);
+  typedef void (Shell::*sh_unload_func_t) (const std::string &);
 
   // typedefs for builtins (public for access from builtins struct)
 
@@ -1012,30 +1012,30 @@ protected:
   void initialize_readline ();
   void bashline_reset ();
   void bashline_reinitialize ();
-  int bash_re_edit (const char *);
+  int bash_re_edit (const std::string &);
 
   void bashline_set_event_hook ();
   void bashline_reset_event_hook ();
 
-  int bind_keyseq_to_unix_command (const char *);
+  int bind_keyseq_to_unix_command (const std::string &);
   int bash_execute_unix_command (int, int);
   int print_unix_command_map ();
-  int unbind_unix_command (const char *);
+  int unbind_unix_command (const std::string &);
 
-  char **bash_default_completion (const char *, int, int, int, int);
+  char **bash_default_completion (const std::string &, int, int, int, int);
 
   void set_directory_hook ();
 
   /* Used by programmable completion code. */
-  char *command_word_completion_function (const char *, int);
-  char *bash_groupname_completion_function (const char *, int);
-  char *bash_servicename_completion_function (const char *, int);
+  char *command_word_completion_function (const std::string &, int);
+  char *bash_groupname_completion_function (const std::string &, int);
+  char *bash_servicename_completion_function (const std::string &, int);
 
   char **get_hostname_list ();
   void clear_hostname_list ();
 
-  char **bash_directory_completion_matches (const char *);
-  char *bash_dequote_text (const char *);
+  char **bash_directory_completion_matches (const std::string &);
+  char *bash_dequote_text (const std::string &);
 
   /* Functions from expr.c. */
 
@@ -1044,8 +1044,8 @@ protected:
     EXP_EXPANDED =	0x01
   };
 
-  intmax_t evalexp (const char *, eval_flags, bool *);
-  intmax_t subexpr (const char *);
+  intmax_t evalexp (const std::string &, eval_flags, bool *);
+  intmax_t subexpr (const std::string &);
   intmax_t expcomma ();
   intmax_t expassign ();
   intmax_t expcond ();
@@ -1062,23 +1062,21 @@ protected:
   intmax_t exppower ();
   intmax_t exp1 ();
   intmax_t exp0 ();
-  intmax_t expr_streval (const char *, int, struct lvalue *);
+  intmax_t expr_streval (const std::string &, int, struct lvalue *);
 
   void readtok ();
 
-  intmax_t expr_streval (char *, int, struct lvalue *);
-
-  void evalerror (const char *);
-  intmax_t strlong (const char *);
+  void evalerror (const std::string &);
+  intmax_t strlong (const std::string &);
 
   void pushexp ();
   void popexp ();
   void expr_unwind ();
-  void expr_bind_variable (const char *, const char *);
+  void expr_bind_variable (const std::string &, const std::string &);
 
 #if defined (ARRAY_VARS)
   int expr_skipsubscript (const char *, char *);
-  void expr_bind_array_element (const char *, arrayind_t, char *);
+  void expr_bind_array_element (const std::string &, arrayind_t, const std::string &);
 #endif
 
   /* set -x support */
@@ -1099,8 +1097,8 @@ protected:
   void unbind_args ();
 
 #if defined (RESTRICTED_SHELL)
-  bool shell_is_restricted (const char *);
-  bool maybe_make_restricted (const char *);
+  bool shell_is_restricted (const std::string &);
+  bool maybe_make_restricted (const std::string &);
 #endif
 
   void unset_bash_input (int);
@@ -1128,25 +1126,25 @@ protected:
 
   void clear_shell_input_line ();
 
-  char *decode_prompt_string (const char *);
+  char *decode_prompt_string (const std::string &);
 
   int get_current_prompt_level ();
   int set_current_prompt_level (int);
 
 #if defined (HISTORY)
-  const char *history_delimiting_chars (const char *);
+  const char *history_delimiting_chars (const std::string &);
 #endif
 
   /* Declarations for functions defined in locale.c */
   void set_default_locale ();
   void set_default_locale_vars ();
-  bool set_locale_var (const char *, const char *);
-  int set_lang (const char *, const char *);
+  bool set_locale_var (const std::string &, const std::string &);
+  int set_lang (const std::string &, const std::string &);
   void set_default_lang ();
-  const char *get_locale_var (const char *);
-  char *localetrans (const char *, int, int *);
+  const char *get_locale_var (const std::string &);
+  char *localetrans (const std::string &, int, int *);
   char *mk_msgstr (char *, bool *);
-  char *localeexpand (const char *, int, int, int, int *);
+  char *localeexpand (const std::string &, int, int, int, int *);
 
   /* Functions from jobs.h */
 
@@ -1347,13 +1345,22 @@ protected:
   char *sh_modcase (const char *, const char *, sh_modcase_flags);
 
   /* from lib/sh/eaccess.cc */
-  int sh_stataccess (const char *, int);
+  int sh_stataccess (const std::string &, int);
+
+  /* enum for sh_makepath function defined in lib/sh/makepath.c */
+  enum mp_flags {
+    MP_NOFLAGS =	   0,
+    MP_DOTILDE =	0x01,
+    MP_DOCWD =		0x02,
+    MP_RMDOT =		0x04,
+    MP_IGNDOT =		0x08
+  };
 
   /* from lib/sh/makepath.cc */
-  char *sh_makepath (const char *, const char *, int);
+  char *sh_makepath (const std::string &, const std::string &, mp_flags);
 
   /* from lib/sh/mbschr.cc */
-  const char *mbschr (const char *, int);
+  const char *mbschr (const std::string &, int);
 
   /* from lib/sh/random.c */
   u_bits32_t genseed ();
@@ -1817,7 +1824,7 @@ protected:
 
   /* from bashhist.c */
 #if defined (BANG_HISTORY)
-  bool bash_history_inhibit_expansion (const char *, int);
+  bool bash_history_inhibit_expansion (const std::string &, int);
 #endif
 
   /* Functions declared in execute_cmd.c, used by many other files */
@@ -1851,7 +1858,7 @@ protected:
   int execute_shell_function (SHELL_VAR *, WORD_LIST *);
 
   Coproc *getcoprocbypid (pid_t);
-  Coproc *getcoprocbyname (const char *);
+  Coproc *getcoprocbyname (const std::string &);
 
   void coproc_init (Coproc *);
   Coproc *coproc_alloc (char *, pid_t);
@@ -1908,7 +1915,7 @@ protected:
     RX_SAVEFD =		0x40	/* fd used to save another even if < SHELL_FD_BASE */
   };
 
-  void redirection_error (REDIRECT *, int, const char *);
+  void redirection_error (REDIRECT *, int, const std::string &);
   int do_redirections (REDIRECT *, redir_flags);
   char *redirection_expand (WORD_DESC *);
   int stdin_redirects (REDIRECT *);
@@ -1987,13 +1994,13 @@ protected:
      Start extracting at (SINDEX) as if we had just seen "$(".
      Make (SINDEX) get the position just after the matching ")".
      XFLAGS is additional flags to pass to other extraction functions, */
-  char *extract_command_subst (const char *, size_t *, sx_flags);
+  char *extract_command_subst (const std::string &, size_t *, sx_flags);
 
   /* Extract the $[ construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "$[".
      Make (SINDEX) get the position just after the matching "]". */
   inline char *
-  extract_arithmetic_subst (const char *string, size_t *sindex)
+  extract_arithmetic_subst (const std::string &string, size_t *sindex)
   {
     return extract_delimited_string (string, sindex, "$[", "[", "]", SX_NOFLAGS); /*]*/
   }
@@ -2012,7 +2019,7 @@ protected:
 
   /* Return a single string of all the words present in LIST, separating
      each word with SEP. */
-  char *string_list_internal (const WORD_LIST *, const char *);
+  char *string_list_internal (const WORD_LIST *, const std::string &);
 
   /* Return a single string of all the words present in LIST, separating
      each word with a space. */
@@ -2036,11 +2043,11 @@ protected:
 
   /* This performs word splitting and quoted null character removal on
      STRING. */
-  WORD_LIST *list_string (const char *, const char *, quoted_flags);
+  WORD_LIST *list_string (const std::string &, const std::string &, quoted_flags);
 
   char *ifs_firstchar (int *);
-  char *get_word_from_string (char **, const char *, char **);
-  char *strip_trailing_ifs_whitespace (char *, const char *, bool);
+  char *get_word_from_string (char **, const std::string &, char **);
+  char *strip_trailing_ifs_whitespace (char *, const std::string &, bool);
 
   /* Given STRING, an assignment string, get the value of the right side
      of the `=', and bind it to the left side.  If EXPAND is true, then
@@ -2065,36 +2072,36 @@ protected:
      returning it, but do not perform word splitting.  The call to
      remove_quoted_nulls () is made here because word splitting normally
      takes care of quote removal. */
-  WORD_LIST *expand_string_unsplit (const char *, int);
+  WORD_LIST *expand_string_unsplit (const std::string &, int);
 
   /* Expand the rhs of an assignment statement. */
-  WORD_LIST *expand_string_assignment (const char *, int);
+  WORD_LIST *expand_string_assignment (const std::string &, int);
 
   /* Expand a prompt string. */
-  WORD_LIST *expand_prompt_string (const char *, int, int);
+  WORD_LIST *expand_prompt_string (const std::string &, int, int);
 
   /* Expand STRING just as if you were expanding a word.  This also returns
      a list of words.  Note that filename globbing is *NOT* done for word
      or string expansion, just when the shell is expanding a command.  This
      does parameter expansion, command substitution, arithmetic expansion,
      and word splitting.  Dequote the resultant WORD_LIST before returning. */
-  WORD_LIST *expand_string (const char *, int);
+  WORD_LIST *expand_string (const std::string &, int);
 
   /* Convenience functions that expand strings to strings, taking care of
      converting the WORD_LIST * returned by the expand_string* functions
      to a string and deallocating the WORD_LIST *. */
-  char *expand_string_to_string (const char *, int);
-  char *expand_string_unsplit_to_string (const char *, int);
-  char *expand_assignment_string_to_string (const char *, int);
+  char *expand_string_to_string (const std::string &, int);
+  char *expand_string_unsplit_to_string (const std::string &, int);
+  char *expand_assignment_string_to_string (const std::string &, int);
 
   /* Expand an arithmetic expression string */
-  char *expand_arith_string (const char *, int);
+  char *expand_arith_string (const std::string &, int);
 
   /* De-quote quoted characters in STRING. */
-  char *dequote_string (const char *);
+  char *dequote_string (const std::string &);
 
   /* De-quote CTLESC-escaped CTLESC or CTLNUL characters in STRING. */
-  char *dequote_escapes (const char *);
+  char *dequote_escapes (const std::string &);
 
   WORD_DESC *dequote_word (WORD_DESC *);
 
@@ -2116,11 +2123,11 @@ protected:
   char *get_dollar_var_value (intmax_t);
 
   /* Quote a string to protect it from word splitting. */
-  char *quote_string (const char *);
+  char *quote_string (const std::string &);
 
   /* Quote escape characters (characters special to internals of expansion)
      in a string. */
-  char *quote_escapes (const char *);
+  char *quote_escapes (const std::string &);
 
   /* And remove such quoted special characters. */
   char *remove_quoted_escapes (char *);
@@ -2130,7 +2137,7 @@ protected:
 
   /* Perform quote removal on STRING.  If QUOTED > 0, assume we are obeying the
      backslash quoting rules for within double quotes. */
-  char *string_quote_removal (const char *, int);
+  char *string_quote_removal (const std::string &, int);
 
   /* Perform quote removal on word WORD.  This allocates and returns a new
      WORD_DESC *. */
@@ -2145,12 +2152,12 @@ protected:
   void setifs (SHELL_VAR *);
 
   /* Return the value of $IFS, or " \t\n" if IFS is unset. */
-  const char *getifs ();
+  const std::string &getifs ();
 
   /* This splits a single word into a WORD LIST on $IFS, but only if the word
      is not quoted.  list_string () performs quote removal for us, even if we
      don't do any splitting. */
-  WORD_LIST *word_split (WORD_DESC *, const char *);
+  WORD_LIST *word_split (WORD_DESC *, const std::string &);
 
   /* Take the list of words in LIST and do the various substitutions.  Return
      a new list of words which is the expanded list, and without things like
@@ -2168,7 +2175,7 @@ protected:
 
   WORD_DESC *command_substitute (char *, int, int);
 
-  char *pat_subst (const char *, const char *, const char *, int);
+  char *pat_subst (const std::string &, const std::string &, const std::string &, int);
 
 #if defined (PROCESS_SUBSTITUTION)
   int fifos_pending ();
@@ -2190,26 +2197,26 @@ protected:
 #endif
 
 #if defined (ARRAY_VARS)
-  char *extract_array_assignment_list (const char *, int *);
+  char *extract_array_assignment_list (const std::string &, int *);
 #endif
 
 #if defined (COND_COMMAND)
-  char *remove_backslashes (const char *);
+  char *remove_backslashes (const std::string &);
   char *cond_expand_word (WORD_DESC *, int);
 #endif
 
   size_t
-  skip_to_delim (const char *, size_t, const char *, sd_flags);
+  skip_to_delim (const std::string &, size_t, const std::string &, sd_flags);
 
 #if defined (BANG_HISTORY)
   size_t
-  skip_to_histexp (const char *, size_t, const char *, sd_flags);
+  skip_to_histexp (const std::string &, size_t, const std::string &, sd_flags);
 #endif
 
 #if defined (READLINE)
   unsigned int char_is_quoted (const std::string &, int);	/* rl_linebuf_func_t */
-  bool unclosed_pair (const char *, int, const char *);
-  WORD_LIST *split_at_delims (const char *, int, const char *, int, sd_flags, int *, int *);
+  bool unclosed_pair (const std::string &, int, const std::string &);
+  WORD_LIST *split_at_delims (const std::string &, int, const std::string &, int, sd_flags, int *, int *);
 #endif
 
   void invalidate_cached_quoted_dollar_at ();
@@ -2217,32 +2224,32 @@ protected:
   // private methods from subst.c
 
   char *
-  string_extract (const char *, size_t *, const char *, sx_flags);
+  string_extract (const std::string &, size_t *, const std::string &, sx_flags);
 
   char *
-  string_extract_double_quoted (const char *, size_t *, sx_flags);
+  string_extract_double_quoted (const std::string &, size_t *, sx_flags);
 
   size_t
-  skip_double_quoted (const char *, size_t, size_t, sx_flags);
+  skip_double_quoted (const std::string &, size_t, size_t, sx_flags);
 
   char *
-  string_extract_single_quoted (const char *, size_t *);
+  string_extract_single_quoted (const std::string &, size_t *);
 
   size_t
-  skip_single_quoted (const char *, size_t, size_t, sx_flags);
+  skip_single_quoted (const std::string &, size_t, size_t, sx_flags);
 
   char *
-  string_extract_verbatim (const char *, size_t, size_t *, const char *, sx_flags);
+  string_extract_verbatim (const std::string &, size_t, size_t *, const std::string &, sx_flags);
 
   char *
-  extract_delimited_string (const char *, size_t *, const char *,
-			    const char *, const char *, sx_flags);
+  extract_delimited_string (const std::string &, size_t *, const std::string &,
+			    const std::string &, const std::string &, sx_flags);
 
   char *
-  extract_dollar_brace_string (const char *, size_t *, quoted_flags, sx_flags);
+  extract_dollar_brace_string (const std::string &, size_t *, quoted_flags, sx_flags);
 
   size_t
-  skip_matched_pair (const char *, size_t, char, char, valid_array_flags);
+  skip_matched_pair (const std::string &, size_t, char, char, valid_array_flags);
 
   void
   exp_throw_to_top_level (const std::exception &);
@@ -2252,7 +2259,7 @@ protected:
      skipping over quoted strings and taking the first instance of the
      closing character. */
   size_t
-  skipsubscript (const char *string, size_t start, valid_array_flags flags)
+  skipsubscript (const std::string &string, size_t start, valid_array_flags flags)
   {
     return skip_matched_pair (string, start, '[', ']', flags);
   }
@@ -2264,46 +2271,46 @@ protected:
   }
 
   SHELL_VAR *
-  do_compound_assignment (const char *, const char *, assign_flags);
+  do_compound_assignment (const std::string &, const std::string &, assign_flags);
 
   // from variables.c
 
   void validate_inherited_value (SHELL_VAR *, int);
 
-  SHELL_VAR *set_if_not (const char *, const char *);
+  SHELL_VAR *set_if_not (const std::string &, const std::string &);
 
   virtual void sh_set_lines_and_columns (unsigned int, unsigned int) RL_OVERRIDE;
   void set_pwd ();
   void set_ppid ();
   void make_funcname_visible (bool);
 
-  SHELL_VAR *var_lookup (const char *, VAR_CONTEXT *);
+  SHELL_VAR *var_lookup (const std::string &, VAR_CONTEXT *);
 
-  SHELL_VAR *find_function_var (const char *);
-  FUNCTION_DEF *find_function_def (const char *);
-  SHELL_VAR *find_variable (const char *);
-  SHELL_VAR *find_variable_noref (const char *);
-  SHELL_VAR *find_var_last_nameref (const char *, int);
-  SHELL_VAR *find_global_var_last_nameref (const char *, int);
+  SHELL_VAR *find_function_var (const std::string &);
+  FUNCTION_DEF *find_function_def (const std::string &);
+  SHELL_VAR *find_variable (const std::string &);
+  SHELL_VAR *find_variable_noref (const std::string &);
+  SHELL_VAR *find_var_last_nameref (const std::string &, int);
+  SHELL_VAR *find_global_var_last_nameref (const std::string &, int);
   SHELL_VAR *find_var_nameref (SHELL_VAR *);
-  SHELL_VAR *find_var_nameref_for_create (const char *, int);
-  SHELL_VAR *find_var_nameref_for_assignment (const char *, int);
-/* SHELL_VAR *find_internal (const char *, int); */
-  SHELL_VAR *find_tempenv (const char *);
-  SHELL_VAR *find_no_tempenv (const char *);
-  SHELL_VAR *find_global (const char *);
-  SHELL_VAR *find_global_noref (const char *);
-  SHELL_VAR *find_shell (const char *);
-  SHELL_VAR *find_no_invisible (const char *);
-  SHELL_VAR *find_for_assignment (const char *);
-  char *nameref_transform_name (const char *, int);
+  SHELL_VAR *find_var_nameref_for_create (const std::string &, int);
+  SHELL_VAR *find_var_nameref_for_assignment (const std::string &, int);
+/* SHELL_VAR *find_internal (const std::string &, int); */
+  SHELL_VAR *find_tempenv (const std::string &);
+  SHELL_VAR *find_no_tempenv (const std::string &);
+  SHELL_VAR *find_global (const std::string &);
+  SHELL_VAR *find_global_noref (const std::string &);
+  SHELL_VAR *find_shell (const std::string &);
+  SHELL_VAR *find_no_invisible (const std::string &);
+  SHELL_VAR *find_for_assignment (const std::string &);
+  char *nameref_transform_name (const std::string &, int);
 //   SHELL_VAR *copy_variable (SHELL_VAR *);
-  SHELL_VAR *make_local (const char *, int);
-  SHELL_VAR *bind (const char *, const char *, int);
-  SHELL_VAR *bind_global (const char *, const char *, int);
-  SHELL_VAR *bind_function (const char *, COMMAND *);
+  SHELL_VAR *make_local (const std::string &, int);
+  SHELL_VAR *bind (const std::string &, const std::string &, int);
+  SHELL_VAR *bind_global (const std::string &, const std::string &, int);
+  SHELL_VAR *bind_function (const std::string &, COMMAND *);
 
-  void bind_function_def (const char *, FUNCTION_DEF *, int);
+  void bind_function_def (const std::string &, FUNCTION_DEF *, int);
 
   SHELL_VAR **map_over (sh_var_map_func_t *, VAR_CONTEXT *);
   SHELL_VAR **map_over_funcs (sh_var_map_func_t *);
@@ -2318,49 +2325,49 @@ protected:
 #if defined (ARRAY_VARS)
   SHELL_VAR **all_array ();
 #endif
-  char **all_matching_prefix (const char *);
+  char **all_matching_prefix (const std::string &);
 
   char **make_var_array (HASH_TABLE *);
-  char **add_or_supercede_exported_var (const char *, int);
+  char **add_or_supercede_exported_var (const std::string &, int);
 
   char *get_variable_value (SHELL_VAR *);
-  char *get_string_value (const char *);
-  char *sh_get_env_value (const char *) RL_OVERRIDE;
-  char *make_variable_value (SHELL_VAR *, const char *, int);
+  char *get_string_value (const std::string &);
+  char *make_variable_value (SHELL_VAR *, const std::string &, int);
 
-  /* These three are virtual callbacks when Readline is used. */
-  char *sh_single_quote (const char *) RL_OVERRIDE;
-  char *sh_get_home_dir () RL_OVERRIDE;
-  int sh_unset_nodelay_mode (int) RL_OVERRIDE;
+  /* These four are virtual callbacks when Readline is used. */
+  char *sh_get_env_value (const char *) override;
+  char *sh_single_quote (const char *) override;
+  char *sh_get_home_dir () override;
+  int sh_unset_nodelay_mode (int) override;
 
-  SHELL_VAR *bind_variable_value (SHELL_VAR *, const char *, int);
-  SHELL_VAR *bind_int_variable (const char *, const char *, assign_flags);
-  SHELL_VAR *bind_var_to_int (const char *, intmax_t);
+  SHELL_VAR *bind_variable_value (SHELL_VAR *, const std::string &, int);
+  SHELL_VAR *bind_int_variable (const std::string &, const std::string &, assign_flags);
+  SHELL_VAR *bind_var_to_int (const std::string &, intmax_t);
 
   int assign_in_env (WORD_DESC *, int);
 
-  int unbind_variable (const char *);
-  int check_unbind_variable (const char *);
-  int unbind_nameref (const char *);
-  int unbind_variable_noref (const char *);
-  int unbind_func (const char *);
-  int unbind_function_def (const char *);
-  int delete_var (const char *, VAR_CONTEXT *);
-  int makunbound (const char *, VAR_CONTEXT *);
-  int kill_local_var (const char *);
+  int unbind_variable (const std::string &);
+  int check_unbind_variable (const std::string &);
+  int unbind_nameref (const std::string &);
+  int unbind_variable_noref (const std::string &);
+  int unbind_func (const std::string &);
+  int unbind_function_def (const std::string &);
+  int delete_var (const std::string &, VAR_CONTEXT *);
+  int makunbound (const std::string &, VAR_CONTEXT *);
+  int kill_local_var (const std::string &);
   void delete_all_vars (HASH_TABLE *);
   void delete_all_contexts (VAR_CONTEXT *);
 
-  VAR_CONTEXT *new_var_context (const char *, int);
+  VAR_CONTEXT *new_var_context (const std::string &, int);
   void dispose_var_context (VAR_CONTEXT *);
-  VAR_CONTEXT *push_var_context (const char *, int, HASH_TABLE *);
+  VAR_CONTEXT *push_var_context (const std::string &, int, HASH_TABLE *);
   void pop_var_context ();
   VAR_CONTEXT *push_scope (int, HASH_TABLE *);
   int pop_scope (int);
 
   void clear_dollar_vars ();
 
-  void push_context (const char *, bool, HASH_TABLE *);
+  void push_context (const std::string &, bool, HASH_TABLE *);
   void pop_context ();
   void push_dollar_vars ();
   void pop_dollar_vars ();
@@ -2372,7 +2379,7 @@ protected:
   void pop_args ();
 
   void adjust_shell_level (int);
-  void non_unsettable (const char *);
+  void non_unsettable (const std::string &);
   void dispose_variable (void *);
   void dispose_used_env_vars ();
   void dispose_function_env ();
@@ -2382,18 +2389,18 @@ protected:
   void merge_builtin_env ();
   void kill_all_local_variables ();
 
-  void set_var_read_only (const char *);
-  void set_func_read_only (const char *);
-  void set_var_auto_export (const char *);
-  void set_func_auto_export (const char *);
+  void set_var_read_only (const std::string &);
+  void set_func_read_only (const std::string &);
+  void set_var_auto_export (const std::string &);
+  void set_func_auto_export (const std::string &);
 
   void sort_variables (SHELL_VAR **);
 
-  int chkexport (const char *);
+  int chkexport (const std::string &);
   void maybe_make_export_env ();
-  void update_export_env_inplace (const char *, int, const char *);
-  void put_command_name_into_env (const char *);
-  void put_gnu_argv_flags_into_env (intmax_t, const char *);
+  void update_export_env_inplace (const std::string &, int, const std::string &);
+  void put_command_name_into_env (const std::string &);
+  void put_gnu_argv_flags_into_env (intmax_t, const std::string &);
 
   void print_var_list (SHELL_VAR **);
   void print_func_list (SHELL_VAR **);
@@ -2402,11 +2409,11 @@ protected:
   void print_var_function (SHELL_VAR *);
 
 #if defined (ARRAY_VARS)
-  SHELL_VAR *make_new_array_variable (const char *);
-  SHELL_VAR *make_local_array_variable (const char *, int);
+  SHELL_VAR *make_new_array_variable (const std::string &);
+  SHELL_VAR *make_local_array_variable (const std::string &, int);
 
-  SHELL_VAR *make_new_assoc_variable (const char *);
-  SHELL_VAR *make_local_assoc_variable (const char *, int);
+  SHELL_VAR *make_new_assoc_variable (const std::string &);
+  SHELL_VAR *make_local_assoc_variable (const std::string &, int);
 
   void set_pipestatus_array (int *, int);
   ARRAY *save_pipestatus_array ();
@@ -2417,7 +2424,7 @@ protected:
 
   /* The variable in NAME has just had its state changed.  Check to see if it
      is one of the special ones where something special happens. */
-  void stupidly_hack_special_vars (const char *);
+  void stupidly_hack_special_vars (const std::string &);
 
   /* Reinitialize some special variables that have external effects upon unset
      when the shell reinitializes itself. */
@@ -2427,47 +2434,47 @@ protected:
 
 /* The `special variable' functions that get called when a particular
    variable is set. */
-  void sv_ifs (const char *);
-  void sv_path (const char *);
-  void sv_mail (const char *);
-  void sv_funcnest (const char *);
-  void sv_execignore (const char *);
-  void sv_globignore (const char *);
-  void sv_ignoreeof (const char *);
-  void sv_strict_posix (const char *);
-  void sv_optind (const char *);
-  void sv_opterr (const char *);
-  void sv_locale (const char *);
-  void sv_xtracefd (const char *);
-  void sv_shcompat (const char *);
+  void sv_ifs (const std::string &);
+  void sv_path (const std::string &);
+  void sv_mail (const std::string &);
+  void sv_funcnest (const std::string &);
+  void sv_execignore (const std::string &);
+  void sv_globignore (const std::string &);
+  void sv_ignoreeof (const std::string &);
+  void sv_strict_posix (const std::string &);
+  void sv_optind (const std::string &);
+  void sv_opterr (const std::string &);
+  void sv_locale (const std::string &);
+  void sv_xtracefd (const std::string &);
+  void sv_shcompat (const std::string &);
 
 #if defined (READLINE)
-  void sv_comp_wordbreaks (const char *);
-  void sv_terminal (const char *);
-  void sv_hostfile (const char *);
-  void sv_winsize (const char *);
+  void sv_comp_wordbreaks (const std::string &);
+  void sv_terminal (const std::string &);
+  void sv_hostfile (const std::string &);
+  void sv_winsize (const std::string &);
 #endif
 
 #if defined (__CYGWIN__)
-  void sv_home (const char *);
+  void sv_home (const std::string &);
 #endif
 
 #if defined (HISTORY)
-  void sv_histsize (const char *);
-  void sv_histignore (const char *);
-  void sv_history_control (const char *);
+  void sv_histsize (const std::string &);
+  void sv_histignore (const std::string &);
+  void sv_history_control (const std::string &);
 #  if defined (BANG_HISTORY)
-  void sv_histchars (const char *);
+  void sv_histchars (const std::string &);
 #  endif
-  void sv_histtimefmt (const char *);
+  void sv_histtimefmt (const std::string &);
 #endif /* HISTORY */
 
 #if defined (HAVE_TZSET)
-  void sv_tz (const char *);
+  void sv_tz (const std::string &);
 #endif
 
 #if defined (JOB_CONTROL)
-  void sv_childmax (const char *);
+  void sv_childmax (const std::string &);
 #endif
 
   // Methods that were previously static in variables.c.
@@ -2475,16 +2482,16 @@ protected:
 
   /* The variable in NAME has just had its state changed.  Check to see if it
      is one of the special ones where something special happens. */
-  void stupidly_hack_special_variables (const char *);
+  void stupidly_hack_special_variables (const std::string &);
 
   // Methods in parse.y / y.tab.c.
-  char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
+  char *xparse_dolparen (const std::string &, char *, size_t *, sx_flags);
 
   // Methods in lib/tilde/tilde.c.
-  size_t tilde_find_prefix (const char *, size_t *);
-  char *tilde_expand_word (const char *);
-  size_t tilde_find_suffix (const char *);
-  char *tilde_expand (const char *);
+  size_t tilde_find_prefix (const std::string &, size_t *);
+  char *tilde_expand_word (const std::string &);
+  size_t tilde_find_suffix (const std::string &);
+  char *tilde_expand (const std::string &);
 
 private:
 
@@ -2551,15 +2558,14 @@ private:
 
   lvalue lastlval;
 
-  /* private variables from subst.c */
+  /* private variables from subst.cc */
 
   /* Variables used to keep track of the characters in IFS. */
   SHELL_VAR *ifs_var;
   const char *ifs_value;
 
-  /* Used to hold a list of variable assignments preceding a command.  Global
-     so the SIGCHLD handler in jobs.c can unwind-protect it when it runs a
-     SIGCHLD trap and so it can be saved and restored by the trap handlers. */
+  /* Used to hold a list of variable assignments preceding a command.
+     TODO: make sure SIGCHLD trap handlers can save and restore this. */
   WORD_LIST *subst_assign_varlist;
 
   WORD_LIST *cached_quoted_dollar_at;
@@ -2568,14 +2574,18 @@ private:
      without any leading variable assignments. */
   WORD_LIST *garglist;
 
-  /* variables from lib/sh/shtty.c */
+  /* variables from lib/sh/getenv.cc */
+
+  char *last_tempenv_value;
+
+  /* variables from lib/sh/shtty.cc */
 
   TTYSTRUCT ttin, ttout;
 
   /* local buffer for lib/sh/zread.c functions */
   char *zread_lbuf;
 
-  /* moved from lib/tilde/tilde.c */
+  /* moved from lib/tilde/tilde.cc */
 
   /* If non-null, this contains the address of a function that the application
      wants called before trying the standard tilde expansions.  The function

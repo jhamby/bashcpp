@@ -27,6 +27,8 @@
 #include <cstring>
 #include <ctime>
 
+#include <string>
+
 #ifdef HAVE_STDINT_H
 #  include <stdint.h>
 #endif
@@ -90,9 +92,6 @@ void set_working_directory (const char *);
 /* Functions from the bash library, lib/sh/libsh.a.  These should really
    go into a separate include file. */
 
-/* declarations for functions defined in lib/sh/casemod.c */
-char *sh_modcase (const char *, const char *, int);
-
 /* Enum type for the flags argument to sh_modcase. */
 enum sh_modcase_flags {
   CASE_NOOP =		     0,
@@ -119,6 +118,9 @@ operator ~ (const sh_modcase_flags &a) {
   return static_cast<sh_modcase_flags> (~static_cast<uint32_t> (a));
 }
 
+/* declarations for functions defined in lib/sh/casemod.c */
+char *sh_modcase (const char *, const char *, sh_modcase_flags);
+
 /* declarations for functions defined in lib/sh/clktck.c */
 long get_clk_tck ();
 
@@ -129,19 +131,22 @@ void print_clock_t (FILE *, clock_t);
 /* from lib/sh/eaccess.c */
 int sh_stat (const char *, struct stat *);
 
-/* Declarations for functions defined in lib/sh/fmtulong.c */
-#define FL_PREFIX     0x01    /* add 0x, 0X, or 0 prefix as appropriate */
-#define FL_ADDBASE    0x02    /* add base# prefix to converted value */
-#define FL_HEXUPPER   0x04    /* use uppercase when converting to hex */
-#define FL_UNSIGNED   0x08    /* don't add any sign */
+/* Enum for functions defined in lib/sh/fmtulong.c */
+enum fmt_flags {
+  FL_NOFLAGS =		   0,
+  FL_PREFIX =		0x01,    /* add 0x, 0X, or 0 prefix as appropriate */
+  FL_ADDBASE =		0x02,    /* add base# prefix to converted value */
+  FL_HEXUPPER =		0x04,    /* use uppercase when converting to hex */
+  FL_UNSIGNED =		0x08    /* don't add any sign */
+};
 
-char *fmtulong (unsigned long int, int, char *, size_t, int);
+std::string fmtulong (unsigned long, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fmtulong.c */
-char *fmtullong (unsigned long long int, int, char *, size_t, int);
+std::string fmtullong (unsigned long long, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fmtumax.c */
-char *fmtumax (uintmax_t, int, char *, size_t, int);
+std::string fmtumax (uintmax_t, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fnxform.c */
 
@@ -158,58 +163,40 @@ int input_avail (int);
 
 /* Inline declarations of functions previously defined in lib/sh/itos.c */
 
-static inline char *
-inttostr (intmax_t i, char *buf, size_t len)
+static inline std::string
+inttostr (intmax_t i)
 {
-  return fmtumax (static_cast<uintmax_t> (i), 10, buf, len, 0);
+  return fmtumax (static_cast<uintmax_t> (i), 10, FL_NOFLAGS);
 }
 
-/* Integer to string conversion.  This conses the string; the
-   caller should delete it. */
-static inline char *
+/* Integer to string conversion.  This now returns a string. */
+static inline std::string
 itos (intmax_t i)
 {
-  char *p, lbuf[INT_STRLEN_BOUND(intmax_t) + 1];
-
-  p = fmtumax (static_cast<uintmax_t> (i), 10, lbuf, sizeof(lbuf), 0);
-  return savestring (p);
+  return fmtumax (static_cast<uintmax_t> (i), 10, FL_NOFLAGS);
 }
 
 /* Integer to string conversion.  This conses the string using savestring;
    caller should delete it and be prepared to catch alloc exceptions. */
-static inline char *
+static inline std::string
 mitos (intmax_t i)
 {
-  char *p, lbuf[INT_STRLEN_BOUND(intmax_t) + 1];
-
-  p = fmtumax (static_cast<uintmax_t> (i), 10, lbuf, sizeof(lbuf), 0);
-  return savestring (p);
+  return fmtumax (static_cast<uintmax_t> (i), 10, FL_NOFLAGS);
 }
 
-static inline char *
-uinttostr (uintmax_t i, char *buf, size_t len)
+static inline std::string
+uinttostr (uintmax_t i)
 {
-  return fmtumax (i, 10, buf, len, FL_UNSIGNED);
+  return fmtumax (i, 10, FL_UNSIGNED);
 }
 
 /* Integer to string conversion.  This conses the string; the
    caller should delete it. */
-static inline char *
+static inline std::string
 uitos (uintmax_t i)
 {
-  char *p, lbuf[INT_STRLEN_BOUND(uintmax_t) + 1];
-
-  p = fmtumax (i, 10, lbuf, sizeof(lbuf), FL_UNSIGNED);
-  return savestring (p);
+  return fmtumax (i, 10, FL_UNSIGNED);
 }
-
-/* declarations for functions defined in lib/sh/makepath.c */
-#define MP_DOTILDE	0x01
-#define MP_DOCWD	0x02
-#define MP_RMDOT	0x04
-#define MP_IGNDOT	0x08
-
-char *sh_makepath (const char *, const char *, int);
 
 /* declarations for functions defined in lib/sh/mbscasecmp.c */
 char *mbscasecmp (const char *, const char *);
@@ -229,10 +216,13 @@ int getmaxgroups ();
 long getmaxchild ();
 
 /* declarations for functions defined in lib/sh/pathcanon.c */
-#define PATH_CHECKDOTDOT	0x0001
-#define PATH_CHECKEXISTS	0x0002
-#define PATH_HARDPATH		0x0004
-#define PATH_NOALLOC		0x0008
+enum path_flags {
+  PATH_NOFLAGS =	     0,
+  PATH_CHECKDOTDOT =	0x0001,
+  PATH_CHECKEXISTS =	0x0002,
+  PATH_HARDPATH =	0x0004,
+  PATH_NOALLOC =	0x0008
+};
 
 char *sh_canonpath (const char *, int);
 
@@ -257,8 +247,11 @@ int sh_eaccess (const char *, int);
 int sh_regmatch (const char *, const char *, int);
 
 /* defines for flags argument to sh_regmatch. */
-#define SHMAT_SUBEXP		0x001	/* save subexpressions in SH_REMATCH */
-#define SHMAT_PWARN		0x002	/* print a warning message on invalid regexp */
+enum sh_match_flags {
+  SHMAT_NOFLAGS =	    0,
+  SHMAT_SUBEXP =	0x001,	/* save subexpressions in SH_REMATCH */
+  SHMAT_PWARN =		0x002	/* print a warning message on invalid regexp */
+};
 
 /* declarations for functions defined in lib/sh/shmbchar.c */
 size_t mbstrlen (const char *);
@@ -347,10 +340,13 @@ void timeval_to_secs (struct timeval *tvp, time_t *sp, int *sfp);
 void print_timeval (FILE *fp, struct timeval *tvp);
 
 /* declarations for functions defined in lib/sh/tmpfile.c */
-#define MT_USETMPDIR		0x0001
-#define MT_READWRITE		0x0002
-#define MT_USERANDOM		0x0004
-#define MT_TEMPLATE		0x0008
+enum mktmp_flags {
+  MT_NOFLAGS =		     0,
+  MT_USETMPDIR =	0x0001,
+  MT_READWRITE =	0x0002,
+  MT_USERANDOM =	0x0004,
+  MT_TEMPLATE =		0x0008
+};
 
 char *sh_mktmpname (char *, int);
 int sh_mktmpfd (const char *, int, char **);

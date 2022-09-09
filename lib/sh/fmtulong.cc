@@ -39,8 +39,12 @@
 
 #include "chartypes.hh"
 #include "bashintl.hh"
+#include "externs.hh"
 
 #include "typemax.hh"
+
+namespace bash
+{
 
 static const char *x_digs = "0123456789abcdef";
 static const char *X_digs = "0123456789ABCDEF";
@@ -53,25 +57,17 @@ static const char *X_digs = "0123456789ABCDEF";
 			   : (((x) < 62) ? (x) - 36 + 'A' \
 					 : (((x) == 62) ? '@' : '_')))
 
-#ifndef FL_PREFIX
-#  define FL_PREFIX	0x01	/* add 0x, 0X, or 0 prefix as appropriate */
-#  define FL_ADDBASE	0x02	/* add base# prefix to converted value */
-#  define FL_HEXUPPER	0x04	/* use uppercase when converting to hex */
-#  define FL_UNSIGNED	0x08	/* don't add any sign */
-#endif
-
 #ifndef LONG
 #  define LONG	long
 #  define UNSIGNED_LONG unsigned long
 #endif
 
 /* `unsigned long' (or unsigned long long) to string conversion for a given
-   base.  The caller passes the output buffer and the size.  This should
-   check for buffer underflow, but currently does not. */
-char *
-fmtulong (UNSIGNED_LONG ui, int base, char *buf, size_t len, int flags)
+   base. */
+std::string
+fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
 {
-  char *p;
+  std::string buf;
   int sign;
   LONG si;
 
@@ -81,11 +77,9 @@ fmtulong (UNSIGNED_LONG ui, int base, char *buf, size_t len, int flags)
   if (base < 2 || base > 64)
     {
 #if 1
-      /* XXX - truncation possible with long translation */
-      std::strncpy (buf, _("invalid base"), len - 1);
-      buf[len - 1] = '\0';
+      buf = _("invalid base");
       errno = EINVAL;
-      return p = buf;
+      return buf;
 #else
       base = 10;
 #endif
@@ -98,53 +92,50 @@ fmtulong (UNSIGNED_LONG ui, int base, char *buf, size_t len, int flags)
       sign = '-';
     }
 
-  p = buf + len - 2;
-  p[1] = '\0';
-
   /* handle common cases explicitly */
   switch (base)
     {
     case 10:
       if (ui < 10)
 	{
-	  *p-- = static_cast<char> (ui);
+	  buf.insert (0, 1, static_cast<char> (ui));
 	  break;
 	}
       /* Favor signed arithmetic over unsigned arithmetic; it is faster on
 	 many machines. */
       if ((LONG)ui < 0)
 	{
-	  *p-- = static_cast<char> (ui % 10);
+	  buf.insert (0, 1, static_cast<char> (ui % 10));
 	  si = ui / 10;
 	}
       else
         si = ui;
       do
-	*p-- = static_cast<char> (si % 10);
+	buf.insert (0, 1, static_cast<char> (si % 10));
       while (si /= 10);
       break;
 
     case 8:
       do
-	*p-- = static_cast<char> (ui & 7);
+	buf.insert (0, 1, static_cast<char> (ui & 7));
       while (ui >>= 3);
       break;
 
     case 16:
       do
-	*p-- = (flags & FL_HEXUPPER) ? X_digs[ui & 15] : x_digs[ui & 15];
+	buf.insert (0, 1, (flags & FL_HEXUPPER) ? X_digs[ui & 15] : x_digs[ui & 15]);
       while (ui >>= 4);
       break;
 
     case 2:
       do
-	*p-- = static_cast<char> (ui & 1);
+	buf.insert (0, 1, static_cast<char> (ui & 1));
       while (ui >>= 1);
       break;
 
     default:
       do
-	*p-- = FMTCHAR (ui % base);
+	buf.insert (0, 1, FMTCHAR (ui % base));
       while (ui /= base);
       break;
     }
@@ -153,22 +144,24 @@ fmtulong (UNSIGNED_LONG ui, int base, char *buf, size_t len, int flags)
     {
       if (base == 16)
 	{
-	  *p-- = (flags & FL_HEXUPPER) ? 'X' : 'x';
-	  *p-- = '0';
+	  buf.insert (0, 1, (flags & FL_HEXUPPER) ? 'X' : 'x');
+	  buf.insert (0, 1, '0');
 	}
-      else if (p[1] != '0')
-	*p-- = '0';
+      else if (buf[0] != '0')
+	buf.insert (0, 1, '0');
     }
   else if ((flags & FL_ADDBASE) && base != 10)
     {
-      *p-- = '#';
-      *p-- = static_cast<char> (base % 10);
+      buf.insert (0, 1, '#');
+      buf.insert (0, 1, static_cast<char> (base % 10));
       if (base > 10)
-        *p-- = static_cast<char> (base / 10);
+	buf.insert (0, 1, static_cast<char> (base / 10));
     }
 
   if (sign)
-    *p-- = '-';
+    buf.insert (0, 1, '-');
 
-  return p + 1;
+  return buf;
 }
+
+}  // namespace bash
