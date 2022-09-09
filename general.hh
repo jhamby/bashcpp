@@ -32,32 +32,47 @@
 #endif
 
 #include <cstddef>
+#include <cstdlib>
 #include <cstring>
 #include <climits>
 
 #include <string>
-#include <list>
 #include <exception>
 
 namespace bash
 {
 
-/* Shared exceptions to replace setjmp and longjmp. */
+/* Exceptions to replace setjmp and longjmp calls. */
 
 /* We want to stop parsing. */
-class force_eof_exception : public std::exception {};
+class force_eof_exception : public std::exception {
+public:
+  virtual const char *what() const noexcept override;
+};
 
 /* Discard current command. */
-class discard_exception : public std::exception {};
+class discard_exception : public std::exception {
+public:
+  virtual const char *what() const noexcept override;
+};
 
 /* Unconditionally exit the program now. */
-class exit_exception : public std::exception {};
+class exit_exception : public std::exception {
+public:
+  virtual const char *what() const noexcept override;
+};
 
 /* Exit due to error condition (inherits from exit_exception). */
-class error_exit_exception : public exit_exception {};
+class error_exit_exception : public exit_exception {
+public:
+  virtual const char *what() const noexcept override;
+};
 
 /* String extraction error. */
-class extract_string_error : public std::exception {};
+class string_extract_error : public std::exception {
+public:
+  virtual const char *what() const noexcept override;
+};
 
 /* Exceptions used by expansion functions in subst.c. */
 

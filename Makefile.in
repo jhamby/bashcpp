@@ -811,7 +811,7 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	include/unionwait.hh pathnames.hh
 
 bash_LDADD = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
-BUILT_SOURCES = parse.hh pipesize.hh builtext.hh builtins.cc
+BUILT_SOURCES = parse.hh pipesize.hh builtext.hh builtins.cc version.hh
 AM_YFLAGS = -d
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
 	-I$(srcdir)/lib/tilde -I$(srcdir)/builtins
@@ -843,6 +843,8 @@ psize_SOURCES = $(BLTDIR)/psize.cc
 PSIZE = psize$(EXEEXT)
 MKBUILTINS = mkbuiltins$(EXEEXT)
 DIRECTDEFINE = -D $(srcdir)
+Program = bash$(EXEEXT)
+Version = @BASHVERS@
 libglob_a_SOURCES = $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc $(GLBDIR)/gmisc.cc \
 	$(GLBDIR)/xmbsrtowcs.cc $(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh \
 	$(GLBDIR)/glob_loop.hh $(GLBDIR)/gm_loop.hh $(GLBDIR)/ndir.hh \
@@ -2440,6 +2442,10 @@ builtext.hh builtins.cc: $(CONFIG_HEADER) $(MKBUILTINS) $(DEFSRC)
 	 else \
 		$(RM) old-builtins.cc; \
 	 fi
+
+version.hh: $(CONFIG_HEADER) patchlevel.hh
+	$(SHELL) $(srcdir)/support/mkversion.sh -b -S $(srcdir) -s $(RELSTATUS) -d $(Version) -o newversion.hh \
+		&& mv newversion.hh version.hh
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

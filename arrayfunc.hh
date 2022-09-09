@@ -37,6 +37,7 @@ namespace bash
 
 /* Flags for array_value_internal and callers array_value/get_array_value */
 enum av_flags {
+  AV_NOFLAGS =		    0,
   AV_ALLOWALL =		0x001,
   AV_QUOTED =		0x002,
   AV_USEIND =		0x004,
@@ -47,6 +48,7 @@ enum av_flags {
 
 /* Flags for valid_array_reference. Value 1 is reserved for skipsubscript() */
 enum valid_array_flags {
+  VA_NOFLAGS =	    0,
   VA_NOEXPAND =	0x001,
   VA_ONEWORD =	0x002
 };

@@ -156,9 +156,9 @@ struct procstat {
   int status;
 };
 
-/* A standalone linked list of PROCESS *, used in various places
+/* A standalone vector of PROCESS *, used in various places
    including keeping track of process substitutions. */
-typedef std::list<PROCESS> procchain;
+typedef std::vector<PROCESS *> procchain;
 
 /* A value which cannot be a process ID. */
 #define NO_PID (static_cast<pid_t> (-1))

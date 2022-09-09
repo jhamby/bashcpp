@@ -18,27 +18,27 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #if defined (ARRAY_VARS)
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
-#include <cstdio>
 
-#include "bashintl.h"
+#include "bashintl.hh"
 
-#include "shell.h"
-#include "execute_cmd.h"
-#include "pathexp.h"
+#include "shell.hh"
+#include "execute_cmd.hh"
+#include "pathexp.hh"
 
-#include "shmbutil.h"
+#include "shmbutil.hh"
+
 #if defined (HAVE_MBSTR_H) && defined (HAVE_MBSCHR)
 #  include <mbstr.h>		/* mbschr */
 #endif
 
-#include "builtins/common.h"
+#include "builtins/common.hh"
 
 #ifndef LBRACK
 #  define LBRACK '['

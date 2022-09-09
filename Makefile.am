@@ -53,7 +53,7 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 
 bash_LDADD = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
 
-BUILT_SOURCES = parse.hh pipesize.hh builtext.hh builtins.cc
+BUILT_SOURCES = parse.hh pipesize.hh builtext.hh builtins.cc version.hh
 
 AM_YFLAGS = -d
 
@@ -119,6 +119,14 @@ builtext.hh builtins.cc: $(CONFIG_HEADER) $(MKBUILTINS) $(DEFSRC)
 	 else \
 		$(RM) old-builtins.cc; \
 	 fi
+
+Program = bash$(EXEEXT)
+Version = @BASHVERS@
+RELSTATUS = @RELSTATUS@
+
+version.hh: $(CONFIG_HEADER) patchlevel.hh
+	$(SHELL) $(srcdir)/support/mkversion.sh -b -S $(srcdir) -s $(RELSTATUS) -d $(Version) -o newversion.hh \
+		&& mv newversion.hh version.hh
 
 libglob_a_SOURCES = $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc $(GLBDIR)/gmisc.cc \
 	$(GLBDIR)/xmbsrtowcs.cc $(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh \

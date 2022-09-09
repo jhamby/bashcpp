@@ -18,11 +18,11 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
-#include "posixstat.h"
-#include "posixtime.h"
+#include "bashtypes.hh"
+#include "posixstat.hh"
+#include "posixtime.hh"
 
 #if defined (__QNX__)
 #  if defined (__QNXNTO__)
@@ -36,45 +36,44 @@
 #  include <unistd.h>
 #endif
 
-#include <cstdio>
-#include "chartypes.h"
+#include "chartypes.hh"
+
 #if defined (HAVE_PWD_H)
 #  include <pwd.h>
 #endif
-#include "bashintl.h"
-#include "filecntl.h"
 
-#define NEED_XTRACE_SET_DECL
+#include "bashintl.hh"
+#include "filecntl.hh"
 
-#include "shell.h"
-#include "parser.h"
-#include "flags.h"
-#include "execute_cmd.h"
-#include "findcmd.h"
-#include "input.h"
-#include "hashcmd.h"
-#include "pathexp.h"
-#include "alias.h"
-#include "jobs.h"
+#include "shell.hh"
+#include "parser.hh"
+#include "flags.hh"
+#include "execute_cmd.hh"
+#include "findcmd.hh"
+#include "input.hh"
+#include "hashcmd.hh"
+#include "pathexp.hh"
+#include "alias.hh"
+#include "jobs.hh"
 
-#include "version.h"
+#include "version.hh"
 
-#include "builtins/getopt.h"
-#include "builtins/common.h"
-#include "builtins/builtext.h"
+#include "builtins/getopt.hh"
+#include "builtins/common.hh"
+#include "builtext.hh"
 
 #if defined (READLINE)
-#  include <readline/readline.h>
+#  include "readline.hh"
 #else
-#  include <tilde/tilde.h>
+#  include "tilde.hh"
 #endif
 
 #if defined (HISTORY)
-#  include <readline/history.h>
+#  include "history.hh"
 #endif /* HISTORY */
 
 #if defined (PROGRAMMABLE_COMPLETION)
-#  include "pcomplete.h"
+#  include "pcomplete.hh"
 #endif
 
 // Process environment variables supplied by the C library.

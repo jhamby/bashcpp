@@ -164,6 +164,76 @@ struct UserInfo {
   char *home_dir;
 };
 
+/* Definitions moved from expr.cc to simplify definition of Shell class. */
+
+/* The Tokens.  Singing "The Lion Sleeps Tonight". */
+
+enum token_t {
+  NONE =	0,
+  EQEQ =	1,	/* "==" */
+  NEQ =		2,	/* "!=" */
+  LEQ =		3,	/* "<=" */
+  GEQ =		4,	/* ">=" */
+  STR =		5,	/* string */
+  NUM =		6,	/* number */
+  LAND =	7,	/* "&&" Logical AND */
+  LOR =		8,	/* "||" Logical OR */
+  LSH =		9,	/* "<<" Left SHift */
+  RSH =		10,	/* ">>" Right SHift */
+  OP_ASSIGN =	11,	/* op= expassign as in Posix.2 */
+  COND =	12,	/* exp1 ? exp2 : exp3 */
+  POWER =	13,	/* exp1**exp2 */
+  PREINC =	14,	/* ++var */
+  PREDEC =	15,	/* --var */
+  POSTINC =	16,	/* var++ */
+  POSTDEC =	17,	/* var-- */
+  EQ =		'=',
+  GT =		'>',
+  LT =		'<',
+  PLUS =	'+',
+  MINUS =	'-',
+  MUL =		'*',
+  DIV =		'/',
+  MOD =		'%',
+  NOT =		'!',
+  LPAR =	'(',
+  RPAR =	')',
+  BAND =	'&',	/* Bitwise AND */
+  BOR =		'|',	/* Bitwise OR. */
+  BXOR =	'^',	/* Bitwise eXclusive OR. */
+  BNOT =	'~',	/* Bitwise NOT; Two's complement. */
+  QUES =	'?',
+  COL =		':',
+  COMMA =	','
+};
+
+struct lvalue
+{
+  std::string tokstr;	/* possibly-rewritten lvalue if not nullptr */
+  intmax_t tokval;	/* expression evaluated value */
+  SHELL_VAR *tokvar;	/* variable described by array or var reference */
+  intmax_t ind;		/* array index if not -1 */
+
+  void init ()
+  {
+    tokstr.clear ();
+    tokvar = nullptr;
+    tokval = ind = -1;
+  }
+};
+
+/* A struct defining a single expression context. */
+struct EXPR_CONTEXT
+{
+  std::string expression, tp, lasttp;
+  std::string tokstr;
+  intmax_t tokval;
+  struct lvalue lval;
+  token_t curtok, lasttok;
+  int noeval;
+  int _pad;		// silence clang -Wpadded warning
+};
+
 /* Simple shell state: variables that can be memcpy'd to subshells. */
 class SimpleState
 {
@@ -198,6 +268,9 @@ protected:
   /* ************************************************************** */
   /*		Bash Variables (32-bit int types)		    */
   /* ************************************************************** */
+
+  /* from expr.cc: the OP in OP= */
+  token_t assigntok;
 
   // from bashhist.c
   int history_lines_this_session;
@@ -313,8 +386,6 @@ protected:
   pid_t current_command_subst_pid;
 
   /* variables from lib/sh/shtty.c */
-
-  TTYSTRUCT ttin, ttout;
 
   /* Variables used to keep track of the characters in IFS. */
   bool ifs_cmap[UCHAR_MAX + 1];
@@ -695,11 +766,14 @@ protected:
   bool u32init;
   bool utf8locale;
 
+  /* set to true if the expression has already been run through word expansion */
+  bool already_expanded;
+
 #ifndef HAVE_LOCALE_CHARSET
   char charsetbuf[40];
 #endif
 
-  char _pad[5];				// silence clang -Wpadded warning
+  char _pad[8];				// silence clang -Wpadded warning
 };
 
 
@@ -964,12 +1038,48 @@ protected:
   char *bash_dequote_text (const char *);
 
   /* Functions from expr.c. */
+
   enum eval_flags {
     EXP_NONE =		0,
     EXP_EXPANDED =	0x01
   };
 
   intmax_t evalexp (const char *, eval_flags, bool *);
+  intmax_t subexpr (const char *);
+  intmax_t expcomma ();
+  intmax_t expassign ();
+  intmax_t expcond ();
+  intmax_t explor ();
+  intmax_t expland ();
+  intmax_t expbor ();
+  intmax_t expbxor ();
+  intmax_t expband ();
+  intmax_t exp5 ();
+  intmax_t exp4 ();
+  intmax_t expshift ();
+  intmax_t exp3 ();
+  intmax_t expmuldiv ();
+  intmax_t exppower ();
+  intmax_t exp1 ();
+  intmax_t exp0 ();
+  intmax_t expr_streval (const char *, int, struct lvalue *);
+
+  void readtok ();
+
+  intmax_t expr_streval (char *, int, struct lvalue *);
+
+  void evalerror (const char *);
+  intmax_t strlong (const char *);
+
+  void pushexp ();
+  void popexp ();
+  void expr_unwind ();
+  void expr_bind_variable (const char *, const char *);
+
+#if defined (ARRAY_VARS)
+  int expr_skipsubscript (const char *, char *);
+  void expr_bind_array_element (const char *, arrayind_t, char *);
+#endif
 
   /* set -x support */
   void xtrace_init ();
@@ -2132,7 +2242,7 @@ protected:
   extract_dollar_brace_string (const char *, size_t *, quoted_flags, sx_flags);
 
   size_t
-  skip_matched_pair (const char *, size_t, char, char, int);
+  skip_matched_pair (const char *, size_t, char, char, valid_array_flags);
 
   void
   exp_throw_to_top_level (const std::exception &);
@@ -2142,7 +2252,7 @@ protected:
      skipping over quoted strings and taking the first instance of the
      closing character. */
   size_t
-  skipsubscript (const char *string, size_t start, int flags)
+  skipsubscript (const char *string, size_t start, valid_array_flags flags)
   {
     return skip_matched_pair (string, start, '[', ']', flags);
   }
@@ -2171,13 +2281,13 @@ protected:
 
   SHELL_VAR *find_function_var (const char *);
   FUNCTION_DEF *find_function_def (const char *);
-  SHELL_VAR *find (const char *);
-  SHELL_VAR *find_noref (const char *);
-  SHELL_VAR *find_last_nameref (const char *, int);
-  SHELL_VAR *find_global_last_nameref (const char *, int);
-  SHELL_VAR *find_nameref (SHELL_VAR *);
-  SHELL_VAR *find_nameref_for_create (const char *, int);
-  SHELL_VAR *find_nameref_for_assignment (const char *, int);
+  SHELL_VAR *find_variable (const char *);
+  SHELL_VAR *find_variable_noref (const char *);
+  SHELL_VAR *find_var_last_nameref (const char *, int);
+  SHELL_VAR *find_global_var_last_nameref (const char *, int);
+  SHELL_VAR *find_var_nameref (SHELL_VAR *);
+  SHELL_VAR *find_var_nameref_for_create (const char *, int);
+  SHELL_VAR *find_var_nameref_for_assignment (const char *, int);
 /* SHELL_VAR *find_internal (const char *, int); */
   SHELL_VAR *find_tempenv (const char *);
   SHELL_VAR *find_no_tempenv (const char *);
@@ -2224,7 +2334,7 @@ protected:
   int sh_unset_nodelay_mode (int) RL_OVERRIDE;
 
   SHELL_VAR *bind_variable_value (SHELL_VAR *, const char *, int);
-  SHELL_VAR *bind_int_variable (const char *, const char *, int);
+  SHELL_VAR *bind_int_variable (const char *, const char *, assign_flags);
   SHELL_VAR *bind_var_to_int (const char *, intmax_t);
 
   int assign_in_env (WORD_DESC *, int);
@@ -2363,6 +2473,10 @@ protected:
   // Methods that were previously static in variables.c.
   void create_variable_tables ();
 
+  /* The variable in NAME has just had its state changed.  Check to see if it
+     is one of the special ones where something special happens. */
+  void stupidly_hack_special_variables (const char *);
+
   // Methods in parse.y / y.tab.c.
   char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
 
@@ -2410,8 +2524,8 @@ private:
   SHELL_VAR invalid_nameref_value;
 
   /* variables from common.c */
-  Shell::sh_builtin_func_t this_shell_builtin;
-  Shell::sh_builtin_func_t last_shell_builtin;
+  sh_builtin_func_t this_shell_builtin;
+  sh_builtin_func_t last_shell_builtin;
 
   WORD_LIST *rest_of_args;
 
@@ -2429,6 +2543,14 @@ private:
   WORD_LIST *lcurrent;
   WORD_LIST *loptend;
 
+  /* The arithmetic expression evaluator's stack of expression contexts. */
+  std::vector<EXPR_CONTEXT *> expr_stack;
+
+  /* The current context for the expression being evaluated. */
+  EXPR_CONTEXT expr_current;
+
+  lvalue lastlval;
+
   /* private variables from subst.c */
 
   /* Variables used to keep track of the characters in IFS. */
@@ -2445,6 +2567,10 @@ private:
   /* A WORD_LIST of words to be expanded by expand_word_list_internal,
      without any leading variable assignments. */
   WORD_LIST *garglist;
+
+  /* variables from lib/sh/shtty.c */
+
+  TTYSTRUCT ttin, ttout;
 
   /* local buffer for lib/sh/zread.c functions */
   char *zread_lbuf;
@@ -2486,7 +2612,7 @@ private:
   int list_opttype;
 };
 
-// The global (defined in shell.c) pointer to the single shell object.
+// The global (constructed in shell.cc) pointer to the single shell object.
 extern Shell *the_shell;
 
 static constexpr int HEREDOC_MAX = 16;

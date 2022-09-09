@@ -54,10 +54,10 @@ struct VAR_CONTEXT {
   HASH_TABLE *table;	/* variables at this scope */
 
   /* Inline access methods. */
-  bool is_func_env()	{ return (flags & VC_FUNCENV); }
-  bool is_builtin_env()	{ return (flags & VC_BLTNENV); }
-  bool is_temp_env()	{ return ((flags & VC_TEMPFLAGS) == VC_TEMPENV); }
-  bool is_temp_scope()	{ return (flags & (VC_TEMPENV | VC_BLTNENV)); }
+  bool func_env()	{ return (flags & VC_FUNCENV); }
+  bool builtin_env()	{ return (flags & VC_BLTNENV); }
+  bool temp_env()	{ return ((flags & VC_TEMPFLAGS) == VC_TEMPENV); }
+  bool temp_scope()	{ return (flags & (VC_TEMPENV | VC_BLTNENV)); }
   bool has_locals()	{ return (flags & VC_HASLOCAL); }
   bool has_temp_vars()	{ return (flags & VC_HASTMPVAR); }
 };
@@ -124,40 +124,40 @@ public:
   char *name() { return name_; }
   void set_name(char *new_name) { name_ = new_name; }
 
-  char *value() { return value_.s; }
+  char *str_value() { return value_.s; }
 
-  COMMAND *command() { return value_.cmd; }
+  COMMAND *cmd_value() { return value_.cmd; }
 
-  ARRAY *array() { return value_.a; }
+  ARRAY *array_value() { return value_.a; }
 
-  HASH_TABLE *assoc() { return value_.h; }
+  HASH_TABLE *hash_value() { return value_.h; }
 
   char *name_ref() { return value_.s; }		/* so it can change later */
 
   /* Inline access methods. */
-  bool is_exported()		{ return (attributes & att_exported); }
-  bool is_readonly()		{ return (attributes & att_readonly); }
-  bool is_array()		{ return (attributes & att_array); }
-  bool is_function()		{ return (attributes & att_function); }
-  bool is_integer()		{ return (attributes & att_integer); }
-  bool is_local()		{ return (attributes & att_local); }
-  bool is_assoc()		{ return (attributes & att_assoc); }
-  bool is_trace()		{ return (attributes & att_trace); }
-  bool is_uppercase()		{ return (attributes & att_uppercase); }
-  bool is_lowercase()		{ return (attributes & att_lowercase); }
-  bool is_capcase()		{ return (attributes & att_capcase); }
-  bool is_nameref()		{ return (attributes & att_nameref); }
+  bool exported()		{ return (attributes & att_exported); }
+  bool readonly()		{ return (attributes & att_readonly); }
+  bool array()			{ return (attributes & att_array); }
+  bool function()		{ return (attributes & att_function); }
+  bool integer()		{ return (attributes & att_integer); }
+  bool local()			{ return (attributes & att_local); }
+  bool assoc()			{ return (attributes & att_assoc); }
+  bool trace()			{ return (attributes & att_trace); }
+  bool uppercase()		{ return (attributes & att_uppercase); }
+  bool lowercase()		{ return (attributes & att_lowercase); }
+  bool capcase()		{ return (attributes & att_capcase); }
+  bool nameref()		{ return (attributes & att_nameref); }
 
-  bool is_invisible()		{ return (attributes & att_invisible); }
-  bool is_non_unsettable()	{ return (attributes & att_nounset); }
-  bool is_noassign()		{ return (attributes & att_noassign); }
-  bool is_imported()		{ return (attributes & att_imported); }
-  bool is_special()		{ return (attributes & att_special); }
-  bool is_nofree()		{ return (attributes & att_nofree); }
-  bool is_regen()		{ return (attributes & att_regenerate); }
+  bool invisible()		{ return (attributes & att_invisible); }
+  bool non_unsettable()	{ return (attributes & att_nounset); }
+  bool noassign()		{ return (attributes & att_noassign); }
+  bool imported()		{ return (attributes & att_imported); }
+  bool special()		{ return (attributes & att_special); }
+  bool nofree()			{ return (attributes & att_nofree); }
+  bool regen()			{ return (attributes & att_regenerate); }
 
-  bool is_tempvar()		{ return (attributes & att_tempvar); }
-  bool is_propagate()		{ return (attributes & att_propagate); }
+  bool tempvar()		{ return (attributes & att_tempvar); }
+  bool propagate()		{ return (attributes & att_propagate); }
 
   bool is_set()			{ return (value_.s != nullptr); }
   bool is_unset()		{ return (value_.s == nullptr); }

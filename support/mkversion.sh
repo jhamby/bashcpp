@@ -72,7 +72,7 @@ fi
 
 # what's the patch level?
 if [ -z "$patch_level" ]; then
-	patchlevel_h=$source_dir/patchlevel.h
+	patchlevel_h=$source_dir/patchlevel.hh
 	if [ -s $patchlevel_h ]; then
 		patch_level=`cat $patchlevel_h | grep '^#define[ 	]*PATCHLEVEL' | awk '{print $NF}'`
 	fi
@@ -93,7 +93,7 @@ fi
 
 # Output the leading comment.
 echo "/* Version control for the shell.  This file gets changed when you say"
-echo "   \`make version.h' to the Makefile.  It is created by mkversion. */"
+echo "   \`make version.hh' to the Makefile.  It is created by mkversion. */"
 
 # Output the distribution version.  Single numbers are converted to x.00.
 # Allow, as a special case, `[:digit:].[:digit:][:alpha:]' for
