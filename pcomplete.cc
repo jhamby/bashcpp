@@ -53,7 +53,8 @@
 
 #include "builtins.hh"
 #include "builtins/common.hh"
-#include "builtins/builtext.hh"
+
+#include "builtext.hh"
 
 #include "glob.hh"
 #include "strmatch.hh"

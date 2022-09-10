@@ -56,14 +56,10 @@ else
 bash_SOURCES += nojobs.cc
 endif
 
-bash_LDADD = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
-
 AM_YFLAGS = -d
 
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
 	-I$(srcdir)/lib/tilde -I$(srcdir)/builtins
-
-noinst_LIBRARIES = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
 
 DEFSRC = $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
 	$(BLTDIR)/builtin_def.cc $(BLTDIR)/caller_def.cc $(BLTDIR)/cd_def.cc \
@@ -81,10 +77,9 @@ DEFSRC = $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
 	$(BLTDIR)/reserved_def.cc $(BLTDIR)/pushd_def.cc $(BLTDIR)/shopt_def.cc \
 	$(BLTDIR)/printf_def.cc $(BLTDIR)/complete_def.cc $(BLTDIR)/mapfile_def.cc
 
-libbuiltins_a_SOURCES = $(DEFSRC) \
+bash_SOURCES += $(DEFSRC) $(BLTDIR)/builtins.cc \
 	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
-	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh \
-	$(BLTDIR)/builtins.cc
+	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh
 
 # programs for generating sources and used by the test cases
 noinst_PROGRAMS = mkbuiltins psize
@@ -123,6 +118,8 @@ builtext.hh builtins.cc: $(MKBUILTINS) $(DEFSRC)
 		$(RM) old-builtins.cc; \
 	 fi
 
+CLEANFILES = builtins.cc builtext.hh pipesize.hh version.hh
+
 # manual dependencies on generated files
 builtins/common.$(OBJEXT): builtext.hh
 builtins/declare_def.$(OBJEXT): builtext.hh
@@ -138,8 +135,9 @@ jobs.$(OBJEXT): builtext.hh
 nojobs.$(OBJEXT): builtext.hh
 parse.$(OBJEXT): builtext.hh
 pcomplete.$(OBJEXT): builtext.hh
-parse.$(OBJEXT): builtext.hh
+parser.$(OBJEXT): builtext.hh
 redir.$(OBJEXT): pipesize.hh
+$(srcdir)/shell.hh: parse.hh
 sig.$(OBJEXT): builtext.hh
 subst.$(OBJEXT): builtext.hh
 trap.$(OBJEXT): builtext.hh
@@ -154,13 +152,13 @@ version.hh: $(CONFIG_HEADER) patchlevel.hh
 	$(SHELL) $(srcdir)/support/mkversion.sh -b -S $(srcdir) -s $(RELSTATUS) -d $(Version) -o newversion.hh \
 		&& mv newversion.hh version.hh
 
-libglob_a_SOURCES = $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc $(GLBDIR)/gmisc.cc \
+bash_SOURCES += $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc $(GLBDIR)/gmisc.cc \
 	$(GLBDIR)/xmbsrtowcs.cc $(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh \
 	$(GLBDIR)/glob_loop.hh $(GLBDIR)/gm_loop.hh $(GLBDIR)/ndir.hh \
 	$(GLBDIR)/sm_loop.hh $(GLBDIR)/strmatch.hh
 
-# TODO: add a separate libhistorycpp_a_SOURCES rule for non-readline builds.
-libreadlinecpp_a_SOURCES = $(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
+# TODO: include these source files conditionally based on READLINE and HISTORY
+bash_SOURCES += $(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
 	$(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc $(RLDIR)/rltty.cc \
 	$(RLDIR)/complete.cc $(RLDIR)/bind.cc $(RLDIR)/isearch.cc \
 	$(RLDIR)/display.cc $(RLDIR)/signals.cc $(RLDIR)/emacs_keymap.hh \
@@ -178,7 +176,7 @@ libreadlinecpp_a_SOURCES = $(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keym
 	$(RLDIR)/rlshell.hh $(RLDIR)/rltty.hh $(RLDIR)/rlwinsize.hh \
 	$(RLDIR)/tcap.hh $(RLDIR)/tilde.hh
 
-libsh_a_SOURCES = $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
+bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
 	$(SHDIR)/getenv.cc $(SHDIR)/oslib.cc $(SHDIR)/setlinebuf.cc \
 	$(SHDIR)/strcasecmp.cc $(SHDIR)/strerror.cc \
 	$(SHDIR)/vprint.cc $(SHDIR)/rename.cc $(SHDIR)/zread.cc \
@@ -199,4 +197,4 @@ libsh_a_SOURCES = $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
 	$(SHDIR)/wcsnwidth.cc $(SHDIR)/shmbchar.cc \
 	$(SHDIR)/random.cc $(SHDIR)/gettimeofday.cc
 
-libtilde_a_SOURCES = $(TLDIR)/tilde.cc
+bash_SOURCES += $(TLDIR)/tilde.cc

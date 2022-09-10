@@ -22,18 +22,21 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #if defined (BRACE_EXPANSION) && defined (READLINE)
 
-#include "shell.h"
-#include <readline/readline.h>
+#include "shell.hh"
+#include "readline.hh"
+
+namespace bash
+{
 
 static int _strcompare (char **, char **);
 
 /* Find greatest common prefix of two strings. */
 static int
-string_gcd (char *s1, char *s2)
+string_gcd (const char *s1, const char *s2)
 {
   if (s1 == NULL || s2 == NULL)
     return 0;
@@ -196,4 +199,7 @@ bash_brace_completion (int count, int ignore)
 
   return r;
 }
+
+}  // namespace bash
+
 #endif /* BRACE_EXPANSION && READLINE */

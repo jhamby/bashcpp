@@ -22,74 +22,12 @@
 %require "3.2"
 %language "c++"
 %define api.value.type variant
+%define api.token.constructor
+%define api.namespace {bash}
 
 %{
 #include "config.hh"
-
-#include "bashtypes.hh"
-
-#include "filecntl.hh"
-
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
-#endif
-
-#include <clocale>
-
-#include "chartypes.hh"
-
-#include "bashintl.hh"
-
 #include "shell.hh"
-#include "execute_cmd.hh"
-#include "typemax.hh"		/* SIZE_MAX if needed */
-#include "trap.hh"
-#include "flags.hh"
-#include "parser.hh"
-#include "test.hh"
-#include "builtins.hh"
-#include "builtins/common.hh"
-#include "builtext.hh"
-
-#include "shmbutil.hh"
-
-#if defined (READLINE)
-#  include "readline.hh"
-#endif /* READLINE */
-
-#if defined (HISTORY)
-#  include "history.hh"
-#endif /* HISTORY */
-
-#include "jobs.hh"
-
-#if !defined (JOB_CONTROL)
-// extern int cleanup_dead_jobs ();
-#endif /* !JOB_CONTROL */
-
-#if defined (ALIAS)
-#  include "alias.hh"
-#else
-typedef void *alias_t;
-#endif /* ALIAS */
-
-#if defined (PROMPT_STRING_DECODE)
-#  include <sys/param.h>
-#  include <ctime>
-#  if defined (TM_IN_SYS_TIME)
-#    include <sys/types.h>
-#    include <sys/time.h>
-#  endif /* TM_IN_SYS_TIME */
-#  include "maxpath.hh"
-#endif /* PROMPT_STRING_DECODE */
-
-namespace bash
-{
-
-#define RE_READ_TOKEN	-99
-#define NO_EXPANSION	-100
-
-#define END_ALIAS	-2
 
 #ifdef DEBUG
 #  define YYDEBUG 1
@@ -97,123 +35,10 @@ namespace bash
 #  define YYDEBUG 0
 #endif
 
-#if defined (HANDLE_MULTIBYTE)
-#  define last_shell_getc_is_singlebyte \
-	((shell_input_line_index > 1) \
-		? shell_input_line_property[shell_input_line_index - 1] \
-		: 1)
-#  define MBTEST(x)	((x) && last_shell_getc_is_singlebyte)
-#else
-#  define last_shell_getc_is_singlebyte	1
-#  define MBTEST(x)	((x))
-#endif
-
-#if 0
-#if defined (EXTENDED_GLOB)
-extern bool extended_glob;
-#endif
-
-extern bool dump_translatable_strings, dump_po_strings;
-
-/* **************************************************************** */
-/*								    */
-/*		    "Forward" declarations			    */
-/*								    */
-/* **************************************************************** */
-
-#ifdef DEBUG
-static void debug_parser (int);
-#endif
-
-static int yy_getc ();
-static int yy_ungetc (int);
-
-#if defined (READLINE)
-static int yy_readline_get ();
-static int yy_readline_unget (int);
-#endif
-
-static int yy_string_get ();
-static int yy_string_unget (int);
-static void rewind_input_string ();
-static int yy_stream_get ();
-static int yy_stream_unget (int);
-
-static int shell_getc (int);
-static void shell_ungetc (int);
-static void discard_until (int);
-
-#if defined (ALIAS) || defined (DPAREN_ARITHMETIC)
-static void push_string (char *, int, alias_t *);
-static void pop_string ();
-static void free_string_list ();
-#endif
-
-static char *read_a_line (int);
-
-static int reserved_word_acceptable (int);
-static int yylex ();
-
-static void push_heredoc (REDIRECT *);
-static char *mk_alexpansion (char *);
-static int alias_expand_token (char *);
-static int time_command_acceptable ();
-static int special_case_tokens (char *);
-static int read_token (int);
-static char *parse_matched_pair (int, int, int, int *, int);
-static char *parse_comsub (int, int, int, int *, int);
-#if defined (ARRAY_VARS)
-static char *parse_compound_assignment (int *);
-#endif
-#if defined (DPAREN_ARITHMETIC) || defined (ARITH_FOR_COMMAND)
-static int parse_dparen (int);
-static int parse_arith_cmd (char **, int);
-#endif
-#if defined (COND_COMMAND)
-static void cond_error ();
-static COND_COM *cond_expr ();
-static COND_COM *cond_or ();
-static COND_COM *cond_and ();
-static COND_COM *cond_term ();
-static int cond_skip_newlines ();
-static COMMAND *parse_cond_command ();
-#endif
-#if defined (ARRAY_VARS)
-static int token_is_assignment (char *, int);
-static int token_is_ident (char *, int);
-#endif
-static int read_token_word (int);
-static void discard_parser_constructs (int);
-
-static char *error_token_from_token (int);
-static char *error_token_from_text ();
-static void print_offending_line ();
-static void report_syntax_error (const char *);
-
-static void handle_eof_input_unit ();
-static void prompt_again ();
-#if 0
-static void reset_readline_prompt ();
-#endif
-static void print_prompt ();
-
-#if defined (HANDLE_MULTIBYTE)
-static void set_line_mbstate ();
-static char *shell_input_line_property = NULL;
-static size_t shell_input_line_propsize = 0;
-#else
-#  define set_line_mbstate()
-#endif
-
-extern int yyerror (const char *);
-
-#ifdef DEBUG
-extern int yydebug;
-#endif
-
-#endif
-
-}  // namespace bash
+static inline bash::parser::token::token_kind_type
+yylex () {
+  return bash::the_shell->yylex ();
+}
 
 %}
 
@@ -226,10 +51,10 @@ extern int yydebug;
 %token IN BANG TIME TIMEOPT TIMEIGN
 
 /* More general tokens. yylex () knows how to make these. */
-%token <bash::WORD_DESC> WORD ASSIGNMENT_WORD REDIR_WORD
+%token <WORD_DESC*> WORD ASSIGNMENT_WORD REDIR_WORD
 %token <int> NUMBER
-%token <bash::WORD_LIST> ARITH_CMD ARITH_FOR_EXPRS
-%token <bash::COMMAND> COND_CMD
+%token <WORD_LIST*> ARITH_CMD ARITH_FOR_EXPRS
+%token <COMMAND*> COND_CMD
 %token AND_AND OR_OR GREATER_GREATER LESS_LESS LESS_AND LESS_LESS_LESS
 %token GREATER_AND SEMI_SEMI SEMI_AND SEMI_SEMI_AND
 %token LESS_LESS_MINUS AND_GREATER AND_GREATER_GREATER LESS_GREATER
@@ -237,19 +62,19 @@ extern int yydebug;
 
 /* The types that the various syntactical units return. */
 
-%type <bash::COMMAND> inputunit command pipeline pipeline_command
-%type <bash::COMMAND> list list0 list1 compound_list simple_list simple_list1
-%type <bash::COMMAND> simple_command shell_command
-%type <bash::COMMAND> for_command select_command case_command group_command
-%type <bash::COMMAND> arith_command
-%type <bash::COMMAND> cond_command
-%type <bash::COMMAND> arith_for_command
-%type <bash::COMMAND> coproc
-%type <bash::COMMAND> function_def function_body if_command elif_clause subshell
-%type <bash::REDIRECT> redirection redirection_list
-%type <bash::ELEMENT> simple_command_element
-%type <bash::WORD_LIST> word_list pattern
-%type <bash::PATTERN_LIST> pattern_list case_clause_sequence case_clause
+%type <COMMAND*> inputunit command pipeline pipeline_command
+%type <COMMAND*> list list0 list1 compound_list simple_list simple_list1
+%type <COMMAND*> simple_command shell_command
+%type <COMMAND*> for_command select_command case_command group_command
+%type <COMMAND*> arith_command
+%type <COMMAND*> cond_command
+%type <COMMAND*> arith_for_command
+%type <COMMAND*> coproc
+%type <COMMAND*> function_def function_body if_command elif_clause subshell
+%type <REDIRECT*> redirection redirection_list
+%type <ELEMENT*> simple_command_element
+%type <WORD_LIST*> word_list pattern
+%type <PATTERN_LIST*> pattern_list case_clause_sequence case_clause
 %type <int> timespec
 %type <int> list_terminator
 

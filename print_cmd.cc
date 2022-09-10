@@ -29,11 +29,8 @@
 #include "bashintl.hh"
 #include "command.hh"
 
-#define NEED_XTRACE_SET_DECL
-
 #include "shell.hh"
 #include "flags.hh"
-#include "parse.hh"
 #include "input.hh"
 
 #include "shmbutil.hh"

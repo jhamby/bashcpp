@@ -54,7 +54,6 @@
 #include "bashintl.hh"
 
 #include "shell.hh"
-#include "parse.hh"	/* use <...> so we pick it up from the build directory */
 #include "parser.hh"
 #include "flags.hh"
 #include "builtins.hh"
@@ -76,7 +75,7 @@
 #include "builtins/getopt.hh"
 
 #include "glob/strmatch.hh"
-#include "tilde/tilde.hh"
+#include "tilde.hh"
 
 #if defined (BUFFERED_INPUT)
 #  include "input.hh"

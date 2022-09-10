@@ -32,7 +32,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 VPATH = @srcdir@
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
@@ -150,16 +149,98 @@ CONFIG_CLEAN_FILES = intl/Makefile doc/Makefile pathnames.hh \
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
-LIBRARIES = $(noinst_LIBRARIES)
-ARFLAGS = cru
-AM_V_AR = $(am__v_AR_@AM_V@)
-am__v_AR_ = $(am__v_AR_@AM_DEFAULT_V@)
-am__v_AR_0 = @echo "  AR      " $@;
-am__v_AR_1 = 
-libbuiltins_a_AR = $(AR) $(ARFLAGS)
-libbuiltins_a_LIBADD =
+am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
+	dispose_cmd.cc execute_cmd.cc variables.cc version.cc expr.cc \
+	copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc \
+	mailcheck.cc test.cc trap.cc alias.cc braces.cc input.cc \
+	bashhist.cc array.cc arrayfunc.cc assoc.cc sig.cc pathexp.cc \
+	siglist.cc bashline.cc bracecomp.cc error.cc stringlib.cc \
+	locale.cc findcmd.cc redir.cc pcomplete.cc pcomplib.cc \
+	syntax.cc alias.hh arrayfunc.hh array.hh assoc.hh bashintl.hh \
+	bashtypes.hh builtins.hh command.hh config-bot.hh \
+	config-top.hh conftypes.hh error.hh execute_cmd.hh externs.hh \
+	findcmd.hh flags.hh general.hh hashcmd.hh hashlib.hh input.hh \
+	jobs.hh parser.hh patchlevel.hh pathexp.hh pcomplete.hh \
+	quit.hh shell.hh sig.hh siglist.hh subst.hh syntax.hh test.hh \
+	trap.hh variables.hh include/chartypes.hh include/filecntl.hh \
+	include/gettext.hh include/maxpath.hh include/posixdir.hh \
+	include/posixselect.hh include/posixstat.hh \
+	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
+	include/shmbutil.hh include/shtty.hh include/stat-time.hh \
+	include/systimes.hh include/typemax.hh include/unionwait.hh \
+	pathnames.hh jobs.cc nojobs.cc $(BLTDIR)/alias_def.cc \
+	$(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
+	$(BLTDIR)/builtin_def.cc $(BLTDIR)/caller_def.cc \
+	$(BLTDIR)/cd_def.cc $(BLTDIR)/colon_def.cc \
+	$(BLTDIR)/command_def.cc $(BLTDIR)/declare_def.cc \
+	$(BLTDIR)/echo_def.cc $(BLTDIR)/enable_def.cc \
+	$(BLTDIR)/eval_def.cc $(BLTDIR)/getopts_def.cc \
+	$(BLTDIR)/exec_def.cc $(BLTDIR)/exit_def.cc \
+	$(BLTDIR)/fc_def.cc $(BLTDIR)/fg_bg_def.cc \
+	$(BLTDIR)/hash_def.cc $(BLTDIR)/help_def.cc \
+	$(BLTDIR)/history_def.cc $(BLTDIR)/jobs_def.cc \
+	$(BLTDIR)/kill_def.cc $(BLTDIR)/let_def.cc \
+	$(BLTDIR)/read_def.cc $(BLTDIR)/return_def.cc \
+	$(BLTDIR)/set_def.cc $(BLTDIR)/setattr_def.cc \
+	$(BLTDIR)/shift_def.cc $(BLTDIR)/source_def.cc \
+	$(BLTDIR)/suspend_def.cc $(BLTDIR)/test_def.cc \
+	$(BLTDIR)/times_def.cc $(BLTDIR)/trap_def.cc \
+	$(BLTDIR)/type_def.cc $(BLTDIR)/ulimit_def.cc \
+	$(BLTDIR)/umask_def.cc $(BLTDIR)/wait_def.cc \
+	$(BLTDIR)/reserved_def.cc $(BLTDIR)/pushd_def.cc \
+	$(BLTDIR)/shopt_def.cc $(BLTDIR)/printf_def.cc \
+	$(BLTDIR)/complete_def.cc $(BLTDIR)/mapfile_def.cc \
+	$(BLTDIR)/builtins.cc $(BLTDIR)/common.cc \
+	$(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
+	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc \
+	$(BLTDIR)/getopt.hh $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc \
+	$(GLBDIR)/gmisc.cc $(GLBDIR)/xmbsrtowcs.cc \
+	$(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh $(GLBDIR)/glob_loop.hh \
+	$(GLBDIR)/gm_loop.hh $(GLBDIR)/ndir.hh $(GLBDIR)/sm_loop.hh \
+	$(GLBDIR)/strmatch.hh $(RLDIR)/readline.cc $(RLDIR)/funmap.cc \
+	$(RLDIR)/keymaps.cc $(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc \
+	$(RLDIR)/rltty.cc $(RLDIR)/complete.cc $(RLDIR)/bind.cc \
+	$(RLDIR)/isearch.cc $(RLDIR)/display.cc $(RLDIR)/signals.cc \
+	$(RLDIR)/emacs_keymap.hh $(RLDIR)/vi_keymap.hh \
+	$(RLDIR)/util.cc $(RLDIR)/kill.cc $(RLDIR)/undo.cc \
+	$(RLDIR)/macro.cc $(RLDIR)/input.cc $(RLDIR)/callback.cc \
+	$(RLDIR)/terminal.cc $(RLDIR)/history.cc \
+	$(RLDIR)/histsearch.cc $(RLDIR)/histexpand.cc \
+	$(RLDIR)/histfile.cc $(RLDIR)/nls.cc $(RLDIR)/search.cc \
+	$(RLDIR)/shell.cc $(RLDIR)/tilde.cc $(RLDIR)/text.cc \
+	$(RLDIR)/misc.cc $(RLDIR)/colors.cc $(RLDIR)/parse-colors.cc \
+	$(RLDIR)/mbutil.cc $(RLDIR)/chardefs.hh $(RLDIR)/colors.hh \
+	$(RLDIR)/history.hh $(RLDIR)/parse-colors.hh \
+	$(RLDIR)/posixdir.hh $(RLDIR)/posixselect.hh \
+	$(RLDIR)/posixstat.hh $(RLDIR)/readline.hh $(RLDIR)/rlconf.hh \
+	$(RLDIR)/rldefs.hh $(RLDIR)/rlmbutil.hh $(RLDIR)/rlprivate.hh \
+	$(RLDIR)/rlshell.hh $(RLDIR)/rltty.hh $(RLDIR)/rlwinsize.hh \
+	$(RLDIR)/tcap.hh $(RLDIR)/tilde.hh $(SHDIR)/clktck.cc \
+	$(SHDIR)/clock.cc $(SHDIR)/getcwd.cc $(SHDIR)/getenv.cc \
+	$(SHDIR)/oslib.cc $(SHDIR)/setlinebuf.cc \
+	$(SHDIR)/strcasecmp.cc $(SHDIR)/strerror.cc $(SHDIR)/vprint.cc \
+	$(SHDIR)/rename.cc $(SHDIR)/zread.cc $(SHDIR)/inet_aton.cc \
+	$(SHDIR)/netconn.cc $(SHDIR)/netopen.cc $(SHDIR)/strpbrk.cc \
+	$(SHDIR)/timeval.cc $(SHDIR)/makepath.cc $(SHDIR)/pathcanon.cc \
+	$(SHDIR)/pathphys.cc $(SHDIR)/tmpfile.cc $(SHDIR)/spell.cc \
+	$(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
+	$(SHDIR)/strcasestr.cc $(SHDIR)/snprintf.cc \
+	$(SHDIR)/mailstat.cc $(SHDIR)/fmtulong.cc \
+	$(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc $(SHDIR)/shmatch.cc \
+	$(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
+	$(SHDIR)/strtoumax.cc $(SHDIR)/mktime.cc $(SHDIR)/mbschr.cc \
+	$(SHDIR)/zcatfd.cc $(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc \
+	$(SHDIR)/eaccess.cc $(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc \
+	$(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc \
+	$(SHDIR)/dprintf.cc $(SHDIR)/input_avail.cc \
+	$(SHDIR)/fnxform.cc $(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc \
+	$(SHDIR)/wcswidth.cc $(SHDIR)/wcsnwidth.cc \
+	$(SHDIR)/shmbchar.cc $(SHDIR)/random.cc \
+	$(SHDIR)/gettimeofday.cc $(TLDIR)/tilde.cc
+@JOB_CONTROL_TRUE@am__objects_1 = jobs.$(OBJEXT)
+@JOB_CONTROL_FALSE@am__objects_2 = nojobs.$(OBJEXT)
 am__dirstamp = $(am__leading_dot)dirstamp
-am__objects_1 = $(BLTDIR)/alias_def.$(OBJEXT) \
+am__objects_3 = $(BLTDIR)/alias_def.$(OBJEXT) \
 	$(BLTDIR)/bind_def.$(OBJEXT) $(BLTDIR)/break_def.$(OBJEXT) \
 	$(BLTDIR)/builtin_def.$(OBJEXT) $(BLTDIR)/caller_def.$(OBJEXT) \
 	$(BLTDIR)/cd_def.$(OBJEXT) $(BLTDIR)/colon_def.$(OBJEXT) \
@@ -183,20 +264,25 @@ am__objects_1 = $(BLTDIR)/alias_def.$(OBJEXT) \
 	$(BLTDIR)/printf_def.$(OBJEXT) \
 	$(BLTDIR)/complete_def.$(OBJEXT) \
 	$(BLTDIR)/mapfile_def.$(OBJEXT)
-am_libbuiltins_a_OBJECTS = $(am__objects_1) $(BLTDIR)/common.$(OBJEXT) \
-	$(BLTDIR)/evalstring.$(OBJEXT) $(BLTDIR)/evalfile.$(OBJEXT) \
-	$(BLTDIR)/getopt.$(OBJEXT) $(BLTDIR)/bashgetopt.$(OBJEXT) \
-	$(BLTDIR)/builtins.$(OBJEXT)
-libbuiltins_a_OBJECTS = $(am_libbuiltins_a_OBJECTS)
-libglob_a_AR = $(AR) $(ARFLAGS)
-libglob_a_LIBADD =
-am_libglob_a_OBJECTS = $(GLBDIR)/glob.$(OBJEXT) \
+am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
+	general.$(OBJEXT) parser.$(OBJEXT) dispose_cmd.$(OBJEXT) \
+	execute_cmd.$(OBJEXT) variables.$(OBJEXT) version.$(OBJEXT) \
+	expr.$(OBJEXT) copy_cmd.$(OBJEXT) flags.$(OBJEXT) \
+	subst.$(OBJEXT) hashcmd.$(OBJEXT) hashlib.$(OBJEXT) \
+	mailcheck.$(OBJEXT) test.$(OBJEXT) trap.$(OBJEXT) \
+	alias.$(OBJEXT) braces.$(OBJEXT) input.$(OBJEXT) \
+	bashhist.$(OBJEXT) array.$(OBJEXT) arrayfunc.$(OBJEXT) \
+	assoc.$(OBJEXT) sig.$(OBJEXT) pathexp.$(OBJEXT) \
+	siglist.$(OBJEXT) bashline.$(OBJEXT) bracecomp.$(OBJEXT) \
+	error.$(OBJEXT) stringlib.$(OBJEXT) locale.$(OBJEXT) \
+	findcmd.$(OBJEXT) redir.$(OBJEXT) pcomplete.$(OBJEXT) \
+	pcomplib.$(OBJEXT) syntax.$(OBJEXT) $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(BLTDIR)/builtins.$(OBJEXT) \
+	$(BLTDIR)/common.$(OBJEXT) $(BLTDIR)/evalstring.$(OBJEXT) \
+	$(BLTDIR)/evalfile.$(OBJEXT) $(BLTDIR)/getopt.$(OBJEXT) \
+	$(BLTDIR)/bashgetopt.$(OBJEXT) $(GLBDIR)/glob.$(OBJEXT) \
 	$(GLBDIR)/smatch.$(OBJEXT) $(GLBDIR)/gmisc.$(OBJEXT) \
-	$(GLBDIR)/xmbsrtowcs.$(OBJEXT)
-libglob_a_OBJECTS = $(am_libglob_a_OBJECTS)
-libreadlinecpp_a_AR = $(AR) $(ARFLAGS)
-libreadlinecpp_a_LIBADD =
-am_libreadlinecpp_a_OBJECTS = $(RLDIR)/readline.$(OBJEXT) \
+	$(GLBDIR)/xmbsrtowcs.$(OBJEXT) $(RLDIR)/readline.$(OBJEXT) \
 	$(RLDIR)/funmap.$(OBJEXT) $(RLDIR)/keymaps.$(OBJEXT) \
 	$(RLDIR)/vi_mode.$(OBJEXT) $(RLDIR)/parens.$(OBJEXT) \
 	$(RLDIR)/rltty.$(OBJEXT) $(RLDIR)/complete.$(OBJEXT) \
@@ -211,82 +297,37 @@ am_libreadlinecpp_a_OBJECTS = $(RLDIR)/readline.$(OBJEXT) \
 	$(RLDIR)/search.$(OBJEXT) $(RLDIR)/shell.$(OBJEXT) \
 	$(RLDIR)/tilde.$(OBJEXT) $(RLDIR)/text.$(OBJEXT) \
 	$(RLDIR)/misc.$(OBJEXT) $(RLDIR)/colors.$(OBJEXT) \
-	$(RLDIR)/parse-colors.$(OBJEXT) $(RLDIR)/mbutil.$(OBJEXT)
-libreadlinecpp_a_OBJECTS = $(am_libreadlinecpp_a_OBJECTS)
-libsh_a_AR = $(AR) $(ARFLAGS)
-libsh_a_LIBADD =
-am_libsh_a_OBJECTS = $(SHDIR)/clktck.$(OBJEXT) \
-	$(SHDIR)/clock.$(OBJEXT) $(SHDIR)/getcwd.$(OBJEXT) \
-	$(SHDIR)/getenv.$(OBJEXT) $(SHDIR)/oslib.$(OBJEXT) \
-	$(SHDIR)/setlinebuf.$(OBJEXT) $(SHDIR)/strcasecmp.$(OBJEXT) \
-	$(SHDIR)/strerror.$(OBJEXT) $(SHDIR)/vprint.$(OBJEXT) \
-	$(SHDIR)/rename.$(OBJEXT) $(SHDIR)/zread.$(OBJEXT) \
-	$(SHDIR)/inet_aton.$(OBJEXT) $(SHDIR)/netconn.$(OBJEXT) \
-	$(SHDIR)/netopen.$(OBJEXT) $(SHDIR)/strpbrk.$(OBJEXT) \
-	$(SHDIR)/timeval.$(OBJEXT) $(SHDIR)/makepath.$(OBJEXT) \
-	$(SHDIR)/pathcanon.$(OBJEXT) $(SHDIR)/pathphys.$(OBJEXT) \
-	$(SHDIR)/tmpfile.$(OBJEXT) $(SHDIR)/spell.$(OBJEXT) \
-	$(SHDIR)/shquote.$(OBJEXT) $(SHDIR)/strtrans.$(OBJEXT) \
-	$(SHDIR)/strcasestr.$(OBJEXT) $(SHDIR)/snprintf.$(OBJEXT) \
-	$(SHDIR)/mailstat.$(OBJEXT) $(SHDIR)/fmtulong.$(OBJEXT) \
-	$(SHDIR)/fmtullong.$(OBJEXT) $(SHDIR)/fmtumax.$(OBJEXT) \
-	$(SHDIR)/shmatch.$(OBJEXT) $(SHDIR)/strnlen.$(OBJEXT) \
-	$(SHDIR)/strtoimax.$(OBJEXT) $(SHDIR)/strtoumax.$(OBJEXT) \
-	$(SHDIR)/mktime.$(OBJEXT) $(SHDIR)/mbschr.$(OBJEXT) \
-	$(SHDIR)/zcatfd.$(OBJEXT) $(SHDIR)/zmapfd.$(OBJEXT) \
-	$(SHDIR)/winsize.$(OBJEXT) $(SHDIR)/eaccess.$(OBJEXT) \
-	$(SHDIR)/fpurge.$(OBJEXT) $(SHDIR)/zgetline.$(OBJEXT) \
-	$(SHDIR)/uconvert.$(OBJEXT) $(SHDIR)/ufuncs.$(OBJEXT) \
-	$(SHDIR)/casemod.$(OBJEXT) $(SHDIR)/dprintf.$(OBJEXT) \
-	$(SHDIR)/input_avail.$(OBJEXT) $(SHDIR)/fnxform.$(OBJEXT) \
-	$(SHDIR)/strchrnul.$(OBJEXT) $(SHDIR)/unicode.$(OBJEXT) \
-	$(SHDIR)/wcswidth.$(OBJEXT) $(SHDIR)/wcsnwidth.$(OBJEXT) \
-	$(SHDIR)/shmbchar.$(OBJEXT) $(SHDIR)/random.$(OBJEXT) \
-	$(SHDIR)/gettimeofday.$(OBJEXT)
-libsh_a_OBJECTS = $(am_libsh_a_OBJECTS)
-libtilde_a_AR = $(AR) $(ARFLAGS)
-libtilde_a_LIBADD =
-am_libtilde_a_OBJECTS = $(TLDIR)/tilde.$(OBJEXT)
-libtilde_a_OBJECTS = $(am_libtilde_a_OBJECTS)
-am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
-	dispose_cmd.cc execute_cmd.cc variables.cc version.cc expr.cc \
-	copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc \
-	mailcheck.cc test.cc trap.cc alias.cc braces.cc input.cc \
-	bashhist.cc array.cc arrayfunc.cc assoc.cc sig.cc pathexp.cc \
-	siglist.cc bashline.cc bracecomp.cc error.cc stringlib.cc \
-	locale.cc findcmd.cc redir.cc pcomplete.cc pcomplib.cc \
-	syntax.cc alias.hh arrayfunc.hh array.hh assoc.hh bashintl.hh \
-	bashtypes.hh builtins.hh command.hh config-bot.hh \
-	config-top.hh conftypes.hh error.hh execute_cmd.hh externs.hh \
-	findcmd.hh flags.hh general.hh hashcmd.hh hashlib.hh input.hh \
-	jobs.hh parser.hh patchlevel.hh pathexp.hh pcomplete.hh \
-	quit.hh shell.hh sig.hh siglist.hh subst.hh syntax.hh test.hh \
-	trap.hh variables.hh include/chartypes.hh include/filecntl.hh \
-	include/gettext.hh include/maxpath.hh include/posixdir.hh \
-	include/posixselect.hh include/posixstat.hh \
-	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
-	include/shmbutil.hh include/shtty.hh include/stat-time.hh \
-	include/systimes.hh include/typemax.hh include/unionwait.hh \
-	pathnames.hh jobs.cc nojobs.cc
-@JOB_CONTROL_TRUE@am__objects_2 = jobs.$(OBJEXT)
-@JOB_CONTROL_FALSE@am__objects_3 = nojobs.$(OBJEXT)
-am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
-	general.$(OBJEXT) parser.$(OBJEXT) dispose_cmd.$(OBJEXT) \
-	execute_cmd.$(OBJEXT) variables.$(OBJEXT) version.$(OBJEXT) \
-	expr.$(OBJEXT) copy_cmd.$(OBJEXT) flags.$(OBJEXT) \
-	subst.$(OBJEXT) hashcmd.$(OBJEXT) hashlib.$(OBJEXT) \
-	mailcheck.$(OBJEXT) test.$(OBJEXT) trap.$(OBJEXT) \
-	alias.$(OBJEXT) braces.$(OBJEXT) input.$(OBJEXT) \
-	bashhist.$(OBJEXT) array.$(OBJEXT) arrayfunc.$(OBJEXT) \
-	assoc.$(OBJEXT) sig.$(OBJEXT) pathexp.$(OBJEXT) \
-	siglist.$(OBJEXT) bashline.$(OBJEXT) bracecomp.$(OBJEXT) \
-	error.$(OBJEXT) stringlib.$(OBJEXT) locale.$(OBJEXT) \
-	findcmd.$(OBJEXT) redir.$(OBJEXT) pcomplete.$(OBJEXT) \
-	pcomplib.$(OBJEXT) syntax.$(OBJEXT) $(am__objects_2) \
-	$(am__objects_3)
+	$(RLDIR)/parse-colors.$(OBJEXT) $(RLDIR)/mbutil.$(OBJEXT) \
+	$(SHDIR)/clktck.$(OBJEXT) $(SHDIR)/clock.$(OBJEXT) \
+	$(SHDIR)/getcwd.$(OBJEXT) $(SHDIR)/getenv.$(OBJEXT) \
+	$(SHDIR)/oslib.$(OBJEXT) $(SHDIR)/setlinebuf.$(OBJEXT) \
+	$(SHDIR)/strcasecmp.$(OBJEXT) $(SHDIR)/strerror.$(OBJEXT) \
+	$(SHDIR)/vprint.$(OBJEXT) $(SHDIR)/rename.$(OBJEXT) \
+	$(SHDIR)/zread.$(OBJEXT) $(SHDIR)/inet_aton.$(OBJEXT) \
+	$(SHDIR)/netconn.$(OBJEXT) $(SHDIR)/netopen.$(OBJEXT) \
+	$(SHDIR)/strpbrk.$(OBJEXT) $(SHDIR)/timeval.$(OBJEXT) \
+	$(SHDIR)/makepath.$(OBJEXT) $(SHDIR)/pathcanon.$(OBJEXT) \
+	$(SHDIR)/pathphys.$(OBJEXT) $(SHDIR)/tmpfile.$(OBJEXT) \
+	$(SHDIR)/spell.$(OBJEXT) $(SHDIR)/shquote.$(OBJEXT) \
+	$(SHDIR)/strtrans.$(OBJEXT) $(SHDIR)/strcasestr.$(OBJEXT) \
+	$(SHDIR)/snprintf.$(OBJEXT) $(SHDIR)/mailstat.$(OBJEXT) \
+	$(SHDIR)/fmtulong.$(OBJEXT) $(SHDIR)/fmtullong.$(OBJEXT) \
+	$(SHDIR)/fmtumax.$(OBJEXT) $(SHDIR)/shmatch.$(OBJEXT) \
+	$(SHDIR)/strnlen.$(OBJEXT) $(SHDIR)/strtoimax.$(OBJEXT) \
+	$(SHDIR)/strtoumax.$(OBJEXT) $(SHDIR)/mktime.$(OBJEXT) \
+	$(SHDIR)/mbschr.$(OBJEXT) $(SHDIR)/zcatfd.$(OBJEXT) \
+	$(SHDIR)/zmapfd.$(OBJEXT) $(SHDIR)/winsize.$(OBJEXT) \
+	$(SHDIR)/eaccess.$(OBJEXT) $(SHDIR)/fpurge.$(OBJEXT) \
+	$(SHDIR)/zgetline.$(OBJEXT) $(SHDIR)/uconvert.$(OBJEXT) \
+	$(SHDIR)/ufuncs.$(OBJEXT) $(SHDIR)/casemod.$(OBJEXT) \
+	$(SHDIR)/dprintf.$(OBJEXT) $(SHDIR)/input_avail.$(OBJEXT) \
+	$(SHDIR)/fnxform.$(OBJEXT) $(SHDIR)/strchrnul.$(OBJEXT) \
+	$(SHDIR)/unicode.$(OBJEXT) $(SHDIR)/wcswidth.$(OBJEXT) \
+	$(SHDIR)/wcsnwidth.$(OBJEXT) $(SHDIR)/shmbchar.$(OBJEXT) \
+	$(SHDIR)/random.$(OBJEXT) $(SHDIR)/gettimeofday.$(OBJEXT) \
+	$(TLDIR)/tilde.$(OBJEXT)
 bash_OBJECTS = $(am_bash_OBJECTS)
-bash_DEPENDENCIES = libreadlinecpp.a libsh.a libtilde.a libglob.a \
-	libbuiltins.a
+bash_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -472,14 +513,9 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libbuiltins_a_SOURCES) $(libglob_a_SOURCES) \
-	$(libreadlinecpp_a_SOURCES) $(libsh_a_SOURCES) \
-	$(libtilde_a_SOURCES) $(bash_SOURCES) $(mkbuiltins_SOURCES) \
+SOURCES = $(bash_SOURCES) $(mkbuiltins_SOURCES) $(psize_SOURCES)
+DIST_SOURCES = $(am__bash_SOURCES_DIST) $(mkbuiltins_SOURCES) \
 	$(psize_SOURCES)
-DIST_SOURCES = $(libbuiltins_a_SOURCES) $(libglob_a_SOURCES) \
-	$(libreadlinecpp_a_SOURCES) $(libsh_a_SOURCES) \
-	$(libtilde_a_SOURCES) $(am__bash_SOURCES_DIST) \
-	$(mkbuiltins_SOURCES) $(psize_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -789,6 +825,8 @@ BLTDIR = builtins
 
 # TODO: add docs and tests subdirs
 SUBDIRS = po
+
+# TODO: include these source files conditionally based on READLINE and HISTORY
 bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc expr.cc \
 	copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc \
@@ -808,13 +846,58 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
 	include/shmbutil.hh include/shtty.hh include/stat-time.hh \
 	include/systimes.hh include/typemax.hh include/unionwait.hh \
-	pathnames.hh $(am__append_1) $(am__append_2)
-bash_LDADD = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
+	pathnames.hh $(am__append_1) $(am__append_2) $(DEFSRC) \
+	$(BLTDIR)/builtins.cc $(BLTDIR)/common.cc \
+	$(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
+	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc \
+	$(BLTDIR)/getopt.hh $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc \
+	$(GLBDIR)/gmisc.cc $(GLBDIR)/xmbsrtowcs.cc \
+	$(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh $(GLBDIR)/glob_loop.hh \
+	$(GLBDIR)/gm_loop.hh $(GLBDIR)/ndir.hh $(GLBDIR)/sm_loop.hh \
+	$(GLBDIR)/strmatch.hh $(RLDIR)/readline.cc $(RLDIR)/funmap.cc \
+	$(RLDIR)/keymaps.cc $(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc \
+	$(RLDIR)/rltty.cc $(RLDIR)/complete.cc $(RLDIR)/bind.cc \
+	$(RLDIR)/isearch.cc $(RLDIR)/display.cc $(RLDIR)/signals.cc \
+	$(RLDIR)/emacs_keymap.hh $(RLDIR)/vi_keymap.hh \
+	$(RLDIR)/util.cc $(RLDIR)/kill.cc $(RLDIR)/undo.cc \
+	$(RLDIR)/macro.cc $(RLDIR)/input.cc $(RLDIR)/callback.cc \
+	$(RLDIR)/terminal.cc $(RLDIR)/history.cc \
+	$(RLDIR)/histsearch.cc $(RLDIR)/histexpand.cc \
+	$(RLDIR)/histfile.cc $(RLDIR)/nls.cc $(RLDIR)/search.cc \
+	$(RLDIR)/shell.cc $(RLDIR)/tilde.cc $(RLDIR)/text.cc \
+	$(RLDIR)/misc.cc $(RLDIR)/colors.cc $(RLDIR)/parse-colors.cc \
+	$(RLDIR)/mbutil.cc $(RLDIR)/chardefs.hh $(RLDIR)/colors.hh \
+	$(RLDIR)/history.hh $(RLDIR)/parse-colors.hh \
+	$(RLDIR)/posixdir.hh $(RLDIR)/posixselect.hh \
+	$(RLDIR)/posixstat.hh $(RLDIR)/readline.hh $(RLDIR)/rlconf.hh \
+	$(RLDIR)/rldefs.hh $(RLDIR)/rlmbutil.hh $(RLDIR)/rlprivate.hh \
+	$(RLDIR)/rlshell.hh $(RLDIR)/rltty.hh $(RLDIR)/rlwinsize.hh \
+	$(RLDIR)/tcap.hh $(RLDIR)/tilde.hh $(SHDIR)/clktck.cc \
+	$(SHDIR)/clock.cc $(SHDIR)/getcwd.cc $(SHDIR)/getenv.cc \
+	$(SHDIR)/oslib.cc $(SHDIR)/setlinebuf.cc \
+	$(SHDIR)/strcasecmp.cc $(SHDIR)/strerror.cc $(SHDIR)/vprint.cc \
+	$(SHDIR)/rename.cc $(SHDIR)/zread.cc $(SHDIR)/inet_aton.cc \
+	$(SHDIR)/netconn.cc $(SHDIR)/netopen.cc $(SHDIR)/strpbrk.cc \
+	$(SHDIR)/timeval.cc $(SHDIR)/makepath.cc $(SHDIR)/pathcanon.cc \
+	$(SHDIR)/pathphys.cc $(SHDIR)/tmpfile.cc $(SHDIR)/spell.cc \
+	$(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
+	$(SHDIR)/strcasestr.cc $(SHDIR)/snprintf.cc \
+	$(SHDIR)/mailstat.cc $(SHDIR)/fmtulong.cc \
+	$(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc $(SHDIR)/shmatch.cc \
+	$(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
+	$(SHDIR)/strtoumax.cc $(SHDIR)/mktime.cc $(SHDIR)/mbschr.cc \
+	$(SHDIR)/zcatfd.cc $(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc \
+	$(SHDIR)/eaccess.cc $(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc \
+	$(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc \
+	$(SHDIR)/dprintf.cc $(SHDIR)/input_avail.cc \
+	$(SHDIR)/fnxform.cc $(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc \
+	$(SHDIR)/wcswidth.cc $(SHDIR)/wcsnwidth.cc \
+	$(SHDIR)/shmbchar.cc $(SHDIR)/random.cc \
+	$(SHDIR)/gettimeofday.cc $(TLDIR)/tilde.cc
 AM_YFLAGS = -d
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
 	-I$(srcdir)/lib/tilde -I$(srcdir)/builtins
 
-noinst_LIBRARIES = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
 DEFSRC = $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
 	$(BLTDIR)/builtin_def.cc $(BLTDIR)/caller_def.cc $(BLTDIR)/cd_def.cc \
 	$(BLTDIR)/colon_def.cc $(BLTDIR)/command_def.cc \
@@ -831,65 +914,14 @@ DEFSRC = $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
 	$(BLTDIR)/reserved_def.cc $(BLTDIR)/pushd_def.cc $(BLTDIR)/shopt_def.cc \
 	$(BLTDIR)/printf_def.cc $(BLTDIR)/complete_def.cc $(BLTDIR)/mapfile_def.cc
 
-libbuiltins_a_SOURCES = $(DEFSRC) \
-	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
-	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh \
-	$(BLTDIR)/builtins.cc
-
 mkbuiltins_SOURCES = $(BLTDIR)/mkbuiltins.cc
 psize_SOURCES = $(BLTDIR)/psize.cc
 PSIZE = psize$(EXEEXT)
 MKBUILTINS = mkbuiltins$(EXEEXT)
 DIRECTDEFINE = -D $(srcdir)
+CLEANFILES = builtins.cc builtext.hh pipesize.hh version.hh
 Program = bash$(EXEEXT)
 Version = @BASHVERS@
-libglob_a_SOURCES = $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc $(GLBDIR)/gmisc.cc \
-	$(GLBDIR)/xmbsrtowcs.cc $(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh \
-	$(GLBDIR)/glob_loop.hh $(GLBDIR)/gm_loop.hh $(GLBDIR)/ndir.hh \
-	$(GLBDIR)/sm_loop.hh $(GLBDIR)/strmatch.hh
-
-
-# TODO: add a separate libhistorycpp_a_SOURCES rule for non-readline builds.
-libreadlinecpp_a_SOURCES = $(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
-	$(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc $(RLDIR)/rltty.cc \
-	$(RLDIR)/complete.cc $(RLDIR)/bind.cc $(RLDIR)/isearch.cc \
-	$(RLDIR)/display.cc $(RLDIR)/signals.cc $(RLDIR)/emacs_keymap.hh \
-	$(RLDIR)/vi_keymap.hh $(RLDIR)/util.cc $(RLDIR)/kill.cc \
-	$(RLDIR)/undo.cc $(RLDIR)/macro.cc $(RLDIR)/input.cc \
-	$(RLDIR)/callback.cc $(RLDIR)/terminal.cc \
-	$(RLDIR)/history.cc $(RLDIR)/histsearch.cc $(RLDIR)/histexpand.cc \
-	$(RLDIR)/histfile.cc $(RLDIR)/nls.cc $(RLDIR)/search.cc \
-	$(RLDIR)/shell.cc $(RLDIR)/tilde.cc $(RLDIR)/text.cc $(RLDIR)/misc.cc \
-	$(RLDIR)/colors.cc $(RLDIR)/parse-colors.cc $(RLDIR)/mbutil.cc \
-	$(RLDIR)/chardefs.hh $(RLDIR)/colors.hh $(RLDIR)/history.hh \
-	$(RLDIR)/parse-colors.hh $(RLDIR)/posixdir.hh $(RLDIR)/posixselect.hh \
-	$(RLDIR)/posixstat.hh $(RLDIR)/readline.hh $(RLDIR)/rlconf.hh \
-	$(RLDIR)/rldefs.hh $(RLDIR)/rlmbutil.hh $(RLDIR)/rlprivate.hh \
-	$(RLDIR)/rlshell.hh $(RLDIR)/rltty.hh $(RLDIR)/rlwinsize.hh \
-	$(RLDIR)/tcap.hh $(RLDIR)/tilde.hh
-
-libsh_a_SOURCES = $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
-	$(SHDIR)/getenv.cc $(SHDIR)/oslib.cc $(SHDIR)/setlinebuf.cc \
-	$(SHDIR)/strcasecmp.cc $(SHDIR)/strerror.cc \
-	$(SHDIR)/vprint.cc $(SHDIR)/rename.cc $(SHDIR)/zread.cc \
-	$(SHDIR)/inet_aton.cc $(SHDIR)/netconn.cc $(SHDIR)/netopen.cc \
-	$(SHDIR)/strpbrk.cc $(SHDIR)/timeval.cc $(SHDIR)/makepath.cc \
-	$(SHDIR)/pathcanon.cc $(SHDIR)/pathphys.cc $(SHDIR)/tmpfile.cc \
-	$(SHDIR)/spell.cc $(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
-	$(SHDIR)/strcasestr.cc $(SHDIR)/snprintf.cc $(SHDIR)/mailstat.cc \
-	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
-	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc \
-	$(SHDIR)/strtoimax.cc $(SHDIR)/strtoumax.cc \
-	$(SHDIR)/mktime.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
-	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
-	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
-	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
-	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
-	$(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc $(SHDIR)/wcswidth.cc \
-	$(SHDIR)/wcsnwidth.cc $(SHDIR)/shmbchar.cc \
-	$(SHDIR)/random.cc $(SHDIR)/gettimeofday.cc
-
-libtilde_a_SOURCES = $(TLDIR)/tilde.cc
 all: config.hh
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -1011,9 +1043,9 @@ clean-noinstPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-
-clean-noinstLIBRARIES:
-	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+parse.hh: parse.cc
+	@if test ! -f $@; then rm -f parse.cc; else :; fi
+	@if test ! -f $@; then $(MAKE) $(AM_MAKEFLAGS) parse.cc; else :; fi
 $(BLTDIR)/$(am__dirstamp):
 	@$(MKDIR_P) $(BLTDIR)
 	@: > $(BLTDIR)/$(am__dirstamp)
@@ -1106,6 +1138,8 @@ $(BLTDIR)/complete_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
 	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
 $(BLTDIR)/mapfile_def.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
 	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
+$(BLTDIR)/builtins.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
+	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
 $(BLTDIR)/common.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
 	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
 $(BLTDIR)/evalstring.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
@@ -1116,13 +1150,6 @@ $(BLTDIR)/getopt.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
 	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
 $(BLTDIR)/bashgetopt.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
 	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
-$(BLTDIR)/builtins.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
-	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
-
-libbuiltins.a: $(libbuiltins_a_OBJECTS) $(libbuiltins_a_DEPENDENCIES) $(EXTRA_libbuiltins_a_DEPENDENCIES) 
-	$(AM_V_at)-rm -f libbuiltins.a
-	$(AM_V_AR)$(libbuiltins_a_AR) libbuiltins.a $(libbuiltins_a_OBJECTS) $(libbuiltins_a_LIBADD)
-	$(AM_V_at)$(RANLIB) libbuiltins.a
 $(GLBDIR)/$(am__dirstamp):
 	@$(MKDIR_P) $(GLBDIR)
 	@: > $(GLBDIR)/$(am__dirstamp)
@@ -1137,11 +1164,6 @@ $(GLBDIR)/gmisc.$(OBJEXT): $(GLBDIR)/$(am__dirstamp) \
 	$(GLBDIR)/$(DEPDIR)/$(am__dirstamp)
 $(GLBDIR)/xmbsrtowcs.$(OBJEXT): $(GLBDIR)/$(am__dirstamp) \
 	$(GLBDIR)/$(DEPDIR)/$(am__dirstamp)
-
-libglob.a: $(libglob_a_OBJECTS) $(libglob_a_DEPENDENCIES) $(EXTRA_libglob_a_DEPENDENCIES) 
-	$(AM_V_at)-rm -f libglob.a
-	$(AM_V_AR)$(libglob_a_AR) libglob.a $(libglob_a_OBJECTS) $(libglob_a_LIBADD)
-	$(AM_V_at)$(RANLIB) libglob.a
 $(RLDIR)/$(am__dirstamp):
 	@$(MKDIR_P) $(RLDIR)
 	@: > $(RLDIR)/$(am__dirstamp)
@@ -1210,11 +1232,6 @@ $(RLDIR)/parse-colors.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
 	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
 $(RLDIR)/mbutil.$(OBJEXT): $(RLDIR)/$(am__dirstamp) \
 	$(RLDIR)/$(DEPDIR)/$(am__dirstamp)
-
-libreadlinecpp.a: $(libreadlinecpp_a_OBJECTS) $(libreadlinecpp_a_DEPENDENCIES) $(EXTRA_libreadlinecpp_a_DEPENDENCIES) 
-	$(AM_V_at)-rm -f libreadlinecpp.a
-	$(AM_V_AR)$(libreadlinecpp_a_AR) libreadlinecpp.a $(libreadlinecpp_a_OBJECTS) $(libreadlinecpp_a_LIBADD)
-	$(AM_V_at)$(RANLIB) libreadlinecpp.a
 $(SHDIR)/$(am__dirstamp):
 	@$(MKDIR_P) $(SHDIR)
 	@: > $(SHDIR)/$(am__dirstamp)
@@ -1329,11 +1346,6 @@ $(SHDIR)/random.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/gettimeofday.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
-
-libsh.a: $(libsh_a_OBJECTS) $(libsh_a_DEPENDENCIES) $(EXTRA_libsh_a_DEPENDENCIES) 
-	$(AM_V_at)-rm -f libsh.a
-	$(AM_V_AR)$(libsh_a_AR) libsh.a $(libsh_a_OBJECTS) $(libsh_a_LIBADD)
-	$(AM_V_at)$(RANLIB) libsh.a
 $(TLDIR)/$(am__dirstamp):
 	@$(MKDIR_P) $(TLDIR)
 	@: > $(TLDIR)/$(am__dirstamp)
@@ -1342,14 +1354,6 @@ $(TLDIR)/$(DEPDIR)/$(am__dirstamp):
 	@: > $(TLDIR)/$(DEPDIR)/$(am__dirstamp)
 $(TLDIR)/tilde.$(OBJEXT): $(TLDIR)/$(am__dirstamp) \
 	$(TLDIR)/$(DEPDIR)/$(am__dirstamp)
-
-libtilde.a: $(libtilde_a_OBJECTS) $(libtilde_a_DEPENDENCIES) $(EXTRA_libtilde_a_DEPENDENCIES) 
-	$(AM_V_at)-rm -f libtilde.a
-	$(AM_V_AR)$(libtilde_a_AR) libtilde.a $(libtilde_a_OBJECTS) $(libtilde_a_LIBADD)
-	$(AM_V_at)$(RANLIB) libtilde.a
-parse.hh: parse.cc
-	@if test ! -f $@; then rm -f parse.cc; else :; fi
-	@if test ! -f $@; then $(MAKE) $(AM_MAKEFLAGS) parse.cc; else :; fi
 
 bash$(EXEEXT): $(bash_OBJECTS) $(bash_DEPENDENCIES) $(EXTRA_bash_DEPENDENCIES) 
 	@rm -f bash$(EXEEXT)
@@ -1906,7 +1910,7 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(PROGRAMS) $(LIBRARIES) config.hh
+all-am: Makefile $(PROGRAMS) config.hh
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(bindir)"; do \
@@ -1934,6 +1938,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -1957,7 +1962,7 @@ maintainer-clean-generic:
 clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-generic clean-libtool \
-	clean-noinstLIBRARIES clean-noinstPROGRAMS mostlyclean-am
+	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -2393,22 +2398,21 @@ uninstall-am: uninstall-binPROGRAMS
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am \
 	am--depfiles am--refresh check check-am clean \
 	clean-binPROGRAMS clean-cscope clean-generic clean-libtool \
-	clean-noinstLIBRARIES clean-noinstPROGRAMS cscope \
-	cscopelist-am ctags ctags-am dist dist-all dist-bzip2 \
-	dist-gzip dist-lzip dist-shar dist-tarZ dist-xz dist-zip \
-	dist-zstd distcheck distclean distclean-compile \
-	distclean-generic distclean-hdr distclean-libtool \
-	distclean-tags distcleancheck distdir distuninstallcheck dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-binPROGRAMS install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-binPROGRAMS
+	clean-noinstPROGRAMS cscope cscopelist-am ctags ctags-am dist \
+	dist-all dist-bzip2 dist-gzip dist-lzip dist-shar dist-tarZ \
+	dist-xz dist-zip dist-zstd distcheck distclean \
+	distclean-compile distclean-generic distclean-hdr \
+	distclean-libtool distclean-tags distcleancheck distdir \
+	distuninstallcheck dvi dvi-am html html-am info info-am \
+	install install-am install-binPROGRAMS install-data \
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am uninstall-binPROGRAMS
 
 .PRECIOUS: Makefile
 
@@ -2451,8 +2455,9 @@ jobs.$(OBJEXT): builtext.hh
 nojobs.$(OBJEXT): builtext.hh
 parse.$(OBJEXT): builtext.hh
 pcomplete.$(OBJEXT): builtext.hh
-parse.$(OBJEXT): builtext.hh
+parser.$(OBJEXT): builtext.hh
 redir.$(OBJEXT): pipesize.hh
+$(srcdir)/shell.hh: parse.hh
 sig.$(OBJEXT): builtext.hh
 subst.$(OBJEXT): builtext.hh
 trap.$(OBJEXT): builtext.hh

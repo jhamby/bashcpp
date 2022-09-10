@@ -1,4 +1,4 @@
-/* parser.h -- Everything you wanted to know about the parser, but were
+/* parser.hh -- Everything you wanted to know about the parser, but were
    afraid to ask. */
 
 /* Copyright (C) 1995-2019 Free Software Foundation, Inc.
@@ -77,6 +77,7 @@ enum dolbrace_state_t {
   DOLBRACE_QUOTE2 =	0x80	/* single quote is semi-special in double quotes */
 };
 
+#if 0
 /* variable declarations from parse.y */
 extern struct dstack dstack;
 
@@ -102,5 +103,6 @@ extern int eof_encountered;
 extern int eof_encountered_limit;
 
 extern int line_number, line_number_base;
+#endif
 
 #endif /* _PARSER_H_ */

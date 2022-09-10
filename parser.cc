@@ -22,7 +22,6 @@
 
 #include "shell.hh"
 #include "parser.hh"
-#include "parse.hh"
 
 namespace bash
 {
@@ -42,8 +41,10 @@ namespace bash
 #  define expanding_alias() 0
 #endif
 
+#if 0
 /* Global var is non-zero when end of file has been reached. */
 bool EOF_Reached = false;
+#endif
 
 #ifdef DEBUG
 static void
@@ -73,7 +74,7 @@ return_EOF ()
 }
 
 /* Variable containing the current get and unget functions.
-   See ./input.h for a clearer description. */
+   See ./input.hh for a clearer description. */
 BASH_INPUT bash_input;
 
 /* Set all of the fields in BASH_INPUT to NULL.  Free bash_input.name if it
@@ -1421,8 +1422,8 @@ static int token_buffer_size;
 
 /* Function for yyparse to call.  yylex keeps track of
    the last two tokens read, and calls read_token.  */
-static int
-yylex ()
+int
+Shell::yylex ()
 {
   if (interactive && (current_token == 0 || current_token == '\n'))
     {

@@ -57,6 +57,8 @@
 #include "jobs.hh"
 #include "shtty.hh"
 
+#include "parse.hh"
+
 #if defined (READLINE)
 #include "readline.hh"
 #endif
@@ -1111,6 +1113,9 @@ public:
 
   /* callback from lib/sh/getenv.cc */
   char *getenv (const char *);
+
+  // lexer called from Bison parser
+  parser::token::token_kind_type yylex ();
 
 protected:
 
@@ -2596,8 +2601,10 @@ protected:
   void stupidly_hack_special_variables (const std::string &);
 
   // Methods implemented in parse.yy.
-  char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
   int yyparse ();
+
+  // Methods implemented in parser.cc
+  char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
   int return_EOF ();
   void push_token (int);
   void reset_parser ();
