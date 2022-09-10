@@ -23,7 +23,6 @@
   Sunday, January 10th, 1988.
   Initial author: Brian Fox
 */
-#define INSTALL_DEBUG_MODE
 
 #include "config.hh"
 
@@ -229,6 +228,7 @@ SimpleState::SimpleState () :
 	rseed32 (1073741823),
 	last_command_subst_pid (NO_PID),
 	current_command_subst_pid (NO_PID),
+	array_needs_making (true),
 #if defined (JOB_CONTROL)
 	job_control (true),
 #endif
@@ -241,11 +241,13 @@ SimpleState::SimpleState () :
 #if defined (BRACE_EXPANSION)
 	brace_expansion (1),
 #endif
+	extended_quote (1),
+	promptvars (1),
 #ifdef HAVE_DEV_FD
 	have_devfd (HAVE_DEV_FD),
 #endif
 #if !defined (READLINE)
-	no_line_editing (true),	/* can't have line editing without readline */
+	no_line_editing (1),	/* can't have line editing without readline */
 #endif
 #if defined (STRICT_POSIX)
 	posixly_correct (1)
@@ -260,10 +262,9 @@ SimpleState::SimpleState () :
 #endif
 }
 
-#if 0
-
 // Everything happens when we construct the Shell.
-Shell::Shell (int argc, char **argv, char **env) : SimpleState ()
+Shell::Shell (int argc, char **argv, char **env) : SimpleState (),
+	primary_prompt (PPROMPT), secondary_prompt (SPROMPT)
 {
   // alloc this 4K read buffer from the heap to keep the class size small
   zread_lbuf = new char[ZBUFSIZ];
@@ -1964,7 +1965,5 @@ run_shopt_alist ()
   shopt_alist = 0;
   shopt_ind = shopt_len = 0;
 }
-
-#endif  // disaster area above
 
 }  // namespace bash

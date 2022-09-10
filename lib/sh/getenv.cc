@@ -49,7 +49,7 @@ bash::Shell::getenv (const char *name)
 {
   SHELL_VAR *var;
 
-  if (name == 0 || *name == '\0')
+  if (name == nullptr || *name == '\0')
     return nullptr;
 
   var = find_tempenv_variable (name);

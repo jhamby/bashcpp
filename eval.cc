@@ -60,10 +60,6 @@ Shell::reader_loop ()
 
   while (!EOF_Reached)
     {
-      int code;
-
-      code = setjmp_nosigs (top_level);
-
 #if defined (PROCESS_SUBSTITUTION)
       unlink_fifo_list ();
 #endif /* PROCESS_SUBSTITUTION */
@@ -73,84 +69,38 @@ Shell::reader_loop ()
       if (interactive_shell && signal_is_ignored (SIGINT) == 0 && signal_is_trapped (SIGINT) == 0)
 	set_signal_handler (SIGINT, sigint_sighandler);
 
-      if (code != NOT_JUMPED)
+      try
 	{
-	  indirection_level = our_indirection_level;
+	  executing = 0;
+	  if (temporary_env)
+	    dispose_used_env_vars ();
 
-	  switch (code)
+	  if (read_command () == 0)
 	    {
-	      /* Some kind of throw to top_level has occurred. */
-	    case FORCE_EOF:
-	    case ERREXIT:
-	    case EXITPROG:
-	      current_command = (COMMAND *)NULL;
-	      if (exit_immediately_on_error)
-		variable_context = 0;	/* not in a function */
-	      EOF_Reached = true;
-	      goto exec_done;
-
-	    case DISCARD:
-	      /* Make sure the exit status is reset to a non-zero value, but
-		 leave existing non-zero values (e.g., > 128 on signal)
-		 alone. */
-	      if (last_command_exit_value == 0)
-		set_exit_status (EXECUTION_FAILURE);
-	      if (subshell_environment)
+	      if (interactive_shell == 0 && read_but_dont_execute)
 		{
-		  current_command = (COMMAND *)NULL;
-		  EOF_Reached = true;
-		  goto exec_done;
+		  set_exit_status (EXECUTION_SUCCESS);
+		  dispose_command (global_command);
+		  global_command = nullptr;
 		}
-	      /* Obstack free command elements, etc. */
-	      if (current_command)
+	      else if ((current_command = global_command))
 		{
-		  dispose_command (current_command);
-		  current_command = (COMMAND *)NULL;
-		}
+		  global_command = nullptr;
 
-	      restore_sigmask ();
-	      break;
-
-	    default:
-	      command_error ("reader_loop", CMDERR_BADJUMP, code, 0);
-	    }
-	}
-
-      executing = 0;
-      if (temporary_env)
-	dispose_used_env_vars ();
-
-#if (defined (ultrix) && defined (mips)) || defined (C_ALLOCA)
-      /* Attempt to reclaim memory allocated with alloca (). */
-      (void) alloca (0);
-#endif
-
-      if (read_command () == 0)
-	{
-	  if (interactive_shell == 0 && read_but_dont_execute)
-	    {
-	      set_exit_status (EXECUTION_SUCCESS);
-	      dispose_command (global_command);
-	      global_command = (COMMAND *)NULL;
-	    }
-	  else if ((current_command = global_command))
-	    {
-	      global_command = (COMMAND *)NULL;
-
-	      /* If the shell is interactive, expand and display $PS0 after reading a
-		 command (possibly a list or pipeline) and before executing it. */
-	      if (interactive && ps0_prompt)
-		{
-		  char *ps0_string;
-
-		  ps0_string = decode_prompt_string (ps0_prompt);
-		  if (ps0_string && *ps0_string)
+		  /* If the shell is interactive, expand and display $PS0 after reading a
+		     command (possibly a list or pipeline) and before executing it. */
+		  if (interactive && ps0_prompt)
 		    {
-		      fprintf (stderr, "%s", ps0_string);
-		      fflush (stderr);
+		      char *ps0_string;
+
+		      ps0_string = decode_prompt_string (ps0_prompt);
+		      if (ps0_string && *ps0_string)
+			{
+			  fprintf (stderr, "%s", ps0_string);
+			  fflush (stderr);
+			}
+		      free (ps0_string);
 		    }
-		  free (ps0_string);
-		}
 
 	      current_command_number++;
 
@@ -165,18 +115,61 @@ Shell::reader_loop ()
 	      if (current_command)
 		{
 		  dispose_command (current_command);
-		  current_command = (COMMAND *)NULL;
+		  current_command = nullptr;
 		}
+	       }
 	    }
-	}
-      else
-	{
-	  /* Parse error, maybe discard rest of stream if not interactive. */
-	  if (!interactive)
+	  else
+	    {
+	      /* Parse error, maybe discard rest of stream if not interactive. */
+	      if (!interactive)
+		EOF_Reached = true;
+	    }
+	  if (just_one_command)
 	    EOF_Reached = true;
 	}
-      if (just_one_command)
-	EOF_Reached = true;
+      catch (const bash_exception& e)
+	{
+	  indirection_level = our_indirection_level;
+
+	  switch (e.type)
+	    {
+	      /* Some kind of throw to top_level has occurred. */
+	    case FORCE_EOF:
+	    case ERREXIT:
+	    case EXITPROG:
+	      current_command = nullptr;
+	      if (exit_immediately_on_error)
+		variable_context = 0;	/* not in a function */
+	      EOF_Reached = true;
+	      goto exec_done;
+
+	    case DISCARD:
+	      /* Make sure the exit status is reset to a non-zero value, but
+		 leave existing non-zero values (e.g., > 128 on signal)
+		 alone. */
+	      if (last_command_exit_value == 0)
+		set_exit_status (EXECUTION_FAILURE);
+	      if (subshell_environment)
+		{
+		  current_command = nullptr;
+		  EOF_Reached = true;
+		  goto exec_done;
+		}
+	      /* Obstack free command elements, etc. */
+	      if (current_command)
+		{
+		  dispose_command (current_command);
+		  current_command = nullptr;
+		}
+
+	      restore_sigmask ();
+	      break;
+
+	    default:
+	      command_error ("reader_loop", CMDERR_BADJUMP, code, 0);
+	    }
+	}
     }
   indirection_level--;
   return last_command_exit_value;
@@ -184,46 +177,49 @@ Shell::reader_loop ()
 
 /* Pretty print shell scripts */
 int
-pretty_print_loop ()
+Shell::pretty_print_loop ()
 {
   COMMAND *current_command;
   char *command_to_print;
-  int code;
-  int global_posix_mode, last_was_newline;
+  bool global_posix_mode, last_was_newline;
 
   global_posix_mode = posixly_correct;
-  last_was_newline = 0;
-  while (!EOF_Reached)
+  last_was_newline = false;
+  try
+  {
+    while (!EOF_Reached)
     {
-      code = setjmp_nosigs (top_level);
-      if (code)
-        return EXECUTION_FAILURE;
       if (read_command() == 0)
 	{
 	  current_command = global_command;
-	  global_command = 0;
-	  posixly_correct = 1;			/* print posix-conformant */
+	  global_command = nullptr;
+	  posixly_correct = true;			/* print posix-conformant */
 	  if (current_command && (command_to_print = make_command_string (current_command)))
 	    {
 	      printf ("%s\n", command_to_print);	/* for now */
 	      last_was_newline = 0;
 	    }
-	  else if (last_was_newline == 0)
+	  else if (!last_was_newline)
 	    {
 	       printf ("\n");
-	       last_was_newline = 1;
+	       last_was_newline = true;
 	    }
 	  posixly_correct = global_posix_mode;
-	  dispose_command (current_command);
+	  delete current_command;
 	}
       else
 	return EXECUTION_FAILURE;
+    }
+  }
+  catch (const bash_exception &e)
+    {
+      return EXECUTION_FAILURE;
     }
 
   return EXECUTION_SUCCESS;
 }
 
-static sighandler
+static SigHandler
 alrm_catcher(int i)
 {
   const char *msg;
@@ -232,13 +228,13 @@ alrm_catcher(int i)
   ssize_t ignored = write (1, msg, strlen (msg));
 
   bash_logout ();	/* run ~/.bash_logout if this is a login shell */
-  jump_to_top_level (EXITPROG);
+  throw bash_exception (EXITPROG);
 }
 
 /* Send an escape sequence to emacs term mode to tell it the
    current working directory. */
-static void
-send_pwd_to_eterm ()
+void
+Shell::send_pwd_to_eterm ()
 {
   char *pwd, *f;
 
@@ -272,8 +268,8 @@ execute_array_command (ARRAY *a, const void *v)
 }
 #endif
 
-static void
-execute_prompt_command ()
+void
+Shell::execute_prompt_command ()
 {
   char *command_to_execute;
   SHELL_VAR *pcv;
@@ -305,7 +301,7 @@ execute_prompt_command ()
    leaves the parsed command in the global variable GLOBAL_COMMAND.
    This is where PROMPT_COMMAND is executed. */
 int
-parse_command ()
+Shell::parse_command ()
 {
   int r;
 
@@ -342,14 +338,14 @@ parse_command ()
    is left in the globval variable GLOBAL_COMMAND for use by reader_loop.
    This is where the shell timeout code is executed. */
 int
-read_command ()
+Shell::read_command ()
 {
   SHELL_VAR *tmout_var;
   int tmout_len, result;
   SigHandler *old_alrm;
 
   set_current_prompt_level (1);
-  global_command = (COMMAND *)NULL;
+  global_command = nullptr;
 
   /* Only do timeouts if interactive. */
   tmout_var = (SHELL_VAR *)NULL;

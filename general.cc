@@ -57,6 +57,10 @@
 #  include <sys/cygwin.h>
 #endif
 
+namespace bash
+{
+
+#if 0
 static char *bash_special_tilde_expansions (char *);
 static int unquoted_tilde_word (const char *);
 static void initialize_group_array (void);
@@ -93,9 +97,31 @@ static struct {
 };
 
 static char *saved_posix_vars = 0;
+#endif
+
+
+// Return the type of bash_exception as a string.
+const char *
+bash_exception::what() const noexcept
+{
+  switch (type)
+    {
+      case FORCE_EOF:
+	return "FORCE_EOF";
+
+      case DISCARD:
+	return "DISCARD";
+
+      case EXITPROG:
+	return "EXITPROG";
+
+      case ERREXIT:
+	return "ERREXIT";
+    }
+}
 
 void
-posix_initialize (bool on)
+Shell::posix_initialize (bool on)
 {
   /* Things that should be turned on when posix mode is enabled. */
   if (on)
@@ -1370,3 +1396,5 @@ default_columns ()
 
   return c > 0 ? c : 80;
 }
+
+}  // namespace bash

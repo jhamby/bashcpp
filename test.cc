@@ -293,8 +293,8 @@ filecomp (const char *s, const char *t, int op)
   return false;
 }
 
-static bool
-arithcomp (const char *s, const char *t, int op, int flags)
+bool
+Shell::arithcomp (const char *s, const char *t, int op, int flags)
 {
   intmax_t l, r;
 
@@ -329,8 +329,8 @@ arithcomp (const char *s, const char *t, int op, int flags)
   return false;
 }
 
-static bool
-patcomp (const char *string, const char *pat, int op)
+bool
+Shell::patcomp (const char *string, const char *pat, int op)
 {
   int m;
 
@@ -339,7 +339,7 @@ patcomp (const char *string, const char *pat, int op)
 }
 
 bool
-binary_test (const char *op, const char *arg1, const char *arg2, int flags)
+Shell::binary_test (const char *op, const char *arg1, const char *arg2, int flags)
 {
   int patmatch;
 
@@ -466,7 +466,7 @@ unary_operator ()
 }
 
 bool
-unary_test (const char *op, const char *arg)
+Shell::unary_test (const char *op, const char *arg)
 {
   intmax_t r;
   struct stat stat_buf;
@@ -815,8 +815,6 @@ test_command (int margc, char **margv)
 {
   int value;
   int code;
-
-  USE_VAR(margc);
 
   code = setjmp_nosigs (test_exit_buf);
 

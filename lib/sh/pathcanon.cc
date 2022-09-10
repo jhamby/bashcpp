@@ -100,14 +100,14 @@ _path_isdir (const char *path)
 #define DOUBLE_SLASH(p)	((p[0] == '/') && (p[1] == '/') && p[2] != '/')
 
 char *
-sh_canonpath (const char *path, int flags)
+sh_canonpath (const char *path, path_flags flags)
 {
   char stub_char;
   char *result, *p, *q, *base, *dotdot;
   int rooted, double_slash_path;
 
   /* The result cannot be larger than the input PATH. */
-  result = (flags & PATH_NOALLOC) ? (char *)path : savestring (path);
+  result = (flags & PATH_NOALLOC) ? const_cast<char *> (path) : savestring (path);
 
   /* POSIX.2 says to leave a leading `//' alone.  On cygwin, we skip over any
      leading `x:' (dos drive name). */
@@ -166,7 +166,7 @@ sh_canonpath (const char *path, int flags)
 		    {
 		      if ((flags & PATH_NOALLOC) == 0)
 			delete[] result;
-		      return (char *)NULL;
+		      return nullptr;
 		    }
 		  *q = c;
 		}
@@ -204,7 +204,7 @@ sh_canonpath (const char *path, int flags)
 		{
 		  if ((flags & PATH_NOALLOC) == 0)
 		    delete[] result;
-		  return NULL;
+		  return nullptr;
 		}
 	      *q = c;
 	    }

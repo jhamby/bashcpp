@@ -469,7 +469,7 @@ Shell::string_extract (const char *string, size_t *sindex,
 	{
 	  size_t ni;
 	  /* If this is an array subscript, skip over it and continue. */
-	  ni = skipsubscript (string, i, 0);
+	  ni = skipsubscript (string, i, VA_NOFLAGS);
 	  if (string[ni] == RBRACK)
 	    i = ni;
 	}

@@ -24,9 +24,6 @@
 #  include <unistd.h>
 #endif
 
-#include <cstdio>
-#include <cstdlib>
-
 #include "chartypes.hh"
 #include "shell.hh"
 

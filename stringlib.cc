@@ -18,26 +18,25 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <cstdio>
-#include "chartypes.h"
+#include "chartypes.hh"
 
 #include <sstream>
 
-#include "shell.h"
-#include "pathexp.h"
+#include "shell.hh"
+#include "pathexp.hh"
 
-#include <glob/glob.h>
+#include "glob.hh"
 
 #if defined (EXTENDED_GLOB)
-#  include <glob/strmatch.h>
+#  include "strmatch.hh"
 #endif
 
 namespace bash

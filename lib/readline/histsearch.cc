@@ -19,6 +19,8 @@
    along with History.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "config.hh"
+
 #include "history.hh"
 
 #if defined (HAVE_FNMATCH)

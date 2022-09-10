@@ -86,6 +86,8 @@ enum hist_ctl_flags {
 #  endif /* !HISTEXPAND_DEFAULT */
 #endif
 
+#define HEREDOC_MAX		16
+
 const int NO_PIPE =		 -1;
 const int REDIRECT_BOTH =	 -2;
 
@@ -231,7 +233,9 @@ struct EXPR_CONTEXT
   struct lvalue lval;
   token_t curtok, lasttok;
   int noeval;
-  int _pad;		// silence clang -Wpadded warning
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  int _pad;			// silence clang -Wpadded warning
+#endif
 };
 
 /* Simple shell state: variables that can be memcpy'd to subshells. */
@@ -330,8 +334,12 @@ protected:
   int default_buffered_input;
 #endif
 
+  /* The current variable context.  This is really a count of how deep into
+     executing functions we are. */
   int variable_context;
 
+  /* The number of times BASH has been executed.  This is set
+     by initialize_variables (). */
   int shell_level;
 
   /* variables from evalfile.c */
@@ -343,7 +351,10 @@ protected:
   /* Variables declared in execute_cmd.c, used by many other files */
   int return_catch_flag;
   int return_catch_value;
+
+  /* execution state possibly modified by the parser */
   int last_command_exit_value;
+
   int last_command_exit_signal;
   int executing_builtin;
   int executing_list;		/* list nesting level */
@@ -363,6 +374,8 @@ protected:
   int loop_level;
 
   int posparam_count;
+
+  /* The value of $$. */
   pid_t dollar_dollar_pid;
 
   int subshell_argc;
@@ -387,6 +400,79 @@ protected:
 
   /* variables from lib/sh/shtty.c */
 
+  // additional 32-bit variables
+
+  unsigned int zread_lind;	// read index in zread_lbuf
+  unsigned int zread_lused;	// bytes used in zread_lbuf
+
+  int list_optopt;
+  int list_opttype;
+
+  int export_env_index;
+  int export_env_size;
+
+#if defined (READLINE)
+  int winsize_assignment;		/* currently assigning to LINES or COLUMNS */
+#endif
+
+  int need_here_doc;
+
+  /* The number of lines read from input while creating the current command. */
+  int current_command_line_count;
+
+  /* The number of lines in a command saved while we run parse_and_execute */
+  int saved_command_line_count;
+
+  /* The token that currently denotes the end of parse. */
+  int shell_eof_token;
+
+  /* The token currently being read. */
+  int current_token;
+
+  /* The current parser state. */
+  int parser_state;
+
+  /* Either zero or EOF. */
+  int shell_input_line_terminator;
+
+  /* The line number in a script on which a function definition starts. */
+  int function_dstart;
+
+  /* The line number in a script on which a function body starts. */
+  int function_bstart;
+
+  /* The line number in a script at which an arithmetic for command starts. */
+  int arith_for_lineno;
+
+  /* The last read token, or NULL.  read_token () uses this for context
+     checking. */
+  int last_read_token;
+
+  /* The token read prior to last_read_token. */
+  int token_before_that;
+
+  /* The token read prior to token_before_that. */
+  int two_tokens_ago;
+
+  int global_extglob;
+
+  /* The line number in a script where the word in a `case WORD', `select WORD'
+     or `for WORD' begins.  This is a nested command maximum, since the array
+     index is decremented after a case, select, or for command is parsed. */
+#define MAX_CASE_NEST	128
+  int word_lineno[MAX_CASE_NEST + 1];
+  int word_top = -1;
+
+  /* If non-zero, it is the token that we want read_token to return
+     regardless of what text is (or isn't) present to be read.  This
+     is reset by read_token.  If token_to_read == WORD or
+     ASSIGNMENT_WORD, yylval.word should be set to word_desc_to_read. */
+  int token_to_read;
+
+  /* ************************************************************** */
+  /*		Bash Variables (8-bit bool/char types)		    */
+  /* ************************************************************** */
+
   /* Variables used to keep track of the characters in IFS. */
   bool ifs_cmap[UCHAR_MAX + 1];
   bool ifs_is_set;
@@ -405,10 +491,6 @@ protected:
      rules to expand $* as we would if it appeared within double quotes. */
   bool expand_no_split_dollar_star;
 
-  /* ************************************************************** */
-  /*		Bash Variables (8-bit bool/char types)		    */
-  /* ************************************************************** */
-
   /* Is this locale a UTF-8 locale? */
   bool locale_utf8locale;
 
@@ -425,7 +507,11 @@ protected:
   /* variables from wait.def */
   bool wait_intr_flag;
 
+  /* Set to true if an assignment error occurs while putting variables
+     into the temporary environment. */
   bool tempenv_assign_error;
+
+  /* True means that we have to remake EXPORT_ENV. */
   bool array_needs_making;
 
   /* Shared state from bashhist.c */
@@ -619,31 +705,56 @@ protected:
   char array_expand_once;
   char assoc_expand_once;
 #endif
+
   char cdable_vars;
   char cdspelling;
   char check_hashed_filenames;
+
+  /* Non-zero means we expand aliases in commands. */
   char expand_aliases;
+
 #if defined (EXTENDED_GLOB)
   char extended_glob;
 #endif
+
+  /* If non-zero, $'...' and $"..." are expanded when they appear within
+     a ${...} expansion, even when the expansion appears within double
+     quotes. */
   char extended_quote;
+
   char glob_asciirange;
   char glob_dot_filenames;
   char glob_ignore_case;
   char glob_star;
   char lastpipe_opt;
+
+  /* If non-zero, local variables inherit values and attributes from a variable
+     with the same name at a previous scope. */
   char localvar_inherit;
+
+  /* If non-zero, calling `unset' on local variables in previous scopes marks
+     them as invisible so lookups find them unset. This is the same behavior
+     as local variables in the current local scope. */
   char localvar_unset;
+
   char mail_warning;
   char no_exit_on_failed_exec;
+
 #if defined (PROGRAMMABLE_COMPLETION)
   char prog_completion_enabled;
   char progcomp_alias;
 #endif
+
+  /* If non-zero, the decoded prompt string undergoes parameter and
+     variable substitution, command substitution, arithmetic substitution,
+     string expansion, process substitution, and quote removal in
+     decode_prompt_string. */
   char promptvars;
+
 #if defined (SYSLOG_HISTORY)
   char syslog_history;
 #endif
+
   char xpg_echo;
 
 #if defined (READLINE)
@@ -772,8 +883,6 @@ protected:
 #ifndef HAVE_LOCALE_CHARSET
   char charsetbuf[40];
 #endif
-
-  char _pad[8];				// silence clang -Wpadded warning
 };
 
 
@@ -811,14 +920,16 @@ public:
     pid_t pgrp;			/* The process ID of the process group (necessary). */
     JOB_STATE state;		/* The state that this job is in. */
     job_flags flags;		/* Flags word: J_NOTIFIED, J_FOREGROUND, or J_JOBCONTROL. */
-    int _pad;		// suppress clang -Wpadded warning
+#if SIZEOF_INT != SIZEOF_CHAR_P
+    int _pad;			// silence clang -Wpadded warning
+#endif
   };
 
 // Define structs for jobs and collected job stats.
 
-#define NO_JOB  -1	/* An impossible job array index. */
-#define DUP_JOB -2	/* A possible return value for get_job_spec (). */
-#define BAD_JOBSPEC -3	/* Bad syntax for job spec. */
+#define NO_JOB  -1		/* An impossible job array index. */
+#define DUP_JOB -2		/* A possible return value for get_job_spec (). */
+#define BAD_JOBSPEC -3		/* Bad syntax for job spec. */
 
   // Job stats struct.
   struct jobstats {
@@ -827,25 +938,27 @@ public:
     /* limits */
     long c_childmax;
     /* */
-    JOB *j_lastmade;	/* last job allocated by stop_pipeline */
-    JOB *j_lastasync;	/* last async job allocated by stop_pipeline */
+    JOB *j_lastmade;		/* last job allocated by stop_pipeline */
+    JOB *j_lastasync;		/* last async job allocated by stop_pipeline */
     /* child process statistics */
     int c_living;		/* running or stopped child processes */
     int c_reaped;		/* exited child processes still in jobs list */
     int c_injobs;		/* total number of child processes in jobs list */
     /* child process totals */
-    int c_totforked;	/* total number of children this shell has forked */
-    int c_totreaped;	/* total number of children this shell has reaped */
+    int c_totforked;		/* total number of children this shell has forked */
+    int c_totreaped;		/* total number of children this shell has reaped */
     /* job counters and indices */
     int j_lastj;		/* last (newest) job allocated */
     int j_firstj;		/* first (oldest) job allocated */
     int j_njobs;		/* number of non-NULL jobs in jobs array */
     int j_ndead;		/* number of JDEAD jobs in jobs array */
     /* */
-    int j_current;	/* current job */
-    int j_previous;	/* previous job */
+    int j_current;		/* current job */
+    int j_previous;		/* previous job */
 
-    int _pad;
+#if SIZEOF_INT != SIZEOF_CHAR_P
+    int _pad;			// silence clang -Wpadded warning
+#endif
   };
 
 protected:
@@ -973,9 +1086,7 @@ public:
   int times_builtin (WORD_LIST *);
   int trap_builtin (WORD_LIST *);
   int type_builtin (WORD_LIST *);
-#if !defined (_MINIX)
   int ulimit_builtin (WORD_LIST *);
-#endif /* !_MINIX */
   int umask_builtin (WORD_LIST *);
   int wait_builtin (WORD_LIST *);
 
@@ -1150,7 +1261,7 @@ protected:
 
 #if defined (JOB_CONTROL)
 
-  inline void
+  void
   making_children ()
   {
     if (already_making_children)
@@ -1160,13 +1271,13 @@ protected:
     start_pipeline ();
   }
 
-  inline void
+  void
   stop_making_children ()
   {
     already_making_children = false;
   }
 
-  inline void
+  void
   cleanup_the_pipeline ()
   {
     PROCESS *disposer;
@@ -1421,7 +1532,7 @@ protected:
   /* include all functions from lib/sh/shtty.c here: they're very small. */
   /* shtty.c -- abstract interface to the terminal, focusing on capabilities. */
 
-  static inline int
+  static int
   ttgetattr(int fd, TTYSTRUCT *ttp)
   {
 #ifdef TERMIOS_TTY_DRIVER
@@ -1435,7 +1546,7 @@ protected:
 #endif
   }
 
-  static inline int
+  static int
   ttsetattr(int fd, TTYSTRUCT *ttp)
   {
 #ifdef TERMIOS_TTY_DRIVER
@@ -1449,7 +1560,7 @@ protected:
 #endif
   }
 
-  inline void
+  void
   ttsave()
   {
     if (ttsaved)
@@ -1459,7 +1570,7 @@ protected:
     ttsaved = true;
   }
 
-  inline void
+  void
   ttrestore()
   {
     if (!ttsaved)
@@ -1470,7 +1581,7 @@ protected:
   }
 
   /* Retrieve the internally-saved attributes associated with tty fd FD. */
-  inline TTYSTRUCT *
+  TTYSTRUCT *
   ttattr (int fd)
   {
     if (!ttsaved)
@@ -1487,7 +1598,7 @@ protected:
    * Change attributes in ttp so that when it is installed using
    * ttsetattr, the terminal will be in one-char-at-a-time mode.
    */
-  static inline void
+  static void
   tt_setonechar(TTYSTRUCT *ttp)
   {
 #if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
@@ -1530,7 +1641,7 @@ protected:
   }
 
   /* Set the tty associated with FD and TTP into one-character-at-a-time mode */
-  static inline int
+  static int
   ttfd_onechar (int fd, TTYSTRUCT *ttp)
   {
     tt_setonechar(ttp);
@@ -1538,7 +1649,7 @@ protected:
   }
 
   /* Set the terminal into one-character-at-a-time mode */
-  inline int
+  int
   ttonechar ()
   {
     TTYSTRUCT tt;
@@ -1553,7 +1664,7 @@ protected:
    * Change attributes in ttp so that when it is installed using
    * ttsetattr, the terminal will be in no-echo mode.
    */
-  static inline void
+  static void
   tt_setnoecho(TTYSTRUCT *ttp)
   {
 #if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
@@ -1564,7 +1675,7 @@ protected:
   }
 
   /* Set the tty associated with FD and TTP into no-echo mode */
-  static inline int
+  static int
   ttfd_noecho (int fd, TTYSTRUCT *ttp)
   {
     tt_setnoecho (ttp);
@@ -1572,7 +1683,7 @@ protected:
   }
 
   /* Set the terminal into no-echo mode */
-  inline int
+  int
   ttnoecho ()
   {
     TTYSTRUCT tt;
@@ -1587,7 +1698,7 @@ protected:
    * Change attributes in ttp so that when it is installed using
    * ttsetattr, the terminal will be in eight-bit mode (pass8).
    */
-  static inline void
+  static void
   tt_seteightbit (TTYSTRUCT *ttp)
   {
 #if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
@@ -1600,7 +1711,7 @@ protected:
   }
 
   /* Set the tty associated with FD and TTP into eight-bit mode */
-  static inline int
+  static int
   ttfd_eightbit (int fd, TTYSTRUCT *ttp)
   {
     tt_seteightbit (ttp);
@@ -1608,7 +1719,7 @@ protected:
   }
 
   /* Set the terminal into eight-bit mode */
-  inline int
+  int
   tteightbit ()
   {
     TTYSTRUCT tt;
@@ -1623,7 +1734,7 @@ protected:
    * Change attributes in ttp so that when it is installed using
    * ttsetattr, the terminal will be in non-canonical input mode.
    */
-  static inline void
+  static void
   tt_setnocanon (TTYSTRUCT *ttp)
   {
 #if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
@@ -1632,7 +1743,7 @@ protected:
   }
 
   /* Set the tty associated with FD and TTP into non-canonical mode */
-  static inline int
+  static int
   ttfd_nocanon (int fd, TTYSTRUCT *ttp)
   {
     tt_setnocanon (ttp);
@@ -1640,7 +1751,7 @@ protected:
   }
 
   /* Set the terminal into non-canonical mode */
-  inline int
+  int
   ttnocanon ()
   {
     TTYSTRUCT tt;
@@ -1655,7 +1766,7 @@ protected:
    * Change attributes in ttp so that when it is installed using
    * ttsetattr, the terminal will be in cbreak, no-echo mode.
    */
-  static inline void
+  static void
   tt_setcbreak(TTYSTRUCT *ttp)
   {
     tt_setonechar (ttp);
@@ -1664,7 +1775,7 @@ protected:
 
   /* Set the tty associated with FD and TTP into cbreak (no-echo,
      one-character-at-a-time) mode */
-  static inline int
+  static int
   ttfd_cbreak (int fd, TTYSTRUCT *ttp)
   {
     tt_setcbreak (ttp);
@@ -1672,7 +1783,7 @@ protected:
   }
 
   /* Set the terminal into cbreak (no-echo, one-character-at-a-time) mode */
-  inline int
+  int
   ttcbreak ()
   {
     TTYSTRUCT tt;
@@ -1797,7 +1908,7 @@ protected:
   /* Write NB bytes from BUF to file descriptor FD, retrying the write if
      it is interrupted.  We retry three times if we get a zero-length
      write.  Any other signal causes this function to return prematurely. */
-  static inline ssize_t
+  static ssize_t
   zwrite (int fd, char *buf, size_t nb)
   {
     size_t n, nt;
@@ -1999,7 +2110,7 @@ protected:
   /* Extract the $[ construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "$[".
      Make (SINDEX) get the position just after the matching "]". */
-  inline char *
+  char *
   extract_arithmetic_subst (const std::string &string, size_t *sindex)
   {
     return extract_delimited_string (string, sindex, "$[", "[", "]", SX_NOFLAGS); /*]*/
@@ -2009,7 +2120,7 @@ protected:
   /* Extract the <( or >( construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "<(".
      Make (SINDEX) get the position just after the matching ")". */
-  inline char *
+  char *
   extract_process_subst (const char *string, size_t *sindex, sx_flags xflags)
   {
     xflags |= (no_throw_on_fatal_error ? SX_NOTHROW : SX_NOFLAGS);
@@ -2266,7 +2377,7 @@ protected:
 #endif
 
   /* Evaluates to true if C is a character in $IFS. */
-  inline bool isifs (char c) {
+  bool isifs (char c) {
     return ifs_cmap[static_cast<unsigned char> (c)];
   }
 
@@ -2484,8 +2595,14 @@ protected:
      is one of the special ones where something special happens. */
   void stupidly_hack_special_variables (const std::string &);
 
-  // Methods in parse.y / y.tab.c.
-  char *xparse_dolparen (const std::string &, char *, size_t *, sx_flags);
+  // Methods implemented in parse.yy.
+  char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
+  int yyparse ();
+  int return_EOF ();
+  void push_token (int);
+  void reset_parser ();
+  void reset_readahead_token ();
+  WORD_LIST *parse_string_to_word_list (char *, int, const char *);
 
   // Methods in lib/tilde/tilde.c.
   size_t tilde_find_prefix (const std::string &, size_t *);
@@ -2518,23 +2635,44 @@ private:
   size_t statsize;
 #endif
 
+  /* The list of shell variables that the user has created at the global
+     scope, or that came from the environment. */
   VAR_CONTEXT *global_variables;
+
+  /* The current list of shell variables, including function scopes */
   VAR_CONTEXT *shell_variables;
 
+  /* The list of shell functions that the user has created, or that came from
+     the environment. */
   HASH_TABLE *shell_functions;
+
+#if defined (DEBUGGER)
+  /* The table of shell function definitions that the user defined or that
+     came from the environment. */
+  HASH_TABLE *shell_function_defs;
+#endif
+
+  /* The set of shell assignments which are made only in the environment
+     for a single command. */
   HASH_TABLE *temporary_env;
 
-  char **dollar_vars;
+  /* Some funky variables which are known about specially.  Here is where
+     "$*", "$1", and all the cruft is kept. */
+  char *dollar_vars[10];
+
+  WORD_LIST *rest_of_args;
+
+  /* An array which is passed to commands as their environment.  It is
+     manufactured from the union of the initial environment and the
+     shell variables that are marked for export. */
   char **export_env;
 
-  /* Special value for nameref with invalid value for creation or assignment. */
-  SHELL_VAR invalid_nameref_value;
+  HASH_TABLE *last_table_searched;	/* hash_lookup sets this */
+  VAR_CONTEXT *last_context_searched;
 
   /* variables from common.c */
   sh_builtin_func_t this_shell_builtin;
   sh_builtin_func_t last_shell_builtin;
-
-  WORD_LIST *rest_of_args;
 
   char *the_current_working_directory;
 
@@ -2613,21 +2751,49 @@ private:
   iconv_t localconv;
 #endif
 
-  // 32-bit variables here (before I move them to SimpleState)
+  // Previously-global variables moved from parse.yy.
 
-  unsigned int zread_lind;	// read index in zread_lbuf
-  unsigned int zread_lused;	// bytes used in zread_lbuf
+  /* Default prompt strings */
+  const char *primary_prompt;
+  const char *secondary_prompt;
 
-  int list_optopt;
-  int list_opttype;
+  /* PROMPT_STRING_POINTER points to one of these, never to an actual string. */
+  const char *ps1_prompt, *ps2_prompt;
+
+  /* Displayed after reading a command but before executing it in an interactive shell */
+  const char *ps0_prompt;
+
+  /* Handle on the current prompt string.  Indirectly points through
+     ps1_ or ps2_prompt. */
+  const char **prompt_string_pointer;
+  const char *current_prompt_string;
+
+  /* Variables to manage the task of reading here documents, because we need to
+     defer the reading until after a complete command has been collected. */
+  REDIRECT *redir_stack[HEREDOC_MAX];
+
+  /* Where shell input comes from.  History expansion is performed on each
+     line when the shell is interactive. */
+  std::string shell_input_line;
+  size_t shell_input_line_index;
+
+  /* The decoded prompt string.  Used if READLINE is not defined or if
+     editing is turned off.  Analogous to current_readline_prompt. */
+  char *current_decoded_prompt;
+
+  WORD_DESC *word_desc_to_read;
+
+  REDIRECTEE source;
+  REDIRECTEE redir;
+
+  FILE *yyoutstream;
+  FILE *yyerrstream;
 };
 
 // The global (constructed in shell.cc) pointer to the single shell object.
 extern Shell *the_shell;
 
-static constexpr int HEREDOC_MAX = 16;
-
-struct ShellInputLineState {
+struct sh_input_line_state_t {
   char *input_line;
   size_t input_line_index;
   size_t input_line_size;
@@ -2641,7 +2807,7 @@ struct ShellInputLineState {
 /* Structure in which to save partial parsing state when doing things like
    PROMPT_COMMAND and bash_execute_unix_command execution. */
 
-struct ShellParserState {
+struct sh_parser_state_t {
 
   /* parsing state */
   int parser_state;
@@ -2667,8 +2833,6 @@ struct ShellParserState {
   int history_expansion_inhibited;
 #endif
 
-  /* execution state possibly modified by the parser */
-  int last_command_exit_value;
 #if defined (ARRAY_VARS)
   ARRAY *pipestatus;
 #endif
@@ -2676,23 +2840,8 @@ struct ShellParserState {
   Shell::sh_builtin_func_t last_shell_builtin;
   Shell::sh_builtin_func_t this_shell_builtin;
 
-  /* flags state affecting the parser */
-  int expand_aliases;
-  int echo_input_at_read;
-  int need_here_doc;
-  int here_doc_first_line;
-
   /* structures affecting the parser */
   REDIRECT *redir_stack[HEREDOC_MAX];
-
-  /* Let's try declaring these here. */
-  const char *parser_remaining_input ();
-
-  ShellParserState *save_parser_state (ShellParserState *);
-  void restore_parser_state (ShellParserState *);
-
-  ShellInputLineState *save_input_line_state (ShellInputLineState *);
-  void ShellInputLineState (ShellInputLineState *);
 };
 
 }  // namespace bash

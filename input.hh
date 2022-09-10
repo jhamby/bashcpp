@@ -90,7 +90,7 @@ struct BASH_INPUT {
 /* Functions from parse.y whose use directly or indirectly depends on the
    definitions in this file. */
 extern void initialize_bash_input ();
-extern void init_yy_io (sh_cget_func_t *, sh_cunget_func_t *, enum stream_type, const char *, InputStream);
+extern void init_yy_io (sh_cget_func_t *, sh_cunget_func_t *, enum stream_type, const char *, INPUT_STREAM);
 extern const char *yy_input_name ();
 extern void with_input_from_stdin ();
 extern void with_input_from_string (const std::string &, const std::string &);

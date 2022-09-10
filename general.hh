@@ -44,37 +44,26 @@ namespace bash
 
 /* Exceptions to replace setjmp and longjmp calls. */
 
-/* We want to stop parsing. */
-class force_eof_exception : public std::exception {
-public:
-  virtual const char *what() const noexcept override;
+enum bash_exception_t {
+  FORCE_EOF =	1,		// We want to stop parsing.
+  DISCARD =	2,		// Discard current command.
+  EXITPROG =	3,		// Unconditionally exit the program now.
+  ERREXIT =	4		// Exit due to error condition.
 };
 
-/* Discard current command. */
-class discard_exception : public std::exception {
+/* General shell exception, including an exception type enum. */
+class bash_exception : public std::exception {
 public:
-  virtual const char *what() const noexcept override;
+  bash_exception (bash_exception_t t) : type (t) {}
+  virtual const char *what () const noexcept override;
+
+  bash_exception_t type;
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  int _pad;			// silence clang -Wpadded warning
+#endif
 };
 
-/* Unconditionally exit the program now. */
-class exit_exception : public std::exception {
-public:
-  virtual const char *what() const noexcept override;
-};
-
-/* Exit due to error condition (inherits from exit_exception). */
-class error_exit_exception : public exit_exception {
-public:
-  virtual const char *what() const noexcept override;
-};
-
-/* String extraction error. */
-class string_extract_error : public std::exception {
-public:
-  virtual const char *what() const noexcept override;
-};
-
-/* Exceptions used by expansion functions in subst.c. */
+/* Local exceptions used by expansion functions in subst.c. */
 
 class subst_expand_error : public std::exception {};
 

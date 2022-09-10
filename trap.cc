@@ -39,10 +39,11 @@
 #include "parser.hh"
 #include "input.hh"	/* for save_token_state, restore_token_state */
 #include "jobs.hh"
-#include "signames.hh"
 #include "builtins.hh"
 #include "builtins/common.hh"
+
 #include "builtext.hh"
+#include "signames.hh"
 
 #if defined (READLINE)
 #  include "readline.hh"
@@ -63,6 +64,7 @@ namespace bash
 
 #define SPECIAL_TRAP(s)	((s) == EXIT_TRAP || (s) == DEBUG_TRAP || (s) == ERROR_TRAP || (s) == RETURN_TRAP)
 
+#if 0
 /* An array of such flags, one for each signal, describing what the
    shell will do with a signal.  DEBUG_TRAP == NSIG; some code below
    assumes this. */
@@ -86,7 +88,7 @@ static void trap_if_untrapped (int, char *);
 extern bool from_return_trap;
 extern bool waiting_for_child;
 
-extern WordList *subst_assign_varlist;
+extern WORD_LIST *subst_assign_varlist;
 
 /* The list of things to do originally, before we started trapping. */
 sighandler_t original_signals[NSIG];
@@ -117,6 +119,7 @@ int trapped_signal_received;
 
 /* Set to 1 to suppress the effect of `set v' in the DEBUG trap. */
 bool suppress_debug_trap_verbose = false;
+#endif
 
 #define GETORIGSIG(sig) \
   do { \

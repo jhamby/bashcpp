@@ -105,91 +105,6 @@ namespace bash
 static intmax_t ipow (intmax_t base, intmax_t exp);
 
 
-#if 0
-static std::string	expression;	/* The current expression */
-static std::string	tp;		/* token lexical position */
-static std::string	lasttp;		/* pointer to last token position */
-static token_t		curtok;		/* the current token */
-static token_t		lasttok;	/* the previous token */
-static int		assigntok;	/* the OP in OP= */
-static std::string	tokstr;		/* current token string */
-static intmax_t		tokval;		/* current token value */
-static int		noeval;		/* set to non-zero if no assignment to be done */
-
-// static procenv_t evalbuf;
-
-static struct lvalue curlval = {0, 0, 0, -1};
-static struct lvalue lastlval = {0, 0, 0, -1};
-
-static bool	_is_arithop (int);
-static void	readtok ();	/* lexical analyzer */
-
-static void	init_lvalue (struct lvalue *);
-static struct lvalue *alloc_lvalue ();
-static void	free_lvalue (struct lvalue *);
-
-static intmax_t	expr_streval (std::string &, int, struct lvalue *);
-static intmax_t	strlong (const std::string &);
-static void	evalerror (const std::string &);
-
-static void	popexp ();
-static void	expr_unwind ();
-static void	expr_bind_variable (std::string &, std::string &);
-#if defined (ARRAY_VARS)
-static void	expr_bind_array_element (const std::string &, arrayind_t, std::string &);
-#endif
-
-static intmax_t subexpr (const std::string &);
-
-static intmax_t	expcomma ();
-static intmax_t expassign ();
-static intmax_t	expcond ();
-static intmax_t explor ();
-static intmax_t expland ();
-static intmax_t	expbor ();
-static intmax_t	expbxor ();
-static intmax_t	expband ();
-static intmax_t exp5 ();
-static intmax_t exp4 ();
-static intmax_t expshift ();
-static intmax_t exp3 ();
-static intmax_t expmuldiv ();
-static intmax_t	exppower ();
-static intmax_t exp1 ();
-static intmax_t exp0 ();
-
-
-#if defined (ARRAY_VARS)
-extern const std::string bash_badsub_errmsg;
-#endif
-
-#define SAVETOK(X) \
-  do { \
-    (X)->curtok = curtok; \
-    (X)->lasttok = lasttok; \
-    (X)->tp = tp; \
-    (X)->lasttp = lasttp; \
-    (X)->tokval = tokval; \
-    (X)->tokstr = tokstr; \
-    (X)->noeval = noeval; \
-    (X)->lval = curlval; \
-  } while (0)
-
-#define RESTORETOK(X) \
-  do { \
-    curtok = (X)->curtok; \
-    lasttok = (X)->lasttok; \
-    tp = (X)->tp; \
-    lasttp = (X)->lasttp; \
-    tokval = (X)->tokval; \
-    tokstr = (X)->tokstr; \
-    noeval = (X)->noeval; \
-    curlval = (X)->lval; \
-  } while (0)
-#endif
-
-
-
 /* Push and save away the contents of the globals describing the
    current expression context. */
 void
@@ -249,7 +164,7 @@ Shell::expr_bind_variable (const std::string &lhs, const std::string &rhs)
 #endif
   v = bind_int_variable (lhs, rhs, aflags);
   if (v && v->readonly () || v->noassign ())
-    throw force_eof_exception ();	/* variable assignment error */
+    throw bash_exception (FORCE_EOF);	/* variable assignment error */
 
   stupidly_hack_special_variables (lhs);
 }
@@ -278,9 +193,7 @@ Shell::expr_skipsubscript (const char *vp, char *cp)
 void
 Shell::expr_bind_array_element (const std::string &tok, arrayind_t ind, const std::string &rhs)
 {
-  char ibuf[INT_STRLEN_BOUND (arrayind_t) + 1];
-
-  char *istr = fmtumax (ind, 10, ibuf, sizeof (ibuf), 0);
+  std::string istr = fmtumax (ind, 10, FL_NOFLAGS);
   char *vname = array_variable_name (tok.c_str (), 0, nullptr, nullptr);
 
   std::string lhs (vname);
@@ -292,6 +205,7 @@ Shell::expr_bind_array_element (const std::string &tok, arrayind_t ind, const st
   expr_bind_variable (lhs, rhs);
   delete[] vname;
 }
+
 #endif /* ARRAY_VARS */
 
 /* Evaluate EXPR, and return the arithmetic result.  If VALIDP is
@@ -322,7 +236,7 @@ Shell::evalexp (const std::string &expr, eval_flags flags, bool *validp)
 
       return val;
     }
-  catch (const force_eof_exception& e)
+  catch (const bash_exception& e)
     {
       expr_current.tokstr.clear ();
       expr_current.expression.clear ();
@@ -331,6 +245,10 @@ Shell::evalexp (const std::string &expr, eval_flags flags, bool *validp)
 
       if (validp)
 	*validp = false;
+
+      if (e.type != FORCE_EOF)
+	throw;				// unexpected exception type
+
       return 0;
     }
 }
@@ -391,7 +309,6 @@ intmax_t
 Shell::expassign ()
 {
   intmax_t value;
-//   std::string &lhs, *rhs;
   arrayind_t lind;
 #if defined (HAVE_IMAXDIV)
   imaxdiv_t idiv;
@@ -481,7 +398,7 @@ Shell::expassign ()
 	  value = lvalue;
 	}
 
-      char *rhs = itos (value);
+      std::string rhs = itos (value);
       if (expr_current.noeval == 0)
 	{
 #if defined (ARRAY_VARS)
@@ -494,7 +411,6 @@ Shell::expassign ()
       if (expr_current.lval.tokstr == expr_current.tokstr)
 	expr_current.lval.init ();
 
-      delete[] rhs;
       expr_current.tokstr.clear ();		/* For freeing on errors. */
     }
 
@@ -922,31 +838,31 @@ Shell::exp0 ()
       delete[] vincdec;
       val = v2;
 
-      curtok = NUM;	/* make sure --x=7 is flagged as an error */
+      expr_current.curtok = NUM;	/* make sure --x=7 is flagged as an error */
       readtok ();
     }
-  else if (curtok == LPAR)
+  else if (expr_current.curtok == LPAR)
     {
       /* XXX - save curlval here?  Or entire expression context? */
       readtok ();
       val = EXP_HIGHEST ();
 
-      if (curtok != RPAR) /* ( */
+      if (expr_current.curtok != RPAR) /* ( */
 	evalerror (_("missing `)'"));
 
       /* Skip over closing paren. */
       readtok ();
     }
-  else if ((curtok == NUM) || (curtok == STR))
+  else if ((expr_current.curtok == NUM) || (expr_current.curtok == STR))
     {
       val = expr_current.tokval;
-      if (curtok == STR)
+      if (expr_current.curtok == STR)
 	{
-	  SAVETOK (&ec);
-	  expr_current.tokstr = nullptr;	/* keep it from being freed */
+	  ec = expr_current;
+	  expr_current.tokstr.clear ();		/* keep it from being freed */
           expr_current.noeval = 1;
           readtok ();
-          stok = curtok;
+          stok = expr_current.curtok;
 
 	  /* post-increment or post-decrement */
  	  if (stok == POSTINC || stok == POSTDEC)
@@ -969,14 +885,14 @@ Shell::exp0 ()
 		    expr_bind_variable (expr_current.tokstr, vincdec);
 		}
 	      free (vincdec);
-	      curtok = NUM;	/* make sure x++=7 is flagged as an error */
+	      expr_current.curtok = NUM;	/* make sure x++=7 is flagged as an error */
  	    }
  	  else
  	    {
 	      /* XXX - watch out for pointer aliasing issues here */
 	      if (stok == STR)	/* free new tokstr before old one is restored */
 		FREE (tokstr);
-	      RESTORETOK (&ec);
+	      expr_current = ec;
  	    }
 	}
 
@@ -1059,7 +975,7 @@ Shell::expr_streval (std::string &tok, int e, struct lvalue *lvalue)
 	FREE (value);	/* array_variable_name returns new memory */
 #endif
 
-      if (no_longjmp_on_fatal_error && interactive_shell)
+      if (no_throw_on_fatal_error && interactive_shell)
 	sh_longjmp (evalbuf, 1);
 
       if (interactive_shell)
@@ -1381,7 +1297,7 @@ Shell::evalerror (const std::string &msg)
   internal_error (_("%s%s%s: %s (error token is \"%s\")"),
 		   name ? name : "", name ? ": " : "",
 		   t ? t : "", msg, (lasttp && *lasttp) ? lasttp : "");
-  sh_longjmp (evalbuf, 1);
+  throw bash_exception (FORCE_EOF);
 }
 
 /* Convert a string to an intmax_t integer, with an arbitrary base.
@@ -1450,8 +1366,8 @@ Shell::strlong (const std::string &num)
 	}
       else if (VALID_NUMCHAR (c))
 	{
-	  if (DIGIT(c))
-	    c = TODIGIT(c);
+	  if (std::isdigit(c))
+	    c = todigit (c);
 	  else if (c >= 'a' && c <= 'z')
 	    c -= 'a' - 10;
 	  else if (c >= 'A' && c <= 'Z')
@@ -1474,49 +1390,3 @@ Shell::strlong (const std::string &num)
 }
 
 }  //namespace bash
-
-#if defined (EXPR_TEST)
-
-SHELL_VAR *find_variable () { return 0;}
-SHELL_VAR *bind_variable () { return 0; }
-
-char *get_string_value () { return 0; }
-
-procenv_t top_level;
-
-main (int argc, char **argv)
-{
-  int i;
-  intmax_t v;
-  int expok;
-
-  if (setjmp (top_level))
-    exit (0);
-
-  for (i = 1; i < argc; i++)
-    {
-      v = evalexp (argv[i], 0, &expok);
-      if (expok == 0)
-	fprintf (stderr, _("%s: expression error\n"), argv[i]);
-      else
-	printf ("'%s' -> %ld\n", argv[i], v);
-    }
-  exit (0);
-}
-
-int
-builtin_error (const char *format, int arg1, int arg2, int arg3, int arg4, int arg5)
-{
-  fprintf (stderr, "expr: ");
-  fprintf (stderr, format, arg1, arg2, arg3, arg4, arg5);
-  fprintf (stderr, "\n");
-  return 0;
-}
-
-char *
-itos (intmax_t n)
-{
-  return "42";
-}
-
-#endif /* EXPR_TEST */

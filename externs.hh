@@ -41,7 +41,7 @@
 namespace bash
 {
 
-/* Miscellaneous functions from parse.y */
+/* Miscellaneous functions from parse.yy */
 #if 0
 int yyparse ();
 int return_EOF ();
@@ -224,7 +224,7 @@ enum path_flags {
   PATH_NOALLOC =	0x0008
 };
 
-char *sh_canonpath (const char *, int);
+char *sh_canonpath (const char *, path_flags);
 
 /* declarations for functions defined in lib/sh/pathphys.c */
 char *sh_physpath (const char *, int);

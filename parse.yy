@@ -48,7 +48,7 @@
 #include "test.hh"
 #include "builtins.hh"
 #include "builtins/common.hh"
-#include "builtins/builtext.hh"
+#include "builtext.hh"
 
 #include "shmbutil.hh"
 
@@ -107,6 +107,7 @@ namespace bash
 #  define MBTEST(x)	((x))
 #endif
 
+#if 0
 #if defined (EXTENDED_GLOB)
 extern bool extended_glob;
 #endif
@@ -203,116 +204,12 @@ static size_t shell_input_line_propsize = 0;
 #  define set_line_mbstate()
 #endif
 
-#if 0
 extern int yyerror (const char *);
 
 #ifdef DEBUG
 extern int yydebug;
 #endif
 
-/* Default prompt strings */
-const char *primary_prompt = PPROMPT;
-const char *secondary_prompt = SPROMPT;
-
-/* PROMPT_STRING_POINTER points to one of these, never to an actual string. */
-const char *ps1_prompt, *ps2_prompt;
-
-/* Displayed after reading a command but before executing it in an interactive shell */
-const char *ps0_prompt;
-
-/* Handle on the current prompt string.  Indirectly points through
-   ps1_ or ps2_prompt. */
-const char **prompt_string_pointer = NULL;
-const char *current_prompt_string;
-
-/* Non-zero means we expand aliases in commands. */
-char expand_aliases = 0;
-
-/* If non-zero, the decoded prompt string undergoes parameter and
-   variable substitution, command substitution, arithmetic substitution,
-   string expansion, process substitution, and quote removal in
-   decode_prompt_string. */
-bool promptvars = true;
-
-/* If non-zero, $'...' and $"..." are expanded when they appear within
-   a ${...} expansion, even when the expansion appears within double
-   quotes. */
-bool extended_quote = true;
-
-/* The number of lines read from input while creating the current command. */
-int current_command_line_count;
-
-/* The number of lines in a command saved while we run parse_and_execute */
-int saved_command_line_count;
-
-/* The token that currently denotes the end of parse. */
-int shell_eof_token;
-
-/* The token currently being read. */
-int current_token;
-
-/* The current parser state. */
-int parser_state;
-
-/* Variables to manage the task of reading here documents, because we need to
-   defer the reading until after a complete command has been collected. */
-static REDIRECT *redir_stack[HEREDOC_MAX];
-int need_here_doc;
-
-/* Where shell input comes from.  History expansion is performed on each
-   line when the shell is interactive. */
-static char *shell_input_line = (char *)NULL;
-static size_t shell_input_line_index;
-static size_t shell_input_line_size;	/* Amount allocated for shell_input_line. */
-static size_t shell_input_line_len;	/* strlen (shell_input_line) */
-
-/* Either zero or EOF. */
-static int shell_input_line_terminator;
-
-/* The line number in a script on which a function definition starts. */
-static int function_dstart;
-
-/* The line number in a script on which a function body starts. */
-static int function_bstart;
-
-/* The line number in a script at which an arithmetic for command starts. */
-static int arith_for_lineno;
-
-/* The decoded prompt string.  Used if READLINE is not defined or if
-   editing is turned off.  Analogous to current_readline_prompt. */
-static char *current_decoded_prompt;
-
-/* The last read token, or NULL.  read_token () uses this for context
-   checking. */
-static int last_read_token;
-
-/* The token read prior to last_read_token. */
-static int token_before_that;
-
-/* The token read prior to token_before_that. */
-static int two_tokens_ago;
-
-static int global_extglob;
-
-/* The line number in a script where the word in a `case WORD', `select WORD'
-   or `for WORD' begins.  This is a nested command maximum, since the array
-   index is decremented after a case, select, or for command is parsed. */
-#define MAX_CASE_NEST	128
-static int word_lineno[MAX_CASE_NEST+1];
-static int word_top = -1;
-
-/* If non-zero, it is the token that we want read_token to return
-   regardless of what text is (or isn't) present to be read.  This
-   is reset by read_token.  If token_to_read == WORD or
-   ASSIGNMENT_WORD, yylval.word should be set to word_desc_to_read. */
-static int token_to_read;
-static WORD_DESC *word_desc_to_read;
-
-static REDIRECTEE source;
-static REDIRECTEE redir;
-
-static FILE *yyoutstream;
-static FILE *yyerrstream;
 #endif
 
 }  // namespace bash
