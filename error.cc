@@ -18,34 +18,27 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
+
 #include <fcntl.h>
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#if defined (PREFER_STDARG)
 #  include <cstdarg>
-#else
-#  include <varargs.h>
-#endif
 
-#include <cstdio>
+#include "bashintl.hh"
 
-#include <cerrno>
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
+#include "shell.hh"
+#include "execute_cmd.hh"
+#include "flags.hh"
+#include "input.hh"
 
-#include "bashintl.h"
-
-#include "shell.h"
-#include "execute_cmd.h"
-#include "flags.h"
-#include "input.h"
+namespace bash
+{
 
 #if 0
 extern int executing_line_number (void);
@@ -436,3 +429,5 @@ err_readonly (const char *s)
 {
   report_error (_("%s: readonly variable"), s);
 }
+
+}  // namespace bash

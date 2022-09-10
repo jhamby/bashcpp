@@ -225,7 +225,7 @@ alrm_catcher(int i)
   const char *msg;
 
   msg = _("\007timed out waiting for input: auto-logout\n");
-  ssize_t ignored = write (1, msg, strlen (msg));
+  ssize_t ignored = ::write (1, msg, std::strlen (msg));
 
   bash_logout ();	/* run ~/.bash_logout if this is a login shell */
   throw bash_exception (EXITPROG);
@@ -242,7 +242,7 @@ Shell::send_pwd_to_eterm ()
   pwd = get_string_value ("PWD");
   if (pwd == 0)
     f = pwd = get_working_directory ("eterm");
-  fprintf (stderr, "\032/%s\n", pwd);
+  std::fprintf (stderr, "\032/%s\n", pwd);
   free (f);
 }
 
@@ -348,9 +348,9 @@ Shell::read_command ()
   global_command = nullptr;
 
   /* Only do timeouts if interactive. */
-  tmout_var = (SHELL_VAR *)NULL;
+  tmout_var = nullptr;
   tmout_len = 0;
-  old_alrm = (SigHandler *)NULL;
+  old_alrm = nullptr;
 
   if (interactive)
     {

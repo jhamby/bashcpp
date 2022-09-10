@@ -35,6 +35,7 @@ struct flags_alist {
   char *value;
 };
 
+#if 0
 extern const struct flags_alist shell_flags[];
 extern char optflags[];
 
@@ -78,6 +79,7 @@ extern char *get_current_flags ();
 extern void set_current_flags (const char *);
 
 extern void initialize_flags ();
+#endif
 
 /* A macro for efficiency. */
 #define change_flag_char(flag, on_or_off)  change_flag (flag, on_or_off)

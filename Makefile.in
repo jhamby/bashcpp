@@ -248,7 +248,7 @@ libtilde_a_AR = $(AR) $(ARFLAGS)
 libtilde_a_LIBADD =
 am_libtilde_a_OBJECTS = $(TLDIR)/tilde.$(OBJEXT)
 libtilde_a_OBJECTS = $(am_libtilde_a_OBJECTS)
-am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc \
+am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc expr.cc \
 	copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc \
 	mailcheck.cc test.cc trap.cc alias.cc braces.cc input.cc \
@@ -271,18 +271,19 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc \
 @JOB_CONTROL_TRUE@am__objects_2 = jobs.$(OBJEXT)
 @JOB_CONTROL_FALSE@am__objects_3 = nojobs.$(OBJEXT)
 am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
-	general.$(OBJEXT) dispose_cmd.$(OBJEXT) execute_cmd.$(OBJEXT) \
-	variables.$(OBJEXT) version.$(OBJEXT) expr.$(OBJEXT) \
-	copy_cmd.$(OBJEXT) flags.$(OBJEXT) subst.$(OBJEXT) \
-	hashcmd.$(OBJEXT) hashlib.$(OBJEXT) mailcheck.$(OBJEXT) \
-	test.$(OBJEXT) trap.$(OBJEXT) alias.$(OBJEXT) braces.$(OBJEXT) \
-	input.$(OBJEXT) bashhist.$(OBJEXT) array.$(OBJEXT) \
-	arrayfunc.$(OBJEXT) assoc.$(OBJEXT) sig.$(OBJEXT) \
-	pathexp.$(OBJEXT) siglist.$(OBJEXT) bashline.$(OBJEXT) \
-	bracecomp.$(OBJEXT) error.$(OBJEXT) stringlib.$(OBJEXT) \
-	locale.$(OBJEXT) findcmd.$(OBJEXT) redir.$(OBJEXT) \
-	pcomplete.$(OBJEXT) pcomplib.$(OBJEXT) syntax.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_3)
+	general.$(OBJEXT) parser.$(OBJEXT) dispose_cmd.$(OBJEXT) \
+	execute_cmd.$(OBJEXT) variables.$(OBJEXT) version.$(OBJEXT) \
+	expr.$(OBJEXT) copy_cmd.$(OBJEXT) flags.$(OBJEXT) \
+	subst.$(OBJEXT) hashcmd.$(OBJEXT) hashlib.$(OBJEXT) \
+	mailcheck.$(OBJEXT) test.$(OBJEXT) trap.$(OBJEXT) \
+	alias.$(OBJEXT) braces.$(OBJEXT) input.$(OBJEXT) \
+	bashhist.$(OBJEXT) array.$(OBJEXT) arrayfunc.$(OBJEXT) \
+	assoc.$(OBJEXT) sig.$(OBJEXT) pathexp.$(OBJEXT) \
+	siglist.$(OBJEXT) bashline.$(OBJEXT) bracecomp.$(OBJEXT) \
+	error.$(OBJEXT) stringlib.$(OBJEXT) locale.$(OBJEXT) \
+	findcmd.$(OBJEXT) redir.$(OBJEXT) pcomplete.$(OBJEXT) \
+	pcomplib.$(OBJEXT) syntax.$(OBJEXT) $(am__objects_2) \
+	$(am__objects_3)
 bash_OBJECTS = $(am_bash_OBJECTS)
 bash_DEPENDENCIES = libreadlinecpp.a libsh.a libtilde.a libglob.a \
 	libbuiltins.a
@@ -417,13 +418,13 @@ am__depfiles_remade = $(BLTDIR)/$(DEPDIR)/alias_def.Po \
 	./$(DEPDIR)/hashlib.Po ./$(DEPDIR)/input.Po \
 	./$(DEPDIR)/jobs.Po ./$(DEPDIR)/locale.Po \
 	./$(DEPDIR)/mailcheck.Po ./$(DEPDIR)/nojobs.Po \
-	./$(DEPDIR)/parse.Po ./$(DEPDIR)/pathexp.Po \
-	./$(DEPDIR)/pcomplete.Po ./$(DEPDIR)/pcomplib.Po \
-	./$(DEPDIR)/redir.Po ./$(DEPDIR)/shell.Po ./$(DEPDIR)/sig.Po \
-	./$(DEPDIR)/siglist.Po ./$(DEPDIR)/stringlib.Po \
-	./$(DEPDIR)/subst.Po ./$(DEPDIR)/syntax.Po ./$(DEPDIR)/test.Po \
-	./$(DEPDIR)/trap.Po ./$(DEPDIR)/variables.Po \
-	./$(DEPDIR)/version.Po
+	./$(DEPDIR)/parse.Po ./$(DEPDIR)/parser.Po \
+	./$(DEPDIR)/pathexp.Po ./$(DEPDIR)/pcomplete.Po \
+	./$(DEPDIR)/pcomplib.Po ./$(DEPDIR)/redir.Po \
+	./$(DEPDIR)/shell.Po ./$(DEPDIR)/sig.Po ./$(DEPDIR)/siglist.Po \
+	./$(DEPDIR)/stringlib.Po ./$(DEPDIR)/subst.Po \
+	./$(DEPDIR)/syntax.Po ./$(DEPDIR)/test.Po ./$(DEPDIR)/trap.Po \
+	./$(DEPDIR)/variables.Po ./$(DEPDIR)/version.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -788,20 +789,20 @@ BLTDIR = builtins
 
 # TODO: add docs and tests subdirs
 SUBDIRS = po
-bash_SOURCES = shell.cc eval.cc parse.yy general.cc dispose_cmd.cc \
-	execute_cmd.cc variables.cc version.cc expr.cc copy_cmd.cc \
-	flags.cc subst.cc hashcmd.cc hashlib.cc mailcheck.cc test.cc \
-	trap.cc alias.cc braces.cc input.cc bashhist.cc array.cc \
-	arrayfunc.cc assoc.cc sig.cc pathexp.cc siglist.cc bashline.cc \
-	bracecomp.cc error.cc stringlib.cc locale.cc findcmd.cc \
-	redir.cc pcomplete.cc pcomplib.cc syntax.cc alias.hh \
-	arrayfunc.hh array.hh assoc.hh bashintl.hh bashtypes.hh \
-	builtins.hh command.hh config-bot.hh config-top.hh \
-	conftypes.hh error.hh execute_cmd.hh externs.hh findcmd.hh \
-	flags.hh general.hh hashcmd.hh hashlib.hh input.hh jobs.hh \
-	parser.hh patchlevel.hh pathexp.hh pcomplete.hh quit.hh \
-	shell.hh sig.hh siglist.hh subst.hh syntax.hh test.hh trap.hh \
-	variables.hh include/chartypes.hh include/filecntl.hh \
+bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
+	dispose_cmd.cc execute_cmd.cc variables.cc version.cc expr.cc \
+	copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc \
+	mailcheck.cc test.cc trap.cc alias.cc braces.cc input.cc \
+	bashhist.cc array.cc arrayfunc.cc assoc.cc sig.cc pathexp.cc \
+	siglist.cc bashline.cc bracecomp.cc error.cc stringlib.cc \
+	locale.cc findcmd.cc redir.cc pcomplete.cc pcomplib.cc \
+	syntax.cc alias.hh arrayfunc.hh array.hh assoc.hh bashintl.hh \
+	bashtypes.hh builtins.hh command.hh config-bot.hh \
+	config-top.hh conftypes.hh error.hh execute_cmd.hh externs.hh \
+	findcmd.hh flags.hh general.hh hashcmd.hh hashlib.hh input.hh \
+	jobs.hh parser.hh patchlevel.hh pathexp.hh pcomplete.hh \
+	quit.hh shell.hh sig.hh siglist.hh subst.hh syntax.hh test.hh \
+	trap.hh variables.hh include/chartypes.hh include/filecntl.hh \
 	include/gettext.hh include/maxpath.hh include/posixdir.hh \
 	include/posixselect.hh include/posixstat.hh \
 	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
@@ -1543,6 +1544,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mailcheck.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nojobs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parse.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pathexp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcomplete.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcomplib.Po@am__quote@ # am--include-marker
@@ -2125,6 +2127,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/mailcheck.Po
 	-rm -f ./$(DEPDIR)/nojobs.Po
 	-rm -f ./$(DEPDIR)/parse.Po
+	-rm -f ./$(DEPDIR)/parser.Po
 	-rm -f ./$(DEPDIR)/pathexp.Po
 	-rm -f ./$(DEPDIR)/pcomplete.Po
 	-rm -f ./$(DEPDIR)/pcomplib.Po
@@ -2352,6 +2355,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/mailcheck.Po
 	-rm -f ./$(DEPDIR)/nojobs.Po
 	-rm -f ./$(DEPDIR)/parse.Po
+	-rm -f ./$(DEPDIR)/parser.Po
 	-rm -f ./$(DEPDIR)/pathexp.Po
 	-rm -f ./$(DEPDIR)/pcomplete.Po
 	-rm -f ./$(DEPDIR)/pcomplib.Po

@@ -29,7 +29,7 @@ SUBDIRS = po
 
 bin_PROGRAMS = bash
 
-bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
+bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc \
 	expr.cc copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc mailcheck.cc \
 	test.cc trap.cc alias.cc braces.cc \
