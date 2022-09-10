@@ -208,16 +208,6 @@ Readline::readline (const char *prompt)
   rl_clear_signals ();
 #endif
 
-#if 0
-  if (in_callback)
-    RL_SETSTATE (RL_STATE_CALLBACK);
-#endif
-
-#if HAVE_DECL_AUDIT_USER_TTY && defined (HAVE_LIBAUDIT_H) && defined (ENABLE_TTY_AUDIT_SUPPORT)
-  if (value)
-    _rl_audit_tty (value);
-#endif
-
   return value;
 }
 

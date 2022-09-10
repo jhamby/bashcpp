@@ -442,9 +442,9 @@ fi
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_MAJOR
-AC_CHECK_HEADERS([argz.h arpa/inet.h fcntl.h inttypes.h langinfo.h libintl.h \
-		  malloc.h netdb.h netinet/in.h sgtty.h stdint.h stdio_ext.h \
-		  strings.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h \
+AC_CHECK_HEADERS([arpa/inet.h dirent.h fcntl.h grp.h inttypes.h langinfo.h libintl.h \
+		  malloc.h netdb.h netinet/in.h pwd.h sgtty.h stdint.h stdio_ext.h \
+		  strings.h sys/dir.h sys/file.h sys/ioctl.h sys/ndir.h sys/param.h sys/socket.h \
 		  sys/time.h sys/wait.h syslog.h termio.h termios.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -475,25 +475,23 @@ AC_FUNC_MMAP
 AC_FUNC_REALLOC
 AC_FUNC_STRCOLL
 AC_FUNC_STRNLEN
-AC_CHECK_FUNCS([__argz_count __argz_next __argz_stringify alarm bzero dup2 \
-		endgrent endpwent fchdir ftruncate getcwd gethostbyname \
-		gethostname gettimeofday inet_ntoa isascii iswprint \
-		localeconv mblen mbrlen memchr memmove mempcpy memset mkdir \
-		mkfifo munmap nl_langinfo pathconf putenv regcomp rmdir \
-		select setenv setlocale socket stpcpy strcasecmp strchr \
-		strcspn strdup strerror strncasecmp strpbrk strrchr strspn \
-		strstr strtol strtoul strtoull strtoumax tzset uname wcwidth])
+AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf eaccess getaddrinfo \
+		getcwd getdtablesize fnmatch getentropy getgroups gethostbyname \
+		gethostname getpeername getpwent getpwnam getpwuid \
+		getrandom getrlimit getrusage getservbyname getservent \
+		gettimeofday group_member imaxdiv inet_aton isascii kill killpg \
+		localeconv localtime_r lstat mbschr mbsnrtowcs mkdir mkdtemp \
+		mkfifo mkstemp mmap nl_langinfo pathconf pselect putenv random \
+		readlink regexec rename select setdtablesize setenv setitimer \
+		setlocale setresgid setresuid socket stpcpy strcasecmp \
+		strcasestr strchrnul strerror strncasecmp strnlen \
+		strsignal strtoimax strtoumax sysconf tcgetattr \
+		times ttyname tzset ulimit uname vprintf vsnprintf waitpid \
+		wcswidth wcwidth])
 
 # checks for obsolete functions (flagged in red by VS Code).
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MKTIME
-
-dnl substitutes for broken C library functions
-AC_REPLACE_FUNCS(getcwd)
-AC_REPLACE_FUNCS(strcasecmp strcasestr strerror strftime strnlen strpbrk)
-AC_REPLACE_FUNCS(strtoimax strtoumax)
-AC_REPLACE_FUNCS(dprintf)
-AC_REPLACE_FUNCS(strchrnul)
 
 BASH_CHECK_MULTIBYTE
 
@@ -668,13 +666,9 @@ fi
 
 if test "$opt_job_control" = yes; then
 AC_DEFINE([JOB_CONTROL], [1], [Define if your operating system supports BSD-like job control.])
-JOBS_CC=jobs.cc
-else
-JOBS_CC=nojobs.cc
 fi
 
-dnl This needs to be fixed to conditionally compile jobs.o or nojobs.o.
-AC_SUBST(JOBS_CC)
+AM_CONDITIONAL([JOB_CONTROL], [test x$opt_job_control = xyes])
 
 # directory where we install dynamically loadable builtins
 if test -z "$loadablesdir"; then

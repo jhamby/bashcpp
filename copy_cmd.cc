@@ -20,17 +20,18 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <cstdio>
+#include "shell.hh"
 
-#include "shell.h"
+namespace bash
+{
 
 static PATTERN_LIST *copy_case_clause (PATTERN_LIST *);
 static PATTERN_LIST *copy_case_clauses (PATTERN_LIST *);
@@ -437,3 +438,5 @@ copy_command (COMMAND *command)
     }
   return new_command;
 }
+
+}  // namespace bash

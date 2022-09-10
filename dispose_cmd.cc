@@ -18,15 +18,18 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "shell.h"
+#include "shell.hh"
+
+namespace bash
+{
 
 /* Dispose of the command structure passed. */
 void
@@ -317,3 +320,5 @@ dispose_redirects (void *arg)
       free (t);
     }
 }
+
+}  // namespace bash

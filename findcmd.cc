@@ -96,7 +96,7 @@ exec_name_should_ignore (const char *name)
   struct ign *p;
 
   for (p = execignore.ignores; p && p->val; p++)
-    if (strmatch (p->val, (char *)name, FNMATCH_EXTFLAG|FNM_CASEFOLD) != FNM_NOMATCH)
+    if (strmatch (p->val, (char *)name, FNMATCH_EXTFLAG | FNM_CASEFOLD) != FNM_NOMATCH)
       return 1;
   return 0;
 }
@@ -130,16 +130,6 @@ file_status (const char *name)
   if (exec_name_should_ignore (name) == 0 && eaccess (name, X_OK) == 0)
     r |= FS_EXECABLE;
   if (eaccess (name, R_OK) == 0)
-    r |= FS_READABLE;
-
-  return r;
-#elif defined (AFS)
-  /* We have to use access(2) to determine access because AFS does not
-     support Unix file system semantics.  This may produce wrong
-     answers for non-AFS files when ruid != euid.  I hate AFS. */
-  if (exec_name_should_ignore (name) == 0 && access (name, X_OK) == 0)
-    r |= FS_EXECABLE;
-  if (access (name, R_OK) == 0)
     r |= FS_READABLE;
 
   return r;

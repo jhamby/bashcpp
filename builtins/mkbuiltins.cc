@@ -50,7 +50,7 @@ using std::cerr;
 namespace bash
 {
 
-constexpr char *DOCFILE = "builtins.texi";
+static const char *DOCFILE = "builtins.texi";
 
 static inline bool whitespace(char c)
 {
@@ -67,39 +67,39 @@ constexpr int BASE_INDENT = 4;
 
 /* If this stream descriptor is non-zero, then write
    texinfo documentation to it. */
-ofstream documentation_file;
+static ofstream documentation_file;
 
 /* Non-zero means to only produce documentation. */
-bool only_documentation = false;
+static bool only_documentation = false;
 
 /* Non-zero means to not do any productions. */
-bool inhibit_production = false;
+static bool inhibit_production = false;
 
 /* Non-zero means to not add functions (xxx_builtin) to the members of the
    produced `bash::Builtin []' */
-bool inhibit_functions = false;
+static bool inhibit_functions = false;
 
 /* Non-zero means to produce separate help files for each builtin, named by
    the builtin name, in `./helpfiles'. */
-bool separate_helpfiles = false;
+static bool separate_helpfiles = false;
 
 /* Non-zero means to create single C strings for each `longdoc', with
    embedded newlines, for ease of translation. */
-bool single_longdoc_strings = true;
+static bool single_longdoc_strings = true;
 
 /* The name of a directory into which the separate external help files will
    eventually be installed. */
-string helpfile_directory;
+static string helpfile_directory;
 
 /* The name of a directory to precede the filename when reporting
    errors. */
-string source_directory;
+static string source_directory;
 
 /* The name of the structure file. */
-string struct_filename;
+static string struct_filename;
 
 /* The name of the external declaration file. */
-string extern_filename;
+static string extern_filename;
 
 /* This typedef replaces the old ARRAY implementation, for strings. */
 typedef std::vector<string> StrArray;
@@ -117,6 +117,9 @@ struct Builtin {
   StrArray longdoc;	/* The long documentation for this builtin. */
   StrArray dependencies;/* std::vector of #define names. */
   int flags;		/* Flags for this builtin. */
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  int _pad;		// silence clang -Wpadded warning
+#endif
 };
 
 /* This typedef replaces the old ARRAY implementation, for Builtins. */
@@ -124,19 +127,23 @@ typedef std::vector<Builtin *> BltArray;
 
 /* Here is a structure which defines a DEF file. */
 struct DefFile {
+  DefFile (const std::string &f, int lnum) : filename (f), line_number (lnum) {}
   string filename;	/* The name of the input def file. */
-  int line_number;	/* The current line number. */
   StrArray lines;	/* The contents of the file. */
   string production;	/* The name of the production file. */
   ofstream output;	/* Open file stream for PRODUCTION. */
   BltArray builtins;	/* std::vector of Builtin *. */
+  int line_number;	/* The current line number. */
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  int _pad;		// silence clang -Wpadded warning
+#endif
 };
 
 /* The array of all builtins encountered during execution of this code. */
 static BltArray saved_builtins;
 
 /* The Posix.2 so-called `special' builtins. */
-const char *special_builtins[] =
+static const char *special_builtins[] =
 {
   ":", ".", "source", "break", "continue", "eval", "exec", "exit",
   "export", "readonly", "return", "set", "shift", "times", "trap", "unset",
@@ -144,19 +151,19 @@ const char *special_builtins[] =
 };
 
 /* The builtin commands that take assignment statements as arguments. */
-const char *assignment_builtins[] =
+static const char *assignment_builtins[] =
 {
   "alias", "declare", "export", "local", "readonly", "typeset",
   nullptr
 };
 
-const char *localvar_builtins[] =
+static const char *localvar_builtins[] =
 {
   "declare", "local", "typeset", nullptr
 };
 
 /* The builtin commands that are special to the POSIX search order. */
-const char *posix_builtins[] =
+static const char *posix_builtins[] =
 {
   "alias", "bg", "cd", "command", "false", "fc", "fg", "getopts", "jobs",
   "kill", "newgrp", "pwd", "read", "true", "umask", "unalias", "wait",
@@ -171,7 +178,7 @@ static bool is_posix_builtin (const string &name);
 
 static void extract_info (const string &, ofstream &, ofstream &);
 
-static void file_error (const string &);
+static void file_error (const string &) __attribute__((__noreturn__));
 
 static void line_error (DefFile &defs, const string &msg);
 
@@ -183,11 +190,13 @@ static void write_documentation (ofstream &, const StrArray &, int, int);
 static void write_longdocs (ofstream &stream, const BltArray &builtins);
 static void write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile);
 
-static int write_helpfiles (const BltArray &builtins);
-
 static void add_documentation (DefFile &defs, const string &line);
 
+static string get_arg (const string &for_whom, DefFile &defs, const string &str);
+
 static void must_be_building (const string &directive, DefFile &defs);
+
+static Builtin *current_builtin (const string &directive, DefFile &defs);
 
 static string strip_whitespace (const string &string);
 static string remove_trailing_whitespace (const string &string);
@@ -270,7 +279,7 @@ main (int argc, char **argv)
       /* Open the files. */
       if (!bash::struct_filename.empty())
 	{
-	  std::snprintf(temp_struct_filename, 24, "mk-%ld", (long) ::getpid());
+	  std::snprintf(temp_struct_filename, 24, "mk-%ld", static_cast<long> (::getpid()));
 	  structfile.open(temp_struct_filename);
 
 	  if (!structfile.is_open())
@@ -369,7 +378,7 @@ static HandlerEntry handlers[] = {
 };
 
 /* Return the entry in the table of handlers for NAME. */
-HandlerEntry *
+static HandlerEntry *
 find_directive (const char *directive)
 {
   for (int i = 0; handlers[i].directive; i++)
@@ -385,7 +394,7 @@ static bool building_builtin = false;
 
 /* Non-zero means to output cpp line and file information before
    printing the current line to the production file. */
-bool output_cpp_line_info = false;
+static bool output_cpp_line_info = false;
 
 /* The main function of this program.  Read FILENAME and act on what is
    found.  Lines not starting with a dollar sign are copied to the
@@ -400,7 +409,8 @@ void
 extract_info (const string &filename, ofstream &structfile, ofstream &externfile)
 {
   struct stat finfo;
-  int fd, nr;
+  int fd;
+  ssize_t nr;
 
   if (::stat (filename.c_str(), &finfo) == -1)
     file_error (filename);
@@ -410,15 +420,15 @@ extract_info (const string &filename, ofstream &structfile, ofstream &externfile
   if (fd == -1)
     file_error (filename);
 
-  size_t file_size = (size_t)finfo.st_size;
+  size_t file_size = static_cast<size_t> (finfo.st_size);
   char *buffer = new char[1 + file_size];
 
   if ((nr = ::read (fd, buffer, file_size)) < 0)
     file_error (filename);
 
   /* This is needed on WIN32, and does not hurt on Unix. */
-  if (nr < file_size)
-    file_size = nr;
+  if (static_cast<size_t> (nr) < file_size)
+    file_size = static_cast<size_t> (nr);
 
   ::close (fd);
 
@@ -430,12 +440,12 @@ extract_info (const string &filename, ofstream &structfile, ofstream &externfile
     }
 
   /* Create and fill in the initial structure describing this file. */
-  DefFile defs = { filename, 0 };	/* filename and line number */
+  DefFile defs (filename, 0);	/* filename and line number */
 
   /* Build the array of lines. */
-  for (int i = 0; i < file_size; ++i)
+  for (size_t i = 0; i < file_size; ++i)
     {
-      int start = i;
+      size_t start = i;
       while (i < file_size && buffer[i] != '\n')
 	i++;
 
@@ -651,7 +661,7 @@ function_handler (const string &self, DefFile &defs, const string &arg)
 {
   Builtin *builtin = current_builtin (self, defs);
 
-  if (builtin == 0)
+  if (builtin == nullptr)
     {
       line_error (defs, "syntax error: no current builtin for $FUNCTION directive");
       std::exit (1);
@@ -706,7 +716,7 @@ short_doc_handler (const string &self, DefFile &defs, const string &arg)
 
 /* How to handle the $COMMENT directive. */
 void
-comment_handler (const string &self, DefFile &defs, const string &arg)
+comment_handler (const string &, DefFile &, const string &)
 {
 }
 
@@ -758,7 +768,7 @@ produces_handler (const string &self, DefFile &defs, const string &arg)
 
 /* How to handle the $END directive. */
 void
-end_handler (const string &self, DefFile &defs, const string &arg)
+end_handler (const string &self, DefFile &defs, const string &)
 {
   must_be_building (self, defs);
   building_builtin = false;
@@ -783,7 +793,7 @@ line_error (DefFile &defs, const string &msg)
 }
 
 /* Print error message for FILENAME. */
-void
+static void
 file_error (const string &filename)
 {
   std::perror (filename.c_str());
@@ -799,10 +809,10 @@ file_error (const string &filename)
 /* Flags that mean something to write_documentation (). */
 constexpr int STRING_ARRAY =	0x01;
 constexpr int TEXINFO =		0x02;
-constexpr int PLAINTEXT =	0x04;
+// constexpr int PLAINTEXT =	0x04;
 constexpr int HELPFILE =	0x08;
 
-constexpr char *structfile_header[] = {
+static const char *structfile_header[] = {
   "/* builtins.cc -- the built in shell commands. */",
   "",
   "/* This file is manufactured by ./mkbuiltins, and should not be",
@@ -844,7 +854,7 @@ constexpr char *structfile_header[] = {
   nullptr
   };
 
-constexpr char *structfile_footer[] = {
+static const char *structfile_footer[] = {
   "  { nullptr, nullptr, 0, nullptr, nullptr, nullptr }",
   "};",
   "",
@@ -883,10 +893,8 @@ write_file_headers (ofstream &structfile, ofstream &externfile)
 /* Write out any necessary closing information for
    STRUCTFILE and EXTERNFILE. */
 void
-write_file_footers (ofstream &structfile, ofstream &externfile)
+write_file_footers (ofstream &structfile, ofstream &)
 {
-  int i;
-
   /* Write out the footers. */
   if (structfile)
     {
@@ -900,13 +908,9 @@ write_file_footers (ofstream &structfile, ofstream &externfile)
 void
 write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
 {
-  int i;
-
   /* Write out the information. */
   if (!defs.builtins.empty())
     {
-      Builtin *builtin;
-
       for (BltArray::iterator it = defs.builtins.begin(); it != defs.builtins.end(); ++it)
 	{
 	  Builtin *builtin = *it;
@@ -1035,19 +1039,6 @@ write_longdocs (ofstream &stream, const BltArray &builtins)
 
       /* delete the builtin now that we're done with it. */
       delete builtin;
-    }
-}
-
-void
-write_dummy_declarations (ofstream &stream, const BltArray &builtins)
-{
-  for (int i = 0; structfile_header[i]; i++)
-    stream << structfile_header[i] << '\n';
-
-  for (BltArray::const_iterator it = builtins.begin(); it != builtins.end(); ++it)
-    {
-      /* How to guarantee that no builtin is written more than once? */
-      stream << "int " << (*it)->function << " () { return 0; }\n";
     }
 }
 
@@ -1232,38 +1223,6 @@ write_documentation (ofstream &stream, const StrArray &documentation, int indent
 
   if (string_array)
     stream << "#endif /* HELP_BUILTIN */\n  nullptr\n};\n";
-}
-
-int
-write_helpfiles (const BltArray &builtins)
-{
-  int ret = ::mkdir ("helpfiles", 0755);	/* fix insecure permissions */
-  if (ret < 0 && errno != EEXIST)
-    {
-      cerr << "write_helpfiles: helpfiles: cannot create directory\n";
-      return -1;
-    }
-
-  for (BltArray::const_iterator it = builtins.begin(); it != builtins.end(); ++it)
-    {
-      const Builtin *builtin = *it;
-
-      string tmp("helpfiles/");
-      tmp += document_name (*builtin);
-      string helpfilename(tmp);
-
-      ofstream helpfile(helpfilename.c_str());
-      if (!helpfile.is_open())
-	{
-	  cerr << "write_helpfiles: cannot open " << helpfilename << '\n';
-	  continue;
-	}
-
-      write_documentation (helpfile, builtin->longdoc, 4, PLAINTEXT);
-
-      helpfile.close();
-    }
-  return 0;
 }
 
 static bool

@@ -18,18 +18,21 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #include <cstdio>
 #include <csignal>
 
-#include "chartypes.h"
-#include "bashtypes.h"
+#include "chartypes.hh"
+#include "bashtypes.hh"
+
 #if defined (HAVE_SYS_FILE_H)
 #  include <sys/file.h>
 #endif
-#include "filecntl.h"
-#include "posixstat.h"
+
+#include "filecntl.hh"
+#include "posixstat.hh"
+
 #if defined (HAVE_SYS_PARAM_H)
 #  include <sys/param.h>
 #endif
@@ -38,7 +41,7 @@
 #  include <unistd.h>
 #endif
 
-#include "posixtime.h"
+#include "posixtime.hh"
 
 #if defined (HAVE_SYS_RESOURCE_H) && !defined (RLIMTYPE)
 #  include <sys/resource.h>
@@ -48,44 +51,39 @@
 #  include <sys/times.h>
 #endif
 
-#include <cerrno>
+#include "bashintl.hh"
 
-#define NEED_FPURGE_DECL
-#define NEED_SH_SETLINEBUF_DECL
-
-#include "bashintl.h"
-
-#include "shell.h"
-#include <y.tab.h>	/* use <...> so we pick it up from the build directory */
-#include "parser.h"
-#include "flags.h"
-#include "builtins.h"
-#include "hashlib.h"
-#include "jobs.h"
-#include "execute_cmd.h"
-#include "findcmd.h"
-#include "trap.h"
-#include "pathexp.h"
-#include "hashcmd.h"
+#include "shell.hh"
+#include "parse.hh"	/* use <...> so we pick it up from the build directory */
+#include "parser.hh"
+#include "flags.hh"
+#include "builtins.hh"
+#include "hashlib.hh"
+#include "jobs.hh"
+#include "execute_cmd.hh"
+#include "findcmd.hh"
+#include "trap.hh"
+#include "pathexp.hh"
+#include "hashcmd.hh"
 
 #if defined (COND_COMMAND)
-#  include "test.h"
+#  include "test.hh"
 #endif
 
-#include "builtins/common.h"
-#include "builtins/builtext.h"	/* list of builtins */
+#include "builtins/common.hh"
+#include "builtext.hh"	/* list of builtins */
 
-#include "builtins/getopt.h"
+#include "builtins/getopt.hh"
 
-#include <glob/strmatch.h>
-#include <tilde/tilde.h>
+#include "glob/strmatch.hh"
+#include "tilde/tilde.hh"
 
 #if defined (BUFFERED_INPUT)
-#  include "input.h"
+#  include "input.hh"
 #endif
 
 #if defined (ALIAS)
-#  include "alias.h"
+#  include "alias.hh"
 #endif
 
 #if defined (HAVE_MBSTR_H) && defined (HAVE_MBSCHR)

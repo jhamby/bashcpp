@@ -19,18 +19,15 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
+
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "shell.h"
-#include "execute_cmd.h"
-#include "flags.h"
-
-#if defined (JOB_CONTROL)
-extern bool set_job_control (bool);
-#endif
+#include "shell.hh"
+#include "execute_cmd.hh"
+#include "flags.hh"
 
 
 /* **************************************************************** */

@@ -18,26 +18,25 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <cstdio>
 #include <csignal>
 
-#include "bashintl.h"
+#include "bashintl.hh"
 
-#include "shell.h"
-#include "parser.h"
-#include "flags.h"
-#include "trap.h"
+#include "shell.hh"
+#include "parser.hh"
+#include "flags.hh"
+#include "trap.hh"
 
-#include "builtins/common.h"
+#include "builtins/common.hh"
 
-#include "input.h"
-#include "execute_cmd.h"
+#include "input.hh"
+#include "execute_cmd.hh"
 
 namespace bash
 {
@@ -48,11 +47,11 @@ static SigHandler alrm_catcher (int);
 /* Read and execute commands until EOF is reached.  This assumes that
    the input source has already been initialized. */
 int
-reader_loop ()
+Shell::reader_loop ()
 {
   int our_indirection_level;
 
-  Command *current_command = NULL;
+  COMMAND *current_command = nullptr;
 
   our_indirection_level = ++indirection_level;
 

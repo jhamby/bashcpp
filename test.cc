@@ -24,55 +24,29 @@
    binary operators. */
 /* #define PATTERN_MATCHING */
 
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
+#include "config.hh"
 
-#include <cstdio>
-
-#include "bashtypes.h"
-
-#if !defined (HAVE_LIMITS_H) && defined (HAVE_SYS_PARAM_H)
-#  include <sys/param.h>
-#endif
+#include "bashtypes.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include <cerrno>
+#include "posixstat.hh"
+#include "filecntl.hh"
+#include "stat-time.hh"
 
-#if !defined (_POSIX_VERSION) && defined (HAVE_SYS_FILE_H)
-#  include <sys/file.h>
-#endif /* !_POSIX_VERSION */
-#include "posixstat.h"
-#include "filecntl.h"
-#include "stat-time.h"
+#include "bashintl.hh"
 
-#include "bashintl.h"
+#include "shell.hh"
+#include "pathexp.hh"
+#include "test.hh"
+#include "builtins/common.hh"
 
-#include "shell.h"
-#include "pathexp.h"
-#include "test.h"
-#include "builtins/common.h"
+#include "strmatch.hh"
 
-#include <glob/strmatch.h>
-
-#if !defined (STRLEN)
-#  define STRLEN(s) ((s)[0] ? ((s)[1] ? ((s)[2] ? strlen(s) : 2) : 1) : 0)
-#endif
-
-#if !defined (STREQ)
-#  define STREQ(a, b) ((a)[0] == (b)[0] && strcmp ((a), (b)) == 0)
-#endif /* !STREQ */
-#define STRCOLLEQ(a, b) ((a)[0] == (b)[0] && strcoll ((a), (b)) == 0)
-
-#if !defined (R_OK)
-#define R_OK 4
-#define W_OK 2
-#define X_OK 1
-#define F_OK 0
-#endif /* R_OK */
+namespace bash
+{
 
 #define EQ	0
 #define NE	1
@@ -89,10 +63,6 @@
    TRUE and FALSE are what we use to compute the final output value.
    SHELL_BOOLEAN is the form which returns truth or falseness in shell terms.
    Default is TRUE = 1, FALSE = 0, SHELL_BOOLEAN = (!value). */
-#if 0
-#define TRUE 1
-#define FALSE 0
-#endif
 #define SHELL_BOOLEAN(value) (!(value))
 
 #define TEST_ERREXIT_STATUS	2
@@ -885,3 +855,5 @@ test_command (int margc, char **margv)
 
   test_exit (SHELL_BOOLEAN (value));
 }
+
+}  // namespace bash

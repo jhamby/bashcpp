@@ -29,11 +29,10 @@ SUBDIRS = po
 
 bin_PROGRAMS = bash
 
-# FIXME: substitute nojobs.cc for jobs.cc for no job control builds
 bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc \
 	expr.cc copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc mailcheck.cc \
-	test.cc trap.cc alias.cc jobs.cc braces.cc \
+	test.cc trap.cc alias.cc braces.cc \
 	input.cc bashhist.cc array.cc arrayfunc.cc assoc.cc sig.cc pathexp.cc \
 	siglist.cc bashline.cc bracecomp.cc error.cc \
 	stringlib.cc locale.cc findcmd.cc redir.cc \
@@ -50,6 +49,12 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
 	include/unionwait.hh pathnames.hh
+
+if JOB_CONTROL
+bash_SOURCES += jobs.cc
+else
+bash_SOURCES += nojobs.cc
+endif
 
 bash_LDADD = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
 
@@ -128,14 +133,17 @@ builtins/pushd_def.$(OBJEXT): builtext.hh
 builtins/ulimit_def.$(OBJEXT): pipesize.hh
 builtins/psize.$(OBJEXT): config.hh
 bashline.$(OBJEXT): builtext.hh
+execute_cmd.$(OBJEXT): builtext.hh
 jobs.$(OBJEXT): builtext.hh
 nojobs.$(OBJEXT): builtext.hh
 parse.$(OBJEXT): builtext.hh
 pcomplete.$(OBJEXT): builtext.hh
 parse.$(OBJEXT): builtext.hh
 redir.$(OBJEXT): pipesize.hh
-variables.$(OBJEXT): builtext.hh
 sig.$(OBJEXT): builtext.hh
+subst.$(OBJEXT): builtext.hh
+trap.$(OBJEXT): builtext.hh
+variables.$(OBJEXT): builtext.hh
 version.$(OBJEXT): version.hh
 
 Program = bash$(EXEEXT)

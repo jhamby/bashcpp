@@ -671,7 +671,8 @@ RELSTATUS
 BASHVERS
 headersdir
 loadablesdir
-JOBS_CC
+JOB_CONTROL_FALSE
+JOB_CONTROL_TRUE
 TERMCAP_DEP
 TERMCAP_LIB
 SIGLIST_O
@@ -26355,22 +26356,28 @@ fi
 
 fi
 
-ac_fn_cxx_check_header_compile "$LINENO" "argz.h" "ac_cv_header_argz_h" "$ac_includes_default"
-if test "x$ac_cv_header_argz_h" = xyes
-then :
-  printf "%s\n" "#define HAVE_ARGZ_H 1" >>confdefs.h
-
-fi
 ac_fn_cxx_check_header_compile "$LINENO" "arpa/inet.h" "ac_cv_header_arpa_inet_h" "$ac_includes_default"
 if test "x$ac_cv_header_arpa_inet_h" = xyes
 then :
   printf "%s\n" "#define HAVE_ARPA_INET_H 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_header_compile "$LINENO" "dirent.h" "ac_cv_header_dirent_h" "$ac_includes_default"
+if test "x$ac_cv_header_dirent_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_DIRENT_H 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_header_compile "$LINENO" "fcntl.h" "ac_cv_header_fcntl_h" "$ac_includes_default"
 if test "x$ac_cv_header_fcntl_h" = xyes
 then :
   printf "%s\n" "#define HAVE_FCNTL_H 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_header_compile "$LINENO" "grp.h" "ac_cv_header_grp_h" "$ac_includes_default"
+if test "x$ac_cv_header_grp_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_GRP_H 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_header_compile "$LINENO" "inttypes.h" "ac_cv_header_inttypes_h" "$ac_includes_default"
@@ -26409,6 +26416,12 @@ then :
   printf "%s\n" "#define HAVE_NETINET_IN_H 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_header_compile "$LINENO" "pwd.h" "ac_cv_header_pwd_h" "$ac_includes_default"
+if test "x$ac_cv_header_pwd_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_PWD_H 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_header_compile "$LINENO" "sgtty.h" "ac_cv_header_sgtty_h" "$ac_includes_default"
 if test "x$ac_cv_header_sgtty_h" = xyes
 then :
@@ -26433,6 +26446,12 @@ then :
   printf "%s\n" "#define HAVE_STRINGS_H 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_header_compile "$LINENO" "sys/dir.h" "ac_cv_header_sys_dir_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_dir_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_SYS_DIR_H 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_header_compile "$LINENO" "sys/file.h" "ac_cv_header_sys_file_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_file_h" = xyes
 then :
@@ -26443,6 +26462,12 @@ ac_fn_cxx_check_header_compile "$LINENO" "sys/ioctl.h" "ac_cv_header_sys_ioctl_h
 if test "x$ac_cv_header_sys_ioctl_h" = xyes
 then :
   printf "%s\n" "#define HAVE_SYS_IOCTL_H 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_header_compile "$LINENO" "sys/ndir.h" "ac_cv_header_sys_ndir_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_ndir_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_SYS_NDIR_H 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_header_compile "$LINENO" "sys/param.h" "ac_cv_header_sys_param_h" "$ac_includes_default"
@@ -27804,70 +27829,76 @@ test $ac_cv_func_strnlen_working = no && case " $LIBOBJS " in
 esac
 
 
-ac_fn_cxx_check_func "$LINENO" "__argz_count" "ac_cv_func___argz_count"
-if test "x$ac_cv_func___argz_count" = xyes
+ac_fn_cxx_check_func "$LINENO" "arc4random" "ac_cv_func_arc4random"
+if test "x$ac_cv_func_arc4random" = xyes
 then :
-  printf "%s\n" "#define HAVE___ARGZ_COUNT 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_ARC4RANDOM 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "__argz_next" "ac_cv_func___argz_next"
-if test "x$ac_cv_func___argz_next" = xyes
+ac_fn_cxx_check_func "$LINENO" "asprintf" "ac_cv_func_asprintf"
+if test "x$ac_cv_func_asprintf" = xyes
 then :
-  printf "%s\n" "#define HAVE___ARGZ_NEXT 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_ASPRINTF 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "__argz_stringify" "ac_cv_func___argz_stringify"
-if test "x$ac_cv_func___argz_stringify" = xyes
+ac_fn_cxx_check_func "$LINENO" "bcopy" "ac_cv_func_bcopy"
+if test "x$ac_cv_func_bcopy" = xyes
 then :
-  printf "%s\n" "#define HAVE___ARGZ_STRINGIFY 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_BCOPY 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "alarm" "ac_cv_func_alarm"
-if test "x$ac_cv_func_alarm" = xyes
+ac_fn_cxx_check_func "$LINENO" "confstr" "ac_cv_func_confstr"
+if test "x$ac_cv_func_confstr" = xyes
 then :
-  printf "%s\n" "#define HAVE_ALARM 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_CONFSTR 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "bzero" "ac_cv_func_bzero"
-if test "x$ac_cv_func_bzero" = xyes
+ac_fn_cxx_check_func "$LINENO" "dprintf" "ac_cv_func_dprintf"
+if test "x$ac_cv_func_dprintf" = xyes
 then :
-  printf "%s\n" "#define HAVE_BZERO 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_DPRINTF 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "dup2" "ac_cv_func_dup2"
-if test "x$ac_cv_func_dup2" = xyes
+ac_fn_cxx_check_func "$LINENO" "eaccess" "ac_cv_func_eaccess"
+if test "x$ac_cv_func_eaccess" = xyes
 then :
-  printf "%s\n" "#define HAVE_DUP2 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_EACCESS 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "endgrent" "ac_cv_func_endgrent"
-if test "x$ac_cv_func_endgrent" = xyes
+ac_fn_cxx_check_func "$LINENO" "getaddrinfo" "ac_cv_func_getaddrinfo"
+if test "x$ac_cv_func_getaddrinfo" = xyes
 then :
-  printf "%s\n" "#define HAVE_ENDGRENT 1" >>confdefs.h
-
-fi
-ac_fn_cxx_check_func "$LINENO" "endpwent" "ac_cv_func_endpwent"
-if test "x$ac_cv_func_endpwent" = xyes
-then :
-  printf "%s\n" "#define HAVE_ENDPWENT 1" >>confdefs.h
-
-fi
-ac_fn_cxx_check_func "$LINENO" "fchdir" "ac_cv_func_fchdir"
-if test "x$ac_cv_func_fchdir" = xyes
-then :
-  printf "%s\n" "#define HAVE_FCHDIR 1" >>confdefs.h
-
-fi
-ac_fn_cxx_check_func "$LINENO" "ftruncate" "ac_cv_func_ftruncate"
-if test "x$ac_cv_func_ftruncate" = xyes
-then :
-  printf "%s\n" "#define HAVE_FTRUNCATE 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_GETADDRINFO 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "getcwd" "ac_cv_func_getcwd"
 if test "x$ac_cv_func_getcwd" = xyes
 then :
   printf "%s\n" "#define HAVE_GETCWD 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "getdtablesize" "ac_cv_func_getdtablesize"
+if test "x$ac_cv_func_getdtablesize" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETDTABLESIZE 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "fnmatch" "ac_cv_func_fnmatch"
+if test "x$ac_cv_func_fnmatch" = xyes
+then :
+  printf "%s\n" "#define HAVE_FNMATCH 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "getentropy" "ac_cv_func_getentropy"
+if test "x$ac_cv_func_getentropy" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETENTROPY 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "getgroups" "ac_cv_func_getgroups"
+if test "x$ac_cv_func_getgroups" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETGROUPS 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "gethostbyname" "ac_cv_func_gethostbyname"
@@ -27882,16 +27913,82 @@ then :
   printf "%s\n" "#define HAVE_GETHOSTNAME 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_func "$LINENO" "getpeername" "ac_cv_func_getpeername"
+if test "x$ac_cv_func_getpeername" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETPEERNAME 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "getpwent" "ac_cv_func_getpwent"
+if test "x$ac_cv_func_getpwent" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETPWENT 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "getpwnam" "ac_cv_func_getpwnam"
+if test "x$ac_cv_func_getpwnam" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETPWNAM 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "getpwuid" "ac_cv_func_getpwuid"
+if test "x$ac_cv_func_getpwuid" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETPWUID 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "getrandom" "ac_cv_func_getrandom"
+if test "x$ac_cv_func_getrandom" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETRANDOM 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "getrlimit" "ac_cv_func_getrlimit"
+if test "x$ac_cv_func_getrlimit" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETRLIMIT 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "getrusage" "ac_cv_func_getrusage"
+if test "x$ac_cv_func_getrusage" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETRUSAGE 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "getservbyname" "ac_cv_func_getservbyname"
+if test "x$ac_cv_func_getservbyname" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETSERVBYNAME 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "getservent" "ac_cv_func_getservent"
+if test "x$ac_cv_func_getservent" = xyes
+then :
+  printf "%s\n" "#define HAVE_GETSERVENT 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_func "$LINENO" "gettimeofday" "ac_cv_func_gettimeofday"
 if test "x$ac_cv_func_gettimeofday" = xyes
 then :
   printf "%s\n" "#define HAVE_GETTIMEOFDAY 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "inet_ntoa" "ac_cv_func_inet_ntoa"
-if test "x$ac_cv_func_inet_ntoa" = xyes
+ac_fn_cxx_check_func "$LINENO" "group_member" "ac_cv_func_group_member"
+if test "x$ac_cv_func_group_member" = xyes
 then :
-  printf "%s\n" "#define HAVE_INET_NTOA 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_GROUP_MEMBER 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "imaxdiv" "ac_cv_func_imaxdiv"
+if test "x$ac_cv_func_imaxdiv" = xyes
+then :
+  printf "%s\n" "#define HAVE_IMAXDIV 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "inet_aton" "ac_cv_func_inet_aton"
+if test "x$ac_cv_func_inet_aton" = xyes
+then :
+  printf "%s\n" "#define HAVE_INET_ATON 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "isascii" "ac_cv_func_isascii"
@@ -27900,10 +27997,16 @@ then :
   printf "%s\n" "#define HAVE_ISASCII 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "iswprint" "ac_cv_func_iswprint"
-if test "x$ac_cv_func_iswprint" = xyes
+ac_fn_cxx_check_func "$LINENO" "kill" "ac_cv_func_kill"
+if test "x$ac_cv_func_kill" = xyes
 then :
-  printf "%s\n" "#define HAVE_ISWPRINT 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_KILL 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "killpg" "ac_cv_func_killpg"
+if test "x$ac_cv_func_killpg" = xyes
+then :
+  printf "%s\n" "#define HAVE_KILLPG 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "localeconv" "ac_cv_func_localeconv"
@@ -27912,40 +28015,28 @@ then :
   printf "%s\n" "#define HAVE_LOCALECONV 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "mblen" "ac_cv_func_mblen"
-if test "x$ac_cv_func_mblen" = xyes
+ac_fn_cxx_check_func "$LINENO" "localtime_r" "ac_cv_func_localtime_r"
+if test "x$ac_cv_func_localtime_r" = xyes
 then :
-  printf "%s\n" "#define HAVE_MBLEN 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_LOCALTIME_R 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "mbrlen" "ac_cv_func_mbrlen"
-if test "x$ac_cv_func_mbrlen" = xyes
+ac_fn_cxx_check_func "$LINENO" "lstat" "ac_cv_func_lstat"
+if test "x$ac_cv_func_lstat" = xyes
 then :
-  printf "%s\n" "#define HAVE_MBRLEN 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_LSTAT 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "memchr" "ac_cv_func_memchr"
-if test "x$ac_cv_func_memchr" = xyes
+ac_fn_cxx_check_func "$LINENO" "mbschr" "ac_cv_func_mbschr"
+if test "x$ac_cv_func_mbschr" = xyes
 then :
-  printf "%s\n" "#define HAVE_MEMCHR 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_MBSCHR 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "memmove" "ac_cv_func_memmove"
-if test "x$ac_cv_func_memmove" = xyes
+ac_fn_cxx_check_func "$LINENO" "mbsnrtowcs" "ac_cv_func_mbsnrtowcs"
+if test "x$ac_cv_func_mbsnrtowcs" = xyes
 then :
-  printf "%s\n" "#define HAVE_MEMMOVE 1" >>confdefs.h
-
-fi
-ac_fn_cxx_check_func "$LINENO" "mempcpy" "ac_cv_func_mempcpy"
-if test "x$ac_cv_func_mempcpy" = xyes
-then :
-  printf "%s\n" "#define HAVE_MEMPCPY 1" >>confdefs.h
-
-fi
-ac_fn_cxx_check_func "$LINENO" "memset" "ac_cv_func_memset"
-if test "x$ac_cv_func_memset" = xyes
-then :
-  printf "%s\n" "#define HAVE_MEMSET 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_MBSNRTOWCS 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "mkdir" "ac_cv_func_mkdir"
@@ -27954,16 +28045,28 @@ then :
   printf "%s\n" "#define HAVE_MKDIR 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_func "$LINENO" "mkdtemp" "ac_cv_func_mkdtemp"
+if test "x$ac_cv_func_mkdtemp" = xyes
+then :
+  printf "%s\n" "#define HAVE_MKDTEMP 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_func "$LINENO" "mkfifo" "ac_cv_func_mkfifo"
 if test "x$ac_cv_func_mkfifo" = xyes
 then :
   printf "%s\n" "#define HAVE_MKFIFO 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "munmap" "ac_cv_func_munmap"
-if test "x$ac_cv_func_munmap" = xyes
+ac_fn_cxx_check_func "$LINENO" "mkstemp" "ac_cv_func_mkstemp"
+if test "x$ac_cv_func_mkstemp" = xyes
 then :
-  printf "%s\n" "#define HAVE_MUNMAP 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_MKSTEMP 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "mmap" "ac_cv_func_mmap"
+if test "x$ac_cv_func_mmap" = xyes
+then :
+  printf "%s\n" "#define HAVE_MMAP 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "nl_langinfo" "ac_cv_func_nl_langinfo"
@@ -27978,22 +28081,40 @@ then :
   printf "%s\n" "#define HAVE_PATHCONF 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_func "$LINENO" "pselect" "ac_cv_func_pselect"
+if test "x$ac_cv_func_pselect" = xyes
+then :
+  printf "%s\n" "#define HAVE_PSELECT 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_func "$LINENO" "putenv" "ac_cv_func_putenv"
 if test "x$ac_cv_func_putenv" = xyes
 then :
   printf "%s\n" "#define HAVE_PUTENV 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "regcomp" "ac_cv_func_regcomp"
-if test "x$ac_cv_func_regcomp" = xyes
+ac_fn_cxx_check_func "$LINENO" "random" "ac_cv_func_random"
+if test "x$ac_cv_func_random" = xyes
 then :
-  printf "%s\n" "#define HAVE_REGCOMP 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_RANDOM 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "rmdir" "ac_cv_func_rmdir"
-if test "x$ac_cv_func_rmdir" = xyes
+ac_fn_cxx_check_func "$LINENO" "readlink" "ac_cv_func_readlink"
+if test "x$ac_cv_func_readlink" = xyes
 then :
-  printf "%s\n" "#define HAVE_RMDIR 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_READLINK 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "regexec" "ac_cv_func_regexec"
+if test "x$ac_cv_func_regexec" = xyes
+then :
+  printf "%s\n" "#define HAVE_REGEXEC 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "rename" "ac_cv_func_rename"
+if test "x$ac_cv_func_rename" = xyes
+then :
+  printf "%s\n" "#define HAVE_RENAME 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "select" "ac_cv_func_select"
@@ -28002,16 +28123,40 @@ then :
   printf "%s\n" "#define HAVE_SELECT 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_func "$LINENO" "setdtablesize" "ac_cv_func_setdtablesize"
+if test "x$ac_cv_func_setdtablesize" = xyes
+then :
+  printf "%s\n" "#define HAVE_SETDTABLESIZE 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_func "$LINENO" "setenv" "ac_cv_func_setenv"
 if test "x$ac_cv_func_setenv" = xyes
 then :
   printf "%s\n" "#define HAVE_SETENV 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_func "$LINENO" "setitimer" "ac_cv_func_setitimer"
+if test "x$ac_cv_func_setitimer" = xyes
+then :
+  printf "%s\n" "#define HAVE_SETITIMER 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_func "$LINENO" "setlocale" "ac_cv_func_setlocale"
 if test "x$ac_cv_func_setlocale" = xyes
 then :
   printf "%s\n" "#define HAVE_SETLOCALE 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "setresgid" "ac_cv_func_setresgid"
+if test "x$ac_cv_func_setresgid" = xyes
+then :
+  printf "%s\n" "#define HAVE_SETRESGID 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "setresuid" "ac_cv_func_setresuid"
+if test "x$ac_cv_func_setresuid" = xyes
+then :
+  printf "%s\n" "#define HAVE_SETRESUID 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "socket" "ac_cv_func_socket"
@@ -28032,22 +28177,16 @@ then :
   printf "%s\n" "#define HAVE_STRCASECMP 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "strchr" "ac_cv_func_strchr"
-if test "x$ac_cv_func_strchr" = xyes
+ac_fn_cxx_check_func "$LINENO" "strcasestr" "ac_cv_func_strcasestr"
+if test "x$ac_cv_func_strcasestr" = xyes
 then :
-  printf "%s\n" "#define HAVE_STRCHR 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_STRCASESTR 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "strcspn" "ac_cv_func_strcspn"
-if test "x$ac_cv_func_strcspn" = xyes
+ac_fn_cxx_check_func "$LINENO" "strchrnul" "ac_cv_func_strchrnul"
+if test "x$ac_cv_func_strchrnul" = xyes
 then :
-  printf "%s\n" "#define HAVE_STRCSPN 1" >>confdefs.h
-
-fi
-ac_fn_cxx_check_func "$LINENO" "strdup" "ac_cv_func_strdup"
-if test "x$ac_cv_func_strdup" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRDUP 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_STRCHRNUL 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "strerror" "ac_cv_func_strerror"
@@ -28062,46 +28201,22 @@ then :
   printf "%s\n" "#define HAVE_STRNCASECMP 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "strpbrk" "ac_cv_func_strpbrk"
-if test "x$ac_cv_func_strpbrk" = xyes
+ac_fn_cxx_check_func "$LINENO" "strnlen" "ac_cv_func_strnlen"
+if test "x$ac_cv_func_strnlen" = xyes
 then :
-  printf "%s\n" "#define HAVE_STRPBRK 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_STRNLEN 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "strrchr" "ac_cv_func_strrchr"
-if test "x$ac_cv_func_strrchr" = xyes
+ac_fn_cxx_check_func "$LINENO" "strsignal" "ac_cv_func_strsignal"
+if test "x$ac_cv_func_strsignal" = xyes
 then :
-  printf "%s\n" "#define HAVE_STRRCHR 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_STRSIGNAL 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "strspn" "ac_cv_func_strspn"
-if test "x$ac_cv_func_strspn" = xyes
+ac_fn_cxx_check_func "$LINENO" "strtoimax" "ac_cv_func_strtoimax"
+if test "x$ac_cv_func_strtoimax" = xyes
 then :
-  printf "%s\n" "#define HAVE_STRSPN 1" >>confdefs.h
-
-fi
-ac_fn_cxx_check_func "$LINENO" "strstr" "ac_cv_func_strstr"
-if test "x$ac_cv_func_strstr" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRSTR 1" >>confdefs.h
-
-fi
-ac_fn_cxx_check_func "$LINENO" "strtol" "ac_cv_func_strtol"
-if test "x$ac_cv_func_strtol" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRTOL 1" >>confdefs.h
-
-fi
-ac_fn_cxx_check_func "$LINENO" "strtoul" "ac_cv_func_strtoul"
-if test "x$ac_cv_func_strtoul" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRTOUL 1" >>confdefs.h
-
-fi
-ac_fn_cxx_check_func "$LINENO" "strtoull" "ac_cv_func_strtoull"
-if test "x$ac_cv_func_strtoull" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRTOULL 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_STRTOIMAX 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "strtoumax" "ac_cv_func_strtoumax"
@@ -28110,16 +28225,70 @@ then :
   printf "%s\n" "#define HAVE_STRTOUMAX 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_func "$LINENO" "sysconf" "ac_cv_func_sysconf"
+if test "x$ac_cv_func_sysconf" = xyes
+then :
+  printf "%s\n" "#define HAVE_SYSCONF 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "tcgetattr" "ac_cv_func_tcgetattr"
+if test "x$ac_cv_func_tcgetattr" = xyes
+then :
+  printf "%s\n" "#define HAVE_TCGETATTR 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "times" "ac_cv_func_times"
+if test "x$ac_cv_func_times" = xyes
+then :
+  printf "%s\n" "#define HAVE_TIMES 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "ttyname" "ac_cv_func_ttyname"
+if test "x$ac_cv_func_ttyname" = xyes
+then :
+  printf "%s\n" "#define HAVE_TTYNAME 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_func "$LINENO" "tzset" "ac_cv_func_tzset"
 if test "x$ac_cv_func_tzset" = xyes
 then :
   printf "%s\n" "#define HAVE_TZSET 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_func "$LINENO" "ulimit" "ac_cv_func_ulimit"
+if test "x$ac_cv_func_ulimit" = xyes
+then :
+  printf "%s\n" "#define HAVE_ULIMIT 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_func "$LINENO" "uname" "ac_cv_func_uname"
 if test "x$ac_cv_func_uname" = xyes
 then :
   printf "%s\n" "#define HAVE_UNAME 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "vprintf" "ac_cv_func_vprintf"
+if test "x$ac_cv_func_vprintf" = xyes
+then :
+  printf "%s\n" "#define HAVE_VPRINTF 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "vsnprintf" "ac_cv_func_vsnprintf"
+if test "x$ac_cv_func_vsnprintf" = xyes
+then :
+  printf "%s\n" "#define HAVE_VSNPRINTF 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "waitpid" "ac_cv_func_waitpid"
+if test "x$ac_cv_func_waitpid" = xyes
+then :
+  printf "%s\n" "#define HAVE_WAITPID 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "wcswidth" "ac_cv_func_wcswidth"
+if test "x$ac_cv_func_wcswidth" = xyes
+then :
+  printf "%s\n" "#define HAVE_WCSWIDTH 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "wcwidth" "ac_cv_func_wcwidth"
@@ -28387,155 +28556,6 @@ if test $ac_cv_func_working_mktime = no; then
   case " $LIBOBJS " in
   *" mktime.$ac_objext "* ) ;;
   *) LIBOBJS="$LIBOBJS mktime.$ac_objext"
- ;;
-esac
-
-fi
-
-
-ac_fn_cxx_check_func "$LINENO" "getcwd" "ac_cv_func_getcwd"
-if test "x$ac_cv_func_getcwd" = xyes
-then :
-  printf "%s\n" "#define HAVE_GETCWD 1" >>confdefs.h
-
-else $as_nop
-  case " $LIBOBJS " in
-  *" getcwd.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS getcwd.$ac_objext"
- ;;
-esac
-
-fi
-
-ac_fn_cxx_check_func "$LINENO" "strcasecmp" "ac_cv_func_strcasecmp"
-if test "x$ac_cv_func_strcasecmp" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRCASECMP 1" >>confdefs.h
-
-else $as_nop
-  case " $LIBOBJS " in
-  *" strcasecmp.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS strcasecmp.$ac_objext"
- ;;
-esac
-
-fi
-ac_fn_cxx_check_func "$LINENO" "strcasestr" "ac_cv_func_strcasestr"
-if test "x$ac_cv_func_strcasestr" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRCASESTR 1" >>confdefs.h
-
-else $as_nop
-  case " $LIBOBJS " in
-  *" strcasestr.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS strcasestr.$ac_objext"
- ;;
-esac
-
-fi
-ac_fn_cxx_check_func "$LINENO" "strerror" "ac_cv_func_strerror"
-if test "x$ac_cv_func_strerror" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRERROR 1" >>confdefs.h
-
-else $as_nop
-  case " $LIBOBJS " in
-  *" strerror.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS strerror.$ac_objext"
- ;;
-esac
-
-fi
-ac_fn_cxx_check_func "$LINENO" "strftime" "ac_cv_func_strftime"
-if test "x$ac_cv_func_strftime" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRFTIME 1" >>confdefs.h
-
-else $as_nop
-  case " $LIBOBJS " in
-  *" strftime.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS strftime.$ac_objext"
- ;;
-esac
-
-fi
-ac_fn_cxx_check_func "$LINENO" "strnlen" "ac_cv_func_strnlen"
-if test "x$ac_cv_func_strnlen" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRNLEN 1" >>confdefs.h
-
-else $as_nop
-  case " $LIBOBJS " in
-  *" strnlen.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS strnlen.$ac_objext"
- ;;
-esac
-
-fi
-ac_fn_cxx_check_func "$LINENO" "strpbrk" "ac_cv_func_strpbrk"
-if test "x$ac_cv_func_strpbrk" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRPBRK 1" >>confdefs.h
-
-else $as_nop
-  case " $LIBOBJS " in
-  *" strpbrk.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS strpbrk.$ac_objext"
- ;;
-esac
-
-fi
-
-ac_fn_cxx_check_func "$LINENO" "strtoimax" "ac_cv_func_strtoimax"
-if test "x$ac_cv_func_strtoimax" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRTOIMAX 1" >>confdefs.h
-
-else $as_nop
-  case " $LIBOBJS " in
-  *" strtoimax.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS strtoimax.$ac_objext"
- ;;
-esac
-
-fi
-ac_fn_cxx_check_func "$LINENO" "strtoumax" "ac_cv_func_strtoumax"
-if test "x$ac_cv_func_strtoumax" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRTOUMAX 1" >>confdefs.h
-
-else $as_nop
-  case " $LIBOBJS " in
-  *" strtoumax.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS strtoumax.$ac_objext"
- ;;
-esac
-
-fi
-
-ac_fn_cxx_check_func "$LINENO" "dprintf" "ac_cv_func_dprintf"
-if test "x$ac_cv_func_dprintf" = xyes
-then :
-  printf "%s\n" "#define HAVE_DPRINTF 1" >>confdefs.h
-
-else $as_nop
-  case " $LIBOBJS " in
-  *" dprintf.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS dprintf.$ac_objext"
- ;;
-esac
-
-fi
-
-ac_fn_cxx_check_func "$LINENO" "strchrnul" "ac_cv_func_strchrnul"
-if test "x$ac_cv_func_strchrnul" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRCHRNUL 1" >>confdefs.h
-
-else $as_nop
-  case " $LIBOBJS " in
-  *" strchrnul.$ac_objext "* ) ;;
-  *) LIBOBJS="$LIBOBJS strchrnul.$ac_objext"
  ;;
 esac
 
@@ -33069,11 +33089,15 @@ if test "$opt_job_control" = yes; then
 
 printf "%s\n" "#define JOB_CONTROL 1" >>confdefs.h
 
-JOBS_CC=jobs.cc
-else
-JOBS_CC=nojobs.cc
 fi
 
+ if test x$opt_job_control = xyes; then
+  JOB_CONTROL_TRUE=
+  JOB_CONTROL_FALSE='#'
+else
+  JOB_CONTROL_TRUE='#'
+  JOB_CONTROL_FALSE=
+fi
 
 
 # directory where we install dynamically loadable builtins
@@ -33235,6 +33259,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${JOB_CONTROL_TRUE}" && test -z "${JOB_CONTROL_FALSE}"; then
+  as_fn_error $? "conditional \"JOB_CONTROL\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 

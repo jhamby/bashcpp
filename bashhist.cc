@@ -18,21 +18,21 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #if defined (HISTORY)
 
-#include "shell.h"
-#include "flags.h"
-#include "parser.h"
-#include "input.h"
-#include "parser.h"	/* for the struct dstack stuff. */
-#include "pathexp.h"	/* for the struct ignorevar stuff */
-#include "builtins/common.h"
+#include "shell.hh"
+#include "flags.hh"
+#include "parser.hh"
+#include "input.hh"
+#include "parser.hh"	/* for the struct dstack stuff. */
+#include "pathexp.hh"	/* for the struct ignorevar stuff */
+#include "builtins/common.hh"
 
-#include <readline/history.h>
-#include <glob/glob.h>
-#include <glob/strmatch.h>
+#include "history.hh"
+#include "glob.hh"
+#include "strmatch.hh"
 
 #if defined (SYSLOG_HISTORY)
 #  include <syslog.h>

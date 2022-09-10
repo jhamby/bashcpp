@@ -18,44 +18,40 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
+
 #if defined (HAVE_SYS_PARAM_H)
 #  include <sys/param.h>
 #endif
-#include "posixstat.h"
+
+#include "posixstat.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "filecntl.h"
-#include <cstdio>
-#include "chartypes.h"
-#include <cerrno>
+#include "filecntl.hh"
+#include "chartypes.hh"
 
-#include "bashintl.h"
+#include "bashintl.hh"
 
-#include "shell.h"
-#include "parser.h"
-#include "flags.h"
-#include "findcmd.h"
-#include "test.h"
-#include "trap.h"
-#include "pathexp.h"
+#include "shell.hh"
+#include "parser.hh"
+#include "flags.hh"
+#include "findcmd.hh"
+#include "test.hh"
+#include "trap.hh"
+#include "pathexp.hh"
 
-#include "builtins/common.h"
+#include "builtins/common.hh"
 
 #if defined (HAVE_MBSTR_H) && defined (HAVE_MBSCHR)
 #  include <mbstr.h>		/* mbschr */
 #endif
 
-#include <tilde/tilde.h>
-
-#if !defined (errno)
-extern int errno;
-#endif /* !errno */
+#include "tilde.hh"
 
 #ifdef __CYGWIN__
 #  include <sys/cygwin.h>

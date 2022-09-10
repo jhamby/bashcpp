@@ -19,23 +19,28 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
-#include "bashtypes.h"
-#include "posixstat.h"
+#include "bashtypes.hh"
+#include "posixstat.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "shell.h"
-#include "flags.h"
-#include "findcmd.h"
-#include "hashcmd.h"
+#include "shell.hh"
+#include "flags.hh"
+#include "findcmd.hh"
+#include "hashcmd.hh"
 
+namespace bash
+{
+
+#if 0
 HASH_TABLE *hashed_filenames = (HASH_TABLE *)NULL;
 
 static void phash_freedata (PTR_T);
+#endif
 
 void
 phash_create ()
@@ -186,3 +191,5 @@ phash_search (const char *filename)
 
   return savestring (path);
 }
+
+}  // namespace bash

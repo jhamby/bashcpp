@@ -466,11 +466,7 @@ dequote_pathname (unsigned char *pathname)
 #if defined (HAVE_LSTAT)
 #  define GLOB_TESTNAME(name)  (lstat (name, &finfo))
 #else /* !HAVE_LSTAT */
-#  if !defined (AFS)
-#    define GLOB_TESTNAME(name)  (sh_eaccess (name, F_OK))
-#  else /* AFS */
-#    define GLOB_TESTNAME(name)  (access (name, F_OK))
-#  endif /* AFS */
+#  define GLOB_TESTNAME(name)  (sh_eaccess (name, F_OK))
 #endif /* !HAVE_LSTAT */
 
 /* Return 0 if DIR is a directory, -2 if DIR is a symlink,  -1 otherwise. */

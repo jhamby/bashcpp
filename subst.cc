@@ -23,29 +23,31 @@
 */
 
 /* Include shell.h first for common defs. */
-#include "shell.h"
+#include "shell.hh"
 
-#include "parser.h"
-#include "flags.h"
-#include "jobs.h"
-#include "execute_cmd.h"
-#include "filecntl.h"
-#include "trap.h"
-#include "pathexp.h"
-#include "subst.h"
+#include "parser.hh"
+#include "flags.hh"
+#include "jobs.hh"
+#include "execute_cmd.hh"
+#include "filecntl.hh"
+#include "trap.hh"
+#include "pathexp.hh"
+#include "subst.hh"
 
-#include "shmbutil.h"
+#include "shmbutil.hh"
+
 #if defined (HAVE_MBSTR_H) && defined (HAVE_MBSCHR)
 #  include <mbstr.h>		/* mbschr */
 #endif
-#include "typemax.h"
 
-#include "builtins/getopt.h"
-#include "builtins/common.h"
+#include "typemax.hh"
 
-#include "builtins/builtext.h"
+#include "builtins/getopt.hh"
+#include "builtins/common.hh"
 
-#include <glob/strmatch.h>
+#include "builtext.hh"
+
+#include "strmatch.hh"
 
 namespace bash
 {

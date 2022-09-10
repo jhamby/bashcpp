@@ -2744,10 +2744,6 @@ private:
   void _rl_ttymsg (const char *, ...) __attribute__((__format__ (printf, 2, 3)));
   void _rl_errmsg (const char *, ...) __attribute__((__format__ (printf, 2, 3)));
 
-#if HAVE_DECL_AUDIT_USER_TTY && defined (HAVE_LIBAUDIT_H) && defined (ENABLE_TTY_AUDIT_SUPPORT)
-  void _rl_audit_tty (char *);
-#endif
-
   int _rl_abort_internal ();
   int _rl_null_function (int, int);
   char *_rl_strindex (const char *, const char *);

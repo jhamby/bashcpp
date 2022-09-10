@@ -19,35 +19,33 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
-#include <cstdio>
-#include <cerrno>
 #include <csignal>
 
-#include "bashintl.h"
+#include "bashintl.hh"
 
-#include "trap.h"
+#include "trap.hh"
 
-#include "shell.h"
-#include "execute_cmd.h"
-#include "flags.h"
-#include "parser.h"
-#include "input.h"	/* for save_token_state, restore_token_state */
-#include "jobs.h"
-#include "signames.h"
-#include "builtins.h"
-#include "builtins/common.h"
-#include "builtins/builtext.h"
+#include "shell.hh"
+#include "execute_cmd.hh"
+#include "flags.hh"
+#include "parser.hh"
+#include "input.hh"	/* for save_token_state, restore_token_state */
+#include "jobs.hh"
+#include "signames.hh"
+#include "builtins.hh"
+#include "builtins/common.hh"
+#include "builtext.hh"
 
 #if defined (READLINE)
-#  include <readline/readline.h>
+#  include "readline.hh"
 #endif
 
 namespace bash
