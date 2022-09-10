@@ -22,14 +22,9 @@
 #  define _POSIXWAIT_H_
 
 /* If _POSIX_VERSION is not defined, we assume that <sys/wait.h> defines
-   a `union wait' and various macros used to manipulate it.  Look in
-   unionwait.h for the things we expect to find. */
+   a `union wait' and various macros used to manipulate it. */
 #if defined (HAVE_SYS_WAIT_H)
 #  include <sys/wait.h>
-#else /* !HAVE_SYS_WAIT_H */
-#  if !defined (_POSIX_VERSION)
-#    include "unionwait.h"
-#  endif
 #endif  /* !HAVE_SYS_WAIT_H */
 
 /* How to get the status of a job.  For Posix, this is just an

@@ -29,7 +29,7 @@ define(relstatus, dev)
 dnl make sure we are using a recent autoconf version
 AC_PREREQ([2.69])
 
-AC_CONFIG_SRCDIR(shell.hh)
+AC_CONFIG_SRCDIR(siglist.cc)
 
 dnl where to find install.sh, config.sub, and config.guess
 AC_CONFIG_AUX_DIR(./support)
@@ -49,14 +49,8 @@ alp*|bet*|dev*|rc*|releng*|maint*)	opt_debug=yes ;;
 *)	opt_debug=no ;;
 esac
 
-dnl canonicalize the host and os so we can do some tricky things before
-dnl parsing options
-AC_CANONICAL_HOST
-AC_CANONICAL_BUILD
-
 dnl configure defaults
 opt_curses=no
-opt_with_installed_readline=no
 opt_with_vfork_subshell=no
 
 dnl
@@ -73,7 +67,6 @@ dnl arguments to configure
 dnl packages
 
 AC_ARG_WITH(curses, AS_HELP_STRING([--with-curses],[use the curses library instead of the termcap library]), opt_curses=$withval)
-AC_ARG_WITH(installed-readline, AS_HELP_STRING([--with-installed-readline],[use a version of the readline library that is already installed]), opt_with_installed_readline=$withval)
 
 dnl this is for my future vfork() refactoring work.
 AC_ARG_WITH(vfork-subshell, AS_HELP_STRING([--with-vfork-subshell],[prefer vfork to fork when both are available]), opt_with_vfork_subshell=$withval)
@@ -336,11 +329,6 @@ AC_SUBST(HELPINSTALL)
 AC_SUBST(HELPFILES_TARGET)
 AC_SUBST(HELPSTRINGS)
 
-dnl We want these before the checks, so the checks can modify their values.
-if test -z "$CFLAGS"; then
-	want_auto_cflags=1
-fi
-
 echo ""
 echo "Beginning configuration for bash-$BASHVERS-$RELSTATUS for ${host_cpu}-${host_vendor}-${host_os}"
 echo ""
@@ -350,7 +338,7 @@ AC_USE_SYSTEM_EXTENSIONS
 dnl compilation checks
 AC_LANG(C++)
 
-dnl Checks for programs.
+# Checks for programs.
 AC_PROG_CXX
 AC_PROG_AWK
 AC_PROG_CC
@@ -360,17 +348,6 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_MKDIR_P
 AC_PROG_YACC
-
-if test -n "$want_auto_cflags"; then
-	AUTO_CXXFLAGS="-g ${GCC+-O2}"
-	AUTO_LDFLAGS="-g ${GCC+-O2}"
-	STYLE_CXXFLAGS="${GCC+-Wno-parentheses} ${GCC+-Wno-format-security}"
-else
-	AUTO_CXXFLAGS= AUTO_LDFLAGS= STYLE_CXXFLAGS=
-fi
-
-dnl test for Unix variants
-AC_SEARCH_LIBS([strerror],[cposix])
 
 AC_SYS_LARGEFILE
 
@@ -388,23 +365,10 @@ if test $opt_history = yes || test $opt_bang_history = yes; then
 	fi
 fi
 
-dnl programs needed by the build and install process
-AC_PROG_INSTALL
-AC_PROG_YACC
-AC_PROG_MAKE_SET
-
-LT_INIT
-
 case "$ac_cv_prog_YACC" in
 *bison*)	;;
 *)	AC_MSG_WARN([bison not available; needed to process parse.yy]) ;;
 esac
-
-case "$host_os" in
-opennt*|interix*)	MAKE_SHELL="$INTERIX_ROOT/bin/sh" ;;
-*)			MAKE_SHELL=/bin/sh ;;
-esac
-AC_SUBST(MAKE_SHELL)
 
 dnl include custom bash rules, moved from aclocal.m4.
 m4_include([m4/bash-rules.m4])
@@ -451,19 +415,13 @@ m4_include([m4/xsize.m4])
 dnl Turn on any extensions available in the GNU C library.
 AC_DEFINE([_GNU_SOURCE], [1], [Enable any available GNU C library extensions.])
 
-dnl C compiler characteristics
-AC_C_CONST
-AC_C_INLINE
-AC_C_BIGENDIAN
-AC_C_STRINGIZE
-AC_C_PROTOTYPES
-AC_C_CHAR_UNSIGNED
-
 dnl initialize libtool
 LT_INIT
 
 dnl initialize GNU gettext
 AM_ICONV
+AM_GNU_GETTEXT([external], [need-ngettext], [intl])
+AM_GNU_GETTEXT_VERSION([0.19])
 
 dnl additional iconv checks
 AC_SEARCH_LIBS([locale_charset], [iconv])
@@ -481,117 +439,61 @@ if test x$ac_cv_langinfo_codeset = xyes; then
   AC_DEFINE([HAVE_LANGINFO_CODESET], [1], [have nl_langinfo (CODESET)])
 fi
 
-AM_GNU_GETTEXT([external], [need-ngettext], [intl])
-AM_GNU_GETTEXT_VERSION([0.19])
-
-dnl header files
-AC_HEADER_DIRENT
+# Checks for header files.
+AC_FUNC_ALLOCA
 AC_HEADER_MAJOR
+AC_CHECK_HEADERS([argz.h arpa/inet.h fcntl.h inttypes.h langinfo.h libintl.h \
+		  malloc.h netdb.h netinet/in.h sgtty.h stdint.h stdio_ext.h \
+		  strings.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h \
+		  sys/time.h sys/wait.h syslog.h termio.h termios.h unistd.h])
 
-BASH_HEADER_INTTYPES
+# Checks for typedefs, structures, and compiler characteristics.
+AC_CHECK_HEADER_STDBOOL
+AC_TYPE_UID_T
+AC_TYPE_MODE_T
+AC_TYPE_OFF_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
+AC_CHECK_MEMBERS([struct stat.st_blksize])
+AC_STRUCT_ST_BLOCKS
+AC_CHECK_MEMBERS([struct stat.st_rdev])
+AC_CHECK_DECLS([sys_siglist])
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT8_T
+AC_CHECK_TYPES([ptrdiff_t])
 
-AC_CHECK_HEADERS(unistd.h termcap.h termio.h termios.h dlfcn.h \
-		 stdbool.h stdint.h netdb.h pwd.h grp.h \
-		 regex.h syslog.h ulimit.h)
-AC_CHECK_HEADERS(sys/pte.h sys/stream.h sys/select.h sys/file.h sys/ioctl.h \
-		 sys/mman.h sys/param.h sys/random.h sys/socket.h sys/stat.h \
-		 sys/time.h sys/times.h sys/types.h sys/wait.h sys/resource.h)
-AC_CHECK_HEADERS(netinet/in.h arpa/inet.h)
-
-dnl sys/ptem.h requires definitions from sys/stream.h on systems where it
-dnl exists
-AC_CHECK_HEADER(sys/ptem.h, , ,[[
-#if HAVE_SYS_STREAM_H
-#  include <sys/stream.h>
-#endif
-]])
-
-dnl special checks for libc functions
+# Checks for library functions.
 AC_FUNC_CHOWN
-AC_FUNC_GETPGRP
+AC_FUNC_FORK
+AC_FUNC_GETGROUPS
+AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
+AC_FUNC_MALLOC
+AC_FUNC_MBRTOWC
+AC_FUNC_MMAP
+AC_FUNC_REALLOC
 AC_FUNC_STRCOLL
+AC_FUNC_STRNLEN
+AC_CHECK_FUNCS([__argz_count __argz_next __argz_stringify alarm bzero dup2 \
+		endgrent endpwent fchdir ftruncate getcwd gethostbyname \
+		gethostname gettimeofday inet_ntoa isascii iswprint \
+		localeconv mblen mbrlen memchr memmove mempcpy memset mkdir \
+		mkfifo munmap nl_langinfo pathconf putenv regcomp rmdir \
+		select setenv setlocale socket stpcpy strcasecmp strchr \
+		strcspn strdup strerror strncasecmp strpbrk strrchr strspn \
+		strstr strtol strtoul strtoull strtoumax tzset uname wcwidth])
 
-dnl if vprintf is not in libc, see if it's defined in stdio.h
-if test "$ac_cv_func_vprintf" = no; then
-    AC_MSG_CHECKING(for declaration of vprintf in stdio.h)
-    AC_EGREP_HEADER([[int[ 	]*vprintf[^a-zA-Z0-9]]],stdio.h,ac_cv_func_vprintf=yes)
-    AC_MSG_RESULT($ac_cv_func_vprintf)
-    if test $ac_cv_func_vprintf = yes; then
-	AC_DEFINE([HAVE_VPRINTF], 1, [Define if you have the vprintf function in stdio.h.])
-    fi
-fi
+# checks for obsolete functions (flagged in red by VS Code).
+AC_FUNC_ERROR_AT_LINE
+AC_FUNC_MKTIME
 
-if test "$ac_cv_func_vprintf" = no && test "$ac_cv_func__doprnt" = "yes"; then
-  AC_LIBOBJ(vprint)
-fi
-
-dnl checks for certain version-specific system calls and libc functions
-AC_CHECK_FUNC(__setostype, AC_DEFINE([HAVE_SETOSTYPE], 1, [Define if you have the __setostype function.]))
-AC_CHECK_FUNC(wait3, AC_DEFINE([HAVE_WAIT3], 1, [Define if you have the wait3 function (used only if you don't have waitpid).]))
-
-dnl checks for missing libc functions
-AC_CHECK_FUNC(mkfifo, AC_DEFINE([HAVE_MKFIFO], 1, [Define if you have the mkfifo function.]), AC_DEFINE([MKFIFO_MISSING], 1, [Define if you are missing the mkfifo function.]))
-
-dnl checks for system calls
-AC_CHECK_FUNCS(dup2 eaccess fcntl fork getdtablesize getentropy getgroups \
-		gethostname getpagesize getpeername getrandom getrlimit \
-		getrusage gettimeofday kill killpg localeconv lstat pselect readlink \
-		select setdtablesize setitimer tcgetpgrp uname ulimit vfork waitpid)
-AC_REPLACE_FUNCS(rename)
-
-dnl checks for c library functions
-AC_CHECK_FUNCS(bcopy bzero confstr faccessat fnmatch getaddrinfo \
-		gethostbyname getservbyname getservent group_member inet_aton \
-		imaxdiv memmove pathconf putenv raise random regcomp regexec \
-		setenv setlinebuf setlocale setvbuf siginterrupt strchr \
-		sysconf syslog tcgetattr times ttyname tzset unsetenv)
-
-AC_CHECK_FUNCS(vasprintf asprintf)
-AC_CHECK_FUNCS(isascii isblank isgraph isprint isspace isxdigit)
-AC_CHECK_FUNCS(getpwent getpwnam getpwuid)
-AC_CHECK_FUNCS(mkstemp mkdtemp)
-AC_CHECK_FUNCS(arc4random)
-
+dnl substitutes for broken C library functions
 AC_REPLACE_FUNCS(getcwd)
 AC_REPLACE_FUNCS(strcasecmp strcasestr strerror strftime strnlen strpbrk)
 AC_REPLACE_FUNCS(strtoimax strtoumax)
 AC_REPLACE_FUNCS(dprintf)
 AC_REPLACE_FUNCS(strchrnul)
-
-AC_CHECK_HEADERS(libaudit.h)
-AC_CHECK_DECLS([AUDIT_USER_TTY],,, [[#include <linux/audit.h>]])
-
-AC_CHECK_DECLS([confstr])
-AC_CHECK_DECLS([setregid])
-dnl AC_CHECK_DECLS[(setresuid])
-dnl AC_CHECK_DECLS[(setresgid])
-AC_CHECK_DECLS([strsignal])
-
-AC_CHECK_FUNCS(setresuid setresgid)
-AC_CHECK_DECLS(strtoimax)
-AC_CHECK_DECLS(strtoumax)
-
-AC_CHECK_HEADERS([argz.h fcntl.h stdio_ext.h])
-
-AC_FUNC_MMAP
-AC_CHECK_FUNCS([__argz_count __argz_next __argz_stringify dcgettext mempcpy \
-		munmap mremap stpcpy strcspn])
-
-INTL_DEP= INTL_INC= LIBINTL_H=
-if test "x$USE_INCLUDED_LIBINTL" = "xyes"; then
-	INTL_DEP='${INTL_LIBDIR}/libintl.a'
-	INTL_INC='-I${INTL_LIBSRC} -I${INTL_BUILDDIR}'
-	LIBINTL_H='${INTL_BUILDDIR}/libintl.h'
-fi
-AC_SUBST(INTL_DEP)
-AC_SUBST(INTL_INC)
-AC_SUBST(LIBINTL_H)
-AC_SUBST(BUILD_INCLUDED_LIBINTL)
-AC_SUBST(USE_INCLUDED_LIBINTL)
-
-dnl
-dnl End of checks needed by files in lib/intl
-dnl
 
 BASH_CHECK_MULTIBYTE
 
@@ -600,17 +502,6 @@ if test "$opt_static_link" != yes; then
 AC_CHECK_LIB(dl, dlopen)
 AC_CHECK_FUNCS(dlopen dlclose dlsym)
 fi
-
-dnl network functions -- check for inet_aton again
-if test "$ac_cv_func_inet_aton" != 'yes'; then
-BASH_FUNC_INET_ATON
-fi
-
-dnl libraries
-dnl this is reportedly no longer necessary for irix[56].?
-case "$host_os" in
-irix4*)	AC_CHECK_LIB(sun, getpwent) ;;
-esac
 
 dnl check for getpeername in the socket library only if it's not in libc
 if test "$ac_cv_func_getpeername" = no; then
@@ -691,58 +582,6 @@ BASH_TYPE_RLIMIT
 
 AC_CHECK_SIZEOF(intmax_t, 8)
 
-dnl additional checks recommended by autoscan
-
-AC_CHECK_DECLS([sys_siglist])
-AC_CHECK_FUNCS([alarm])
-AC_CHECK_FUNCS([endgrent])
-AC_CHECK_FUNCS([endpwent])
-AC_CHECK_FUNCS([ftruncate])
-dnl the inet_ntoa function is only wanted by examples/loadables/accept.c.
-AC_CHECK_FUNCS([inet_ntoa])
-dnl the iswprint function is only wanted by lib/sh/strtrans.c.
-AC_CHECK_FUNCS([iswprint])
-AC_CHECK_FUNCS([mblen])
-AC_CHECK_FUNCS([mbrlen])
-AC_CHECK_FUNCS([memchr])
-AC_CHECK_FUNCS([memset])
-AC_CHECK_FUNCS([mkdir])
-AC_CHECK_FUNCS([mkfifo])
-AC_CHECK_FUNCS([nl_langinfo])
-AC_CHECK_FUNCS([rmdir])
-AC_CHECK_FUNCS([socket])
-AC_CHECK_FUNCS([strerror])
-AC_CHECK_FUNCS([strncasecmp])
-AC_CHECK_FUNCS([strpbrk])
-AC_CHECK_FUNCS([strrchr])
-dnl the strspn function is only wanted by examples/loadables/seq.c.
-AC_CHECK_FUNCS([strspn])
-AC_CHECK_FUNCS([strstr])
-AC_CHECK_FUNCS([strtol])
-AC_CHECK_FUNCS([strtoull])
-AC_CHECK_FUNCS([strtoumax])
-AC_CHECK_FUNCS([wcwidth])
-AC_CHECK_HEADERS([libintl.h])
-AC_CHECK_HEADERS([malloc.h])
-AC_CHECK_HEADERS([sgtty.h])
-AC_CHECK_HEADERS([strings.h])
-AC_CHECK_HEADER_STDBOOL
-AC_CHECK_MEMBERS([struct stat.st_blksize])
-AC_CHECK_MEMBERS([struct stat.st_rdev])
-AC_CHECK_TYPES([ptrdiff_t])
-AC_FUNC_ALLOCA
-AC_FUNC_FORK
-AC_FUNC_GETGROUPS
-AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
-AC_FUNC_STRNLEN
-AC_STRUCT_ST_BLOCKS
-AC_TYPE_SSIZE_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT8_T
-
 dnl presence and contents of structures used by system calls
 BASH_STRUCT_TERMIOS_LDISC
 BASH_STRUCT_TERMIO_LDISC
@@ -751,9 +590,6 @@ BASH_STRUCT_DIRENT_D_FILENO
 BASH_STRUCT_DIRENT_D_NAMLEN
 BASH_STRUCT_WINSIZE
 BASH_STRUCT_TIMEVAL
-AC_CHECK_MEMBERS([struct stat.st_blocks])
-AC_STRUCT_TM
-AC_STRUCT_TIMEZONE
 BASH_STRUCT_TIMEZONE
 
 BASH_STRUCT_WEXITSTATUS_OFFSET
@@ -840,145 +676,12 @@ fi
 dnl This needs to be fixed to conditionally compile jobs.o or nojobs.o.
 AC_SUBST(JOBS_CC)
 
-dnl use this section to possibly define more cpp variables, specify local
-dnl libraries, and specify any additional local cc or ld flags
-dnl
-dnl most of these are really old; this should really go away someday
-
-case "${host_os}" in
-sysv4.2*)	AC_DEFINE([SVR4_2], [1], [Are we running SVR4.2?])
-		AC_DEFINE([SVR4], [1], [Are we running some verson of SVR4?]) ;;
-sysv4*)		AC_DEFINE([SVR4], [1], [Are we running some verson of SVR4?]) ;;
-sysv5*)		AC_DEFINE([SVR5], [1], [Are we running SVR5 (UnixWare 7)?]) ;;
-hpux9*)		LOCAL_CFLAGS="-DHPUX9 -DHPUX -DTGETENT_BROKEN -DTGETFLAG_BROKEN" ;;
-hpux*)		LOCAL_CFLAGS="-DHPUX -DTGETENT_BROKEN -DTGETFLAG_BROKEN" ;;
-dgux*)		LOCAL_CFLAGS=-D_DGUX_SOURCE; LOCAL_LIBS=-ldgc ;;
-isc*)		LOCAL_CFLAGS=-Disc386 ;;
-rhapsody*)	LOCAL_CFLAGS=-DRHAPSODY ;;
-darwin*)	LOCAL_CFLAGS=-DMACOSX ;;
-sco3.2v5*)	LOCAL_CFLAGS="-b elf -DWAITPID_BROKEN -DPATH_MAX=1024" ;;
-sco3.2v4*)	LOCAL_CFLAGS="-DMUST_UNBLOCK_CHLD -DPATH_MAX=1024" ;;
-sco3.2*)	LOCAL_CFLAGS=-DMUST_UNBLOCK_CHLD ;;
-sunos4*)	LOCAL_CFLAGS=-DSunOS4 ;;
-solaris2.5*)	LOCAL_CFLAGS="-DSunOS5 -DSOLARIS" ;;
-solaris2.8*)	LOCAL_CFLAGS=-DSOLARIS  ;;
-solaris2.9*)	LOCAL_CFLAGS=-DSOLARIS  ;;
-solaris2.10*)	LOCAL_CFLAGS=-DSOLARIS  ;;
-solaris2*)	LOCAL_CFLAGS=-DSOLARIS ;;
-lynxos*)	LOCAL_CFLAGS=-DRECYCLES_PIDS ;;
-linux*)		LOCAL_LDFLAGS=-rdynamic		 # allow dynamic loading
-		case "`uname -r`" in
-		1.*|2.[[0123]]*)	: ;;
-		*)	AC_DEFINE([PGRP_PIPE], [1], [Linux 2.4 and newer pgrp pipe support.]) ;;
-		esac ;;
-netbsd*|openbsd*)	LOCAL_CFLAGS="-DDEV_FD_STAT_BROKEN" ;;
-freebsd*)	LOCAL_CFLAGS='-DHEREDOC_PIPESIZE=4096' ;;
-*qnx[[67]]*)	LOCAL_LIBS="-lncurses" ;;
-*qnx*)		LOCAL_CFLAGS="-Dqnx -F -3s" LOCAL_LDFLAGS="-3s" LOCAL_LIBS="-lunix -lncurses" ;;
-powerux*)	LOCAL_LIBS="-lgen" ;;
-cygwin*)	LOCAL_CFLAGS=-DRECYCLES_PIDS ;;
-opennt*|interix*) LOCAL_CFLAGS="-DNO_MAIN_ENV_ARG -DBROKEN_DIRENT_D_INO -D_POSIX_SOURCE -D_ALL_SOURCE -DRECYCLES_PIDS" ;;
-*openstep*)	LOCAL_CFLAGS="-D__APPLE_CC__" ;;
-esac
-
-dnl Stanza for OS/compiler pair-specific flags
-case "${host_os}-${CC}" in
-aix4.2*-*gcc*)	LOCAL_LDFLAGS="-Xlinker -bexpall -Xlinker -brtl" ;;
-aix4.2*)	LOCAL_LDFLAGS="-bexpall -brtl" ;;
-bsdi4*-*gcc*)	LOCAL_LDFLAGS="-rdynamic" ;;	# allow dynamic loading, like Linux
-bsdi5*-*gcc*)	LOCAL_LDFLAGS="-rdynamic" ;;	# allow dynamic loading, like Linux
-hpux11*-gcc*)	LOCAL_LDFLAGS="-Wl,-E" ;;	# allow dynamic loading
-esac
-
-dnl FreeBSD-3.x can have either a.out or ELF
-case "${host_os}" in
-freebsd[[3-9]]*)
-		if test -x /usr/bin/objformat && test "`/usr/bin/objformat`" = "elf" ; then
-			LOCAL_LDFLAGS=-rdynamic # allow dynamic loading
-		fi ;;
-freebsdelf*)	LOCAL_LDFLAGS=-rdynamic ;;	# allow dynamic loading
-dragonfly*)	LOCAL_LDFLAGS=-rdynamic ;;	# allow dynamic loading
-esac
-
-case "$host_cpu" in
-*cray*)		LOCAL_CFLAGS="-DCRAY" ;; # shell var so config.h can use it
-esac
-
-case "$host_cpu-$host_os" in
-ibmrt-*bsd4*)	LOCAL_CFLAGS="-ma -U__STDC__" ;;
-esac
-
-case "$host_cpu-$host_vendor-$host_os" in
-m88k-motorola-sysv3)	LOCAL_CFLAGS=-DWAITPID_BROKEN ;;
-mips-pyramid-sysv4)	LOCAL_CFLAGS=-Xa ;;
-esac
-
-# turn off paren warnings in gcc
-CFLAGS="$CFLAGS ${STYLE_CFLAGS}"
-
-#
-# Shared object configuration section.  These values are generated by
-# ${srcdir}/support/shobj-conf
-#
-if test "$ac_cv_func_dlopen" = "yes" && test -f ${srcdir}/support/shobj-conf
-then
-	AC_MSG_CHECKING(shared object configuration for loadable builtins)
-	eval `${CONFIG_SHELL-/bin/sh} ${srcdir}/support/shobj-conf -C "${CC}" -c "${host_cpu}" -o "${host_os}" -v "${host_vendor}"`
-	AC_SUBST(SHOBJ_CC)
-	AC_SUBST(SHOBJ_CFLAGS)
-	AC_SUBST(SHOBJ_LD)
-	AC_SUBST(SHOBJ_LDFLAGS)
-	AC_SUBST(SHOBJ_XLDFLAGS)
-	AC_SUBST(SHOBJ_LIBS)
-	AC_SUBST(SHOBJ_STATUS)
-	AC_MSG_RESULT($SHOBJ_STATUS)
-else
-	SHOBJ_STATUS=unsupported
-	AC_SUBST(SHOBJ_STATUS)
-fi
-
-# try to create a directory tree if the source is elsewhere
-# this should be packaged into a script accessible via ${srcdir}/support
-case "$srcdir" in
-.)	;;
-*)	for d in doc tests support lib examples; do	# dirs
-		test -d $d || mkdir $d
-	done
-	for ld in readline glob tilde sh termcap; do	# libdirs
-		test -d lib/$ld || mkdir lib/$ld
-	done
-	test -d examples/loadables || mkdir examples/loadables	# loadable builtins
-	test -d examples/loadables/perl || mkdir examples/loadables/perl
-	;;
-esac
-
-BUILD_DIR=`pwd`
-case "$BUILD_DIR" in
-*\ *)	BUILD_DIR=`echo "$BUILD_DIR" | sed 's: :\\\\ :g'` ;;
-*)	;;
-esac
-
-if test -z "$localedir"; then
-	localedir='${datarootdir}/locale'
-fi
-if test -z "$datarootdir"; then
-	datarootdir='${prefix}/share'
-fi
-
-AC_SUBST(PROFILE_FLAGS)
-
-AC_SUBST(incdir)
-AC_SUBST(BUILD_DIR)
-
-# Some versions of autoconf don't substitute these automatically
-AC_SUBST(datarootdir)
-AC_SUBST(localedir)
-
 # directory where we install dynamically loadable builtins
 if test -z "$loadablesdir"; then
 	loadablesdir='${libdir}/bash'
 fi
 AC_SUBST(loadablesdir)
+
 if test -z "$headersdir"; then
 	headersdir='$(includedir)/$(PACKAGE_NAME)'
 fi
@@ -991,13 +694,6 @@ AC_SUBST(host_cpu)
 AC_SUBST(host_vendor)
 AC_SUBST(host_os)
 
-AC_SUBST(LOCAL_LIBS)
-AC_SUBST(LOCAL_CFLAGS)
-AC_SUBST(LOCAL_LDFLAGS)
-AC_SUBST(LOCAL_DEFS)
-
 AC_CONFIG_FILES([Makefile intl/Makefile doc/Makefile po/Makefile.in \
-	  examples/loadables/Makefile examples/loadables/Makefile.inc \
-	  examples/loadables/perl/Makefile pathnames.hh \
-	  support/bash.pc support/bashbug.sh])
+		 pathnames.hh support/bash.pc support/bashbug.sh])
 AC_OUTPUT

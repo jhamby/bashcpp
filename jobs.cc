@@ -103,25 +103,15 @@ enum delete_job_flags {
 
 /* Take care of system dependencies that must be handled when waiting for
    children.  The arguments to the WAITPID macro match those to the Posix.1
-   waitpid() function. */
-
-#if defined (ultrix) && defined (mips) && defined (_POSIX_VERSION)
+   waitpid() function. NOTE: wait3() is obsolete, so only the waitpid()
+   path remains. If you'd like to run bashcpp on a system with only wait3(),
+   feel free to add back the alternative macro definition. */
+#if defined (_POSIX_VERSION) || defined (HAVE_WAITPID)
 #  define WAITPID(pid, statusp, options) \
-	::wait3 ((union wait *)statusp, options, (struct rusage *)0)
-#else
-#  if defined (_POSIX_VERSION) || defined (HAVE_WAITPID)
-#    define WAITPID(pid, statusp, options) \
-	::waitpid ((pid_t)pid, statusp, options)
+	::waitpid (static_cast<pid_t> (pid), statusp, options)
 #  else
-#    if defined (HAVE_WAIT3)
-#      define WAITPID(pid, statusp, options) \
-	::wait3 (statusp, options, (struct rusage *)0)
-#    else
-#      define WAITPID(pid, statusp, options) \
-	::wait3 (statusp, options, (int *)0)
-#    endif /* HAVE_WAIT3 */
-#  endif /* !_POSIX_VERSION && !HAVE_WAITPID*/
-#endif /* !(Ultrix && mips && _POSIX_VERSION) */
+#error You must define an alternative WAITPID() macro, e.g. using wait3().
+#endif /* !_POSIX_VERSION && !HAVE_WAITPID*/
 
 /* getpgrp () varies between systems.  Even systems that claim to be
    Posix.1 compatible lie sometimes (Ultrix, SunOS4, apollo). */

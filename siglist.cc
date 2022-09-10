@@ -18,22 +18,22 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #if !defined (HAVE_SYS_SIGLIST) && !defined (HAVE_UNDER_SYS_SIGLIST) && !defined (HAVE_STRSIGNAL)
 
-#include "general.h"
+#include "general.hh"
 
 #include <cstdio>
 #include <csignal>
 
-#include "siglist.h"
+#include "siglist.hh"
 
 #if !defined (NSIG)
-#  include "trap.h"
+#  include "trap.hh"
 #endif
 
-#include "bashintl.h"
+#include "bashintl.hh"
 
 const char *sys_siglist[NSIG];
 

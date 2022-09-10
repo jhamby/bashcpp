@@ -143,10 +143,8 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(SHELL) $(top_srcdir)/./support/mkinstalldirs
 CONFIG_HEADER = config.hh
-CONFIG_CLEAN_FILES = intl/Makefile doc/Makefile \
-	examples/loadables/Makefile examples/loadables/Makefile.inc \
-	examples/loadables/perl/Makefile pathnames.hh support/bash.pc \
-	support/bashbug.sh
+CONFIG_CLEAN_FILES = intl/Makefile doc/Makefile pathnames.hh \
+	support/bash.pc support/bashbug.sh
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
@@ -507,9 +505,6 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.hh.in \
 	$(top_srcdir)/./support/missing \
 	$(top_srcdir)/./support/mkinstalldirs \
 	$(top_srcdir)/./support/ylwrap $(top_srcdir)/doc/Makefile.in \
-	$(top_srcdir)/examples/loadables/Makefile.in \
-	$(top_srcdir)/examples/loadables/Makefile.inc.in \
-	$(top_srcdir)/examples/loadables/perl/Makefile.in \
 	$(top_srcdir)/intl/Makefile.in \
 	$(top_srcdir)/support/bash.pc.in \
 	$(top_srcdir)/support/bashbug.sh.in ./support/compile \
@@ -572,7 +567,6 @@ AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BASHVERS = @BASHVERS@
-BUILD_DIR = @BUILD_DIR@
 BUILD_INCLUDED_LIBINTL = @BUILD_INCLUDED_LIBINTL@
 CATOBJEXT = @CATOBJEXT@
 CC = @CC@
@@ -634,8 +628,6 @@ INTLBISON = @INTLBISON@
 INTLLIBS = @INTLLIBS@
 INTLOBJS = @INTLOBJS@
 INTL_DEFAULT_VERBOSITY = @INTL_DEFAULT_VERBOSITY@
-INTL_DEP = @INTL_DEP@
-INTL_INC = @INTL_INC@
 INTL_LIBTOOL_SUFFIX_PREFIX = @INTL_LIBTOOL_SUFFIX_PREFIX@
 INTL_MACOSX_LIBS = @INTL_MACOSX_LIBS@
 JOBS_CC = @JOBS_CC@
@@ -644,7 +636,6 @@ LDFLAGS = @LDFLAGS@
 LDFLAGS_FOR_BUILD = @LDFLAGS_FOR_BUILD@
 LIBICONV = @LIBICONV@
 LIBINTL = @LIBINTL@
-LIBINTL_H = @LIBINTL_H@
 LIBMULTITHREAD = @LIBMULTITHREAD@
 LIBOBJS = @LIBOBJS@
 LIBPTH = @LIBPTH@
@@ -654,10 +645,6 @@ LIBTHREAD = @LIBTHREAD@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
-LOCAL_CFLAGS = @LOCAL_CFLAGS@
-LOCAL_DEFS = @LOCAL_DEFS@
-LOCAL_LDFLAGS = @LOCAL_LDFLAGS@
-LOCAL_LIBS = @LOCAL_LIBS@
 LTLIBC = @LTLIBC@
 LTLIBICONV = @LTLIBICONV@
 LTLIBINTL = @LTLIBINTL@
@@ -667,7 +654,6 @@ LTLIBPTH = @LTLIBPTH@
 LTLIBTHREAD = @LTLIBTHREAD@
 LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAKEINFO = @MAKEINFO@
-MAKE_SHELL = @MAKE_SHELL@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
 MSGFMT = @MSGFMT@
@@ -689,20 +675,12 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 POSUB = @POSUB@
 PRI_MACROS_BROKEN = @PRI_MACROS_BROKEN@
-PROFILE_FLAGS = @PROFILE_FLAGS@
 PTHREAD_H_DEFINES_STRUCT_TIMESPEC = @PTHREAD_H_DEFINES_STRUCT_TIMESPEC@
 RANLIB = @RANLIB@
 RELSTATUS = @RELSTATUS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SHOBJ_CC = @SHOBJ_CC@
-SHOBJ_CFLAGS = @SHOBJ_CFLAGS@
-SHOBJ_LD = @SHOBJ_LD@
-SHOBJ_LDFLAGS = @SHOBJ_LDFLAGS@
-SHOBJ_LIBS = @SHOBJ_LIBS@
-SHOBJ_STATUS = @SHOBJ_STATUS@
-SHOBJ_XLDFLAGS = @SHOBJ_XLDFLAGS@
 SIGLIST_O = @SIGLIST_O@
 STRIP = @STRIP@
 SYS_TIME_H_DEFINES_STRUCT_TIMESPEC = @SYS_TIME_H_DEFINES_STRUCT_TIMESPEC@
@@ -753,7 +731,6 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-incdir = @incdir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -811,7 +788,6 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 	include/unionwait.hh pathnames.hh
 
 bash_LDADD = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
-BUILT_SOURCES = parse.hh pipesize.hh builtext.hh builtins.cc version.hh
 AM_YFLAGS = -d
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
 	-I$(srcdir)/lib/tilde -I$(srcdir)/builtins
@@ -892,7 +868,7 @@ libsh_a_SOURCES = $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
 	$(SHDIR)/random.cc $(SHDIR)/gettimeofday.cc
 
 libtilde_a_SOURCES = $(TLDIR)/tilde.cc
-all: $(BUILT_SOURCES) config.hh
+all: config.hh
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
@@ -948,12 +924,6 @@ distclean-hdr:
 intl/Makefile: $(top_builddir)/config.status $(top_srcdir)/intl/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 doc/Makefile: $(top_builddir)/config.status $(top_srcdir)/doc/Makefile.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-examples/loadables/Makefile: $(top_builddir)/config.status $(top_srcdir)/examples/loadables/Makefile.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-examples/loadables/Makefile.inc: $(top_builddir)/config.status $(top_srcdir)/examples/loadables/Makefile.inc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-examples/loadables/perl/Makefile: $(top_builddir)/config.status $(top_srcdir)/examples/loadables/perl/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 pathnames.hh: $(top_builddir)/config.status $(srcdir)/pathnames.hh.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -1911,18 +1881,15 @@ distcleancheck: distclean
 	       $(distcleancheck_listfiles) ; \
 	       exit 1; } >&2
 check-am: all-am
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-recursive
+check: check-recursive
 all-am: Makefile $(PROGRAMS) $(LIBRARIES) config.hh
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(bindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-recursive
-install-exec: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-exec-recursive
+install: install-recursive
+install-exec: install-exec-recursive
 install-data: install-data-recursive
 uninstall: uninstall-recursive
 
@@ -1963,7 +1930,6 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 	-rm -f parse.cc
 	-rm -f parse.hh
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-generic clean-libtool \
@@ -2394,8 +2360,7 @@ ps-am:
 
 uninstall-am: uninstall-binPROGRAMS
 
-.MAKE: $(am__recursive_targets) all check install install-am \
-	install-exec install-strip
+.MAKE: $(am__recursive_targets) all install-am install-strip
 
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am \
 	am--depfiles am--refresh check check-am clean \
@@ -2421,13 +2386,13 @@ uninstall-am: uninstall-binPROGRAMS
 
 
 # link to a known filename for shell script to expect
-psize.aux: $(CONFIG_HEADER) $(PSIZE)
+psize.aux: $(PSIZE)
 	-$(LN_S) $(PSIZE) psize.aux
 
 pipesize.hh: psize.aux $(srcdir)/builtins/psize.sh
 	$(SHELL) $(srcdir)/builtins/psize.sh > $@
 
-builtext.hh builtins.cc: $(CONFIG_HEADER) $(MKBUILTINS) $(DEFSRC)
+builtext.hh builtins.cc: $(MKBUILTINS) $(DEFSRC)
 	@-if test -f builtins.cc; then mv -f builtins.cc old-builtins.cc; fi
 	@-if test -f builtext.hh; then mv -f builtext.hh old-builtext.hh; fi
 	./$(MKBUILTINS) -externfile builtext.hh -structfile builtins.cc \
@@ -2442,6 +2407,26 @@ builtext.hh builtins.cc: $(CONFIG_HEADER) $(MKBUILTINS) $(DEFSRC)
 	 else \
 		$(RM) old-builtins.cc; \
 	 fi
+
+# manual dependencies on generated files
+builtins/common.$(OBJEXT): builtext.hh
+builtins/declare_def.$(OBJEXT): builtext.hh
+builtins/evalstring.$(OBJEXT): builtext.hh
+builtins/exit_def.$(OBJEXT): builtext.hh
+builtins/mkbuiltins.$(OBJEXT): config.hh
+builtins/pushd_def.$(OBJEXT): builtext.hh
+builtins/ulimit_def.$(OBJEXT): pipesize.hh
+builtins/psize.$(OBJEXT): config.hh
+bashline.$(OBJEXT): builtext.hh
+jobs.$(OBJEXT): builtext.hh
+nojobs.$(OBJEXT): builtext.hh
+parse.$(OBJEXT): builtext.hh
+pcomplete.$(OBJEXT): builtext.hh
+parse.$(OBJEXT): builtext.hh
+redir.$(OBJEXT): pipesize.hh
+variables.$(OBJEXT): builtext.hh
+sig.$(OBJEXT): builtext.hh
+version.$(OBJEXT): version.hh
 
 version.hh: $(CONFIG_HEADER) patchlevel.hh
 	$(SHELL) $(srcdir)/support/mkversion.sh -b -S $(srcdir) -s $(RELSTATUS) -d $(Version) -o newversion.hh \

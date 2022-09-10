@@ -53,8 +53,6 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc \
 
 bash_LDADD = libreadlinecpp.a libsh.a libtilde.a libglob.a libbuiltins.a
 
-BUILT_SOURCES = parse.hh pipesize.hh builtext.hh builtins.cc version.hh
-
 AM_YFLAGS = -d
 
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
@@ -98,13 +96,13 @@ HELPDIRDEFINE = @HELPDIRDEFINE@
 HELPSTRINGS = @HELPSTRINGS@
 
 # link to a known filename for shell script to expect
-psize.aux: $(CONFIG_HEADER) $(PSIZE)
+psize.aux: $(PSIZE)
 	-$(LN_S) $(PSIZE) psize.aux
 
 pipesize.hh: psize.aux $(srcdir)/builtins/psize.sh
 	$(SHELL) $(srcdir)/builtins/psize.sh > $@
 
-builtext.hh builtins.cc: $(CONFIG_HEADER) $(MKBUILTINS) $(DEFSRC)
+builtext.hh builtins.cc: $(MKBUILTINS) $(DEFSRC)
 	@-if test -f builtins.cc; then mv -f builtins.cc old-builtins.cc; fi
 	@-if test -f builtext.hh; then mv -f builtext.hh old-builtext.hh; fi
 	./$(MKBUILTINS) -externfile builtext.hh -structfile builtins.cc \
@@ -119,6 +117,26 @@ builtext.hh builtins.cc: $(CONFIG_HEADER) $(MKBUILTINS) $(DEFSRC)
 	 else \
 		$(RM) old-builtins.cc; \
 	 fi
+
+# manual dependencies on generated files
+builtins/common.$(OBJEXT): builtext.hh
+builtins/declare_def.$(OBJEXT): builtext.hh
+builtins/evalstring.$(OBJEXT): builtext.hh
+builtins/exit_def.$(OBJEXT): builtext.hh
+builtins/mkbuiltins.$(OBJEXT): config.hh
+builtins/pushd_def.$(OBJEXT): builtext.hh
+builtins/ulimit_def.$(OBJEXT): pipesize.hh
+builtins/psize.$(OBJEXT): config.hh
+bashline.$(OBJEXT): builtext.hh
+jobs.$(OBJEXT): builtext.hh
+nojobs.$(OBJEXT): builtext.hh
+parse.$(OBJEXT): builtext.hh
+pcomplete.$(OBJEXT): builtext.hh
+parse.$(OBJEXT): builtext.hh
+redir.$(OBJEXT): pipesize.hh
+variables.$(OBJEXT): builtext.hh
+sig.$(OBJEXT): builtext.hh
+version.$(OBJEXT): version.hh
 
 Program = bash$(EXEEXT)
 Version = @BASHVERS@

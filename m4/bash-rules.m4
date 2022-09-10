@@ -1163,20 +1163,6 @@ AC_CACHE_VAL(bash_cv_job_control_missing,
 #error
 #endif
 
-/* Posix systems have tcgetpgrp and waitpid. */
-#if defined (_POSIX_VERSION) && !defined (HAVE_TCGETPGRP)
-#error
-#endif
-
-#if defined (_POSIX_VERSION) && !defined (HAVE_WAITPID)
-#error
-#endif
-
-/* Other systems have TIOCSPGRP/TIOCGPRGP and wait3. */
-#if !defined (_POSIX_VERSION) && !defined (HAVE_WAIT3)
-#error
-#endif
-
 ]], [[]])],[bash_cv_job_control_missing=present],[bash_cv_job_control_missing=missing
 ])])
 AC_MSG_RESULT($bash_cv_job_control_missing)

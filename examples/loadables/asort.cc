@@ -14,16 +14,12 @@
    You should have received a copy of the GNU General Public License
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
 
-#include "bashtypes.h"
-#include "shell.h"
-#include "builtins.h"
-#include "common.h"
-#include "xmalloc.h"
-#include "bashgetopt.h"
+#include "bashtypes.hh"
+#include "shell.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "bashgetopt.hh"
 
 typedef struct sort_element {
     ARRAY_ELEMENT *v;   // used when sorting array in-place
@@ -48,9 +44,9 @@ compare(const void *p1, const void *p2) {
     }
     else {
         if (reverse_flag)
-            return strcoll(e2.value, e1.value);
+            return std::strcoll(e2.value, e1.value);
         else
-            return strcoll(e1.value, e2.value);
+            return std::strcoll(e1.value, e2.value);
     }
 }
 
@@ -78,7 +74,7 @@ sort_index(SHELL_VAR *dest, SHELL_VAR *source) {
                 sa[i].v = NULL;
                 sa[i].key = bucket->key;
                 if ( numeric_flag )
-                    sa[i].num = strtod(bucket->data, NULL);
+                    sa[i].num = std::strtod(bucket->data, NULL);
                 else
                     sa[i].value = bucket->data;
                 i++;
@@ -95,7 +91,7 @@ sort_index(SHELL_VAR *dest, SHELL_VAR *source) {
         for (ae = element_forw(array->head); ae != array->head; ae = element_forw(ae)) {
             sa[i].v = ae;
             if (numeric_flag)
-                sa[i].num = strtod(element_value(ae), NULL);
+                sa[i].num = std::strtod(element_value(ae), NULL);
             else
                 sa[i].value = element_value(ae);
             i++;
@@ -143,7 +139,7 @@ sort_inplace(SHELL_VAR *var) {
     for (ae = element_forw(a->head); ae != a->head; ae = element_forw(ae)) {
         sa[i].v = ae;
         if (numeric_flag)
-            sa[i].num = strtod(element_value(ae), NULL);
+            sa[i].num = std::strtod(element_value(ae), NULL);
         else
             sa[i].value = element_value(ae);
         i++;

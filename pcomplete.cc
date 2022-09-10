@@ -1039,7 +1039,7 @@ gen_shell_function_matches (COMPSPEC *cs, const char *cmd, const char *text,
   WORD_LIST *cmdlist;
   int fval, found;
   sh_parser_state_t ps;
-  sh_parser_state_t * restrict pps;
+  sh_parser_state_t *pps;
 #if defined (ARRAY_VARS)
   ARRAY *a;
 #endif
