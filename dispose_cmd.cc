@@ -31,294 +31,116 @@
 namespace bash
 {
 
-/* Dispose of the command structure passed. */
-void
-dispose_command (void *arg)
+// Virtual destructor for COMMAND. Subclasses will free any additional data.
+COMMAND::~COMMAND () noexcept
 {
-  COMMAND *command = (COMMAND *)arg;
-  if (command == 0)
-    return;
+}
 
-  if (command->redirects)
-    dispose_redirects (command->redirects);
+// Virtual destructor for standard 'for' command.
+FOR_COM::~FOR_COM () noexcept
+{
+  delete name;
+  delete map_list;
+  delete action;
+}
 
-  switch (command->type)
-    {
-    case cm_for:
 #if defined (SELECT_COMMAND)
-    case cm_select:
+// Virtual destructor for select command.
+SELECT_COM::~SELECT_COM () noexcept
+{
+  delete name;
+  delete map_list;
+  delete action;
+}
 #endif
-      {
-	FOR_COM *c;
-#if defined (SELECT_COMMAND)
-	if (command->type == cm_select)
-	  c = (FOR_COM *)command->value.Select;
-	else
-#endif
-	c = command->value.For;
-	dispose_word (c->name);
-	dispose_words (c->map_list);
-	dispose_command (c->action);
-	free (c);
-	break;
-      }
 
 #if defined (ARITH_FOR_COMMAND)
-    case cm_arith_for:
-      {
-	ARITH_FOR_COM *c;
+// Virtual destructor for arithmetic 'for' command.
+ARITH_FOR_COM::~ARITH_FOR_COM () noexcept
+{
+  delete init;
+  delete test;
+  delete step;
+  delete action;
+}
+#endif
 
-	c = command->value.ArithFor;
-	dispose_words (c->init);
-	dispose_words (c->test);
-	dispose_words (c->step);
-	dispose_command (c->action);
-	free (c);
-	break;
-      }
-#endif /* ARITH_FOR_COMMAND */
+// Virtual destructor for group command.
+GROUP_COM::~GROUP_COM () noexcept
+{
+  delete command;
+}
 
-    case cm_group:
-      {
-	dispose_command (command->value.Group->command);
-	free (command->value.Group);
-	break;
-      }
+// Virtual destructor for subshell command.
+SUBSHELL_COM::~SUBSHELL_COM () noexcept
+{
+  delete command;
+}
 
-    case cm_subshell:
-      {
-	dispose_command (command->value.Subshell->command);
-	free (command->value.Subshell);
-	break;
-      }
+// Virtual destructor for coprocess command.
+COPROC_COM::~COPROC_COM () noexcept
+{
+  delete command;
+}
 
-    case cm_coproc:
-      {
-	free (command->value.Coproc->name);
-	dispose_command (command->value.Coproc->command);
-	free (command->value.Coproc);
-	break;
-      }
+// Virtual destructor for case command.
+CASE_COM::~CASE_COM () noexcept
+{
+  delete word;
+  delete clauses;
+}
 
-    case cm_case:
-      {
-	CASE_COM *c;
-	PATTERN_LIST *t, *p;
+// Virtual destructor for until and while commands.
+UNTIL_WHILE_COM::~UNTIL_WHILE_COM () noexcept
+{
+  delete test;
+  delete action;
+}
 
-	c = command->value.Case;
-	dispose_word (c->word);
+// Virtual destructor for if command.
+IF_COM::~IF_COM () noexcept
+{
+  delete test;
+  delete true_case;
+  delete false_case;
+}
 
-	for (p = c->clauses; p; )
-	  {
-	    dispose_words (p->patterns);
-	    dispose_command (p->action);
-	    t = p;
-	    p = p->next;
-	    free (t);
-	  }
-	free (c);
-	break;
-      }
+// Virtual destructor for simple command.
+SIMPLE_COM::~SIMPLE_COM () noexcept
+{
+  delete words;
+}
 
-    case cm_until:
-    case cm_while:
-      {
-	WHILE_COM *c;
-
-	c = command->value.While;
-	dispose_command (c->test);
-	dispose_command (c->action);
-	free (c);
-	break;
-      }
-
-    case cm_if:
-      {
-	IF_COM *c;
-
-	c = command->value.If;
-	dispose_command (c->test);
-	dispose_command (c->true_case);
-	dispose_command (c->false_case);
-	free (c);
-	break;
-      }
-
-    case cm_simple:
-      {
-	SIMPLE_COM *c;
-
-	c = command->value.Simple;
-	dispose_words (c->words);
-	dispose_redirects (c->redirects);
-	free (c);
-	break;
-      }
-
-    case cm_connection:
-      {
-	CONNECTION *c;
-
-	c = command->value.Connection;
-	dispose_command (c->first);
-	dispose_command (c->second);
-	free (c);
-	break;
-      }
+// Virtual destructor for connection command.
+CONNECTION::~CONNECTION () noexcept
+{
+  delete first;
+  delete second;
+}
 
 #if defined (DPAREN_ARITHMETIC)
-    case cm_arith:
-      {
-	ARITH_COM *c;
-
-	c = command->value.Arith;
-	dispose_words (c->exp);
-	free (c);
-	break;
-      }
-#endif /* DPAREN_ARITHMETIC */
-
-#if defined (COND_COMMAND)
-    case cm_cond:
-      {
-	COND_COM *c;
-
-	c = command->value.Cond;
-	dispose_cond_node (c);
-	break;
-      }
-#endif /* COND_COMMAND */
-
-    case cm_function_def:
-      {
-	FUNCTION_DEF *c;
-
-	c = command->value.Function_def;
-	dispose_function_def (c);
-	break;
-      }
-
-    default:
-      command_error ("dispose_command", CMDERR_BADTYPE, command->type, 0);
-      break;
-    }
-  free (command);
-}
-
-#if defined (COND_COMMAND)
-/* How to free a node in a conditional command. */
-void
-dispose_cond_node (void *arg)
+// Virtual destructor for arithmetic expression.
+ARITH_COM::~ARITH_COM () noexcept
 {
-  COND_COM *cond = (COND_COM *)arg;
-  if (cond)
-    {
-      if (cond->left)
-	dispose_cond_node (cond->left);
-      if (cond->right)
-	dispose_cond_node (cond->right);
-      if (cond->op)
-	dispose_word (cond->op);
-      free (cond);
-    }
+  delete exp;
 }
-#endif /* COND_COMMAND */
-
-void
-dispose_function_def_contents (void *arg)
-{
-  FUNCTION_DEF *c = (FUNCTION_DEF *)arg;
-  dispose_word (c->name);
-  dispose_command (c->command);
-  FREE (c->source_file);
-}
-
-void
-dispose_function_def (void *arg)
-{
-  FUNCTION_DEF *c = (FUNCTION_DEF *)arg;
-  dispose_function_def_contents (c);
-  free (c);
-}
-
-/* How to free a WORD_DESC. */
-void
-dispose_word (void *arg)
-{
-  WORD_DESC *w = (WORD_DESC *)arg;
-  FREE (w->word);
-  ocache_free (wdcache, WORD_DESC, w);
-}
-
-/* Free a WORD_DESC, but not the word contained within. */
-void
-dispose_word_desc (void *arg)
-{
-  WORD_DESC *w = (WORD_DESC *)arg;
-  w->word = 0;
-  ocache_free (wdcache, WORD_DESC, w);
-}
-
-/* How to get rid of a linked list of words.  A WORD_LIST. */
-void
-dispose_words (void *arg)
-{
-  WORD_LIST *list = (WORD_LIST *)arg;
-
-  while (list)
-    {
-      WORD_LIST *t = list;
-      list = (WORD_LIST *)(list->next);
-      dispose_word (t->word);
-#if 0
-      free (t);
-#else
-      ocache_free (wlcache, WORD_LIST, t);
 #endif
-    }
-}
 
-/* How to dispose of a list of redirections. TODO: move this. */
-void
-dispose_redirects (void *arg)
+// Virtual destructor for function definition.
+FUNCTION_DEF::~FUNCTION_DEF () noexcept
 {
-  REDIRECT *list = (REDIRECT *)arg;
-  REDIRECT *t;
-
-  while (list)
-    {
-      t = list;
-      list = list->next;
-
-      if (t->rflags & REDIR_VARASSIGN)
-	dispose_word (t->redirector.filename);
-
-      switch (t->instruction)
-	{
-	case r_reading_until:
-	case r_deblank_reading_until:
-	  free (t->here_doc_eof);
-	/*FALLTHROUGH*/
-	case r_reading_string:
-	case r_output_direction:
-	case r_input_direction:
-	case r_inputa_direction:
-	case r_appending_to:
-	case r_err_and_out:
-	case r_append_err_and_out:
-	case r_input_output:
-	case r_output_force:
-	case r_duplicating_input_word:
-	case r_duplicating_output_word:
-	case r_move_input_word:
-	case r_move_output_word:
-	  dispose_word (t->redirectee.filename);
-	  /* FALLTHROUGH */
-	default:
-	  break;
-	}
-      free (t);
-    }
+  delete name;
+  delete command;
 }
+
+#if defined (COND_COMMAND)
+// Virtual destructor for conditional command.
+COND_COM::~COND_COM () noexcept
+{
+  delete left;
+  delete right;
+  delete op;
+}
+#endif /* COND_COMMAND */
 
 }  // namespace bash

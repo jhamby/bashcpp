@@ -27,6 +27,56 @@
 namespace bash
 {
 
+/* Values for COMPSPEC actions.  These are things the shell knows how to
+   build internally. */
+enum compspec_action_t {
+  CA_NOACTION =			    0,
+  CA_ALIAS =			(1<<0),
+  CA_ARRAYVAR =			(1<<1),
+  CA_BINDING =			(1<<2),
+  CA_BUILTIN =			(1<<3),
+  CA_COMMAND =			(1<<4),
+  CA_DIRECTORY =		(1<<5),
+  CA_DISABLED =			(1<<6),
+  CA_ENABLED =			(1<<7),
+  CA_EXPORT =			(1<<8),
+  CA_FILE =			(1<<9),
+  CA_FUNCTION =			(1<<10),
+  CA_GROUP =			(1<<11),
+  CA_HELPTOPIC =		(1<<12),
+  CA_HOSTNAME =			(1<<13),
+  CA_JOB =			(1<<14),
+  CA_KEYWORD =			(1<<15),
+  CA_RUNNING =			(1<<16),
+  CA_SERVICE =			(1<<17),
+  CA_SETOPT =			(1<<18),
+  CA_SHOPT =			(1<<19),
+  CA_SIGNAL =			(1<<20),
+  CA_STOPPED =			(1<<21),
+  CA_USER =			(1<<22),
+  CA_VARIABLE =			(1<<23)
+};
+
+/* Values for COMPSPEC options field. */
+enum compspec_option_t {
+  COPT_NONE =			    0,
+  COPT_RESERVED =		(1<<0),		/* reserved for other use */
+  COPT_DEFAULT =		(1<<1),
+  COPT_FILENAMES =		(1<<2),
+  COPT_DIRNAMES =		(1<<3),
+  COPT_NOQUOTE =		(1<<4),
+  COPT_NOSPACE =		(1<<5),
+  COPT_BASHDEFAULT =		(1<<6),
+  COPT_PLUSDIRS =		(1<<7),
+  COPT_NOSORT =			(1<<8),
+
+  COPT_LASTUSER =		COPT_NOSORT,
+
+  PCOMP_RETRYFAIL =		(COPT_LASTUSER << 1),
+  PCOMP_NOTFOUND =		(COPT_LASTUSER << 2)
+};
+
+
 struct COMPSPEC {
   char *globpat;
   char *words;
@@ -36,53 +86,10 @@ struct COMPSPEC {
   char *command;
   char *lcommand;
   char *filterpat;
-  uint32_t refcount;
-  uint32_t actions;
-  uint32_t options;
+  unsigned int refcount;
+  compspec_action_t actions;
+  compspec_option_t options;
 };
-
-/* Values for COMPSPEC actions.  These are things the shell knows how to
-   build internally. */
-const uint32_t CA_ALIAS =		(1<<0);
-const uint32_t CA_ARRAYVAR =		(1<<1);
-const uint32_t CA_BINDING =		(1<<2);
-const uint32_t CA_BUILTIN =		(1<<3);
-const uint32_t CA_COMMAND =		(1<<4);
-const uint32_t CA_DIRECTORY =		(1<<5);
-const uint32_t CA_DISABLED =		(1<<6);
-const uint32_t CA_ENABLED =		(1<<7);
-const uint32_t CA_EXPORT =		(1<<8);
-const uint32_t CA_FILE =		(1<<9);
-const uint32_t CA_FUNCTION =		(1<<10);
-const uint32_t CA_GROUP =		(1<<11);
-const uint32_t CA_HELPTOPIC =		(1<<12);
-const uint32_t CA_HOSTNAME =		(1<<13);
-const uint32_t CA_JOB =			(1<<14);
-const uint32_t CA_KEYWORD =		(1<<15);
-const uint32_t CA_RUNNING =		(1<<16);
-const uint32_t CA_SERVICE =		(1<<17);
-const uint32_t CA_SETOPT =		(1<<18);
-const uint32_t CA_SHOPT =		(1<<19);
-const uint32_t CA_SIGNAL =		(1<<20);
-const uint32_t CA_STOPPED =		(1<<21);
-const uint32_t CA_USER =		(1<<22);
-const uint32_t CA_VARIABLE =		(1<<23);
-
-/* Values for COMPSPEC options field. */
-const uint32_t COPT_RESERVED =		(1<<0);		/* reserved for other use */
-const uint32_t COPT_DEFAULT =		(1<<1);
-const uint32_t COPT_FILENAMES =		(1<<2);
-const uint32_t COPT_DIRNAMES =		(1<<3);
-const uint32_t COPT_NOQUOTE =		(1<<4);
-const uint32_t COPT_NOSPACE =		(1<<5);
-const uint32_t COPT_BASHDEFAULT =	(1<<6);
-const uint32_t COPT_PLUSDIRS =		(1<<7);
-const uint32_t COPT_NOSORT =		(1<<8);
-
-const uint32_t COPT_LASTUSER =		COPT_NOSORT;
-
-const uint32_t PCOMP_RETRYFAIL =	(COPT_LASTUSER << 1);
-const uint32_t PCOMP_NOTFOUND =		(COPT_LASTUSER << 2);
 
 
 /* List of items is used by the code that implements the programmable
@@ -100,16 +107,18 @@ typedef struct _list_of_items {
 } ITEMLIST;
 
 /* Values for ITEMLIST -> flags */
-const uint32_t LIST_DYNAMIC =		0x001;
-const uint32_t LIST_DIRTY =		0x002;
-const uint32_t LIST_INITIALIZED =	0x004;
-const uint32_t LIST_MUSTSORT =		0x008;
-const uint32_t LIST_DONTFREE =		0x010;
-const uint32_t LIST_DONTFREEMEMBERS =	0x020;
+enum itemlist_flags {
+  LIST_DYNAMIC =		0x001,
+  LIST_DIRTY =			0x002,
+  LIST_INITIALIZED =		0x004,
+  LIST_MUSTSORT =		0x008,
+  LIST_DONTFREE =		0x010,
+  LIST_DONTFREEMEMBERS =	0x020
+};
 
-const char *EMPTYCMD =		"_EmptycmD_";
-const char *DEFAULTCMD =	"_DefaultCmD_";
-const char *INITIALWORD =	"_InitialWorD_";
+static const char *EMPTYCMD =		"_EmptycmD_";
+static const char *DEFAULTCMD =	"_DefaultCmD_";
+static const char *INITIALWORD =	"_InitialWorD_";
 
 #if 0
 extern HASH_TABLE *prog_completes;

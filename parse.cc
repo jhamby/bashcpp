@@ -42,19 +42,18 @@
 #include "config.hh"
 #include "shell.hh"
 
-#ifdef DEBUG
-#  define YYDEBUG 1
-#else
-#  define YYDEBUG 0
-#endif
-
 static inline bash::parser::token::token_kind_type
 yylex () {
   return bash::the_shell->yylex ();
 }
 
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
 
-#line 58 "parse.cc"
+
+#line 57 "parse.cc"
 
 
 #include "parse.hh"
@@ -133,7 +132,7 @@ yylex () {
 
 #line 26 "../bashcpp/parse.yy"
 namespace bash {
-#line 137 "parse.cc"
+#line 136 "parse.cc"
 
   /// Build a parser object.
   parser::parser ()
@@ -230,7 +229,7 @@ namespace bash {
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
-        value.YY_MOVE_OR_COPY< ELEMENT* > (YY_MOVE (that.value));
+        value.YY_MOVE_OR_COPY< ELEMENT > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_case_clause: // case_clause
@@ -240,8 +239,11 @@ namespace bash {
         break;
 
       case symbol_kind::S_redirection: // redirection
-      case symbol_kind::S_redirection_list: // redirection_list
         value.YY_MOVE_OR_COPY< REDIRECT* > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_redirection_list: // redirection_list
+        value.YY_MOVE_OR_COPY< REDIRECT_LIST* > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_WORD: // WORD
@@ -308,7 +310,7 @@ namespace bash {
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
-        value.move< ELEMENT* > (YY_MOVE (that.value));
+        value.move< ELEMENT > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_case_clause: // case_clause
@@ -318,8 +320,11 @@ namespace bash {
         break;
 
       case symbol_kind::S_redirection: // redirection
-      case symbol_kind::S_redirection_list: // redirection_list
         value.move< REDIRECT* > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_redirection_list: // redirection_list
+        value.move< REDIRECT_LIST* > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_WORD: // WORD
@@ -386,7 +391,7 @@ namespace bash {
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
-        value.copy< ELEMENT* > (that.value);
+        value.copy< ELEMENT > (that.value);
         break;
 
       case symbol_kind::S_case_clause: // case_clause
@@ -396,8 +401,11 @@ namespace bash {
         break;
 
       case symbol_kind::S_redirection: // redirection
-      case symbol_kind::S_redirection_list: // redirection_list
         value.copy< REDIRECT* > (that.value);
+        break;
+
+      case symbol_kind::S_redirection_list: // redirection_list
+        value.copy< REDIRECT_LIST* > (that.value);
         break;
 
       case symbol_kind::S_WORD: // WORD
@@ -462,7 +470,7 @@ namespace bash {
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
-        value.move< ELEMENT* > (that.value);
+        value.move< ELEMENT > (that.value);
         break;
 
       case symbol_kind::S_case_clause: // case_clause
@@ -472,8 +480,11 @@ namespace bash {
         break;
 
       case symbol_kind::S_redirection: // redirection
-      case symbol_kind::S_redirection_list: // redirection_list
         value.move< REDIRECT* > (that.value);
+        break;
+
+      case symbol_kind::S_redirection_list: // redirection_list
+        value.move< REDIRECT_LIST* > (that.value);
         break;
 
       case symbol_kind::S_WORD: // WORD
@@ -779,7 +790,7 @@ namespace bash {
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
-        yylhs.value.emplace< ELEMENT* > ();
+        yylhs.value.emplace< ELEMENT > ();
         break;
 
       case symbol_kind::S_case_clause: // case_clause
@@ -789,8 +800,11 @@ namespace bash {
         break;
 
       case symbol_kind::S_redirection: // redirection
-      case symbol_kind::S_redirection_list: // redirection_list
         yylhs.value.emplace< REDIRECT* > ();
+        break;
+
+      case symbol_kind::S_redirection_list: // redirection_list
+        yylhs.value.emplace< REDIRECT_LIST* > ();
         break;
 
       case symbol_kind::S_WORD: // WORD
@@ -830,38 +844,41 @@ namespace bash {
 #line 89 "../bashcpp/parse.yy"
                         {
 			  /* Case of regular command.  Discard the error
-			     safety net,and return the command just parsed. */
-			  global_command = yystack_[1].value.as < COMMAND* > ();
-			  eof_encountered = 0;
+			     safety net, and return the command just parsed. */
+			  Shell &sh = *the_shell;
+			  sh.global_command = yystack_[1].value.as < COMMAND* > ();
+			  sh.eof_encountered = 0;
 			  /* discard_parser_constructs (0); */
-			  if (parser_state & PST_CMDSUBST)
-			    parser_state |= PST_EOFTOKEN;
+			  if (sh.parser_state & PST_CMDSUBST)
+			    sh.parser_state |= PST_EOFTOKEN;
 			  YYACCEPT;
 			}
-#line 842 "parse.cc"
+#line 857 "parse.cc"
     break;
 
   case 3: // inputunit: '\n'
-#line 100 "../bashcpp/parse.yy"
+#line 101 "../bashcpp/parse.yy"
                         {
 			  /* Case of regular command, but not a very
 			     interesting one.  Return a NULL command. */
-			  global_command = (COMMAND *)NULL;
-			  if (parser_state & PST_CMDSUBST)
-			    parser_state |= PST_EOFTOKEN;
+			  Shell &sh = *the_shell;
+			  sh.global_command = nullptr;
+			  if (sh.parser_state & PST_CMDSUBST)
+			    sh.parser_state |= PST_EOFTOKEN;
 			  YYACCEPT;
 			}
-#line 855 "parse.cc"
+#line 871 "parse.cc"
     break;
 
   case 4: // inputunit: error '\n'
-#line 109 "../bashcpp/parse.yy"
+#line 111 "../bashcpp/parse.yy"
                         {
 			  /* Error during parsing.  Return NULL command. */
-			  global_command = (COMMAND *)NULL;
-			  eof_encountered = 0;
+			  Shell &sh = *the_shell;
+			  sh.global_command = nullptr;
+			  sh.eof_encountered = 0;
 			  /* discard_parser_constructs (1); */
-			  if (interactive && parse_and_execute_level == 0)
+			  if (sh.interactive && sh.parse_and_execute_level == 0)
 			    {
 			      YYACCEPT;
 			    }
@@ -870,20 +887,21 @@ namespace bash {
 			      YYABORT;
 			    }
 			}
-#line 874 "parse.cc"
+#line 891 "parse.cc"
     break;
 
   case 5: // inputunit: error yacc_EOF
-#line 124 "../bashcpp/parse.yy"
+#line 127 "../bashcpp/parse.yy"
                         {
 			  /* EOF after an error.  Do ignoreeof or not.  Really
 			     only interesting in non-interactive shells */
-			  global_command = (COMMAND *)NULL;
-			  if (last_command_exit_value == 0)
-			    last_command_exit_value = EX_BADUSAGE;	/* force error return */
-			  if (interactive && parse_and_execute_level == 0)
+			  Shell &sh = *the_shell;
+			  sh.global_command = nullptr;
+			  if (sh.last_command_exit_value == 0)
+			    sh.last_command_exit_value = EX_BADUSAGE;	/* force error return */
+			  if (sh.interactive && sh.parse_and_execute_level == 0)
 			    {
-			      handle_eof_input_unit ();
+			      sh.handle_eof_input_unit ();
 			      YYACCEPT;
 			    }
 			  else
@@ -891,544 +909,541 @@ namespace bash {
 			      YYABORT;
 			    }
 			}
-#line 895 "parse.cc"
-    break;
-
-  case 6: // inputunit: yacc_EOF
-#line 141 "../bashcpp/parse.yy"
-                        {
-			  /* Case of EOF seen by itself.  Do ignoreeof or
-			     not. */
-			  global_command = (COMMAND *)NULL;
-			  handle_eof_input_unit ();
-			  YYACCEPT;
-			}
-#line 907 "parse.cc"
-    break;
-
-  case 7: // word_list: WORD
-#line 151 "../bashcpp/parse.yy"
-                        { yylhs.value.as < WORD_LIST* > () = make_word_list (yystack_[0].value.as < WORD_DESC* > (), (WORD_LIST *)NULL); }
 #line 913 "parse.cc"
     break;
 
+  case 6: // inputunit: yacc_EOF
+#line 145 "../bashcpp/parse.yy"
+                        {
+			  /* Case of EOF seen by itself.  Do ignoreeof or
+			     not. */
+			  Shell &sh = *the_shell;
+			  sh.global_command = nullptr;
+			  sh.handle_eof_input_unit ();
+			  YYACCEPT;
+			}
+#line 926 "parse.cc"
+    break;
+
+  case 7: // word_list: WORD
+#line 156 "../bashcpp/parse.yy"
+                        { yylhs.value.as < WORD_LIST* > () = new WORD_LIST (yystack_[0].value.as < WORD_DESC* > ()); }
+#line 932 "parse.cc"
+    break;
+
   case 8: // word_list: word_list WORD
-#line 153 "../bashcpp/parse.yy"
-                        { yylhs.value.as < WORD_LIST* > () = make_word_list (yystack_[0].value.as < WORD_DESC* > (), yystack_[1].value.as < WORD_LIST* > ()); }
-#line 919 "parse.cc"
+#line 158 "../bashcpp/parse.yy"
+                        { yylhs.value.as < WORD_LIST* > () = yystack_[1].value.as < WORD_LIST* > (); yystack_[1].value.as < WORD_LIST* > ()->push_back (yystack_[0].value.as < WORD_DESC* > ()); }
+#line 938 "parse.cc"
     break;
 
   case 9: // redirection: '>' WORD
-#line 157 "../bashcpp/parse.yy"
+#line 162 "../bashcpp/parse.yy"
                         {
-			  source.dest = 1;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_output_direction, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_output_direction, redir, REDIR_NOFLAGS);
 			}
-#line 929 "parse.cc"
+#line 948 "parse.cc"
     break;
 
   case 10: // redirection: '<' WORD
-#line 163 "../bashcpp/parse.yy"
+#line 168 "../bashcpp/parse.yy"
                         {
-			  source.dest = 0;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_input_direction, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_input_direction, redir, REDIR_NOFLAGS);
 			}
-#line 939 "parse.cc"
+#line 958 "parse.cc"
     break;
 
   case 11: // redirection: NUMBER '>' WORD
-#line 169 "../bashcpp/parse.yy"
+#line 174 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_output_direction, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_output_direction, redir, REDIR_NOFLAGS);
 			}
-#line 949 "parse.cc"
+#line 968 "parse.cc"
     break;
 
   case 12: // redirection: NUMBER '<' WORD
-#line 175 "../bashcpp/parse.yy"
+#line 180 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_input_direction, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_input_direction, redir, REDIR_NOFLAGS);
 			}
-#line 959 "parse.cc"
+#line 978 "parse.cc"
     break;
 
   case 13: // redirection: REDIR_WORD '>' WORD
-#line 181 "../bashcpp/parse.yy"
+#line 186 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_output_direction, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_output_direction, redir, REDIR_VARASSIGN);
 			}
-#line 969 "parse.cc"
+#line 988 "parse.cc"
     break;
 
   case 14: // redirection: REDIR_WORD '<' WORD
-#line 187 "../bashcpp/parse.yy"
+#line 192 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_input_direction, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_input_direction, redir, REDIR_VARASSIGN);
 			}
-#line 979 "parse.cc"
+#line 998 "parse.cc"
     break;
 
   case 15: // redirection: GREATER_GREATER WORD
-#line 193 "../bashcpp/parse.yy"
+#line 198 "../bashcpp/parse.yy"
                         {
-			  source.dest = 1;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_appending_to, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_appending_to, redir, REDIR_NOFLAGS);
 			}
-#line 989 "parse.cc"
+#line 1008 "parse.cc"
     break;
 
   case 16: // redirection: NUMBER GREATER_GREATER WORD
-#line 199 "../bashcpp/parse.yy"
+#line 204 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_appending_to, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_appending_to, redir, REDIR_NOFLAGS);
 			}
-#line 999 "parse.cc"
+#line 1018 "parse.cc"
     break;
 
   case 17: // redirection: REDIR_WORD GREATER_GREATER WORD
-#line 205 "../bashcpp/parse.yy"
+#line 210 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_appending_to, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_appending_to, redir, REDIR_VARASSIGN);
 			}
-#line 1009 "parse.cc"
+#line 1028 "parse.cc"
     break;
 
   case 18: // redirection: GREATER_BAR WORD
-#line 211 "../bashcpp/parse.yy"
+#line 216 "../bashcpp/parse.yy"
                         {
-			  source.dest = 1;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_output_force, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_output_force, redir, REDIR_NOFLAGS);
 			}
-#line 1019 "parse.cc"
+#line 1038 "parse.cc"
     break;
 
   case 19: // redirection: NUMBER GREATER_BAR WORD
-#line 217 "../bashcpp/parse.yy"
+#line 222 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_output_force, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_output_force, redir, REDIR_NOFLAGS);
 			}
-#line 1029 "parse.cc"
+#line 1048 "parse.cc"
     break;
 
   case 20: // redirection: REDIR_WORD GREATER_BAR WORD
-#line 223 "../bashcpp/parse.yy"
+#line 228 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_output_force, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_output_force, redir, REDIR_VARASSIGN);
 			}
-#line 1039 "parse.cc"
+#line 1058 "parse.cc"
     break;
 
   case 21: // redirection: LESS_GREATER WORD
-#line 229 "../bashcpp/parse.yy"
+#line 234 "../bashcpp/parse.yy"
                         {
-			  source.dest = 0;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_input_output, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_input_output, redir, REDIR_NOFLAGS);
 			}
-#line 1049 "parse.cc"
+#line 1068 "parse.cc"
     break;
 
   case 22: // redirection: NUMBER LESS_GREATER WORD
-#line 235 "../bashcpp/parse.yy"
+#line 240 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_input_output, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_input_output, redir, REDIR_NOFLAGS);
 			}
-#line 1059 "parse.cc"
+#line 1078 "parse.cc"
     break;
 
   case 23: // redirection: REDIR_WORD LESS_GREATER WORD
-#line 241 "../bashcpp/parse.yy"
+#line 246 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_input_output, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_input_output, redir, REDIR_VARASSIGN);
 			}
-#line 1069 "parse.cc"
+#line 1088 "parse.cc"
     break;
 
   case 24: // redirection: LESS_LESS WORD
-#line 247 "../bashcpp/parse.yy"
+#line 252 "../bashcpp/parse.yy"
                         {
-			  source.dest = 0;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_reading_until, redir, 0);
-			  push_heredoc (yylhs.value.as < REDIRECT* > ());
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_reading_until, redir, REDIR_NOFLAGS);
+			  the_shell->push_heredoc (yylhs.value.as < REDIRECT* > ());
 			}
-#line 1080 "parse.cc"
+#line 1099 "parse.cc"
     break;
 
   case 25: // redirection: NUMBER LESS_LESS WORD
-#line 254 "../bashcpp/parse.yy"
+#line 259 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_reading_until, redir, 0);
-			  push_heredoc (yylhs.value.as < REDIRECT* > ());
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_reading_until, redir, REDIR_NOFLAGS);
+			  the_shell->push_heredoc (yylhs.value.as < REDIRECT* > ());
 			}
-#line 1091 "parse.cc"
+#line 1110 "parse.cc"
     break;
 
   case 26: // redirection: REDIR_WORD LESS_LESS WORD
-#line 261 "../bashcpp/parse.yy"
+#line 266 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_reading_until, redir, REDIR_VARASSIGN);
-			  push_heredoc (yylhs.value.as < REDIRECT* > ());
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_reading_until, redir, REDIR_VARASSIGN);
+			  the_shell->push_heredoc (yylhs.value.as < REDIRECT* > ());
 			}
-#line 1102 "parse.cc"
+#line 1121 "parse.cc"
     break;
 
   case 27: // redirection: LESS_LESS_MINUS WORD
-#line 268 "../bashcpp/parse.yy"
+#line 273 "../bashcpp/parse.yy"
                         {
-			  source.dest = 0;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_deblank_reading_until, redir, 0);
-			  push_heredoc (yylhs.value.as < REDIRECT* > ());
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_deblank_reading_until, redir, REDIR_NOFLAGS);
+			  the_shell->push_heredoc (yylhs.value.as < REDIRECT* > ());
 			}
-#line 1113 "parse.cc"
+#line 1132 "parse.cc"
     break;
 
   case 28: // redirection: NUMBER LESS_LESS_MINUS WORD
-#line 275 "../bashcpp/parse.yy"
+#line 280 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_deblank_reading_until, redir, 0);
-			  push_heredoc (yylhs.value.as < REDIRECT* > ());
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_deblank_reading_until, redir, REDIR_NOFLAGS);
+			  the_shell->push_heredoc (yylhs.value.as < REDIRECT* > ());
 			}
-#line 1124 "parse.cc"
+#line 1143 "parse.cc"
     break;
 
   case 29: // redirection: REDIR_WORD LESS_LESS_MINUS WORD
-#line 282 "../bashcpp/parse.yy"
+#line 287 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_deblank_reading_until, redir, REDIR_VARASSIGN);
-			  push_heredoc (yylhs.value.as < REDIRECT* > ());
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_deblank_reading_until, redir, REDIR_VARASSIGN);
+			  the_shell->push_heredoc (yylhs.value.as < REDIRECT* > ());
 			}
-#line 1135 "parse.cc"
+#line 1154 "parse.cc"
     break;
 
   case 30: // redirection: LESS_LESS_LESS WORD
-#line 289 "../bashcpp/parse.yy"
+#line 294 "../bashcpp/parse.yy"
                         {
-			  source.dest = 0;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_reading_string, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_reading_string, redir, REDIR_NOFLAGS);
 			}
-#line 1145 "parse.cc"
+#line 1164 "parse.cc"
     break;
 
   case 31: // redirection: NUMBER LESS_LESS_LESS WORD
-#line 295 "../bashcpp/parse.yy"
+#line 300 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_reading_string, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_reading_string, redir, REDIR_NOFLAGS);
 			}
-#line 1155 "parse.cc"
+#line 1174 "parse.cc"
     break;
 
   case 32: // redirection: REDIR_WORD LESS_LESS_LESS WORD
-#line 301 "../bashcpp/parse.yy"
+#line 306 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_reading_string, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_reading_string, redir, REDIR_VARASSIGN);
 			}
-#line 1165 "parse.cc"
+#line 1184 "parse.cc"
     break;
 
   case 33: // redirection: LESS_AND NUMBER
-#line 307 "../bashcpp/parse.yy"
+#line 312 "../bashcpp/parse.yy"
                         {
-			  source.dest = 0;
-			  redir.dest = yystack_[0].value.as < int > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_input, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir (yystack_[0].value.as < int > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_input, redir, REDIR_NOFLAGS);
 			}
-#line 1175 "parse.cc"
+#line 1194 "parse.cc"
     break;
 
   case 34: // redirection: NUMBER LESS_AND NUMBER
-#line 313 "../bashcpp/parse.yy"
+#line 318 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.dest = yystack_[0].value.as < int > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_input, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < int > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_input, redir, REDIR_NOFLAGS);
 			}
-#line 1185 "parse.cc"
+#line 1204 "parse.cc"
     break;
 
   case 35: // redirection: REDIR_WORD LESS_AND NUMBER
-#line 319 "../bashcpp/parse.yy"
+#line 324 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.dest = yystack_[0].value.as < int > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_input, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < int > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_input, redir, REDIR_VARASSIGN);
 			}
-#line 1195 "parse.cc"
+#line 1214 "parse.cc"
     break;
 
   case 36: // redirection: GREATER_AND NUMBER
-#line 325 "../bashcpp/parse.yy"
+#line 330 "../bashcpp/parse.yy"
                         {
-			  source.dest = 1;
-			  redir.dest = yystack_[0].value.as < int > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_output, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir (yystack_[0].value.as < int > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_output, redir, REDIR_NOFLAGS);
 			}
-#line 1205 "parse.cc"
+#line 1224 "parse.cc"
     break;
 
   case 37: // redirection: NUMBER GREATER_AND NUMBER
-#line 331 "../bashcpp/parse.yy"
+#line 336 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.dest = yystack_[0].value.as < int > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_output, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < int > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_output, redir, REDIR_NOFLAGS);
 			}
-#line 1215 "parse.cc"
+#line 1234 "parse.cc"
     break;
 
   case 38: // redirection: REDIR_WORD GREATER_AND NUMBER
-#line 337 "../bashcpp/parse.yy"
+#line 342 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.dest = yystack_[0].value.as < int > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_output, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < int > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_output, redir, REDIR_VARASSIGN);
 			}
-#line 1225 "parse.cc"
+#line 1244 "parse.cc"
     break;
 
   case 39: // redirection: LESS_AND WORD
-#line 343 "../bashcpp/parse.yy"
+#line 348 "../bashcpp/parse.yy"
                         {
-			  source.dest = 0;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_input_word, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_input_word, redir, REDIR_NOFLAGS);
 			}
-#line 1235 "parse.cc"
+#line 1254 "parse.cc"
     break;
 
   case 40: // redirection: NUMBER LESS_AND WORD
-#line 349 "../bashcpp/parse.yy"
+#line 354 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_input_word, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_input_word, redir, REDIR_NOFLAGS);
 			}
-#line 1245 "parse.cc"
+#line 1264 "parse.cc"
     break;
 
   case 41: // redirection: REDIR_WORD LESS_AND WORD
-#line 355 "../bashcpp/parse.yy"
+#line 360 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_input_word, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_input_word, redir, REDIR_VARASSIGN);
 			}
-#line 1255 "parse.cc"
+#line 1274 "parse.cc"
     break;
 
   case 42: // redirection: GREATER_AND WORD
-#line 361 "../bashcpp/parse.yy"
+#line 366 "../bashcpp/parse.yy"
                         {
-			  source.dest = 1;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_output_word, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_output_word, redir, REDIR_NOFLAGS);
 			}
-#line 1265 "parse.cc"
+#line 1284 "parse.cc"
     break;
 
   case 43: // redirection: NUMBER GREATER_AND WORD
-#line 367 "../bashcpp/parse.yy"
+#line 372 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_output_word, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_output_word, redir, REDIR_NOFLAGS);
 			}
-#line 1275 "parse.cc"
+#line 1294 "parse.cc"
     break;
 
   case 44: // redirection: REDIR_WORD GREATER_AND WORD
-#line 373 "../bashcpp/parse.yy"
+#line 378 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_duplicating_output_word, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_duplicating_output_word, redir, REDIR_VARASSIGN);
 			}
-#line 1285 "parse.cc"
+#line 1304 "parse.cc"
     break;
 
   case 45: // redirection: GREATER_AND '-'
-#line 379 "../bashcpp/parse.yy"
+#line 384 "../bashcpp/parse.yy"
                         {
-			  source.dest = 1;
-			  redir.dest = 0;
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_close_this, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir (0);
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_close_this, redir, REDIR_NOFLAGS);
 			}
-#line 1295 "parse.cc"
+#line 1314 "parse.cc"
     break;
 
   case 46: // redirection: NUMBER GREATER_AND '-'
-#line 385 "../bashcpp/parse.yy"
+#line 390 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.dest = 0;
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_close_this, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (0);
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_close_this, redir, REDIR_NOFLAGS);
 			}
-#line 1305 "parse.cc"
+#line 1324 "parse.cc"
     break;
 
   case 47: // redirection: REDIR_WORD GREATER_AND '-'
-#line 391 "../bashcpp/parse.yy"
+#line 396 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.dest = 0;
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_close_this, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (0);
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_close_this, redir, REDIR_VARASSIGN);
 			}
-#line 1315 "parse.cc"
+#line 1334 "parse.cc"
     break;
 
   case 48: // redirection: LESS_AND '-'
-#line 397 "../bashcpp/parse.yy"
+#line 402 "../bashcpp/parse.yy"
                         {
-			  source.dest = 0;
-			  redir.dest = 0;
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_close_this, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir (0);
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_close_this, redir, REDIR_NOFLAGS);
 			}
-#line 1325 "parse.cc"
+#line 1344 "parse.cc"
     break;
 
   case 49: // redirection: NUMBER LESS_AND '-'
-#line 403 "../bashcpp/parse.yy"
+#line 408 "../bashcpp/parse.yy"
                         {
-			  source.dest = yystack_[2].value.as < int > ();
-			  redir.dest = 0;
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_close_this, redir, 0);
+			  REDIRECTEE source (yystack_[2].value.as < int > ());
+			  REDIRECTEE redir (0);
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_close_this, redir, REDIR_NOFLAGS);
 			}
-#line 1335 "parse.cc"
+#line 1354 "parse.cc"
     break;
 
   case 50: // redirection: REDIR_WORD LESS_AND '-'
-#line 409 "../bashcpp/parse.yy"
+#line 414 "../bashcpp/parse.yy"
                         {
-			  source.filename = yystack_[2].value.as < WORD_DESC* > ();
-			  redir.dest = 0;
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_close_this, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source (yystack_[2].value.as < WORD_DESC* > ());
+			  REDIRECTEE redir (0);
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_close_this, redir, REDIR_VARASSIGN);
 			}
-#line 1345 "parse.cc"
+#line 1364 "parse.cc"
     break;
 
   case 51: // redirection: AND_GREATER WORD
-#line 415 "../bashcpp/parse.yy"
+#line 420 "../bashcpp/parse.yy"
                         {
-			  source.dest = 1;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_err_and_out, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_err_and_out, redir, REDIR_NOFLAGS);
 			}
-#line 1355 "parse.cc"
+#line 1374 "parse.cc"
     break;
 
   case 52: // redirection: AND_GREATER_GREATER WORD
-#line 421 "../bashcpp/parse.yy"
+#line 426 "../bashcpp/parse.yy"
                         {
-			  source.dest = 1;
-			  redir.filename = yystack_[0].value.as < WORD_DESC* > ();
-			  yylhs.value.as < REDIRECT* > () = make_redirection (source, r_append_err_and_out, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir (yystack_[0].value.as < WORD_DESC* > ());
+			  yylhs.value.as < REDIRECT* > () = new REDIRECT (source, r_append_err_and_out, redir, REDIR_NOFLAGS);
 			}
-#line 1365 "parse.cc"
+#line 1384 "parse.cc"
     break;
 
   case 53: // simple_command_element: WORD
-#line 429 "../bashcpp/parse.yy"
-                        { yylhs.value.as < ELEMENT* > ().word = yystack_[0].value.as < WORD_DESC* > (); yylhs.value.as < ELEMENT* > ().redirect = 0; }
-#line 1371 "parse.cc"
+#line 434 "../bashcpp/parse.yy"
+                        { yylhs.value.as < ELEMENT > ().word = yystack_[0].value.as < WORD_DESC* > (); yylhs.value.as < ELEMENT > ().redirect = nullptr; }
+#line 1390 "parse.cc"
     break;
 
   case 54: // simple_command_element: ASSIGNMENT_WORD
-#line 431 "../bashcpp/parse.yy"
-                        { yylhs.value.as < ELEMENT* > ().word = yystack_[0].value.as < WORD_DESC* > (); yylhs.value.as < ELEMENT* > ().redirect = 0; }
-#line 1377 "parse.cc"
+#line 436 "../bashcpp/parse.yy"
+                        { yylhs.value.as < ELEMENT > ().word = yystack_[0].value.as < WORD_DESC* > (); yylhs.value.as < ELEMENT > ().redirect = nullptr; }
+#line 1396 "parse.cc"
     break;
 
   case 55: // simple_command_element: redirection
-#line 433 "../bashcpp/parse.yy"
-                        { yylhs.value.as < ELEMENT* > ().redirect = yystack_[0].value.as < REDIRECT* > (); yylhs.value.as < ELEMENT* > ().word = 0; }
-#line 1383 "parse.cc"
+#line 438 "../bashcpp/parse.yy"
+                        { yylhs.value.as < ELEMENT > ().redirect = yystack_[0].value.as < REDIRECT* > (); yylhs.value.as < ELEMENT > ().word = nullptr; }
+#line 1402 "parse.cc"
     break;
 
   case 56: // redirection_list: redirection
-#line 437 "../bashcpp/parse.yy"
+#line 442 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < REDIRECT* > () = yystack_[0].value.as < REDIRECT* > ();
+			  yylhs.value.as < REDIRECT_LIST* > () = new REDIRECT_LIST (yystack_[0].value.as < REDIRECT* > ());
 			}
-#line 1391 "parse.cc"
-    break;
-
-  case 57: // redirection_list: redirection_list redirection
-#line 441 "../bashcpp/parse.yy"
-                        {
-			  REDIRECT *t;
-
-			  for (t = yystack_[1].value.as < REDIRECT* > (); t->next; t = t->next)
-			    ;
-			  t->next = yystack_[0].value.as < REDIRECT* > ();
-			  yylhs.value.as < REDIRECT* > () = yystack_[1].value.as < REDIRECT* > ();
-			}
-#line 1404 "parse.cc"
-    break;
-
-  case 58: // simple_command: simple_command_element
-#line 452 "../bashcpp/parse.yy"
-                        { yylhs.value.as < COMMAND* > () = make_simple_command (yystack_[0].value.as < ELEMENT* > (), (COMMAND *)NULL); }
 #line 1410 "parse.cc"
     break;
 
+  case 57: // redirection_list: redirection_list redirection
+#line 446 "../bashcpp/parse.yy"
+                        {
+			  yystack_[1].value.as < REDIRECT_LIST* > ()->push_back (yystack_[0].value.as < REDIRECT* > ());
+			  yylhs.value.as < REDIRECT_LIST* > () = yystack_[1].value.as < REDIRECT_LIST* > ();
+			}
+#line 1419 "parse.cc"
+    break;
+
+  case 58: // simple_command: simple_command_element
+#line 453 "../bashcpp/parse.yy"
+                        { yylhs.value.as < COMMAND* > () = the_shell->make_simple_command (yystack_[0].value.as < ELEMENT > ()); }
+#line 1425 "parse.cc"
+    break;
+
   case 59: // simple_command: simple_command simple_command_element
-#line 454 "../bashcpp/parse.yy"
-                        { yylhs.value.as < COMMAND* > () = make_simple_command (yystack_[0].value.as < ELEMENT* > (), yystack_[1].value.as < COMMAND* > ()); }
-#line 1416 "parse.cc"
+#line 455 "../bashcpp/parse.yy"
+                        { yylhs.value.as < COMMAND* > () = the_shell->make_simple_command (yystack_[0].value.as < ELEMENT > (), yystack_[1].value.as < COMMAND* > ()); }
+#line 1431 "parse.cc"
     break;
 
   case 60: // command: simple_command
-#line 458 "../bashcpp/parse.yy"
-                        { yylhs.value.as < COMMAND* > () = clean_simple_command (yystack_[0].value.as < COMMAND* > ()); }
-#line 1422 "parse.cc"
+#line 459 "../bashcpp/parse.yy"
+                        { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
+#line 1437 "parse.cc"
     break;
 
   case 61: // command: shell_command
-#line 460 "../bashcpp/parse.yy"
+#line 461 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1428 "parse.cc"
+#line 1443 "parse.cc"
     break;
 
   case 62: // command: shell_command redirection_list
-#line 462 "../bashcpp/parse.yy"
+#line 463 "../bashcpp/parse.yy"
                         {
 			  COMMAND *tc;
 
@@ -1438,340 +1453,339 @@ namespace bash {
 			      REDIRECT *t;
 			      for (t = tc->redirects; t->next; t = t->next)
 				;
-			      t->next = yystack_[0].value.as < REDIRECT* > ();
+			      t->next = yystack_[0].value.as < REDIRECT_LIST* > ();
 			    }
 			  else if (tc)
-			    tc->redirects = yystack_[0].value.as < REDIRECT* > ();
+			    tc->redirects = yystack_[0].value.as < REDIRECT_LIST* > ();
 			  yylhs.value.as < COMMAND* > () = yystack_[1].value.as < COMMAND* > ();
 			}
-#line 1448 "parse.cc"
+#line 1463 "parse.cc"
     break;
 
   case 63: // command: function_def
-#line 478 "../bashcpp/parse.yy"
+#line 479 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1454 "parse.cc"
+#line 1469 "parse.cc"
     break;
 
   case 64: // command: coproc
-#line 480 "../bashcpp/parse.yy"
+#line 481 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1460 "parse.cc"
+#line 1475 "parse.cc"
     break;
 
   case 65: // shell_command: for_command
-#line 484 "../bashcpp/parse.yy"
+#line 485 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1466 "parse.cc"
+#line 1481 "parse.cc"
     break;
 
   case 66: // shell_command: case_command
-#line 486 "../bashcpp/parse.yy"
+#line 487 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1472 "parse.cc"
+#line 1487 "parse.cc"
     break;
 
   case 67: // shell_command: WHILE compound_list DO compound_list DONE
-#line 488 "../bashcpp/parse.yy"
+#line 489 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_while_command (yystack_[3].value.as < COMMAND* > (), yystack_[1].value.as < COMMAND* > ()); }
-#line 1478 "parse.cc"
+#line 1493 "parse.cc"
     break;
 
   case 68: // shell_command: UNTIL compound_list DO compound_list DONE
-#line 490 "../bashcpp/parse.yy"
+#line 491 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_until_command (yystack_[3].value.as < COMMAND* > (), yystack_[1].value.as < COMMAND* > ()); }
-#line 1484 "parse.cc"
+#line 1499 "parse.cc"
     break;
 
   case 69: // shell_command: select_command
-#line 492 "../bashcpp/parse.yy"
+#line 493 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1490 "parse.cc"
+#line 1505 "parse.cc"
     break;
 
   case 70: // shell_command: if_command
-#line 494 "../bashcpp/parse.yy"
+#line 495 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1496 "parse.cc"
+#line 1511 "parse.cc"
     break;
 
   case 71: // shell_command: subshell
-#line 496 "../bashcpp/parse.yy"
+#line 497 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1502 "parse.cc"
+#line 1517 "parse.cc"
     break;
 
   case 72: // shell_command: group_command
-#line 498 "../bashcpp/parse.yy"
+#line 499 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1508 "parse.cc"
+#line 1523 "parse.cc"
     break;
 
   case 73: // shell_command: arith_command
-#line 500 "../bashcpp/parse.yy"
+#line 501 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1514 "parse.cc"
+#line 1529 "parse.cc"
     break;
 
   case 74: // shell_command: cond_command
-#line 502 "../bashcpp/parse.yy"
+#line 503 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1520 "parse.cc"
-    break;
-
-  case 75: // shell_command: arith_for_command
-#line 504 "../bashcpp/parse.yy"
-                        { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1526 "parse.cc"
-    break;
-
-  case 76: // for_command: FOR WORD newline_list DO compound_list DONE
-#line 508 "../bashcpp/parse.yy"
-                        {
-			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[4].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
-			  if (word_top > 0) word_top--;
-			}
 #line 1535 "parse.cc"
     break;
 
-  case 77: // for_command: FOR WORD newline_list '{' compound_list '}'
-#line 513 "../bashcpp/parse.yy"
+  case 75: // shell_command: arith_for_command
+#line 505 "../bashcpp/parse.yy"
+                        { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
+#line 1541 "parse.cc"
+    break;
+
+  case 76: // for_command: FOR WORD newline_list DO compound_list DONE
+#line 509 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[4].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[4].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", nullptr), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1544 "parse.cc"
+#line 1550 "parse.cc"
+    break;
+
+  case 77: // for_command: FOR WORD newline_list '{' compound_list '}'
+#line 514 "../bashcpp/parse.yy"
+                        {
+			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[4].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", nullptr), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  if (word_top > 0) word_top--;
+			}
+#line 1559 "parse.cc"
     break;
 
   case 78: // for_command: FOR WORD ';' newline_list DO compound_list DONE
-#line 518 "../bashcpp/parse.yy"
+#line 519 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[5].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[5].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", nullptr), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1553 "parse.cc"
+#line 1568 "parse.cc"
     break;
 
   case 79: // for_command: FOR WORD ';' newline_list '{' compound_list '}'
-#line 523 "../bashcpp/parse.yy"
+#line 524 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[5].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[5].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", nullptr), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1562 "parse.cc"
+#line 1577 "parse.cc"
     break;
 
   case 80: // for_command: FOR WORD newline_list IN word_list list_terminator newline_list DO compound_list DONE
-#line 528 "../bashcpp/parse.yy"
+#line 529 "../bashcpp/parse.yy"
                         {
 			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[8].value.as < WORD_DESC* > (), REVERSE_LIST (yystack_[5].value.as < WORD_LIST* > (), WORD_LIST *), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1571 "parse.cc"
+#line 1586 "parse.cc"
     break;
 
   case 81: // for_command: FOR WORD newline_list IN word_list list_terminator newline_list '{' compound_list '}'
-#line 533 "../bashcpp/parse.yy"
+#line 534 "../bashcpp/parse.yy"
                         {
 			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[8].value.as < WORD_DESC* > (), REVERSE_LIST (yystack_[5].value.as < WORD_LIST* > (), WORD_LIST *), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1580 "parse.cc"
+#line 1595 "parse.cc"
     break;
 
   case 82: // for_command: FOR WORD newline_list IN list_terminator newline_list DO compound_list DONE
-#line 538 "../bashcpp/parse.yy"
+#line 539 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[7].value.as < WORD_DESC* > (), (WORD_LIST *)NULL, yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[7].value.as < WORD_DESC* > (), nullptr, yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1589 "parse.cc"
+#line 1604 "parse.cc"
     break;
 
   case 83: // for_command: FOR WORD newline_list IN list_terminator newline_list '{' compound_list '}'
-#line 543 "../bashcpp/parse.yy"
+#line 544 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[7].value.as < WORD_DESC* > (), (WORD_LIST *)NULL, yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_for_command (yystack_[7].value.as < WORD_DESC* > (), nullptr, yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1598 "parse.cc"
+#line 1613 "parse.cc"
     break;
 
   case 84: // arith_for_command: FOR ARITH_FOR_EXPRS list_terminator newline_list DO compound_list DONE
-#line 550 "../bashcpp/parse.yy"
+#line 551 "../bashcpp/parse.yy"
                                 {
 				  yylhs.value.as < COMMAND* > () = make_arith_for_command (yystack_[5].value.as < WORD_LIST* > (), yystack_[1].value.as < COMMAND* > (), arith_for_lineno);
 				  if (yylhs.value.as < COMMAND* > () == 0) YYERROR;
 				  if (word_top > 0) word_top--;
 				}
-#line 1608 "parse.cc"
+#line 1623 "parse.cc"
     break;
 
   case 85: // arith_for_command: FOR ARITH_FOR_EXPRS list_terminator newline_list '{' compound_list '}'
-#line 556 "../bashcpp/parse.yy"
+#line 557 "../bashcpp/parse.yy"
                                 {
 				  yylhs.value.as < COMMAND* > () = make_arith_for_command (yystack_[5].value.as < WORD_LIST* > (), yystack_[1].value.as < COMMAND* > (), arith_for_lineno);
 				  if (yylhs.value.as < COMMAND* > () == 0) YYERROR;
 				  if (word_top > 0) word_top--;
 				}
-#line 1618 "parse.cc"
+#line 1633 "parse.cc"
     break;
 
   case 86: // arith_for_command: FOR ARITH_FOR_EXPRS DO compound_list DONE
-#line 562 "../bashcpp/parse.yy"
+#line 563 "../bashcpp/parse.yy"
                                 {
 				  yylhs.value.as < COMMAND* > () = make_arith_for_command (yystack_[3].value.as < WORD_LIST* > (), yystack_[1].value.as < COMMAND* > (), arith_for_lineno);
 				  if (yylhs.value.as < COMMAND* > () == 0) YYERROR;
 				  if (word_top > 0) word_top--;
 				}
-#line 1628 "parse.cc"
+#line 1643 "parse.cc"
     break;
 
   case 87: // arith_for_command: FOR ARITH_FOR_EXPRS '{' compound_list '}'
-#line 568 "../bashcpp/parse.yy"
+#line 569 "../bashcpp/parse.yy"
                                 {
 				  yylhs.value.as < COMMAND* > () = make_arith_for_command (yystack_[3].value.as < WORD_LIST* > (), yystack_[1].value.as < COMMAND* > (), arith_for_lineno);
 				  if (yylhs.value.as < COMMAND* > () == 0) YYERROR;
 				  if (word_top > 0) word_top--;
 				}
-#line 1638 "parse.cc"
+#line 1653 "parse.cc"
     break;
 
   case 88: // select_command: SELECT WORD newline_list DO list DONE
-#line 576 "../bashcpp/parse.yy"
+#line 577 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[4].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[4].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", nullptr), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1647 "parse.cc"
+#line 1662 "parse.cc"
     break;
 
   case 89: // select_command: SELECT WORD newline_list '{' list '}'
-#line 581 "../bashcpp/parse.yy"
+#line 582 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[4].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[4].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", nullptr), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1656 "parse.cc"
+#line 1671 "parse.cc"
     break;
 
   case 90: // select_command: SELECT WORD ';' newline_list DO list DONE
-#line 586 "../bashcpp/parse.yy"
+#line 587 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[5].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[5].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", nullptr), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1665 "parse.cc"
+#line 1680 "parse.cc"
     break;
 
   case 91: // select_command: SELECT WORD ';' newline_list '{' list '}'
-#line 591 "../bashcpp/parse.yy"
+#line 592 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[5].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[5].value.as < WORD_DESC* > (), add_string_to_list ("\"$@\"", nullptr), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1674 "parse.cc"
+#line 1689 "parse.cc"
     break;
 
   case 92: // select_command: SELECT WORD newline_list IN word_list list_terminator newline_list DO list DONE
-#line 596 "../bashcpp/parse.yy"
+#line 597 "../bashcpp/parse.yy"
                         {
 			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[8].value.as < WORD_DESC* > (), REVERSE_LIST (yystack_[5].value.as < WORD_LIST* > (), WORD_LIST *), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1683 "parse.cc"
+#line 1698 "parse.cc"
     break;
 
   case 93: // select_command: SELECT WORD newline_list IN word_list list_terminator newline_list '{' list '}'
-#line 601 "../bashcpp/parse.yy"
+#line 602 "../bashcpp/parse.yy"
                         {
 			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[8].value.as < WORD_DESC* > (), REVERSE_LIST (yystack_[5].value.as < WORD_LIST* > (), WORD_LIST *), yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1692 "parse.cc"
+#line 1707 "parse.cc"
     break;
 
   case 94: // select_command: SELECT WORD newline_list IN list_terminator newline_list DO compound_list DONE
-#line 606 "../bashcpp/parse.yy"
+#line 607 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[7].value.as < WORD_DESC* > (), (WORD_LIST *)NULL, yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[7].value.as < WORD_DESC* > (), nullptr, yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1701 "parse.cc"
+#line 1716 "parse.cc"
     break;
 
   case 95: // select_command: SELECT WORD newline_list IN list_terminator newline_list '{' compound_list '}'
-#line 611 "../bashcpp/parse.yy"
+#line 612 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[7].value.as < WORD_DESC* > (), (WORD_LIST *)NULL, yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_select_command (yystack_[7].value.as < WORD_DESC* > (), nullptr, yystack_[1].value.as < COMMAND* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1710 "parse.cc"
+#line 1725 "parse.cc"
     break;
 
   case 96: // case_command: CASE WORD newline_list IN newline_list ESAC
-#line 618 "../bashcpp/parse.yy"
+#line 619 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_case_command (yystack_[4].value.as < WORD_DESC* > (), (PATTERN_LIST *)NULL, word_lineno[word_top]);
+			  yylhs.value.as < COMMAND* > () = make_case_command (yystack_[4].value.as < WORD_DESC* > (), nullptr, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1719 "parse.cc"
+#line 1734 "parse.cc"
     break;
 
   case 97: // case_command: CASE WORD newline_list IN case_clause_sequence newline_list ESAC
-#line 623 "../bashcpp/parse.yy"
+#line 624 "../bashcpp/parse.yy"
                         {
 			  yylhs.value.as < COMMAND* > () = make_case_command (yystack_[5].value.as < WORD_DESC* > (), yystack_[2].value.as < PATTERN_LIST* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1728 "parse.cc"
+#line 1743 "parse.cc"
     break;
 
   case 98: // case_command: CASE WORD newline_list IN case_clause ESAC
-#line 628 "../bashcpp/parse.yy"
+#line 629 "../bashcpp/parse.yy"
                         {
 			  yylhs.value.as < COMMAND* > () = make_case_command (yystack_[4].value.as < WORD_DESC* > (), yystack_[1].value.as < PATTERN_LIST* > (), word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
-#line 1737 "parse.cc"
+#line 1752 "parse.cc"
     break;
 
   case 99: // function_def: WORD '(' ')' newline_list function_body
-#line 635 "../bashcpp/parse.yy"
+#line 636 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_function_def (yystack_[4].value.as < WORD_DESC* > (), yystack_[0].value.as < COMMAND* > (), function_dstart, function_bstart); }
-#line 1743 "parse.cc"
+#line 1758 "parse.cc"
     break;
 
   case 100: // function_def: FUNCTION WORD '(' ')' newline_list function_body
-#line 637 "../bashcpp/parse.yy"
+#line 638 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_function_def (yystack_[4].value.as < WORD_DESC* > (), yystack_[0].value.as < COMMAND* > (), function_dstart, function_bstart); }
-#line 1749 "parse.cc"
+#line 1764 "parse.cc"
     break;
 
   case 101: // function_def: FUNCTION WORD function_body
-#line 639 "../bashcpp/parse.yy"
+#line 640 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_function_def (yystack_[1].value.as < WORD_DESC* > (), yystack_[0].value.as < COMMAND* > (), function_dstart, function_bstart); }
-#line 1755 "parse.cc"
+#line 1770 "parse.cc"
     break;
 
   case 102: // function_def: FUNCTION WORD '\n' newline_list function_body
-#line 641 "../bashcpp/parse.yy"
+#line 642 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_function_def (yystack_[3].value.as < WORD_DESC* > (), yystack_[0].value.as < COMMAND* > (), function_dstart, function_bstart); }
-#line 1761 "parse.cc"
+#line 1776 "parse.cc"
     break;
 
   case 103: // function_body: shell_command
-#line 645 "../bashcpp/parse.yy"
+#line 646 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 1767 "parse.cc"
+#line 1782 "parse.cc"
     break;
 
   case 104: // function_body: shell_command redirection_list
-#line 647 "../bashcpp/parse.yy"
+#line 648 "../bashcpp/parse.yy"
                         {
-			  COMMAND *tc;
+			  COMMAND *tc = yystack_[1].value.as < COMMAND* > ();
 
-			  tc = yystack_[1].value.as < COMMAND* > ();
 			  /* According to Posix.2 3.9.5, redirections
 			     specified after the body of a function should
 			     be attached to the function and performed when
@@ -1790,13 +1804,13 @@ namespace bash {
 			      REDIRECT *t;
 			      for (t = tc->redirects; t->next; t = t->next)
 				;
-			      t->next = yystack_[0].value.as < REDIRECT* > ();
+			      t->next = yystack_[0].value.as < REDIRECT_LIST* > ();
 			    }
 			  else if (tc)
-			    tc->redirects = yystack_[0].value.as < REDIRECT* > ();
+			    tc->redirects = yystack_[0].value.as < REDIRECT_LIST* > ();
 			  yylhs.value.as < COMMAND* > () = yystack_[1].value.as < COMMAND* > ();
 			}
-#line 1800 "parse.cc"
+#line 1814 "parse.cc"
     break;
 
   case 105: // subshell: '(' compound_list ')'
@@ -1805,7 +1819,7 @@ namespace bash {
 			  yylhs.value.as < COMMAND* > () = make_subshell_command (yystack_[1].value.as < COMMAND* > ());
 			  yylhs.value.as < COMMAND* > ()->flags |= CMD_WANT_SUBSHELL;
 			}
-#line 1809 "parse.cc"
+#line 1823 "parse.cc"
     break;
 
   case 106: // coproc: COPROC shell_command
@@ -1814,7 +1828,7 @@ namespace bash {
 			  yylhs.value.as < COMMAND* > () = make_coproc_command ("COPROC", yystack_[0].value.as < COMMAND* > ());
 			  yylhs.value.as < COMMAND* > ()->flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
 			}
-#line 1818 "parse.cc"
+#line 1832 "parse.cc"
     break;
 
   case 107: // coproc: COPROC shell_command redirection_list
@@ -1828,14 +1842,14 @@ namespace bash {
 			      REDIRECT *t;
 			      for (t = tc->redirects; t->next; t = t->next)
 				;
-			      t->next = yystack_[0].value.as < REDIRECT* > ();
+			      t->next = yystack_[0].value.as < REDIRECT_LIST* > ();
 			    }
 			  else if (tc)
-			    tc->redirects = yystack_[0].value.as < REDIRECT* > ();
+			    tc->redirects = yystack_[0].value.as < REDIRECT_LIST* > ();
 			  yylhs.value.as < COMMAND* > () = make_coproc_command ("COPROC", yystack_[1].value.as < COMMAND* > ());
 			  yylhs.value.as < COMMAND* > ()->flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
 			}
-#line 1839 "parse.cc"
+#line 1853 "parse.cc"
     break;
 
   case 108: // coproc: COPROC WORD shell_command
@@ -1844,7 +1858,7 @@ namespace bash {
 			  yylhs.value.as < COMMAND* > () = make_coproc_command (yystack_[1].value.as < WORD_DESC* > ()->word, yystack_[0].value.as < COMMAND* > ());
 			  yylhs.value.as < COMMAND* > ()->flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
 			}
-#line 1848 "parse.cc"
+#line 1862 "parse.cc"
     break;
 
   case 109: // coproc: COPROC WORD shell_command redirection_list
@@ -1858,161 +1872,161 @@ namespace bash {
 			      REDIRECT *t;
 			      for (t = tc->redirects; t->next; t = t->next)
 				;
-			      t->next = yystack_[0].value.as < REDIRECT* > ();
+			      t->next = yystack_[0].value.as < REDIRECT_LIST* > ();
 			    }
 			  else if (tc)
-			    tc->redirects = yystack_[0].value.as < REDIRECT* > ();
+			    tc->redirects = yystack_[0].value.as < REDIRECT_LIST* > ();
 			  yylhs.value.as < COMMAND* > () = make_coproc_command (yystack_[2].value.as < WORD_DESC* > ()->word, yystack_[1].value.as < COMMAND* > ());
 			  yylhs.value.as < COMMAND* > ()->flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
 			}
-#line 1869 "parse.cc"
+#line 1883 "parse.cc"
     break;
 
   case 110: // coproc: COPROC simple_command
 #line 729 "../bashcpp/parse.yy"
                         {
-			  yylhs.value.as < COMMAND* > () = make_coproc_command ("COPROC", clean_simple_command (yystack_[0].value.as < COMMAND* > ()));
+			  yylhs.value.as < COMMAND* > () = make_coproc_command ("COPROC", yystack_[0].value.as < COMMAND* > ());
 			  yylhs.value.as < COMMAND* > ()->flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
 			}
-#line 1878 "parse.cc"
+#line 1892 "parse.cc"
     break;
 
   case 111: // if_command: IF compound_list THEN compound_list FI
 #line 736 "../bashcpp/parse.yy"
-                        { yylhs.value.as < COMMAND* > () = make_if_command (yystack_[3].value.as < COMMAND* > (), yystack_[1].value.as < COMMAND* > (), (COMMAND *)NULL); }
-#line 1884 "parse.cc"
+                        { yylhs.value.as < COMMAND* > () = make_if_command (yystack_[3].value.as < COMMAND* > (), yystack_[1].value.as < COMMAND* > (), nullptr); }
+#line 1898 "parse.cc"
     break;
 
   case 112: // if_command: IF compound_list THEN compound_list ELSE compound_list FI
 #line 738 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_if_command (yystack_[5].value.as < COMMAND* > (), yystack_[3].value.as < COMMAND* > (), yystack_[1].value.as < COMMAND* > ()); }
-#line 1890 "parse.cc"
+#line 1904 "parse.cc"
     break;
 
   case 113: // if_command: IF compound_list THEN compound_list elif_clause FI
 #line 740 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_if_command (yystack_[4].value.as < COMMAND* > (), yystack_[2].value.as < COMMAND* > (), yystack_[1].value.as < COMMAND* > ()); }
-#line 1896 "parse.cc"
+#line 1910 "parse.cc"
     break;
 
   case 114: // group_command: '{' compound_list '}'
 #line 745 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_group_command (yystack_[1].value.as < COMMAND* > ()); }
-#line 1902 "parse.cc"
+#line 1916 "parse.cc"
     break;
 
   case 115: // arith_command: ARITH_CMD
 #line 749 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_arith_command (yystack_[0].value.as < WORD_LIST* > ()); }
-#line 1908 "parse.cc"
+#line 1922 "parse.cc"
     break;
 
   case 116: // cond_command: COND_START COND_CMD COND_END
 #line 753 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[1].value.as < COMMAND* > (); }
-#line 1914 "parse.cc"
+#line 1928 "parse.cc"
     break;
 
   case 117: // elif_clause: ELIF compound_list THEN compound_list
 #line 757 "../bashcpp/parse.yy"
-                        { yylhs.value.as < COMMAND* > () = make_if_command (yystack_[2].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), (COMMAND *)NULL); }
-#line 1920 "parse.cc"
+                        { yylhs.value.as < COMMAND* > () = make_if_command (yystack_[2].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), nullptr); }
+#line 1934 "parse.cc"
     break;
 
   case 118: // elif_clause: ELIF compound_list THEN compound_list ELSE compound_list
 #line 759 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_if_command (yystack_[4].value.as < COMMAND* > (), yystack_[2].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > ()); }
-#line 1926 "parse.cc"
+#line 1940 "parse.cc"
     break;
 
   case 119: // elif_clause: ELIF compound_list THEN compound_list elif_clause
 #line 761 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = make_if_command (yystack_[3].value.as < COMMAND* > (), yystack_[1].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > ()); }
-#line 1932 "parse.cc"
+#line 1946 "parse.cc"
     break;
 
   case 120: // case_clause: pattern_list
 #line 764 "../bashcpp/parse.yy"
                 { yylhs.value.as < PATTERN_LIST* > () = yystack_[0].value.as < PATTERN_LIST* > (); }
-#line 1938 "parse.cc"
+#line 1952 "parse.cc"
     break;
 
   case 121: // case_clause: case_clause_sequence pattern_list
 #line 766 "../bashcpp/parse.yy"
                         { yystack_[0].value.as < PATTERN_LIST* > ()->next = yystack_[1].value.as < PATTERN_LIST* > (); yylhs.value.as < PATTERN_LIST* > () = yystack_[0].value.as < PATTERN_LIST* > (); }
-#line 1944 "parse.cc"
+#line 1958 "parse.cc"
     break;
 
   case 122: // pattern_list: newline_list pattern ')' compound_list
 #line 770 "../bashcpp/parse.yy"
                         { yylhs.value.as < PATTERN_LIST* > () = make_pattern_list (yystack_[2].value.as < WORD_LIST* > (), yystack_[0].value.as < COMMAND* > ()); }
-#line 1950 "parse.cc"
+#line 1964 "parse.cc"
     break;
 
   case 123: // pattern_list: newline_list pattern ')' newline_list
 #line 772 "../bashcpp/parse.yy"
-                        { yylhs.value.as < PATTERN_LIST* > () = make_pattern_list (yystack_[2].value.as < WORD_LIST* > (), (COMMAND *)NULL); }
-#line 1956 "parse.cc"
+                        { yylhs.value.as < PATTERN_LIST* > () = make_pattern_list (yystack_[2].value.as < WORD_LIST* > (), nullptr); }
+#line 1970 "parse.cc"
     break;
 
   case 124: // pattern_list: newline_list '(' pattern ')' compound_list
 #line 774 "../bashcpp/parse.yy"
                         { yylhs.value.as < PATTERN_LIST* > () = make_pattern_list (yystack_[2].value.as < WORD_LIST* > (), yystack_[0].value.as < COMMAND* > ()); }
-#line 1962 "parse.cc"
+#line 1976 "parse.cc"
     break;
 
   case 125: // pattern_list: newline_list '(' pattern ')' newline_list
 #line 776 "../bashcpp/parse.yy"
-                        { yylhs.value.as < PATTERN_LIST* > () = make_pattern_list (yystack_[2].value.as < WORD_LIST* > (), (COMMAND *)NULL); }
-#line 1968 "parse.cc"
+                        { yylhs.value.as < PATTERN_LIST* > () = make_pattern_list (yystack_[2].value.as < WORD_LIST* > (), nullptr); }
+#line 1982 "parse.cc"
     break;
 
   case 126: // case_clause_sequence: pattern_list SEMI_SEMI
 #line 780 "../bashcpp/parse.yy"
                         { yylhs.value.as < PATTERN_LIST* > () = yystack_[1].value.as < PATTERN_LIST* > (); }
-#line 1974 "parse.cc"
+#line 1988 "parse.cc"
     break;
 
   case 127: // case_clause_sequence: case_clause_sequence pattern_list SEMI_SEMI
 #line 782 "../bashcpp/parse.yy"
                         { yystack_[1].value.as < PATTERN_LIST* > ()->next = yystack_[2].value.as < PATTERN_LIST* > (); yylhs.value.as < PATTERN_LIST* > () = yystack_[1].value.as < PATTERN_LIST* > (); }
-#line 1980 "parse.cc"
+#line 1994 "parse.cc"
     break;
 
   case 128: // case_clause_sequence: pattern_list SEMI_AND
 #line 784 "../bashcpp/parse.yy"
                         { yystack_[1].value.as < PATTERN_LIST* > ()->flags |= CASEPAT_FALLTHROUGH; yylhs.value.as < PATTERN_LIST* > () = yystack_[1].value.as < PATTERN_LIST* > (); }
-#line 1986 "parse.cc"
+#line 2000 "parse.cc"
     break;
 
   case 129: // case_clause_sequence: case_clause_sequence pattern_list SEMI_AND
 #line 786 "../bashcpp/parse.yy"
                         { yystack_[1].value.as < PATTERN_LIST* > ()->flags |= CASEPAT_FALLTHROUGH; yystack_[1].value.as < PATTERN_LIST* > ()->next = yystack_[2].value.as < PATTERN_LIST* > (); yylhs.value.as < PATTERN_LIST* > () = yystack_[1].value.as < PATTERN_LIST* > (); }
-#line 1992 "parse.cc"
+#line 2006 "parse.cc"
     break;
 
   case 130: // case_clause_sequence: pattern_list SEMI_SEMI_AND
 #line 788 "../bashcpp/parse.yy"
                         { yystack_[1].value.as < PATTERN_LIST* > ()->flags |= CASEPAT_TESTNEXT; yylhs.value.as < PATTERN_LIST* > () = yystack_[1].value.as < PATTERN_LIST* > (); }
-#line 1998 "parse.cc"
+#line 2012 "parse.cc"
     break;
 
   case 131: // case_clause_sequence: case_clause_sequence pattern_list SEMI_SEMI_AND
 #line 790 "../bashcpp/parse.yy"
                         { yystack_[1].value.as < PATTERN_LIST* > ()->flags |= CASEPAT_TESTNEXT; yystack_[1].value.as < PATTERN_LIST* > ()->next = yystack_[2].value.as < PATTERN_LIST* > (); yylhs.value.as < PATTERN_LIST* > () = yystack_[1].value.as < PATTERN_LIST* > (); }
-#line 2004 "parse.cc"
+#line 2018 "parse.cc"
     break;
 
   case 132: // pattern: WORD
 #line 794 "../bashcpp/parse.yy"
-                        { yylhs.value.as < WORD_LIST* > () = make_word_list (yystack_[0].value.as < WORD_DESC* > (), (WORD_LIST *)NULL); }
-#line 2010 "parse.cc"
+                        { yylhs.value.as < WORD_LIST* > () = make_word_list (yystack_[0].value.as < WORD_DESC* > (), nullptr); }
+#line 2024 "parse.cc"
     break;
 
   case 133: // pattern: pattern '|' WORD
 #line 796 "../bashcpp/parse.yy"
                         { yylhs.value.as < WORD_LIST* > () = make_word_list (yystack_[0].value.as < WORD_DESC* > (), yystack_[2].value.as < WORD_LIST* > ()); }
-#line 2016 "parse.cc"
+#line 2030 "parse.cc"
     break;
 
   case 134: // list: newline_list list0
@@ -2022,13 +2036,13 @@ namespace bash {
 			  if (need_here_doc)
 			    gather_here_documents ();
 			 }
-#line 2026 "parse.cc"
+#line 2040 "parse.cc"
     break;
 
   case 135: // compound_list: list
 #line 812 "../bashcpp/parse.yy"
                 { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 2032 "parse.cc"
+#line 2046 "parse.cc"
     break;
 
   case 136: // compound_list: newline_list list1
@@ -2036,42 +2050,42 @@ namespace bash {
                         {
 			  yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > ();
 			}
-#line 2040 "parse.cc"
+#line 2054 "parse.cc"
     break;
 
   case 137: // list0: list1 '\n' newline_list
 #line 819 "../bashcpp/parse.yy"
                 { yylhs.value.as < COMMAND* > () = yystack_[2].value.as < COMMAND* > (); }
-#line 2046 "parse.cc"
+#line 2060 "parse.cc"
     break;
 
   case 138: // list0: list1 '&' newline_list
 #line 821 "../bashcpp/parse.yy"
                         {
 			  if (yystack_[2].value.as < COMMAND* > ()->type == cm_connection)
-			    yylhs.value.as < COMMAND* > () = connect_async_list (yystack_[2].value.as < COMMAND* > (), (COMMAND *)NULL, '&');
+			    yylhs.value.as < COMMAND* > () = connect_async_list (yystack_[2].value.as < COMMAND* > (), nullptr, '&');
 			  else
-			    yylhs.value.as < COMMAND* > () = command_connect (yystack_[2].value.as < COMMAND* > (), (COMMAND *)NULL, '&');
+			    yylhs.value.as < COMMAND* > () = command_connect (yystack_[2].value.as < COMMAND* > (), nullptr, '&');
 			}
-#line 2057 "parse.cc"
+#line 2071 "parse.cc"
     break;
 
   case 139: // list0: list1 ';' newline_list
 #line 827 "../bashcpp/parse.yy"
                 { yylhs.value.as < COMMAND* > () = yystack_[2].value.as < COMMAND* > (); }
-#line 2063 "parse.cc"
+#line 2077 "parse.cc"
     break;
 
   case 140: // list1: list1 AND_AND newline_list list1
 #line 832 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = command_connect (yystack_[3].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), AND_AND); }
-#line 2069 "parse.cc"
+#line 2083 "parse.cc"
     break;
 
   case 141: // list1: list1 OR_OR newline_list list1
 #line 834 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = command_connect (yystack_[3].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), OR_OR); }
-#line 2075 "parse.cc"
+#line 2089 "parse.cc"
     break;
 
   case 142: // list1: list1 '&' newline_list list1
@@ -2082,43 +2096,43 @@ namespace bash {
 			  else
 			    yylhs.value.as < COMMAND* > () = command_connect (yystack_[3].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), '&');
 			}
-#line 2086 "parse.cc"
+#line 2100 "parse.cc"
     break;
 
   case 143: // list1: list1 ';' newline_list list1
 #line 843 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = command_connect (yystack_[3].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), ';'); }
-#line 2092 "parse.cc"
+#line 2106 "parse.cc"
     break;
 
   case 144: // list1: list1 '\n' newline_list list1
 #line 845 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = command_connect (yystack_[3].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), ';'); }
-#line 2098 "parse.cc"
+#line 2112 "parse.cc"
     break;
 
   case 145: // list1: pipeline_command
 #line 847 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 2104 "parse.cc"
+#line 2118 "parse.cc"
     break;
 
   case 148: // list_terminator: '\n'
 #line 855 "../bashcpp/parse.yy"
                 { yylhs.value.as < int > () = '\n'; }
-#line 2110 "parse.cc"
+#line 2124 "parse.cc"
     break;
 
   case 149: // list_terminator: ';'
 #line 857 "../bashcpp/parse.yy"
                 { yylhs.value.as < int > () = ';'; }
-#line 2116 "parse.cc"
+#line 2130 "parse.cc"
     break;
 
   case 150: // list_terminator: yacc_EOF
 #line 859 "../bashcpp/parse.yy"
                 { yylhs.value.as < int > () = yacc_EOF; }
-#line 2122 "parse.cc"
+#line 2136 "parse.cc"
     break;
 
   case 153: // simple_list: simple_list1
@@ -2135,16 +2149,16 @@ namespace bash {
 			      YYACCEPT;
 			    }
 			}
-#line 2139 "parse.cc"
+#line 2153 "parse.cc"
     break;
 
   case 154: // simple_list: simple_list1 '&'
 #line 886 "../bashcpp/parse.yy"
                         {
 			  if (yystack_[1].value.as < COMMAND* > ()->type == cm_connection)
-			    yylhs.value.as < COMMAND* > () = connect_async_list (yystack_[1].value.as < COMMAND* > (), (COMMAND *)NULL, '&');
+			    yylhs.value.as < COMMAND* > () = connect_async_list (yystack_[1].value.as < COMMAND* > (), nullptr, '&');
 			  else
-			    yylhs.value.as < COMMAND* > () = command_connect (yystack_[1].value.as < COMMAND* > (), (COMMAND *)NULL, '&');
+			    yylhs.value.as < COMMAND* > () = command_connect (yystack_[1].value.as < COMMAND* > (), nullptr, '&');
 			  if (need_here_doc)
 			    gather_here_documents ();
 			  if ((parser_state & PST_CMDSUBST) && current_token == shell_eof_token)
@@ -2155,7 +2169,7 @@ namespace bash {
 			      YYACCEPT;
 			    }
 			}
-#line 2159 "parse.cc"
+#line 2173 "parse.cc"
     break;
 
   case 155: // simple_list: simple_list1 ';'
@@ -2172,19 +2186,19 @@ namespace bash {
 			      YYACCEPT;
 			    }
 			}
-#line 2176 "parse.cc"
+#line 2190 "parse.cc"
     break;
 
   case 156: // simple_list1: simple_list1 AND_AND newline_list simple_list1
 #line 917 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = command_connect (yystack_[3].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), AND_AND); }
-#line 2182 "parse.cc"
+#line 2196 "parse.cc"
     break;
 
   case 157: // simple_list1: simple_list1 OR_OR newline_list simple_list1
 #line 919 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = command_connect (yystack_[3].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), OR_OR); }
-#line 2188 "parse.cc"
+#line 2202 "parse.cc"
     break;
 
   case 158: // simple_list1: simple_list1 '&' simple_list1
@@ -2195,25 +2209,25 @@ namespace bash {
 			  else
 			    yylhs.value.as < COMMAND* > () = command_connect (yystack_[2].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), '&');
 			}
-#line 2199 "parse.cc"
+#line 2213 "parse.cc"
     break;
 
   case 159: // simple_list1: simple_list1 ';' simple_list1
 #line 928 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = command_connect (yystack_[2].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), ';'); }
-#line 2205 "parse.cc"
+#line 2219 "parse.cc"
     break;
 
   case 160: // simple_list1: pipeline_command
 #line 931 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 2211 "parse.cc"
+#line 2225 "parse.cc"
     break;
 
   case 161: // pipeline_command: pipeline
 #line 935 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 2217 "parse.cc"
+#line 2231 "parse.cc"
     break;
 
   case 162: // pipeline_command: BANG pipeline_command
@@ -2223,7 +2237,7 @@ namespace bash {
 			    yystack_[0].value.as < COMMAND* > ()->flags ^= CMD_INVERT_RETURN;	/* toggle */
 			  yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > ();
 			}
-#line 2227 "parse.cc"
+#line 2241 "parse.cc"
     break;
 
   case 163: // pipeline_command: timespec pipeline_command
@@ -2233,7 +2247,7 @@ namespace bash {
 			    yystack_[0].value.as < COMMAND* > ()->flags |= yystack_[1].value.as < int > ();
 			  yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > ();
 			}
-#line 2237 "parse.cc"
+#line 2251 "parse.cc"
     break;
 
   case 164: // pipeline_command: timespec list_terminator
@@ -2248,7 +2262,7 @@ namespace bash {
 			     terminate this, one to terminate the command) */
 			  x.word = 0;
 			  x.redirect = 0;
-			  yylhs.value.as < COMMAND* > () = make_simple_command (x, (COMMAND *)NULL);
+			  yylhs.value.as < COMMAND* > () = make_simple_command (x, nullptr);
 			  yylhs.value.as < COMMAND* > ()->flags |= yystack_[1].value.as < int > ();
 			  /* XXX - let's cheat and push a newline back */
 			  if (yystack_[0].value.as < int > () == '\n')
@@ -2257,7 +2271,7 @@ namespace bash {
 			    token_to_read = ';';
 			  parser_state &= ~PST_REDIRLIST;	/* make_simple_command sets this */
 			}
-#line 2261 "parse.cc"
+#line 2275 "parse.cc"
     break;
 
   case 165: // pipeline_command: BANG list_terminator
@@ -2273,7 +2287,7 @@ namespace bash {
 			     terminate this, one to terminate the command) */
 			  x.word = 0;
 			  x.redirect = 0;
-			  yylhs.value.as < COMMAND* > () = make_simple_command (x, (COMMAND *)NULL);
+			  yylhs.value.as < COMMAND* > () = make_simple_command (x, nullptr);
 			  yylhs.value.as < COMMAND* > ()->flags |= CMD_INVERT_RETURN;
 			  /* XXX - let's cheat and push a newline back */
 			  if (yystack_[0].value.as < int > () == '\n')
@@ -2282,13 +2296,13 @@ namespace bash {
 			    token_to_read = ';';
 			  parser_state &= ~PST_REDIRLIST;	/* make_simple_command sets this */
 			}
-#line 2286 "parse.cc"
+#line 2300 "parse.cc"
     break;
 
   case 166: // pipeline: pipeline '|' newline_list pipeline
 #line 992 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = command_connect (yystack_[3].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), '|'); }
-#line 2292 "parse.cc"
+#line 2306 "parse.cc"
     break;
 
   case 167: // pipeline: pipeline BAR_AND newline_list pipeline
@@ -2315,41 +2329,41 @@ namespace bash {
 
 			  yylhs.value.as < COMMAND* > () = command_connect (yystack_[3].value.as < COMMAND* > (), yystack_[0].value.as < COMMAND* > (), '|');
 			}
-#line 2319 "parse.cc"
+#line 2333 "parse.cc"
     break;
 
   case 168: // pipeline: command
 #line 1017 "../bashcpp/parse.yy"
                         { yylhs.value.as < COMMAND* > () = yystack_[0].value.as < COMMAND* > (); }
-#line 2325 "parse.cc"
+#line 2339 "parse.cc"
     break;
 
   case 169: // timespec: TIME
 #line 1021 "../bashcpp/parse.yy"
                         { yylhs.value.as < int > () = CMD_TIME_PIPELINE; }
-#line 2331 "parse.cc"
+#line 2345 "parse.cc"
     break;
 
   case 170: // timespec: TIME TIMEOPT
 #line 1023 "../bashcpp/parse.yy"
                         { yylhs.value.as < int > () = (CMD_TIME_PIPELINE | CMD_TIME_POSIX); }
-#line 2337 "parse.cc"
+#line 2351 "parse.cc"
     break;
 
   case 171: // timespec: TIME TIMEIGN
 #line 1025 "../bashcpp/parse.yy"
                         { yylhs.value.as < int > () = (CMD_TIME_PIPELINE | CMD_TIME_POSIX); }
-#line 2343 "parse.cc"
+#line 2357 "parse.cc"
     break;
 
   case 172: // timespec: TIME TIMEOPT TIMEIGN
 #line 1027 "../bashcpp/parse.yy"
                         { yylhs.value.as < int > () = (CMD_TIME_PIPELINE | CMD_TIME_POSIX); }
-#line 2349 "parse.cc"
+#line 2363 "parse.cc"
     break;
 
 
-#line 2353 "parse.cc"
+#line 2367 "parse.cc"
 
             default:
               break;
@@ -2905,17 +2919,17 @@ namespace bash {
   const short
   parser::yyrline_[] =
   {
-       0,    88,    88,    99,   108,   123,   140,   150,   152,   156,
-     162,   168,   174,   180,   186,   192,   198,   204,   210,   216,
-     222,   228,   234,   240,   246,   253,   260,   267,   274,   281,
-     288,   294,   300,   306,   312,   318,   324,   330,   336,   342,
-     348,   354,   360,   366,   372,   378,   384,   390,   396,   402,
-     408,   414,   420,   428,   430,   432,   436,   440,   451,   453,
-     457,   459,   461,   477,   479,   483,   485,   487,   489,   491,
-     493,   495,   497,   499,   501,   503,   507,   512,   517,   522,
-     527,   532,   537,   542,   549,   555,   561,   567,   575,   580,
-     585,   590,   595,   600,   605,   610,   617,   622,   627,   634,
-     636,   638,   640,   644,   646,   677,   684,   689,   706,   711,
+       0,    88,    88,   100,   110,   126,   144,   155,   157,   161,
+     167,   173,   179,   185,   191,   197,   203,   209,   215,   221,
+     227,   233,   239,   245,   251,   258,   265,   272,   279,   286,
+     293,   299,   305,   311,   317,   323,   329,   335,   341,   347,
+     353,   359,   365,   371,   377,   383,   389,   395,   401,   407,
+     413,   419,   425,   433,   435,   437,   441,   445,   452,   454,
+     458,   460,   462,   478,   480,   484,   486,   488,   490,   492,
+     494,   496,   498,   500,   502,   504,   508,   513,   518,   523,
+     528,   533,   538,   543,   550,   556,   562,   568,   576,   581,
+     586,   591,   596,   601,   606,   611,   618,   623,   628,   635,
+     637,   639,   641,   645,   647,   677,   684,   689,   706,   711,
      728,   735,   737,   739,   744,   748,   752,   756,   758,   760,
      764,   765,   769,   771,   773,   775,   779,   781,   783,   785,
      787,   789,   793,   795,   804,   812,   813,   819,   820,   827,
@@ -2955,7 +2969,11 @@ namespace bash {
 
 #line 26 "../bashcpp/parse.yy"
 } // bash
-#line 2959 "parse.cc"
+#line 2973 "parse.cc"
 
 #line 1029 "../bashcpp/parse.yy"
 
+
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif

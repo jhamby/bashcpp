@@ -43,8 +43,11 @@
 #define BASH_NSIG	NSIG+3
 
 /* Flags values for decode_signal() */
-#define DSIG_SIGPREFIX	0x01		/* don't allow `SIG' PREFIX */
-#define DSIG_NOCASE	0x02		/* case-insensitive comparison */
+enum decode_signal_flags {
+  DSIG_NOFLAGS =	   0,
+  DSIG_SIGPREFIX =	0x01,		/* don't allow `SIG' PREFIX */
+  DSIG_NOCASE =		0x02		/* case-insensitive comparison */
+};
 
 namespace bash
 {

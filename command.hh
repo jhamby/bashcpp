@@ -43,7 +43,10 @@ enum r_instruction {
 };
 
 /* Redirection flags; values for rflags */
-constexpr int REDIR_VARASSIGN = 0x01;
+enum redir_flags {
+  REDIR_NOFLAGS =	   0,
+  REDIR_VARASSIGN =	0x01
+};
 
 /* Redirection errors. */
 enum redir_error_type {
@@ -177,22 +180,46 @@ enum subshell_flags {
 class WORD_DESC {
 public:
   WORD_DESC() : flags(W_NOFLAGS) {}
+
   WORD_DESC(const std::string &w) : word(w), flags(W_NOFLAGS) {}
   WORD_DESC(const char *w) : word(w), flags(W_NOFLAGS) {}
   WORD_DESC(const WORD_DESC &w) : word(w.word), flags(w.flags) {}
+
 #if __cplusplus >= 201103L
   WORD_DESC(WORD_DESC &&w) noexcept : word(std::move(w.word)), flags(w.flags) {}
 #endif
 
   std::string word;			/* C++ string. */
   word_desc_flags flags;		/* Flags associated with this word. */
+
 #if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;				// silence clang -Wpadded warning
+  int _pad;			// silence clang -Wpadded warning
 #endif
 };
 
-/* A vector of pointers to words. */
-typedef std::vector<WORD_DESC *> WORD_LIST;
+/* This class holds a vector of WORD_DESC * and knows how to delete them. */
+class WORD_LIST : public std::vector<WORD_DESC *> {
+public:
+  WORD_LIST () {}
+
+  // Create a list of one word.
+  WORD_LIST (WORD_DESC *word) {
+    push_back (word);
+  }
+
+  // List destructor deletes all of the WORD_DESC items.
+  ~WORD_LIST () noexcept {
+    for (std::vector<WORD_DESC *>::iterator it = begin (); it != end (); ++it)
+      {
+	delete *it;
+      }
+  }
+
+private:
+  // disallow copy constructor and copy assignment operator
+  WORD_LIST (const WORD_LIST &);
+  WORD_LIST& operator=(const WORD_LIST &);
+};
 
 
 /* **************************************************************** */
@@ -206,23 +233,93 @@ typedef std::vector<WORD_DESC *> WORD_LIST;
    use the file in FILENAME.  Out-of-range descriptors are identified by a
    negative DEST. */
 
-union REDIRECTEE {
-  int dest;			/* Place to redirect REDIRECTOR to, or ... */
-  WORD_DESC *filename;		/* filename to redirect to. */
+class REDIRECTEE {
+public:
+  // C++03-compatible constructors.
+  REDIRECTEE (int dest_) { r.dest = dest_; }
+  REDIRECTEE (WORD_DESC *filename_) { r.filename = filename_; }
+
+  union redirectee_t {
+    int dest;			/* Place to redirect REDIRECTOR to, or ... */
+    WORD_DESC *filename;	/* filename to redirect to. */
+  } r;
 };
 
 /* Structure describing a redirection.  If REDIRECTOR is negative, the parser
-   (or translator in redir.c) encountered an out-of-range file descriptor. */
-struct REDIRECT {
-  char *here_doc_eof;		/* The word that appeared in <<foo. */
+   (or translator in redir.c) encountered an out-of-range file descriptor.
+   There may also be a next element, creating a list of redirections.  When
+   the object is deleted, the entire list will be deleted along with it.  */
+class REDIRECT {
+public:
+  REDIRECT (REDIRECTEE source, r_instruction instruction,
+	    REDIRECTEE dest_and_filename, redir_flags flags);
+
+  ~REDIRECT ()
+  {
+    if (rflags & REDIR_VARASSIGN)
+      delete redirector.r.filename;
+
+    switch (instruction)
+      {
+	case r_reading_until:
+	case r_deblank_reading_until:
+	case r_reading_string:
+	case r_output_direction:
+	case r_input_direction:
+	case r_inputa_direction:
+	case r_appending_to:
+	case r_err_and_out:
+	case r_append_err_and_out:
+	case r_input_output:
+	case r_output_force:
+	case r_duplicating_input_word:
+	case r_duplicating_output_word:
+	case r_move_input_word:
+	case r_move_output_word:
+	  delete redirectee.r.filename;
+	  break;
+	case r_duplicating_input:
+	case r_duplicating_output:
+	case r_move_input:
+	case r_close_this:
+	case r_move_output:
+	  break;
+      }
+  }
+
+  std::string here_doc_eof;	/* The word that appeared in <<foo. */
   REDIRECTEE redirector;	/* Descriptor or varname to be redirected. */
   REDIRECTEE redirectee;	/* File descriptor or filename */
-  uint32_t rflags;		/* Private flags for this redirection */
+  redir_flags rflags;		/* Private flags for this redirection */
   uint32_t flags;		/* Flag value for `open'. */
   r_instruction instruction;	/* What to do with the information. */
 #if SIZEOF_INT != SIZEOF_CHAR_P
   int _pad;			// silence clang -Wpadded warning
 #endif
+};
+
+/* This class holds a vector of REDIRECT * and knows how to delete them. */
+class REDIRECT_LIST : public std::vector<REDIRECT *> {
+public:
+  REDIRECT_LIST () {}
+
+  // Create a list of a single redirect.
+  REDIRECT_LIST (REDIRECT *redir) {
+    push_back (redir);
+  }
+
+  // List destructor deletes all of the REDIRECT items.
+  ~REDIRECT_LIST () noexcept {
+    for (std::vector<REDIRECT *>::iterator it = begin (); it != end (); ++it)
+      {
+	delete *it;
+      }
+  }
+
+private:
+  // disallow copy constructor and copy assignment operator
+  REDIRECT_LIST (const REDIRECT_LIST &);
+  REDIRECT_LIST& operator=(const REDIRECT_LIST &);
 };
 
 /* An element used in parsing.  A single word or a single redirection.
@@ -256,21 +353,39 @@ enum cmd_flags {
 /* What a command looks like (virtual base class). */
 class COMMAND {
 public:
-  COMMAND();
-  virtual ~COMMAND () noexcept;	/* virtual base class destructor */
+  COMMAND () {}
+  COMMAND (int line_) : line (line_) {}
+  virtual ~COMMAND () noexcept;		/* virtual base class destructor */
 
-  cmd_flags flags;		/* Flags controlling execution environment. */
-  unsigned int line;		/* line number the command starts on */
+  virtual COMMAND *clone ();		// return a new deep copy of the command
+
+  cmd_flags flags;			/* Flags controlling execution environment. */
+  int line;				/* line number the command starts on */
 
 protected:
-  REDIRECT *redirects;		/* Special redirects for FOR CASE, etc. */
+  REDIRECT_LIST redirects;		/* Special redirects for FOR CASE, etc. */
+
+private:
+  // disallow copy constructor and copy assignment operator
+  COMMAND (const COMMAND &);
+  COMMAND& operator= (const COMMAND &);
 };
 
 /* Structure used to represent the CONNECTION type. */
-struct CONNECTION {
+class CONNECTION : public COMMAND {
+public:
+  CONNECTION (COMMAND *com1, COMMAND *com2, int con_)
+	: first (com1), second (com2), connector (con_) {}
+
+  virtual ~CONNECTION () noexcept override;
+  virtual COMMAND *clone () override;
+
   COMMAND *first;		/* Pointer to the first command. */
   COMMAND *second;		/* Pointer to the second command. */
   int connector;		/* What separates this command from others. */
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  int _pad;			// silence clang -Wpadded warning
+#endif
 };
 
 /* Structures used to represent the CASE command. */
@@ -283,6 +398,14 @@ enum pattern_list_flags {
 
 /* Pattern/action structure for CASE_COM. */
 struct PATTERN_LIST {
+  ~PATTERN_LIST ()
+  {
+    delete next;		// recursively delete the rest of the list
+    delete patterns;
+    delete action;
+  }
+
+  PATTERN_LIST *next;		/* Clause to try in case this one failed. */
   WORD_LIST *patterns;		/* Linked list of patterns to test. */
   COMMAND *action;		/* Thing to execute if a pattern matches. */
   pattern_list_flags flags;
@@ -294,7 +417,12 @@ struct PATTERN_LIST {
 /* The CASE command. */
 class CASE_COM : public COMMAND {
 public:
+  CASE_COM (WORD_DESC *word_, PATTERN_LIST *clauses_, int lineno_) :
+	COMMAND (lineno_), word (word_), clauses (clauses_) {}
+
   virtual ~CASE_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
   WORD_DESC *word;		/* The thing to test. */
   PATTERN_LIST *clauses;	/* The clauses to test against, or nullptr. */
@@ -303,7 +431,12 @@ protected:
 /* FOR command. */
 class FOR_COM : public COMMAND {
 public:
+  FOR_COM (WORD_DESC *name_, WORD_LIST *map_list_, COMMAND *action_, int lineno_)
+	: COMMAND (lineno_), name (name_), map_list (map_list_), action (action_) {}
+
   virtual ~FOR_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
   WORD_DESC *name;	/* The variable name to get mapped over. */
   WORD_LIST *map_list;	/* The things to map over.  This is never nullptr. */
@@ -315,7 +448,11 @@ protected:
 #if defined (ARITH_FOR_COMMAND)
 class ARITH_FOR_COM : public COMMAND {
 public:
+  ARITH_FOR_COM () {}
+
   virtual ~ARITH_FOR_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
   WORD_LIST *init;
   WORD_LIST *test;
@@ -328,7 +465,12 @@ protected:
 /* KSH SELECT command. */
 class SELECT_COM : public COMMAND {
 public:
+  SELECT_COM (WORD_DESC *name_, WORD_LIST *map_list_, COMMAND *action_, int lineno_)
+	: COMMAND (lineno_), name (name_), map_list (map_list_), action (action_) {}
+
   virtual ~SELECT_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
   WORD_DESC *name;	/* The variable name to get mapped over. */
   WORD_LIST *map_list;	/* The things to map over.  This is never nullptr. */
@@ -342,19 +484,32 @@ protected:
 class IF_COM : public COMMAND {
 public:
   virtual ~IF_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
   COMMAND *test;		/* Thing to test. */
   COMMAND *true_case;		/* What to do if the test returned non-zero. */
   COMMAND *false_case;		/* What to do if the test returned zero. */
 };
 
-/* WHILE command. */
-class WHILE_COM : public COMMAND {
+/* UNTIL_WHILE command. */
+class UNTIL_WHILE_COM : public COMMAND {
 public:
-  virtual ~WHILE_COM () noexcept override;
+  virtual ~UNTIL_WHILE_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
   COMMAND *test;		/* Thing to test. */
   COMMAND *action;		/* Thing to do while test is non-zero. */
+
+  enum loop_type {		// is this an until or a while loop?
+    UNTIL = 0,
+    WHILE
+  } loop_type;
+
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  int _pad;			// silence clang -Wpadded warning
+#endif
 };
 
 #if defined (DPAREN_ARITHMETIC)
@@ -364,6 +519,8 @@ protected:
 class ARITH_COM : public COMMAND {
 public:
   virtual ~ARITH_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
   WORD_LIST *exp;
 };
@@ -380,19 +537,30 @@ enum cond_com_type {
   COND_EXPR =	6
 };
 
+#if defined (COND_COMMAND)
 class COND_COM : public COMMAND {
 public:
   virtual ~COND_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
-  int type;
   WORD_DESC *op;
   COND_COM *left, *right;
+  int type;
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  int _pad;			// silence clang -Wpadded warning
+#endif
 };
+#endif
 
 /* The "simple" command.  Just a collection of words and redirects. */
 class SIMPLE_COM : public COMMAND {
 public:
+  SIMPLE_COM (ELEMENT, COMMAND *);
+
   virtual ~SIMPLE_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
   WORD_LIST *words;		/* The program name, the arguments,
 				   variable assignments, etc. */
@@ -402,10 +570,12 @@ protected:
 class FUNCTION_DEF : public COMMAND {
 public:
   virtual ~FUNCTION_DEF () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
   WORD_DESC *name;		/* The name of the function. */
   COMMAND *command;		/* The parsed execution tree. */
-  char *source_file;		/* file in which function was defined, if any */
+  std::string source_file;		/* file in which function was defined, if any */
 };
 
 /* A command that is `grouped' allows pipes and redirections to affect all
@@ -413,13 +583,20 @@ protected:
 class GROUP_COM : public COMMAND {
 public:
   virtual ~GROUP_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
+  COMMAND *command;
 };
 
+/* A command that is run in a subshell. */
 class SUBSHELL_COM : public COMMAND {
 public:
   virtual ~SUBSHELL_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
+  COMMAND *command;
 };
 
 enum coproc_status {
@@ -428,7 +605,7 @@ enum coproc_status {
 };
 
 struct Coproc {
-  char *c_name;
+  std::string c_name;
   pid_t c_pid;
   int c_rfd;
   int c_wfd;
@@ -442,6 +619,8 @@ struct Coproc {
 class COPROC_COM : public COMMAND {
 public:
   virtual ~COPROC_COM () noexcept override;
+  virtual COMMAND *clone () override;
+
 protected:
   std::string name;
   COMMAND *command;

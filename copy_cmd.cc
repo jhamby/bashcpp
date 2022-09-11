@@ -33,36 +33,6 @@
 namespace bash
 {
 
-static PATTERN_LIST *copy_case_clause (PATTERN_LIST *);
-static PATTERN_LIST *copy_case_clauses (PATTERN_LIST *);
-static FOR_COM *copy_for_command (FOR_COM *);
-#if defined (ARITH_FOR_COMMAND)
-static ARITH_FOR_COM *copy_arith_for_command (ARITH_FOR_COM *);
-#endif
-static GROUP_COM *copy_group_command (GROUP_COM *);
-static SUBSHELL_COM *copy_subshell_command (SUBSHELL_COM *);
-static COPROC_COM *copy_coproc_command (COPROC_COM *);
-static CASE_COM *copy_case_command (CASE_COM *);
-static WHILE_COM *copy_while_command (WHILE_COM *);
-static IF_COM *copy_if_command (IF_COM *);
-#if defined (DPAREN_ARITHMETIC)
-static ARITH_COM *copy_arith_command (ARITH_COM *);
-#endif
-#if defined (COND_COMMAND)
-static COND_COM *copy_cond_command (COND_COM *);
-#endif
-static SIMPLE_COM *copy_simple_command (SIMPLE_COM *);
-
-WORD_DESC *
-copy_word (WORD_DESC *w)
-{
-  WORD_DESC *new_word;
-
-  new_word = make_bare_word (w->word);
-  new_word->flags = w->flags;
-  return new_word;
-}
-
 /* Copy the chain of words in LIST.  Return a pointer to
    the new chain. */
 WORD_LIST *

@@ -50,154 +50,14 @@
 namespace bash
 {
 
-// int here_doc_first_line = 0;
-
-WORD_DESC *
-make_word_flags (WORD_DESC *w, const char *string)
-{
-  int i;
-  size_t slen;
-  DECLARE_MBSTATE;
-
-  i = 0;
-  slen = strlen (string);
-  while (i < slen)
-    {
-      switch (string[i])
-	{
-	case '$':
-	  w->flags |= W_HASDOLLAR;
-	  break;
-	case '\\':
-	  break;	/* continue the loop */
-	case '\'':
-	case '`':
-	case '"':
-	  w->flags |= W_QUOTED;
-	  break;
-	}
-
-      ADVANCE_CHAR (string, slen, i);
-    }
-
-  return w;
-}
-
-WORD_DESC *
-make_word (const char *string)
-{
-  WORD_DESC *temp;
-
-  temp = make_bare_word (string);
-  return make_word_flags (temp, string);
-}
-
-WORD_DESC *
-make_word_from_token (int token)
-{
-  char tokenizer[2];
-
-  tokenizer[0] = token;
-  tokenizer[1] = '\0';
-
-  return make_word (tokenizer);
-}
-
-WORD_LIST *
-make_word_list (WORD_DESC *word, WORD_LIST *wlink)
-{
-  WORD_LIST *temp;
-
-  ocache_alloc (wlcache, WORD_LIST, temp);
-
-  temp->word = word;
-  temp->next = wlink;
-  return temp;
-}
-
-COMMAND *
-make_command (enum command_type type, simple_com *pointer)
-{
-  COMMAND *temp;
-
-  temp = (COMMAND *)xmalloc (sizeof (COMMAND));
-  temp->type = type;
-  temp->value.Simple = pointer;
-  temp->value.Simple->flags = temp->flags = 0;
-  temp->redirects = (REDIRECT *)NULL;
-  return temp;
-}
-
-COMMAND *
-command_connect (COMMAND *com1, COMMAND *com2, int connector)
-{
-  connection *temp = (connection *)xmalloc (sizeof (connection));
-  temp->connector = connector;
-  temp->first = com1;
-  temp->second = com2;
-  return make_command (cm_connection, (simple_com *)temp);
-}
-
-static COMMAND *
-make_for_or_select (enum command_type type, WORD_DESC *name,
-                    WORD_LIST *map_list, COMMAND *action,
-                    int lineno)
-{
-  for_com *temp;
-
-  temp = (for_com *)xmalloc (sizeof (for_com));
-  temp->flags = 0;
-  temp->name = name;
-  temp->line = lineno;
-  temp->map_list = map_list;
-  temp->action = action;
-  return make_command (type, (simple_com *)temp);
-}
-
-COMMAND *
-make_for_command (WORD_DESC *name, WORD_LIST *map_list,
-                  COMMAND *action, int lineno)
-{
-  return make_for_or_select (cm_for, name, map_list, action, lineno);
-}
-
-COMMAND *
-make_select_command (WORD_DESC *name, WORD_LIST *map_list,
-                     COMMAND *action, int lineno)
-{
-#if defined (SELECT_COMMAND)
-  return make_for_or_select (cm_select, name, map_list, action, lineno);
-#else
-  set_exit_status (2);
-  return (COMMAND *)NULL;
-#endif
-}
-
-#if defined (ARITH_FOR_COMMAND)
-static WORD_LIST *
-make_arith_for_expr (const char *s)
-{
-  WORD_LIST *result;
-  WORD_DESC *wd;
-
-  if (s == 0 || *s == '\0')
-    return (WORD_LIST *)NULL;
-  wd = make_word (s);
-  wd->flags |= (W_NOGLOB | W_NOSPLIT | W_QUOTED | W_DQUOTE);	/* no word splitting or globbing */
-#if defined (PROCESS_SUBSTITUTION)
-  wd->flags |= W_NOPROCSUB;	/* no process substitution */
-#endif
-  result = make_word_list (wd, (WORD_LIST *)NULL);
-  return result;
-}
-#endif
+// TODO: try to move all of the constructors inline
 
 /* Note that this function calls dispose_words on EXPRS, since it doesn't
    use the word list directly.  We free it here rather than at the caller
    because no other function in this file requires that the caller free
    any arguments. */
-COMMAND *
-make_arith_for_command (WORD_LIST *exprs, COMMAND *action, int lineno)
+ARITH_FOR_COM *
+Shell::make_arith_for_command (WORD_LIST *exprs, COMMAND *action, int lineno)
 {
 #if defined (ARITH_FOR_COMMAND)
   arith_for_com *temp;
@@ -269,29 +129,6 @@ make_arith_for_command (WORD_LIST *exprs, COMMAND *action, int lineno)
   set_exit_status (2);
   return (COMMAND *)NULL;
 #endif /* ARITH_FOR_COMMAND */
-}
-
-COMMAND *
-make_group_command (COMMAND *command)
-{
-  group_com *temp;
-
-  temp = (group_com *)xmalloc (sizeof (group_com));
-  temp->command = command;
-  return make_command (cm_group, (simple_com *)temp);
-}
-
-COMMAND *
-make_case_command (WORD_DESC *word, PATTERN_LIST *clauses, int lineno)
-{
-  case_com *temp;
-
-  temp = (case_com *)xmalloc (sizeof (case_com));
-  temp->flags = 0;
-  temp->line = lineno;
-  temp->word = word;
-  temp->clauses = REVERSE_LIST (clauses, PATTERN_LIST *);
-  return make_command (cm_case, (simple_com *)temp);
 }
 
 PATTERN_LIST *
@@ -432,8 +269,8 @@ make_bare_simple_command ()
 
 /* Return a command which is the connection of the word or redirection
    in ELEMENT, and the command * or NULL in COMMAND. */
-COMMAND *
-make_simple_command (ELEMENT element, COMMAND *command)
+SIMPLE_COM *
+Shell::make_simple_command (ELEMENT element, COMMAND *command)
 {
   /* If we are starting from scratch, then make the initial command
      structure.  Also note that we have to fill in all the slots, since
@@ -457,11 +294,9 @@ make_simple_command (ELEMENT element, COMMAND *command)
 	 as it goes, and hook onto the end. */
       while (r->next)
 	r = r->next;
-      r->next = command->value.Simple->redirects;
-      command->value.Simple->redirects = element.redirect;
+      r->next = redirects;
+      redirects = element.redirect;
     }
-
-  return command;
 }
 
 /* Because we are Bourne compatible, we read the input for this
@@ -581,25 +416,18 @@ document_done:
 /* Generate a REDIRECT from SOURCE, DEST, and INSTRUCTION.
    INSTRUCTION is the instruction type, SOURCE is a file descriptor,
    and DEST is a file descriptor or a WORD_DESC *. */
-REDIRECT *
-make_redirection (REDIRECTEE source, enum r_instruction instruction,
-                  REDIRECTEE dest_and_filename, int flags)
+REDIRECT::REDIRECT (REDIRECTEE source, r_instruction instruction,
+		    REDIRECTEE dest_and_filename, redir_flags flags)
 {
-  REDIRECT *temp;
   WORD_DESC *w;
   int wlen;
   intmax_t lfd;
 
-  temp = (REDIRECT *)xmalloc (sizeof (REDIRECT));
-
   /* First do the common cases. */
-  temp->redirector = source;
-  temp->redirectee = dest_and_filename;
-  temp->here_doc_eof = 0;
-  temp->instruction = instruction;
-  temp->flags = 0;
-  temp->rflags = flags;
-  temp->next = (REDIRECT *)NULL;
+  redirector = source;
+  redirectee = dest_and_filename;
+  instruction = instruction;
+  rflags = flags;
 
   switch (instruction)
     {
@@ -607,21 +435,21 @@ make_redirection (REDIRECTEE source, enum r_instruction instruction,
     case r_output_direction:		/* >foo */
     case r_output_force:		/* >| foo */
     case r_err_and_out:			/* &>filename */
-      temp->flags = O_TRUNC | O_WRONLY | O_CREAT;
+      flags = O_TRUNC | O_WRONLY | O_CREAT;
       break;
 
     case r_appending_to:		/* >>foo */
     case r_append_err_and_out:		/* &>> filename */
-      temp->flags = O_APPEND | O_WRONLY | O_CREAT;
+      flags = O_APPEND | O_WRONLY | O_CREAT;
       break;
 
     case r_input_direction:		/* <foo */
     case r_inputa_direction:		/* foo & makes this. */
-      temp->flags = O_RDONLY;
+      flags = O_RDONLY;
       break;
 
     case r_input_output:		/* <>foo */
-      temp->flags = O_RDWR | O_CREAT;
+      flags = O_RDWR | O_CREAT;
       break;
 
     case r_deblank_reading_until: 	/* <<-foo */
@@ -643,18 +471,21 @@ make_redirection (REDIRECTEE source, enum r_instruction instruction,
     case r_duplicating_input_word:	/* 1<&$foo */
     case r_duplicating_output_word:	/* 1>&$foo */
       w = dest_and_filename.filename;
-      wlen = strlen (w->word) - 1;
+      wlen = w->word.size () - 1;
       if (w->word[wlen] == '-')		/* Yuck */
         {
           w->word[wlen] = '\0';
-	  if (all_digits (w->word) && legal_number (w->word, &lfd) && lfd == (int)lfd)
+	  if (all_digits (w->word.c_str ()) &&
+	      legal_number (w->word.c_str (), &lfd) && lfd == static_cast<int> (lfd))
 	    {
-	      dispose_word (w);
-	      temp->instruction = (instruction == r_duplicating_input_word) ? r_move_input : r_move_output;
-	      temp->redirectee.dest = lfd;
+	      delete w;
+	      instruction = (instruction == r_duplicating_input_word)
+					? r_move_input : r_move_output;
+	      redirectee.dest = static_cast<int> (lfd);
 	    }
 	  else
-	    temp->instruction = (instruction == r_duplicating_input_word) ? r_move_input_word : r_move_output_word;
+	    instruction = (instruction == r_duplicating_input_word)
+					? r_move_input_word : r_move_output_word;
         }
 
       break;
@@ -664,7 +495,6 @@ make_redirection (REDIRECTEE source, enum r_instruction instruction,
       abort ();
       break;
     }
-  return temp;
 }
 
 COMMAND *

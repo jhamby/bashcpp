@@ -56,8 +56,27 @@
 #include "externs.hh"
 #include "jobs.hh"
 #include "shtty.hh"
+#include "parser.hh"
+
+#ifdef DEBUG
+#  define YYDEBUG 1
+#else
+#  define YYDEBUG 0
+#endif
+
+// include the generated Bison C++ header after suppressing some warnings
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+#pragma clang diagnostic ignored "-Wsuggest-destructor-override"
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
 
 #include "parse.hh"
+
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif
 
 #if defined (READLINE)
 #include "readline.hh"
@@ -90,48 +109,50 @@ enum hist_ctl_flags {
 
 #define HEREDOC_MAX		16
 
-const int NO_PIPE =		 -1;
-const int REDIRECT_BOTH =	 -2;
+constexpr int NO_PIPE =		 -1;
+constexpr int REDIRECT_BOTH =	 -2;
 
-const int NO_VARIABLE =		 -1;
+constexpr int NO_VARIABLE =		 -1;
 
 /* Values that can be returned by execute_command (). */
-const int EXECUTION_FAILURE =	  1;
-const int EXECUTION_SUCCESS =	  0;
+constexpr int EXECUTION_FAILURE =	  1;
+constexpr int EXECUTION_SUCCESS =	  0;
 
 /* Usage messages by builtins result in a return status of 2. */
-const int EX_BADUSAGE =		  2;
+constexpr int EX_BADUSAGE =		  2;
 
-const int EX_MISCERROR =	  2;
+constexpr int EX_MISCERROR =		  2;
 
 /* Special exit statuses used by the shell, internally and externally. */
-const int EX_RETRYFAIL =	124;
-const int EX_WEXPCOMSUB =	125;
-const int EX_BINARY_FILE =	126;
-const int EX_NOEXEC =		126;
-const int EX_NOINPUT =		126;
-const int EX_NOTFOUND =		127;
+constexpr int EX_RETRYFAIL =		124;
+constexpr int EX_WEXPCOMSUB =		125;
+constexpr int EX_BINARY_FILE =		126;
+constexpr int EX_NOEXEC =		126;
+constexpr int EX_NOINPUT =		126;
+constexpr int EX_NOTFOUND =		127;
 
-const int EX_SHERRBASE =	256;	/* all special error values are > this. */
+constexpr int EX_SHERRBASE =	256;	/* all special error values are > this. */
 
-const int EX_BADSYNTAX =	257;	/* shell syntax error */
-const int EX_USAGE =		258;	/* syntax error in usage */
-const int EX_REDIRFAIL =	259;	/* redirection failed */
-const int EX_BADASSIGN =	260;	/* variable assignment error */
-const int EX_EXPFAIL =		261;	/* word expansion failed */
-const int EX_DISKFALLBACK =	262;	/* fall back to disk command from builtin */
+constexpr int EX_BADSYNTAX =	257;	/* shell syntax error */
+constexpr int EX_USAGE =	258;	/* syntax error in usage */
+constexpr int EX_REDIRFAIL =	259;	/* redirection failed */
+constexpr int EX_BADASSIGN =	260;	/* variable assignment error */
+constexpr int EX_EXPFAIL =	261;	/* word expansion failed */
+constexpr int EX_DISKFALLBACK =	262;	/* fall back to disk command from builtin */
 
 /* Flag values that control parameter pattern substitution. */
-const int MATCH_ANY =		0x000;
-const int MATCH_BEG =		0x001;
-const int MATCH_END =		0x002;
+enum match_flags {
+  MATCH_ANY =		0x000,
+  MATCH_BEG =		0x001,
+  MATCH_END =		0x002,
 
-const int MATCH_TYPEMASK =	0x003;
+  MATCH_TYPEMASK =	0x003,
 
-const int MATCH_GLOBREP =	0x010;
-const int MATCH_QUOTED =	0x020;
-const int MATCH_ASSIGNRHS =	0x040;
-const int MATCH_STARSUB =	0x080;
+  MATCH_GLOBREP =	0x010,
+  MATCH_QUOTED =	0x020,
+  MATCH_ASSIGNRHS =	0x040,
+  MATCH_STARSUB =	0x080
+};
 
 /* Flags for skip_to_delim */
 
@@ -251,8 +272,7 @@ public:
   SimpleState (int fd);		// TODO: Load initial values from pipe
 #endif
 
-  // Everything below this is protected or private.
-
+  // Start of protected variables, ordered by decreasing alignment.
 protected:
 
   /* ************************************************************** */
@@ -306,10 +326,10 @@ protected:
 #endif
 
   /* Last child made by the shell.  */
-  volatile pid_t last_made_pid;
+  pid_t last_made_pid;
 
   /* Pid of the last asynchronous child. */
-  volatile pid_t last_asynchronous_pid;
+  pid_t last_asynchronous_pid;
 
   /* Used to synchronize between wait_for and other functions and the SIGCHLD
      signal handler. */
@@ -347,15 +367,9 @@ protected:
   /* variables from evalfile.c */
   int sourcelevel;
 
-  /* variables from evalstring.c */
-  int parse_and_execute_level;
-
   /* Variables declared in execute_cmd.c, used by many other files */
   int return_catch_flag;
   int return_catch_value;
-
-  /* execution state possibly modified by the parser */
-  int last_command_exit_value;
 
   int last_command_exit_signal;
   int executing_builtin;
@@ -431,8 +445,30 @@ protected:
   /* The token currently being read. */
   int current_token;
 
+public:
+  // The following are accessed by the parser.
+
+  /* variables from evalstring.c */
+  int parse_and_execute_level;
+
+  /* execution state possibly modified by the parser */
+  int last_command_exit_value;
+
   /* The current parser state. */
-  int parser_state;
+  pstate_flags parser_state;
+
+  /* Do that silly `type "bye" to exit' stuff.  You know, "ignoreeof". */
+
+  /* The number of times that we have encountered an EOF character without
+     another character intervening.  When this gets above the limit, the
+     shell terminates. */
+  int eof_encountered;
+
+  /* The limit for eof_encountered. */
+  int eof_encountered_limit;
+
+protected:
+  // Back to protected access.
 
   /* Either zero or EOF. */
   int shell_input_line_terminator;
@@ -463,7 +499,7 @@ protected:
      index is decremented after a case, select, or for command is parsed. */
 #define MAX_CASE_NEST	128
   int word_lineno[MAX_CASE_NEST + 1];
-  int word_top = -1;
+  int word_top;
 
   /* If non-zero, it is the token that we want read_token to return
      regardless of what text is (or isn't) present to be read.  This
@@ -471,9 +507,31 @@ protected:
      ASSIGNMENT_WORD, yylval.word should be set to word_desc_to_read. */
   int token_to_read;
 
+  /* When non-zero, we have read the required tokens
+     which allow ESAC to be the next one read. */
+  int esacs_needed_count;
+
+  /* When non-zero, we can read IN as an acceptable token, regardless of how
+     many newlines we read. */
+  int expecting_in_token;
+
   /* ************************************************************** */
   /*		Bash Variables (8-bit bool/char types)		    */
   /* ************************************************************** */
+
+public:
+  // The following are accessed by the parser.
+
+  /* A flag denoting whether or not ignoreeof is set. */
+  char ignoreeof;
+
+  /* Non-zero means that at this moment, the shell is interactive.  In
+     general, this means that the shell is at this moment reading input
+     from the keyboard. */
+  bool interactive;
+
+protected:
+  // Back to protected access.
 
   /* Variables used to keep track of the characters in IFS. */
   bool ifs_cmap[UCHAR_MAX + 1];
@@ -558,7 +616,7 @@ protected:
      exits from get_tty_state(). */
   char check_window_size;
 
-  /* EOF reached. */
+  /* This becomes true when the end of file has been reached. */
   bool EOF_Reached;
 
   /* If non-zero, command substitution inherits the value of errexit option.
@@ -792,11 +850,6 @@ protected:
   */
   char login_shell;
 
-  /* Non-zero means that at this moment, the shell is interactive.  In
-     general, this means that the shell is at this moment reading input
-     from the keyboard. */
-  bool interactive;
-
   /* Non-zero means that the shell was started as an interactive shell. */
   bool interactive_shell;
 
@@ -884,6 +937,12 @@ protected:
 
 #ifndef HAVE_LOCALE_CHARSET
   char charsetbuf[40];
+#endif
+
+#if SIZEOF_INT != SIZEOF_CHAR_P
+    char _pad[7];			// silence clang -Wpadded warning
+#else
+    char _pad[3];			// silence clang -Wpadded warning
 #endif
 };
 
@@ -1009,9 +1068,12 @@ protected:
   typedef int (Shell::*sh_load_func_t) (const std::string &);
   typedef void (Shell::*sh_unload_func_t) (const std::string &);
 
-  // typedefs for builtins (public for access from builtins struct)
-
 public:
+
+  // Called from generated parser on EOF.
+  void handle_eof_input_unit ();
+
+  // typedefs for builtins (public for access from builtins struct)
 
 #if defined (ALIAS)
   int alias_builtin (WORD_LIST *);
@@ -1117,7 +1179,98 @@ public:
   // lexer called from Bison parser
   parser::token::token_kind_type yylex ();
 
+  /* Functions from make_cmd.cc */
+
+  WORD_DESC *
+  make_word_flags (WORD_DESC *w, const char *string)
+  {
+    DECLARE_MBSTATE;
+
+    size_t i = 0;
+    size_t slen = std::strlen (string);
+    while (i < slen)
+      {
+	switch (string[i])
+	  {
+	  case '$':
+	    w->flags |= W_HASDOLLAR;
+	    break;
+	  case '\\':
+	    break;	/* continue the loop */
+	  case '\'':
+	  case '`':
+	  case '"':
+	    w->flags |= W_QUOTED;
+	    break;
+	  }
+
+	ADVANCE_CHAR (string, slen, i);
+      }
+
+    return w;
+  }
+
+  WORD_DESC *
+  make_word (const char *string)
+  {
+    WORD_DESC *temp = new WORD_DESC (string);
+    return make_word_flags (temp, string);
+  }
+
+  WORD_DESC *
+  make_word_from_token (int token)
+  {
+    char tokenizer[2];
+
+    tokenizer[0] = static_cast<char> (token);
+    tokenizer[1] = '\0';
+
+    return make_word (tokenizer);
+  }
+
+#if defined (ARITH_FOR_COMMAND)
+  WORD_LIST *
+  make_arith_for_expr (const char *s)
+  {
+    if (s == nullptr || *s == '\0')
+      return nullptr;
+
+    WORD_DESC *wd = make_word (s);
+    wd->flags |= (W_NOGLOB | W_NOSPLIT | W_QUOTED | W_DQUOTE);	/* no word splitting or globbing */
+#if defined (PROCESS_SUBSTITUTION)
+    wd->flags |= W_NOPROCSUB;	/* no process substitution */
+#endif
+    return new WORD_LIST (wd);
+  }
+#endif
+
+  ARITH_FOR_COM *
+  make_arith_for_command (WORD_LIST *exprs, COMMAND *action, int lineno);
+
+  SIMPLE_COM *
+  make_simple_command (ELEMENT element, COMMAND *command = nullptr);
+
+  void
+  push_heredoc (REDIRECT *r)
+  {
+    if (need_here_doc >= HEREDOC_MAX)
+      {
+	last_command_exit_value = EX_BADUSAGE;
+	need_here_doc = 0;
+	report_syntax_error (_("maximum here-document count exceeded"));
+	reset_parser ();
+	exit_shell (last_command_exit_value);
+      }
+    redir_stack[need_here_doc++] = r;
+  }
+
+  // Protected methods below
 protected:
+
+  // Functions from parser.cc (previously in parse.y).
+
+  // Report parser syntax error.
+  void report_syntax_error(const char *);
 
   int internal_getopt (WORD_LIST *, const char *);
   void reset_internal_getopt ();
@@ -2063,7 +2216,14 @@ protected:
      categories */
   char *lang;
 
+public:
+  // The following are public for access from the Bison parser.
+
   COMMAND *global_command;
+
+
+protected:
+  // Back to protected access.
 
   /* Information about the current user. */
   UserInfo current_user;

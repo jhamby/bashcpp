@@ -42,8 +42,6 @@ namespace bash
 #endif
 
 #if 0
-/* Global var is non-zero when end of file has been reached. */
-bool EOF_Reached = false;
 #endif
 
 #ifdef DEBUG
@@ -1457,28 +1455,6 @@ Shell::yylex ()
   parser_state &= ~PST_EOFTOKEN;	/* ??? */
 
   return current_token;
-}
-
-/* When non-zero, we have read the required tokens
-   which allow ESAC to be the next one read. */
-static int esacs_needed_count;
-
-/* When non-zero, we can read IN as an acceptable token, regardless of how
-   many newlines we read. */
-static int expecting_in_token;
-
-static void
-push_heredoc (REDIRECT *r)
-{
-  if (need_here_doc >= HEREDOC_MAX)
-    {
-      last_command_exit_value = EX_BADUSAGE;
-      need_here_doc = 0;
-      report_syntax_error (_("maximum here-document count exceeded"));
-      reset_parser ();
-      exit_shell (last_command_exit_value);
-    }
-  redir_stack[need_here_doc++] = r;
 }
 
 void
@@ -4928,8 +4904,8 @@ print_offending_line ()
    Call here for recoverable errors.  If you have a message to print,
    then place it in MESSAGE, otherwise pass NULL and this will figure
    out an appropriate message for you. */
-static void
-report_syntax_error (const char *message)
+void
+Shell::report_syntax_error (const char *message)
 {
   char *msg, *p;
 
@@ -5012,25 +4988,12 @@ discard_parser_constructs (int error_p)
  *						*
  ************************************************/
 
-/* Do that silly `type "bye" to exit' stuff.  You know, "ignoreeof". */
-
-/* A flag denoting whether or not ignoreeof is set. */
-char ignoreeof = 0;
-
-/* The number of times that we have encountered an EOF character without
-   another character intervening.  When this gets above the limit, the
-   shell terminates. */
-int eof_encountered = 0;
-
-/* The limit for eof_encountered. */
-int eof_encountered_limit = 10;
-
 /* If we have EOF as the only input unit, this user wants to leave
    the shell.  If the shell is not interactive, then just leave.
    Otherwise, if ignoreeof is set, and we haven't done this the
    required number of times in a row, print a message. */
-static void
-handle_eof_input_unit ()
+void
+Shell::handle_eof_input_unit ()
 {
   if (interactive)
     {

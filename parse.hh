@@ -404,7 +404,7 @@ namespace bash {
       char dummy1[sizeof (COMMAND*)];
 
       // simple_command_element
-      char dummy2[sizeof (ELEMENT*)];
+      char dummy2[sizeof (ELEMENT)];
 
       // case_clause
       // pattern_list
@@ -412,24 +412,26 @@ namespace bash {
       char dummy3[sizeof (PATTERN_LIST*)];
 
       // redirection
-      // redirection_list
       char dummy4[sizeof (REDIRECT*)];
+
+      // redirection_list
+      char dummy5[sizeof (REDIRECT_LIST*)];
 
       // WORD
       // ASSIGNMENT_WORD
       // REDIR_WORD
-      char dummy5[sizeof (WORD_DESC*)];
+      char dummy6[sizeof (WORD_DESC*)];
 
       // ARITH_CMD
       // ARITH_FOR_EXPRS
       // word_list
       // pattern
-      char dummy6[sizeof (WORD_LIST*)];
+      char dummy7[sizeof (WORD_LIST*)];
 
       // NUMBER
       // list_terminator
       // timespec
-      char dummy7[sizeof (int)];
+      char dummy8[sizeof (int)];
     };
 
     /// The size of the largest semantic type.
@@ -701,7 +703,7 @@ namespace bash {
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
-        value.move< ELEMENT* > (std::move (that.value));
+        value.move< ELEMENT > (std::move (that.value));
         break;
 
       case symbol_kind::S_case_clause: // case_clause
@@ -711,8 +713,11 @@ namespace bash {
         break;
 
       case symbol_kind::S_redirection: // redirection
-      case symbol_kind::S_redirection_list: // redirection_list
         value.move< REDIRECT* > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_redirection_list: // redirection_list
+        value.move< REDIRECT_LIST* > (std::move (that.value));
         break;
 
       case symbol_kind::S_WORD: // WORD
@@ -768,12 +773,12 @@ namespace bash {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, ELEMENT*&& v)
+      basic_symbol (typename Base::kind_type t, ELEMENT&& v)
         : Base (t)
         , value (std::move (v))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const ELEMENT*& v)
+      basic_symbol (typename Base::kind_type t, const ELEMENT& v)
         : Base (t)
         , value (v)
       {}
@@ -798,6 +803,18 @@ namespace bash {
       {}
 #else
       basic_symbol (typename Base::kind_type t, const REDIRECT*& v)
+        : Base (t)
+        , value (v)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, REDIRECT_LIST*&& v)
+        : Base (t)
+        , value (std::move (v))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const REDIRECT_LIST*& v)
         : Base (t)
         , value (v)
       {}
@@ -893,7 +910,7 @@ switch (yykind)
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
-        value.template destroy< ELEMENT* > ();
+        value.template destroy< ELEMENT > ();
         break;
 
       case symbol_kind::S_case_clause: // case_clause
@@ -903,8 +920,11 @@ switch (yykind)
         break;
 
       case symbol_kind::S_redirection: // redirection
-      case symbol_kind::S_redirection_list: // redirection_list
         value.template destroy< REDIRECT* > ();
+        break;
+
+      case symbol_kind::S_redirection_list: // redirection_list
+        value.template destroy< REDIRECT_LIST* > ();
         break;
 
       case symbol_kind::S_WORD: // WORD
@@ -2258,7 +2278,7 @@ switch (yykind)
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
-        value.copy< ELEMENT* > (YY_MOVE (that.value));
+        value.copy< ELEMENT > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_case_clause: // case_clause
@@ -2268,8 +2288,11 @@ switch (yykind)
         break;
 
       case symbol_kind::S_redirection: // redirection
-      case symbol_kind::S_redirection_list: // redirection_list
         value.copy< REDIRECT* > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_redirection_list: // redirection_list
+        value.copy< REDIRECT_LIST* > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_WORD: // WORD
@@ -2352,7 +2375,7 @@ switch (yykind)
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
-        value.move< ELEMENT* > (YY_MOVE (s.value));
+        value.move< ELEMENT > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_case_clause: // case_clause
@@ -2362,8 +2385,11 @@ switch (yykind)
         break;
 
       case symbol_kind::S_redirection: // redirection
-      case symbol_kind::S_redirection_list: // redirection_list
         value.move< REDIRECT* > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_redirection_list: // redirection_list
+        value.move< REDIRECT_LIST* > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_WORD: // WORD
@@ -2451,7 +2477,7 @@ switch (yykind)
 
 #line 26 "../bashcpp/parse.yy"
 } // bash
-#line 2455 "parse.hh"
+#line 2481 "parse.hh"
 
 
 

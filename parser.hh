@@ -26,7 +26,7 @@
 #  include "input.hh"
 
 /* Possible states for the parser that require it to do special things. */
-enum parser_state_flags {
+enum pstate_flags {
   PST_NOFLAGS =		       0,
   PST_CASEPAT =		0x000001,	/* in a case pattern list */
   PST_ALEXPNEXT =	0x000002,	/* expand next word for aliases */
@@ -51,6 +51,33 @@ enum parser_state_flags {
   PST_COMMENT =		0x100000,	/* parsing a shell comment; used by aliases */
   PST_ENDALIAS =	0x200000	/* just finished expanding and consuming an alias */
 };
+
+static inline pstate_flags&
+operator |= (pstate_flags &a, const pstate_flags &b) {
+  a = static_cast<pstate_flags> (static_cast<uint32_t> (a) | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline pstate_flags
+operator | (const pstate_flags &a, const pstate_flags &b) {
+  return static_cast<pstate_flags> (static_cast<uint32_t> (a) | static_cast<uint32_t> (b));
+}
+
+static inline pstate_flags&
+operator &= (pstate_flags &a, const pstate_flags &b) {
+  a = static_cast<pstate_flags> (static_cast<uint32_t> (a) & static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline pstate_flags
+operator & (const pstate_flags &a, const pstate_flags &b) {
+  return static_cast<pstate_flags> (static_cast<uint32_t> (a) & static_cast<uint32_t> (b));
+}
+
+static inline pstate_flags
+operator ~ (const pstate_flags &a) {
+  return static_cast<pstate_flags> (~static_cast<uint32_t> (a));
+}
 
 /* Definition of the delimiter stack.  Needed by parse.y and bashhist.c. */
 struct dstack {

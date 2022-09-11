@@ -228,6 +228,8 @@ SimpleState::SimpleState () :
 	rseed32 (1073741823),
 	last_command_subst_pid (NO_PID),
 	current_command_subst_pid (NO_PID),
+	eof_encountered_limit (10),
+	word_top (-1),
 	array_needs_making (true),
 #if defined (JOB_CONTROL)
 	job_control (true),

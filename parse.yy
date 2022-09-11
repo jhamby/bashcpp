@@ -29,16 +29,15 @@
 #include "config.hh"
 #include "shell.hh"
 
-#ifdef DEBUG
-#  define YYDEBUG 1
-#else
-#  define YYDEBUG 0
-#endif
-
 static inline bash::parser::token::token_kind_type
 yylex () {
   return bash::the_shell->yylex ();
 }
+
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
 
 %}
 
@@ -71,8 +70,9 @@ yylex () {
 %type <COMMAND*> arith_for_command
 %type <COMMAND*> coproc
 %type <COMMAND*> function_def function_body if_command elif_clause subshell
-%type <REDIRECT*> redirection redirection_list
-%type <ELEMENT*> simple_command_element
+%type <REDIRECT*> redirection
+%type <REDIRECT_LIST*> redirection_list
+%type <ELEMENT> simple_command_element
 %type <WORD_LIST*> word_list pattern
 %type <PATTERN_LIST*> pattern_list case_clause_sequence case_clause
 %type <int> timespec
@@ -88,30 +88,33 @@ yylex () {
 inputunit:	simple_list simple_list_terminator
 			{
 			  /* Case of regular command.  Discard the error
-			     safety net,and return the command just parsed. */
-			  global_command = $1;
-			  eof_encountered = 0;
+			     safety net, and return the command just parsed. */
+			  Shell &sh = *the_shell;
+			  sh.global_command = $1;
+			  sh.eof_encountered = 0;
 			  /* discard_parser_constructs (0); */
-			  if (parser_state & PST_CMDSUBST)
-			    parser_state |= PST_EOFTOKEN;
+			  if (sh.parser_state & PST_CMDSUBST)
+			    sh.parser_state |= PST_EOFTOKEN;
 			  YYACCEPT;
 			}
 	|	'\n'
 			{
 			  /* Case of regular command, but not a very
 			     interesting one.  Return a NULL command. */
-			  global_command = (COMMAND *)NULL;
-			  if (parser_state & PST_CMDSUBST)
-			    parser_state |= PST_EOFTOKEN;
+			  Shell &sh = *the_shell;
+			  sh.global_command = nullptr;
+			  if (sh.parser_state & PST_CMDSUBST)
+			    sh.parser_state |= PST_EOFTOKEN;
 			  YYACCEPT;
 			}
 	|	error '\n'
 			{
 			  /* Error during parsing.  Return NULL command. */
-			  global_command = (COMMAND *)NULL;
-			  eof_encountered = 0;
+			  Shell &sh = *the_shell;
+			  sh.global_command = nullptr;
+			  sh.eof_encountered = 0;
 			  /* discard_parser_constructs (1); */
-			  if (interactive && parse_and_execute_level == 0)
+			  if (sh.interactive && sh.parse_and_execute_level == 0)
 			    {
 			      YYACCEPT;
 			    }
@@ -124,12 +127,13 @@ inputunit:	simple_list simple_list_terminator
 			{
 			  /* EOF after an error.  Do ignoreeof or not.  Really
 			     only interesting in non-interactive shells */
-			  global_command = (COMMAND *)NULL;
-			  if (last_command_exit_value == 0)
-			    last_command_exit_value = EX_BADUSAGE;	/* force error return */
-			  if (interactive && parse_and_execute_level == 0)
+			  Shell &sh = *the_shell;
+			  sh.global_command = nullptr;
+			  if (sh.last_command_exit_value == 0)
+			    sh.last_command_exit_value = EX_BADUSAGE;	/* force error return */
+			  if (sh.interactive && sh.parse_and_execute_level == 0)
 			    {
-			      handle_eof_input_unit ();
+			      sh.handle_eof_input_unit ();
 			      YYACCEPT;
 			    }
 			  else
@@ -141,321 +145,318 @@ inputunit:	simple_list simple_list_terminator
 			{
 			  /* Case of EOF seen by itself.  Do ignoreeof or
 			     not. */
-			  global_command = (COMMAND *)NULL;
-			  handle_eof_input_unit ();
+			  Shell &sh = *the_shell;
+			  sh.global_command = nullptr;
+			  sh.handle_eof_input_unit ();
 			  YYACCEPT;
 			}
 	;
 
 word_list:	WORD
-			{ $$ = make_word_list ($1, (WORD_LIST *)NULL); }
+			{ $$ = new WORD_LIST ($1); }
 	|	word_list WORD
-			{ $$ = make_word_list ($2, $1); }
+			{ $$ = $1; $1->push_back ($2); }
 	;
 
 redirection:	'>' WORD
 			{
-			  source.dest = 1;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_output_direction, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_output_direction, redir, REDIR_NOFLAGS);
 			}
 	|	'<' WORD
 			{
-			  source.dest = 0;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_input_direction, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_input_direction, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER '>' WORD
 			{
-			  source.dest = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_output_direction, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_output_direction, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER '<' WORD
 			{
-			  source.dest = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_input_direction, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_input_direction, redir, REDIR_NOFLAGS);
 			}
 	|	REDIR_WORD '>' WORD
 			{
-			  source.filename = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_output_direction, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_output_direction, redir, REDIR_VARASSIGN);
 			}
 	|	REDIR_WORD '<' WORD
 			{
-			  source.filename = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_input_direction, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_input_direction, redir, REDIR_VARASSIGN);
 			}
 	|	GREATER_GREATER WORD
 			{
-			  source.dest = 1;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_appending_to, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_appending_to, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER GREATER_GREATER WORD
 			{
-			  source.dest = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_appending_to, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_appending_to, redir, REDIR_NOFLAGS);
 			}
 	|	REDIR_WORD GREATER_GREATER WORD
 			{
-			  source.filename = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_appending_to, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_appending_to, redir, REDIR_VARASSIGN);
 			}
 	|	GREATER_BAR WORD
 			{
-			  source.dest = 1;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_output_force, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_output_force, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER GREATER_BAR WORD
 			{
-			  source.dest = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_output_force, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_output_force, redir, REDIR_NOFLAGS);
 			}
 	|	REDIR_WORD GREATER_BAR WORD
 			{
-			  source.filename = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_output_force, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_output_force, redir, REDIR_VARASSIGN);
 			}
 	|	LESS_GREATER WORD
 			{
-			  source.dest = 0;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_input_output, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_input_output, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER LESS_GREATER WORD
 			{
-			  source.dest = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_input_output, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_input_output, redir, REDIR_NOFLAGS);
 			}
 	|	REDIR_WORD LESS_GREATER WORD
 			{
-			  source.filename = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_input_output, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_input_output, redir, REDIR_VARASSIGN);
 			}
 	|	LESS_LESS WORD
 			{
-			  source.dest = 0;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_reading_until, redir, 0);
-			  push_heredoc ($$);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_reading_until, redir, REDIR_NOFLAGS);
+			  the_shell->push_heredoc ($$);
 			}
 	|	NUMBER LESS_LESS WORD
 			{
-			  source.dest = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_reading_until, redir, 0);
-			  push_heredoc ($$);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_reading_until, redir, REDIR_NOFLAGS);
+			  the_shell->push_heredoc ($$);
 			}
 	|	REDIR_WORD LESS_LESS WORD
 			{
-			  source.filename = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_reading_until, redir, REDIR_VARASSIGN);
-			  push_heredoc ($$);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_reading_until, redir, REDIR_VARASSIGN);
+			  the_shell->push_heredoc ($$);
 			}
 	|	LESS_LESS_MINUS WORD
 			{
-			  source.dest = 0;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_deblank_reading_until, redir, 0);
-			  push_heredoc ($$);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_deblank_reading_until, redir, REDIR_NOFLAGS);
+			  the_shell->push_heredoc ($$);
 			}
 	|	NUMBER LESS_LESS_MINUS WORD
 			{
-			  source.dest = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_deblank_reading_until, redir, 0);
-			  push_heredoc ($$);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_deblank_reading_until, redir, REDIR_NOFLAGS);
+			  the_shell->push_heredoc ($$);
 			}
 	|	REDIR_WORD  LESS_LESS_MINUS WORD
 			{
-			  source.filename = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_deblank_reading_until, redir, REDIR_VARASSIGN);
-			  push_heredoc ($$);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_deblank_reading_until, redir, REDIR_VARASSIGN);
+			  the_shell->push_heredoc ($$);
 			}
 	|	LESS_LESS_LESS WORD
 			{
-			  source.dest = 0;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_reading_string, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_reading_string, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER LESS_LESS_LESS WORD
 			{
-			  source.dest = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_reading_string, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_reading_string, redir, REDIR_NOFLAGS);
 			}
 	|	REDIR_WORD LESS_LESS_LESS WORD
 			{
-			  source.filename = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_reading_string, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_reading_string, redir, REDIR_VARASSIGN);
 			}
 	|	LESS_AND NUMBER
 			{
-			  source.dest = 0;
-			  redir.dest = $2;
-			  $$ = make_redirection (source, r_duplicating_input, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_duplicating_input, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER LESS_AND NUMBER
 			{
-			  source.dest = $1;
-			  redir.dest = $3;
-			  $$ = make_redirection (source, r_duplicating_input, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_duplicating_input, redir, REDIR_NOFLAGS);
 			}
 	|	REDIR_WORD LESS_AND NUMBER
 			{
-			  source.filename = $1;
-			  redir.dest = $3;
-			  $$ = make_redirection (source, r_duplicating_input, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_duplicating_input, redir, REDIR_VARASSIGN);
 			}
 	|	GREATER_AND NUMBER
 			{
-			  source.dest = 1;
-			  redir.dest = $2;
-			  $$ = make_redirection (source, r_duplicating_output, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_duplicating_output, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER GREATER_AND NUMBER
 			{
-			  source.dest = $1;
-			  redir.dest = $3;
-			  $$ = make_redirection (source, r_duplicating_output, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_duplicating_output, redir, REDIR_NOFLAGS);
 			}
 	|	REDIR_WORD GREATER_AND NUMBER
 			{
-			  source.filename = $1;
-			  redir.dest = $3;
-			  $$ = make_redirection (source, r_duplicating_output, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_duplicating_output, redir, REDIR_VARASSIGN);
 			}
 	|	LESS_AND WORD
 			{
-			  source.dest = 0;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_duplicating_input_word, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_duplicating_input_word, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER LESS_AND WORD
 			{
-			  source.dest = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_duplicating_input_word, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_duplicating_input_word, redir, REDIR_NOFLAGS);
 			}
 	|	REDIR_WORD LESS_AND WORD
 			{
-			  source.filename = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_duplicating_input_word, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_duplicating_input_word, redir, REDIR_VARASSIGN);
 			}
 	|	GREATER_AND WORD
 			{
-			  source.dest = 1;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_duplicating_output_word, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_duplicating_output_word, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER GREATER_AND WORD
 			{
-			  source.dest = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_duplicating_output_word, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_duplicating_output_word, redir, REDIR_NOFLAGS);
 			}
 	|	REDIR_WORD GREATER_AND WORD
 			{
-			  source.filename = $1;
-			  redir.filename = $3;
-			  $$ = make_redirection (source, r_duplicating_output_word, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir ($3);
+			  $$ = new REDIRECT (source, r_duplicating_output_word, redir, REDIR_VARASSIGN);
 			}
 	|	GREATER_AND '-'
 			{
-			  source.dest = 1;
-			  redir.dest = 0;
-			  $$ = make_redirection (source, r_close_this, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir (0);
+			  $$ = new REDIRECT (source, r_close_this, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER GREATER_AND '-'
 			{
-			  source.dest = $1;
-			  redir.dest = 0;
-			  $$ = make_redirection (source, r_close_this, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir (0);
+			  $$ = new REDIRECT (source, r_close_this, redir, REDIR_NOFLAGS);
 			}
 	|	REDIR_WORD GREATER_AND '-'
 			{
-			  source.filename = $1;
-			  redir.dest = 0;
-			  $$ = make_redirection (source, r_close_this, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir (0);
+			  $$ = new REDIRECT (source, r_close_this, redir, REDIR_VARASSIGN);
 			}
 	|	LESS_AND '-'
 			{
-			  source.dest = 0;
-			  redir.dest = 0;
-			  $$ = make_redirection (source, r_close_this, redir, 0);
+			  REDIRECTEE source (0);
+			  REDIRECTEE redir (0);
+			  $$ = new REDIRECT (source, r_close_this, redir, REDIR_NOFLAGS);
 			}
 	|	NUMBER LESS_AND '-'
 			{
-			  source.dest = $1;
-			  redir.dest = 0;
-			  $$ = make_redirection (source, r_close_this, redir, 0);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir (0);
+			  $$ = new REDIRECT (source, r_close_this, redir, REDIR_NOFLAGS);
 			}
 	|	REDIR_WORD LESS_AND '-'
 			{
-			  source.filename = $1;
-			  redir.dest = 0;
-			  $$ = make_redirection (source, r_close_this, redir, REDIR_VARASSIGN);
+			  REDIRECTEE source ($1);
+			  REDIRECTEE redir (0);
+			  $$ = new REDIRECT (source, r_close_this, redir, REDIR_VARASSIGN);
 			}
 	|	AND_GREATER WORD
 			{
-			  source.dest = 1;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_err_and_out, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_err_and_out, redir, REDIR_NOFLAGS);
 			}
 	|	AND_GREATER_GREATER WORD
 			{
-			  source.dest = 1;
-			  redir.filename = $2;
-			  $$ = make_redirection (source, r_append_err_and_out, redir, 0);
+			  REDIRECTEE source (1);
+			  REDIRECTEE redir ($2);
+			  $$ = new REDIRECT (source, r_append_err_and_out, redir, REDIR_NOFLAGS);
 			}
 	;
 
 simple_command_element: WORD
-			{ $$.word = $1; $$.redirect = 0; }
+			{ $$.word = $1; $$.redirect = nullptr; }
 	|	ASSIGNMENT_WORD
-			{ $$.word = $1; $$.redirect = 0; }
+			{ $$.word = $1; $$.redirect = nullptr; }
 	|	redirection
-			{ $$.redirect = $1; $$.word = 0; }
+			{ $$.redirect = $1; $$.word = nullptr; }
 	;
 
 redirection_list: redirection
 			{
-			  $$ = $1;
+			  $$ = new REDIRECT_LIST ($1);
 			}
 	|	redirection_list redirection
 			{
-			  REDIRECT *t;
-
-			  for (t = $1; t->next; t = t->next)
-			    ;
-			  t->next = $2;
+			  $1->push_back ($2);
 			  $$ = $1;
 			}
 	;
 
 simple_command:	simple_command_element
-			{ $$ = make_simple_command ($1, (COMMAND *)NULL); }
+			{ $$ = the_shell->make_simple_command ($1); }
 	|	simple_command simple_command_element
-			{ $$ = make_simple_command ($2, $1); }
+			{ $$ = the_shell->make_simple_command ($2, $1); }
 	;
 
 command:	simple_command
-			{ $$ = clean_simple_command ($1); }
+			{ $$ = $1; }
 	|	shell_command
 			{ $$ = $1; }
 	|	shell_command redirection_list
@@ -506,22 +507,22 @@ shell_command:	for_command
 
 for_command:	FOR WORD newline_list DO compound_list DONE
 			{
-			  $$ = make_for_command ($2, add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), $5, word_lineno[word_top]);
+			  $$ = make_for_command ($2, add_string_to_list ("\"$@\"", nullptr), $5, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	|	FOR WORD newline_list '{' compound_list '}'
 			{
-			  $$ = make_for_command ($2, add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), $5, word_lineno[word_top]);
+			  $$ = make_for_command ($2, add_string_to_list ("\"$@\"", nullptr), $5, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	|	FOR WORD ';' newline_list DO compound_list DONE
 			{
-			  $$ = make_for_command ($2, add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), $6, word_lineno[word_top]);
+			  $$ = make_for_command ($2, add_string_to_list ("\"$@\"", nullptr), $6, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	|	FOR WORD ';' newline_list '{' compound_list '}'
 			{
-			  $$ = make_for_command ($2, add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), $6, word_lineno[word_top]);
+			  $$ = make_for_command ($2, add_string_to_list ("\"$@\"", nullptr), $6, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	|	FOR WORD newline_list IN word_list list_terminator newline_list DO compound_list DONE
@@ -536,12 +537,12 @@ for_command:	FOR WORD newline_list DO compound_list DONE
 			}
 	|	FOR WORD newline_list IN list_terminator newline_list DO compound_list DONE
 			{
-			  $$ = make_for_command ($2, (WORD_LIST *)NULL, $8, word_lineno[word_top]);
+			  $$ = make_for_command ($2, nullptr, $8, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	|	FOR WORD newline_list IN list_terminator newline_list '{' compound_list '}'
 			{
-			  $$ = make_for_command ($2, (WORD_LIST *)NULL, $8, word_lineno[word_top]);
+			  $$ = make_for_command ($2, nullptr, $8, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	;
@@ -574,22 +575,22 @@ arith_for_command:	FOR ARITH_FOR_EXPRS list_terminator newline_list DO compound_
 
 select_command:	SELECT WORD newline_list DO list DONE
 			{
-			  $$ = make_select_command ($2, add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), $5, word_lineno[word_top]);
+			  $$ = make_select_command ($2, add_string_to_list ("\"$@\"", nullptr), $5, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	|	SELECT WORD newline_list '{' list '}'
 			{
-			  $$ = make_select_command ($2, add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), $5, word_lineno[word_top]);
+			  $$ = make_select_command ($2, add_string_to_list ("\"$@\"", nullptr), $5, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	|	SELECT WORD ';' newline_list DO list DONE
 			{
-			  $$ = make_select_command ($2, add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), $6, word_lineno[word_top]);
+			  $$ = make_select_command ($2, add_string_to_list ("\"$@\"", nullptr), $6, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	|	SELECT WORD ';' newline_list '{' list '}'
 			{
-			  $$ = make_select_command ($2, add_string_to_list ("\"$@\"", (WORD_LIST *)NULL), $6, word_lineno[word_top]);
+			  $$ = make_select_command ($2, add_string_to_list ("\"$@\"", nullptr), $6, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	|	SELECT WORD newline_list IN word_list list_terminator newline_list DO list DONE
@@ -604,19 +605,19 @@ select_command:	SELECT WORD newline_list DO list DONE
 			}
 	|	SELECT WORD newline_list IN list_terminator newline_list DO compound_list DONE
 			{
-			  $$ = make_select_command ($2, (WORD_LIST *)NULL, $8, word_lineno[word_top]);
+			  $$ = make_select_command ($2, nullptr, $8, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	|	SELECT WORD newline_list IN list_terminator newline_list '{' compound_list '}'
 			{
-			  $$ = make_select_command ($2, (WORD_LIST *)NULL, $8, word_lineno[word_top]);
+			  $$ = make_select_command ($2, nullptr, $8, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	;
 
 case_command:	CASE WORD newline_list IN newline_list ESAC
 			{
-			  $$ = make_case_command ($2, (PATTERN_LIST *)NULL, word_lineno[word_top]);
+			  $$ = make_case_command ($2, nullptr, word_lineno[word_top]);
 			  if (word_top > 0) word_top--;
 			}
 	|	CASE WORD newline_list IN case_clause_sequence newline_list ESAC
@@ -645,9 +646,8 @@ function_body:	shell_command
 			{ $$ = $1; }
 	|	shell_command redirection_list
 			{
-			  COMMAND *tc;
+			  COMMAND *tc = $1;
 
-			  tc = $1;
 			  /* According to Posix.2 3.9.5, redirections
 			     specified after the body of a function should
 			     be attached to the function and performed when
@@ -727,13 +727,13 @@ coproc:		COPROC shell_command
 			}
 	|	COPROC simple_command
 			{
-			  $$ = make_coproc_command ("COPROC", clean_simple_command ($2));
+			  $$ = make_coproc_command ("COPROC", $2);
 			  $$->flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
 			}
 	;
 
 if_command:	IF compound_list THEN compound_list FI
-			{ $$ = make_if_command ($2, $4, (COMMAND *)NULL); }
+			{ $$ = make_if_command ($2, $4, nullptr); }
 	|	IF compound_list THEN compound_list ELSE compound_list FI
 			{ $$ = make_if_command ($2, $4, $6); }
 	|	IF compound_list THEN compound_list elif_clause FI
@@ -754,7 +754,7 @@ cond_command:	COND_START COND_CMD COND_END
 	;
 
 elif_clause:	ELIF compound_list THEN compound_list
-			{ $$ = make_if_command ($2, $4, (COMMAND *)NULL); }
+			{ $$ = make_if_command ($2, $4, nullptr); }
 	|	ELIF compound_list THEN compound_list ELSE compound_list
 			{ $$ = make_if_command ($2, $4, $6); }
 	|	ELIF compound_list THEN compound_list elif_clause
@@ -769,11 +769,11 @@ case_clause:	pattern_list
 pattern_list:	newline_list pattern ')' compound_list
 			{ $$ = make_pattern_list ($2, $4); }
 	|	newline_list pattern ')' newline_list
-			{ $$ = make_pattern_list ($2, (COMMAND *)NULL); }
+			{ $$ = make_pattern_list ($2, nullptr); }
 	|	newline_list '(' pattern ')' compound_list
 			{ $$ = make_pattern_list ($3, $5); }
 	|	newline_list '(' pattern ')' newline_list
-			{ $$ = make_pattern_list ($3, (COMMAND *)NULL); }
+			{ $$ = make_pattern_list ($3, nullptr); }
 	;
 
 case_clause_sequence:  pattern_list SEMI_SEMI
@@ -791,7 +791,7 @@ case_clause_sequence:  pattern_list SEMI_SEMI
 	;
 
 pattern:	WORD
-			{ $$ = make_word_list ($1, (WORD_LIST *)NULL); }
+			{ $$ = make_word_list ($1, nullptr); }
 	|	pattern '|' WORD
 			{ $$ = make_word_list ($3, $1); }
 	;
@@ -820,9 +820,9 @@ list0:  	list1 '\n' newline_list
 	|	list1 '&' newline_list
 			{
 			  if ($1->type == cm_connection)
-			    $$ = connect_async_list ($1, (COMMAND *)NULL, '&');
+			    $$ = connect_async_list ($1, nullptr, '&');
 			  else
-			    $$ = command_connect ($1, (COMMAND *)NULL, '&');
+			    $$ = command_connect ($1, nullptr, '&');
 			}
 	|	list1 ';' newline_list
 
@@ -885,9 +885,9 @@ simple_list:	simple_list1
 	|	simple_list1 '&'
 			{
 			  if ($1->type == cm_connection)
-			    $$ = connect_async_list ($1, (COMMAND *)NULL, '&');
+			    $$ = connect_async_list ($1, nullptr, '&');
 			  else
-			    $$ = command_connect ($1, (COMMAND *)NULL, '&');
+			    $$ = command_connect ($1, nullptr, '&');
 			  if (need_here_doc)
 			    gather_here_documents ();
 			  if ((parser_state & PST_CMDSUBST) && current_token == shell_eof_token)
@@ -956,7 +956,7 @@ pipeline_command: pipeline
 			     terminate this, one to terminate the command) */
 			  x.word = 0;
 			  x.redirect = 0;
-			  $$ = make_simple_command (x, (COMMAND *)NULL);
+			  $$ = make_simple_command (x, nullptr);
 			  $$->flags |= $1;
 			  /* XXX - let's cheat and push a newline back */
 			  if ($2 == '\n')
@@ -977,7 +977,7 @@ pipeline_command: pipeline
 			     terminate this, one to terminate the command) */
 			  x.word = 0;
 			  x.redirect = 0;
-			  $$ = make_simple_command (x, (COMMAND *)NULL);
+			  $$ = make_simple_command (x, nullptr);
 			  $$->flags |= CMD_INVERT_RETURN;
 			  /* XXX - let's cheat and push a newline back */
 			  if ($2 == '\n')
@@ -1027,3 +1027,7 @@ timespec:	TIME
 			{ $$ = (CMD_TIME_PIPELINE | CMD_TIME_POSIX); }
 	;
 %%
+
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif
