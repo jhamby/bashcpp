@@ -477,15 +477,15 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
   /* If a command was being explicitly run in a subshell, or if it is
      a shell control-structure, and it has a pipe, then we do the command
      in a subshell. */
-  if (typeid (command) == typeid (SUBSHELL_COM *) && (command->flags & CMD_NO_FORK))
+  if (typeid (*command) == typeid (SUBSHELL_COM) && (command->flags & CMD_NO_FORK))
     return execute_in_subshell (command, asynchronous, pipe_in, pipe_out, fds_to_close);
 
 #if defined (COPROCESS_SUPPORT)
-  if (typeid (command) == typeid (COPROC_COM *))
+  if (typeid (*command) == typeid (COPROC_COM))
     return last_command_exit_value = execute_coproc (command, pipe_in, pipe_out, fds_to_close);
 #endif
 
-  bool user_subshell = typeid (command) == typeid (SUBSHELL_COM *) ||
+  bool user_subshell = typeid (*command) == typeid (SUBSHELL_COM) ||
 		       ((command->flags & CMD_WANT_SUBSHELL) != 0);
 
 #if defined (TIME_BEFORE_SUBSHELL)
@@ -498,7 +498,7 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
     }
 #endif
 
-  if (typeid (command) == typeid (SUBSHELL_COM *) ||
+  if (typeid (*command) == typeid (SUBSHELL_COM) ||
       (command->flags & (CMD_WANT_SUBSHELL | CMD_FORCE_SUBSHELL)) ||
       (shell_control_structure (command->type) &&
        (pipe_out != NO_PIPE || pipe_in != NO_PIPE || asynchronous)))

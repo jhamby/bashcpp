@@ -1267,6 +1267,22 @@ public:
 
   void gather_here_documents ();
 
+  COMMAND *
+  clean_simple_command (COMMAND *command)
+  {
+    if (typeid (*command) != typeid (SIMPLE_COM))
+      command_error ("clean_simple_command", CMDERR_BADTYPE, 0, 0);
+    else
+      {
+	SIMPLE_COM *simple_com = dynamic_cast<SIMPLE_COM *> (command);
+	simple_com->words = simple_com->words->reverse ();
+	simple_com->redirects = simple_com->redirects->reverse ();
+      }
+
+    parser_state &= ~PST_REDIRLIST;
+    return command;
+  }
+
   // Protected methods below
 protected:
 

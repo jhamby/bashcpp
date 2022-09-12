@@ -113,6 +113,39 @@ savestring(const std::string &s) {
    splitting. */
 #define spctabnl(c)     ((c) == ' ' || (c) == '\t' || (c) == '\n')
 
+/* All structs which contain a `next' field should inherit from this
+   class to get access to its reverse () method. */
+class GENERIC_LIST {
+public:
+
+  // Children call this, then cast the result to their derived type.
+  GENERIC_LIST *reverse_ ()
+    {
+      GENERIC_LIST *next, *prev;
+      GENERIC_LIST *list = this;
+
+      for (prev = nullptr; list; ) {
+	next = list->next_;
+	list->next_ = prev;
+	prev = list;
+        list = next;
+      }
+      return prev;
+    }
+
+  void append_ (GENERIC_LIST *new_item)
+    {
+      GENERIC_LIST *last = this;
+      while (last->next_)
+	last = last->next_;
+
+      last->next_ = new_item;
+    }
+
+protected:
+  GENERIC_LIST *next_;
+};
+
 /* Here is a generic structure for associating character strings
    with integers.  It is used in the parser for shell tokenization. */
 struct STRING_INT_ALIST {

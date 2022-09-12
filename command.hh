@@ -180,81 +180,54 @@ enum subshell_flags {
 /* A structure which represents a word. */
 class WORD_DESC {
 public:
-  WORD_DESC() : flags(W_NOFLAGS) {}
+  WORD_DESC () : flags (W_NOFLAGS) {}
 
-  WORD_DESC(const std::string &w) : word(w), flags(W_NOFLAGS) {}
-  WORD_DESC(const char *w) : word(w), flags(W_NOFLAGS) {}
-  WORD_DESC(const WORD_DESC &w) : word(w.word), flags(w.flags) {}
+  WORD_DESC (const std::string &w) : word (w), flags (W_NOFLAGS) {}
+  WORD_DESC (const char *w) : word (w), flags (W_NOFLAGS) {}
+  WORD_DESC (const WORD_DESC &w) : word (w.word), flags (w.flags) {}
 
 #if __cplusplus >= 201103L
-  WORD_DESC(WORD_DESC &&w) noexcept : word(std::move(w.word)), flags(w.flags) {}
+  WORD_DESC (WORD_DESC &&w) noexcept : word (std::move(w.word)), flags (w.flags) {}
 #endif
 
   std::string word;			/* C++ string. */
   word_desc_flags flags;		/* Flags associated with this word. */
 };
 
-/* This class holds a vector of a pointer type that it knows how to delete. */
-template<class T>
-class GENERIC_LIST {
+/* A linked list of words. */
+class WORD_LIST : public GENERIC_LIST {
 public:
-  GENERIC_LIST () {}
+  WORD_LIST (WORD_DESC *word_) : word (word_) {}
 
-  // Create a list of one word.
-  GENERIC_LIST (T *item) {
-    items.push_back (item);
+  // Non-virtual destructor should be safe here with the static_cast.
+  ~WORD_LIST () noexcept {
+    delete next ();
+    delete word;
   }
 
-  // List destructor deletes all of the list items.
-  ~GENERIC_LIST () noexcept {
-    for (typename std::vector<T*>::iterator it = items.begin ();
-	 it != items.end (); ++it)
-      {
-	delete *it;
-      }
+  // Create a new WORD_LIST and hook it to the front of this one.
+  // Returns a pointer to the newly-created WORD_LIST.
+  WORD_LIST *prepend (WORD_DESC *new_word) {
+    WORD_LIST *new_list = new WORD_LIST (new_word);
+    new_list->next_ = this;
+    return new_list;
   }
 
-  void push_back (T *item) {
-    items.push_back (item);
-  }
-
-  T *back () {
-    return items.back ();
-  }
-
-  // Append the items from the other list and take ownership of deleting them.
-  GENERIC_LIST<T> *append (GENERIC_LIST<T> *other) {
-    items.insert (items.end (), other->begin (), other->end ());
-    other->items.clear ();
+  WORD_LIST *append (WORD_LIST *new_item) {
+    append_ (new_item);
     return this;
   }
 
-  // Append a single list item and return this.
-  GENERIC_LIST<T> *append (T *other) {
-    items.push_back (other);
-    return this;
+  WORD_LIST *next () {
+    return static_cast<WORD_LIST *> (next_);
   }
 
-  typename std::vector<T*>::iterator
-  begin () {
-    return items.begin ();
+  WORD_LIST *reverse () {
+    return static_cast<WORD_LIST *> (reverse_ ());
   }
 
-  typename std::vector<T*>::iterator
-  end () {
-    return items.end ();
-  }
-
-  std::vector<T*> items;
-
-private:
-  // disallow copy constructor and copy assignment operator
-  GENERIC_LIST (const GENERIC_LIST &);
-  GENERIC_LIST& operator= (const GENERIC_LIST &);
+  WORD_DESC *word;
 };
-
-// Instantiate our generic vector for WORD_DESC pointers.
-typedef GENERIC_LIST<WORD_DESC> WORD_LIST;
 
 /* **************************************************************** */
 /*								    */
@@ -281,13 +254,18 @@ public:
 
 /* Structure describing a redirection.  If REDIRECTOR is negative, the parser
    (or translator in redir.c) encountered an out-of-range file descriptor. */
-class REDIRECT {
+class REDIRECT : public GENERIC_LIST {
 public:
-  REDIRECT (REDIRECTEE source, r_instruction instruction,
-	    REDIRECTEE dest_and_filename, redir_flags flags);
+  REDIRECT (REDIRECTEE source_, r_instruction instruction_,
+	    REDIRECTEE dest_and_filename_, redir_flags flags_) :
+		redirector (source_), redirectee (dest_and_filename_),
+		rflags (flags_), instruction (instruction_) {}
 
+  // Non-virtual destructor should be safe here with the static_cast.
   ~REDIRECT ()
   {
+    delete next ();
+
     if (rflags & REDIR_VARASSIGN)
       delete redirector.r.filename;
 
@@ -319,6 +297,19 @@ public:
       }
   }
 
+  REDIRECT *next () {
+    return static_cast<REDIRECT *> (next_);
+  }
+
+  REDIRECT *reverse () {
+    return static_cast<REDIRECT *> (reverse_ ());
+  }
+
+  REDIRECT *append (REDIRECT *new_item) {
+    append_ (new_item);
+    return this;
+  }
+
   std::string here_doc_eof;	/* The word that appeared in <<foo. */
   REDIRECTEE redirector;	/* Descriptor or varname to be redirected. */
   REDIRECTEE redirectee;	/* File descriptor or filename */
@@ -326,9 +317,6 @@ public:
   uint32_t flags;		/* Flag value for `open'. */
   r_instruction instruction;	/* What to do with the information. */
 };
-
-// Instantiate our generic vector for REDIRECT pointers.
-typedef GENERIC_LIST<REDIRECT> REDIRECT_LIST;
 
 /* An element used in parsing.  A single word or a single redirection.
    This is an ephemeral construct. */
@@ -402,10 +390,10 @@ public:
 
   virtual bool control_structure ();
 
+  REDIRECT *redirects;			/* List of special redirects for FOR CASE, etc. */
+
   cmd_flags flags;			/* Flags controlling execution environment. */
   int line;				/* line number the command starts on */
-
-  REDIRECT_LIST redirects;		/* List of special redirects for FOR CASE, etc. */
 
 private:
   // disallow copy constructor and copy assignment operator
@@ -449,21 +437,38 @@ operator | (const pattern_flags &a, const pattern_flags &b) {
   return static_cast<pattern_flags> (static_cast<uint32_t> (a) | static_cast<uint32_t> (b));
 }
 
-/* Pattern/action structure for CASE_COM. Unlike the other _LIST types
-   defined in this file, this doesn't have a corresponding PATTERN type.
-   Also, unlike the other list types, this one is actually a linked list. */
-struct PATTERN_LIST {
+/* Pattern/action structure for CASE_COM. */
+class PATTERN_LIST : public GENERIC_LIST {
+public:
   // Constructor that takes ownership of the passed WORD_LIST and COMMAND.
   PATTERN_LIST (WORD_LIST *patterns_, COMMAND *action_) : patterns (patterns_),
 		action (action_) {}
 
-  ~PATTERN_LIST ()
+  // Non-virtual destructor should be safe here with the static_cast.
+  ~PATTERN_LIST () noexcept
   {
+    delete next ();
     delete patterns;
     delete action;
   }
 
-  PATTERN_LIST *next;		/* Clause to try in case this one failed. */
+  PATTERN_LIST *append (PATTERN_LIST *new_item) {
+    append_ (new_item);
+    return this;
+  }
+
+  PATTERN_LIST *next () {
+    return static_cast<PATTERN_LIST *> (next_);
+  }
+
+  void set_next (PATTERN_LIST *new_next) {
+    next_ = new_next;
+  }
+
+  PATTERN_LIST *reverse () {
+    return static_cast<PATTERN_LIST *> (reverse_ ());
+  }
+
   WORD_LIST *patterns;		/* Linked list of patterns to test. */
   COMMAND *action;		/* Thing to execute if a pattern matches. */
   pattern_flags flags;
@@ -609,6 +614,7 @@ public:
 
   WORD_LIST *words;		/* The program name, the arguments,
 				   variable assignments, etc. */
+  REDIRECT *simple_redirects;	/* This class has its own separate redirects. */
 };
 
 /* The "function definition" command. */

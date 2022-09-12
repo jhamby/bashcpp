@@ -70,8 +70,7 @@ yylex () {
 %type <COMMAND*> arith_for_command
 %type <COMMAND*> coproc
 %type <COMMAND*> function_def function_body if_command elif_clause subshell
-%type <REDIRECT*> redirection
-%type <REDIRECT_LIST*> redirection_list
+%type <REDIRECT*> redirection redirection_list
 %type <ELEMENT> simple_command_element
 %type <WORD_LIST*> word_list pattern
 %type <PATTERN_LIST*> pattern_list case_clause_sequence case_clause
@@ -155,7 +154,7 @@ inputunit:	simple_list simple_list_terminator
 word_list:	WORD
 			{ $$ = new WORD_LIST ($1); }
 	|	word_list WORD
-			{ $$ = $1; $1->push_back ($2); }
+			{ $$ = $1->prepend ($2); }
 	;
 
 redirection:	'>' WORD
@@ -440,12 +439,11 @@ simple_command_element: WORD
 
 redirection_list: redirection
 			{
-			  $$ = new REDIRECT_LIST ($1);
+			  $$ = $1;
 			}
 	|	redirection_list redirection
 			{
-			  $1->push_back ($2);
-			  $$ = $1;
+			  $$ = $1->append ($2);
 			}
 	;
 
@@ -456,17 +454,17 @@ simple_command:	simple_command_element
 	;
 
 command:	simple_command
-			{ $$ = $1; }
+			{ $$ = the_shell->clean_simple_command ($1); }
 	|	shell_command
 			{ $$ = $1; }
 	|	shell_command redirection_list
 			{
 			  COMMAND *tc = $1;
-			  if (tc)
-			    {
-			      // append and take ownership of redirects
-			      tc->redirects.append ($2);
-			    }
+			  if (tc->redirects) {
+			    tc->redirects->append ($2);
+			  } else {
+			    tc->redirects = $2;
+			  }
 			  $$ = tc;
 			}
 	|	function_def
@@ -530,13 +528,13 @@ for_command:	FOR WORD newline_list DO compound_list DONE
 	|	FOR WORD newline_list IN word_list list_terminator newline_list DO compound_list DONE
 			{
 			  Shell &sh = *the_shell;
-			  $$ = new FOR_SELECT_COM (FOR_LOOP, $2, $5, $9, sh.word_lineno[sh.word_top]);
+			  $$ = new FOR_SELECT_COM (FOR_LOOP, $2, $5->reverse (), $9, sh.word_lineno[sh.word_top]);
 			  if (sh.word_top > 0) sh.word_top--;
 			}
 	|	FOR WORD newline_list IN word_list list_terminator newline_list '{' compound_list '}'
 			{
 			  Shell &sh = *the_shell;
-			  $$ = new FOR_SELECT_COM (FOR_LOOP, $2, $5, $9, sh.word_lineno[sh.word_top]);
+			  $$ = new FOR_SELECT_COM (FOR_LOOP, $2, $5->reverse (), $9, sh.word_lineno[sh.word_top]);
 			  if (sh.word_top > 0) sh.word_top--;
 			}
 	|	FOR WORD newline_list IN list_terminator newline_list DO compound_list DONE
@@ -614,14 +612,14 @@ select_command:	SELECT WORD newline_list DO list DONE
 	|	SELECT WORD newline_list IN word_list list_terminator newline_list DO list DONE
 			{
 			  Shell &sh = *the_shell;
-			  $$ = new FOR_SELECT_COM (SELECT_LOOP, $2, $5,
+			  $$ = new FOR_SELECT_COM (SELECT_LOOP, $2, $5->reverse (),
 						   $9, sh.word_lineno[sh.word_top]);
 			  if (sh.word_top > 0) sh.word_top--;
 			}
 	|	SELECT WORD newline_list IN word_list list_terminator newline_list '{' list '}'
 			{
 			  Shell &sh = *the_shell;
-			  $$ = new FOR_SELECT_COM (SELECT_LOOP, $2, $5,
+			  $$ = new FOR_SELECT_COM (SELECT_LOOP, $2, $5->reverse (),
 						   $9, sh.word_lineno[sh.word_top]);
 			  if (sh.word_top > 0) sh.word_top--;
 			}
@@ -702,8 +700,11 @@ function_body:	shell_command
 			     redirection.  The two are semantically equivalent,
 			     though -- the only difference is in how the
 			     command printing code displays the redirections. */
-			  if (tc)
-			    tc->redirects.append ($2);
+			  if (tc->redirects)
+			    tc->redirects->append ($2);
+			  else
+			    tc->redirects = $2;
+
 			  $$ = $1;
 			}
 	;
@@ -722,8 +723,10 @@ coproc:		COPROC shell_command
 			{
 			  COMMAND *tc = $2;
 
-			  if (tc)
-			    tc->redirects.append ($3);
+			  if (tc->redirects)
+			    tc->redirects->append ($3);
+			  else
+			    tc->redirects = $3;
 
 			  $$ = new COPROC_COM ("COPROC", tc);
 			}
@@ -735,14 +738,16 @@ coproc:		COPROC shell_command
 			{
 			  COMMAND *tc = $3;
 
-			  if (tc)
-			    tc->redirects.append ($4);
+			  if (tc->redirects)
+			    tc->redirects->append ($4);
+			  else
+			    tc->redirects = $4;
 
-			  $$ = new COPROC_COM  ($2->word, $3);
+			  $$ = new COPROC_COM ($2->word, tc);
 			}
 	|	COPROC simple_command
 			{
-			  $$ = new COPROC_COM  ("COPROC", $2);
+			  $$ = new COPROC_COM ("COPROC", the_shell->clean_simple_command ($2));
 			}
 	;
 
@@ -777,7 +782,7 @@ elif_clause:	ELIF compound_list THEN compound_list
 
 case_clause:	pattern_list
 	|	case_clause_sequence pattern_list
-			{ $2->next = $1; $$ = $2; }
+			{ $2->set_next ($1); $$ = $2; }
 	;
 
 pattern_list:	newline_list pattern ')' compound_list
@@ -793,21 +798,21 @@ pattern_list:	newline_list pattern ')' compound_list
 case_clause_sequence:  pattern_list SEMI_SEMI
 			{ $$ = $1; }
 	|	case_clause_sequence pattern_list SEMI_SEMI
-			{ $2->next = $1; $$ = $2; }
+			{ $2->set_next ($1); $$ = $2; }
 	|	pattern_list SEMI_AND
 			{ $1->flags |= CASEPAT_FALLTHROUGH; $$ = $1; }
 	|	case_clause_sequence pattern_list SEMI_AND
-			{ $2->flags |= CASEPAT_FALLTHROUGH; $2->next = $1; $$ = $2; }
+			{ $2->flags |= CASEPAT_FALLTHROUGH; $2->set_next ($1); $$ = $2; }
 	|	pattern_list SEMI_SEMI_AND
 			{ $1->flags |= CASEPAT_TESTNEXT; $$ = $1; }
 	|	case_clause_sequence pattern_list SEMI_SEMI_AND
-			{ $2->flags |= CASEPAT_TESTNEXT; $2->next = $1; $$ = $2; }
+			{ $2->flags |= CASEPAT_TESTNEXT; $2->set_next ($1); $$ = $2; }
 	;
 
 pattern:	WORD
 			{ $$ = new WORD_LIST ($1); }
 	|	pattern '|' WORD
-			{ $$ = $1->append ($3); }
+			{ $$ = $1->prepend ($3); }
 	;
 
 /* A list allows leading or trailing newlines and
@@ -833,10 +838,11 @@ compound_list:	list
 list0:  	list1 '\n' newline_list
 	|	list1 '&' newline_list
 			{
-			  if (typeid ($1) == typeid (CONNECTION *))
-			    $$ = connect_async_list ($1, nullptr, '&');
+			  COMMAND *cmd = $1;
+			  if (typeid (*cmd) == typeid (CONNECTION))
+			    $$ = connect_async_list (cmd, nullptr, '&');
 			  else
-			    $$ = new CONNECTION ($1, nullptr, '&');
+			    $$ = new CONNECTION (cmd, nullptr, '&');
 			}
 	|	list1 ';' newline_list
 
@@ -848,10 +854,11 @@ list1:		list1 AND_AND newline_list list1
 			{ $$ = new CONNECTION ($1, $4, static_cast<int> (token::OR_OR)); }
 	|	list1 '&' newline_list list1
 			{
-			  if (typeid ($1) == typeid (CONNECTION *))
-			    $$ = connect_async_list ($1, $4, '&');
+			  COMMAND *cmd = $1;
+			  if (typeid (*cmd) == typeid (CONNECTION))
+			    $$ = connect_async_list (cmd, $4, '&');
 			  else
-			    $$ = new CONNECTION ($1, $4, '&');
+			    $$ = new CONNECTION (cmd, $4, '&');
 			}
 	|	list1 ';' newline_list list1
 			{ $$ = new CONNECTION ($1, $4, ';'); }
@@ -900,17 +907,18 @@ simple_list:	simple_list1
 			}
 	|	simple_list1 '&'
 			{
-			  if (typeid ($1) == typeid (CONNECTION *))
-			    $$ = connect_async_list ($1, nullptr, '&');
+			  COMMAND *cmd = $1;
+			  if (typeid (*cmd) == typeid (CONNECTION))
+			    $$ = connect_async_list (cmd, nullptr, '&');
 			  else
-			    $$ = new CONNECTION ($1, nullptr, '&');
+			    $$ = new CONNECTION (cmd, nullptr, '&');
 			  Shell &sh = *the_shell;
 			  if (sh.need_here_doc)
 			    sh.gather_here_documents ();
 			  if ((sh.parser_state & PST_CMDSUBST) &&
 			      sh.current_token == sh.shell_eof_token)
 			    {
-			      sh.global_command = $1;
+			      sh.global_command = cmd;
 			      sh.eof_encountered = 0;
 			      sh.rewind_input_string ();
 			      YYACCEPT;
@@ -939,10 +947,11 @@ simple_list1:	simple_list1 AND_AND newline_list simple_list1
 			{ $$ = new CONNECTION ($1, $4, static_cast<int> (token::OR_OR)); }
 	|	simple_list1 '&' simple_list1
 			{
-			  if (typeid ($1) == typeid (CONNECTION *))
-			    $$ = connect_async_list ($1, $3, '&');
+			  COMMAND *cmd = $1;
+			  if (typeid (*cmd) == typeid (CONNECTION))
+			    $$ = connect_async_list (cmd, $3, '&');
 			  else
-			    $$ = new CONNECTION ($1, $3, '&');
+			    $$ = new CONNECTION (cmd, $3, '&');
 			}
 	|	simple_list1 ';' simple_list1
 			{ $$ = new CONNECTION ($1, $3, ';'); }
@@ -1017,12 +1026,21 @@ pipeline:	pipeline '|' newline_list pipeline
 			  /* Make cmd1 |& cmd2 equivalent to cmd1 2>&1 | cmd2 */
 			  COMMAND *tc;
 			  REDIRECT *r;
+			  REDIRECT **rp;	// pointer to "redirects" to update
 
 			  tc = $1;
+			  if (typeid (*tc) == typeid (SIMPLE_COM))
+			    rp = &(dynamic_cast<SIMPLE_COM *> (tc)->simple_redirects);
+			  else
+			    rp = &(tc->redirects);
+
 			  REDIRECTEE sd (2);
 			  REDIRECTEE rd (1);
 			  r = new REDIRECT (sd, r_duplicating_output, rd, REDIR_NOFLAGS);
-			  tc->redirects.append (r);
+			  if (*rp)
+			    (*rp)->append (r);
+			  else
+			    *rp = r;
 
 			  $$ = new CONNECTION ($1, $4, '|');
 			}
