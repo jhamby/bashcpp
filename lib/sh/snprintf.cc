@@ -67,21 +67,6 @@
 #  define HAVE_ASPRINTF 0
 #endif
 
-#if defined(DRIVER) && !defined(HAVE_CONFIG_H)
-#define HAVE_LONG_DOUBLE
-#ifdef __linux__
-#define HAVE_PRINTF_A_FORMAT
-#endif
-#define HAVE_ISINF_IN_LIBC
-#define HAVE_ISNAN_IN_LIBC
-#define PREFER_STDARG
-#define HAVE_STRINGIZE
-#define HAVE_LIMITS_H
-#define HAVE_STDDEF_H
-#define HAVE_LOCALE_H
-#define intmax_t long
-#endif
-
 #if !defined (HAVE_SNPRINTF) || !defined (HAVE_ASPRINTF)
 
 #include "bashtypes.hh"
@@ -1347,7 +1332,7 @@ vsnprintf_internal(struct DATA *data, char *string, size_t length, const char *f
 		continue;
 	      case 'j':
 		data->flags |= PF_INTMAX_T;
-		SET_SIZE_FLAGS(data, intmax_t);
+		SET_SIZE_FLAGS(data, int64_t);
 		continue;
 	      case 'z':
 		data->flags |= PF_SIZE_T;

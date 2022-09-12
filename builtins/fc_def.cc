@@ -535,7 +535,7 @@ fc_number (WORD_LIST *list)
   s = list->word->word;
   if (*s == '-')
     s++;
-  return legal_number (s, (intmax_t *)NULL);
+  return legal_number (s, nullptr);
 }
 
 /* Return an absolute index into HLIST which corresponds to COMMAND.  If

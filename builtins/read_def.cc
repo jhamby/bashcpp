@@ -174,7 +174,7 @@ Shell::read_builtin (WORD_LIST *list)
   int mb_cur_max;
   unsigned int tmsec, tmusec;
   long ival, uval;
-  intmax_t intval;
+  int64_t intval;
   char c;
   char *input_string, *orig_input_string, *prompt, *arrayname;
   char *t, *t1, *ps2, *tofree;

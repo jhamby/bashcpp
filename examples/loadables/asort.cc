@@ -58,7 +58,7 @@ sort_index(SHELL_VAR *dest, SHELL_VAR *source) {
     ARRAY *array, *dest_array;
     ARRAY_ELEMENT *ae;
     size_t i, j, n;
-    char ibuf[INT_STRLEN_BOUND (intmax_t) + 1]; // used by fmtulong
+    char ibuf[INT_STRLEN_BOUND (int64_t) + 1]; // used by fmtulong
     char *key;
 
     dest_array = array_cell(dest);

@@ -334,7 +334,7 @@ void print_rlimtype (RLIMTYPE, int);
 class WORD_DESC;
 
 bool all_digits (const char *);
-bool legal_number (const char *, intmax_t *);
+bool legal_number (const char *, int64_t *);
 bool legal_identifier (const char *);
 bool importable_function_name (const char *, size_t);
 bool exportable_function_name (const char *);

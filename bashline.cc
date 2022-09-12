@@ -4186,7 +4186,7 @@ bash_execute_unix_command (int count, int key)
   maybe_make_readline_line (v ? value_cell (v) : 0);
 
   v = find_variable ("READLINE_POINT");
-  intmax_t mi;
+  int64_t mi;
   if (v && legal_number (value_cell (v), &mi))
     readline_set_char_offset (mi, &rl_point);
 

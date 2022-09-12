@@ -52,6 +52,9 @@ void reset_readahead_token ();
 WordList *parse_string_to_word_list (char *, int, const char *);
 #endif
 
+/* Declarations for functions needed by the parser. */
+COMMAND *connect_async_list (COMMAND *, COMMAND *, int);
+
 struct StringIntAlist;
 
 /* Declarations for functions defined in stringlib.c */
@@ -146,7 +149,7 @@ std::string fmtulong (unsigned long, int, fmt_flags);
 std::string fmtullong (unsigned long long, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fmtumax.c */
-std::string fmtumax (uintmax_t, int, fmt_flags);
+std::string fmtumax (uint64_t, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fnxform.c */
 
@@ -164,28 +167,28 @@ int input_avail (int);
 /* Inline declarations of functions previously defined in lib/sh/itos.c */
 
 static inline std::string
-inttostr (intmax_t i)
+inttostr (int64_t i)
 {
-  return fmtumax (static_cast<uintmax_t> (i), 10, FL_NOFLAGS);
+  return fmtumax (static_cast<uint64_t> (i), 10, FL_NOFLAGS);
 }
 
 /* Integer to string conversion.  This now returns a string. */
 static inline std::string
-itos (intmax_t i)
+itos (int64_t i)
 {
-  return fmtumax (static_cast<uintmax_t> (i), 10, FL_NOFLAGS);
+  return fmtumax (static_cast<uint64_t> (i), 10, FL_NOFLAGS);
 }
 
 /* Integer to string conversion.  This conses the string using savestring;
    caller should delete it and be prepared to catch alloc exceptions. */
 static inline std::string
-mitos (intmax_t i)
+mitos (int64_t i)
 {
-  return fmtumax (static_cast<uintmax_t> (i), 10, FL_NOFLAGS);
+  return fmtumax (static_cast<uint64_t> (i), 10, FL_NOFLAGS);
 }
 
 static inline std::string
-uinttostr (uintmax_t i)
+uinttostr (uint64_t i)
 {
   return fmtumax (i, 10, FL_UNSIGNED);
 }
@@ -193,7 +196,7 @@ uinttostr (uintmax_t i)
 /* Integer to string conversion.  This conses the string; the
    caller should delete it. */
 static inline std::string
-uitos (uintmax_t i)
+uitos (uint64_t i)
 {
   return fmtumax (i, 10, FL_UNSIGNED);
 }
@@ -462,12 +465,12 @@ char *strpbrk (const char *, const char *);
 
 /* declarations for functions defined in lib/sh/strimax.c */
 #if !defined (HAVE_DECL_STRTOIMAX)
-intmax_t strtoimax (const char *, char **, int);
+int64_t strtoimax (const char *, char **, int);
 #endif
 
 /* declarations for functions defined in lib/sh/strumax.c */
 #if !defined (HAVE_DECL_STRTOUMAX)
-uintmax_t strtoumax (const char *, char **, int);
+uint64_t strtoumax (const char *, char **, int);
 #endif
 
 // This value was previously stored in lib/sh/zread.c.

@@ -63,7 +63,7 @@ int continuing = 0;
 int
 Shell::break_builtin (WORD_LIST *list)
 {
-  intmax_t newbreak;
+  int64_t newbreak;
 
   CHECK_HELPOPT (list);
 
@@ -104,7 +104,7 @@ Shell::break_builtin (WORD_LIST *list)
 int
 Shell::continue_builtin (WORD_LIST *list)
 {
-  intmax_t newcont;
+  int64_t newcont;
 
   CHECK_HELPOPT (list);
 

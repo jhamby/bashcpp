@@ -228,7 +228,7 @@ int
 Shell::mapfile_builtin (WORD_LIST *list)
 {
   int opt, code, fd, flags;
-  intmax_t intval;
+  int64_t intval;
   long lines, origin, nskip, callback_quantum;
   const char *array_name, *callback;
 

@@ -75,7 +75,7 @@ Shell::caller_builtin (WORD_LIST *list)
   SHELL_VAR *funcname_v, *bash_source_v, *bash_lineno_v;
   ARRAY *funcname_a, *bash_source_a, *bash_lineno_a;
   char *funcname_s, *source_s, *lineno_s;
-  intmax_t num;
+  int64_t num;
 
   CHECK_HELPOPT (list);
 

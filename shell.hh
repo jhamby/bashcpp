@@ -235,9 +235,9 @@ enum token_t {
 struct lvalue
 {
   std::string tokstr;	/* possibly-rewritten lvalue if not nullptr */
-  intmax_t tokval;	/* expression evaluated value */
+  int64_t tokval;	/* expression evaluated value */
   SHELL_VAR *tokvar;	/* variable described by array or var reference */
-  intmax_t ind;		/* array index if not -1 */
+  int64_t ind;		/* array index if not -1 */
 
   void init ()
   {
@@ -252,7 +252,7 @@ struct EXPR_CONTEXT
 {
   std::string expression, tp, lasttp;
   std::string tokstr;
-  intmax_t tokval;
+  int64_t tokval;
   struct lvalue lval;
   token_t curtok, lasttok;
   int noeval;
@@ -371,7 +371,10 @@ protected:
   int return_catch_flag;
   int return_catch_value;
 
+  /* Whether or not the last command (corresponding to last_command_exit_value)
+     was terminated by a signal, and, if so, which one. */
   int last_command_exit_signal;
+
   int executing_builtin;
   int executing_list;		/* list nesting level */
   int comsub_ignore_return;	/* can be greater than 1 */
@@ -431,13 +434,14 @@ protected:
   int winsize_assignment;		/* currently assigning to LINES or COLUMNS */
 #endif
 
-  int need_here_doc;
-
   /* The number of lines read from input while creating the current command. */
   int current_command_line_count;
 
   /* The number of lines in a command saved while we run parse_and_execute */
   int saved_command_line_count;
+
+public:
+  // The following are accessed by the parser.
 
   /* The token that currently denotes the end of parse. */
   int shell_eof_token;
@@ -445,17 +449,18 @@ protected:
   /* The token currently being read. */
   int current_token;
 
-public:
-  // The following are accessed by the parser.
-
   /* variables from evalstring.c */
   int parse_and_execute_level;
 
-  /* execution state possibly modified by the parser */
+  /* The value returned by the last synchronous command (possibly modified
+     by the parser). */
   int last_command_exit_value;
 
   /* The current parser state. */
   pstate_flags parser_state;
+
+  /* The line number in a script at which an arithmetic for command starts. */
+  int arith_for_lineno;
 
   /* Do that silly `type "bye" to exit' stuff.  You know, "ignoreeof". */
 
@@ -467,11 +472,12 @@ public:
   /* The limit for eof_encountered. */
   int eof_encountered_limit;
 
-protected:
-  // Back to protected access.
-
-  /* Either zero or EOF. */
-  int shell_input_line_terminator;
+  /* The line number in a script where the word in a `case WORD', `select WORD'
+     or `for WORD' begins.  This is a nested command maximum, since the array
+     index is decremented after a case, select, or for command is parsed. */
+#define MAX_CASE_NEST	128
+  int word_lineno[MAX_CASE_NEST + 1];
+  int word_top;
 
   /* The line number in a script on which a function definition starts. */
   int function_dstart;
@@ -479,8 +485,20 @@ protected:
   /* The line number in a script on which a function body starts. */
   int function_bstart;
 
-  /* The line number in a script at which an arithmetic for command starts. */
-  int arith_for_lineno;
+  /* The current index into the redir_stack array. */
+  int need_here_doc;
+
+  /* If non-zero, it is the token that we want read_token to return
+     regardless of what text is (or isn't) present to be read.  This
+     is reset by read_token.  If token_to_read == WORD or
+     ASSIGNMENT_WORD, yylval.word should be set to word_desc_to_read. */
+  int token_to_read;
+
+protected:
+  // Back to protected access.
+
+  /* Either zero or EOF. */
+  int shell_input_line_terminator;
 
   /* The last read token, or NULL.  read_token () uses this for context
      checking. */
@@ -493,19 +511,6 @@ protected:
   int two_tokens_ago;
 
   int global_extglob;
-
-  /* The line number in a script where the word in a `case WORD', `select WORD'
-     or `for WORD' begins.  This is a nested command maximum, since the array
-     index is decremented after a case, select, or for command is parsed. */
-#define MAX_CASE_NEST	128
-  int word_lineno[MAX_CASE_NEST + 1];
-  int word_top;
-
-  /* If non-zero, it is the token that we want read_token to return
-     regardless of what text is (or isn't) present to be read.  This
-     is reset by read_token.  If token_to_read == WORD or
-     ASSIGNMENT_WORD, yylval.word should be set to word_desc_to_read. */
-  int token_to_read;
 
   /* When non-zero, we have read the required tokens
      which allow ESAC to be the next one read. */
@@ -596,9 +601,16 @@ protected:
   bool hostname_list_initialized;
 
   /* variables from execute_cmd.h */
+
+  /* Are we currently ignoring the -e option for the duration of a builtin's
+     execution? */
   bool builtin_ignoring_errexit;
+
   bool match_ignore_case;
   bool executing_command_builtin;
+
+  /* Set to 1 if fd 0 was the subject of redirection to a subshell.  Global
+     so that reader_loop can set it to zero before executing a command. */
   bool stdin_redir;
 
   /* these are controlled via shopt */
@@ -1073,6 +1085,9 @@ public:
   // Called from generated parser on EOF.
   void handle_eof_input_unit ();
 
+  // Called from generated parser to rewind the input stream.
+  void rewind_input_string ();
+
   // typedefs for builtins (public for access from builtins struct)
 
 #if defined (ALIAS)
@@ -1250,6 +1265,9 @@ public:
   SIMPLE_COM *
   make_simple_command (ELEMENT element, COMMAND *command = nullptr);
 
+  FUNCTION_DEF *
+  make_function_def (WORD_DESC *, COMMAND *, int, int);
+
   void
   push_heredoc (REDIRECT *r)
   {
@@ -1263,6 +1281,8 @@ public:
       }
     redir_stack[need_here_doc++] = r;
   }
+
+  void gather_here_documents ();
 
   // Protected methods below
 protected:
@@ -1313,30 +1333,30 @@ protected:
     EXP_EXPANDED =	0x01
   };
 
-  intmax_t evalexp (const std::string &, eval_flags, bool *);
-  intmax_t subexpr (const std::string &);
-  intmax_t expcomma ();
-  intmax_t expassign ();
-  intmax_t expcond ();
-  intmax_t explor ();
-  intmax_t expland ();
-  intmax_t expbor ();
-  intmax_t expbxor ();
-  intmax_t expband ();
-  intmax_t exp5 ();
-  intmax_t exp4 ();
-  intmax_t expshift ();
-  intmax_t exp3 ();
-  intmax_t expmuldiv ();
-  intmax_t exppower ();
-  intmax_t exp1 ();
-  intmax_t exp0 ();
-  intmax_t expr_streval (const std::string &, int, struct lvalue *);
+  int64_t evalexp (const std::string &, eval_flags, bool *);
+  int64_t subexpr (const std::string &);
+  int64_t expcomma ();
+  int64_t expassign ();
+  int64_t expcond ();
+  int64_t explor ();
+  int64_t expland ();
+  int64_t expbor ();
+  int64_t expbxor ();
+  int64_t expband ();
+  int64_t exp5 ();
+  int64_t exp4 ();
+  int64_t expshift ();
+  int64_t exp3 ();
+  int64_t expmuldiv ();
+  int64_t exppower ();
+  int64_t exp1 ();
+  int64_t exp0 ();
+  int64_t expr_streval (const std::string &, int, struct lvalue *);
 
   void readtok ();
 
   void evalerror (const std::string &);
-  intmax_t strlong (const std::string &);
+  int64_t strlong (const std::string &);
 
   void pushexp ();
   void popexp ();
@@ -2396,7 +2416,7 @@ protected:
   WORD_LIST *expand_word_leave_quoted (WORD_DESC *, int);
 
   /* Return the value of a positional parameter.  This handles values > 10. */
-  char *get_dollar_var_value (intmax_t);
+  char *get_dollar_var_value (int64_t);
 
   /* Quote a string to protect it from word splitting. */
   char *quote_string (const std::string &);
@@ -2618,7 +2638,7 @@ protected:
 
   SHELL_VAR *bind_variable_value (SHELL_VAR *, const std::string &, int);
   SHELL_VAR *bind_int_variable (const std::string &, const std::string &, assign_flags);
-  SHELL_VAR *bind_var_to_int (const std::string &, intmax_t);
+  SHELL_VAR *bind_var_to_int (const std::string &, int64_t);
 
   int assign_in_env (WORD_DESC *, int);
 
@@ -2676,7 +2696,7 @@ protected:
   void maybe_make_export_env ();
   void update_export_env_inplace (const std::string &, int, const std::string &);
   void put_command_name_into_env (const std::string &);
-  void put_gnu_argv_flags_into_env (intmax_t, const std::string &);
+  void put_gnu_argv_flags_into_env (int64_t, const std::string &);
 
   void print_var_list (SHELL_VAR **);
   void print_func_list (SHELL_VAR **);
@@ -2843,9 +2863,15 @@ private:
 
   char *the_current_working_directory;
 
+  /* The printed representation of the currently-executing command (same as
+     the_printed_command), except when a trap is being executed.  Useful for
+     a debugger to know where exactly the program is currently executing. */
   char *the_printed_command_except_trap;
 
+  /* The name of the command that is currently being executed.
+     `test' needs this, for example. */
   const char *this_command_name;
+
   SHELL_VAR *this_shell_function;
 
   char_flags *sh_syntaxtab;

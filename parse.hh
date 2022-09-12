@@ -431,7 +431,7 @@ namespace bash {
       // NUMBER
       // list_terminator
       // timespec
-      char dummy8[sizeof (int)];
+      char dummy8[sizeof (int64_t)];
     };
 
     /// The size of the largest semantic type.
@@ -736,7 +736,7 @@ namespace bash {
       case symbol_kind::S_NUMBER: // NUMBER
       case symbol_kind::S_list_terminator: // list_terminator
       case symbol_kind::S_timespec: // timespec
-        value.move< int > (std::move (that.value));
+        value.move< int64_t > (std::move (that.value));
         break;
 
       default:
@@ -845,12 +845,12 @@ namespace bash {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, int&& v)
+      basic_symbol (typename Base::kind_type t, int64_t&& v)
         : Base (t)
         , value (std::move (v))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const int& v)
+      basic_symbol (typename Base::kind_type t, const int64_t& v)
         : Base (t)
         , value (v)
       {}
@@ -943,7 +943,7 @@ switch (yykind)
       case symbol_kind::S_NUMBER: // NUMBER
       case symbol_kind::S_list_terminator: // list_terminator
       case symbol_kind::S_timespec: // timespec
-        value.template destroy< int > ();
+        value.template destroy< int64_t > ();
         break;
 
       default:
@@ -1067,10 +1067,10 @@ switch (yykind)
 #endif
       {}
 #if 201103L <= YY_CPLUSPLUS
-      symbol_type (int tok, int v)
+      symbol_type (int tok, int64_t v)
         : super_type (token_kind_type (tok), std::move (v))
 #else
-      symbol_type (int tok, const int& v)
+      symbol_type (int tok, const int64_t& v)
         : super_type (token_kind_type (tok), v)
 #endif
       {}
@@ -1562,14 +1562,14 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
-      make_NUMBER (int v)
+      make_NUMBER (int64_t v)
       {
         return symbol_type (token::NUMBER, std::move (v));
       }
 #else
       static
       symbol_type
-      make_NUMBER (const int& v)
+      make_NUMBER (const int64_t& v)
       {
         return symbol_type (token::NUMBER, v);
       }
@@ -2311,7 +2311,7 @@ switch (yykind)
       case symbol_kind::S_NUMBER: // NUMBER
       case symbol_kind::S_list_terminator: // list_terminator
       case symbol_kind::S_timespec: // timespec
-        value.copy< int > (YY_MOVE (that.value));
+        value.copy< int64_t > (YY_MOVE (that.value));
         break;
 
       default:
@@ -2408,7 +2408,7 @@ switch (yykind)
       case symbol_kind::S_NUMBER: // NUMBER
       case symbol_kind::S_list_terminator: // list_terminator
       case symbol_kind::S_timespec: // timespec
-        value.move< int > (YY_MOVE (s.value));
+        value.move< int64_t > (YY_MOVE (s.value));
         break;
 
       default:

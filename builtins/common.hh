@@ -126,7 +126,7 @@ int dollar_vars_changed ();
 void set_dollar_vars_unchanged ();
 void set_dollar_vars_changed ();
 
-int get_numeric_arg (WORD_LIST *, int, intmax_t *);
+int get_numeric_arg (WORD_LIST *, int, int64_t *);
 int get_exitstat (WORD_LIST *);
 int read_octal (const char *);
 
@@ -201,8 +201,8 @@ int var_attribute_string (SHELL_VAR *, int, char *);
 
 /* Functions from pushd.def */
 char *get_dirstack_from_string (const char *);
-char *get_dirstack_element (intmax_t, int);
-void set_dirstack_element (intmax_t, int, const char *);
+char *get_dirstack_element (int64_t, int);
+void set_dirstack_element (int64_t, int, const char *);
 WORD_LIST *get_directory_stack (int);
 
 /* Functions from evalstring.c */

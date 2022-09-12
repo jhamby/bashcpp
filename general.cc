@@ -258,9 +258,9 @@ all_digits (const char *string)
    valid number.  Stuff the converted number into RESULT if RESULT is
    not null. */
 bool
-legal_number (const char *string, intmax_t *result)
+legal_number (const char *string, int64_t *result)
 {
-  intmax_t value;
+  int64_t value;
   char *ep;
 
   if (result)
@@ -892,7 +892,7 @@ char *
 trim_pathname (char *name, int maxlen)
 {
   int nlen, ndirs;
-  intmax_t nskip;
+  int64_t nskip;
   char *nbeg, *nend, *ntail, *v;
 
   if (name == 0 || (nlen = strlen (name)) == 0)

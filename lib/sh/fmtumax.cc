@@ -1,4 +1,4 @@
-/* fmtumax.c -- Convert uintmax_t to string.  */
+/* fmtumax.c -- Convert uint64_t to string.  */
 
 /* Copyright (C) 2002 Free Software Foundation, Inc.
 
@@ -20,8 +20,8 @@
 
 #include "config.hh"
 
-#define LONG		intmax_t
-#define UNSIGNED_LONG	uintmax_t
+#define LONG		int64_t
+#define UNSIGNED_LONG	uint64_t
 #define fmtulong	fmtumax
 
 #include "fmtulong.cc"

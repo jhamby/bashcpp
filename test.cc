@@ -296,7 +296,7 @@ filecomp (const char *s, const char *t, int op)
 bool
 Shell::arithcomp (const char *s, const char *t, int op, int flags)
 {
-  intmax_t l, r;
+  int64_t l, r;
 
   if (flags & TEST_ARITHEXP)
     {
@@ -433,7 +433,7 @@ static bool
 unary_operator ()
 {
   char *op;
-  intmax_t r;
+  int64_t r;
 
   op = argv[pos];
   if (test_unop (op) == 0)
@@ -468,7 +468,7 @@ unary_operator ()
 bool
 Shell::unary_test (const char *op, const char *arg)
 {
-  intmax_t r;
+  int64_t r;
   struct stat stat_buf;
   struct timespec mtime, atime;
   SHELL_VAR *v;

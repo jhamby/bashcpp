@@ -443,7 +443,7 @@ fi
 AC_FUNC_ALLOCA
 AC_HEADER_MAJOR
 AC_CHECK_HEADERS([arpa/inet.h dirent.h fcntl.h grp.h inttypes.h langinfo.h libintl.h \
-		  malloc.h netdb.h netinet/in.h pwd.h sgtty.h stdint.h stdio_ext.h \
+		  malloc.h netdb.h netinet/in.h pwd.h regex.h sgtty.h stdint.h stdio_ext.h \
 		  strings.h sys/dir.h sys/file.h sys/ioctl.h sys/ndir.h sys/param.h sys/socket.h \
 		  sys/time.h sys/wait.h syslog.h termio.h termios.h unistd.h])
 
@@ -482,7 +482,7 @@ AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf eaccess getaddrinfo \
 		gettimeofday group_member imaxdiv inet_aton isascii kill killpg \
 		localeconv localtime_r lstat mbschr mbsnrtowcs mkdir mkdtemp \
 		mkfifo mkstemp mmap nl_langinfo pathconf pselect putenv random \
-		readlink regexec rename select setdtablesize setenv setitimer \
+		readlink regcomp regexec rename select setdtablesize setenv setitimer \
 		setlocale setresgid setresuid socket stpcpy strcasecmp \
 		strcasestr strchrnul strerror strncasecmp strnlen \
 		strsignal strtoimax strtoumax sysconf tcgetattr \

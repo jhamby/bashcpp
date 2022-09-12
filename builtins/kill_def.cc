@@ -82,7 +82,7 @@ Shell::kill_builtin (WORD_LIST *list)
   int sig, dflags;
   const char *sigspec, *word;
   pid_t pid;
-  intmax_t pid_value;
+  int64_t pid_value;
 
   if (list == 0)
     {

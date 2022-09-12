@@ -45,7 +45,7 @@ strftime_builtin (list)
   time_t secs;
   struct tm *t;
   int n;
-  intmax_t i;
+  int64_t i;
 
   if (no_options (list))
     return (EX_USAGE);

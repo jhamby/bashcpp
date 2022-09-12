@@ -36,23 +36,13 @@ COMMAND::~COMMAND () noexcept
 {
 }
 
-// Virtual destructor for standard 'for' command.
-FOR_COM::~FOR_COM () noexcept
+// Virtual destructor for standard 'for' or ksh 'select' command.
+FOR_SELECT_COM::~FOR_SELECT_COM () noexcept
 {
   delete name;
   delete map_list;
   delete action;
 }
-
-#if defined (SELECT_COMMAND)
-// Virtual destructor for select command.
-SELECT_COM::~SELECT_COM () noexcept
-{
-  delete name;
-  delete map_list;
-  delete action;
-}
-#endif
 
 #if defined (ARITH_FOR_COMMAND)
 // Virtual destructor for arithmetic 'for' command.

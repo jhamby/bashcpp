@@ -1,4 +1,4 @@
-/* strtoumax - convert string representation of a number into an uintmax_t value. */
+/* strtoumax - convert string representation of a number into an uint64_t value. */
 
 /* Copyright 1999-2020 Free Software Foundation, Inc.
 
@@ -55,14 +55,14 @@ extern unsigned long long strtoull (const char *, char **, int);
 #undef strtoumax
 #endif
 
-uintmax_t
+uint64_t
 strtoumax (const char *ptr, char **endptr, int base)
 {
   verify (size_is_that_of_unsigned_long_or_unsigned_long_long,
-	  (sizeof (uintmax_t) == sizeof (unsigned long) ||
-	   sizeof (uintmax_t) == sizeof (unsigned long long)));
+	  (sizeof (uint64_t) == sizeof (unsigned long) ||
+	   sizeof (uint64_t) == sizeof (unsigned long long)));
 
-  if (sizeof (uintmax_t) != sizeof (unsigned long))
+  if (sizeof (uint64_t) != sizeof (unsigned long))
     return strtoull (ptr, endptr, base);
 
   return strtoul (ptr, endptr, base);
@@ -74,11 +74,11 @@ int
 main ()
 {
   char *p, *endptr;
-  uintmax_t x;
+  uint64_t x;
   unsigned long long y;
   unsigned long z;
 
-  std::printf ("sizeof uintmax_t: %d\n", sizeof (uintmax_t));
+  std::printf ("sizeof uint64_t: %d\n", sizeof (uint64_t));
 
   std::printf ("sizeof unsigned long long: %d\n", sizeof (unsigned long long));
   std::printf ("sizeof unsigned long: %d\n", sizeof (unsigned long));

@@ -421,7 +421,7 @@ REDIRECT::REDIRECT (REDIRECTEE source, r_instruction instruction,
 {
   WORD_DESC *w;
   int wlen;
-  intmax_t lfd;
+  int64_t lfd;
 
   /* First do the common cases. */
   redirector = source;

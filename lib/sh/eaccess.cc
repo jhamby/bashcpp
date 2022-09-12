@@ -18,14 +18,12 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined (HAVE_CONFIG_H)
-#  include <config.h>
-#endif
+#include "config.hh"
 
 #include <cstdio>
 #include <cstring>
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
@@ -36,10 +34,10 @@
 #if !defined (_POSIX_VERSION) && defined (HAVE_SYS_FILE_H)
 #  include <sys/file.h>
 #endif /* !_POSIX_VERSION */
-#include "posixstat.h"
-#include "filecntl.h"
+#include "posixstat.hh"
+#include "filecntl.hh"
 
-#include "shell.h"
+#include "shell.hh"
 
 namespace bash
 {
@@ -84,7 +82,7 @@ sh_stat (const char *path, struct stat *finfo)
       /* If stating /dev/fd/n doesn't produce the same results as fstat of
 	 FD N, then define DEV_FD_STAT_BROKEN */
 #if !defined (HAVE_DEV_FD) || defined (DEV_FD_STAT_BROKEN)
-      intmax_t fd;
+      int64_t fd;
       int r;
 
       if (legal_number (path + 8, &fd) && fd == (int)fd)

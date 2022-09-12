@@ -233,7 +233,7 @@ disown_builtin (WORD_LIST *list)
 {
   int opt, job, retval, nohup_only, running_jobs, all_jobs;
   sigset_t set, oset;
-  intmax_t pid_value;
+  int64_t pid_value;
 
   nohup_only = running_jobs = all_jobs = 0;
   reset_internal_getopt ();

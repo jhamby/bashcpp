@@ -20,7 +20,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined (HAVE_UNISTD_H)
 #  include <unistd.h>
@@ -78,7 +78,7 @@ getstat (fname, flags, sp)
      int flags;
      struct stat *sp;
 {
-  intmax_t lfd;
+  int64_t lfd;
   int fd, r;
 
   if (strncmp (fname, "/dev/fd/", 8) == 0)

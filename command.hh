@@ -197,30 +197,67 @@ public:
 #endif
 };
 
-/* This class holds a vector of WORD_DESC * and knows how to delete them. */
-class WORD_LIST : public std::vector<WORD_DESC *> {
+/* This class holds a vector of a pointer type that it knows how to delete. */
+template<class T>
+class GENERIC_LIST {
 public:
-  WORD_LIST () {}
+  GENERIC_LIST () {}
 
   // Create a list of one word.
-  WORD_LIST (WORD_DESC *word) {
-    push_back (word);
+  GENERIC_LIST (T *item) {
+    items.push_back (item);
   }
 
-  // List destructor deletes all of the WORD_DESC items.
-  ~WORD_LIST () noexcept {
-    for (std::vector<WORD_DESC *>::iterator it = begin (); it != end (); ++it)
+  // List destructor deletes all of the list items.
+  ~GENERIC_LIST () noexcept {
+    for (typename std::vector<T*>::iterator it = items.begin ();
+	 it != items.end (); ++it)
       {
 	delete *it;
       }
   }
 
+  void push_back (T *item) {
+    items.push_back (item);
+  }
+
+  T *back () {
+    return items.back ();
+  }
+
+  // Append the items from the other list and take ownership of deleting them.
+  GENERIC_LIST<T> *append (GENERIC_LIST<T> *other) {
+    items.insert (items.end (), other->begin (), other->end ());
+    other->items.clear ();
+    return this;
+  }
+
+  // Append a single list item and return this.
+  GENERIC_LIST<T> *append (T *other) {
+    items.push_back (other);
+    return this;
+  }
+
+  typename std::vector<T*>::iterator
+  begin () {
+    return items.begin ();
+  }
+
+  typename std::vector<T*>::iterator
+  end () {
+    return items.end ();
+  }
+
+  std::vector<T*> items;
+
 private:
   // disallow copy constructor and copy assignment operator
-  WORD_LIST (const WORD_LIST &);
-  WORD_LIST& operator=(const WORD_LIST &);
+  GENERIC_LIST (const GENERIC_LIST &);
+  GENERIC_LIST& operator= (const GENERIC_LIST &);
 };
 
+// Instantiate our generic vector for WORD_DESC pointers.
+typedef GENERIC_LIST<WORD_DESC> WORD_LIST;
 
 /* **************************************************************** */
 /*								    */
@@ -236,19 +273,17 @@ private:
 class REDIRECTEE {
 public:
   // C++03-compatible constructors.
-  REDIRECTEE (int dest_) { r.dest = dest_; }
-  REDIRECTEE (WORD_DESC *filename_) { r.filename = filename_; }
+  REDIRECTEE (int64_t dest_) { r.dest = dest_; }
+  REDIRECTEE (WORD_DESC &filename_) { r.filename = &filename_; }
 
   union redirectee_t {
-    int dest;			/* Place to redirect REDIRECTOR to, or ... */
+    int64_t dest;		/* Place to redirect REDIRECTOR to, or ... */
     WORD_DESC *filename;	/* filename to redirect to. */
   } r;
 };
 
 /* Structure describing a redirection.  If REDIRECTOR is negative, the parser
-   (or translator in redir.c) encountered an out-of-range file descriptor.
-   There may also be a next element, creating a list of redirections.  When
-   the object is deleted, the entire list will be deleted along with it.  */
+   (or translator in redir.c) encountered an out-of-range file descriptor. */
 class REDIRECT {
 public:
   REDIRECT (REDIRECTEE source, r_instruction instruction,
@@ -298,29 +333,8 @@ public:
 #endif
 };
 
-/* This class holds a vector of REDIRECT * and knows how to delete them. */
-class REDIRECT_LIST : public std::vector<REDIRECT *> {
-public:
-  REDIRECT_LIST () {}
-
-  // Create a list of a single redirect.
-  REDIRECT_LIST (REDIRECT *redir) {
-    push_back (redir);
-  }
-
-  // List destructor deletes all of the REDIRECT items.
-  ~REDIRECT_LIST () noexcept {
-    for (std::vector<REDIRECT *>::iterator it = begin (); it != end (); ++it)
-      {
-	delete *it;
-      }
-  }
-
-private:
-  // disallow copy constructor and copy assignment operator
-  REDIRECT_LIST (const REDIRECT_LIST &);
-  REDIRECT_LIST& operator=(const REDIRECT_LIST &);
-};
+// Instantiate our generic vector for REDIRECT pointers.
+typedef GENERIC_LIST<REDIRECT> REDIRECT_LIST;
 
 /* An element used in parsing.  A single word or a single redirection.
    This is an ephemeral construct. */
@@ -350,20 +364,54 @@ enum cmd_flags {
   CMD_TRY_OPTIMIZING =	0x8000	/* try to optimize this simple command */
 };
 
+static inline cmd_flags&
+operator |= (cmd_flags &a, const cmd_flags &b) {
+  a = static_cast<cmd_flags> (static_cast<uint32_t> (a) | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline cmd_flags
+operator | (const cmd_flags &a, const cmd_flags &b) {
+  return static_cast<cmd_flags> (static_cast<uint32_t> (a) | static_cast<uint32_t> (b));
+}
+
+static inline cmd_flags&
+operator &= (cmd_flags &a, const cmd_flags &b) {
+  a = static_cast<cmd_flags> (static_cast<uint32_t> (a) & static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline cmd_flags
+operator & (const cmd_flags &a, const cmd_flags &b) {
+  return static_cast<cmd_flags> (static_cast<uint32_t> (a) & static_cast<uint32_t> (b));
+}
+
+static inline cmd_flags&
+operator ^= (cmd_flags &a, const cmd_flags &b) {
+  a = static_cast<cmd_flags> (static_cast<uint32_t> (a) ^ static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline cmd_flags
+operator ~ (const cmd_flags &a) {
+  return static_cast<cmd_flags> (~static_cast<uint32_t> (a));
+}
+
 /* What a command looks like (virtual base class). */
 class COMMAND {
 public:
-  COMMAND () {}
-  COMMAND (int line_) : line (line_) {}
+  COMMAND (int line_) : line (line_) {}	// requires a line number to be specified
+
   virtual ~COMMAND () noexcept;		/* virtual base class destructor */
 
   virtual COMMAND *clone ();		// return a new deep copy of the command
 
+  virtual bool control_structure ();
+
   cmd_flags flags;			/* Flags controlling execution environment. */
   int line;				/* line number the command starts on */
 
-protected:
-  REDIRECT_LIST redirects;		/* Special redirects for FOR CASE, etc. */
+  REDIRECT_LIST redirects;		/* List of special redirects for FOR CASE, etc. */
 
 private:
   // disallow copy constructor and copy assignment operator
@@ -374,11 +422,13 @@ private:
 /* Structure used to represent the CONNECTION type. */
 class CONNECTION : public COMMAND {
 public:
+  // Constructor that uses the first
   CONNECTION (COMMAND *com1, COMMAND *com2, int con_)
-	: first (com1), second (com2), connector (con_) {}
+	: COMMAND (com1->line), first (com1), second (com2), connector (con_) {}
 
-  virtual ~CONNECTION () noexcept override;
-  virtual COMMAND *clone () override;
+  virtual ~CONNECTION () noexcept override;	/* virtual base class destructor */
+
+  virtual COMMAND *clone () override;		// return a new deep copy of the command
 
   COMMAND *first;		/* Pointer to the first command. */
   COMMAND *second;		/* Pointer to the second command. */
@@ -390,17 +440,34 @@ public:
 
 /* Structures used to represent the CASE command. */
 
-/* Values for FLAGS word in a PATTERN_LIST */
-enum pattern_list_flags {
+/* Values for FLAGS word in a PATTERN */
+enum pattern_flags {
+  CASEPAT_NOFLAGS =	   0,
   CASEPAT_FALLTHROUGH =	0x01,
   CASEPAT_TESTNEXT =	0x02
 };
 
-/* Pattern/action structure for CASE_COM. */
+static inline pattern_flags&
+operator |= (pattern_flags &a, const pattern_flags &b) {
+  a = static_cast<pattern_flags> (static_cast<uint32_t> (a) | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline pattern_flags
+operator | (const pattern_flags &a, const pattern_flags &b) {
+  return static_cast<pattern_flags> (static_cast<uint32_t> (a) | static_cast<uint32_t> (b));
+}
+
+/* Pattern/action structure for CASE_COM. Unlike the other _LIST types
+   defined in this file, this doesn't have a corresponding PATTERN type.
+   Also, unlike the other list types, this one is actually a linked list. */
 struct PATTERN_LIST {
+  // Constructor that takes ownership of the passed WORD_LIST and COMMAND.
+  PATTERN_LIST (WORD_LIST *patterns_, COMMAND *action_) : patterns (patterns_),
+		action (action_) {}
+
   ~PATTERN_LIST ()
   {
-    delete next;		// recursively delete the rest of the list
     delete patterns;
     delete action;
   }
@@ -408,7 +475,7 @@ struct PATTERN_LIST {
   PATTERN_LIST *next;		/* Clause to try in case this one failed. */
   WORD_LIST *patterns;		/* Linked list of patterns to test. */
   COMMAND *action;		/* Thing to execute if a pattern matches. */
-  pattern_list_flags flags;
+  pattern_flags flags;
 #if SIZEOF_INT != SIZEOF_CHAR_P
   int _pad;			// silence clang -Wpadded warning
 #endif
@@ -417,43 +484,55 @@ struct PATTERN_LIST {
 /* The CASE command. */
 class CASE_COM : public COMMAND {
 public:
-  CASE_COM (WORD_DESC *word_, PATTERN_LIST *clauses_, int lineno_) :
-	COMMAND (lineno_), word (word_), clauses (clauses_) {}
+  CASE_COM (WORD_DESC *word_, PATTERN_LIST *clauses_, int line_) :
+	COMMAND (line_), word (word_), clauses (clauses_) {}
 
   virtual ~CASE_COM () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
   WORD_DESC *word;		/* The thing to test. */
   PATTERN_LIST *clauses;	/* The clauses to test against, or nullptr. */
 };
 
-/* FOR command. */
-class FOR_COM : public COMMAND {
-public:
-  FOR_COM (WORD_DESC *name_, WORD_LIST *map_list_, COMMAND *action_, int lineno_)
-	: COMMAND (lineno_), name (name_), map_list (map_list_), action (action_) {}
+enum for_loop_type {		// is this a for or a select loop?
+  FOR_LOOP,
+  SELECT_LOOP
+};
 
-  virtual ~FOR_COM () noexcept override;
+/* FOR or KSH SELECT command. */
+class FOR_SELECT_COM : public COMMAND {
+public:
+  FOR_SELECT_COM (for_loop_type type_, WORD_DESC *name_, WORD_LIST *map_list_,
+		  COMMAND *action_, int line_)
+	: COMMAND (line_), name (name_), map_list (map_list_), action (action_),
+	  loop_type (type_) {}
+
+  virtual ~FOR_SELECT_COM () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
   WORD_DESC *name;	/* The variable name to get mapped over. */
   WORD_LIST *map_list;	/* The things to map over.  This is never nullptr. */
   COMMAND *action;	/* The action to execute.
 			   During execution, NAME is bound to successive
 			   members of MAP_LIST. */
+
+  for_loop_type loop_type;	// Whether this is a FOR or a SELECT loop. */
+
+#if SIZEOF_INT != SIZEOF_CHAR_P
+  int _pad;			// silence clang -Wpadded warning
+#endif
 };
 
 #if defined (ARITH_FOR_COMMAND)
 class ARITH_FOR_COM : public COMMAND {
 public:
-  ARITH_FOR_COM () {}
+  ARITH_FOR_COM (WORD_LIST *init_, WORD_LIST *test_, WORD_LIST *step_,
+		 COMMAND *action_, int line_) : COMMAND (line_),
+		 init (init_), test (test_), step (step_), action (action_) {}
 
   virtual ~ARITH_FOR_COM () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
   WORD_LIST *init;
   WORD_LIST *test;
   WORD_LIST *step;
@@ -461,51 +540,42 @@ protected:
 };
 #endif
 
-#if defined (SELECT_COMMAND)
-/* KSH SELECT command. */
-class SELECT_COM : public COMMAND {
-public:
-  SELECT_COM (WORD_DESC *name_, WORD_LIST *map_list_, COMMAND *action_, int lineno_)
-	: COMMAND (lineno_), name (name_), map_list (map_list_), action (action_) {}
-
-  virtual ~SELECT_COM () noexcept override;
-  virtual COMMAND *clone () override;
-
-protected:
-  WORD_DESC *name;	/* The variable name to get mapped over. */
-  WORD_LIST *map_list;	/* The things to map over.  This is never nullptr. */
-  COMMAND *action;	/* The action to execute.
-			   During execution, NAME is bound to the member of
-			   MAP_LIST chosen by the user. */
-};
-#endif /* SELECT_COMMAND */
-
 /* IF command. */
 class IF_COM : public COMMAND {
 public:
+  // Constructor called by parser that uses the line number of the 'test' argument.
+  // In the C version of bash, the line number isn't initialized for this struct.
+  IF_COM (COMMAND *test_, COMMAND *true_case_, COMMAND *false_case_) :
+	  COMMAND (test_->line), test (test_), true_case (true_case_),
+	  false_case (false_case_) {}
+
   virtual ~IF_COM () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
   COMMAND *test;		/* Thing to test. */
   COMMAND *true_case;		/* What to do if the test returned non-zero. */
   COMMAND *false_case;		/* What to do if the test returned zero. */
 };
 
+enum loop_type {		// is this an until or a while loop?
+  LOOP_UNTIL,
+  LOOP_WHILE
+};
+
 /* UNTIL_WHILE command. */
 class UNTIL_WHILE_COM : public COMMAND {
 public:
+  // Constructor called by parser that uses the line number of the 'test' argument.
+  // In the C version of bash, the line number isn't initialized for this struct.
+  UNTIL_WHILE_COM (loop_type type_, COMMAND *test_, COMMAND *action_) :
+	COMMAND (test_->line), test (test_), action (action_), loop_type (type_) {}
+
   virtual ~UNTIL_WHILE_COM () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
   COMMAND *test;		/* Thing to test. */
   COMMAND *action;		/* Thing to do while test is non-zero. */
-
-  enum loop_type {		// is this an until or a while loop?
-    UNTIL = 0,
-    WHILE
-  } loop_type;
+  loop_type loop_type;		// Whether this is an UNTIL or WHILE loop. */
 
 #if SIZEOF_INT != SIZEOF_CHAR_P
   int _pad;			// silence clang -Wpadded warning
@@ -518,14 +588,17 @@ protected:
    time being. */
 class ARITH_COM : public COMMAND {
 public:
+  // Contruct a new ARITH_COM, wrapping the specified WORD_LIST.
+  ARITH_COM (WORD_LIST *exp_) : COMMAND (0), exp (exp_) {}
+
   virtual ~ARITH_COM () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
   WORD_LIST *exp;
 };
 #endif /* DPAREN_ARITHMETIC */
 
+#if defined (COND_COMMAND)
 /* The conditional command, [[...]].  This is a binary tree -- we slipped
    a recursive-descent parser into the YACC grammar to parse it. */
 enum cond_com_type {
@@ -537,13 +610,11 @@ enum cond_com_type {
   COND_EXPR =	6
 };
 
-#if defined (COND_COMMAND)
 class COND_COM : public COMMAND {
 public:
   virtual ~COND_COM () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
   WORD_DESC *op;
   COND_COM *left, *right;
   int type;
@@ -561,7 +632,8 @@ public:
   virtual ~SIMPLE_COM () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
+  virtual bool control_structure () override;	// not a control structure
+
   WORD_LIST *words;		/* The program name, the arguments,
 				   variable assignments, etc. */
 };
@@ -569,34 +641,42 @@ protected:
 /* The "function definition" command. */
 class FUNCTION_DEF : public COMMAND {
 public:
+
   virtual ~FUNCTION_DEF () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
   WORD_DESC *name;		/* The name of the function. */
   COMMAND *command;		/* The parsed execution tree. */
-  std::string source_file;		/* file in which function was defined, if any */
+  std::string source_file;	/* file in which function was defined, if any */
 };
 
 /* A command that is `grouped' allows pipes and redirections to affect all
    commands in the group. */
 class GROUP_COM : public COMMAND {
 public:
+  // Contruct a new GROUP_COM, wrapping the specified command.
+  GROUP_COM (COMMAND *command_) : COMMAND (command_->line), command (command_) {}
+
   virtual ~GROUP_COM () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
   COMMAND *command;
 };
 
-/* A command that is run in a subshell. */
+// A wrapper for a command that runs in a subshell.
 class SUBSHELL_COM : public COMMAND {
 public:
+  SUBSHELL_COM (COMMAND *command_) : COMMAND (command_->line), command (command_)
+  {
+    flags |= CMD_WANT_SUBSHELL;			// set the appropriate flags
+  }
+
   virtual ~SUBSHELL_COM () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
-  COMMAND *command;
+  virtual bool control_structure () override;	// not a control structure
+
+  COMMAND *command;				// The actual command to run.
 };
 
 enum coproc_status {
@@ -616,14 +696,28 @@ struct Coproc {
   int c_lock;
 };
 
+// A wrapper for a command that runs as a coprocess.
 class COPROC_COM : public COMMAND {
 public:
+  COPROC_COM (const char *name_, COMMAND *command_) : COMMAND (command_->line),
+	name (name_), command (command_)
+  {
+    flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
+  }
+
+  COPROC_COM (const std::string& name_, COMMAND *command_) : COMMAND (command_->line),
+	name (name_), command (command_)
+  {
+    flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
+  }
+
   virtual ~COPROC_COM () noexcept override;
   virtual COMMAND *clone () override;
 
-protected:
+  virtual bool control_structure () override;	// not a control structure
+
   std::string name;
-  COMMAND *command;
+  COMMAND *command;				// The actual command to run.
 };
 
 #if 0

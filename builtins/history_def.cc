@@ -178,7 +178,7 @@ Shell::history_builtin (WORD_LIST *list)
 #endif
   else if ((flags & DFLAG) && (range = strchr ((delete_arg[0] == '-') ? delete_arg + 1 : delete_arg, '-')))
     {
-      intmax_t delete_start, delete_end;
+      int64_t delete_start, delete_end;
       *range++ = '\0';
       if (legal_number (delete_arg, &delete_start) == 0 || legal_number (range, &delete_end) == 0)
 	{
@@ -223,7 +223,7 @@ range_error:
     }
   else if (flags & DFLAG)
     {
-      intmax_t delete_offset;
+      int64_t delete_offset;
       if (legal_number (delete_arg, &delete_offset) == 0)
 	{
 	  sh_erange (delete_arg, _("history position"));
@@ -344,7 +344,7 @@ histtime (HIST_ENTRY *hlist, const char *histtimefmt)
 static int
 display_history (WORD_LIST *list)
 {
-  intmax_t limit;
+  int64_t limit;
 
   if (list)
     {

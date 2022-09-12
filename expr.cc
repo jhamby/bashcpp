@@ -19,7 +19,7 @@
 */
 
 /*
- All arithmetic is done as intmax_t integers with no checking for overflow
+ All arithmetic is done as int64_t integers with no checking for overflow
  (though division by 0 is caught and flagged as an error).
 
  The following operators are handled, grouped into a set of levels in
@@ -102,7 +102,7 @@ namespace bash
 #  define MAX_INT_LEN 32
 #endif
 
-static intmax_t ipow (intmax_t base, intmax_t exp);
+static int64_t ipow (int64_t base, int64_t exp);
 
 
 /* Push and save away the contents of the globals describing the
@@ -221,7 +221,7 @@ Shell::expr_bind_array_element (const std::string &tok, arrayind_t ind, const st
    were assigned at program startup or by the compiler.  Therefore, it is
    safe to let the loop terminate when expr_depth == 0, without freeing up
    any of the expr_depth[0] stuff. */
-intmax_t
+int64_t
 Shell::evalexp (const std::string &expr, eval_flags flags, bool *validp)
 {
   try
@@ -229,7 +229,7 @@ Shell::evalexp (const std::string &expr, eval_flags flags, bool *validp)
       expr_current.noeval = 0;
       already_expanded = (flags & EXP_EXPANDED);
 
-      intmax_t val = subexpr (expr);
+      int64_t val = subexpr (expr);
 
       if (validp)
 	*validp = true;
@@ -253,10 +253,10 @@ Shell::evalexp (const std::string &expr, eval_flags flags, bool *validp)
     }
 }
 
-intmax_t
+int64_t
 Shell::subexpr (const std::string &expr)
 {
-  intmax_t val;
+  int64_t val;
   const char *p;
 
   for (p = expr.c_str (); p && *p && cr_whitespace (*p); p++)
@@ -290,10 +290,10 @@ Shell::subexpr (const std::string &expr)
   return val;
 }
 
-intmax_t
+int64_t
 Shell::expcomma ()
 {
-  intmax_t value;
+  int64_t value;
 
   value = expassign ();
   while (expr_current.curtok == COMMA)
@@ -305,10 +305,10 @@ Shell::expcomma ()
   return value;
 }
 
-intmax_t
+int64_t
 Shell::expassign ()
 {
-  intmax_t value;
+  int64_t value;
   arrayind_t lind;
 #if defined (HAVE_IMAXDIV)
   imaxdiv_t idiv;
@@ -318,7 +318,7 @@ Shell::expassign ()
   if (expr_current.curtok == EQ || expr_current.curtok == OP_ASSIGN)
     {
       token_t op;
-      intmax_t lvalue;
+      int64_t lvalue;
 
       bool special = (expr_current.curtok == OP_ASSIGN);
 
@@ -418,10 +418,10 @@ Shell::expassign ()
 }
 
 /* Conditional expression (expr?expr:expr) */
-intmax_t
+int64_t
 Shell::expcond ()
 {
-  intmax_t cval, val1, val2, rval;
+  int64_t cval, val1, val2, rval;
   bool set_noeval = false;
 
   rval = cval = explor ();
@@ -465,10 +465,10 @@ Shell::expcond ()
 }
 
 /* Logical OR. */
-intmax_t
+int64_t
 Shell::explor ()
 {
-  intmax_t val1, val2;
+  int64_t val1, val2;
 
   val1 = expland ();
 
@@ -492,10 +492,10 @@ Shell::explor ()
 }
 
 /* Logical AND. */
-intmax_t
+int64_t
 Shell::expland ()
 {
-  intmax_t val1, val2;
+  int64_t val1, val2;
 
   val1 = expbor ();
 
@@ -519,10 +519,10 @@ Shell::expland ()
 }
 
 /* Bitwise OR. */
-intmax_t
+int64_t
 Shell::expbor ()
 {
-  intmax_t val1, val2;
+  int64_t val1, val2;
 
   val1 = expbxor ();
 
@@ -538,10 +538,10 @@ Shell::expbor ()
 }
 
 /* Bitwise XOR. */
-intmax_t
+int64_t
 Shell::expbxor ()
 {
-  intmax_t val1, val2;
+  int64_t val1, val2;
 
   val1 = expband ();
 
@@ -557,10 +557,10 @@ Shell::expbxor ()
 }
 
 /* Bitwise AND. */
-intmax_t
+int64_t
 Shell::expband ()
 {
-  intmax_t val1, val2;
+  int64_t val1, val2;
 
   val1 = exp5 ();
 
@@ -575,10 +575,10 @@ Shell::expband ()
   return val1;
 }
 
-intmax_t
+int64_t
 Shell::exp5 ()
 {
-  intmax_t val1, val2;
+  int64_t val1, val2;
 
   val1 = exp4 ();
 
@@ -597,10 +597,10 @@ Shell::exp5 ()
   return val1;
 }
 
-intmax_t
+int64_t
 Shell::exp4 ()
 {
-  intmax_t val1, val2;
+  int64_t val1, val2;
 
   val1 = expshift ();
   while ((expr_current.curtok == LEQ) ||
@@ -627,10 +627,10 @@ Shell::exp4 ()
 }
 
 /* Left and right shifts. */
-intmax_t
+int64_t
 Shell::expshift ()
 {
-  intmax_t val1, val2;
+  int64_t val1, val2;
 
   val1 = exp3 ();
 
@@ -651,10 +651,10 @@ Shell::expshift ()
   return val1;
 }
 
-intmax_t
+int64_t
 Shell::exp3 ()
 {
-  intmax_t val1, val2;
+  int64_t val1, val2;
 
   val1 = expmuldiv ();
 
@@ -674,10 +674,10 @@ Shell::exp3 ()
   return val1;
 }
 
-intmax_t
+int64_t
 Shell::expmuldiv ()
 {
-  intmax_t val1, val2;
+  int64_t val1, val2;
 #if defined (HAVE_IMAXDIV)
   imaxdiv_t idiv;
 #endif
@@ -735,10 +735,10 @@ Shell::expmuldiv ()
   return val1;
 }
 
-static inline intmax_t
-ipow (intmax_t base, intmax_t exp)
+static inline int64_t
+ipow (int64_t base, int64_t exp)
 {
-  intmax_t result;
+  int64_t result;
 
   result = 1;
   while (exp)
@@ -751,10 +751,10 @@ ipow (intmax_t base, intmax_t exp)
   return result;
 }
 
-intmax_t
+int64_t
 Shell::exppower ()
 {
-  intmax_t val1, val2, c;
+  int64_t val1, val2, c;
 
   val1 = exp1 ();
   while (expr_current.curtok == POWER)
@@ -771,10 +771,10 @@ Shell::exppower ()
   return val1;
 }
 
-intmax_t
+int64_t
 Shell::exp1 ()
 {
-  intmax_t val;
+  int64_t val;
 
   if (expr_current.curtok == NOT)
     {
@@ -806,10 +806,10 @@ Shell::exp1 ()
   return val;
 }
 
-intmax_t
+int64_t
 Shell::exp0 ()
 {
-  intmax_t val = 0, v2;
+  int64_t val = 0, v2;
   char *vincdec;
   EXPR_CONTEXT ec;
 
@@ -930,12 +930,12 @@ free_lvalue (struct lvalue *lv)
 }
 #endif
 
-intmax_t
+int64_t
 Shell::expr_streval (std::string &tok, int e, struct lvalue *lvalue)
 {
   SHELL_VAR *v;
 //   std::string &value;
-//   intmax_t tval;
+//   int64_t tval;
 
 /*itrace("expr_streval: %s: noeval = %d expanded=%d", tok, noeval, already_expanded);*/
   /* If we are suppressing evaluation, just short-circuit here instead of
@@ -1300,7 +1300,7 @@ Shell::evalerror (const std::string &msg)
   throw bash_exception (FORCE_EOF);
 }
 
-/* Convert a string to an intmax_t integer, with an arbitrary base.
+/* Convert a string to an int64_t integer, with an arbitrary base.
    0nnn -> base 8
    0[Xx]nn -> base 16
    Anything else: [base#]number (this is implemented to match ksh93)
@@ -1313,13 +1313,13 @@ Shell::evalerror (const std::string &msg)
 
 #define VALID_NUMCHAR(c)	(ISALNUM(c) || ((c) == '_') || ((c) == '@'))
 
-intmax_t
+int64_t
 Shell::strlong (const std::string &num)
 {
   const std::string &s;
   unsigned char c;
   int base, foundbase;
-  intmax_t val;
+  int64_t val;
 
   s = num;
 

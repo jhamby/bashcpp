@@ -162,7 +162,7 @@ char	*f;
 {
 	static struct stat st;
 	int	fd, r;
-	intmax_t lfd;
+	int64_t lfd;
 
 	if (strncmp(f, "/dev/fd/", 8) == 0) {
 		if ((legal_number(f + 8, &lfd) == 0) || (int)lfd != lfd) {

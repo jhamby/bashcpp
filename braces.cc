@@ -70,7 +70,7 @@ static const int brace_arg_separator = ',';
 static int brace_gobbler (char *, size_t, int *, int);
 static char **expand_amble (char *, size_t, int);
 static char **expand_seqterm (char *, size_t);
-static char **mkseq (intmax_t, intmax_t, intmax_t, int, int);
+static char **mkseq (int64_t, int64_t, int64_t, int, int);
 static char **array_concat (char **, char **);
 
 #if 0
@@ -336,9 +336,9 @@ expand_amble (char *text, size_t tlen, int flags)
 #define ST_ZINT	3
 
 static char **
-mkseq (intmax_t start, intmax_t end, intmax_t incr, int type, int width)
+mkseq (int64_t start, int64_t end, int64_t incr, int type, int width)
 {
-  intmax_t n, prevn;
+  int64_t n, prevn;
   int i, nelem;
   char **result, *t;
 
@@ -365,7 +365,7 @@ mkseq (intmax_t start, intmax_t end, intmax_t incr, int type, int width)
   if (INT_MAX == INTMAX_MAX && (ADDOVERFLOW (prevn, 2, INT_MIN, INT_MAX)))
     return (char **)NULL;
   /* Make sure the assignment to nelem below doesn't end up <= 0 due to
-     intmax_t overflow */
+     int64_t overflow */
   else if (ADDOVERFLOW ((prevn/sh_imaxabs(incr)), 1, INTMAX_MIN, INTMAX_MAX))
     return (char **)NULL;
 
@@ -420,9 +420,9 @@ mkseq (intmax_t start, intmax_t end, intmax_t incr, int type, int width)
       /* We failed to allocate memory for this number, so we bail. */
       if (t == 0)
 	{
-	  char *p, lbuf[INT_STRLEN_BOUND(intmax_t) + 1];
+	  char *p, lbuf[INT_STRLEN_BOUND(int64_t) + 1];
 
-	  /* Easier to do this than mess around with various intmax_t printf
+	  /* Easier to do this than mess around with various int64_t printf
 	     formats (%ld? %lld? %jd?) and PRIdMAX. */
 	  p = inttostr (n, lbuf, sizeof (lbuf));
 	  internal_error (_("brace expansion: failed to allocate memory for `%s'"), p);
@@ -450,8 +450,8 @@ expand_seqterm (char *text, size_t tlen)
 {
   char *t, *lhs, *rhs;
   int lhs_t, rhs_t, lhs_l, rhs_l, width;
-  intmax_t lhs_v, rhs_v, incr;
-  intmax_t tl, tr;
+  int64_t lhs_v, rhs_v, incr;
+  int64_t tl, tr;
   char **result, *ep, *oep;
 
   t = strstr (text, BRACE_SEQ_SPECIFIER);

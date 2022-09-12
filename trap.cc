@@ -219,7 +219,7 @@ signal_name (int sig)
 int
 decode_signal (const char *string, int flags)
 {
-  intmax_t sig;
+  int64_t sig;
 
   if (legal_number (string, &sig))
     return (sig >= 0 && sig < NSIG) ? (int)sig : NO_SIG;

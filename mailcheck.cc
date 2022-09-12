@@ -90,7 +90,7 @@ time_to_check_mail ()
 {
   char *temp;
   std::time_t now;
-  intmax_t seconds;
+  int64_t seconds;
 
   temp = get_string_value ("MAILCHECK");
 

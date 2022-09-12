@@ -82,7 +82,7 @@ namespace bash
 int
 Shell::let_builtin (WORD_LIST *list)
 {
-  intmax_t ret;
+  int64_t ret;
   bool expok;
 
   CHECK_HELPOPT (list);

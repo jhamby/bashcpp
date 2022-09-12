@@ -813,7 +813,7 @@ char *
 array_to_kvpair (ARRAY *a, int quoted)
 {
 	char	*result, *valstr, *is;
-	char	indstr[INT_STRLEN_BOUND(intmax_t) + 1];
+	char	indstr[INT_STRLEN_BOUND(int64_t) + 1];
 	ARRAY_ELEMENT *ae;
 	int	rsize, rlen, elen;
 
@@ -865,7 +865,7 @@ char *
 array_to_assign (ARRAY *a, int quoted)
 {
 	char	*result, *valstr, *is;
-	char	indstr[INT_STRLEN_BOUND(intmax_t) + 1];
+	char	indstr[INT_STRLEN_BOUND(int64_t) + 1];
 	ARRAY_ELEMENT *ae;
 	int	rsize, rlen, elen;
 
@@ -1038,7 +1038,7 @@ quote_string(char *s)
 
 print_element(ARRAY_ELEMENT *ae)
 {
-	char	lbuf[INT_STRLEN_BOUND (intmax_t) + 1];
+	char	lbuf[INT_STRLEN_BOUND (int64_t) + 1];
 
 	printf("array[%s] = %s\n",
 		inttostr (element_index(ae), lbuf, sizeof (lbuf)),

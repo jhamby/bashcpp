@@ -3611,7 +3611,7 @@ read_token_word (int character)
   int result, peek_char;
   char *ttok, *ttrans;
   int ttoklen, ttranslen;
-  intmax_t lvalue;
+  int64_t lvalue;
 
   if (token_buffer_size < TOKEN_DEFAULT_INITIAL_SIZE)
     token = (char *)xrealloc (token, token_buffer_size = TOKEN_DEFAULT_INITIAL_SIZE);

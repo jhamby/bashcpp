@@ -453,7 +453,7 @@ set_dollar_vars_changed ()
    current command; if FATAL is 0, return an indication of an invalid
    number by setting *NUMOK == 0 and return -1. */
 int
-get_numeric_arg (WORD_LIST *list, int fatal, intmax_t *count)
+get_numeric_arg (WORD_LIST *list, int fatal, int64_t *count)
 {
   char *arg;
 
@@ -490,7 +490,7 @@ int
 get_exitstat (WORD_LIST *list)
 {
   int status;
-  intmax_t sval;
+  int64_t sval;
   char *arg;
 
   if (list && list->word && ISOPTION (list->word->word, '-'))
@@ -734,7 +734,7 @@ display_signal_list (WORD_LIST *list, int forcecols)
   /* List individual signal names or numbers. */
   while (list)
     {
-      intmax_t lsignum;
+      int64_t lsignum;
       if (legal_number (list->word->word, &lsignum))
 	{
 	  /* This is specified by Posix.2 so that exit statuses can be

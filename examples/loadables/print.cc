@@ -76,7 +76,7 @@ print_builtin (list)
      WORD_LIST *list;
 {
   int c, r, nflag, raw, ofd, sflag;
-  intmax_t lfd;
+  int64_t lfd;
   char **v, *pfmt, *arg;
   WORD_LIST *l;
 
@@ -158,9 +158,9 @@ opt_end:
       if (nflag == 0)
 	fprintf (ofp, "\n");
       fflush (ofp);
-      return (0);	
+      return (0);
     }
-        
+
   r = printargs (list, ofp);
   if (r && nflag == 0)
     fprintf (ofp, "\n");

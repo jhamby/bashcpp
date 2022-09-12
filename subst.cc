@@ -223,10 +223,10 @@ static WORD_DESC *parameter_brace_expand_rhs (const char *, const char *, int, i
 static void parameter_brace_expand_error (char *, char *, bool);	/* frees name and value */
 
 static bool valid_length_expression (const char *);
-static intmax_t parameter_brace_expand_length (const char *);
+static int64_t parameter_brace_expand_length (const char *);
 
 static const char *skiparith (const char *, char);
-static int verify_substring_values (SHELL_VAR *, const char *, const char *, int, intmax_t *, intmax_t *);
+static int verify_substring_values (SHELL_VAR *, const char *, const char *, int, int64_t *, int64_t *);
 static int get_var_and_type (const char *, const char *, arrayind_t, int, int, SHELL_VAR **, char **);
 static char *mb_substring (const char *, int, int);
 static char *parameter_brace_substring (const char *, const char *, arrayind_t, const char *, int, int, int);
@@ -2763,7 +2763,7 @@ list_rest_of_args ()
 
 /* Return the value of a positional parameter.  This handles values > 10. */
 char *
-get_dollar_var_value (intmax_t ind)
+get_dollar_var_value (int64_t ind)
 {
   char *temp;
   WORD_LIST *p;
@@ -5834,7 +5834,7 @@ parameter_brace_expand_word (const char *name, bool var_is_special, int quoted,
   SHELL_VAR *var;
 
   /* Handle multiple digit arguments, as in ${11}. */
-  intmax_t arg_index;
+  int64_t arg_index;
   if (legal_number (name, &arg_index))
     {
       char *tt = get_dollar_var_value (arg_index);
@@ -6357,10 +6357,10 @@ valid_length_expression (const char *name)
 
 /* Handle the parameter brace expansion that requires us to return the
    length of a parameter. */
-static intmax_t
+static int64_t
 parameter_brace_expand_length (const char *name)
 {
-  intmax_t number;
+  int64_t number;
 
   if (name[1] == '\0')			/* ${#} */
     number = number_of_args ();
@@ -6402,7 +6402,7 @@ parameter_brace_expand_length (const char *name)
     {
       number = 0;
       SHELL_VAR *var = NULL;
-      intmax_t arg_index;
+      int64_t arg_index;
 
       if (legal_number (name + 1, &arg_index))		/* ${#1} */
 	{
@@ -6480,7 +6480,7 @@ skiparith (const char *substr, char delim)
    with an invalid expression, or -1 if the values were out of range. */
 static int
 verify_substring_values (SHELL_VAR *v, const char *value, const char *substr,
-			 int vtype, intmax_t *e1p, intmax_t *e2p)
+			 int vtype, int64_t *e1p, int64_t *e2p)
 {
 #if defined (ARRAY_VARS)
  ARRAY *a;
@@ -7103,7 +7103,7 @@ parameter_brace_substring (const char *varname, const char *value, arrayind_t in
   bool starsub = vtype & VT_STARSUB;
   vtype &= ~VT_STARSUB;
 
-  intmax_t e1, e2;
+  int64_t e1, e2;
   int r = verify_substring_values (v, val, substr, vtype, &e1, &e2);
   this_command_name = oname;
   if (r <= 0)
@@ -7938,7 +7938,7 @@ parameter_brace_expand (const char *string, size_t *indexp, quoted_flags quoted,
 	  goto bad_substitution;	/* substitution error */
 	}
 
-      intmax_t number = parameter_brace_expand_length (name);
+      int64_t number = parameter_brace_expand_length (name);
       if (number == INTMAX_MIN && unbound_vars_is_error)
 	{
 	  set_exit_status (EXECUTION_FAILURE);
@@ -8813,7 +8813,7 @@ arithsub:
 	  savecmd = this_command_name;
 	  this_command_name = nullptr;
 	  bool expok;
-	  intmax_t number = evalexp (temp1, EXP_EXPANDED, &expok);
+	  int64_t number = evalexp (temp1, EXP_EXPANDED, &expok);
 	  this_command_name = savecmd;
 	  free (temp);
 	  free (temp1);

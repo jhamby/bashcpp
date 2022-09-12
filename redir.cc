@@ -581,7 +581,7 @@ redir_special_open (int spec, char *filename, int flags, int mode,
 {
   int fd;
 #if !defined (HAVE_DEV_FD)
-  intmax_t lfd;
+  int64_t lfd;
 #endif
 
   fd = -1;
@@ -743,7 +743,7 @@ do_redirection_internal (REDIRECT *redirect, int flags, char **fnp)
 {
   WORD_DESC *redirectee;
   int redir_fd, fd, redirector, r, oflags;
-  intmax_t lfd;
+  int64_t lfd;
   char *redirectee_word;
   enum r_instruction ri;
   REDIRECT *new_redirect;
@@ -1396,7 +1396,7 @@ redir_varvalue (REDIRECT *redir)
 {
   SHELL_VAR *v;
   char *val, *w;
-  intmax_t vmax;
+  int64_t vmax;
   int i;
 #if defined (ARRAY_VARS)
   char *sub;

@@ -25,7 +25,7 @@
 namespace bash
 {
 
-typedef intmax_t	arrayind_t;
+typedef int64_t	arrayind_t;
 
 enum atype {array_indexed, array_assoc};	/* only array_indexed used */
 

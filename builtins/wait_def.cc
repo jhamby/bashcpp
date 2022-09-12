@@ -247,7 +247,7 @@ wait_builtin (WORD_LIST *list)
     {
       pid_t pid;
       char *w;
-      intmax_t pid_value;
+      int64_t pid_value;
 
       w = list->word->word;
       if (DIGIT (*w))
@@ -331,7 +331,7 @@ set_waitlist (WORD_LIST *list)
   for (WORD_LIST *l = list; l; l = (WORD_LIST *)l->next)
     {
       int job = NO_JOB;
-      intmax_t pid;
+      int64_t pid;
       job = (l && legal_number (l->word->word, &pid) && pid == (pid_t) pid)
 		? get_job_by_pid ((pid_t) pid, 0, 0)
 		: get_job_spec (l);

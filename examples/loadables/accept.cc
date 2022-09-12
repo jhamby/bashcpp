@@ -46,7 +46,7 @@ accept_builtin (list)
 {
   WORD_LIST *l;
   SHELL_VAR *v;
-  intmax_t iport;
+  int64_t iport;
   int opt;
   char *tmoutarg, *fdvar, *rhostvar, *rhost;
   unsigned short uport;

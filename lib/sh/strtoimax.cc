@@ -1,4 +1,4 @@
-/* strtoimax - convert string representation of a number into an intmax_t value. */
+/* strtoimax - convert string representation of a number into an int64_t value. */
 
 /* Copyright 1999-2020 Free Software Foundation, Inc.
 
@@ -57,14 +57,14 @@ extern long long strtoll (const char *, char **, int);
 #undef strtoimax
 #endif
 
-intmax_t
+int64_t
 strtoimax (const char *ptr, char **endptr, int base)
 {
   verify(size_is_that_of_long_or_long_long,
-	 (sizeof (intmax_t) == sizeof (long) ||
-	  sizeof (intmax_t) == sizeof (long long)));
+	 (sizeof (int64_t) == sizeof (long) ||
+	  sizeof (int64_t) == sizeof (long long)));
 
-  if (sizeof (intmax_t) != sizeof (long))
+  if (sizeof (int64_t) != sizeof (long))
     return ::strtoll (ptr, endptr, base);
 
   return std::strtol (ptr, endptr, base);
@@ -76,11 +76,11 @@ int
 main ()
 {
   char *p, *endptr;
-  intmax_t x;
+  int64_t x;
   long long y;
   long z;
 
-  printf ("sizeof intmax_t: %d\n", sizeof (intmax_t));
+  printf ("sizeof int64_t: %d\n", sizeof (int64_t));
 
   printf ("sizeof long long: %d\n", sizeof (long long));
   printf ("sizeof long: %d\n", sizeof (long));

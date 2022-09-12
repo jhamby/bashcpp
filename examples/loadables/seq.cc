@@ -201,7 +201,7 @@ genformat (first, incr, last)
 
   wfirst = snprintf (buf, sizeof (buf), FLOATMAX_FMT, first);
   fprec = getprec (buf);
-    
+
   prec = MAX (fprec, iprec);
 
   wlast = snprintf (buf, sizeof (buf), FLOATMAX_FMT, last);
@@ -256,10 +256,10 @@ print_fltseq (fmt, first, last, incr)
   return (sh_chkwrite (EXECUTION_SUCCESS));
 }
 
-/* must be <= INT_STRLEN_BOUND(intmax_t) */
+/* must be <= INT_STRLEN_BOUND(int64_t) */
 int
 width_needed (num)
-     intmax_t num;
+     int64_t num;
 {
   int ret;
 
@@ -274,11 +274,11 @@ width_needed (num)
 
 int
 print_intseq (ifirst, ilast, iincr)
-     intmax_t ifirst, ilast, iincr;
+     int64_t ifirst, ilast, iincr;
 {
   char intwfmt[6 + INT_STRLEN_BOUND(int) + sizeof (PRIdMAX)];
   const char *s;
-  intmax_t i, next;
+  int64_t i, next;
 
   /* compute integer format string */
   if (equal_width)	/* -w supplied */
@@ -315,7 +315,7 @@ seq_builtin (list)
      WORD_LIST *list;
 {
   floatmax_t first, last, incr;
-  intmax_t ifirst, ilast, iincr;
+  int64_t ifirst, ilast, iincr;
   WORD_LIST *l;
   int opt, nargs, intseq, freefmt;
   char *first_str, *incr_str, *last_str;
@@ -426,7 +426,7 @@ seq_builtin (list)
       if (fmtstr == 0)
 	return (EXECUTION_FAILURE);
     }
-      
+
   if (fmtstr != NULL && equal_width)
     {
       builtin_warning ("-w ignored when the format string is specified");
@@ -442,9 +442,9 @@ seq_builtin (list)
 
   if (intseq)
     {
-      ifirst = (intmax_t)first; /* truncation */
-      ilast = (intmax_t)last;
-      iincr = (intmax_t)incr;
+      ifirst = (int64_t)first; /* truncation */
+      ilast = (int64_t)last;
+      iincr = (int64_t)incr;
 
       return (print_intseq (ifirst, ilast, iincr));
     }
@@ -478,7 +478,7 @@ char *seq_doc[] = {
 	"it defaults to %.PRECf if FIRST, INCREMENT, and LAST are all fixed point",
 	"decimal numbers with maximum precision PREC, and to %g otherwise.",
 	(char *)NULL
-};	
+};
 
 struct builtin seq_struct = {
 	"seq",

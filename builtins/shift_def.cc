@@ -57,7 +57,7 @@ char print_shift_error;
 int
 Shell::shift_builtin (WORD_LIST *list)
 {
-  intmax_t times;
+  int64_t times;
   int itimes, nargs;
 
   CHECK_HELPOPT (list);

@@ -743,7 +743,7 @@ void
 adjust_shell_level (int change)
 {
   char new_level[5], *old_SHLVL;
-  intmax_t old_level;
+  int64_t old_level;
   SHELL_VAR *temp_var;
 
   old_SHLVL = get_string_value ("SHLVL");
@@ -1183,12 +1183,12 @@ init_dynamic_assoc_var (const char *name,
 /* The value of $SECONDS.  This is the number of seconds since shell
    invocation, or, the number of seconds since the last assignment + the
    value of the last assignment. */
-static intmax_t seconds_value_assigned;
+static int64_t seconds_value_assigned;
 
 static SHELL_VAR *
 assign_seconds (SHELL_VAR *self, const char *value, arrayind_t unused, const char *key)
 {
-  intmax_t nval;
+  int64_t nval;
   bool expok;
 
   if (integer_p (self))
@@ -1242,7 +1242,7 @@ static int seeded_subshell = 0;
 static SHELL_VAR *
 assign_random (SHELL_VAR *self, const char *value, arrayind_t unused, const char *key)
 {
-  intmax_t seedval;
+  int64_t seedval;
   bool expok;
 
   if (integer_p (self))
@@ -1312,7 +1312,7 @@ get_urandom (SHELL_VAR *var)
 static SHELL_VAR *
 assign_lineno (SHELL_VAR *var, const char *value, arrayind_t unused, const char *key)
 {
-  intmax_t new_value;
+  int64_t new_value;
 
   if (value == 0 || *value == '\0' || legal_number (value, &new_value) == 0)
     new_value = 0;
@@ -1337,7 +1337,7 @@ get_lineno (SHELL_VAR *var)
 static SHELL_VAR *
 assign_subshell (SHELL_VAR *var, const char *value, arrayind_t unused, const char *key)
 {
-  intmax_t new_value;
+  int64_t new_value;
 
   if (value == 0 || *value == '\0' || legal_number (value, &new_value) == 0)
     new_value = 0;
@@ -1359,7 +1359,7 @@ get_subshell (SHELL_VAR *var)
 static SHELL_VAR *
 get_epochseconds (SHELL_VAR *var)
 {
-  intmax_t now;
+  int64_t now;
   char *p;
 
   now = NOW;
@@ -2732,7 +2732,7 @@ make_variable_value (SHELL_VAR *var, const char *value, int flags)
      top_level. */
   if ((flags & ASS_NOEVAL) == 0 && integer_p (var))
     {
-      intmax_t lval = 0;
+      int64_t lval = 0;
       bool expok;
       if (flags & ASS_APPEND)
 	{
@@ -2749,7 +2749,7 @@ make_variable_value (SHELL_VAR *var, const char *value, int flags)
 		}
 	    }
 	}
-      intmax_t rval = evalexp (value, 0, &expok);
+      int64_t rval = evalexp (value, 0, &expok);
       if (expok == 0)
 	{
 	  if (flags & ASS_NOLONGJMP)
@@ -3243,9 +3243,9 @@ bind_int_variable (const char *lhs, const char *rhs, int flags)
 }
 
 SHELL_VAR *
-bind_var_to_int (const char *var, intmax_t val)
+bind_var_to_int (const char *var, int64_t val)
 {
-  char ibuf[INT_STRLEN_BOUND (intmax_t) + 1], *p;
+  char ibuf[INT_STRLEN_BOUND (int64_t) + 1], *p;
 
   p = fmtulong (val, 10, ibuf, sizeof (ibuf), 0);
   return bind_int_variable (var, p, 0);
@@ -5256,7 +5256,7 @@ pop_args ()
   SHELL_VAR *bash_argv_v, *bash_argc_v;
   ARRAY *bash_argv_a, *bash_argc_a;
   ARRAY_ELEMENT *ce;
-  intmax_t i;
+  int64_t i;
 
   GET_ARRAY_FROM_VAR ("BASH_ARGV", bash_argv_v, bash_argv_a);
   GET_ARRAY_FROM_VAR ("BASH_ARGC", bash_argc_v, bash_argc_a);
@@ -5480,7 +5480,7 @@ void
 sv_funcnest (const char *name)
 {
   SHELL_VAR *v;
-  intmax_t num;
+  int64_t num;
 
   v = find_variable (name);
   if (v == 0)
@@ -5547,7 +5547,7 @@ void
 sv_winsize (const char *name)
 {
   SHELL_VAR *v;
-  intmax_t xd;
+  int64_t xd;
   int d;
 
   if (posixly_correct == 0 || interactive_shell == 0 || no_line_editing)
@@ -5593,7 +5593,7 @@ void
 sv_histsize (const char *name)
 {
   char *temp;
-  intmax_t num;
+  int64_t num;
   int hmax;
 
   temp = get_string_value (name);

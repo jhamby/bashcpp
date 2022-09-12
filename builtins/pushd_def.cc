@@ -156,7 +156,7 @@ static void clear_directory_stack (void);
 static int cd_to_string (char *);
 static int change_to_temp (char *);
 static void add_dirstack_element (char *);
-static int get_dirstack_index (intmax_t, int, int *);
+static int get_dirstack_index (int64_t, int, int *);
 
 #define NOCD		0x01
 #define ROTATE		0x02
@@ -201,7 +201,7 @@ Shell::pushd_builtin (WORD_LIST *list)
     }
 
   int flags;
-  intmax_t num;
+  int64_t num;
   for (flags = 0; skipopt == 0 && list; list = (WORD_LIST *)list->next)
     {
       char direction;
@@ -310,7 +310,7 @@ Shell::pushd_builtin (WORD_LIST *list)
 int
 Shell::popd_builtin (WORD_LIST *list)
 {
-  intmax_t which;
+  int64_t which;
   int flags;
   char direction;
   char *which_word;
@@ -428,7 +428,7 @@ Shell::dirs_builtin (WORD_LIST *list)
       else if (*list->word->word == '+' || *list->word->word == '-')
 	{
 	  int sign;
-	  intmax_t i;
+	  int64_t i;
 	  if (legal_number (w = list->word->word + 1, &i) == 0)
 	    {
 	      sh_invalidnum (list->word->word);
@@ -562,7 +562,7 @@ add_dirstack_element (char *dir)
 }
 
 static int
-get_dirstack_index (intmax_t ind, int sign, int *indexp)
+get_dirstack_index (int64_t ind, int sign, int *indexp)
 {
   if (indexp)
     *indexp = sign > 0 ? 1 : 2;
@@ -588,7 +588,7 @@ char *
 get_dirstack_from_string (char *string)
 {
   int ind, sign, index_flag;
-  intmax_t i;
+  int64_t i;
 
   sign = 1;
   if (*string == '-' || *string == '+')
@@ -610,7 +610,7 @@ get_dirstack_from_string (char *string)
 }
 
 void
-set_dirstack_element (intmax_t ind, int sign, const char *value)
+set_dirstack_element (int64_t ind, int sign, const char *value)
 {
   int i;
 

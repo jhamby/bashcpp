@@ -26422,6 +26422,12 @@ then :
   printf "%s\n" "#define HAVE_PWD_H 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_header_compile "$LINENO" "regex.h" "ac_cv_header_regex_h" "$ac_includes_default"
+if test "x$ac_cv_header_regex_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_REGEX_H 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_header_compile "$LINENO" "sgtty.h" "ac_cv_header_sgtty_h" "$ac_includes_default"
 if test "x$ac_cv_header_sgtty_h" = xyes
 then :
@@ -28103,6 +28109,12 @@ ac_fn_cxx_check_func "$LINENO" "readlink" "ac_cv_func_readlink"
 if test "x$ac_cv_func_readlink" = xyes
 then :
   printf "%s\n" "#define HAVE_READLINK 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "regcomp" "ac_cv_func_regcomp"
+if test "x$ac_cv_func_regcomp" = xyes
+then :
+  printf "%s\n" "#define HAVE_REGCOMP 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_func "$LINENO" "regexec" "ac_cv_func_regexec"

@@ -111,7 +111,7 @@ _getaddr (char *host, struct in_addr *ap)
 static int
 _getserv (char *serv, int proto, unsigned short *pp)
 {
-  intmax_t l;
+  int64_t l;
   unsigned short s;
 
   if (legal_number (serv, &l))

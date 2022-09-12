@@ -165,6 +165,7 @@ extern int asprintf (char **, const char *, ...) __attribute__((__format__ (prin
 extern int vsnprintf (char *, size_t, const char *, va_list) __attribute__((__format__ (printf, 3, 0)));
 #endif
 
+#if 0
 static void printf_erange (const char *);
 static int printstr (const char *, const char *, int, int, int);
 static int tescape (char *, char *, int *, int *);
@@ -172,11 +173,12 @@ static char *bexpand (char *, int, int *, int *);
 static char *vbadd (char *, int);
 static int vbprintf (const char *, ...) __attribute__((__format__ (printf, 1, 2)));
 static char *mklong (const char *, const char *, size_t);
-static int getchr (void);
-static char *getstr (void);
-static int  getint (void);
-static intmax_t getintmax (void);
-static uintmax_t getuintmax (void);
+static int getchr ();
+static char *getstr ();
+static int  getint ();
+static int64_t getintmax ();
+static uint64_t getuintmax ();
+#endif
 
 #if defined (HAVE_LONG_DOUBLE) && HAVE_DECL_STRTOLD && !defined(STRTOLD_BROKEN)
 typedef long double floatmax_t;
@@ -187,9 +189,11 @@ typedef double floatmax_t;
 #  define FLOATMAX_CONV	""
 #  define strtofltmax	strtod
 #endif
-static floatmax_t getfloatmax (void);
 
-static intmax_t asciicode (void);
+#if 0
+static floatmax_t getfloatmax ();
+
+static int64_t asciicode ();
 
 static WORD_LIST *garglist, *orig_arglist;
 static int retval;
@@ -201,10 +205,11 @@ static char *vbuf, *vname;
 static size_t vbsize;
 static int vblen;
 
-static intmax_t tw;
+static int64_t tw;
 
 static char *conv_buf;
 static size_t conv_bufsize;
+#endif
 
 int
 Shell::printf_builtin (WORD_LIST *list)
@@ -421,7 +426,7 @@ Shell::printf_builtin (WORD_LIST *list)
 	      {
 		char *timefmt, timebuf[128], *t;
 		int n;
-		intmax_t arg;
+		int64_t arg;
 		time_t secs;
 		struct tm *tm;
 
@@ -577,7 +582,7 @@ Shell::printf_builtin (WORD_LIST *list)
 	      {
 		char *f;
 		long p;
-		intmax_t pp;
+		int64_t pp;
 
 		p = pp = getintmax ();
 		if (p != pp)
@@ -589,7 +594,7 @@ Shell::printf_builtin (WORD_LIST *list)
 		  {
 		    /* Optimize the common case where the integer fits
 		       in "long".  This also works around some long
-		       long and/or intmax_t library bugs in the common
+		       long and/or int64_t library bugs in the common
 		       case, e.g. glibc 2.2 x86.  */
 		    f = mklong (start, "l", 1);
 		    PF (f, p);
@@ -604,7 +609,7 @@ Shell::printf_builtin (WORD_LIST *list)
 	      {
 		char *f;
 		unsigned long p;
-		uintmax_t pp;
+		uint64_t pp;
 
 		p = pp = getuintmax ();
 		if (p != pp)
@@ -685,7 +690,7 @@ printstr (
 #endif
   int padlen, nc, ljust, i;
   int fw, pr;			/* fieldwidth and precision */
-  intmax_t mfw, mpr;
+  int64_t mfw, mpr;
 
   if (string == 0)
     string = "";
@@ -1076,7 +1081,7 @@ getstr ()
 static int
 getint ()
 {
-  intmax_t ret;
+  int64_t ret;
 
   ret = getintmax ();
 
@@ -1097,10 +1102,10 @@ getint ()
   return (int)ret;
 }
 
-static intmax_t
+static int64_t
 getintmax ()
 {
-  intmax_t ret;
+  int64_t ret;
   char *ep;
 
   if (garglist == 0)
@@ -1132,10 +1137,10 @@ getintmax ()
   return ret;
 }
 
-static uintmax_t
+static uint64_t
 getuintmax ()
 {
-  uintmax_t ret;
+  uint64_t ret;
   char *ep;
 
   if (garglist == 0)
@@ -1195,10 +1200,10 @@ getfloatmax ()
 }
 
 /* NO check is needed for garglist here. */
-static intmax_t
+static int64_t
 asciicode ()
 {
-  intmax_t ch;
+  int64_t ch;
 #if defined (HANDLE_MULTIBYTE)
   wchar_t wc;
   size_t slen;

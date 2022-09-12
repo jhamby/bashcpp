@@ -23,6 +23,8 @@
 #include <cstdio>
 #include <csignal>
 
+#include <typeinfo>
+
 #include "chartypes.hh"
 #include "bashtypes.hh"
 
@@ -142,7 +144,7 @@ static void print_formatted_time (FILE *, const char *,
 static int time_command (COMMAND *, bool, int, int, struct fd_bitmap *);
 #endif
 #if defined (ARITH_FOR_COMMAND)
-static intmax_t eval_arith_for_expr (WORD_LIST *, bool *);
+static int64_t eval_arith_for_expr (WORD_LIST *, bool *);
 static int execute_arith_for_command (ARITH_FOR_COM *);
 #endif
 static int execute_case_command (CASE_COM *);
@@ -181,34 +183,10 @@ static int execute_connection (COMMAND *, bool, int, int, struct fd_bitmap *);
 
 static int execute_intern_function (WORD_DESC *, FUNCTION_DEF *);
 
-/* Set to 1 if fd 0 was the subject of redirection to a subshell.  Global
-   so that reader_loop can set it to zero before executing a command. */
-bool stdin_redir;
-
-/* The name of the command that is currently being executed.
-   `test' needs this, for example. */
-const char *this_command_name;
-
-/* The printed representation of the currently-executing command (same as
-   the_printed_command), except when a trap is being executed.  Useful for
-   a debugger to know where exactly the program is currently executing. */
-char *the_printed_command_except_trap;
-
 /* For catching RETURN in a function. */
 int return_catch_flag;
 int return_catch_value;
 procenv_t return_catch;
-
-/* The value returned by the last synchronous command. */
-int last_command_exit_value;
-
-/* Whether or not the last command (corresponding to last_command_exit_value)
-   was terminated by a signal, and, if so, which one. */
-int last_command_exit_signal;
-
-/* Are we currently ignoring the -e option for the duration of a builtin's
-   execution? */
-bool builtin_ignoring_errexit = false;
 
 /* The list of redirections to perform which will undo the redirections
    that I made in the shell. */
@@ -286,7 +264,7 @@ fd_bitmap *current_fds_to_close = (struct fd_bitmap *)NULL;
 
 /* Return the line number of the currently executing command. */
 int
-executing_line_number ()
+Shell::executing_line_number ()
 {
   if (executing && showing_function_line == 0 &&
       (variable_context == 0 || interactive_shell == 0) &&
@@ -343,37 +321,20 @@ Shell::execute_command (COMMAND *command)
   return result;
 }
 
-/* Return 1 if TYPE is a shell control structure type. */
-static int
-shell_control_structure (command_type type)
-{
-  switch (type)
-    {
-#if defined (ARITH_FOR_COMMAND)
-    case cm_arith_for:
-#endif
-#if defined (SELECT_COMMAND)
-    case cm_select:
-#endif
-#if defined (DPAREN_ARITHMETIC)
-    case cm_arith:
-#endif
-#if defined (COND_COMMAND)
-    case cm_cond:
-#endif
-    case cm_case:
-    case cm_while:
-    case cm_until:
-    case cm_if:
-    case cm_for:
-    case cm_group:
-    case cm_function_def:
-      return 1;
+/* Return true if TYPE is a shell control structure type. */
 
-    default:
-      return 0;
-    }
-}
+// Most command types are control structures, so the default is true.
+bool COMMAND::control_structure () { return true; }
+
+// Simple command isn't a control structure.
+bool SIMPLE_COM::control_structure () { return false; }
+
+// Subshell command isn't a control structure.
+bool SUBSHELL_COM::control_structure () { return false; }
+
+// Coprocess command isn't a control structure.
+bool COPROC_COM::control_structure () { return false; }
+
 
 /* A function to use to unwind_protect the redirection undo list
    for loops. */
@@ -516,15 +477,15 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
   /* If a command was being explicitly run in a subshell, or if it is
      a shell control-structure, and it has a pipe, then we do the command
      in a subshell. */
-  if (command->type == cm_subshell && (command->flags & CMD_NO_FORK))
+  if (typeid (command) == typeid (SUBSHELL_COM *) && (command->flags & CMD_NO_FORK))
     return execute_in_subshell (command, asynchronous, pipe_in, pipe_out, fds_to_close);
 
 #if defined (COPROCESS_SUPPORT)
-  if (command->type == cm_coproc)
+  if (typeid (command) == typeid (COPROC_COM *))
     return last_command_exit_value = execute_coproc (command, pipe_in, pipe_out, fds_to_close);
 #endif
 
-  bool user_subshell = command->type == cm_subshell ||
+  bool user_subshell = typeid (command) == typeid (SUBSHELL_COM *) ||
 		       ((command->flags & CMD_WANT_SUBSHELL) != 0);
 
 #if defined (TIME_BEFORE_SUBSHELL)
@@ -537,7 +498,7 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
     }
 #endif
 
-  if (command->type == cm_subshell ||
+  if (typeid (command) == typeid (SUBSHELL_COM *) ||
       (command->flags & (CMD_WANT_SUBSHELL | CMD_FORCE_SUBSHELL)) ||
       (shell_control_structure (command->type) &&
        (pipe_out != NO_PIPE || pipe_in != NO_PIPE || asynchronous)))
@@ -2756,7 +2717,7 @@ execute_for_command (FOR_COM *for_command)
         continue;
 #endif
 
-      this_command_name = (char *)NULL;
+      this_command_name = nullptr;
       /* XXX - special ksh93 for command index variable handling */
       SHELL_VAR *v = find_variable_last_nameref (identifier, 1);
       if (v && nameref_p (v))
@@ -2854,10 +2815,10 @@ execute_for_command (FOR_COM *for_command)
 		eval \(\( step \)\)
 	done
 */
-static intmax_t
+static int64_t
 eval_arith_for_expr (WORD_LIST *l, bool *okp)
 {
-  intmax_t expresult;
+  int64_t expresult;
 
   WORD_LIST *new_list = expand_words_no_vars (l);
   if (new_list)
@@ -2927,7 +2888,7 @@ execute_arith_for_command (ARITH_FOR_COM *arith_for_command)
 
   /* Evaluate the initialization expression. */
   bool expok;
-  intmax_t expresult = eval_arith_for_expr (arith_for_command->init, &expok);
+  int64_t expresult = eval_arith_for_expr (arith_for_command->init, &expok);
   if (!expok)
     {
       line_number = save_lineno;
@@ -3147,17 +3108,17 @@ select_query (WORD_LIST *list, int list_len, const char *prompt, bool print_menu
       if (r != EXECUTION_SUCCESS)
 	{
 	  putchar ('\n');
-	  return (char *)NULL;
+	  return nullptr;
 	}
       char *repl_string = get_string_value ("REPLY");
       if (repl_string == 0)
-	return (char *)NULL;
+	return nullptr;
       if (*repl_string == 0)
 	{
 	  print_menu = true;
 	  continue;
 	}
-      intmax_t reply;
+      int64_t reply;
       if (!legal_number (repl_string, &reply))
 	return "";
       if (reply < 1 || reply > list_len)
@@ -3552,7 +3513,7 @@ execute_if_command (IF_COM *if_command)
 static int
 execute_arith_command (ARITH_COM *arith_command)
 {
-  intmax_t expresult = 0;
+  int64_t expresult = 0;
 
   int save_line_number = line_number;
   this_command_name = "((";	/* )) */
@@ -3589,7 +3550,7 @@ execute_arith_command (ARITH_COM *arith_command)
     }
 #endif
 
-  char *t = (char *)NULL;
+  char *t = nullptr;
   WORD_LIST *new_list = arith_command->exp;
   char *exp;
   if (new_list->next)
@@ -3673,7 +3634,7 @@ execute_cond_node (COND_COM *cond)
       if (arg1 == 0)
 	arg1 = (char *)nullstr;
       if (echo_command_at_execute)
-	xtrace_print_cond_term (cond->type, invert, cond->op, arg1, (char *)NULL);
+	xtrace_print_cond_term (cond->type, invert, cond->op, arg1, nullptr);
       result = unary_test (cond->op->word, arg1) ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
       if (arg1 != nullstr)
 	free (arg1);
@@ -3842,7 +3803,7 @@ execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out, bool async
       /* We have a null command, but we really want a subshell to take
 	 care of it.  Just fork, do piping and redirections, and exit. */
       int fork_flags = async ? FORK_ASYNC : 0;
-      if (make_child ((char *)NULL, fork_flags) == 0)
+      if (make_child (nullptr, fork_flags) == 0)
 	{
 	  /* Cancel traps, in trap.c. */
 	  restore_original_signals ();		/* XXX */
@@ -4206,13 +4167,13 @@ execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
 	sh_exit (result);
       else
 	{
-	  bind_lastarg ((char *)NULL);
+	  bind_lastarg (nullptr);
 	  set_pipestatus_from_exit (result);
 	  return result;
 	}
     }
 
-  char *lastarg = (char *)NULL;
+  char *lastarg = nullptr;
 
   begin_unwind_frame ("simple-command");
 
@@ -4499,7 +4460,7 @@ execute_from_filesystem:
       executing_command_builtin = old_command_builtin;
     }
   discard_unwind_frame ("simple-command");
-  this_command_name = (char *)NULL;	/* points to freed memory now */
+  this_command_name = nullptr;	/* points to freed memory now */
   return result;
 }
 
@@ -5251,7 +5212,7 @@ execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
   int result = EXECUTION_SUCCESS;
 
 #if defined (RESTRICTED_SHELL)
-  command = (char *)NULL;
+  command = nullptr;
   if (restricted && mbschr (pathname, '/'))
     {
       internal_error (_("%s: restricted: cannot specify `/' in command names"),
@@ -5471,7 +5432,7 @@ execute_shell_script (char *sample, int sample_len, char *command,
   size_increment = 1;
 
   /* Now the argument, if any. */
-  for (firstarg = (char *)NULL, start = i; WHITECHAR(i); i++)
+  for (firstarg = nullptr, start = i; WHITECHAR(i); i++)
     ;
 
   /* If there is more text on the line, then it is an argument for the
@@ -5500,7 +5461,7 @@ execute_shell_script (char *sample, int sample_len, char *command,
   else
     args[1] = command;
 
-  args[larry] = (char *)NULL;
+  args[larry] = nullptr;
 
   return shell_execve (execname, args, env);
 }
@@ -5703,7 +5664,7 @@ shell_execve (char *command, char **args, char **env)
 
   args[0] = (char *)shell_name;
   args[1] = command;
-  args[larray] = (char *)NULL;
+  args[larray] = nullptr;
 
   if (args[0][0] == '-')
     args[0]++;
