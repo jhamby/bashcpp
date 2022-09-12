@@ -68,9 +68,6 @@ struct PROCESS {
   pid_t pid;		/* Process ID. */
   WAIT status;		/* The status of this command as returned by wait. */
   int running;		/* Non-zero if this process is running. */
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;			// silence clang -Wpadded warning
-#endif
 };
 
 /* PALIVE really means `not exited' */
@@ -143,9 +140,6 @@ struct bgpids {
   ps_index_t nalloc;
 
   int npid;
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;			// silence clang -Wpadded warning
-#endif
 };
 
 #define NO_PIDSTAT (static_cast<ps_index_t> (-1))

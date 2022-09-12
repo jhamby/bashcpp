@@ -105,7 +105,6 @@ public:
   std::string text;		/* The text to insert, if undoing a delete. */
   unsigned int start, end;	/* Where the change took place. */
   undo_code what;		/* Delete, Insert, Begin, End. */
-  int _pad;			// silence clang -Wpadded warning
 };
 
 /* Wrapper for a vector of UNDO_ENTRY that history can delete. */
@@ -327,9 +326,6 @@ public:
     int count;
     int i1, i2;
     /* add here as needed */
-#if SIZEOF_INT != SIZEOF_CHAR_P
-    int _pad;			// silence clang -Wpadded warning
-#endif
   };
 
   typedef int (Readline::*_rl_callback_func_t) (_rl_callback_generic_arg *);
@@ -349,9 +345,6 @@ public:
     const char *name;
     bool *value;
     int flags;			// XXX should this be an enum type?
-#if SIZEOF_INT != SIZEOF_CHAR_P
-    int _pad;			// silence clang -Wpadded warning
-#endif
   };
 
   typedef boolean_var_t bvt;
@@ -383,9 +376,6 @@ public:
 		  value (macro) {}
 
     keymap_entry_type type;
-#if SIZEOF_INT != SIZEOF_CHAR_P
-    int _pad;			// silence clang -Wpadded warning
-#endif
     union _keymap_value_type {
       _keymap_value_type () : function (nullptr) {}
       _keymap_value_type (rl_command_func_t func_) : function (func_) {}
@@ -1429,10 +1419,6 @@ private:
 
     rl_search_type type;
     rl_search_flags sflags;
-
-#if SIZEOF_INT != SIZEOF_CHAR_P
-    int _pad;			// silence clang -Wpadded warning
-#endif
   };
 
   struct _rl_cmd {
@@ -1453,10 +1439,6 @@ private:
 
     _rl_keyseq_cxt *ocxt;
     int childval;
-
-#if SIZEOF_INT != SIZEOF_CHAR_P
-    int _pad;			// silence clang -Wpadded warning
-#endif
   };
 
   typedef int _rl_arg_cxt;
@@ -1809,9 +1791,6 @@ private:
 #if defined (HANDLE_MULTIBYTE)
     unsigned int *wrapped_line;
     unsigned int wbsize;
-#if SIZEOF_INT != SIZEOF_CHAR_P
-    int _pad;			// silence clang -Wpadded warning
-#endif
 #endif
   };
 
@@ -3316,9 +3295,6 @@ private:
     struct saved_macro *next;
     char *string;
     unsigned int sindex;
-#if SIZEOF_INT != SIZEOF_CHAR_P
-    int _pad;			// silence clang -Wpadded warning
-#endif
   };
 
   /* The list of saved macros. */
@@ -3342,10 +3318,6 @@ private:
   std::string history_search_string;
 
   /* signals.c */
-
-#if defined (HAVE_POSIX_SIGNALS)
-  sigset_t _rl_orig_sigset;
-#endif /* !HAVE_POSIX_SIGNALS */
 
   sighandler_cxt old_int, old_term, old_hup, old_alrm, old_quit;
 
@@ -3501,10 +3473,6 @@ private:
 
     /* Number of visible chars in the prompt prefix. */
     unsigned int prefix_length;
-
-#if SIZEOF_INT != SIZEOF_CHAR_P
-    int _pad;			// silence clang -Wpadded warning
-#endif
   };
 
   /* The current local prompt state. */
@@ -3550,7 +3518,17 @@ private:
   static const char *const vi_motion;
   static const char *const vi_textmod;
 
-  void *_pad1[2];	// pointer-aligned padding for future object growth
+  /* ************************************************************** */
+  /*    Private Readline Variables (32-bit or 64-bit aligned)	    */
+  /* ************************************************************** */
+
+#if defined (HAVE_POSIX_SIGNALS)
+  sigset_t _rl_orig_sigset;
+#endif /* !HAVE_POSIX_SIGNALS */
+
+#if !defined (NO_TTY_DRIVER)
+  TIOTYPE otio;			// "struct termios" for POSIX termios.
+#endif
 
 public:
 
@@ -3805,10 +3783,6 @@ private:
 
   /* Arrays for the saved marks. */
   int vi_mark_chars['z' - 'a' + 1];
-
-#if !defined (NO_TTY_DRIVER)
-  TIOTYPE otio;			// "struct termios" for POSIX termios.
-#endif
 
 public:
 
@@ -4209,13 +4183,6 @@ private:
   char _rl_numbuf[32];
 
   char _rl_vi_last_replacement[MB_LEN_MAX + 1];	/* reserve for trailing '\0' */
-
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  unsigned char _pad2[7];	// padding for alignment (64-bit pointers)
-#else
-  unsigned char _pad2[3];	// padding for alignment (32-bit pointers)
-#endif
-  int _pad3[2];			// padding for future object growth
 };
 
 /* **************************************************************** */

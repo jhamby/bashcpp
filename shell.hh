@@ -35,6 +35,7 @@
 #include <csignal>
 #include <cerrno>
 
+#include <algorithm>
 #include <vector>
 
 #if defined (HAVE_UNISTD_H)
@@ -256,9 +257,6 @@ struct EXPR_CONTEXT
   struct lvalue lval;
   token_t curtok, lasttok;
   int noeval;
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;			// silence clang -Wpadded warning
-#endif
 };
 
 /* Simple shell state: variables that can be memcpy'd to subshells. */
@@ -950,12 +948,6 @@ protected:
 #ifndef HAVE_LOCALE_CHARSET
   char charsetbuf[40];
 #endif
-
-#if SIZEOF_INT != SIZEOF_CHAR_P
-    char _pad[7];			// silence clang -Wpadded warning
-#else
-    char _pad[3];			// silence clang -Wpadded warning
-#endif
 };
 
 
@@ -972,8 +964,8 @@ protected:
 class Shell : public SimpleState PARENT_CLASS
 {
 public:
-
   Shell (int argc, char **argv, char **env);
+  virtual ~Shell () noexcept override;
 
   // public typedefs accessed from other classes
 
@@ -993,9 +985,6 @@ public:
     pid_t pgrp;			/* The process ID of the process group (necessary). */
     JOB_STATE state;		/* The state that this job is in. */
     job_flags flags;		/* Flags word: J_NOTIFIED, J_FOREGROUND, or J_JOBCONTROL. */
-#if SIZEOF_INT != SIZEOF_CHAR_P
-    int _pad;			// silence clang -Wpadded warning
-#endif
   };
 
 // Define structs for jobs and collected job stats.
@@ -1028,10 +1017,6 @@ public:
     /* */
     int j_current;		/* current job */
     int j_previous;		/* previous job */
-
-#if SIZEOF_INT != SIZEOF_CHAR_P
-    int _pad;			// silence clang -Wpadded warning
-#endif
   };
 
 protected:
@@ -1243,7 +1228,6 @@ public:
     return make_word (tokenizer);
   }
 
-#if defined (ARITH_FOR_COMMAND)
   WORD_LIST *
   make_arith_for_expr (const char *s)
   {
@@ -1257,7 +1241,6 @@ public:
 #endif
     return new WORD_LIST (wd);
   }
-#endif
 
   ARITH_FOR_COM *
   make_arith_for_command (WORD_LIST *exprs, COMMAND *action, int lineno);
@@ -1450,12 +1433,6 @@ protected:
   }
 
   void
-  stop_making_children ()
-  {
-    already_making_children = false;
-  }
-
-  void
   cleanup_the_pipeline ()
   {
     PROCESS *disposer;
@@ -1470,9 +1447,15 @@ protected:
       discard_pipeline (disposer);
   }
 
-#else
-#error write the nojobs.c version!
-#endif
+#endif	// JOB_CONTROL
+
+  // Set already_making_children to false. This method is the same,
+  // with or without JOB_CONTROL.
+  void
+  stop_making_children ()
+  {
+    already_making_children = false;
+  }
 
   void discard_last_procsub_child ();
   void save_pipeline (bool);
@@ -2544,13 +2527,13 @@ protected:
   char *
   extract_dollar_brace_string (const std::string &, size_t *, quoted_flags, sx_flags);
 
-  size_t
-  skip_matched_pair (const std::string &, size_t, char, char, valid_array_flags);
-
   void
   exp_throw_to_top_level (const std::exception &);
 
 #if defined (ARRAY_VARS)
+  size_t
+  skip_matched_pair (const std::string &, size_t, char, char, valid_array_flags);
+
   /* Flags has 1 as a reserved value, since skip_matched_pair uses it for
      skipping over quoted strings and taking the first instance of the
      closing character. */

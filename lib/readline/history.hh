@@ -573,8 +573,6 @@ private:
   char *history_subst_lhs;
   char *history_subst_rhs;
 
-  void *_pad[2];	// for future object expansion
-
 public:
 
   /* ************************************************************** */
@@ -662,12 +660,6 @@ private:
      uses timestamp-delimited entries and can include multi-line history
      entries. Used by read_history_range */
   bool history_multiline_entries;
-
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  unsigned char _pad2[6];	// padding for alignment (64-bit pointers)
-#else
-  unsigned char _pad2[2];	// padding for alignment (32-bit pointers)
-#endif
 };
 
 }  // namespace readline

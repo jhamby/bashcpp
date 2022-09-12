@@ -27,6 +27,7 @@
 
 #include <vector>
 #include <string>
+#include <typeinfo>
 
 namespace bash
 {
@@ -191,10 +192,6 @@ public:
 
   std::string word;			/* C++ string. */
   word_desc_flags flags;		/* Flags associated with this word. */
-
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;			// silence clang -Wpadded warning
-#endif
 };
 
 /* This class holds a vector of a pointer type that it knows how to delete. */
@@ -328,9 +325,6 @@ public:
   redir_flags rflags;		/* Private flags for this redirection */
   uint32_t flags;		/* Flag value for `open'. */
   r_instruction instruction;	/* What to do with the information. */
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;			// silence clang -Wpadded warning
-#endif
 };
 
 // Instantiate our generic vector for REDIRECT pointers.
@@ -433,9 +427,6 @@ public:
   COMMAND *first;		/* Pointer to the first command. */
   COMMAND *second;		/* Pointer to the second command. */
   int connector;		/* What separates this command from others. */
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;			// silence clang -Wpadded warning
-#endif
 };
 
 /* Structures used to represent the CASE command. */
@@ -476,9 +467,6 @@ struct PATTERN_LIST {
   WORD_LIST *patterns;		/* Linked list of patterns to test. */
   COMMAND *action;		/* Thing to execute if a pattern matches. */
   pattern_flags flags;
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;			// silence clang -Wpadded warning
-#endif
 };
 
 /* The CASE command. */
@@ -517,13 +505,8 @@ public:
 			   members of MAP_LIST. */
 
   for_loop_type loop_type;	// Whether this is a FOR or a SELECT loop. */
-
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;			// silence clang -Wpadded warning
-#endif
 };
 
-#if defined (ARITH_FOR_COMMAND)
 class ARITH_FOR_COM : public COMMAND {
 public:
   ARITH_FOR_COM (WORD_LIST *init_, WORD_LIST *test_, WORD_LIST *step_,
@@ -538,7 +521,6 @@ public:
   WORD_LIST *step;
   COMMAND *action;
 };
-#endif
 
 /* IF command. */
 class IF_COM : public COMMAND {
@@ -576,13 +558,8 @@ public:
   COMMAND *test;		/* Thing to test. */
   COMMAND *action;		/* Thing to do while test is non-zero. */
   loop_type loop_type;		// Whether this is an UNTIL or WHILE loop. */
-
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;			// silence clang -Wpadded warning
-#endif
 };
 
-#if defined (DPAREN_ARITHMETIC)
 /* The arithmetic evaluation command, ((...)).  Just a set of flags and
    a WORD_LIST, of which the first element is the only one used, for the
    time being. */
@@ -596,7 +573,6 @@ public:
 
   WORD_LIST *exp;
 };
-#endif /* DPAREN_ARITHMETIC */
 
 #if defined (COND_COMMAND)
 /* The conditional command, [[...]].  This is a binary tree -- we slipped
@@ -618,9 +594,6 @@ public:
   WORD_DESC *op;
   COND_COM *left, *right;
   int type;
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;			// silence clang -Wpadded warning
-#endif
 };
 #endif
 

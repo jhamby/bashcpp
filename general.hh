@@ -58,9 +58,6 @@ public:
   virtual const char *what () const noexcept override;
 
   bash_exception_t type;
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;			// silence clang -Wpadded warning
-#endif
 };
 
 /* Local exceptions used by expansion functions in subst.c. */

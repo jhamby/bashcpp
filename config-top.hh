@@ -77,9 +77,18 @@
   "/bin:/usr/bin:/sbin:/usr/sbin:/etc:/usr/etc"
 #endif
 
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmacro-redefined"
+#endif
+
 /* Default primary and secondary prompt strings. */
 #define PPROMPT "\\s-\\v\\$ "
 #define SPROMPT "> "
+
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif
 
 /* Undefine this if you don't want the ksh-compatible behavior of reprinting
    the select menu after a valid choice is made only if REPLY is set to NULL

@@ -23,6 +23,11 @@
 /* Modify or set defines based on the configure results. */
 /*********************************************************/
 
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmacro-redefined"
+#endif
+
 #if !defined (HAVE_VPRINTF) && defined (HAVE_DOPRNT)
 #  define USE_VFPRINTF_EMULATION
 #  define HAVE_VPRINTF
@@ -183,3 +188,7 @@
 
 /* If you don't want bash to provide a default mail file to check. */
 /* #undef DEFAULT_MAIL_DIRECTORY */
+
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif

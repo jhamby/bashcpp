@@ -117,9 +117,6 @@ struct Builtin {
   StrArray longdoc;	/* The long documentation for this builtin. */
   StrArray dependencies;/* std::vector of #define names. */
   int flags;		/* Flags for this builtin. */
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;		// silence clang -Wpadded warning
-#endif
 };
 
 /* This typedef replaces the old ARRAY implementation, for Builtins. */
@@ -134,9 +131,6 @@ struct DefFile {
   ofstream output;	/* Open file stream for PRODUCTION. */
   BltArray builtins;	/* std::vector of Builtin *. */
   int line_number;	/* The current line number. */
-#if SIZEOF_INT != SIZEOF_CHAR_P
-  int _pad;		// silence clang -Wpadded warning
-#endif
 };
 
 /* The array of all builtins encountered during execution of this code. */
