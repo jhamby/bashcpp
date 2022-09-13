@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_PATCHLEVEL_H_)
+#if !defined(_PATCHLEVEL_H_)
 #define _PATCHLEVEL_H_
 
 /* It's important that there be no other strings in this file that match the

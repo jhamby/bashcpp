@@ -22,8 +22,8 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "shell.hh"
@@ -60,7 +60,8 @@
 // 		0 to 3 octal digits
 //   \xHH	the eight-bit character whose value is HH (hexadecimal).  HH
 // 		can be one or two hex digits
-//   \uHHHH	the Unicode character whose value is the hexadecimal value HHHH.
+//   \uHHHH	the Unicode character whose value is the hexadecimal value
+//   HHHH.
 // 		HHHH can be one to four hex digits.
 //   \UHHHHHHHH the Unicode character whose value is the hexadecimal value
 // 		HHHHHHHH. HHHHHHHH can be one to eight hex digits.
@@ -87,10 +88,10 @@
 namespace bash
 {
 
-#if defined (V9_ECHO)
-#  define VALID_ECHO_OPTIONS "neE"
+#if defined(V9_ECHO)
+#define VALID_ECHO_OPTIONS "neE"
 #else /* !V9_ECHO */
-#  define VALID_ECHO_OPTIONS "n"
+#define VALID_ECHO_OPTIONS "n"
 #endif /* !V9_ECHO */
 
 /* System V machines already have a /bin/sh with a v9 behaviour.  We
@@ -98,7 +99,7 @@ namespace bash
    existing system shells won't barf.  Regrettably, the SUS v2 has
    standardized the Sys V echo behavior.  This variable is external
    so that we can have a `shopt' variable to control it at runtime. */
-#if defined (DEFAULT_ECHO_TO_XPG) || defined (STRICT_POSIX)
+#if defined(DEFAULT_ECHO_TO_XPG) || defined(STRICT_POSIX)
 int xpg_echo = 1;
 #else
 int xpg_echo = 0;
@@ -119,79 +120,81 @@ echo_builtin (WORD_LIST *list)
   if (posixly_correct && xpg_echo)
     goto just_echo;
 
-  for (; list && (temp = list->word->word) && *temp == '-'; list = (WORD_LIST *)list->next)
+  for (; list && (temp = list->word->word) && *temp == '-';
+       list = (WORD_LIST *)list->next)
     {
       /* If it appears that we are handling options, then make sure that
-	 all of the options specified are actually valid.  Otherwise, the
-	 string should just be echoed. */
+         all of the options specified are actually valid.  Otherwise, the
+         string should just be echoed. */
       temp++;
 
       for (i = 0; temp[i]; i++)
-	{
-	  if (strchr (VALID_ECHO_OPTIONS, temp[i]) == 0)
-	    break;
-	}
+        {
+          if (strchr (VALID_ECHO_OPTIONS, temp[i]) == 0)
+            break;
+        }
 
       /* echo - and echo -<nonopt> both mean to just echo the arguments. */
       if (*temp == 0 || temp[i])
-	break;
+        break;
 
       /* All of the options in TEMP are valid options to ECHO.
-	 Handle them. */
+         Handle them. */
       while ((i = *temp++))
-	{
-	  switch (i)
-	    {
-	    case 'n':
-	      display_return = 0;
-	      break;
-#if defined (V9_ECHO)
-	    case 'e':
-	      do_v9 = 1;
-	      break;
-	    case 'E':
-	      do_v9 = 0;
-	      break;
+        {
+          switch (i)
+            {
+            case 'n':
+              display_return = 0;
+              break;
+#if defined(V9_ECHO)
+            case 'e':
+              do_v9 = 1;
+              break;
+            case 'E':
+              do_v9 = 0;
+              break;
 #endif /* V9_ECHO */
-	    default:
-	      goto just_echo;	/* XXX */
-	    }
-	}
+            default:
+              goto just_echo; /* XXX */
+            }
+        }
     }
 
 just_echo:
 
-  clearerr (stdout);	/* clear error before writing and testing success */
+  clearerr (stdout); /* clear error before writing and testing success */
 
   while (list)
     {
       i = len = 0;
-      temp = do_v9 ? ansicstr (list->word->word, STRLEN (list->word->word), 1, &i, &len)
-		   : list->word->word;
+      temp = do_v9 ? ansicstr (list->word->word, STRLEN (list->word->word), 1,
+                               &i, &len)
+                   : list->word->word;
       if (temp)
-	{
-	  if (do_v9)
-	    {
-	      for (s = temp; len > 0; len--)
-		putchar (*s++);
-	    }
-	  else
-	    printf ("%s", temp);
-#if defined (SunOS5)
-	  fflush (stdout);	/* Fix for bug in SunOS 5.5 printf(3) */
+        {
+          if (do_v9)
+            {
+              for (s = temp; len > 0; len--)
+                putchar (*s++);
+            }
+          else
+            printf ("%s", temp);
+#if defined(SunOS5)
+          fflush (stdout); /* Fix for bug in SunOS 5.5 printf(3) */
 #endif
-	}
+        }
       QUIT;
       if (do_v9 && temp)
-	free (temp);
+        free (temp);
       list = (WORD_LIST *)list->next;
       if (i)
-	{
-	  display_return = 0;
-	  break;
-	}
+        {
+          display_return = 0;
+          break;
+        }
       if (list)
-	putchar(' ');
+        putchar (' ');
       QUIT;
     }
 
@@ -201,4 +204,4 @@ just_echo:
   return sh_chkwrite (EXECUTION_SUCCESS);
 }
 
-}  // namespace bash
+} // namespace bash

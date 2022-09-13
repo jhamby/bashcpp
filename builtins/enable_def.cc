@@ -50,51 +50,51 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "builtins.hh"
-#include "flags.hh"
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
 #include "findcmd.hh"
+#include "flags.hh"
+#include "shell.hh"
 
-#if defined (PROGRAMMABLE_COMPLETION)
-#  include "pcomplete.hh"
+#if defined(PROGRAMMABLE_COMPLETION)
+#include "pcomplete.hh"
 #endif
 
 namespace bash
 {
 
-#define ENABLED  1
+#define ENABLED 1
 #define DISABLED 2
-#define SPECIAL  4
+#define SPECIAL 4
 
-#define AFLAG	0x01
-#define DFLAG	0x02
-#define FFLAG	0x04
-#define NFLAG	0x08
-#define PFLAG	0x10
-#define SFLAG	0x20
+#define AFLAG 0x01
+#define DFLAG 0x02
+#define FFLAG 0x04
+#define NFLAG 0x08
+#define PFLAG 0x10
+#define SFLAG 0x20
 
-#if defined (HAVE_DLOPEN) && defined (HAVE_DLSYM)
+#if defined(HAVE_DLOPEN) && defined(HAVE_DLSYM)
 static int dyn_load_builtin (WORD_LIST *, int, const char *);
 #endif
 
-#if defined (HAVE_DLCLOSE)
+#if defined(HAVE_DLCLOSE)
 static int dyn_unload_builtin (const char *);
 static void delete_builtin (struct builtin *);
 static int local_dlclose (void *);
 #endif
 
-#define STRUCT_SUFFIX	"_struct"
+#define STRUCT_SUFFIX "_struct"
 /* for now */
-#define LOAD_SUFFIX	"_builtin_load"
-#define UNLOAD_SUFFIX	"_builtin_unload"
+#define LOAD_SUFFIX "_builtin_load"
+#define UNLOAD_SUFFIX "_builtin_unload"
 
 static void list_some_builtins (int);
 static int enable_shell_command (const char *, bool);
@@ -107,7 +107,7 @@ Shell::enable_builtin (WORD_LIST *list)
 {
   int result, flags;
   int opt, filter;
-#if defined (HAVE_DLOPEN) && defined (HAVE_DLSYM)
+#if defined(HAVE_DLOPEN) && defined(HAVE_DLSYM)
   char *filename;
 #endif
 
@@ -118,48 +118,48 @@ Shell::enable_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "adnpsf:")) != -1)
     {
       switch (opt)
-	{
-	case 'a':
-	  flags |= AFLAG;
-	  break;
-	case 'n':
-	  flags |= NFLAG;
-	  break;
-	case 'p':
-	  flags |= PFLAG;
-	  break;
-	case 's':
-	  flags |= SFLAG;
-	  break;
-	case 'f':
-#if defined (HAVE_DLOPEN) && defined (HAVE_DLSYM)
-	  flags |= FFLAG;
-	  filename = list_optarg;
-	  break;
+        {
+        case 'a':
+          flags |= AFLAG;
+          break;
+        case 'n':
+          flags |= NFLAG;
+          break;
+        case 'p':
+          flags |= PFLAG;
+          break;
+        case 's':
+          flags |= SFLAG;
+          break;
+        case 'f':
+#if defined(HAVE_DLOPEN) && defined(HAVE_DLSYM)
+          flags |= FFLAG;
+          filename = list_optarg;
+          break;
 #else
-	  builtin_error (_("dynamic loading not available"));
-	  return EX_USAGE;
+          builtin_error (_ ("dynamic loading not available"));
+          return EX_USAGE;
 #endif
-#if defined (HAVE_DLCLOSE)
-	case 'd':
-	  flags |= DFLAG;
-	  break;
+#if defined(HAVE_DLCLOSE)
+        case 'd':
+          flags |= DFLAG;
+          break;
 #else
-	  builtin_error (_("dynamic loading not available"));
-	  return EX_USAGE;
+          builtin_error (_ ("dynamic loading not available"));
+          return EX_USAGE;
 #endif /* HAVE_DLCLOSE */
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
 
   list = loptend;
 
-#if defined (RESTRICTED_SHELL)
+#if defined(RESTRICTED_SHELL)
   /* Restricted shells cannot load new builtins. */
-  if (restricted && (flags & (FFLAG|DFLAG)))
+  if (restricted && (flags & (FFLAG | DFLAG)))
     {
       sh_restricted ((char *)NULL);
       return EXECUTION_FAILURE;
@@ -168,38 +168,39 @@ Shell::enable_builtin (WORD_LIST *list)
 
   if (list == 0 || (flags & PFLAG))
     {
-      filter = (flags & AFLAG) ? (ENABLED | DISABLED)
-			       : (flags & NFLAG) ? DISABLED : ENABLED;
+      filter = (flags & AFLAG)   ? (ENABLED | DISABLED)
+               : (flags & NFLAG) ? DISABLED
+                                 : ENABLED;
 
       if (flags & SFLAG)
-	filter |= SPECIAL;
+        filter |= SPECIAL;
 
       list_some_builtins (filter);
     }
-#if defined (HAVE_DLOPEN) && defined (HAVE_DLSYM)
+#if defined(HAVE_DLOPEN) && defined(HAVE_DLSYM)
   else if (flags & FFLAG)
     {
       filter = (flags & NFLAG) ? DISABLED : ENABLED;
       if (flags & SFLAG)
-	filter |= SPECIAL;
+        filter |= SPECIAL;
 
       result = dyn_load_builtin (list, filter, filename);
-#if defined (PROGRAMMABLE_COMPLETION)
+#if defined(PROGRAMMABLE_COMPLETION)
       set_itemlist_dirty (&it_builtins);
 #endif
     }
 #endif
-#if defined (HAVE_DLCLOSE)
+#if defined(HAVE_DLCLOSE)
   else if (flags & DFLAG)
     {
       while (list)
-	{
-	  opt = dyn_unload_builtin (list->word->word);
-	  if (opt == EXECUTION_FAILURE)
-	    result = EXECUTION_FAILURE;
-	  list = (WORD_LIST *)list->next;
-	}
-#if defined (PROGRAMMABLE_COMPLETION)
+        {
+          opt = dyn_unload_builtin (list->word->word);
+          if (opt == EXECUTION_FAILURE)
+            result = EXECUTION_FAILURE;
+          list = (WORD_LIST *)list->next;
+        }
+#if defined(PROGRAMMABLE_COMPLETION)
       set_itemlist_dirty (&it_builtins);
 #endif
     }
@@ -207,16 +208,16 @@ Shell::enable_builtin (WORD_LIST *list)
   else
     {
       while (list)
-	{
-	  opt = enable_shell_command (list->word->word, flags & NFLAG);
+        {
+          opt = enable_shell_command (list->word->word, flags & NFLAG);
 
-	  if (opt == EXECUTION_FAILURE)
-	    {
-	      sh_notbuiltin (list->word->word);
-	      result = EXECUTION_FAILURE;
-	    }
-	  list = (WORD_LIST *)list->next;
-	}
+          if (opt == EXECUTION_FAILURE)
+            {
+              sh_notbuiltin (list->word->word);
+              result = EXECUTION_FAILURE;
+            }
+          list = (WORD_LIST *)list->next;
+        }
     }
   return result;
 }
@@ -228,18 +229,19 @@ list_some_builtins (int filter)
 {
   for (int i = 0; i < num_shell_builtins; i++)
     {
-      if (shell_builtins[i].function == 0 || (shell_builtins[i].flags & BUILTIN_DELETED))
-	continue;
+      if (shell_builtins[i].function == 0
+          || (shell_builtins[i].flags & BUILTIN_DELETED))
+        continue;
 
-      if ((filter & SPECIAL) &&
-	  (shell_builtins[i].flags & SPECIAL_BUILTIN) == 0)
-	continue;
+      if ((filter & SPECIAL)
+          && (shell_builtins[i].flags & SPECIAL_BUILTIN) == 0)
+        continue;
 
       if ((filter & ENABLED) && (shell_builtins[i].flags & BUILTIN_ENABLED))
-	printf ("enable %s\n", shell_builtins[i].name);
-      else if ((filter & DISABLED) &&
-	       ((shell_builtins[i].flags & BUILTIN_ENABLED) == 0))
-	printf ("enable -n %s\n", shell_builtins[i].name);
+        printf ("enable %s\n", shell_builtins[i].name);
+      else if ((filter & DISABLED)
+               && ((shell_builtins[i].flags & BUILTIN_ENABLED) == 0))
+        printf ("enable -n %s\n", shell_builtins[i].name);
     }
 }
 
@@ -256,7 +258,7 @@ enable_shell_command (const char *name, bool disable_p)
 
   if (disable_p)
     b->flags &= ~BUILTIN_ENABLED;
-#if defined (RESTRICTED_SHELL)
+#if defined(RESTRICTED_SHELL)
   else if (restricted && ((b->flags & BUILTIN_ENABLED) == 0))
     {
       sh_restricted ((char *)NULL);
@@ -266,7 +268,7 @@ enable_shell_command (const char *name, bool disable_p)
   else
     b->flags |= BUILTIN_ENABLED;
 
-#if defined (PROGRAMMABLE_COMPLETION)
+#if defined(PROGRAMMABLE_COMPLETION)
   set_itemlist_dirty (&it_enabled);
   set_itemlist_dirty (&it_disabled);
 #endif
@@ -274,10 +276,10 @@ enable_shell_command (const char *name, bool disable_p)
   return EXECUTION_SUCCESS;
 }
 
-#if defined (HAVE_DLOPEN) && defined (HAVE_DLSYM)
+#if defined(HAVE_DLOPEN) && defined(HAVE_DLSYM)
 
-#if defined (HAVE_DLFCN_H)
-#  include <dlfcn.h>
+#if defined(HAVE_DLFCN_H)
+#include <dlfcn.h>
 #endif
 
 static int
@@ -303,24 +305,25 @@ dyn_load_builtin (WORD_LIST *list, int flags, const char *filename)
     {
       loadables_path = get_string_value ("BASH_LOADABLES_PATH");
       if (loadables_path)
-	{
-	  load_path = find_in_path (filename, loadables_path, FS_NODIRS|FS_EXEC_PREFERRED);
-	  if (load_path)
-	    {
-#if defined (_AIX)
-	      handle = dlopen (load_path, RTLD_NOW|RTLD_GLOBAL);
+        {
+          load_path = find_in_path (filename, loadables_path,
+                                    FS_NODIRS | FS_EXEC_PREFERRED);
+          if (load_path)
+            {
+#if defined(_AIX)
+              handle = dlopen (load_path, RTLD_NOW | RTLD_GLOBAL);
 #else
-	      handle = dlopen (load_path, RTLD_LAZY);
+              handle = dlopen (load_path, RTLD_LAZY);
 #endif /* !_AIX */
-	      free (load_path);
-	    }
-	}
+              free (load_path);
+            }
+        }
     }
 
   /* Fall back to current directory for now */
   if (handle == 0)
-#if defined (_AIX)
-    handle = dlopen (filename, RTLD_NOW|RTLD_GLOBAL);
+#if defined(_AIX)
+    handle = dlopen (filename, RTLD_NOW | RTLD_GLOBAL);
 #else
     handle = dlopen (filename, RTLD_LAZY);
 #endif /* !_AIX */
@@ -328,16 +331,17 @@ dyn_load_builtin (WORD_LIST *list, int flags, const char *filename)
   if (handle == 0)
     {
       name = printable_filename (filename, 0);
-      builtin_error (_("cannot open shared object %s: %s"), name, dlerror ());
+      builtin_error (_ ("cannot open shared object %s: %s"), name, dlerror ());
       if (name != filename)
-	free (name);
+        free (name);
       return EXECUTION_FAILURE;
     }
 
   int new_size = 0;
   for (WORD_LIST *l = list; l; l = (WORD_LIST *)l->next, new_size++)
     ;
-  new_builtins = (struct builtin **)xmalloc (new_size * sizeof (struct builtin *));
+  new_builtins
+      = (struct builtin **)xmalloc (new_size * sizeof (struct builtin *));
 
   /* For each new builtin in the shared object, find it and its describing
      structure.  If this is overwriting an existing builtin, do so, otherwise
@@ -356,48 +360,51 @@ dyn_load_builtin (WORD_LIST *list, int flags, const char *filename)
 
       b = (struct builtin *)dlsym (handle, struct_name);
       if (b == 0)
-	{
-	  name = printable_filename (filename, 0);
-	  builtin_error (_("cannot find %s in shared object %s: %s"),
-			  struct_name, name, dlerror ());
-	  if (name != filename)
-	    free (name);
-	  free (struct_name);
-	  continue;
-	}
+        {
+          name = printable_filename (filename, 0);
+          builtin_error (_ ("cannot find %s in shared object %s: %s"),
+                         struct_name, name, dlerror ());
+          if (name != filename)
+            free (name);
+          free (struct_name);
+          continue;
+        }
 
-      funcname = (char *)xrealloc (struct_name, size + sizeof (LOAD_SUFFIX) + 1);
+      funcname
+          = (char *)xrealloc (struct_name, size + sizeof (LOAD_SUFFIX) + 1);
       strcpy (funcname, name);
       strcpy (funcname + size, LOAD_SUFFIX);
 
       loadfunc = (sh_load_func_t *)dlsym (handle, funcname);
       if (loadfunc)
-	{
-	  /* Add warning if running an init function more than once */
-	  if (old_builtin && (old_builtin->flags & STATIC_BUILTIN) == 0)
-	    builtin_warning (_("%s: dynamic builtin already loaded"), name);
-	  r = (*loadfunc) (name);
-	  if (r == 0)
-	    {
-	      builtin_error (_("load function for %s returns failure (%d): not loaded"), name, r);
-	      free (funcname);
-	      continue;
-	    }
-	}
+        {
+          /* Add warning if running an init function more than once */
+          if (old_builtin && (old_builtin->flags & STATIC_BUILTIN) == 0)
+            builtin_warning (_ ("%s: dynamic builtin already loaded"), name);
+          r = (*loadfunc) (name);
+          if (r == 0)
+            {
+              builtin_error (
+                  _ ("load function for %s returns failure (%d): not loaded"),
+                  name, r);
+              free (funcname);
+              continue;
+            }
+        }
       free (funcname);
 
       b->flags &= ~STATIC_BUILTIN;
       if (flags & SPECIAL)
-	b->flags |= SPECIAL_BUILTIN;
+        b->flags |= SPECIAL_BUILTIN;
       b->handle = handle;
 
       if (old_builtin)
-	{
-	  replaced++;
-	  FASTCOPY ((char *)b, (char *)old_builtin, sizeof (struct builtin));
-	}
+        {
+          replaced++;
+          FASTCOPY ((char *)b, (char *)old_builtin, sizeof (struct builtin));
+        }
       else
-	  new_builtins[new_size++] = b;
+        new_builtins[new_size++] = b;
     }
 
   if (replaced == 0 && new_size == 0)
@@ -414,18 +421,18 @@ dyn_load_builtin (WORD_LIST *list, int flags, const char *filename)
 
       new_shell_builtins = (struct builtin *)xmalloc (size);
       FASTCOPY ((char *)shell_builtins, (char *)new_shell_builtins,
-		num_shell_builtins * sizeof (struct builtin));
+                num_shell_builtins * sizeof (struct builtin));
       for (replaced = 0; replaced < new_size; replaced++)
-	FASTCOPY ((char *)new_builtins[replaced],
-		  (char *)&new_shell_builtins[num_shell_builtins + replaced],
-		  sizeof (struct builtin));
+        FASTCOPY ((char *)new_builtins[replaced],
+                  (char *)&new_shell_builtins[num_shell_builtins + replaced],
+                  sizeof (struct builtin));
 
       new_shell_builtins[total].name = (char *)0;
       new_shell_builtins[total].function = (sh_builtin_func_t *)0;
       new_shell_builtins[total].flags = 0;
 
       if (shell_builtins != static_shell_builtins)
-	free (shell_builtins);
+        free (shell_builtins);
 
       shell_builtins = new_shell_builtins;
       num_shell_builtins = total;
@@ -437,7 +444,7 @@ dyn_load_builtin (WORD_LIST *list, int flags, const char *filename)
 }
 #endif
 
-#if defined (HAVE_DLCLOSE)
+#if defined(HAVE_DLCLOSE)
 static void
 delete_builtin (struct builtin *b)
 {
@@ -452,12 +459,12 @@ delete_builtin (struct builtin *b)
   /* Copy shell_builtins[0]...shell_builtins[ind - 1] to new_shell_builtins */
   if (ind)
     FASTCOPY ((char *)shell_builtins, (char *)new_shell_builtins,
-	      ind * sizeof (struct builtin));
+              ind * sizeof (struct builtin));
   /* Copy shell_builtins[ind+1]...shell_builtins[num_shell_builtins to
      new_shell_builtins, starting at ind. */
-  FASTCOPY ((char *)(&shell_builtins[ind+1]),
-  	    (char *)(&new_shell_builtins[ind]),
-  	    (num_shell_builtins - ind) * sizeof (struct builtin));
+  FASTCOPY ((char *)(&shell_builtins[ind + 1]),
+            (char *)(&new_shell_builtins[ind]),
+            (num_shell_builtins - ind) * sizeof (struct builtin));
 
   if (shell_builtins != static_shell_builtins)
     free (shell_builtins);
@@ -472,9 +479,9 @@ delete_builtin (struct builtin *b)
 static int
 local_dlclose (void *handle)
 {
-#if !defined (__MACHTEN__)
+#if !defined(__MACHTEN__)
   return dlclose (handle);
-#else /* __MACHTEN__ */
+#else  /* __MACHTEN__ */
   dlclose (handle);
   return (dlerror () != NULL) ? -1 : 0;
 #endif /* __MACHTEN__ */
@@ -497,7 +504,7 @@ dyn_unload_builtin (const char *name)
     }
   if (b->flags & STATIC_BUILTIN)
     {
-      builtin_error (_("%s: not dynamically loaded"), name);
+      builtin_error (_ ("%s: not dynamically loaded"), name);
       return EXECUTION_FAILURE;
     }
 
@@ -505,7 +512,7 @@ dyn_unload_builtin (const char *name)
   for (ref = i = 0; i < num_shell_builtins; i++)
     {
       if (shell_builtins[i].handle == b->handle)
-	ref++;
+        ref++;
     }
 
   /* Call any unload function */
@@ -516,14 +523,14 @@ dyn_unload_builtin (const char *name)
 
   unloadfunc = (sh_unload_func_t *)dlsym (handle, funcname);
   if (unloadfunc)
-    (*unloadfunc) (name);	/* void function */
+    (*unloadfunc) (name); /* void function */
   free (funcname);
 
   /* Don't remove the shared object unless the reference count of builtins
      using it drops to zero. */
   if (ref == 1 && local_dlclose (handle) != 0)
     {
-      builtin_error (_("%s: cannot delete: %s"), name, dlerror ());
+      builtin_error (_ ("%s: cannot delete: %s"), name, dlerror ());
       return EXECUTION_FAILURE;
     }
 
@@ -534,4 +541,4 @@ dyn_unload_builtin (const char *name)
 }
 #endif
 
-}  // namespace bash
+} // namespace bash

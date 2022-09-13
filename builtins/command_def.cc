@@ -41,20 +41,20 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "shell.hh"
-#include "execute_cmd.hh"
-#include "flags.hh"
 #include "bashgetopt.hh"
 #include "common.hh"
+#include "execute_cmd.hh"
+#include "flags.hh"
+#include "shell.hh"
 
 namespace bash
 {
 
-#if defined (_CS_PATH) && defined (HAVE_CONFSTR) && !HAVE_DECL_CONFSTR
+#if defined(_CS_PATH) && defined(HAVE_CONFSTR) && !HAVE_DECL_CONFSTR
 extern size_t confstr (int, char *, size_t);
 #endif
 
@@ -71,28 +71,29 @@ Shell::command_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "pvV")) != -1)
     {
       switch (opt)
-	{
-	case 'p':
-	  use_standard_path = CDESC_STDPATH;
-	  break;
-	case 'V':
-	  verbose = CDESC_SHORTDESC|CDESC_ABSPATH;	/* look in common.h for constants */
-	  break;
-	case 'v':
-	  verbose = CDESC_REUSABLE;	/* ditto */
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+        case 'p':
+          use_standard_path = CDESC_STDPATH;
+          break;
+        case 'V':
+          verbose = CDESC_SHORTDESC
+                    | CDESC_ABSPATH; /* look in common.h for constants */
+          break;
+        case 'v':
+          verbose = CDESC_REUSABLE; /* ditto */
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
   list = loptend;
 
   if (list == 0)
     return EXECUTION_SUCCESS;
 
-#if defined (RESTRICTED_SHELL)
+#if defined(RESTRICTED_SHELL)
   if (use_standard_path && restricted)
     {
       sh_restricted ("-p");
@@ -105,24 +106,28 @@ Shell::command_builtin (WORD_LIST *list)
       int found, any_found;
 
       for (any_found = 0; list; list = (WORD_LIST *)list->next)
-	{
-	  found = describe_command (list->word->word, verbose|use_standard_path);
+        {
+          found = describe_command (list->word->word,
+                                    verbose | use_standard_path);
 
-	  if (found == 0 && verbose != CDESC_REUSABLE)
-	    sh_notfound (list->word->word);
+          if (found == 0 && verbose != CDESC_REUSABLE)
+            sh_notfound (list->word->word);
 
-	  any_found += found;
-	}
+          any_found += found;
+        }
 
       return any_found ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
     }
 
   begin_unwind_frame ("command_builtin");
 
-#define COMMAND_BUILTIN_FLAGS (CMD_NO_FUNCTIONS | CMD_INHIBIT_EXPANSION | CMD_COMMAND_BUILTIN | (use_standard_path ? CMD_STDPATH : 0))
+#define COMMAND_BUILTIN_FLAGS                                                 \
+  (CMD_NO_FUNCTIONS | CMD_INHIBIT_EXPANSION | CMD_COMMAND_BUILTIN             \
+   | (use_standard_path ? CMD_STDPATH : 0))
 
 #ifdef DEBUG
-  itrace("command_builtin: running execute_command for `%s'", list->word->word);
+  itrace ("command_builtin: running execute_command for `%s'",
+          list->word->word);
 #endif
 
   /* We don't want this to be reparsed (consider command echo 'foo &'), so
@@ -141,4 +146,4 @@ Shell::command_builtin (WORD_LIST *list)
   return result;
 }
 
-}  // namespace bash
+} // namespace bash

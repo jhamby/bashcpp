@@ -33,20 +33,20 @@
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
 #include "execute_cmd.hh"
 #include "jobs.hh"
+#include "shell.hh"
 #include "trap.hh"
 
 #include "common.hh"
 
-#include "builtext.hh"	/* for jobs_builtin */
+#include "builtext.hh" /* for jobs_builtin */
 
 namespace bash
 {
@@ -63,7 +63,7 @@ Shell::exit_builtin (WORD_LIST *list)
 
   if (interactive)
     {
-      fprintf (stderr, login_shell ? _("logout\n") : "exit\n");
+      fprintf (stderr, login_shell ? _ ("logout\n") : "exit\n");
       fflush (stderr);
     }
 
@@ -87,7 +87,7 @@ Shell::logout_builtin (WORD_LIST *list)
 
   if (login_shell == 0 /* && interactive */)
     {
-      builtin_error (_("not login shell: use `exit'"));
+      builtin_error (_ ("not login shell: use `exit'"));
       return EXECUTION_FAILURE;
     }
   else
@@ -99,41 +99,40 @@ exit_or_logout (WORD_LIST *list)
 {
   int exit_value;
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
   int exit_immediate_okay, stopmsg;
 
-  exit_immediate_okay = (interactive  == 0 ||
-			 last_shell_builtin == exit_builtin ||
-			 last_shell_builtin == logout_builtin ||
-			 last_shell_builtin == jobs_builtin);
+  exit_immediate_okay = (interactive == 0 || last_shell_builtin == exit_builtin
+                         || last_shell_builtin == logout_builtin
+                         || last_shell_builtin == jobs_builtin);
 
   /* Check for stopped jobs if the user wants to. */
   if (exit_immediate_okay == 0)
     {
       int i;
       for (i = stopmsg = 0; i < js.j_jobslots; i++)
-	if (jobs[i] && STOPPED (i))
-	  stopmsg = JSTOPPED;
-	else if (check_jobs_at_exit && stopmsg == 0 && jobs[i] && RUNNING (i))
-	  stopmsg = JRUNNING;
+        if (jobs[i] && STOPPED (i))
+          stopmsg = JSTOPPED;
+        else if (check_jobs_at_exit && stopmsg == 0 && jobs[i] && RUNNING (i))
+          stopmsg = JRUNNING;
 
       if (stopmsg == JSTOPPED)
-	fprintf (stderr, _("There are stopped jobs.\n"));
+        fprintf (stderr, _ ("There are stopped jobs.\n"));
       else if (stopmsg == JRUNNING)
-	fprintf (stderr, _("There are running jobs.\n"));
+        fprintf (stderr, _ ("There are running jobs.\n"));
 
       if (stopmsg && check_jobs_at_exit)
         list_all_jobs (JLIST_STANDARD);
 
       if (stopmsg)
-	{
-	  /* This is NOT superfluous because EOF can get here without
-	     going through the command parser.  Set both last and this
-	     so that either `exit', `logout', or ^D will work to exit
-	     immediately if nothing intervenes. */
-	  this_shell_builtin = last_shell_builtin = exit_builtin;
-	  return EXECUTION_FAILURE;
-	}
+        {
+          /* This is NOT superfluous because EOF can get here without
+             going through the command parser.  Set both last and this
+             so that either `exit', `logout', or ^D will work to exit
+             immediately if nothing intervenes. */
+          this_shell_builtin = last_shell_builtin = exit_builtin;
+          return EXECUTION_FAILURE;
+        }
     }
 #endif /* JOB_CONTROL */
 
@@ -144,7 +143,8 @@ exit_or_logout (WORD_LIST *list)
      gets set to SIG+1), and we don't have a argument given to `exit'
      (list == 0), use the exit status we saved before running the trap
      commands (trap_saved_exit_value). */
-  exit_value = (running_trap == 1 && list == 0) ? trap_saved_exit_value : get_exitstat (list);
+  exit_value = (running_trap == 1 && list == 0) ? trap_saved_exit_value
+                                                : get_exitstat (list);
 
   bash_logout ();
 
@@ -168,4 +168,4 @@ bash_logout ()
     }
 }
 
-}  // namespace bash
+} // namespace bash

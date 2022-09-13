@@ -66,14 +66,14 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
 #include "common.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -93,7 +93,7 @@ Shell::let_builtin (WORD_LIST *list)
 
   if (list == 0)
     {
-      builtin_error (_("expression expected"));
+      builtin_error (_ ("expression expected"));
       return EXECUTION_FAILURE;
     }
 
@@ -101,10 +101,10 @@ Shell::let_builtin (WORD_LIST *list)
     {
       ret = evalexp (list->word->word, EXP_EXPANDED, &expok);
       if (expok == 0)
-	return EXECUTION_FAILURE;
+        return EXECUTION_FAILURE;
     }
 
   return (ret == 0) ? EXECUTION_FAILURE : EXECUTION_SUCCESS;
 }
 
-}  // namespace bash
+} // namespace bash

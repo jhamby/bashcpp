@@ -20,12 +20,12 @@
 
 #include "config.hh"
 
-#if !defined (HAVE_STRNLEN)
+#if !defined(HAVE_STRNLEN)
 
 #include <sys/types.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 /* Find the length of S, but scan at most MAXLEN characters.  If no '\0'

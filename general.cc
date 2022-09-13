@@ -22,39 +22,39 @@
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_SYS_PARAM_H)
-#  include <sys/param.h>
+#if defined(HAVE_SYS_PARAM_H)
+#include <sys/param.h>
 #endif
 
 #include "posixstat.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "filecntl.hh"
 #include "chartypes.hh"
+#include "filecntl.hh"
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "parser.hh"
-#include "flags.hh"
 #include "findcmd.hh"
+#include "flags.hh"
+#include "parser.hh"
+#include "pathexp.hh"
+#include "shell.hh"
 #include "test.hh"
 #include "trap.hh"
-#include "pathexp.hh"
 
 #include "builtins/common.hh"
 
-#if defined (HAVE_MBSTR_H) && defined (HAVE_MBSCHR)
-#  include <mbstr.h>		/* mbschr */
+#if defined(HAVE_MBSTR_H) && defined(HAVE_MBSCHR)
+#include <mbstr.h> /* mbschr */
 #endif
 
 #include "tilde.hh"
 
 #ifdef __CYGWIN__
-#  include <sys/cygwin.h>
+#include <sys/cygwin.h>
 #endif
 
 namespace bash
@@ -99,25 +99,31 @@ static struct {
 static char *saved_posix_vars = 0;
 #endif
 
-
 // Return the type of bash_exception as a string.
 const char *
-bash_exception::what() const noexcept
+bash_exception::what () const noexcept
 {
   switch (type)
     {
-      case FORCE_EOF:
-	return "FORCE_EOF";
+    case FORCE_EOF:
+      return "FORCE_EOF";
 
-      case DISCARD:
-	return "DISCARD";
+    case DISCARD:
+      return "DISCARD";
 
-      case EXITPROG:
-	return "EXITPROG";
+    case EXITPROG:
+      return "EXITPROG";
 
-      case ERREXIT:
-	return "ERREXIT";
+    case ERREXIT:
+      return "ERREXIT";
     }
+}
+
+// Return the type of the subshell_child_start exception.
+const char *
+subshell_child_start::what () const noexcept
+{
+  return "subshell_child_start";
 }
 
 void
@@ -133,13 +139,13 @@ Shell::posix_initialize (bool on)
     }
 
   /* Things that should be turned on when posix mode is disabled. */
-  else if (saved_posix_vars)		/* on == 0, restore saved settings */
+  else if (saved_posix_vars) /* on == 0, restore saved settings */
     {
       set_posix_options (saved_posix_vars);
       free (saved_posix_vars);
       saved_posix_vars = 0;
     }
-  else	/* on == 0, restore a default set of settings */
+  else /* on == 0, restore a default set of settings */
     {
       source_searches_cwd = true;
       expand_aliases = interactive_shell;
@@ -159,7 +165,7 @@ get_posix_options (char *bitmap)
   int i;
 
   if (bitmap == 0)
-    bitmap = (char *)xmalloc (num_posix_options ());	/* no trailing NULL */
+    bitmap = (char *)xmalloc (num_posix_options ()); /* no trailing NULL */
   for (i = 0; posix_vars[i].posix_mode_var; i++)
     bitmap[i] = *(posix_vars[i].posix_mode_var);
   return bitmap;
@@ -187,7 +193,7 @@ set_posix_options (const char *bitmap)
 /*								    */
 /* **************************************************************** */
 
-#if defined (RLIMTYPE)
+#if defined(RLIMTYPE)
 RLIMTYPE
 string_to_rlimtype (char *s)
 {
@@ -203,7 +209,7 @@ string_to_rlimtype (char *s)
       neg = *s == '-';
       s++;
     }
-  for ( ; s && *s && DIGIT (*s); s++)
+  for (; s && *s && DIGIT (*s); s++)
     ret = (ret * 10) + TODIGIT (*s);
   return neg ? -ret : ret;
 }
@@ -213,13 +219,13 @@ print_rlimtype (RLIMTYPE n, int addnl)
 {
   char s[INT_STRLEN_BOUND (RLIMTYPE) + 1], *p;
 
-  p = s + sizeof(s);
+  p = s + sizeof (s);
   *--p = '\0';
 
   if (n < 0)
     {
       do
-	*--p = '0' - n % 10;
+        *--p = '0' - n % 10;
       while ((n /= 10) != 0);
 
       *--p = '-';
@@ -227,7 +233,7 @@ print_rlimtype (RLIMTYPE n, int addnl)
   else
     {
       do
-	*--p = '0' + n % 10;
+        *--p = '0' + n % 10;
       while ((n /= 10) != 0);
     }
 
@@ -272,7 +278,7 @@ legal_number (const char *string, int64_t *result)
   errno = 0;
   value = strtoimax (string, &ep, 10);
   if (errno || ep == string)
-    return false;	/* errno is set on overflow or underflow */
+    return false; /* errno is set on overflow or underflow */
 
   /* Skip any trailing whitespace, since strtoimax does not. */
   while (whitespace (*ep))
@@ -283,10 +289,10 @@ legal_number (const char *string, int64_t *result)
   if (*string && *ep == '\0')
     {
       if (result)
-	*result = value;
+        *result = value;
       /* The SunOS4 implementation of strtol() will happily ignore
-	 overflow conditions, so this cannot do overflow correctly
-	 on those systems. */
+         overflow conditions, so this cannot do overflow correctly
+         on those systems. */
       return true;
     }
 
@@ -308,7 +314,7 @@ legal_identifier (const char *name)
   for (s = name + 1; (c = *s) != 0; s++)
     {
       if (legal_variable_char (c) == 0)
-	return false;
+        return false;
     }
   return true;
 }
@@ -324,9 +330,10 @@ valid_nameref_value (const char *name, int flags)
   if (name == 0 || *name == 0)
     return false;
 
-  /* valid identifier */
-#if defined (ARRAY_VARS)
-  if (legal_identifier (name) || (flags != 2 && valid_array_reference (name, 0)))
+    /* valid identifier */
+#if defined(ARRAY_VARS)
+  if (legal_identifier (name)
+      || (flags != 2 && valid_array_reference (name, 0)))
 #else
   if (legal_identifier (name))
 #endif
@@ -341,20 +348,20 @@ check_selfref (const char *name, const char *value, int flags)
   if (STREQ (name, value))
     return true;
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   if (valid_array_reference (value, 0))
     {
       char *t = array_variable_name (value, 0, (char **)NULL, (int *)NULL);
       if (t && STREQ (name, t))
-	{
-	  free (t);
-	  return true;
-	}
+        {
+          free (t);
+          return true;
+        }
       free (t);
     }
 #endif
 
-  return false;	/* not a self reference */
+  return false; /* not a self reference */
 }
 
 /* Make sure that WORD is a valid shell identifier, i.e.
@@ -365,14 +372,15 @@ check_selfref (const char *name, const char *value, int flags)
 bool
 check_identifier (WORD_DESC *word, int check_word)
 {
-  if (word->flags & (W_HASDOLLAR|W_QUOTED))	/* XXX - HASDOLLAR? */
+  if (word->flags & (W_HASDOLLAR | W_QUOTED)) /* XXX - HASDOLLAR? */
     {
-      internal_error (_("`%s': not a valid identifier"), word->word);
+      internal_error (_ ("`%s': not a valid identifier"), word->word);
       return false;
     }
-  else if (check_word && (all_digits (word->word) || legal_identifier (word->word) == 0))
+  else if (check_word
+           && (all_digits (word->word) || legal_identifier (word->word) == 0))
     {
-      internal_error (_("`%s': not a valid identifier"), word->word);
+      internal_error (_ ("`%s': not a valid identifier"), word->word);
       return false;
     }
   else
@@ -387,11 +395,11 @@ check_identifier (WORD_DESC *word, int check_word)
 bool
 importable_function_name (const char *string, size_t len)
 {
-  if (absolute_program (string))	/* don't allow slash */
+  if (absolute_program (string)) /* don't allow slash */
     return false;
-  if (*string == '\n')			/* can't start with a newline */
+  if (*string == '\n') /* can't start with a newline */
     return false;
-  if (shellblank (*string) || shellblank(string[len-1]))
+  if (shellblank (*string) || shellblank (string[len - 1]))
     return false;
   return posixly_correct ? legal_identifier (string) : true;
 }
@@ -421,9 +429,9 @@ legal_alias_name (const char *string, int flags)
 }
 
 /* Returns non-zero if STRING is an assignment statement.  The returned value
-   is the index of the `=' sign.  If FLAGS&1 we are expecting a compound assignment
-   and require an array subscript before the `=' to denote an assignment
-   statement. */
+   is the index of the `=' sign.  If FLAGS&1 we are expecting a compound
+   assignment and require an array subscript before the `=' to denote an
+   assignment statement. */
 int
 assignment (const char *string, int flags)
 {
@@ -432,7 +440,7 @@ assignment (const char *string, int flags)
 
   c = string[indx = 0];
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   /* If parser_state includes PST_COMPASSIGN, FLAGS will include 1, so we are
      parsing the contents of a compound assignment. If parser_state includes
      PST_REPARSE, we are in the middle of an assignment statement and breaking
@@ -441,7 +449,7 @@ assignment (const char *string, int flags)
      the subscript is required to make the word an assignment statement. If
      we don't have a subscript, even if the word is a valid assignment
      statement otherwise, we don't want to treat it as one. */
-  if ((flags & 1) && c != '[')		/* ] */
+  if ((flags & 1) && c != '[') /* ] */
     return 0;
   else if ((flags & 1) == 0 && legal_variable_starter (c) == 0)
 #else
@@ -452,32 +460,32 @@ assignment (const char *string, int flags)
   while ((c = string[indx]))
     {
       /* The following is safe.  Note that '=' at the start of a word
-	 is not an assignment statement. */
+         is not an assignment statement. */
       if (c == '=')
-	return indx;
+        return indx;
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
       if (c == '[')
-	{
-	  newi = skipsubscript (string, indx, (flags & 2) ? 1 : 0);
-	  /* XXX - why not check for blank subscripts here, if we do in
-	     valid_array_reference? */
-	  if (string[newi++] != ']')
-	    return 0;
-	  if (string[newi] == '+' && string[newi+1] == '=')
-	    return newi + 1;
-	  return (string[newi] == '=') ? newi : 0;
-	}
+        {
+          newi = skipsubscript (string, indx, (flags & 2) ? 1 : 0);
+          /* XXX - why not check for blank subscripts here, if we do in
+             valid_array_reference? */
+          if (string[newi++] != ']')
+            return 0;
+          if (string[newi] == '+' && string[newi + 1] == '=')
+            return newi + 1;
+          return (string[newi] == '=') ? newi : 0;
+        }
 #endif /* ARRAY_VARS */
 
       /* Check for `+=' */
-      if (c == '+' && string[indx+1] == '=')
-	return indx + 1;
+      if (c == '+' && string[indx + 1] == '=')
+        return indx + 1;
 
       /* Variable names in assignment statements may contain only letters,
-	 digits, and `_'. */
+         digits, and `_'. */
       if (legal_variable_char (c) == 0)
-	return 0;
+        return 0;
 
       indx++;
     }
@@ -490,7 +498,7 @@ line_isblank (const char *line)
   int i;
 
   if (line == 0)
-    return false;		/* XXX */
+    return false; /* XXX */
   for (i = 0; line[i]; i++)
     if (std::isblank ((unsigned char)line[i]) == 0)
       break;
@@ -507,10 +515,10 @@ line_isblank (const char *line)
    to unset it on the fd passed as stdin.  Should be called on stdin if
    readline gets an EAGAIN or EWOULDBLOCK when trying to read input. */
 
-#if !defined (O_NDELAY)
-#  if defined (FNDELAY)
-#    define O_NDELAY FNDELAY
-#  endif
+#if !defined(O_NDELAY)
+#if defined(FNDELAY)
+#define O_NDELAY FNDELAY
+#endif
 #endif /* O_NDELAY */
 
 /* Make sure no-delay mode is not set on file descriptor FD. */
@@ -568,11 +576,11 @@ fd_ispipe (int fd)
 /* There is a bug in the NeXT 2.1 rlogind that causes opens
    of /dev/tty to fail. */
 
-#if defined (__BEOS__)
+#if defined(__BEOS__)
 /* On BeOS, opening in non-blocking mode exposes a bug in BeOS, so turn it
    into a no-op.  This should probably go away in the future. */
-#  undef O_NONBLOCK
-#  define O_NONBLOCK 0
+#undef O_NONBLOCK
+#define O_NONBLOCK 0
 #endif /* __BEOS__ */
 
 void
@@ -599,22 +607,22 @@ check_dev_tty ()
    expensive.  If non-NULL STP1 and STP2 point to stat structures
    corresponding to PATH1 and PATH2, respectively. */
 bool
-same_file (const char *path1, const char *path2,
-           struct stat *stp1, struct stat *stp2)
+same_file (const char *path1, const char *path2, struct stat *stp1,
+           struct stat *stp2)
 {
   struct stat st1, st2;
 
   if (stp1 == NULL)
     {
       if (stat (path1, &st1) != 0)
-	return false;
+        return false;
       stp1 = &st1;
     }
 
   if (stp2 == NULL)
     {
       if (stat (path2, &st2) != 0)
-	return false;
+        return false;
       stp2 = &st2;
     }
 
@@ -637,9 +645,9 @@ move_to_high_fd (int fd, int check_new, int maxfd)
     {
       nfds = getdtablesize ();
       if (nfds <= 0)
-	nfds = 20;
+        nfds = 20;
       if (nfds > HIGH_FD_MAX)
-	nfds = HIGH_FD_MAX;		/* reasonable maximum */
+        nfds = HIGH_FD_MAX; /* reasonable maximum */
     }
   else
     nfds = maxfd;
@@ -650,8 +658,8 @@ move_to_high_fd (int fd, int check_new, int maxfd)
 
   if (nfds > 3 && fd != nfds && (script_fd = dup2 (fd, nfds)) != -1)
     {
-      if (check_new == 0 || fd != fileno (stderr))	/* don't close stderr */
-	close (fd);
+      if (check_new == 0 || fd != fileno (stderr)) /* don't close stderr */
+        close (fd);
       return script_fd;
     }
 
@@ -675,9 +683,9 @@ check_binary_file (const char *sample, int sample_len)
     {
       c = sample[i];
       if (c == '\n')
-	return 0;
+        return 0;
       if (c == '\0')
-	return 1;
+        return 1;
     }
 
   return 0;
@@ -753,7 +761,7 @@ path_dot_or_dotdot (const char *string)
     return false;
 
   /* string[0] == '.' */
-  if (PATHSEP(string[1]) || (string[1] == '.' && PATHSEP(string[2])))
+  if (PATHSEP (string[1]) || (string[1] == '.' && PATHSEP (string[2])))
     return true;
 
   return false;
@@ -767,13 +775,14 @@ absolute_pathname (const char *string)
   if (string == 0 || *string == '\0')
     return false;
 
-  if (ABSPATH(string))
+  if (ABSPATH (string))
     return true;
 
-  if (string[0] == '.' && PATHSEP(string[1]))	/* . and ./ */
+  if (string[0] == '.' && PATHSEP (string[1])) /* . and ./ */
     return true;
 
-  if (string[0] == '.' && string[1] == '.' && PATHSEP(string[2]))	/* .. and ../ */
+  if (string[0] == '.' && string[1] == '.'
+      && PATHSEP (string[2])) /* .. and ../ */
     return true;
 
   return false;
@@ -803,7 +812,7 @@ make_absolute (const char *string, const char *dot_path)
 {
   char *result;
 
-  if (dot_path == 0 || ABSPATH(string))
+  if (dot_path == 0 || ABSPATH (string))
 #ifdef __CYGWIN__
     {
       char pathbuf[PATH_MAX + 1];
@@ -851,10 +860,10 @@ full_pathname (char *file)
 
   file = (*file == '~') ? bash_tilde_expand (file, 0) : savestring (file);
 
-  if (ABSPATH(file))
+  if (ABSPATH (file))
     return file;
 
-  ret = sh_makepath ((char *)NULL, file, (MP_DOCWD|MP_RMDOT));
+  ret = sh_makepath ((char *)NULL, file, (MP_DOCWD | MP_RMDOT));
   free (file);
 
   return ret;
@@ -876,9 +885,9 @@ polite_directory_format (const char *name)
   l = home ? strlen (home) : 0;
   if (l > 1 && strncmp (home, name, l) == 0 && (!name[l] || name[l] == '/'))
     {
-      strncpy (tdir + 1, name + l, sizeof(tdir) - 2);
+      strncpy (tdir + 1, name + l, sizeof (tdir) - 2);
       tdir[0] = '~';
-      tdir[sizeof(tdir) - 1] = '\0';
+      tdir[sizeof (tdir) - 1] = '\0';
       return tdir;
     }
   else
@@ -910,10 +919,10 @@ trim_pathname (char *name, int maxlen)
   if (name[0] == '~')
     for (nbeg = name; *nbeg; nbeg++)
       if (*nbeg == '/')
-	{
-	  nbeg++;
-	  break;
-	}
+        {
+          nbeg++;
+          break;
+        }
   if (*nbeg == 0)
     return name;
 
@@ -926,14 +935,15 @@ trim_pathname (char *name, int maxlen)
   for (ntail = (*nend == '/') ? nend : nend - 1; ntail > nbeg; ntail--)
     {
       if (*ntail == '/')
-	nskip--;
+        nskip--;
       if (nskip == 0)
-	break;
+        break;
     }
   if (ntail == nbeg)
     return name;
 
-  /* Now we want to return name[0..nbeg]+"..."+ntail, modifying name in place */
+  /* Now we want to return name[0..nbeg]+"..."+ntail, modifying name in place
+   */
   nlen = ntail - nbeg;
   if (nlen <= 3)
     return name;
@@ -1002,7 +1012,7 @@ extract_colon_unit (char *string, int *p_index)
   if (i == start)
     {
       if (string[i])
-	(*p_index)++;
+        (*p_index)++;
       /* Return "" in the case of a trailing `:'. */
       value = (char *)xmalloc (1);
       value[0] = '\0';
@@ -1019,7 +1029,7 @@ extract_colon_unit (char *string, int *p_index)
 /*								    */
 /* **************************************************************** */
 
-#if defined (PUSHD_AND_POPD)
+#if defined(PUSHD_AND_POPD)
 extern char *get_dirstack_from_string (char *);
 #endif
 
@@ -1044,8 +1054,9 @@ bash_special_tilde_expansions (char *text)
     result = get_string_value ("PWD");
   else if (text[0] == '-' && text[1] == '\0')
     result = get_string_value ("OLDPWD");
-#if defined (PUSHD_AND_POPD)
-  else if (DIGIT (*text) || ((*text == '+' || *text == '-') && DIGIT (text[1])))
+#if defined(PUSHD_AND_POPD)
+  else if (DIGIT (*text)
+           || ((*text == '+' || *text == '-') && DIGIT (text[1])))
     result = get_dirstack_from_string (text);
 #endif
 
@@ -1069,25 +1080,25 @@ tilde_initialize ()
   if (times_called++ == 0)
     {
       bash_tilde_prefixes = strvec_create (3);
-      bash_tilde_prefixes[0] = savestring("=~");
-      bash_tilde_prefixes[1] = savestring(":~");
+      bash_tilde_prefixes[0] = savestring ("=~");
+      bash_tilde_prefixes[1] = savestring (":~");
       bash_tilde_prefixes[2] = NULL;
 
       bash_tilde_prefixes2 = strvec_create (2);
-      bash_tilde_prefixes2[0] = savestring(":~");
+      bash_tilde_prefixes2[0] = savestring (":~");
       bash_tilde_prefixes2[1] = NULL;
 
       tilde_additional_prefixes = bash_tilde_prefixes;
 
       bash_tilde_suffixes = strvec_create (3);
-      bash_tilde_suffixes[0] = savestring(":");
-      bash_tilde_suffixes[1] = savestring("=~");	/* XXX - ?? */
+      bash_tilde_suffixes[0] = savestring (":");
+      bash_tilde_suffixes[1] = savestring ("=~"); /* XXX - ?? */
       bash_tilde_suffixes[2] = NULL;
 
       tilde_additional_suffixes = bash_tilde_suffixes;
 
       bash_tilde_suffixes2 = strvec_create (2);
-      bash_tilde_suffixes2[0] = savestring(":");
+      bash_tilde_suffixes2[0] = savestring (":");
       bash_tilde_suffixes2[1] = NULL;
     }
 }
@@ -1099,22 +1110,22 @@ tilde_initialize ()
    quoted, the characters in the tilde-prefix following the tilde shell be
    treated as a possible login name. */
 
-#define TILDE_END(c)	((c) == '\0' || (c) == '/' || (c) == ':')
+#define TILDE_END(c) ((c) == '\0' || (c) == '/' || (c) == ':')
 
 static int
 unquoted_tilde_word (const char *s)
 {
   const char *r;
 
-  for (r = s; TILDE_END(*r) == 0; r++)
+  for (r = s; TILDE_END (*r) == 0; r++)
     {
       switch (*r)
-	{
-	case '\\':
-	case '\'':
-	case '"':
-	  return 0;
-	}
+        {
+        case '\\':
+        case '\'':
+        case '"':
+          return 0;
+        }
     }
   return 1;
 }
@@ -1133,18 +1144,18 @@ bash_tilde_find_word (const char *s, int flags, int *lenp)
   for (r = s; *r && *r != '/'; r++)
     {
       /* Short-circuit immediately if we see a quote character.  Even though
-	 POSIX says that `the first unquoted slash' (or `:') terminates the
-	 tilde-prefix, in practice, any quoted portion of the tilde prefix
-	 will cause it to not be expanded. */
+         POSIX says that `the first unquoted slash' (or `:') terminates the
+         tilde-prefix, in practice, any quoted portion of the tilde prefix
+         will cause it to not be expanded. */
       if (*r == '\\' || *r == '\'' || *r == '"')
-	{
-	  ret = savestring (s);
-	  if (lenp)
-	    *lenp = 0;
-	  return ret;
-	}
+        {
+          ret = savestring (s);
+          if (lenp)
+            *lenp = 0;
+          return ret;
+        }
       else if (flags && *r == ':')
-	break;
+        break;
     }
   l = r - s;
   ret = (char *)xmalloc (l + 1);
@@ -1166,8 +1177,10 @@ bash_tilde_expand (const char *s, int assign_p)
   int r;
   char *ret;
 
-  tilde_additional_prefixes = assign_p == 0 ? (char **)0
-  					    : (assign_p == 2 ? bash_tilde_prefixes2 : bash_tilde_prefixes);
+  tilde_additional_prefixes
+      = assign_p == 0
+            ? (char **)0
+            : (assign_p == 2 ? bash_tilde_prefixes2 : bash_tilde_prefixes);
   if (assign_p == 2)
     tilde_additional_suffixes = bash_tilde_suffixes2;
 
@@ -1190,8 +1203,8 @@ static int ngroups, maxgroups;
 /* The set of groups that this user is a member of. */
 static GETGROUPS_T *group_array = (GETGROUPS_T *)NULL;
 
-#if !defined (NOGROUP)
-#  define NOGROUP (gid_t) -1
+#if !defined(NOGROUP)
+#define NOGROUP (gid_t) - 1
 #endif
 
 static void
@@ -1203,9 +1216,10 @@ initialize_group_array ()
     maxgroups = getmaxgroups ();
 
   ngroups = 0;
-  group_array = (GETGROUPS_T *)xrealloc (group_array, maxgroups * sizeof (GETGROUPS_T));
+  group_array = (GETGROUPS_T *)xrealloc (group_array,
+                                         maxgroups * sizeof (GETGROUPS_T));
 
-#if defined (HAVE_GETGROUPS)
+#if defined(HAVE_GETGROUPS)
   ngroups = getgroups (maxgroups, group_array);
 #endif
 
@@ -1225,7 +1239,7 @@ initialize_group_array ()
   if (i == ngroups && ngroups < maxgroups)
     {
       for (i = ngroups; i > 0; i--)
-	group_array[i] = group_array[i - 1];
+        group_array[i] = group_array[i - 1];
       group_array[0] = current_user.gid;
       ngroups++;
     }
@@ -1236,13 +1250,13 @@ initialize_group_array ()
   if (group_array[0] != current_user.gid)
     {
       for (i = 0; i < ngroups; i++)
-	if (group_array[i] == current_user.gid)
-	  break;
+        if (group_array[i] == current_user.gid)
+          break;
       if (i < ngroups)
-	{
-	  group_array[i] = group_array[0];
-	  group_array[0] = current_user.gid;
-	}
+        {
+          group_array[i] = group_array[0];
+          group_array[0] = current_user.gid;
+        }
     }
 }
 
@@ -1251,7 +1265,7 @@ initialize_group_array ()
 int
 group_member (gid_t gid)
 {
-#if defined (HAVE_GETGROUPS)
+#if defined(HAVE_GETGROUPS)
   int i;
 #endif
 
@@ -1259,7 +1273,7 @@ group_member (gid_t gid)
   if (gid == current_user.gid || gid == current_user.egid)
     return 1;
 
-#if defined (HAVE_GETGROUPS)
+#if defined(HAVE_GETGROUPS)
   if (ngroups == 0)
     initialize_group_array ();
 
@@ -1286,7 +1300,7 @@ get_group_list (int *ngp)
   if (group_vector)
     {
       if (ngp)
-	*ngp = ngroups;
+        *ngp = ngroups;
       return group_vector;
     }
 
@@ -1296,7 +1310,7 @@ get_group_list (int *ngp)
   if (ngroups <= 0)
     {
       if (ngp)
-	*ngp = 0;
+        *ngp = 0;
       return (char **)NULL;
     }
 
@@ -1318,7 +1332,7 @@ get_group_array (int *ngp)
   if (group_iarray)
     {
       if (ngp)
-	*ngp = ngroups;
+        *ngp = ngroups;
       return group_iarray;
     }
 
@@ -1328,7 +1342,7 @@ get_group_array (int *ngp)
   if (ngroups <= 0)
     {
       if (ngp)
-	*ngp = 0;
+        *ngp = 0;
       return (int *)NULL;
     }
 
@@ -1353,7 +1367,7 @@ get_group_array (int *ngp)
 char *
 conf_standard_path ()
 {
-#if defined (_CS_PATH) && defined (HAVE_CONFSTR)
+#if defined(_CS_PATH) && defined(HAVE_CONFSTR)
   char *p;
   size_t len;
 
@@ -1368,11 +1382,11 @@ conf_standard_path ()
   else
     return savestring (STANDARD_UTILS_PATH);
 #else /* !_CS_PATH || !HAVE_CONFSTR  */
-#  if defined (CS_PATH)
+#if defined(CS_PATH)
   return savestring (CS_PATH);
-#  else
+#else
   return savestring (STANDARD_UTILS_PATH);
-#  endif /* !CS_PATH */
+#endif /* !CS_PATH */
 #endif /* !_CS_PATH || !HAVE_CONFSTR */
 }
 
@@ -1388,7 +1402,7 @@ default_columns ()
     {
       c = atoi (v);
       if (c > 0)
-	return c;
+        return c;
     }
 
   if (check_window_size)
@@ -1397,4 +1411,4 @@ default_columns ()
   return c > 0 ? c : 80;
 }
 
-}  // namespace bash
+} // namespace bash

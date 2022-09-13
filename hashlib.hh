@@ -18,24 +18,28 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_HASHLIB_H_)
+#if !defined(_HASHLIB_H_)
 #define _HASHLIB_H_
+
+#include <string>
 
 namespace bash
 {
 
-struct BUCKET_CONTENTS {
-  BUCKET_CONTENTS *next;		/* Link to next hashed key in this bucket. */
-  std::string key;		/* What we look up. */
-  void *data;			/* What we really want. */
-  unsigned int khash;		/* What key hashes to */
-  int times_found;		/* Number of times this item has been found. */
+struct BUCKET_CONTENTS
+{
+  BUCKET_CONTENTS *next; /* Link to next hashed key in this bucket. */
+  std::string key;       /* What we look up. */
+  void *data;            /* What we really want. */
+  unsigned int khash;    /* What key hashes to */
+  int times_found;       /* Number of times this item has been found. */
 };
 
-struct HASH_TABLE {
-  BUCKET_CONTENTS **bucket_array;	/* Where the data is kept. */
-  int nbuckets;				/* How many buckets does this table have. */
-  int nentries;				/* How many entries does this table have. */
+struct HASH_TABLE
+{
+  BUCKET_CONTENTS **bucket_array; /* Where the data is kept. */
+  int nbuckets;                   /* How many buckets does this table have. */
+  int nentries;                   /* How many entries does this table have. */
 };
 
 typedef int hash_wfunc (BUCKET_CONTENTS *);
@@ -61,20 +65,19 @@ typedef int hash_wfunc (BUCKET_CONTENTS *);
 
 /* Redefine the function as a macro for speed. */
 // FIXME: make this a member function.
-#define hash_items(bucket, table) \
-	((table && (bucket < table->nbuckets)) ?  \
-		table->bucket_array[bucket] : \
-		(BUCKET_CONTENTS *)NULL)
+#define hash_items(bucket, table)                                             \
+  ((table && (bucket < table->nbuckets)) ? table->bucket_array[bucket]        \
+                                         : (BUCKET_CONTENTS *)NULL)
 
 /* Default number of buckets in the hash table. */
-#define DEFAULT_HASH_BUCKETS 128	/* must be power of two */
+#define DEFAULT_HASH_BUCKETS 128 /* must be power of two */
 
-#define HASH_ENTRIES(ht)	((ht) ? (ht)->nentries : 0)
+#define HASH_ENTRIES(ht) ((ht) ? (ht)->nentries : 0)
 
 /* flags for hash_search and hash_insert */
-#define HASH_NOSRCH	0x01
-#define HASH_CREATE	0x02
+#define HASH_NOSRCH 0x01
+#define HASH_CREATE 0x02
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* _HASHLIB_H */

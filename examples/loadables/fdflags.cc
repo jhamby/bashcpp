@@ -22,97 +22,97 @@
 
 #include <config.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
-#include <fcntl.h>
-#include <errno.h>
 #include "bashansi.h"
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 
 #include "loadables.h"
 
 #ifndef FD_CLOEXEC
-#  define FD_CLOEXEC 1
+#define FD_CLOEXEC 1
 #endif
 
 static const struct
 {
   const char *name;
   int value;
-} file_flags[] =
-{
+} file_flags[] = {
 #ifdef O_APPEND
-  { "append",	O_APPEND 	},
+  { "append", O_APPEND },
 #else
-#  define O_APPEND 0
+#define O_APPEND 0
 #endif
 #ifdef O_ASYNC
-  { "async",	O_ASYNC		},
+  { "async", O_ASYNC },
 #else
-#  define O_ASYNC 0
+#define O_ASYNC 0
 #endif
 #ifdef O_SYNC
-  { "sync",	O_SYNC		},
+  { "sync", O_SYNC },
 #else
-#  define O_SYNC 0
+#define O_SYNC 0
 #endif
 #ifdef O_NONBLOCK
-  { "nonblock",	O_NONBLOCK	},
+  { "nonblock", O_NONBLOCK },
 #else
-#  define O_NONBLOCK 0
+#define O_NONBLOCK 0
 #endif
 #ifdef O_FSYNC
-  { "fsync",	O_FSYNC		},
+  { "fsync", O_FSYNC },
 #else
-#  define O_FSYNC 0
+#define O_FSYNC 0
 #endif
 #ifdef O_DSYNC
-  { "dsync",	O_DSYNC		},
+  { "dsync", O_DSYNC },
 #else
-#  define O_DSYNC 0
+#define O_DSYNC 0
 #endif
 #ifdef O_RSYNC
-  { "rsync",	O_RSYNC		},
+  { "rsync", O_RSYNC },
 #else
-#  define O_RSYNC 0
+#define O_RSYNC 0
 #endif
 #ifdef O_ALT_IO
-  { "altio",	O_ALT_IO	},
+  { "altio", O_ALT_IO },
 #else
-#  define O_ALT_IO 0
+#define O_ALT_IO 0
 #endif
 #ifdef O_DIRECT
-  { "direct",	O_DIRECT	},
+  { "direct", O_DIRECT },
 #else
-#  define O_DIRECT 0
+#define O_DIRECT 0
 #endif
 #ifdef O_NOATIME
-  { "noatime",	O_NOATIME	},
+  { "noatime", O_NOATIME },
 #else
-#  define O_NOATIME 0
+#define O_NOATIME 0
 #endif
 #ifdef O_NOSIGPIPE
-  { "nosigpipe",	O_NOSIGPIPE	},
+  { "nosigpipe", O_NOSIGPIPE },
 #else
-#  define O_NOSIGPIPE 0
+#define O_NOSIGPIPE 0
 #endif
 
 #ifndef O_CLOEXEC
-#  define ALLFLAGS (O_APPEND|O_ASYNC|O_SYNC|O_NONBLOCK|O_FSYNC|O_DSYNC|\
-	O_RSYNC|O_ALT_IO|O_DIRECT|O_NOATIME|O_NOSIGPIPE)
+#define ALLFLAGS                                                              \
+  (O_APPEND | O_ASYNC | O_SYNC | O_NONBLOCK | O_FSYNC | O_DSYNC | O_RSYNC     \
+   | O_ALT_IO | O_DIRECT | O_NOATIME | O_NOSIGPIPE)
 
 /* An unsed bit in the file status flags word we can use to pass around the
    state of close-on-exec. */
-# define O_CLOEXEC      ((~ALLFLAGS) ^ ((~ALLFLAGS) & ((~ALLFLAGS) - 1)))
+#define O_CLOEXEC ((~ALLFLAGS) ^ ((~ALLFLAGS) & ((~ALLFLAGS) - 1)))
 #endif
 
 #ifdef O_CLOEXEC
-  { "cloexec",	O_CLOEXEC	},
+  { "cloexec", O_CLOEXEC },
 #endif
 };
 
-#define N_FLAGS		(sizeof (file_flags) / sizeof (file_flags[0]))
+#define N_FLAGS (sizeof (file_flags) / sizeof (file_flags[0]))
 
 #ifndef errno
 extern int errno;
@@ -130,38 +130,38 @@ getallflags ()
 }
 
 static int
-getflags(int fd, int p)
+getflags (int fd, int p)
 {
   int c, f;
   int allflags;
 
-  if ((c = fcntl(fd, F_GETFD)) == -1)
+  if ((c = fcntl (fd, F_GETFD)) == -1)
     {
       if (p)
-	builtin_error("can't get status for fd %d: %s", fd, strerror(errno));
+        builtin_error ("can't get status for fd %d: %s", fd, strerror (errno));
       return -1;
     }
 
-  if ((f = fcntl(fd, F_GETFL)) == -1)
+  if ((f = fcntl (fd, F_GETFL)) == -1)
     {
       if (p)
-	builtin_error("Can't get flags for fd %d: %s", fd, strerror(errno));
+        builtin_error ("Can't get flags for fd %d: %s", fd, strerror (errno));
       return -1;
     }
 
   if (c)
     f |= O_CLOEXEC;
 
-  return f & getallflags();
+  return f & getallflags ();
 }
 
 static void
-printone(int fd, int p, int verbose)
+printone (int fd, int p, int verbose)
 {
   int f;
   size_t i;
 
-  if ((f = getflags(fd, p)) == -1)
+  if ((f = getflags (fd, p)) == -1)
     return;
 
   printf ("%d:", fd);
@@ -169,23 +169,23 @@ printone(int fd, int p, int verbose)
   for (i = 0; i < N_FLAGS; i++)
     {
       if (f & file_flags[i].value)
-	{
-	  printf ("%s%s", verbose ? "+" : "", file_flags[i].name);
-	  f &= ~file_flags[i].value;
-	}
+        {
+          printf ("%s%s", verbose ? "+" : "", file_flags[i].name);
+          f &= ~file_flags[i].value;
+        }
       else if (verbose)
-	printf ( "-%s", file_flags[i].name);
+        printf ("-%s", file_flags[i].name);
       else
-	continue;
+        continue;
 
       if (f || (verbose && i != N_FLAGS - 1))
-	putchar (',');
+        putchar (',');
     }
   printf ("\n");
 }
 
 static int
-parseflags(char *s, int *p, int *n)
+parseflags (char *s, int *p, int *n)
 {
   int f, *v;
   size_t i;
@@ -193,46 +193,46 @@ parseflags(char *s, int *p, int *n)
   f = 0;
   *p = *n = 0;
 
-  for (s = strtok(s, ","); s; s = strtok(NULL, ","))
+  for (s = strtok (s, ","); s; s = strtok (NULL, ","))
     {
       switch (*s)
         {
-	case '+':
-	  v = p;
-	  s++;
-	  break;
-	case '-':
-	  v = n;
-	  s++;
-	  break;
-	default:
-	  v = &f;
-	  break;
-	}
+        case '+':
+          v = p;
+          s++;
+          break;
+        case '-':
+          v = n;
+          s++;
+          break;
+        default:
+          v = &f;
+          break;
+        }
 
       for (i = 0; i < N_FLAGS; i++)
-	if (strcmp(s, file_flags[i].name) == 0)
-	  {
-	    *v |= file_flags[i].value;
-	    break;
-	  }
+        if (strcmp (s, file_flags[i].name) == 0)
+          {
+            *v |= file_flags[i].value;
+            break;
+          }
       if (i == N_FLAGS)
-	builtin_error("invalid flag `%s'", s);
+        builtin_error ("invalid flag `%s'", s);
     }
 
   return f;
 }
 
 static void
-setone(int fd, char *v, int verbose)
+setone (int fd, char *v, int verbose)
 {
   int f, n, pos, neg, cloexec;
 
-  f = getflags(fd, 1);
+  f = getflags (fd, 1);
   if (f == -1)
     return;
 
-  parseflags(v, &pos, &neg);
+  parseflags (v, &pos, &neg);
 
   cloexec = -1;
 
@@ -241,8 +241,8 @@ setone(int fd, char *v, int verbose)
   if ((neg & O_CLOEXEC) && (f & O_CLOEXEC))
     cloexec = 0;
 
-  if (cloexec != -1 && fcntl(fd, F_SETFD, cloexec) == -1)
-    builtin_error("can't set status for fd %d: %s", fd, strerror(errno));
+  if (cloexec != -1 && fcntl (fd, F_SETFD, cloexec) == -1)
+    builtin_error ("can't set status for fd %d: %s", fd, strerror (errno));
 
   pos &= ~O_CLOEXEC;
   neg &= ~O_CLOEXEC;
@@ -252,8 +252,8 @@ setone(int fd, char *v, int verbose)
   n |= pos;
   n &= ~neg;
 
-  if (n != f && fcntl(fd, F_SETFL, n) == -1)
-    builtin_error("can't set flags for fd %d: %s", fd, strerror(errno));
+  if (n != f && fcntl (fd, F_SETFL, n) == -1)
+    builtin_error ("can't set flags for fd %d: %s", fd, strerror (errno));
 }
 
 static int
@@ -290,20 +290,19 @@ fdflags_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "s:v")) != -1)
     {
       switch (opt)
-	{
-	case 's':
-	  setflag = 1;
-	  setspec = list_optarg;
-	  break;
-	case 'v':
-	  verbose = 1;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return (EX_USAGE);
-	}
-
+        {
+        case 's':
+          setflag = 1;
+          setspec = list_optarg;
+          break;
+        case 'v':
+          verbose = 1;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return (EX_USAGE);
+        }
     }
   list = loptend;
 
@@ -315,12 +314,12 @@ fdflags_builtin (WORD_LIST *list)
     {
       maxfd = getmaxfd ();
       if (maxfd < 0)
-	{
-	  builtin_error ("can't get max fd: %s", strerror (errno));
-	  return (EXECUTION_FAILURE);
-	}
+        {
+          builtin_error ("can't get max fd: %s", strerror (errno));
+          return (EXECUTION_FAILURE);
+        }
       for (i = 0; i < maxfd; i++)
-	printone (i, 0, verbose);
+        printone (i, 0, verbose);
       return (EXECUTION_SUCCESS);
     }
 
@@ -328,23 +327,22 @@ fdflags_builtin (WORD_LIST *list)
   for (l = list; l; l = l->next)
     {
       if (legal_number (l->word->word, &inum) == 0 || inum < 0)
-	{
-	  builtin_error ("%s: invalid file descriptor", l->word->word);
-	  opt = EXECUTION_FAILURE;
-	  continue;
-	}
-      num = inum;		/* truncate to int */
+        {
+          builtin_error ("%s: invalid file descriptor", l->word->word);
+          opt = EXECUTION_FAILURE;
+          continue;
+        }
+      num = inum; /* truncate to int */
       if (setflag)
-	setone (num, setspec, verbose);
+        setone (num, setspec, verbose);
       else
-	printone (num, 1, verbose);
+        printone (num, 1, verbose);
     }
 
   return (opt);
 }
 
-char *fdflags_doc[] =
-{
+char *fdflags_doc[] = {
   "Display and modify file descriptor flags.",
   "",
   "Display or, if the -s option is supplied, set flags for each file",
@@ -365,10 +363,11 @@ char *fdflags_doc[] =
    of these structures.  The flags must include BUILTIN_ENABLED so the
    builtin can be used. */
 struct builtin fdflags_struct = {
-	"fdflags",		/* builtin name */
-	fdflags_builtin,		/* function implementing the builtin */
-	BUILTIN_ENABLED,	/* initial flags for builtin */
-	fdflags_doc,		/* array of long documentation strings. */
-	"fdflags [-v] [-s flags_string] [fd ...]",	/* usage synopsis; becomes short_doc */
-	0			/* reserved for internal use */
+  "fdflags",       /* builtin name */
+  fdflags_builtin, /* function implementing the builtin */
+  BUILTIN_ENABLED, /* initial flags for builtin */
+  fdflags_doc,     /* array of long documentation strings. */
+  "fdflags [-v] [-s flags_string] [fd ...]", /* usage synopsis; becomes
+                                                short_doc */
+  0                                          /* reserved for internal use */
 };

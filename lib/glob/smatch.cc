@@ -1,5 +1,5 @@
 /* strmatch.c -- ksh-like extended pattern matching for the shell and filename
-		globbing. */
+                globbing. */
 
 /* Copyright (C) 1991-2020 Free Software Foundation, Inc.
 
@@ -21,11 +21,11 @@
 
 #include "config.hh"
 
-#include <cstdio>	/* for debugging */
+#include <cstdio> /* for debugging */
 #include <cstdlib>
 
-#include "strmatch.hh"
 #include "chartypes.hh"
+#include "strmatch.hh"
 
 #include "shmbutil.hh"
 
@@ -39,15 +39,15 @@ namespace bash
 {
 
 /* First, compile `sm_loop.hh' for single-byte characters. */
-#define CHAR	unsigned char
-#define U_CHAR	unsigned char
-#define XCHAR	char
-#define INT	int
-#define L(CS)	CS
-#define INVALID	-1
+#define CHAR unsigned char
+#define U_CHAR unsigned char
+#define XCHAR char
+#define INT int
+#define L(CS) CS
+#define INVALID -1
 
 #ifndef GLOBASCII_DEFAULT
-#  define GLOBASCII_DEFAULT 0
+#define GLOBASCII_DEFAULT 0
 #endif
 
 #if 0
@@ -62,8 +62,8 @@ bool glob_asciirange = GLOBASCII_DEFAULT;
 static int
 _fnmatch_fallback (int s, int p)
 {
-  char s1[2];			/* string */
-  char s2[8];			/* constructed pattern */
+  char s1[2]; /* string */
+  char s2[8]; /* constructed pattern */
 
   s1[0] = (unsigned char)s;
   s1[1] = '\0';
@@ -87,7 +87,7 @@ _fnmatch_fallback (int s, int p)
    the use of strcoll (e.g., for explicit collating symbols), we use
    straight ordering as if in the C locale. */
 
-#if defined (HAVE_STRCOLL)
+#if defined(HAVE_STRCOLL)
 /* Helper functions for collating symbol equivalence. */
 
 /* Return 0 if C1 == C2 or collates equally if FORCECOLL is non-zero. */
@@ -124,13 +124,13 @@ rangecmp (int c1, int c2, bool forcecoll)
   /* We impose a total ordering here by returning c1-c2 if charcmp returns 0 */
   if (r != 0)
     return r;
-  return c1 - c2;		/* impose total ordering */
+  return c1 - c2; /* impose total ordering */
 }
 #else /* !HAVE_STRCOLL */
-#  define rangecmp(c1, c2, f)	((int)(c1) - (int)(c2))
+#define rangecmp(c1, c2, f) ((int)(c1) - (int)(c2))
 #endif /* !HAVE_STRCOLL */
 
-#if defined (HAVE_STRCOLL)
+#if defined(HAVE_STRCOLL)
 /* Returns 1 if chars C and EQUIV collate equally in the current locale. */
 static int
 collequiv (int c, int equiv)
@@ -143,14 +143,13 @@ collequiv (int c, int equiv)
 #else
   return 0;
 #endif
-
 }
 #else
-#  define collequiv(c, equiv)	((c) == (equiv))
+#define collequiv(c, equiv) ((c) == (equiv))
 #endif
 
-#define __COLLSYM	__collsym
-#define POSIXCOLL	posix_collsyms
+#define __COLLSYM __collsym
+#define POSIXCOLL posix_collsyms
 #include "collsyms.hh"
 
 static int
@@ -163,7 +162,7 @@ collsym (const CHAR *s, size_t len)
   for (csp = posix_collsyms; csp->name; csp++)
     {
       if (STREQN (csp->name, x, len) && csp->name[len] == '\0')
-	return csp->code;
+        return csp->code;
     }
   if (len == 1)
     return s[0];
@@ -171,20 +170,29 @@ collsym (const CHAR *s, size_t len)
 }
 
 enum char_class
-  {
-    CC_NO_CLASS = 0,
-    CC_ASCII, CC_ALNUM, CC_ALPHA, CC_BLANK, CC_CNTRL, CC_DIGIT, CC_GRAPH,
-    CC_LOWER, CC_PRINT, CC_PUNCT, CC_SPACE, CC_UPPER, CC_WORD, CC_XDIGIT
-  };
+{
+  CC_NO_CLASS = 0,
+  CC_ASCII,
+  CC_ALNUM,
+  CC_ALPHA,
+  CC_BLANK,
+  CC_CNTRL,
+  CC_DIGIT,
+  CC_GRAPH,
+  CC_LOWER,
+  CC_PRINT,
+  CC_PUNCT,
+  CC_SPACE,
+  CC_UPPER,
+  CC_WORD,
+  CC_XDIGIT
+};
 
-static char const *const cclass_name[] =
-  {
-    "",
-    "ascii", "alnum", "alpha", "blank", "cntrl", "digit", "graph",
-    "lower", "print", "punct", "space", "upper", "word", "xdigit"
-  };
+static char const *const cclass_name[]
+    = { "",      "ascii", "alnum", "alpha", "blank", "cntrl", "digit", "graph",
+        "lower", "print", "punct", "space", "upper", "word",  "xdigit" };
 
-#define N_CHAR_CLASS (sizeof(cclass_name) / sizeof (cclass_name[0]))
+#define N_CHAR_CLASS (sizeof (cclass_name) / sizeof (cclass_name[0]))
 
 static char_class
 is_valid_cclass (const char *name)
@@ -194,10 +202,10 @@ is_valid_cclass (const char *name)
   for (int i = 1; i < N_CHAR_CLASS; i++)
     {
       if (STREQ (name, cclass_name[i]))
-	{
-	  ret = (char_class)i;
-	  break;
-	}
+        {
+          ret = (char_class)i;
+          break;
+        }
     }
 
   return ret;
@@ -210,51 +218,51 @@ cclass_test (int c, char_class char_class)
 
   switch (char_class)
     {
-      case CC_ASCII:
-	result = ::isascii (c);		// not in C++03
-	break;
-      case CC_ALNUM:
-	result = std::isalnum (c);
-	break;
-      case CC_ALPHA:
-	result = std::isalpha (c);
-	break;
-      case CC_BLANK:
-	result = bash::isblank (c);	// in C99 and C++11
-	break;
-      case CC_CNTRL:
-	result = std::iscntrl (c);
-	break;
-      case CC_DIGIT:
-	result = std::isdigit (c);
-	break;
-      case CC_GRAPH:
-	result = std::isgraph (c);
-	break;
-      case CC_LOWER:
-	result = std::islower (c);
-	break;
-      case CC_PRINT:
-	result = std::isprint (c);
-	break;
-      case CC_PUNCT:
-	result = std::ispunct (c);
-	break;
-      case CC_SPACE:
-	result = std::isspace (c);
-	break;
-      case CC_UPPER:
-	result = std::isupper (c);
-	break;
-      case CC_WORD:
-        result = (std::isalnum (c) || c == '_');
-	break;
-      case CC_XDIGIT:
-	result = std::isxdigit (c);
-	break;
-      default:
-	result = -1;
-	break;
+    case CC_ASCII:
+      result = ::isascii (c); // not in C++03
+      break;
+    case CC_ALNUM:
+      result = std::isalnum (c);
+      break;
+    case CC_ALPHA:
+      result = std::isalpha (c);
+      break;
+    case CC_BLANK:
+      result = bash::isblank (c); // in C99 and C++11
+      break;
+    case CC_CNTRL:
+      result = std::iscntrl (c);
+      break;
+    case CC_DIGIT:
+      result = std::isdigit (c);
+      break;
+    case CC_GRAPH:
+      result = std::isgraph (c);
+      break;
+    case CC_LOWER:
+      result = std::islower (c);
+      break;
+    case CC_PRINT:
+      result = std::isprint (c);
+      break;
+    case CC_PUNCT:
+      result = std::ispunct (c);
+      break;
+    case CC_SPACE:
+      result = std::isspace (c);
+      break;
+    case CC_UPPER:
+      result = std::isupper (c);
+      break;
+    case CC_WORD:
+      result = (std::isalnum (c) || c == '_');
+      break;
+    case CC_XDIGIT:
+      result = std::isxdigit (c);
+      break;
+    default:
+      result = -1;
+      break;
     }
 
   return result;
@@ -276,39 +284,39 @@ is_cclass (int c, const char *name)
 
 /* Now include `sm_loop.hh' for single-byte characters. */
 /* The result of FOLD is an `unsigned char' */
-# define FOLD(c) ((flags & FNM_CASEFOLD) \
-	? std::tolower ((unsigned char)c) \
-	: ((unsigned char)c))
+#define FOLD(c)                                                               \
+  ((flags & FNM_CASEFOLD) ? std::tolower ((unsigned char)c)                   \
+                          : ((unsigned char)c))
 
-#define FCT			internal_strmatch
-#define GMATCH			gmatch
-#define COLLSYM			collsym
-#define PARSE_COLLSYM		parse_collsym
-#define BRACKMATCH		brackmatch
-#define PATSCAN			glob_patscan
-#define STRCOMPARE		strcompare
-#define EXTMATCH		extmatch
-#define DEQUOTE_PATHNAME	udequote_pathname
-#define STRUCT			smat_struct
-#define STRCHR(S, C)		std::strchr((S), (C))
-#define MEMCHR(S, C, N)		std::memchr((S), (C), (N))
-#define STRCOLL(S1, S2)		std::strcoll((S1), (S2))
-#define STRLEN(S)		std::strlen(S)
-#define STRCMP(S1, S2)		std::strcmp((S1), (S2))
-#define RANGECMP(C1, C2, F)	rangecmp((C1), (C2), (F))
-#define COLLEQUIV(C1, C2)	collequiv((C1), (C2))
-#define CTYPE_T			char_class
-#define IS_CCLASS(C, S)		is_cclass((C), (S))
+#define FCT internal_strmatch
+#define GMATCH gmatch
+#define COLLSYM collsym
+#define PARSE_COLLSYM parse_collsym
+#define BRACKMATCH brackmatch
+#define PATSCAN glob_patscan
+#define STRCOMPARE strcompare
+#define EXTMATCH extmatch
+#define DEQUOTE_PATHNAME udequote_pathname
+#define STRUCT smat_struct
+#define STRCHR(S, C) std::strchr ((S), (C))
+#define MEMCHR(S, C, N) std::memchr ((S), (C), (N))
+#define STRCOLL(S1, S2) std::strcoll ((S1), (S2))
+#define STRLEN(S) std::strlen (S)
+#define STRCMP(S1, S2) std::strcmp ((S1), (S2))
+#define RANGECMP(C1, C2, F) rangecmp ((C1), (C2), (F))
+#define COLLEQUIV(C1, C2) collequiv ((C1), (C2))
+#define CTYPE_T char_class
+#define IS_CCLASS(C, S) is_cclass ((C), (S))
 #include "sm_loop.hh"
 
 #if HANDLE_MULTIBYTE
 
-#  define CHAR		wchar_t
-#  define U_CHAR	wint_t
-#  define XCHAR		wchar_t
-#  define INT		wint_t
-#  define L(CS)		L##CS
-#  define INVALID	WEOF
+#define CHAR wchar_t
+#define U_CHAR wint_t
+#define XCHAR wchar_t
+#define INT wint_t
+#define L(CS) L##CS
+#define INVALID WEOF
 
 #if FNMATCH_EQUIV_FALLBACK
 /* Construct a string w1 = "c1" and a pattern w2 = "[[=c2=]]" and pass them
@@ -317,8 +325,8 @@ is_cclass (int c, const char *name)
 static int
 _fnmatch_fallback_wc (wchar_t c1, wchar_t c2)
 {
-  char w1[MB_LEN_MAX+1];		/* string */
-  char w2[MB_LEN_MAX+8];		/* constructed pattern */
+  char w1[MB_LEN_MAX + 1]; /* string */
+  char w2[MB_LEN_MAX + 8]; /* constructed pattern */
   int l1, l2;
 
   l1 = std::wctomb (w1, c1);
@@ -329,12 +337,12 @@ _fnmatch_fallback_wc (wchar_t c1, wchar_t c2)
   /* reconstruct the pattern */
   w2[0] = w2[1] = '[';
   w2[2] = '=';
-  l2 = std::wctomb (w2+3, c2);
+  l2 = std::wctomb (w2 + 3, c2);
   if (l2 == -1)
     return 2;
-  w2[l2+3] = '=';
-  w2[l2+4] = w2[l2+5] = ']';
-  w2[l2+6] = '\0';
+  w2[l2 + 3] = '=';
+  w2[l2 + 4] = w2[l2 + 5] = ']';
+  w2[l2 + 6] = '\0';
 
   return ::fnmatch ((const char *)w2, (const char *)w1, 0);
 }
@@ -370,10 +378,11 @@ rangecmp_wc (wint_t c1, wint_t c2, bool forcecoll)
      as we do above in the single-byte case. */
   if (r != 0 || forcecoll)
     return r;
-  return (int)(c1 - c2);		/* impose total ordering */
+  return (int)(c1 - c2); /* impose total ordering */
 }
 
-/* Returns true if wide chars C and EQUIV collate equally in the current locale. */
+/* Returns true if wide chars C and EQUIV collate equally in the current
+ * locale. */
 static bool
 collequiv_wc (wint_t c, wint_t equiv)
 {
@@ -383,9 +392,9 @@ collequiv_wc (wint_t c, wint_t equiv)
     return true;
 
 #if FNMATCH_EQUIV_FALLBACK
-/* We check explicitly for success (fnmatch returns 0) to avoid problems if
-   our local definition of FNM_NOMATCH (strmatch.h) doesn't match the
-   system's (fnmatch.h). We don't care about error return values here. */
+  /* We check explicitly for success (fnmatch returns 0) to avoid problems if
+     our local definition of FNM_NOMATCH (strmatch.h) doesn't match the
+     system's (fnmatch.h). We don't care about error return values here. */
 
   s = c;
   p = equiv;
@@ -396,9 +405,9 @@ collequiv_wc (wint_t c, wint_t equiv)
 }
 
 /* Helper function for collating symbol. */
-#  define __COLLSYM	__collwcsym
-#  define POSIXCOLL	posix_collwcsyms
-#  include "collsyms.hh"
+#define __COLLSYM __collwcsym
+#define POSIXCOLL posix_collwcsyms
+#include "collsyms.hh"
 
 static wint_t
 collwcsym (const wchar_t *s, int len)
@@ -408,7 +417,7 @@ collwcsym (const wchar_t *s, int len)
   for (csp = posix_collwcsyms; csp->name; csp++)
     {
       if (STREQN (csp->name, s, len) && csp->name[len] == L'\0')
-	return csp->code;
+        return csp->code;
     }
   if (len == 1)
     return s[0];
@@ -422,12 +431,13 @@ is_wcclass (wint_t wc, const wchar_t *name)
   size_t mbslength;
   wctype_t desc;
 
-  if ((std::wctype ("ascii") == (wctype_t)0) && (std::wcscmp (name, L"ascii") == 0))
+  if ((std::wctype ("ascii") == (wctype_t)0)
+      && (std::wcscmp (name, L"ascii") == 0))
     {
       int c = std::wctob (wc);
 
       if (c == EOF)
-	return 0;
+        return 0;
       else
         return c <= 0x7F;
     }
@@ -439,9 +449,10 @@ is_wcclass (wint_t wc, const wchar_t *name)
   std::memset (&state, 0, sizeof (std::mbstate_t));
 
   // alloc temp buf on stack
-  char mbs[std::wcslen(name) * MB_CUR_MAX + 1];
+  char mbs[std::wcslen (name) * MB_CUR_MAX + 1];
 
-  mbslength = std::wcsrtombs (mbs, (const wchar_t **)&name, (std::wcslen(name) * MB_CUR_MAX + 1), &state);
+  mbslength = std::wcsrtombs (mbs, (const wchar_t **)&name,
+                              (std::wcslen (name) * MB_CUR_MAX + 1), &state);
 
   if (mbslength == (size_t)-1 || mbslength == (size_t)-2)
     {
@@ -458,8 +469,8 @@ is_wcclass (wint_t wc, const wchar_t *name)
     return std::iswctype (wc, desc);
 }
 
-/* Return true if there are no char class [:class:] expressions (degenerate case)
-   or only posix-specified (C locale supported) char class expressions in
+/* Return true if there are no char class [:class:] expressions (degenerate
+   case) or only posix-specified (C locale supported) char class expressions in
    PATTERN.  These are the ones where it's safe to punt to the single-byte
    code, since wide character support allows locale-defined char classes.
    This only uses single-byte code, but is only needed to support multibyte
@@ -467,65 +478,66 @@ is_wcclass (wint_t wc, const wchar_t *name)
 static bool
 posix_cclass_only (const char *pattern)
 {
-  char cc[16];		/* sufficient for all valid posix char class names */
+  char cc[16]; /* sufficient for all valid posix char class names */
   char_class valid;
 
   const char *p = pattern;
   while ((p = std::strchr (p, '[')))
     {
       if (p[1] != ':')
-	{
-	  p++;
-	  continue;
+        {
+          p++;
+          continue;
         }
-      p += 2;		/* skip past "[:" */
+      p += 2; /* skip past "[:" */
 
       /* Find end of char class expression */
       const char *p1;
-      for (p1 = p; *p1;  p1++)
-	if (*p1 == ':' && p1[1] == ']')
-	  break;
-      if (*p1 == 0)	/* no char class expression found */
-	break;
+      for (p1 = p; *p1; p1++)
+        if (*p1 == ':' && p1[1] == ']')
+          break;
+      if (*p1 == 0) /* no char class expression found */
+        break;
 
       /* Find char class name and validate it against posix char classes */
       if ((p1 - p) >= sizeof (cc))
-	return false;
+        return false;
 
       std::memcpy (cc, p, p1 - p);
       cc[p1 - p] = '\0';
 
       valid = is_valid_cclass (cc);
       if (valid == CC_NO_CLASS)
-	return false;		/* found unrecognized char class name */
+        return false; /* found unrecognized char class name */
 
-      p = p1 + 2;		/* found posix char class name */
+      p = p1 + 2; /* found posix char class name */
     }
 
-  return true;			/* no char class names or only posix */
+  return true; /* no char class names or only posix */
 }
 
 /* Now include `sm_loop.hh' for multibyte characters. */
-#define FOLD(c) ((flags & FNM_CASEFOLD) && std::iswupper (c) ? std::towlower (c) : (c))
-#define FCT			internal_wstrmatch
-#define GMATCH			gmatch_wc
-#define COLLSYM			collwcsym
-#define PARSE_COLLSYM		parse_collwcsym
-#define BRACKMATCH		brackmatch_wc
-#define PATSCAN			glob_patscan_wc
-#define STRCOMPARE		wscompare
-#define EXTMATCH		extmatch_wc
-#define DEQUOTE_PATHNAME	wcdequote_pathname
-#define STRUCT			wcsmat_struct
-#define STRCHR(S, C)		std::wcschr((S), (C))
-#define MEMCHR(S, C, N)		std::wmemchr((S), (C), (N))
-#define STRCOLL(S1, S2)		std::wcscoll((S1), (S2))
-#define STRLEN(S)		std::wcslen(S)
-#define STRCMP(S1, S2)		std::wcscmp((S1), (S2))
-#define RANGECMP(C1, C2, F)	rangecmp_wc((C1), (C2), (F))
-#define COLLEQUIV(C1, C2)	collequiv_wc((C1), (C2))
-#define CTYPE_T			char_class
-#define IS_CCLASS(C, S)		is_wcclass((C), (S))
+#define FOLD(c)                                                               \
+  ((flags & FNM_CASEFOLD) && std::iswupper (c) ? std::towlower (c) : (c))
+#define FCT internal_wstrmatch
+#define GMATCH gmatch_wc
+#define COLLSYM collwcsym
+#define PARSE_COLLSYM parse_collwcsym
+#define BRACKMATCH brackmatch_wc
+#define PATSCAN glob_patscan_wc
+#define STRCOMPARE wscompare
+#define EXTMATCH extmatch_wc
+#define DEQUOTE_PATHNAME wcdequote_pathname
+#define STRUCT wcsmat_struct
+#define STRCHR(S, C) std::wcschr ((S), (C))
+#define MEMCHR(S, C, N) std::wmemchr ((S), (C), (N))
+#define STRCOLL(S1, S2) std::wcscoll ((S1), (S2))
+#define STRLEN(S) std::wcslen (S)
+#define STRCMP(S1, S2) std::wcscmp ((S1), (S2))
+#define RANGECMP(C1, C2, F) rangecmp_wc ((C1), (C2), (F))
+#define COLLEQUIV(C1, C2) collequiv_wc ((C1), (C2))
+#define CTYPE_T char_class
+#define IS_CCLASS(C, S) is_wcclass ((C), (S))
 #include "sm_loop.hh"
 
 #endif /* HAVE_MULTIBYTE */
@@ -540,20 +552,25 @@ xstrmatch (const char *pattern, const char *string, int flags)
   size_t plen, slen, mplen, mslen;
 
   if (MB_CUR_MAX == 1)
-    return internal_strmatch ((unsigned char *)pattern, (unsigned char *)string, flags);
+    return internal_strmatch ((unsigned char *)pattern,
+                              (unsigned char *)string, flags);
 
-  if (mbsmbchar (string) == 0 && mbsmbchar (pattern) == 0 && posix_cclass_only (pattern))
-    return internal_strmatch ((unsigned char *)pattern, (unsigned char *)string, flags);
+  if (mbsmbchar (string) == 0 && mbsmbchar (pattern) == 0
+      && posix_cclass_only (pattern))
+    return internal_strmatch ((unsigned char *)pattern,
+                              (unsigned char *)string, flags);
 
   n = xdupmbstowcs (&wpattern, NULL, pattern);
   if (n == (size_t)-1 || n == (size_t)-2)
-    return internal_strmatch ((unsigned char *)pattern, (unsigned char *)string, flags);
+    return internal_strmatch ((unsigned char *)pattern,
+                              (unsigned char *)string, flags);
 
   n = xdupmbstowcs (&wstring, NULL, string);
   if (n == (size_t)-1 || n == (size_t)-2)
     {
       delete[] wpattern;
-      return internal_strmatch ((unsigned char *)pattern, (unsigned char *)string, flags);
+      return internal_strmatch ((unsigned char *)pattern,
+                                (unsigned char *)string, flags);
     }
 
   ret = internal_wstrmatch (wpattern, wstring, flags);
@@ -563,8 +580,9 @@ xstrmatch (const char *pattern, const char *string, int flags)
 
   return ret;
 #else
-  return internal_strmatch ((unsigned char *)pattern, (unsigned char *)string, flags);
+  return internal_strmatch ((unsigned char *)pattern, (unsigned char *)string,
+                            flags);
 #endif /* !HANDLE_MULTIBYTE */
 }
 
-}  // namespace bash
+} // namespace bash

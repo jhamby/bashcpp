@@ -22,30 +22,30 @@
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_SYS_PARAM_H)
-#  include <sys/param.h>
+#if defined(HAVE_SYS_PARAM_H)
+#include <sys/param.h>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <climits>
 
-#include "posixstat.hh"
 #include "filecntl.hh"
+#include "posixstat.hh"
 
-#if !defined (HAVE_KILLPG)
-#  include <csignal>
+#if !defined(HAVE_KILLPG)
+#include <csignal>
 #endif
 
-#include <cstdio>
 #include <cerrno>
+#include <cstdio>
 
 #include "chartypes.hh"
 #include "shell.hh"
 
-#if !defined (HAVE_DUP2) || defined (DUP2_BROKEN)
+#if !defined(HAVE_DUP2) || defined(DUP2_BROKEN)
 /* Replacement for dup2 (), for those systems which either don't have it,
    or supply one with broken behaviour. */
 int
@@ -69,14 +69,13 @@ dup2 (int fd1, int fd2)
 
   saved_errno = errno;
 
-  (void) ::close (fd2);
+  (void)::close (fd2);
   r = ::fcntl (fd1, F_DUPFD, fd2);
 
   if (r >= 0)
     errno = saved_errno;
-  else
-    if (errno == EINVAL)
-      errno = EBADF;
+  else if (errno == EINVAL)
+    errno = EBADF;
 
   /* Force the new file descriptor to remain open across exec () calls. */
   SET_OPEN_ON_EXEC (fd2);
@@ -104,29 +103,29 @@ dup2 (int fd1, int fd2)
  *
  */
 
-#if !defined (HAVE_GETDTABLESIZE)
+#if !defined(HAVE_GETDTABLESIZE)
 int
 getdtablesize ()
 {
-#  if defined (_POSIX_VERSION) && defined (HAVE_SYSCONF) && defined (_SC_OPEN_MAX)
-  return ::sysconf(_SC_OPEN_MAX);	/* Posix systems use sysconf */
-#  else /* ! (_POSIX_VERSION && HAVE_SYSCONF && _SC_OPEN_MAX) */
-#    if defined (ULIMIT_MAXFDS)
-  return ::ulimit (4, 0L);	/* System V.3 systems use ulimit(4, 0L) */
-#    else /* !ULIMIT_MAXFDS */
-#      if defined (NOFILE)	/* Other systems use NOFILE */
+#if defined(_POSIX_VERSION) && defined(HAVE_SYSCONF) && defined(_SC_OPEN_MAX)
+  return ::sysconf (_SC_OPEN_MAX); /* Posix systems use sysconf */
+#else /* ! (_POSIX_VERSION && HAVE_SYSCONF && _SC_OPEN_MAX) */
+#if defined(ULIMIT_MAXFDS)
+  return ::ulimit (4, 0L); /* System V.3 systems use ulimit(4, 0L) */
+#else               /* !ULIMIT_MAXFDS */
+#if defined(NOFILE) /* Other systems use NOFILE */
   return NOFILE;
-#      else /* !NOFILE */
-  return 20;			/* XXX - traditional value is 20 */
-#      endif /* !NOFILE */
-#    endif /* !ULIMIT_MAXFDS */
-#  endif /* ! (_POSIX_VERSION && _SC_OPEN_MAX) */
+#else               /* !NOFILE */
+  return 20; /* XXX - traditional value is 20 */
+#endif              /* !NOFILE */
+#endif              /* !ULIMIT_MAXFDS */
+#endif              /* ! (_POSIX_VERSION && _SC_OPEN_MAX) */
 }
 #endif /* !HAVE_GETDTABLESIZE */
 
-#if !defined (HAVE_GETHOSTNAME)
-#  if defined (HAVE_UNAME)
-#    include <sys/utsname.h>
+#if !defined(HAVE_GETHOSTNAME)
+#if defined(HAVE_UNAME)
+#include <sys/utsname.h>
 int
 gethostname (char *name, int namelen)
 {
@@ -141,7 +140,7 @@ gethostname (char *name, int namelen)
   name[namelen] = '\0';
   return 0;
 }
-#  else /* !HAVE_UNAME */
+#else  /* !HAVE_UNAME */
 int
 gethostname (char *name, int namelen)
 {
@@ -149,10 +148,10 @@ gethostname (char *name, int namelen)
   name[namelen] = '\0';
   return 0;
 }
-#  endif /* !HAVE_UNAME */
+#endif /* !HAVE_UNAME */
 #endif /* !HAVE_GETHOSTNAME */
 
-#if !defined (HAVE_KILLPG)
+#if !defined(HAVE_KILLPG)
 int
 killpg (pid_t pgrp, int sig)
 {
@@ -160,13 +159,13 @@ killpg (pid_t pgrp, int sig)
 }
 #endif /* !HAVE_KILLPG */
 
-#if !defined (HAVE_MKFIFO) && defined (PROCESS_SUBSTITUTION) && !defined(__VMS)
+#if !defined(HAVE_MKFIFO) && defined(PROCESS_SUBSTITUTION) && !defined(__VMS)
 int
 mkfifo (char *path, int mode)
 {
-#if defined (S_IFIFO)
+#if defined(S_IFIFO)
   return ::mknod (path, (mode | S_IFIFO), 0);
-#else /* !S_IFIFO */
+#else  /* !S_IFIFO */
   return -1;
 #endif /* !S_IFIFO */
 }
@@ -185,18 +184,18 @@ getmaxgroups ()
   if (maxgroups > 0)
     return maxgroups;
 
-#if defined (HAVE_SYSCONF) && defined (_SC_NGROUPS_MAX)
+#if defined(HAVE_SYSCONF) && defined(_SC_NGROUPS_MAX)
   maxgroups = static_cast<int> (::sysconf (_SC_NGROUPS_MAX));
 #else
-#  if defined (NGROUPS_MAX)
+#if defined(NGROUPS_MAX)
   maxgroups = NGROUPS_MAX;
-#  else /* !NGROUPS_MAX */
-#    if defined (NGROUPS)
+#else /* !NGROUPS_MAX */
+#if defined(NGROUPS)
   maxgroups = NGROUPS;
-#    else /* !NGROUPS */
+#else  /* !NGROUPS */
   maxgroups = DEFAULT_MAXGROUPS;
-#    endif /* !NGROUPS */
-#  endif /* !NGROUPS_MAX */
+#endif /* !NGROUPS */
+#endif /* !NGROUPS_MAX */
 #endif /* !HAVE_SYSCONF || !SC_NGROUPS_MAX */
 
   if (maxgroups <= 0)
@@ -213,19 +212,19 @@ getmaxchild ()
   if (maxchild > 0)
     return maxchild;
 
-#if defined (HAVE_SYSCONF) && defined (_SC_CHILD_MAX)
+#if defined(HAVE_SYSCONF) && defined(_SC_CHILD_MAX)
   maxchild = ::sysconf (_SC_CHILD_MAX);
 #else
-#  if defined (CHILD_MAX)
+#if defined(CHILD_MAX)
   maxchild = CHILD_MAX;
-#  else
-#    if defined (MAXUPRC)
+#else
+#if defined(MAXUPRC)
   maxchild = MAXUPRC;
-#    endif /* MAXUPRC */
-#  endif /* CHILD_MAX */
+#endif /* MAXUPRC */
+#endif /* CHILD_MAX */
 #endif /* !HAVE_SYSCONF || !_SC_CHILD_MAX */
 
   return maxchild;
 }
 
-}  // namespace bash
+} // namespace bash

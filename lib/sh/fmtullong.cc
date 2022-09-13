@@ -20,8 +20,8 @@
 
 #include "config.hh"
 
-#define LONG		long long
-#define UNSIGNED_LONG	unsigned long long
-#define fmtulong	fmtullong
+#define LONG long long
+#define UNSIGNED_LONG unsigned long long
+#define fmtulong fmtullong
 
 #include "fmtulong.cc"

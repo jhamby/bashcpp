@@ -24,18 +24,18 @@
 
 #include <fcntl.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#  include <cstdarg>
+#include <cstdarg>
 
 #include "bashintl.hh"
 
-#include "shell.hh"
 #include "execute_cmd.hh"
 #include "flags.hh"
 #include "input.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -43,12 +43,12 @@ namespace bash
 #if 0
 extern int executing_line_number (void);
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 extern pid_t shell_pgrp;
 extern int give_terminal_to (pid_t, int);
 #endif /* JOB_CONTROL */
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
 extern const char * const bash_badsub_errmsg;
 #endif
 
@@ -56,7 +56,7 @@ static void error_prolog (int);
 
 /* The current maintainer of the shell.  You change this in the
    Makefile. */
-#if !defined (MAINTAINER)
+#if !defined(MAINTAINER)
 #define MAINTAINER "bash-maintainers@gnu.org"
 #endif
 
@@ -72,10 +72,12 @@ error_prolog (int print_lineno)
   int line;
 
   ename = get_name_for_error ();
-  line = (print_lineno && interactive_shell == 0) ? executing_line_number () : -1;
+  line = (print_lineno && interactive_shell == 0) ? executing_line_number ()
+                                                  : -1;
 
   if (line > 0)
-    fprintf (stderr, "%s:%s%d: ", ename, gnu_error_format ? "" : _(" line "), line);
+    fprintf (stderr, "%s:%s%d: ", ename, gnu_error_format ? "" : _ (" line "),
+             line);
   else
     fprintf (stderr, "%s: ", ename);
 }
@@ -85,7 +87,7 @@ const char *
 get_name_for_error ()
 {
   const char *name;
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   SHELL_VAR *bash_source_v;
   ARRAY *bash_source_a;
 #endif
@@ -93,19 +95,19 @@ get_name_for_error ()
   name = (char *)NULL;
   if (interactive_shell == 0)
     {
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
       bash_source_v = find_variable ("BASH_SOURCE");
-      if (bash_source_v && array_p (bash_source_v) &&
-	  (bash_source_a = array_cell (bash_source_v)))
-	name = array_reference (bash_source_a, 0);
-      if (name == 0 || *name == '\0')	/* XXX - was just name == 0 */
+      if (bash_source_v && array_p (bash_source_v)
+          && (bash_source_a = array_cell (bash_source_v)))
+        name = array_reference (bash_source_a, 0);
+      if (name == 0 || *name == '\0') /* XXX - was just name == 0 */
 #endif
-	name = dollar_vars[0];
+        name = dollar_vars[0];
     }
   if (name == 0 && shell_name && *shell_name)
     name = base_pathname (shell_name);
   if (name == 0)
-#if defined (PROGRAM)
+#if defined(PROGRAM)
     name = PROGRAM;
 #else
     name = "bash";
@@ -129,7 +131,7 @@ programming_error (const char *format, ...)
   va_list args;
   char *h;
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
   give_terminal_to (shell_pgrp, 0);
 #endif /* JOB_CONTROL */
 
@@ -139,11 +141,11 @@ programming_error (const char *format, ...)
   fprintf (stderr, "\n");
   va_end (args);
 
-#if defined (HISTORY)
+#if defined(HISTORY)
   if (remember_on_history)
     {
       h = last_history_line ();
-      fprintf (stderr, _("last command: %s\n"), h ? h : "(null)");
+      fprintf (stderr, _ ("last command: %s\n"), h ? h : "(null)");
     }
 #endif
 
@@ -151,7 +153,7 @@ programming_error (const char *format, ...)
   fprintf (stderr, "Report this to %s\n", the_current_maintainer);
 #endif
 
-  fprintf (stderr, _("Aborting..."));
+  fprintf (stderr, _ ("Aborting..."));
   fflush (stderr);
 
   abort ();
@@ -177,7 +179,7 @@ report_error (const char *format, ...)
   if (exit_immediately_on_error)
     {
       if (last_command_exit_value == 0)
-	last_command_exit_value = EXECUTION_FAILURE;
+        last_command_exit_value = EXECUTION_FAILURE;
       exit_shell (last_command_exit_value);
     }
 }
@@ -219,7 +221,7 @@ internal_warning (const char *format, ...)
   va_list args;
 
   error_prolog (1);
-  fprintf (stderr, _("warning: "));
+  fprintf (stderr, _ ("warning: "));
 
   SH_VA_START (args, format);
 
@@ -236,7 +238,7 @@ internal_inform (const char *format, ...)
 
   error_prolog (1);
   /* TRANSLATORS: this is a prefix for informational messages. */
-  fprintf (stderr, _("INFORM: "));
+  fprintf (stderr, _ ("INFORM: "));
 
   SH_VA_START (args, format);
 
@@ -265,7 +267,7 @@ sys_error (const char *format, ...)
 
 /* An error from the parser takes the general form
 
-	shell_name: input file name: line number: message
+        shell_name: input file name: line number: message
 
    The input file name and line number are omitted if the shell is
    currently interactive.  If the shell is not currently interactive,
@@ -283,11 +285,14 @@ parser_error (int lineno, const char *format, ...)
   if (interactive)
     fprintf (stderr, "%s: ", ename);
   else if (interactive_shell)
-    fprintf (stderr, "%s: %s:%s%d: ", ename, iname, gnu_error_format ? "" : _(" line "), lineno);
+    fprintf (stderr, "%s: %s:%s%d: ", ename, iname,
+             gnu_error_format ? "" : _ (" line "), lineno);
   else if (STREQ (ename, iname))
-    fprintf (stderr, "%s:%s%d: ", ename, gnu_error_format ? "" : _(" line "), lineno);
+    fprintf (stderr, "%s:%s%d: ", ename, gnu_error_format ? "" : _ (" line "),
+             lineno);
   else
-    fprintf (stderr, "%s: %s:%s%d: ", ename, iname, gnu_error_format ? "" : _(" line "), lineno);
+    fprintf (stderr, "%s: %s:%s%d: ", ename, iname,
+             gnu_error_format ? "" : _ (" line "), lineno);
 
   SH_VA_START (args, format);
 
@@ -313,17 +318,17 @@ strescape (const char *str)
   for (s = (unsigned char *)str; s && *s; s++)
     {
       if (*s < ' ')
-	{
-	  *r++ = '^';
-	  *r++ = *s+64;
-	}
+        {
+          *r++ = '^';
+          *r++ = *s + 64;
+        }
       else if (*s == 127)
-	{
-	  *r++ = '^';
-	  *r++ = '?';
-	}
-     else
-	*r++ = *s;
+        {
+          *r++ = '^';
+          *r++ = '?';
+        }
+      else
+        *r++ = *s;
     }
 
   *r = '\0';
@@ -335,7 +340,7 @@ itrace (const char *format, ...)
 {
   va_list args;
 
-  fprintf(stderr, "TRACE: pid %ld: ", (long)getpid());
+  fprintf (stderr, "TRACE: pid %ld: ", (long)getpid ());
 
   SH_VA_START (args, format);
 
@@ -344,7 +349,7 @@ itrace (const char *format, ...)
 
   va_end (args);
 
-  fflush(stderr);
+  fflush (stderr);
 }
 
 /* A trace function for silent debugging -- doesn't require a control
@@ -356,14 +361,14 @@ trace (const char *format, ...)
   static FILE *tracefp = (FILE *)NULL;
 
   if (tracefp == NULL)
-    tracefp = fopen("/tmp/bash-trace.log", "a+");
+    tracefp = fopen ("/tmp/bash-trace.log", "a+");
 
   if (tracefp == NULL)
     tracefp = stderr;
   else
-    fcntl (fileno (tracefp), F_SETFD, 1);     /* close-on-exec */
+    fcntl (fileno (tracefp), F_SETFD, 1); /* close-on-exec */
 
-  fprintf(tracefp, "TRACE: pid %ld: ", (long)getpid());
+  fprintf (tracefp, "TRACE: pid %ld: ", (long)getpid ());
 
   SH_VA_START (args, format);
 
@@ -372,7 +377,7 @@ trace (const char *format, ...)
 
   va_end (args);
 
-  fflush(tracefp);
+  fflush (tracefp);
 }
 
 #endif /* DEBUG */
@@ -383,14 +388,12 @@ trace (const char *format, ...)
 /*								    */
 /* **************************************************************** */
 
-
-static const char * const cmd_error_table[] = {
-	N_("unknown command error"),	/* CMDERR_DEFAULT */
-	N_("bad command type"),		/* CMDERR_BADTYPE */
-	N_("bad connector"),		/* CMDERR_BADCONN */
-	N_("bad jump"),			/* CMDERR_BADJUMP */
-	0
-};
+static const char *const cmd_error_table[]
+    = { N_ ("unknown command error"), /* CMDERR_DEFAULT */
+        N_ ("bad command type"),      /* CMDERR_BADTYPE */
+        N_ ("bad connector"),         /* CMDERR_BADCONN */
+        N_ ("bad jump"),              /* CMDERR_BADJUMP */
+        0 };
 
 void
 command_error (const char *func, int code, int e, int flags)
@@ -398,7 +401,7 @@ command_error (const char *func, int code, int e, int flags)
   if (code > CMDERR_LAST)
     code = CMDERR_DEFAULT;
 
-  programming_error ("%s: %s: %d", func, _(cmd_error_table[code]), e);
+  programming_error ("%s: %s: %d", func, _ (cmd_error_table[code]), e);
 }
 
 const char *
@@ -407,27 +410,27 @@ command_errstr (int code)
   if (code > CMDERR_LAST)
     code = CMDERR_DEFAULT;
 
-  return _(cmd_error_table[code]);
+  return _ (cmd_error_table[code]);
 }
 
 #ifdef ARRAY_VARS
 void
 err_badarraysub (const char *s)
 {
-  report_error ("%s: %s", s, _(bash_badsub_errmsg));
+  report_error ("%s: %s", s, _ (bash_badsub_errmsg));
 }
 #endif
 
 void
 err_unboundvar (const char *s)
 {
-  report_error (_("%s: unbound variable"), s);
+  report_error (_ ("%s: unbound variable"), s);
 }
 
 void
 err_readonly (const char *s)
 {
-  report_error (_("%s: readonly variable"), s);
+  report_error (_ ("%s: readonly variable"), s);
 }
 
-}  // namespace bash
+} // namespace bash

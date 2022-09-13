@@ -27,42 +27,42 @@ INTERNAL_GLOB_PATTERN_P (const GCHAR *pattern)
   bool bopen = false;
   GCHAR c;
 
-  while ((c = *p++) != L('\0'))
+  while ((c = *p++) != L ('\0'))
     switch (c)
       {
-      case L('?'):
-      case L('*'):
-	return true;
+      case L ('?'):
+      case L ('*'):
+        return true;
 
-      case L('['):      /* Only accept an open brace if there is a close */
-	bopen = true;   /* brace to match it.  Bracket expressions must be */
-	continue;       /* complete, according to Posix.2 */
-      case L(']'):
-	if (bopen)
-	  return true;
-	continue;
+      case L ('['):   /* Only accept an open brace if there is a close */
+        bopen = true; /* brace to match it.  Bracket expressions must be */
+        continue;     /* complete, according to Posix.2 */
+      case L (']'):
+        if (bopen)
+          return true;
+        continue;
 
-      case L('+'):         /* extended matching operators */
-      case L('@'):
-      case L('!'):
-	if (*p == L('('))  /*) */
-	  return true;
-	continue;
+      case L ('+'): /* extended matching operators */
+      case L ('@'):
+      case L ('!'):
+        if (*p == L ('(')) /*) */
+          return true;
+        continue;
 
-      case L('\\'):
-	/* Don't let the pattern end in a backslash (GMATCH returns no match
-	   if the pattern ends in a backslash anyway), but otherwise note that
-	   we have seen this, since the matching engine uses backslash as an
-	   escape character and it can be removed. We return 2 later if we
-	   have seen only backslash-escaped characters, so interested callers
-	   know they can shortcut and just dequote the pathname. */
-	if (*p != L('\0'))
-	  {
-	    p++;
-	    continue;
-	  }
-	else 	/* (*p == L('\0')) */
-	  return false;
+      case L ('\\'):
+        /* Don't let the pattern end in a backslash (GMATCH returns no match
+           if the pattern ends in a backslash anyway), but otherwise note that
+           we have seen this, since the matching engine uses backslash as an
+           escape character and it can be removed. We return 2 later if we
+           have seen only backslash-escaped characters, so interested callers
+           know they can shortcut and just dequote the pathname. */
+        if (*p != L ('\0'))
+          {
+            p++;
+            continue;
+          }
+        else /* (*p == L('\0')) */
+          return false;
       }
 
   return false;

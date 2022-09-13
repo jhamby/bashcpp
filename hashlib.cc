@@ -1,6 +1,7 @@
 /* hashlib.c -- functions to manage and access hash tables for bash. */
 
-/* Copyright (C) 1987,1989,1991,1995,1998,2001,2003,2005,2006,2008,2009 Free Software Foundation, Inc.
+/* Copyright (C) 1987,1989,1991,1995,1998,2001,2003,2005,2006,2008,2009 Free
+   Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -20,33 +21,34 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "shell.hh"
 #include "hashlib.hh"
+#include "shell.hh"
 
 namespace bash
 {
 
 /* tunable constants for rehashing */
-#define HASH_REHASH_MULTIPLIER	4
-#define HASH_REHASH_FACTOR	2
+#define HASH_REHASH_MULTIPLIER 4
+#define HASH_REHASH_FACTOR 2
 
-#define HASH_SHOULDGROW(table) \
+#define HASH_SHOULDGROW(table)                                                \
   ((table)->nentries >= (table)->nbuckets * HASH_REHASH_FACTOR)
 
 /* an initial approximation */
-#define HASH_SHOULDSHRINK(table) \
-  (((table)->nbuckets > DEFAULT_HASH_BUCKETS) && \
-   ((table)->nentries < (table)->nbuckets / HASH_REHASH_MULTIPLIER))
+#define HASH_SHOULDSHRINK(table)                                              \
+  (((table)->nbuckets > DEFAULT_HASH_BUCKETS)                                 \
+   && ((table)->nentries < (table)->nbuckets / HASH_REHASH_MULTIPLIER))
 
 /* Rely on properties of unsigned division (unsigned/int -> unsigned) and
    don't discard the upper 32 bits of the value, if present. */
 #define HASH_BUCKET(s, t, h) (((h) = hash_string (s)) & ((t)->nbuckets - 1))
 
-static BUCKET_CONTENTS *copy_bucket_array (BUCKET_CONTENTS *, sh_string_func_t *);
+static BUCKET_CONTENTS *copy_bucket_array (BUCKET_CONTENTS *,
+                                           sh_string_func_t *);
 
 static void hash_rehash (HASH_TABLE *, int);
 static void hash_grow (HASH_TABLE *);
@@ -64,8 +66,8 @@ hash_create (int buckets)
   if (buckets == 0)
     buckets = DEFAULT_HASH_BUCKETS;
 
-  new_table->bucket_array =
-    (BUCKET_CONTENTS **)xmalloc (buckets * sizeof (BUCKET_CONTENTS *));
+  new_table->bucket_array
+      = (BUCKET_CONTENTS **)xmalloc (buckets * sizeof (BUCKET_CONTENTS *));
   new_table->nbuckets = buckets;
   new_table->nentries = 0;
 
@@ -78,12 +80,12 @@ hash_create (int buckets)
 int
 hash_size (HASH_TABLE *table)
 {
-  return HASH_ENTRIES(table);
+  return HASH_ENTRIES (table);
 }
 
 static BUCKET_CONTENTS *
 copy_bucket_array (BUCKET_CONTENTS *ba,
-                   sh_string_func_t *cpdata)	/* data copy function */
+                   sh_string_func_t *cpdata) /* data copy function */
 {
   BUCKET_CONTENTS *new_bucket, *n, *e;
 
@@ -104,8 +106,9 @@ copy_bucket_array (BUCKET_CONTENTS *ba,
         }
 
       n->key = savestring (e->key);
-      n->data = e->data ? (cpdata ? (*cpdata) ((char *)(e->data)) : savestring ((char *)(e->data)))
-			: NULL;
+      n->data = e->data ? (cpdata ? (*cpdata) ((char *)(e->data))
+                                  : savestring ((char *)(e->data)))
+                        : NULL;
       n->khash = e->khash;
       n->times_found = e->times_found;
       n->next = (BUCKET_CONTENTS *)NULL;
@@ -127,19 +130,20 @@ hash_rehash (HASH_TABLE *table, int nsize)
   old_bucket_array = table->bucket_array;
 
   table->nbuckets = nsize;
-  table->bucket_array = (BUCKET_CONTENTS **)xmalloc (table->nbuckets * sizeof (BUCKET_CONTENTS *));
+  table->bucket_array = (BUCKET_CONTENTS **)xmalloc (
+      table->nbuckets * sizeof (BUCKET_CONTENTS *));
   for (i = 0; i < table->nbuckets; i++)
     table->bucket_array[i] = (BUCKET_CONTENTS *)NULL;
 
   for (j = 0; j < osize; j++)
     {
       for (item = old_bucket_array[j]; item; item = next)
-	{
-	  next = item->next;
-	  i = item->khash & (table->nbuckets - 1);
-	  item->next = table->bucket_array[i];
-	  table->bucket_array[i] = item;
-	}
+        {
+          next = item->next;
+          i = item->khash & (table->nbuckets - 1);
+          item->next = table->bucket_array[i];
+          table->bucket_array[i] = item;
+        }
     }
 
   free (old_bucket_array);
@@ -151,7 +155,7 @@ hash_grow (HASH_TABLE *table)
   int nsize;
 
   nsize = table->nbuckets * HASH_REHASH_MULTIPLIER;
-  if (nsize > 0)		/* overflow */
+  if (nsize > 0) /* overflow */
     hash_rehash (table, nsize);
 }
 
@@ -176,7 +180,8 @@ hash_copy (HASH_TABLE *table, sh_string_func_t *cpdata)
   new_table = hash_create (table->nbuckets);
 
   for (i = 0; i < table->nbuckets; i++)
-    new_table->bucket_array[i] = copy_bucket_array (table->bucket_array[i], cpdata);
+    new_table->bucket_array[i]
+        = copy_bucket_array (table->bucket_array[i], cpdata);
 
   new_table->nentries = table->nentries;
   return new_table;
@@ -208,7 +213,7 @@ hash_string (const char *s)
       /* FNV-1a has the XOR first, traditional FNV-1 has the multiply first */
 
       /* was i *= FNV_PRIME */
-      i += (i<<1) + (i<<4) + (i<<7) + (i<<8) + (i<<24);
+      i += (i << 1) + (i << 4) + (i << 7) + (i << 8) + (i << 24);
       i ^= *s;
     }
 
@@ -240,30 +245,31 @@ hash_search (const char *string, HASH_TABLE *table, int flags)
 
   bucket = HASH_BUCKET (string, table, hv);
 
-  for (list = table->bucket_array ? table->bucket_array[bucket] : 0; list; list = list->next)
+  for (list = table->bucket_array ? table->bucket_array[bucket] : 0; list;
+       list = list->next)
     {
       /* This is the comparison function */
       if (hv == list->khash && STREQ (list->key, string))
-	{
-	  list->times_found++;
-	  return list;
-	}
+        {
+          list->times_found++;
+          return list;
+        }
     }
 
   if (flags & HASH_CREATE)
     {
       if (HASH_SHOULDGROW (table))
-	{
-	  hash_grow (table);
-	  bucket = HASH_BUCKET (string, table, hv);
-	}
+        {
+          hash_grow (table);
+          bucket = HASH_BUCKET (string, table, hv);
+        }
 
       list = (BUCKET_CONTENTS *)xmalloc (sizeof (BUCKET_CONTENTS));
       list->next = table->bucket_array[bucket];
       table->bucket_array[bucket] = list;
 
       list->data = NULL;
-      list->key = (char *)string;	/* XXX fix later */
+      list->key = (char *)string; /* XXX fix later */
       list->khash = hv;
       list->times_found = 0;
 
@@ -292,18 +298,18 @@ hash_remove (const char *string, HASH_TABLE *table, int flags)
   for (temp = table->bucket_array[bucket]; temp; temp = temp->next)
     {
       if (hv == temp->khash && STREQ (temp->key, string))
-	{
-	  if (prev)
-	    prev->next = temp->next;
-	  else
-	    table->bucket_array[bucket] = temp->next;
+        {
+          if (prev)
+            prev->next = temp->next;
+          else
+            table->bucket_array[bucket] = temp->next;
 
-	  table->nentries--;
-	  return temp;
-	}
+          table->nentries--;
+          return temp;
+        }
       prev = temp;
     }
-  return (BUCKET_CONTENTS *) NULL;
+  return (BUCKET_CONTENTS *)NULL;
 }
 
 /* Create an entry for STRING, in TABLE.  If the entry already
@@ -319,12 +325,12 @@ hash_insert (char *string, HASH_TABLE *table, int flags)
     table = hash_create (0);
 
   item = (flags & HASH_NOSRCH) ? (BUCKET_CONTENTS *)NULL
-  			       : hash_search (string, table, 0);
+                               : hash_search (string, table, 0);
 
   if (item == 0)
     {
       if (HASH_SHOULDGROW (table))
-	hash_grow (table);
+        hash_grow (table);
 
       bucket = HASH_BUCKET (string, table, hv);
 
@@ -360,17 +366,17 @@ hash_flush (HASH_TABLE *table, sh_free_func_t *free_data)
       bucket = table->bucket_array[i];
 
       while (bucket)
-	{
-	  item = bucket;
-	  bucket = bucket->next;
+        {
+          item = bucket;
+          bucket = bucket->next;
 
-	  if (free_data)
-	    (*free_data) (item->data);
-	  else
-	    free (item->data);
-	  free (item->key);
-	  free (item);
-	}
+          if (free_data)
+            (*free_data) (item->data);
+          else
+            free (item->data);
+          free (item->key);
+          free (item);
+        }
       table->bucket_array[i] = (BUCKET_CONTENTS *)NULL;
     }
 
@@ -397,12 +403,12 @@ hash_walk (HASH_TABLE *table, hash_wfunc *func)
   for (i = 0; i < table->nbuckets; i++)
     {
       for (item = hash_items (i, table); item; item = item->next)
-	if ((*func) (item) < 0)
-	  return;
+        if ((*func) (item) < 0)
+          return;
     }
 }
 
-#if defined (DEBUG) || defined (TEST_HASHING)
+#if defined(DEBUG) || defined(TEST_HASHING)
 void
 hash_pstats (HASH_TABLE *table, char *name)
 {
@@ -412,7 +418,8 @@ hash_pstats (HASH_TABLE *table, char *name)
   if (name == 0)
     name = "unknown hash table";
 
-  fprintf (stderr, "%s: %d buckets; %d items\n", name, table->nbuckets, table->nentries);
+  fprintf (stderr, "%s: %d buckets; %d items\n", name, table->nbuckets,
+           table->nentries);
 
   /* Print out a count of how many strings hashed to each bucket, so we can
      see how even the distribution is. */
@@ -422,7 +429,7 @@ hash_pstats (HASH_TABLE *table, char *name)
 
       fprintf (stderr, "\tslot %3d: ", slot);
       for (bcount = 0; bc; bc = bc->next)
-	bcount++;
+        bcount++;
 
       fprintf (stderr, "%d\n", bcount);
     }
@@ -453,13 +460,13 @@ signal_is_trapped (int s)
 void
 programming_error (const char *format, ...)
 {
-  abort();
+  abort ();
 }
 
 void
 fatal_error (const char *format, ...)
 {
-  abort();
+  abort ();
 }
 
 void
@@ -474,7 +481,7 @@ main ()
   int count = 0;
   BUCKET_CONTENTS *tt;
 
-#if defined (TEST_NBUCKETS)
+#if defined(TEST_NBUCKETS)
   table = hash_create (TEST_NBUCKETS);
 #else
   table = hash_create (0);
@@ -484,20 +491,20 @@ main ()
     {
       char *temp_string;
       if (fgets (string, sizeof (string), stdin) == 0)
-	break;
+        break;
       if (!*string)
-	break;
+        break;
       temp_string = savestring (string);
       tt = hash_insert (temp_string, table, 0);
       if (tt->times_found)
-	{
-	  fprintf (stderr, "You have already added item `%s'\n", string);
-	  free (temp_string);
-	}
+        {
+          fprintf (stderr, "You have already added item `%s'\n", string);
+          free (temp_string);
+        }
       else
-	{
-	  count++;
-	}
+        {
+          count++;
+        }
     }
 
   hash_pstats (table, "hash test");
@@ -511,4 +518,4 @@ main ()
 
 #endif /* TEST_HASHING */
 
-}  // namespace bash
+} // namespace bash

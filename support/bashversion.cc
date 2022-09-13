@@ -24,21 +24,21 @@
 #include <cstdlib>
 #include <cstring>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "version.h"
-#include "conftypes.h"
 #include "bashtypes.h"
+#include "conftypes.h"
+#include "version.h"
 
-#define RFLAG	0x0001
-#define VFLAG	0x0002
-#define MFLAG	0x0004
-#define PFLAG	0x0008
-#define SFLAG	0x0010
-#define LFLAG	0x0020
-#define XFLAG	0x0040
+#define RFLAG 0x0001
+#define VFLAG 0x0002
+#define MFLAG 0x0004
+#define PFLAG 0x0008
+#define SFLAG 0x0010
+#define LFLAG 0x0020
+#define XFLAG 0x0040
 
 extern int optind;
 extern char *optarg;
@@ -49,14 +49,14 @@ namespace bash
 extern char *shell_version_string (void);
 extern void show_shell_version (bool);
 
-}  // namespace bash
+} // namespace bash
 
 static const char *progname;
 
 static void
-usage()
+usage ()
 {
-  std::fprintf(stderr, "%s: usage: %s [-hrvpmlsx]\n", progname, progname);
+  std::fprintf (stderr, "%s: usage: %s [-hrvpmlsx]\n", progname, progname);
 }
 
 int
@@ -72,38 +72,38 @@ main (int argc, char **argv)
     progname = argv[0];
 
   oflags = 0;
-  while ((opt = ::getopt(argc, argv, "hrvmpslx")) != EOF)
+  while ((opt = ::getopt (argc, argv, "hrvmpslx")) != EOF)
     {
       switch (opt)
-	{
-	case 'h':
-	  usage ();
-	  std::exit (0);
-	case 'r':
-	  oflags |= RFLAG;	/* release */
-	  break;
-	case 'v':
-	  oflags |= VFLAG;	/* version */
-	  break;
-	case 'm':
-	  oflags |= MFLAG;	/* machtype */
-	  break;
-	case 'p':
-	  oflags |= PFLAG;	/* patchlevel */
-	  break;
-	case 's':		/* short version string */
-	  oflags |= SFLAG;
-	  break;
-	case 'l':		/* long version string */
-	  oflags |= LFLAG;
-	  break;
-	case 'x':		/* extended version information */
-	  oflags |= XFLAG;
-	  break;
-	default:
-	  usage ();
-	  std::exit (2);
-	}
+        {
+        case 'h':
+          usage ();
+          std::exit (0);
+        case 'r':
+          oflags |= RFLAG; /* release */
+          break;
+        case 'v':
+          oflags |= VFLAG; /* version */
+          break;
+        case 'm':
+          oflags |= MFLAG; /* machtype */
+          break;
+        case 'p':
+          oflags |= PFLAG; /* patchlevel */
+          break;
+        case 's': /* short version string */
+          oflags |= SFLAG;
+          break;
+        case 'l': /* long version string */
+          oflags |= LFLAG;
+          break;
+        case 'x': /* extended version information */
+          oflags |= XFLAG;
+          break;
+        default:
+          usage ();
+          std::exit (2);
+        }
     }
 
   argc -= optind;
@@ -126,7 +126,7 @@ main (int argc, char **argv)
       if (rv)
         *rv++ = '\0';
       else
-        rv = const_cast<char *>("00");
+        rv = const_cast<char *> ("00");
     }
   if (oflags & RFLAG)
     std::printf ("%s\n", dv);

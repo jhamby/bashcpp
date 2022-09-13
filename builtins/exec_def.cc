@@ -46,30 +46,30 @@
 #include "bashtypes.hh"
 #include "posixstat.hh"
 
-#include <csignal>
 #include <cerrno>
+#include <csignal>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <cstdio>
 
 #include "bashintl.hh"
 
-#include "shell.hh"
 #include "execute_cmd.hh"
 #include "findcmd.hh"
+#include "shell.hh"
 
-#if defined (JOB_CONTROL)
-#  include "jobs.hh"
+#if defined(JOB_CONTROL)
+#include "jobs.hh"
 #endif
 
-#include "flags.hh"
-#include "trap.hh"
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "common.hh"
+#include "flags.hh"
 #include "input.hh"
+#include "trap.hh"
 
 namespace bash
 {
@@ -106,21 +106,21 @@ Shell::exec_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "cla:")) != -1)
     {
       switch (opt)
-	{
-	case 'c':
-	  cleanenv = 1;
-	  break;
-	case 'l':
-	  login = 1;
-	  break;
-	case 'a':
-	  argv0 = list_optarg;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+        case 'c':
+          cleanenv = 1;
+          break;
+        case 'l':
+          login = 1;
+          break;
+        case 'a':
+          argv0 = list_optarg;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
   list = loptend;
 
@@ -131,7 +131,7 @@ Shell::exec_builtin (WORD_LIST *list)
   if (list == 0)
     return EXECUTION_SUCCESS;
 
-#if defined (RESTRICTED_SHELL)
+#if defined(RESTRICTED_SHELL)
   if (restricted)
     {
       sh_restricted ((char *)NULL);
@@ -143,24 +143,27 @@ Shell::exec_builtin (WORD_LIST *list)
   env = (char **)0;
 
   /* A command with a slash anywhere in its name is not looked up in $PATH. */
-  command = absolute_program (args[0]) ? args[0] : search_for_command (args[0], 1);
+  command
+      = absolute_program (args[0]) ? args[0] : search_for_command (args[0], 1);
 
   if (command == 0)
     {
       if (file_isdir (args[0]))
-	{
-#if defined (EISDIR)
-	  builtin_error (_("%s: cannot execute: %s"), args[0], strerror (EISDIR));
+        {
+#if defined(EISDIR)
+          builtin_error (_ ("%s: cannot execute: %s"), args[0],
+                         strerror (EISDIR));
 #else
-	  builtin_error (_("%s: cannot execute: %s"), args[0], strerror (errno));
+          builtin_error (_ ("%s: cannot execute: %s"), args[0],
+                         strerror (errno));
 #endif
-	  exit_value = EX_NOEXEC;
-	}
+          exit_value = EX_NOEXEC;
+        }
       else
-	{
-	  sh_notfound (args[0]);
-	  exit_value = EX_NOTFOUND;	/* As per Posix.2, 3.14.6 */
-	}
+        {
+          sh_notfound (args[0]);
+          exit_value = EX_NOTFOUND; /* As per Posix.2, 3.14.6 */
+        }
       goto failed_exec;
     }
 
@@ -168,7 +171,7 @@ Shell::exec_builtin (WORD_LIST *list)
   if (com2)
     {
       if (command != args[0])
-	free (command);
+        free (command);
       command = com2;
     }
 
@@ -205,22 +208,22 @@ Shell::exec_builtin (WORD_LIST *list)
       env = export_env;
     }
 
-#if defined (HISTORY)
+#if defined(HISTORY)
   if (interactive_shell && subshell_environment == 0)
     maybe_save_shell_history ();
 #endif /* HISTORY */
 
   restore_original_signals ();
 
-#if defined (JOB_CONTROL)
-  orig_job_control = job_control;	/* XXX - was also interactive_shell */
+#if defined(JOB_CONTROL)
+  orig_job_control = job_control; /* XXX - was also interactive_shell */
   if (subshell_environment == 0)
     end_job_control ();
   if (interactive || job_control)
-    default_tty_job_signals ();		/* undo initialize_job_signals */
-#endif /* JOB_CONTROL */
+    default_tty_job_signals (); /* undo initialize_job_signals */
+#endif                          /* JOB_CONTROL */
 
-#if defined (BUFFERED_INPUT)
+#if defined(BUFFERED_INPUT)
   if (default_buffered_input >= 0)
     sync_buffered_stream (default_buffered_input);
 #endif
@@ -234,12 +237,12 @@ Shell::exec_builtin (WORD_LIST *list)
   if (cleanenv == 0)
     adjust_shell_level (1);
 
-  if (exit_value == EX_NOTFOUND)	/* no duplicate error message */
+  if (exit_value == EX_NOTFOUND) /* no duplicate error message */
     goto failed_exec;
   else if (executable_file (command) == 0)
     {
-      builtin_error (_("%s: cannot execute: %s"), command, strerror (errno));
-      exit_value = EX_NOEXEC;	/* As per Posix.2, 3.14.6 */
+      builtin_error (_ ("%s: cannot execute: %s"), command, strerror (errno));
+      exit_value = EX_NOEXEC; /* As per Posix.2, 3.14.6 */
     }
   else
     file_error (command);
@@ -247,7 +250,8 @@ Shell::exec_builtin (WORD_LIST *list)
 failed_exec:
   FREE (command);
 
-  if (subshell_environment || (interactive == 0 && no_exit_on_failed_exec == 0))
+  if (subshell_environment
+      || (interactive == 0 && no_exit_on_failed_exec == 0))
     exit_shell (exit_value);
 
   if (args)
@@ -259,7 +263,7 @@ failed_exec:
   initialize_traps ();
   initialize_signals (1);
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
   if (orig_job_control)
     restart_job_control ();
 #endif /* JOB_CONTROL */
@@ -267,4 +271,4 @@ failed_exec:
   return exit_value;
 }
 
-}  // namespace bash
+} // namespace bash

@@ -1,4 +1,5 @@
-/* accept - listen for and accept a remote network connection on a given port */
+/* accept - listen for and accept a remote network connection on a given port
+ */
 
 /*
    Copyright (C) 2020 Free Software Foundation, Inc.
@@ -20,21 +21,21 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
+#include "bashtypes.hh"
+#include "typemax.hh"
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include "bashtypes.hh"
-#include <errno.h>
 #include <time.h>
-#include "typemax.hh"
+#include <unistd.h>
 
-#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 
 #include "loadables.hh"
 
@@ -42,7 +43,7 @@ static int accept_bind_variable (char *, int);
 
 int
 accept_builtin (list)
-     WORD_LIST *list;
+WORD_LIST *list;
 {
   WORD_LIST *l;
   SHELL_VAR *v;
@@ -62,21 +63,21 @@ accept_builtin (list)
   while ((opt = internal_getopt (list, "r:t:v:")) != -1)
     {
       switch (opt)
-	{
-	case 'r':
-	  rhostvar = list_optarg;
-	  break;
-	case 't':
-	  tmoutarg = list_optarg;
-	  break;
-	case 'v':
-	  fdvar = list_optarg;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return (EX_USAGE);
-	}
+        {
+        case 'r':
+          rhostvar = list_optarg;
+          break;
+        case 't':
+          tmoutarg = list_optarg;
+          break;
+        case 'v':
+          fdvar = list_optarg;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return (EX_USAGE);
+        }
     }
 
   list = loptend;
@@ -87,10 +88,10 @@ accept_builtin (list)
       long ival, uval;
       opt = uconvert (tmoutarg, &ival, &uval, (char **)0);
       if (opt == 0 || ival < 0 || uval < 0)
-	{
-	  builtin_error ("%s: invalid timeout specification", tmoutarg);
-	  return (EXECUTION_FAILURE);
-	}
+        {
+          builtin_error ("%s: invalid timeout specification", tmoutarg);
+          return (EXECUTION_FAILURE);
+        }
       timeval.tv_sec = ival;
       timeval.tv_usec = uval;
       /* XXX - should we warn if ival == uval == 0 ? */
@@ -102,7 +103,8 @@ accept_builtin (list)
       return (EX_USAGE);
     }
 
-  if (legal_number (list->word->word, &iport) == 0 || iport < 0 || iport > TYPE_MAXIMUM (unsigned short))
+  if (legal_number (list->word->word, &iport) == 0 || iport < 0
+      || iport > TYPE_MAXIMUM (unsigned short))
     {
       builtin_error ("%s: invalid port number", list->word->word);
       return (EXECUTION_FAILURE);
@@ -124,8 +126,8 @@ accept_builtin (list)
 
   memset ((char *)&server, 0, sizeof (server));
   server.sin_family = AF_INET;
-  server.sin_port = htons(uport);
-  server.sin_addr.s_addr = htonl(INADDR_ANY);
+  server.sin_port = htons (uport);
+  server.sin_addr.s_addr = htonl (INADDR_ANY);
 
   if (bind (servsock, (struct sockaddr *)&server, sizeof (server)) < 0)
     {
@@ -136,7 +138,8 @@ accept_builtin (list)
 
   opt = 1;
   setsockopt (servsock, SOL_SOCKET, SO_REUSEADDR, (void *)&opt, sizeof (opt));
-  setsockopt (servsock, SOL_SOCKET, SO_LINGER, (void *)&linger, sizeof (linger));
+  setsockopt (servsock, SOL_SOCKET, SO_LINGER, (void *)&linger,
+              sizeof (linger));
 
   if (listen (servsock, 1) < 0)
     {
@@ -149,10 +152,10 @@ accept_builtin (list)
     {
       fd_set iofds;
 
-      FD_ZERO(&iofds);
-      FD_SET(servsock, &iofds);
+      FD_ZERO (&iofds);
+      FD_SET (servsock, &iofds);
 
-      opt = select (servsock+1, &iofds, 0, 0, &timeval);
+      opt = select (servsock + 1, &iofds, 0, 0, &timeval);
       if (opt < 0)
         builtin_error ("select failure: %s", strerror (errno));
       if (opt <= 0)
@@ -163,7 +166,8 @@ accept_builtin (list)
     }
 
   clientlen = sizeof (client);
-  if ((clisock = accept (servsock, (struct sockaddr *)&client, &clientlen)) < 0)
+  if ((clisock = accept (servsock, (struct sockaddr *)&client, &clientlen))
+      < 0)
     {
       builtin_error ("client accept failure: %s", strerror (errno));
       close (servsock);
@@ -178,7 +182,7 @@ accept_builtin (list)
       rhost = inet_ntoa (client.sin_addr);
       v = builtin_bind_variable (rhostvar, rhost, 0);
       if (v == 0 || readonly_p (v) || noassign_p (v))
-	builtin_error ("%s: cannot set variable", rhostvar);
+        builtin_error ("%s: cannot set variable", rhostvar);
     }
 
   return (EXECUTION_SUCCESS);
@@ -186,8 +190,8 @@ accept_builtin (list)
 
 static int
 accept_bind_variable (varname, intval)
-     char *varname;
-     int intval;
+char *varname;
+int intval;
 {
   SHELL_VAR *v;
   char ibuf[INT_STRLEN_BOUND (int) + 1], *p;
@@ -200,35 +204,37 @@ accept_bind_variable (varname, intval)
 }
 
 char *accept_doc[] = {
-	"Accept a network connection on a specified port.",
-	""
-	"This builtin allows a bash script to act as a TCP/IP server.",
-	"",
-	"Options, if supplied, have the following meanings:",
-	"    -t timeout    wait TIMEOUT seconds for a connection. TIMEOUT may",
-	"                  be a decimal number including a fractional portion",
-	"    -v varname    store the numeric file descriptor of the connected",
-	"                  socket into VARNAME. The default VARNAME is ACCEPT_FD",
-	"    -r rhost      store the IP address of the remote host into the shell",
-	"                  variable RHOST, in dotted-decimal notation",
-	"",
-	"If successful, the shell variable ACCEPT_FD, or the variable named by the",
-	"-v option, will be set to the fd of the connected socket, suitable for",
-	"use as 'read -u$ACCEPT_FD'. RHOST, if supplied, will hold the IP address",
-	"of the remote client. The return status is 0.",
-	"",
-	"On failure, the return status is 1 and ACCEPT_FD (or VARNAME) and RHOST,",
-	"if supplied, will be unset.",
-	"",
-	"The server socket fd will be closed before accept returns.",
-	(char *) NULL
+  "Accept a network connection on a specified port.",
+  ""
+  "This builtin allows a bash script to act as a TCP/IP server.",
+  "",
+  "Options, if supplied, have the following meanings:",
+  "    -t timeout    wait TIMEOUT seconds for a connection. TIMEOUT may",
+  "                  be a decimal number including a fractional portion",
+  "    -v varname    store the numeric file descriptor of the connected",
+  "                  socket into VARNAME. The default VARNAME is ACCEPT_FD",
+  "    -r rhost      store the IP address of the remote host into the shell",
+  "                  variable RHOST, in dotted-decimal notation",
+  "",
+  "If successful, the shell variable ACCEPT_FD, or the variable named by the",
+  "-v option, will be set to the fd of the connected socket, suitable for",
+  "use as 'read -u$ACCEPT_FD'. RHOST, if supplied, will hold the IP address",
+  "of the remote client. The return status is 0.",
+  "",
+  "On failure, the return status is 1 and ACCEPT_FD (or VARNAME) and RHOST,",
+  "if supplied, will be unset.",
+  "",
+  "The server socket fd will be closed before accept returns.",
+  (char *)NULL
 };
 
 struct builtin accept_struct = {
-	"accept",		/* builtin name */
-	accept_builtin,		/* function implementing the builtin */
-	BUILTIN_ENABLED,	/* initial flags for builtin */
-	accept_doc,		/* array of long documentation strings. */
-	"accept [-t timeout] [-v varname] [-r addrvar ] port",		/* usage synopsis; becomes short_doc */
-	0			/* reserved for internal use */
+  "accept",        /* builtin name */
+  accept_builtin,  /* function implementing the builtin */
+  BUILTIN_ENABLED, /* initial flags for builtin */
+  accept_doc,      /* array of long documentation strings. */
+  "accept [-t timeout] [-v varname] [-r addrvar ] port", /* usage synopsis;
+                                                            becomes short_doc
+                                                          */
+  0 /* reserved for internal use */
 };

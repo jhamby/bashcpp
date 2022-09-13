@@ -23,16 +23,16 @@
 #include "config.hh"
 
 #include "bashtypes.hh"
+#include "filecntl.hh"
 #include "posixstat.hh"
 #include "posixtime.hh"
-#include "filecntl.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include <cstdio>
 #include <cerrno>
+#include <cstdio>
 #include <cstdlib>
 
 #include "shell.hh"
@@ -40,14 +40,14 @@
 namespace bash
 {
 
-#define BASEOPENFLAGS	(O_CREAT | O_TRUNC | O_EXCL | O_BINARY)
+#define BASEOPENFLAGS (O_CREAT | O_TRUNC | O_EXCL | O_BINARY)
 
-#define DEFAULT_TMPDIR		"."	/* bogus default, should be changed */
-#define DEFAULT_NAMEROOT	"shtmp"
+#define DEFAULT_TMPDIR "." /* bogus default, should be changed */
+#define DEFAULT_NAMEROOT "shtmp"
 
 /* Use ANSI-C rand() interface if random(3) is not available */
-#if !defined (HAVE_RANDOM)
-#define random() rand()
+#if !defined(HAVE_RANDOM)
+#define random() rand ()
 #endif
 
 #if 0
@@ -99,7 +99,7 @@ Shell::get_tmpdir (int flags)
   if (tdir == nullptr)
     tdir = get_sys_tmpdir ();
 
-#if defined (HAVE_PATHCONF) && defined (_PC_NAME_MAX)
+#if defined(HAVE_PATHCONF) && defined(_PC_NAME_MAX)
   if (tmpnamelen == -1)
     tmpnamelen = ::pathconf (tdir, _PC_NAME_MAX);
 #else
@@ -155,24 +155,24 @@ sh_mktmpname (char *nameroot, int flags)
       delete[] filename;
       filename = nullptr;
     }
-#else  /* !USE_MKTEMP */
+#else /* !USE_MKTEMP */
   sh_seedrand ();
   while (1)
     {
-      filenum = (filenum << 1) ^
-		(unsigned long) std::time (nullptr) ^
-		(unsigned long) dollar_dollar_pid ^
-		(unsigned long) ((flags & MT_USERANDOM) ? std::random () : ntmpfiles++);
+      filenum = (filenum << 1) ^ (unsigned long)std::time (nullptr)
+                ^ (unsigned long)dollar_dollar_pid
+                ^ (unsigned long)((flags & MT_USERANDOM) ? std::random ()
+                                                         : ntmpfiles++);
       std::sprintf (filename, "%s/%s-%lu", tdir, lroot, filenum);
       if (tmpnamelen > 0 && tmpnamelen < 32)
-	filename[tdlen + 1 + tmpnamelen] = '\0';
-#  ifdef HAVE_LSTAT
+        filename[tdlen + 1 + tmpnamelen] = '\0';
+#ifdef HAVE_LSTAT
       r = ::lstat (filename, &sb);
-#  else
+#else
       r = ::stat (filename, &sb);
-#  endif
+#endif
       if (r < 0 && errno == ENOENT)
-	break;
+        break;
     }
 #endif /* !USE_MKTEMP */
 
@@ -209,18 +209,20 @@ sh_mktmpfd (const char *nameroot, int flags, char **namep)
   if (namep)
     *namep = filename;
   return fd;
-#else /* !USE_MKSTEMP */
+#else  /* !USE_MKSTEMP */
   sh_seedrand ();
   do
     {
-      filenum = (filenum << 1) ^
-		(unsigned long) std::time (nullptr) ^
-		(unsigned long) dollar_dollar_pid ^
-		(unsigned long) ((flags & MT_USERANDOM) ? std::random () : ntmpfiles++);
+      filenum = (filenum << 1) ^ (unsigned long)std::time (nullptr)
+                ^ (unsigned long)dollar_dollar_pid
+                ^ (unsigned long)((flags & MT_USERANDOM) ? std::random ()
+                                                         : ntmpfiles++);
       std::sprintf (filename, "%s/%s-%lu", tdir, lroot, filenum);
       if (tmpnamelen > 0 && tmpnamelen < 32)
-	filename[tdlen + 1 + tmpnamelen] = '\0';
-      fd = ::open (filename, BASEOPENFLAGS | ((flags & MT_READWRITE) ? O_RDWR : O_WRONLY), 0600);
+        filename[tdlen + 1 + tmpnamelen] = '\0';
+      fd = ::open (
+          filename,
+          BASEOPENFLAGS | ((flags & MT_READWRITE) ? O_RDWR : O_WRONLY), 0600);
     }
   while (fd < 0 && errno == EEXIST);
 
@@ -274,7 +276,7 @@ sh_mktmpdir (char *nameroot, int flags)
       filename = nullptr;
     }
   return dirname;
-#else /* !USE_MKDTEMP */
+#else  /* !USE_MKDTEMP */
   char *filename = nullptr;
   int fd;
   do
@@ -282,7 +284,7 @@ sh_mktmpdir (char *nameroot, int flags)
       filename = sh_mktmpname (nameroot, flags);
       fd = ::mkdir (filename, 0700);
       if (fd == 0)
-	break;
+        break;
       delete[] filename;
       filename = nullptr;
     }
@@ -292,4 +294,4 @@ sh_mktmpdir (char *nameroot, int flags)
 #endif /* !USE_MKDTEMP */
 }
 
-}  // namespace bash
+} // namespace bash

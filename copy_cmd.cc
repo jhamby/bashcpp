@@ -24,8 +24,8 @@
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "shell.hh"
@@ -40,15 +40,17 @@ copy_word_list (WORD_LIST *list)
 {
   WORD_LIST *new_list, *tl;
 
-  for (new_list = tl = (WORD_LIST *)NULL; list; list = (WORD_LIST *)(list->next))
+  for (new_list = tl = (WORD_LIST *)NULL; list;
+       list = (WORD_LIST *)(list->next))
     {
       if (new_list == 0)
-	new_list = tl = make_word_list (copy_word (list->word), new_list);
+        new_list = tl = make_word_list (copy_word (list->word), new_list);
       else
-	{
-	  tl->next = make_word_list (copy_word (list->word), (WORD_LIST *)NULL);
-	  tl = (WORD_LIST *)(tl->next);
-	}
+        {
+          tl->next
+              = make_word_list (copy_word (list->word), (WORD_LIST *)NULL);
+          tl = (WORD_LIST *)(tl->next);
+        }
     }
 
   return new_list;
@@ -90,17 +92,19 @@ copy_redirect (REDIRECT *redirect)
 #if 0
   FASTCOPY ((char *)redirect, (char *)new_redirect, (sizeof (REDIRECT)));
 #else
-  *new_redirect = *redirect;	/* let the compiler do the fast structure copy */
+  *new_redirect = *redirect; /* let the compiler do the fast structure copy */
 #endif
 
   if (redirect->rflags & REDIR_VARASSIGN)
-    new_redirect->redirector.filename = copy_word (redirect->redirector.filename);
+    new_redirect->redirector.filename
+        = copy_word (redirect->redirector.filename);
 
   switch (redirect->instruction)
     {
     case r_reading_until:
     case r_deblank_reading_until:
-      new_redirect->here_doc_eof = redirect->here_doc_eof ? savestring (redirect->here_doc_eof) : 0;
+      new_redirect->here_doc_eof
+          = redirect->here_doc_eof ? savestring (redirect->here_doc_eof) : 0;
       /*FALLTHROUGH*/
     case r_reading_string:
     case r_appending_to:
@@ -115,7 +119,8 @@ copy_redirect (REDIRECT *redirect)
     case r_duplicating_output_word:
     case r_move_input_word:
     case r_move_output_word:
-      new_redirect->redirectee.filename = copy_word (redirect->redirectee.filename);
+      new_redirect->redirectee.filename
+          = copy_word (redirect->redirectee.filename);
       break;
     case r_duplicating_input:
     case r_duplicating_output:
@@ -155,7 +160,7 @@ copy_for_command (FOR_COM *com)
   return new_for;
 }
 
-#if defined (ARITH_FOR_COMMAND)
+#if defined(ARITH_FOR_COMMAND)
 static ARITH_FOR_COM *
 copy_arith_for_command (ARITH_FOR_COM *com)
 {
@@ -240,11 +245,12 @@ copy_if_command (IF_COM *com)
   new_if->flags = com->flags;
   new_if->test = copy_command (com->test);
   new_if->true_case = copy_command (com->true_case);
-  new_if->false_case = com->false_case ? copy_command (com->false_case) : com->false_case;
+  new_if->false_case
+      = com->false_case ? copy_command (com->false_case) : com->false_case;
   return new_if;
 }
 
-#if defined (DPAREN_ARITHMETIC)
+#if defined(DPAREN_ARITHMETIC)
 static ARITH_COM *
 copy_arith_command (ARITH_COM *com)
 {
@@ -259,7 +265,7 @@ copy_arith_command (ARITH_COM *com)
 }
 #endif
 
-#if defined (COND_COMMAND)
+#if defined(COND_COMMAND)
 static COND_COM *
 copy_cond_command (COND_COM *com)
 {
@@ -270,8 +276,10 @@ copy_cond_command (COND_COM *com)
   new_cond->line = com->line;
   new_cond->type = com->type;
   new_cond->op = com->op ? copy_word (com->op) : com->op;
-  new_cond->left = com->left ? copy_cond_command (com->left) : (COND_COM *)NULL;
-  new_cond->right = com->right ? copy_cond_command (com->right) : (COND_COM *)NULL;
+  new_cond->left
+      = com->left ? copy_cond_command (com->left) : (COND_COM *)NULL;
+  new_cond->right
+      = com->right ? copy_cond_command (com->right) : (COND_COM *)NULL;
 
   return new_cond;
 }
@@ -285,7 +293,8 @@ copy_simple_command (SIMPLE_COM *com)
   new_simple = (SIMPLE_COM *)xmalloc (sizeof (SIMPLE_COM));
   new_simple->flags = com->flags;
   new_simple->words = copy_word_list (com->words);
-  new_simple->redirects = com->redirects ? copy_redirects (com->redirects) : (REDIRECT *)NULL;
+  new_simple->redirects
+      = com->redirects ? copy_redirects (com->redirects) : (REDIRECT *)NULL;
   new_simple->line = com->line;
   return new_simple;
 }
@@ -297,7 +306,8 @@ copy_function_def_contents (FUNCTION_DEF *old, FUNCTION_DEF *new_def)
   new_def->command = old->command ? copy_command (old->command) : old->command;
   new_def->flags = old->flags;
   new_def->line = old->line;
-  new_def->source_file = old->source_file ? savestring (old->source_file) : old->source_file;
+  new_def->source_file
+      = old->source_file ? savestring (old->source_file) : old->source_file;
   return new_def;
 }
 
@@ -332,81 +342,86 @@ copy_command (COMMAND *command)
 
   switch (command->type)
     {
-      case cm_for:
-	new_command->value.For = copy_for_command (command->value.For);
-	break;
+    case cm_for:
+      new_command->value.For = copy_for_command (command->value.For);
+      break;
 
-#if defined (ARITH_FOR_COMMAND)
-      case cm_arith_for:
-	new_command->value.ArithFor = copy_arith_for_command (command->value.ArithFor);
-	break;
+#if defined(ARITH_FOR_COMMAND)
+    case cm_arith_for:
+      new_command->value.ArithFor
+          = copy_arith_for_command (command->value.ArithFor);
+      break;
 #endif
 
-#if defined (SELECT_COMMAND)
-      case cm_select:
-	new_command->value.Select =
-	  (SELECT_COM *)copy_for_command ((FOR_COM *)command->value.Select);
-	break;
+#if defined(SELECT_COMMAND)
+    case cm_select:
+      new_command->value.Select
+          = (SELECT_COM *)copy_for_command ((FOR_COM *)command->value.Select);
+      break;
 #endif
 
-      case cm_group:
-	new_command->value.Group = copy_group_command (command->value.Group);
-	break;
+    case cm_group:
+      new_command->value.Group = copy_group_command (command->value.Group);
+      break;
 
-      case cm_subshell:
-	new_command->value.Subshell = copy_subshell_command (command->value.Subshell);
-	break;
+    case cm_subshell:
+      new_command->value.Subshell
+          = copy_subshell_command (command->value.Subshell);
+      break;
 
-      case cm_coproc:
-	new_command->value.Coproc = copy_coproc_command (command->value.Coproc);
-	break;
+    case cm_coproc:
+      new_command->value.Coproc = copy_coproc_command (command->value.Coproc);
+      break;
 
-      case cm_case:
-	new_command->value.Case = copy_case_command (command->value.Case);
-	break;
+    case cm_case:
+      new_command->value.Case = copy_case_command (command->value.Case);
+      break;
 
-      case cm_until:
-      case cm_while:
-	new_command->value.While = copy_while_command (command->value.While);
-	break;
+    case cm_until:
+    case cm_while:
+      new_command->value.While = copy_while_command (command->value.While);
+      break;
 
-      case cm_if:
-	new_command->value.If = copy_if_command (command->value.If);
-	break;
+    case cm_if:
+      new_command->value.If = copy_if_command (command->value.If);
+      break;
 
-#if defined (DPAREN_ARITHMETIC)
-      case cm_arith:
-	new_command->value.Arith = copy_arith_command (command->value.Arith);
-	break;
+#if defined(DPAREN_ARITHMETIC)
+    case cm_arith:
+      new_command->value.Arith = copy_arith_command (command->value.Arith);
+      break;
 #endif
 
-#if defined (COND_COMMAND)
-      case cm_cond:
-	new_command->value.Cond = copy_cond_command (command->value.Cond);
-	break;
+#if defined(COND_COMMAND)
+    case cm_cond:
+      new_command->value.Cond = copy_cond_command (command->value.Cond);
+      break;
 #endif
 
-      case cm_simple:
-	new_command->value.Simple = copy_simple_command (command->value.Simple);
-	break;
+    case cm_simple:
+      new_command->value.Simple = copy_simple_command (command->value.Simple);
+      break;
 
-      case cm_connection:
-	{
-	  CONNECTION *new_connection;
+    case cm_connection:
+      {
+        CONNECTION *new_connection;
 
-	  new_connection = (CONNECTION *)xmalloc (sizeof (CONNECTION));
-	  new_connection->connector = command->value.Connection->connector;
-	  new_connection->first = copy_command (command->value.Connection->first);
-	  new_connection->second = copy_command (command->value.Connection->second);
-	  new_command->value.Connection = new_connection;
-	  break;
-	}
+        new_connection = (CONNECTION *)xmalloc (sizeof (CONNECTION));
+        new_connection->connector = command->value.Connection->connector;
+        new_connection->first
+            = copy_command (command->value.Connection->first);
+        new_connection->second
+            = copy_command (command->value.Connection->second);
+        new_command->value.Connection = new_connection;
+        break;
+      }
 
-      case cm_function_def:
-	new_command->value.Function_def = copy_function_def (command->value.Function_def);
-	break;
+    case cm_function_def:
+      new_command->value.Function_def
+          = copy_function_def (command->value.Function_def);
+      break;
     }
   return new_command;
 }
 
-}  // namespace bash
+} // namespace bash

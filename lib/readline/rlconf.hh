@@ -19,7 +19,7 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_RLCONF_H_)
+#if !defined(_RLCONF_H_)
 #define _RLCONF_H_
 
 /* Define this if you want the vi-mode editing available. */
@@ -68,13 +68,13 @@
 
 /* Defaults for the various editing mode indicators, inserted at the beginning
    of the last (maybe only) line of the prompt if show-mode-in-prompt is on */
-#define RL_EMACS_MODESTR_DEFAULT	"@"
-#define RL_EMACS_MODESTR_DEFLEN		1
+#define RL_EMACS_MODESTR_DEFAULT "@"
+#define RL_EMACS_MODESTR_DEFLEN 1
 
-#define RL_VI_INS_MODESTR_DEFAULT	"(ins)"
-#define RL_VI_INS_MODESTR_DEFLEN	5
-#define RL_VI_CMD_MODESTR_DEFAULT	"(cmd)"
-#define RL_VI_CMD_MODESTR_DEFLEN	5
+#define RL_VI_INS_MODESTR_DEFAULT "(ins)"
+#define RL_VI_INS_MODESTR_DEFLEN 5
+#define RL_VI_CMD_MODESTR_DEFAULT "(cmd)"
+#define RL_VI_CMD_MODESTR_DEFLEN 5
 
 /* What we assume for a max number of kills. */
 #define DEFAULT_MAX_KILLS 10

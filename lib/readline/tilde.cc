@@ -26,13 +26,13 @@
 namespace readline
 {
 
-#if !defined (HAVE_GETPW_DECLS)
-#  if defined (HAVE_GETPWUID)
+#if !defined(HAVE_GETPW_DECLS)
+#if defined(HAVE_GETPWUID)
 extern "C" struct passwd *getpwuid (uid_t);
-#  endif
-#  if defined (HAVE_GETPWNAM)
+#endif
+#if defined(HAVE_GETPWNAM)
 extern "C" struct passwd *getpwnam (const char *);
-#  endif
+#endif
 #endif /* !HAVE_GETPW_DECLS */
 
 static size_t tilde_find_prefix (const char *, size_t *);
@@ -57,16 +57,18 @@ tilde_find_prefix (const char *string, size_t *len)
   if (prefixes)
     {
       for (size_t i = 0; i < string_len; i++)
-	{
-	  for (size_t j = 0; prefixes[j]; j++)
-	    {
-	      if (std::strncmp (string + i, prefixes[j], std::strlen (prefixes[j])) == 0)
-		{
-		  *len = std::strlen (prefixes[j]) - 1;
-		  return i + *len;
-		}
-	    }
-	}
+        {
+          for (size_t j = 0; prefixes[j]; j++)
+            {
+              if (std::strncmp (string + i, prefixes[j],
+                                std::strlen (prefixes[j]))
+                  == 0)
+                {
+                  *len = std::strlen (prefixes[j]) - 1;
+                  return i + *len;
+                }
+            }
+        }
     }
   return string_len;
 }
@@ -82,18 +84,19 @@ tilde_find_suffix (const char *string)
   size_t i;
   for (i = 0; i < string_len; i++)
     {
-#if defined (__MSDOS__)
+#if defined(__MSDOS__)
       if (string[i] == '/' || string[i] == '\\' /* || !string[i] */)
 #else
       if (string[i] == '/' /* || !string[i] */)
 #endif
-	break;
+        break;
 
       for (size_t j = 0; suffixes && suffixes[j]; j++)
-	{
-	  if (std::strncmp (string + i, suffixes[j], std::strlen (suffixes[j])) == 0)
-	    return i;
-	}
+        {
+          if (std::strncmp (string + i, suffixes[j], std::strlen (suffixes[j]))
+              == 0)
+            return i;
+        }
     }
   return i;
 }
@@ -119,12 +122,12 @@ tilde_expand (const char *string)
       string += start;
 
       /* Make END be the index of one after the last character of the
-	 username. */
+         username. */
       size_t end = tilde_find_suffix (string);
 
       /* If both START and END are zero, we are all done. */
       if (!start && !end)
-	break;
+        break;
 
       /* Expand the entire tilde word, and copy it into RESULT. */
       char *tilde_word = new char[1 + end];
@@ -135,18 +138,18 @@ tilde_expand (const char *string)
       char *expansion = tilde_expand_word (tilde_word);
 
       if (expansion == nullptr)
-	expansion = tilde_word;
+        expansion = tilde_word;
       else
-	delete[] tilde_word;
+        delete[] tilde_word;
 
 #ifdef __CYGWIN__
       /* Fix for Cygwin to prevent ~user/xxx from expanding to //xxx when
-	 $HOME for `user' is /.  On cygwin, // denotes a network drive. */
+         $HOME for `user' is /.  On cygwin, // denotes a network drive. */
       if (len > 1 || *expansion != '/' || *string != '/')
 #endif
-	{
-	  result.append (expansion);
-	}
+        {
+          result.append (expansion);
+        }
       delete[] expansion;
     }
 
@@ -163,7 +166,7 @@ isolate_tilde_prefix (const char *fname, size_t *lenp)
   size_t i;
 
   ret = new char[std::strlen (fname)];
-#if defined (__MSDOS__)
+#if defined(__MSDOS__)
   for (i = 1; fname[i] && fname[i] != '/' && fname[i] != '\\'; i++)
 #else
   for (i = 1; fname[i] && fname[i] != '/'; i++)
@@ -214,15 +217,15 @@ Readline::tilde_expand_word (const char *filename)
     {
       /* Prefix $HOME to the rest of the string. */
       expansion = sh_get_env_value ("HOME");
-#if defined (_WIN32)
+#if defined(_WIN32)
       if (expansion == nullptr)
-	expansion = sh_get_env_value ("APPDATA");
+        expansion = sh_get_env_value ("APPDATA");
 #endif
 
       /* If there is no HOME variable, look up the directory in
-	 the password database. */
+         the password database. */
       if (expansion == nullptr)
-	expansion = sh_get_home_dir ();
+        expansion = sh_get_home_dir ();
 
       return glue_prefix_and_suffix (expansion, filename, 1);
     }
@@ -233,18 +236,19 @@ Readline::tilde_expand_word (const char *filename)
     {
       expansion = (*tilde_expansion_preexpansion_hook) (username);
       if (expansion)
-	{
-	  char *dirname = glue_prefix_and_suffix (expansion, filename, user_len);
-	  delete[] username;
-	  delete[] expansion;
-	  return dirname;
-	}
+        {
+          char *dirname
+              = glue_prefix_and_suffix (expansion, filename, user_len);
+          delete[] username;
+          delete[] expansion;
+          return dirname;
+        }
     }
 
   /* No preexpansion hook, or the preexpansion hook failed.  Look in the
      password database. */
   char *dirname = nullptr;
-#if defined (HAVE_GETPWNAM)
+#if defined(HAVE_GETPWNAM)
   user_entry = ::getpwnam (username);
 #else
   user_entry = 0;
@@ -252,36 +256,36 @@ Readline::tilde_expand_word (const char *filename)
   if (user_entry == nullptr)
     {
       /* If the calling program has a special syntax for expanding tildes,
-	 and we couldn't find a standard expansion, then let them try. */
+         and we couldn't find a standard expansion, then let them try. */
       if (tilde_expansion_failure_hook)
-	{
-	  expansion = (*tilde_expansion_failure_hook) (username);
-	  if (expansion)
-	    {
-	      dirname = glue_prefix_and_suffix (expansion, filename, user_len);
-	      delete[] expansion;
-	    }
-	}
+        {
+          expansion = (*tilde_expansion_failure_hook) (username);
+          if (expansion)
+            {
+              dirname = glue_prefix_and_suffix (expansion, filename, user_len);
+              delete[] expansion;
+            }
+        }
       /* If we don't have a failure hook, or if the failure hook did not
-	 expand the tilde, return a copy of what we were passed. */
+         expand the tilde, return a copy of what we were passed. */
       if (dirname == nullptr)
-	dirname = savestring (filename);
+        dirname = savestring (filename);
     }
-#if defined (HAVE_GETPWENT)
+#if defined(HAVE_GETPWENT)
   else
     dirname = glue_prefix_and_suffix (user_entry->pw_dir, filename, user_len);
 #endif
 
   delete[] username;
-#if defined (HAVE_GETPWENT)
+#if defined(HAVE_GETPWENT)
   ::endpwent ();
 #endif
   return dirname;
 }
 
-}  // namespace readline
+} // namespace readline
 
-#if defined (TEST)
+#if defined(TEST)
 #undef NULL
 #include <stdio.h>
 
@@ -296,15 +300,15 @@ main (int argc, char **argv)
       std::fflush (stdout);
 
       if (!std::gets (line))
-	std::strcpy (line, "done");
+        std::strcpy (line, "done");
 
-      if ((std::strcmp (line, "done") == 0) ||
-	  (std::strcmp (line, "quit") == 0) ||
-	  (std::strcmp (line, "exit") == 0))
-	{
-	  done = 1;
-	  break;
-	}
+      if ((std::strcmp (line, "done") == 0)
+          || (std::strcmp (line, "quit") == 0)
+          || (std::strcmp (line, "exit") == 0))
+        {
+          done = 1;
+          break;
+        }
 
       result = readline::tilde_expand (line);
       std::printf ("  --> %s\n", result);

@@ -19,7 +19,7 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_RL_SHELL_H_)
+#if !defined(_RL_SHELL_H_)
 #define _RL_SHELL_H_
 
 namespace readline
@@ -29,23 +29,29 @@ namespace readline
 
 // Create a new copy of null-terminated string s. Free with delete[].
 static inline char *
-savestring(const char *s) {
-  return std::strcpy(new char[1 + std::strlen(s)], s);
+savestring (const char *s)
+{
+  return std::strcpy (new char[1 + std::strlen (s)], s);
 }
 
 // Create a new copy of C++ string s. Free with delete[].
 static inline char *
-savestring(const std::string &s) {
-  return std::strcpy(new char[1 + s.size()], s.c_str());
+savestring (const std::string &s)
+{
+  return std::strcpy (new char[1 + s.size ()], s.c_str ());
 }
 
 // Compare two strings for equality.
-static inline bool STREQ (const char *a, const char *b) {
+static inline bool
+STREQ (const char *a, const char *b)
+{
   return std::strcmp (a, b) == 0;
 }
 
 // Compare two strings for equality, up to n characters.
-static inline bool STREQN (const char *a, const char *b, size_t n) {
+static inline bool
+STREQN (const char *a, const char *b, size_t n)
+{
   return std::strncmp (a, b, n) == 0;
 }
 
@@ -54,9 +60,10 @@ static inline bool STREQN (const char *a, const char *b, size_t n) {
 
 #ifdef SHELL
 
-class ReadlineShell {
+class ReadlineShell
+{
 public:
-  virtual ~ReadlineShell();
+  virtual ~ReadlineShell ();
 
   virtual char *sh_single_quote (const char *) = 0;
   virtual void sh_set_lines_and_columns (unsigned int, unsigned int) = 0;
@@ -67,9 +74,10 @@ public:
 
 #else
 
-class ReadlineShell {
+class ReadlineShell
+{
 public:
-  virtual ~ReadlineShell();
+  virtual ~ReadlineShell ();
 
   virtual char *sh_single_quote (const char *);
   virtual void sh_set_lines_and_columns (unsigned int, unsigned int);
@@ -80,6 +88,6 @@ public:
 
 #endif
 
-}  // namespace readline
+} // namespace readline
 
 #endif /* _RL_SHELL_H_ */

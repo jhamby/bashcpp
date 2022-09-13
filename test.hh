@@ -24,11 +24,12 @@
 #include <string>
 
 /* Values for the flags argument to binary_test */
-enum binary_test_flags {
-  TEST_NOFLAGS =	   0,
-  TEST_PATMATCH =	0x01,
-  TEST_ARITHEXP =	0x02,
-  TEST_LOCALE =		0x04
+enum binary_test_flags
+{
+  TEST_NOFLAGS = 0,
+  TEST_PATMATCH = 0x01,
+  TEST_ARITHEXP = 0x02,
+  TEST_LOCALE = 0x04
 };
 
 extern bool test_unop (const std::string &);
@@ -36,7 +37,7 @@ extern bool test_binop (const std::string &);
 
 extern bool unary_test (const std::string &, const std::string &);
 extern bool binary_test (const std::string &, const std::string &,
-			 const std::string &, binary_test_flags);
+                         const std::string &, binary_test_flags);
 
 extern int test_command (int, std::string *);
 

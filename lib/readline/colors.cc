@@ -40,12 +40,13 @@ namespace readline
 int
 Readline::_rl_print_prefix_color ()
 {
-  /* What do we want to use for the prefix? Let's try cyan first, see colors.h */
+  /* What do we want to use for the prefix? Let's try cyan first, see colors.h
+   */
   const std::string &s = _rl_color_indicator[C_PREFIX];
   if (!s.empty ())
     {
       if (is_colored (C_NORM))
-	restore_default_color ();
+        restore_default_color ();
       _rl_put_indicator (_rl_color_indicator[C_LEFT]);
       _rl_put_indicator (s);
       _rl_put_indicator (_rl_color_indicator[C_RIGHT]);
@@ -60,18 +61,17 @@ bool
 Readline::_rl_print_color_indicator (const std::string &f)
 {
   enum indicator_no colored_filetype;
-  COLOR_EXT_TYPE *ext;	/* Color extension */
-  size_t len;		/* Length of name */
+  COLOR_EXT_TYPE *ext; /* Color extension */
+  size_t len;          /* Length of name */
 
-  const char* name;
+  const char *name;
   std::string filename;
   struct stat astat, linkstat;
   mode_t mode = 0;
-  int linkok;	/* 1 == ok, 0 == dangling symlink, -1 == missing */
+  int linkok; /* 1 == ok, 0 == dangling symlink, -1 == missing */
   int stat_ok;
 
   name = f.c_str ();
-
 
   /* This should already have undergone tilde expansion */
   if (rl_filename_stat_hook)
@@ -81,24 +81,24 @@ Readline::_rl_print_color_indicator (const std::string &f)
       name = filename.c_str ();
     }
 
-#if defined (HAVE_LSTAT)
-  stat_ok = ::lstat(name, &astat);
+#if defined(HAVE_LSTAT)
+  stat_ok = ::lstat (name, &astat);
 #else
-  stat_ok = ::stat(name, &astat);
+  stat_ok = ::stat (name, &astat);
 #endif
   if (stat_ok == 0)
     {
       mode = astat.st_mode;
-#if defined (HAVE_LSTAT)
+#if defined(HAVE_LSTAT)
       if (S_ISLNK (mode))
-	{
-	  linkok = (::stat (name, &linkstat) == 0);
-	  if (linkok && _rl_color_indicator[C_LINK] == "target")
-	    mode = linkstat.st_mode;
-	}
+        {
+          linkok = (::stat (name, &linkstat) == 0);
+          if (linkok && _rl_color_indicator[C_LINK] == "target")
+            mode = linkstat.st_mode;
+        }
       else
 #endif
-	linkok = 1;
+        linkok = 1;
     }
   else
     linkok = -1;
@@ -108,11 +108,11 @@ Readline::_rl_print_color_indicator (const std::string &f)
   if (linkok == -1 && !_rl_color_indicator[C_MISSING].empty ())
     colored_filetype = C_MISSING;
   else if (linkok == 0 && !_rl_color_indicator[C_ORPHAN].empty ())
-    colored_filetype = C_ORPHAN;	/* dangling symlink */
+    colored_filetype = C_ORPHAN; /* dangling symlink */
   else if (stat_ok != 0)
     {
       static enum indicator_no filetype_indicator[] = FILETYPE_INDICATORS;
-      colored_filetype = filetype_indicator[normal]; //f->filetype];
+      colored_filetype = filetype_indicator[normal]; // f->filetype];
     }
   else
     {
@@ -120,17 +120,17 @@ Readline::_rl_print_color_indicator (const std::string &f)
         {
           colored_filetype = C_FILE;
 
-#if defined (S_ISUID)
+#if defined(S_ISUID)
           if ((mode & S_ISUID) != 0 && is_colored (C_SETUID))
             colored_filetype = C_SETUID;
           else
 #endif
-#if defined (S_ISGID)
-          if ((mode & S_ISGID) != 0 && is_colored (C_SETGID))
+#if defined(S_ISGID)
+              if ((mode & S_ISGID) != 0 && is_colored (C_SETGID))
             colored_filetype = C_SETGID;
           else
 #endif
-          if (is_colored (C_CAP) && (0)) //f->has_capability)
+              if (is_colored (C_CAP) && (0)) // f->has_capability)
             colored_filetype = C_CAP;
           else if ((mode & S_IXUGO) != 0 && is_colored (C_EXEC))
             colored_filetype = C_EXEC;
@@ -141,26 +141,26 @@ Readline::_rl_print_color_indicator (const std::string &f)
         {
           colored_filetype = C_DIR;
 
-#if defined (S_ISVTX)
+#if defined(S_ISVTX)
           if ((mode & S_ISVTX) && (mode & S_IWOTH)
               && is_colored (C_STICKY_OTHER_WRITABLE))
             colored_filetype = C_STICKY_OTHER_WRITABLE;
           else
 #endif
-          if ((mode & S_IWOTH) != 0 && is_colored (C_OTHER_WRITABLE))
+              if ((mode & S_IWOTH) != 0 && is_colored (C_OTHER_WRITABLE))
             colored_filetype = C_OTHER_WRITABLE;
-#if defined (S_ISVTX)
+#if defined(S_ISVTX)
           else if ((mode & S_ISVTX) != 0 && is_colored (C_STICKY))
             colored_filetype = C_STICKY;
 #endif
         }
-#if defined (S_ISLNK)
+#if defined(S_ISLNK)
       else if (S_ISLNK (mode))
         colored_filetype = C_LINK;
 #endif
       else if (S_ISFIFO (mode))
         colored_filetype = C_FIFO;
-#if defined (S_ISSOCK)
+#if defined(S_ISSOCK)
       else if (S_ISSOCK (mode))
         colored_filetype = C_SOCK;
 #endif
@@ -181,23 +181,25 @@ Readline::_rl_print_color_indicator (const std::string &f)
     {
       /* Test if NAME has a recognized suffix.  */
       len = strlen (name);
-      name += len;		/* Pointer to final \0.  */
+      name += len; /* Pointer to final \0.  */
       for (ext = _rl_color_ext_list; ext != nullptr; ext = ext->next)
         {
           if (ext->ext.size () <= len
               && std::strncmp (name - ext->ext.size (), ext->ext.c_str (),
-                          ext->ext.size ()) == 0)
+                               ext->ext.size ())
+                     == 0)
             break;
         }
     }
 
   {
-    const std::string *s = ext ? &(ext->seq) : &_rl_color_indicator[colored_filetype];
+    const std::string *s
+        = ext ? &(ext->seq) : &_rl_color_indicator[colored_filetype];
     if (!s->empty ())
       {
         /* Need to reset so not dealing with attribute combinations */
         if (is_colored (C_NORM))
-	  restore_default_color ();
+          restore_default_color ();
         _rl_put_indicator (_rl_color_indicator[C_LEFT]);
         _rl_put_indicator (*s);
         _rl_put_indicator (_rl_color_indicator[C_RIGHT]);
@@ -222,4 +224,4 @@ Readline::_rl_prep_non_filename_text ()
 }
 #endif /* COLOR_SUPPORT */
 
-}  // namespace readline
+} // namespace readline

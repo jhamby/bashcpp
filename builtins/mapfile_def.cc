@@ -33,11 +33,11 @@
 // Options:
 //   -d delim	Use DELIM to terminate lines, instead of newline
 //   -n count	Copy at most COUNT lines.  If COUNT is 0, all lines are copied
-//   -O origin	Begin assigning to ARRAY at index ORIGIN.  The default index is 0
-//   -s count	Discard the first COUNT lines read
-//   -t	Remove a trailing DELIM from each line read (default newline)
-//   -u fd	Read lines from file descriptor FD instead of the standard input
-//   -C callback	Evaluate CALLBACK each time QUANTUM lines are read
+//   -O origin	Begin assigning to ARRAY at index ORIGIN.  The default index is
+//   0 -s count	Discard the first COUNT lines read -t	Remove a trailing DELIM
+//   from each line read (default newline) -u fd	Read lines from file
+//   descriptor FD instead of the standard input -C callback	Evaluate
+//   CALLBACK each time QUANTUM lines are read
 //   -c quantum	Specify the number of lines read between each call to
 // 			CALLBACK
 
@@ -59,8 +59,9 @@
 
 // $BUILTIN readarray
 // $FUNCTION mapfile_builtin
-// $SHORT_DOC readarray [-d delim] [-n count] [-O origin] [-s count] [-t] [-u fd] [-C callback] [-c quantum] [array]
-// Read lines from a file into an array variable.
+// $SHORT_DOC readarray [-d delim] [-n count] [-O origin] [-s count] [-t] [-u
+// fd] [-C callback] [-c quantum] [array] Read lines from a file into an array
+// variable.
 
 // A synonym for `mapfile'.
 // $END
@@ -70,31 +71,31 @@
 #include "builtins.hh"
 #include "posixstat.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "bashintl.hh"
-#include "shell.hh"
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "bashintl.hh"
+#include "common.hh"
+#include "shell.hh"
 
 namespace bash
 {
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
 
 static int run_callback (const char *, unsigned int, const char *);
 
-#define DEFAULT_ARRAY_NAME	"MAPFILE"
-#define DEFAULT_VARIABLE_NAME	"MAPLINE"	/* not used right now */
+#define DEFAULT_ARRAY_NAME "MAPFILE"
+#define DEFAULT_VARIABLE_NAME "MAPLINE" /* not used right now */
 
 /* The value specifying how frequently `mapfile'  calls the callback. */
 #define DEFAULT_QUANTUM 5000
 
 /* Values for FLAGS */
-#define MAPF_CLEARARRAY	0x01
-#define MAPF_CHOP	0x02
+#define MAPF_CLEARARRAY 0x01
+#define MAPF_CHOP 0x02
 
 static int delim;
 
@@ -102,7 +103,7 @@ static int
 run_callback (const char *callback, unsigned int curindex, const char *curline)
 {
   unsigned int execlen;
-  char  *execstr, *qline;
+  char *execstr, *qline;
   int flags;
 
   qline = sh_single_quote (curline);
@@ -123,13 +124,13 @@ run_callback (const char *callback, unsigned int curindex, const char *curline)
 }
 
 static void
-do_chop(char *line, unsigned char delim)
+do_chop (char *line, unsigned char delim)
 {
   int length;
 
   length = strlen (line);
-  if (length && line[length-1] == delim)
-    line[length-1] = '\0';
+  if (length && line[length - 1] == delim)
+    line[length - 1] = '\0';
 }
 
 static int
@@ -153,17 +154,17 @@ mapfile (int fd, long line_count_goal, long origin, long nskip,
   if (entry == 0 || readonly_p (entry) || noassign_p (entry))
     {
       if (entry && readonly_p (entry))
-	err_readonly (array_name);
+        err_readonly (array_name);
 
       return EXECUTION_FAILURE;
     }
   else if (array_p (entry) == 0)
     {
-      builtin_error (_("%s: not an indexed array"), array_name);
+      builtin_error (_ ("%s: not an indexed array"), array_name);
       return EXECUTION_FAILURE;
     }
   else if (invisible_p (entry))
-    VUNSETATTR (entry, att_invisible);	/* no longer invisible */
+    VUNSETATTR (entry, att_invisible); /* no longer invisible */
 
   if (flags & MAPF_CLEARARRAY)
     array_flush (array_cell (entry));
@@ -189,31 +190,31 @@ mapfile (int fd, long line_count_goal, long origin, long nskip,
 
   /* Reset the buffer for bash own stream */
   for (array_index = origin, line_count = 1;
- 	zgetline (fd, &line, &line_length, delim, unbuffered_read) != -1;
-	array_index++)
+       zgetline (fd, &line, &line_length, delim, unbuffered_read) != -1;
+       array_index++)
     {
       /* Remove trailing newlines? */
       if (flags & MAPF_CHOP)
-	do_chop (line, delim);
+        do_chop (line, delim);
 
       /* Has a callback been registered and if so is it time to call it? */
       if (callback && line_count && (line_count % callback_quantum) == 0)
-	{
-	  run_callback (callback, array_index, line);
+        {
+          run_callback (callback, array_index, line);
 
-	  /* Reset the buffer for bash own stream. */
-	  if (!unbuffered_read)
-	    zsyncfd (fd);
-	}
+          /* Reset the buffer for bash own stream. */
+          if (!unbuffered_read)
+            zsyncfd (fd);
+        }
 
       /* XXX - bad things can happen if the callback modifies ENTRY, e.g.,
-	 unsetting it or changing it to a non-indexed-array type. */
+         unsetting it or changing it to a non-indexed-array type. */
       bind_array_element (entry, array_index, line, 0);
 
       /* Have we exceeded # of lines to store? */
       line_count++;
       if (line_count_goal != 0 && line_count > line_count_goal)
-	break;
+        break;
     }
 
   free (line);
@@ -243,80 +244,82 @@ Shell::mapfile_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "d:u:n:O:tC:c:s:")) != -1)
     {
       switch (opt)
-	{
-	case 'd':
-	  delim = *list_optarg;
-	  break;
-	case 'u':
-	  code = legal_number (list_optarg, &intval);
-	  if (code == 0 || intval < 0 || intval != (int)intval)
-	    {
-	      builtin_error (_("%s: invalid file descriptor specification"), list_optarg);
-	      return EXECUTION_FAILURE;
-	    }
-	  else
-	    fd = intval;
+        {
+        case 'd':
+          delim = *list_optarg;
+          break;
+        case 'u':
+          code = legal_number (list_optarg, &intval);
+          if (code == 0 || intval < 0 || intval != (int)intval)
+            {
+              builtin_error (_ ("%s: invalid file descriptor specification"),
+                             list_optarg);
+              return EXECUTION_FAILURE;
+            }
+          else
+            fd = intval;
 
-	  if (sh_validfd (fd) == 0)
-	    {
-	      builtin_error (_("%d: invalid file descriptor: %s"), fd, strerror (errno));
-	      return EXECUTION_FAILURE;
-	    }
-	  break;
+          if (sh_validfd (fd) == 0)
+            {
+              builtin_error (_ ("%d: invalid file descriptor: %s"), fd,
+                             strerror (errno));
+              return EXECUTION_FAILURE;
+            }
+          break;
 
-	case 'n':
-	  code = legal_number (list_optarg, &intval);
-	  if (code == 0 || intval < 0 || intval != (unsigned)intval)
-	    {
-	      builtin_error (_("%s: invalid line count"), list_optarg);
-	      return EXECUTION_FAILURE;
-	    }
-	  else
-	    lines = intval;
-	  break;
+        case 'n':
+          code = legal_number (list_optarg, &intval);
+          if (code == 0 || intval < 0 || intval != (unsigned)intval)
+            {
+              builtin_error (_ ("%s: invalid line count"), list_optarg);
+              return EXECUTION_FAILURE;
+            }
+          else
+            lines = intval;
+          break;
 
-	case 'O':
-	  code = legal_number (list_optarg, &intval);
-	  if (code == 0 || intval < 0 || intval != (unsigned)intval)
-	    {
-	      builtin_error (_("%s: invalid array origin"), list_optarg);
-	      return EXECUTION_FAILURE;
-	    }
-	  else
-	    origin = intval;
-	  flags &= ~MAPF_CLEARARRAY;
-	  break;
-	case 't':
-	  flags |= MAPF_CHOP;
-	  break;
-	case 'C':
-	  callback = list_optarg;
-	  break;
-	case 'c':
-	  code = legal_number (list_optarg, &intval);
-	  if (code == 0 || intval <= 0 || intval != (unsigned)intval)
-	    {
-	      builtin_error (_("%s: invalid callback quantum"), list_optarg);
-	      return EXECUTION_FAILURE;
-	    }
-	  else
-	    callback_quantum = intval;
-	  break;
-	case 's':
-	  code = legal_number (list_optarg, &intval);
-	  if (code == 0 || intval < 0 || intval != (unsigned)intval)
-	    {
-	      builtin_error (_("%s: invalid line count"), list_optarg);
-	      return EXECUTION_FAILURE;
-	    }
-	  else
-	    nskip = intval;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        case 'O':
+          code = legal_number (list_optarg, &intval);
+          if (code == 0 || intval < 0 || intval != (unsigned)intval)
+            {
+              builtin_error (_ ("%s: invalid array origin"), list_optarg);
+              return EXECUTION_FAILURE;
+            }
+          else
+            origin = intval;
+          flags &= ~MAPF_CLEARARRAY;
+          break;
+        case 't':
+          flags |= MAPF_CHOP;
+          break;
+        case 'C':
+          callback = list_optarg;
+          break;
+        case 'c':
+          code = legal_number (list_optarg, &intval);
+          if (code == 0 || intval <= 0 || intval != (unsigned)intval)
+            {
+              builtin_error (_ ("%s: invalid callback quantum"), list_optarg);
+              return EXECUTION_FAILURE;
+            }
+          else
+            callback_quantum = intval;
+          break;
+        case 's':
+          code = legal_number (list_optarg, &intval);
+          if (code == 0 || intval < 0 || intval != (unsigned)intval)
+            {
+              builtin_error (_ ("%s: invalid line count"), list_optarg);
+              return EXECUTION_FAILURE;
+            }
+          else
+            nskip = intval;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
   list = loptend;
 
@@ -329,7 +332,7 @@ Shell::mapfile_builtin (WORD_LIST *list)
     }
   else if (list->word->word[0] == '\0')
     {
-      builtin_error (_("empty array variable name"));
+      builtin_error (_ ("empty array variable name"));
       return EX_USAGE;
     }
   else
@@ -341,7 +344,8 @@ Shell::mapfile_builtin (WORD_LIST *list)
       return EXECUTION_FAILURE;
     }
 
-  return mapfile (fd, lines, origin, nskip, callback_quantum, callback, array_name, delim, flags);
+  return mapfile (fd, lines, origin, nskip, callback_quantum, callback,
+                  array_name, delim, flags);
 }
 
 #else
@@ -349,10 +353,10 @@ Shell::mapfile_builtin (WORD_LIST *list)
 int
 Shell::mapfile_builtin (WORD_LIST *list)
 {
-  builtin_error (_("array variable support required"));
+  builtin_error (_ ("array variable support required"));
   return EXECUTION_FAILURE;
 }
 
-#endif  /* ARRAY_VARS */
+#endif /* ARRAY_VARS */
 
-}  // namespace bash
+} // namespace bash

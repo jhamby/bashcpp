@@ -1,4 +1,5 @@
-/* strtoumax - convert string representation of a number into an uint64_t value. */
+/* strtoumax - convert string representation of a number into an uint64_t
+ * value. */
 
 /* Copyright 1999-2020 Free Software Foundation, Inc.
 
@@ -22,33 +23,39 @@
 
 #include "config.hh"
 
-#if !defined (HAVE_STRTOUMAX)
+#if !defined(HAVE_STRTOUMAX)
 
 #if HAVE_INTTYPES_H
-#  include <inttypes.h>
+#include <inttypes.h>
 #endif
 
 #if HAVE_STDINT_H
-#  include <stdint.h>
+#include <stdint.h>
 #endif
 
 #include <cstdlib>
 
 /* Verify a requirement at compile-time (unlike assert, which is runtime).  */
-#define verify(name, assertion) struct name { char a[(assertion) ? 1 : -1]; }
+#define verify(name, assertion)                                               \
+  struct name                                                                 \
+  {                                                                           \
+    char a[(assertion) ? 1 : -1];                                             \
+  }
 
 #ifndef HAVE_DECL_STRTOUL
 "this configure-time declaration test was not run"
 #endif
 #if !HAVE_DECL_STRTOUL
-extern unsigned long strtoul (const char *, char **, int);
+    extern unsigned long
+    strtoul (const char *, char **, int);
 #endif
 
 #ifndef HAVE_DECL_STRTOULL
 "this configure-time declaration test was not run"
 #endif
 #if !HAVE_DECL_STRTOULL
-extern unsigned long long strtoull (const char *, char **, int);
+    extern unsigned long long
+    strtoull (const char *, char **, int);
 #endif
 
 #ifdef strtoumax
@@ -59,8 +66,8 @@ uint64_t
 strtoumax (const char *ptr, char **endptr, int base)
 {
   verify (size_is_that_of_unsigned_long_or_unsigned_long_long,
-	  (sizeof (uint64_t) == sizeof (unsigned long) ||
-	   sizeof (uint64_t) == sizeof (unsigned long long)));
+          (sizeof (uint64_t) == sizeof (unsigned long)
+           || sizeof (uint64_t) == sizeof (unsigned long long)));
 
   if (sizeof (uint64_t) != sizeof (unsigned long))
     return strtoull (ptr, endptr, base);
@@ -69,7 +76,7 @@ strtoumax (const char *ptr, char **endptr, int base)
 }
 
 #ifdef TESTING
-# include <cstdio>
+#include <cstdio>
 int
 main ()
 {
@@ -83,9 +90,9 @@ main ()
   std::printf ("sizeof unsigned long long: %d\n", sizeof (unsigned long long));
   std::printf ("sizeof unsigned long: %d\n", sizeof (unsigned long));
 
-  x = ::strtoumax("42", &endptr, 10);
-  y = ::strtoull("42", &endptr, 10);
-  z = ::strtoul("42", &endptr, 10);
+  x = ::strtoumax ("42", &endptr, 10);
+  y = ::strtoull ("42", &endptr, 10);
+  z = ::strtoul ("42", &endptr, 10);
 
   std::printf ("%llu %llu %lu\n", x, y, z);
 

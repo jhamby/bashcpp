@@ -34,13 +34,13 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "shell.hh"
 #include "bashgetopt.hh"
 #include "common.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -51,9 +51,10 @@ Shell::eval_builtin (WORD_LIST *list)
 {
   if (no_options (list))
     return EX_USAGE;
-  list = loptend;	/* skip over possible `--' */
+  list = loptend; /* skip over possible `--' */
 
-  return list ? evalstring (string_list (list), "eval", SEVAL_NOHIST) : EXECUTION_SUCCESS;
+  return list ? evalstring (string_list (list), "eval", SEVAL_NOHIST)
+              : EXECUTION_SUCCESS;
 }
 
-}  // namespace bash
+} // namespace bash

@@ -1,4 +1,5 @@
-/* arrayfunc.h -- declarations for miscellaneous array functions in arrayfunc.c */
+/* arrayfunc.h -- declarations for miscellaneous array functions in arrayfunc.c
+ */
 
 /* Copyright (C) 2001-2020 Free Software Foundation, Inc.
 
@@ -18,12 +19,12 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_ARRAYFUNC_H_)
+#if !defined(_ARRAYFUNC_H_)
 #define _ARRAYFUNC_H_
 
 #include "variables.hh"
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
 
 namespace bash
 {
@@ -36,37 +37,41 @@ namespace bash
 // char array_expand_once;
 
 /* Flags for array_value_internal and callers array_value/get_array_value */
-enum av_flags {
-  AV_NOFLAGS =		    0,
-  AV_ALLOWALL =		0x001,
-  AV_QUOTED =		0x002,
-  AV_USEIND =		0x004,
-  AV_USEVAL =		0x008,	/* XXX - should move this */
-  AV_ASSIGNRHS =	0x010,	/* no splitting, special case ${a[@]} */
-  AV_NOEXPAND =		0x020	/* don't run assoc subscripts through word expansion */
+enum av_flags
+{
+  AV_NOFLAGS = 0,
+  AV_ALLOWALL = 0x001,
+  AV_QUOTED = 0x002,
+  AV_USEIND = 0x004,
+  AV_USEVAL = 0x008,    /* XXX - should move this */
+  AV_ASSIGNRHS = 0x010, /* no splitting, special case ${a[@]} */
+  AV_NOEXPAND = 0x020   /* don't run assoc subscripts through word expansion */
 };
 
 /* Flags for valid_array_reference. Value 1 is reserved for skipsubscript() */
-enum valid_array_flags {
-  VA_NOFLAGS =	    0,
-  VA_NOEXPAND =	0x001,
-  VA_ONEWORD =	0x002
+enum valid_array_flags
+{
+  VA_NOFLAGS = 0,
+  VA_NOEXPAND = 0x001,
+  VA_ONEWORD = 0x002
 };
 
 SHELL_VAR *convert_var_to_array (SHELL_VAR *);
 SHELL_VAR *convert_var_to_assoc (SHELL_VAR *);
 
-char *make_array_variable_value (SHELL_VAR *, arrayind_t, const char *, const char *, int);
+char *make_array_variable_value (SHELL_VAR *, arrayind_t, const char *,
+                                 const char *, int);
 
 SHELL_VAR *bind_array_variable (const char *, arrayind_t, const char *, int);
 SHELL_VAR *bind_array_element (SHELL_VAR *, arrayind_t, const char *, int);
 SHELL_VAR *assign_array_element (const char *, const char *, int);
 
-SHELL_VAR *bind_assoc_variable (SHELL_VAR *, const char *, char *, const char *, int);
+SHELL_VAR *bind_assoc_variable (SHELL_VAR *, const char *, char *,
+                                const char *, int);
 
 SHELL_VAR *find_or_make_array_variable (const char *, int);
 
-SHELL_VAR *assign_array_from_string  (const char *, const char *, int);
+SHELL_VAR *assign_array_from_string (const char *, const char *, int);
 SHELL_VAR *assign_array_var_from_word_list (SHELL_VAR *, WORD_LIST *, int);
 
 WORD_LIST *expand_compound_array_assignment (SHELL_VAR *, const char *, int);
@@ -95,16 +100,16 @@ char *array_keys (const char *, int, int);
 char *array_variable_name (const char *, int, char **, int *);
 SHELL_VAR *array_variable_part (const char *, int, char **, int *);
 
-}  // namespace bash
+} // namespace bash
 
 #else
 
-#define AV_ALLOWALL	0
-#define AV_QUOTED	0
-#define AV_USEIND	0
-#define AV_ASSIGNRHS	0
+#define AV_ALLOWALL 0
+#define AV_QUOTED 0
+#define AV_USEIND 0
+#define AV_ASSIGNRHS 0
 
-#define VA_ONEWORD	0
+#define VA_ONEWORD 0
 
 #endif
 

@@ -20,11 +20,11 @@
 
 /* See getopt.h for the explanation of these variables. */
 
-#if !defined (__BASH_GETOPT_H)
-#  define __BASH_GETOPT_H
+#if !defined(__BASH_GETOPT_H)
+#define __BASH_GETOPT_H
 
-#define GETOPT_EOF	-1
-#define GETOPT_HELP	-99
+#define GETOPT_EOF -1
+#define GETOPT_HELP -99
 
 #endif /* !__BASH_GETOPT_H */
 

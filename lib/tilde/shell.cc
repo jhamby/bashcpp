@@ -1,5 +1,5 @@
 /* shell.c -- tilde utility functions that are normally provided by
-	      bash when readline is linked as part of the shell. */
+              bash when readline is linked as part of the shell. */
 
 /* Copyright (C) 1998-2017 Free Software Foundation, Inc.
 
@@ -16,14 +16,15 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with the GNU Tilde Library.  If not, see <http://www.gnu.org/licenses/>.
+   along with the GNU Tilde Library.  If not, see
+   <http://www.gnu.org/licenses/>.
 */
 
 #include "config.hh"
 #include "general.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 
 #include <cstdlib>
@@ -34,7 +35,7 @@
 namespace bash
 {
 
-#if !defined (HAVE_GETPW_DECLS)
+#if !defined(HAVE_GETPW_DECLS)
 extern struct passwd *getpwuid ();
 #endif /* !HAVE_GETPW_DECLS */
 
@@ -55,17 +56,17 @@ get_home_dir (void)
   if (home_dir)
     return (home_dir);
 
-#if defined (HAVE_GETPWUID)
+#if defined(HAVE_GETPWUID)
   entry = getpwuid (getuid ());
   if (entry)
     home_dir = savestring (entry->pw_dir);
 #endif
 
-#if defined (HAVE_GETPWENT)
-  endpwent ();		/* some systems need this */
+#if defined(HAVE_GETPWENT)
+  endpwent (); /* some systems need this */
 #endif
 
   return (home_dir);
 }
 
-}  // namespace bash
+} // namespace bash

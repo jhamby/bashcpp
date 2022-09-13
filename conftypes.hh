@@ -18,50 +18,50 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_CONFTYPES_H_)
+#if !defined(_CONFTYPES_H_)
 #define _CONFTYPES_H_
 
 namespace bash
 {
 
 /* Shared between version.c and bashversion.c */
-extern const char * const dist_version;
+extern const char *const dist_version;
 extern const int patch_level;
 
 /* Placeholder for future modifications if cross-compiling or building a
    `fat' binary, e.g. on Apple Rhapsody.  These values are used in multiple
    files, so they appear here. */
-#if !defined (RHAPSODY) && !defined (MACOSX)
-#  define HOSTTYPE	CONF_HOSTTYPE
-#  define OSTYPE	CONF_OSTYPE
-#  define MACHTYPE	CONF_MACHTYPE
+#if !defined(RHAPSODY) && !defined(MACOSX)
+#define HOSTTYPE CONF_HOSTTYPE
+#define OSTYPE CONF_OSTYPE
+#define MACHTYPE CONF_MACHTYPE
 #else /* RHAPSODY */
-#  if   defined(__powerpc__) || defined(__ppc__)
-#    define HOSTTYPE "powerpc"
-#  elif defined(__i386__)
-#    define HOSTTYPE "i386"
-#  else
-#    define HOSTTYPE CONF_HOSTTYPE
-#  endif
+#if defined(__powerpc__) || defined(__ppc__)
+#define HOSTTYPE "powerpc"
+#elif defined(__i386__)
+#define HOSTTYPE "i386"
+#else
+#define HOSTTYPE CONF_HOSTTYPE
+#endif
 
-#  define OSTYPE CONF_OSTYPE
-#  define VENDOR CONF_VENDOR
+#define OSTYPE CONF_OSTYPE
+#define VENDOR CONF_VENDOR
 
-#  define MACHTYPE HOSTTYPE "-" VENDOR "-" OSTYPE
+#define MACHTYPE HOSTTYPE "-" VENDOR "-" OSTYPE
 #endif /* RHAPSODY */
 
 #ifndef HOSTTYPE
-#  define HOSTTYPE "unknown"
+#define HOSTTYPE "unknown"
 #endif
 
 #ifndef OSTYPE
-#  define OSTYPE "unknown"
+#define OSTYPE "unknown"
 #endif
 
 #ifndef MACHTYPE
-#  define MACHTYPE "unknown"
+#define MACHTYPE "unknown"
 #endif
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* _CONFTYPES_H_ */

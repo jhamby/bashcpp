@@ -20,36 +20,36 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <cstdio>
 
-#include "chartypes.hh"
 #include "bashtypes.hh"
+#include "chartypes.hh"
 #include "posixstat.hh"
 
-#include <csignal>
 #include <cerrno>
+#include <csignal>
 #include <cstdarg>
 
 #include "bashintl.hh"
 
 // #define NEED_FPURGE_DECL
 
-#include "shell.hh"
-#include "maxpath.hh"
-#include "flags.hh"
-#include "parser.hh"
-#include "jobs.hh"
-#include "builtins.hh"
-#include "input.hh"
-#include "execute_cmd.hh"
-#include "trap.hh"
 #include "bashgetopt.hh"
+#include "builtins.hh"
 #include "common.hh"
+#include "execute_cmd.hh"
+#include "flags.hh"
+#include "input.hh"
+#include "jobs.hh"
+#include "maxpath.hh"
+#include "parser.hh"
+#include "shell.hh"
 #include "tilde.hh"
+#include "trap.hh"
 
 #include "builtext.hh"
 
@@ -79,7 +79,7 @@ builtin_error_prolog ()
   fprintf (stderr, "%s: ", name);
 
   if (interactive_shell == 0)
-    fprintf (stderr, _("line %d: "), executing_line_number ());
+    fprintf (stderr, _ ("line %d: "), executing_line_number ());
 
   if (this_command_name && *this_command_name)
     fprintf (stderr, "%s: ", this_command_name);
@@ -105,7 +105,7 @@ builtin_warning (const char *format, ...)
   va_list args;
 
   builtin_error_prolog ();
-  fprintf (stderr, _("warning: "));
+  fprintf (stderr, _ ("warning: "));
 
   SH_VA_START (args, format);
 
@@ -119,8 +119,8 @@ void
 builtin_usage ()
 {
   if (this_command_name && *this_command_name)
-    fprintf (stderr, _("%s: usage: "), this_command_name);
-  fprintf (stderr, "%s\n", _(current_builtin->short_doc));
+    fprintf (stderr, _ ("%s: usage: "), this_command_name);
+  fprintf (stderr, "%s\n", _ (current_builtin->short_doc));
   fflush (stderr);
 }
 
@@ -131,7 +131,7 @@ no_args (WORD_LIST *list)
 {
   if (list)
     {
-      builtin_error (_("too many arguments"));
+      builtin_error (_ ("too many arguments"));
       top_level_cleanup ();
       jump_to_top_level (DISCARD);
     }
@@ -148,10 +148,10 @@ no_options (WORD_LIST *list)
   if ((opt = internal_getopt (list, "")) != -1)
     {
       if (opt == GETOPT_HELP)
-	{
-	  builtin_help ();
-	  return 2;
-	}
+        {
+          builtin_help ();
+          return 2;
+        }
       builtin_usage ();
       return 1;
     }
@@ -161,19 +161,19 @@ no_options (WORD_LIST *list)
 void
 sh_needarg (const char *s)
 {
-  builtin_error (_("%s: option requires an argument"), s);
+  builtin_error (_ ("%s: option requires an argument"), s);
 }
 
 void
 sh_neednumarg (const char *s)
 {
-  builtin_error (_("%s: numeric argument required"), s);
+  builtin_error (_ ("%s: numeric argument required"), s);
 }
 
 void
 sh_notfound (const char *s)
 {
-  builtin_error (_("%s: not found"), s);
+  builtin_error (_ ("%s: not found"), s);
 }
 
 /* Function called when one of the builtin commands detects an invalid
@@ -181,19 +181,19 @@ sh_notfound (const char *s)
 void
 sh_invalidopt (const char *s)
 {
-  builtin_error (_("%s: invalid option"), s);
+  builtin_error (_ ("%s: invalid option"), s);
 }
 
 void
 sh_invalidoptname (const char *s)
 {
-  builtin_error (_("%s: invalid option name"), s);
+  builtin_error (_ ("%s: invalid option name"), s);
 }
 
 void
 sh_invalidid (const char *s)
 {
-  builtin_error (_("`%s': not a valid identifier"), s);
+  builtin_error (_ ("`%s': not a valid identifier"), s);
 }
 
 void
@@ -202,91 +202,93 @@ sh_invalidnum (const char *s)
   const char *msg;
 
   if (*s == '0' && isdigit ((unsigned char)s[1]))
-    msg = _("invalid octal number");
+    msg = _ ("invalid octal number");
   else if (*s == '0' && s[1] == 'x')
-    msg = _("invalid hex number");
+    msg = _ ("invalid hex number");
   else
-    msg = _("invalid number");
+    msg = _ ("invalid number");
   builtin_error ("%s: %s", s, msg);
 }
 
 void
 sh_invalidsig (const char *s)
 {
-  builtin_error (_("%s: invalid signal specification"), s);
+  builtin_error (_ ("%s: invalid signal specification"), s);
 }
 
 void
 sh_badpid (const char *s)
 {
-  builtin_error (_("`%s': not a pid or valid job spec"), s);
+  builtin_error (_ ("`%s': not a pid or valid job spec"), s);
 }
 
 void
 sh_readonly (const char *s)
 {
-  builtin_error (_("%s: readonly variable"), s);
+  builtin_error (_ ("%s: readonly variable"), s);
 }
 
 void
 sh_erange (const char *s, const char *desc)
 {
   if (s)
-    builtin_error (_("%s: %s out of range"), s, desc ? desc : _("argument"));
+    builtin_error (_ ("%s: %s out of range"), s, desc ? desc : _ ("argument"));
   else
-    builtin_error (_("%s out of range"), desc ? desc : _("argument"));
+    builtin_error (_ ("%s out of range"), desc ? desc : _ ("argument"));
 }
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 void
 sh_badjob (const char *s)
 {
-  builtin_error (_("%s: no such job"), s);
+  builtin_error (_ ("%s: no such job"), s);
 }
 
 void
 sh_nojobs (const char *s)
 {
   if (s)
-    builtin_error (_("%s: no job control"), s);
+    builtin_error (_ ("%s: no job control"), s);
   else
-    builtin_error (_("no job control"));
+    builtin_error (_ ("no job control"));
 }
 #endif
 
-#if defined (RESTRICTED_SHELL)
+#if defined(RESTRICTED_SHELL)
 void
 sh_restricted (const char *s)
 {
   if (s)
-    builtin_error (_("%s: restricted"), s);
+    builtin_error (_ ("%s: restricted"), s);
   else
-    builtin_error (_("restricted"));
+    builtin_error (_ ("restricted"));
 }
 #endif
 
 void
 sh_notbuiltin (const char *s)
 {
-  builtin_error (_("%s: not a shell builtin"), s);
+  builtin_error (_ ("%s: not a shell builtin"), s);
 }
 
 void
 sh_wrerror ()
 {
-#if defined (DONT_REPORT_BROKEN_PIPE_WRITE_ERRORS) && defined (EPIPE)
+#if defined(DONT_REPORT_BROKEN_PIPE_WRITE_ERRORS) && defined(EPIPE)
   if (errno != EPIPE)
 #endif /* DONT_REPORT_BROKEN_PIPE_WRITE_ERRORS && EPIPE */
-  builtin_error (_("write error: %s"), strerror (errno));
+    builtin_error (_ ("write error: %s"), strerror (errno));
 }
 
 void
 sh_ttyerror (int set)
 {
   if (set)
-    builtin_error (_("error setting terminal attributes: %s"), strerror (errno));
+    builtin_error (_ ("error setting terminal attributes: %s"),
+                   strerror (errno));
   else
-    builtin_error (_("error getting terminal attributes: %s"), strerror (errno));
+    builtin_error (_ ("error getting terminal attributes: %s"),
+                   strerror (errno));
 }
 
 int
@@ -336,16 +338,16 @@ remember_args (WORD_LIST *list, bool destructive)
   for (int i = 1; i < 10; i++)
     {
       if ((destructive || list) && dollar_vars[i])
-	{
-	  free (dollar_vars[i]);
-	  dollar_vars[i] = (char *)NULL;
-	}
+        {
+          free (dollar_vars[i]);
+          dollar_vars[i] = (char *)NULL;
+        }
 
       if (list)
-	{
-	  dollar_vars[posparam_count = i] = savestring (list->word->word);
-	  list = (WORD_LIST *)list->next;
-	}
+        {
+          dollar_vars[posparam_count = i] = savestring (list->word->word);
+          list = (WORD_LIST *)list->next;
+        }
     }
 
   /* If arguments remain, assign them to REST_OF_ARGS.
@@ -367,27 +369,27 @@ remember_args (WORD_LIST *list, bool destructive)
 void
 shift_args (int times)
 {
-  if (times <= 0)		/* caller should check */
+  if (times <= 0) /* caller should check */
     return;
 
   while (times-- > 0)
     {
       if (dollar_vars[1])
-	free (dollar_vars[1]);
+        free (dollar_vars[1]);
 
       for (int count = 1; count < 9; count++)
-	dollar_vars[count] = dollar_vars[count + 1];
+        dollar_vars[count] = dollar_vars[count + 1];
 
       if (rest_of_args)
-	{
-	  WORD_LIST *temp = rest_of_args;
-	  dollar_vars[9] = savestring (temp->word->word);
-	  rest_of_args = (WORD_LIST *)rest_of_args->next;
-	  temp->next = (WORD_LIST *)NULL;
-	  dispose_words (temp);
-	}
+        {
+          WORD_LIST *temp = rest_of_args;
+          dollar_vars[9] = savestring (temp->word->word);
+          rest_of_args = (WORD_LIST *)rest_of_args->next;
+          temp->next = (WORD_LIST *)NULL;
+          dispose_words (temp);
+        }
       else
-	dollar_vars[9] = (char *)NULL;
+        dollar_vars[9] = (char *)NULL;
 
       posparam_count--;
     }
@@ -400,13 +402,14 @@ number_of_args ()
   WORD_LIST *list;
   int n;
 
-  for (n = 0; n < 9 && dollar_vars[n+1]; n++)
+  for (n = 0; n < 9 && dollar_vars[n + 1]; n++)
     ;
   for (list = rest_of_args; list; list = list->next)
     n++;
 
-if (n != posparam_count)
-  itrace("number_of_args: n (%d) != posparam_count (%d)", n, posparam_count);
+  if (n != posparam_count)
+    itrace ("number_of_args: n (%d) != posparam_count (%d)", n,
+            posparam_count);
 #endif
 
   return posparam_count;
@@ -467,18 +470,18 @@ get_numeric_arg (WORD_LIST *list, int fatal, int64_t *count)
     {
       arg = list->word->word;
       if (arg == 0 || (legal_number (arg, count) == 0))
-	{
-	  sh_neednumarg (list->word->word ? list->word->word : "`'");
-	  if (fatal == 0)
-	    return 0;
-	  else if (fatal == 1)		/* fatal == 1; abort */
-	    throw_to_top_level ();
-	  else				/* fatal == 2; discard current command */
-	    {
-	      top_level_cleanup ();
-	      jump_to_top_level (DISCARD);
-	    }
-	}
+        {
+          sh_neednumarg (list->word->word ? list->word->word : "`'");
+          if (fatal == 0)
+            return 0;
+          else if (fatal == 1) /* fatal == 1; abort */
+            throw_to_top_level ();
+          else /* fatal == 2; discard current command */
+            {
+              top_level_cleanup ();
+              jump_to_top_level (DISCARD);
+            }
+        }
       no_args ((WORD_LIST *)list->next);
     }
 
@@ -499,13 +502,14 @@ get_exitstat (WORD_LIST *list)
   if (list == 0)
     {
       /* If we're not running the DEBUG trap, the return builtin, when not
-	 given any arguments, uses the value of $? before the trap ran.  If
-	 given an argument, return uses it.  This means that the trap can't
-	 change $?.  The DEBUG trap gets to change $?, though, since that is
-	 part of its reason for existing, and because the extended debug mode
-	 does things with the return value. */
-      if (this_shell_builtin == return_builtin && running_trap > 0 && running_trap != DEBUG_TRAP+1)
-	return trap_saved_exit_value;
+         given any arguments, uses the value of $? before the trap ran.  If
+         given an argument, return uses it.  This means that the trap can't
+         change $?.  The DEBUG trap gets to change $?, though, since that is
+         part of its reason for existing, and because the extended debug mode
+         does things with the return value. */
+      if (this_shell_builtin == return_builtin && running_trap > 0
+          && running_trap != DEBUG_TRAP + 1)
+        return trap_saved_exit_value;
       return last_command_exit_value;
     }
 
@@ -534,7 +538,7 @@ read_octal (const char *string)
       digits++;
       result = (result * 8) + (*string++ - '0');
       if (result > 07777)
-	return -1;
+        return -1;
     }
 
   if (digits == 0 || *string)
@@ -564,18 +568,19 @@ get_working_directory (const char *for_whom)
 
   if (the_current_working_directory == 0)
     {
-#if defined (GETCWD_BROKEN)
+#if defined(GETCWD_BROKEN)
       the_current_working_directory = getcwd (0, PATH_MAX);
 #else
       the_current_working_directory = getcwd (0, 0);
 #endif
       if (the_current_working_directory == 0)
-	{
-	  fprintf (stderr, _("%s: error retrieving current directory: %s: %s\n"),
-		   (for_whom && *for_whom) ? for_whom : get_name_for_error (),
-		   _(bash_getcwd_errstr), strerror (errno));
-	  return (char *)NULL;
-	}
+        {
+          fprintf (stderr,
+                   _ ("%s: error retrieving current directory: %s: %s\n"),
+                   (for_whom && *for_whom) ? for_whom : get_name_for_error (),
+                   _ (bash_getcwd_errstr), strerror (errno));
+          return (char *)NULL;
+        }
     }
 
   return savestring (the_current_working_directory);
@@ -595,7 +600,7 @@ set_working_directory (const char *name)
 /*								    */
 /* **************************************************************** */
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 int
 get_job_by_name (const char *name, int flags)
 {
@@ -604,40 +609,40 @@ get_job_by_name (const char *name, int flags)
   for (int i = js.j_jobslots - 1; i >= 0; i--)
     {
       JOB *j = get_job_by_jid (i);
-      if (j == 0 || ((flags & JM_STOPPED) && J_JOBSTATE(j) != JSTOPPED))
+      if (j == 0 || ((flags & JM_STOPPED) && J_JOBSTATE (j) != JSTOPPED))
         continue;
 
       PROCESS *p = j->pipe;
       do
         {
-	  int match;
-	  if (flags & JM_EXACT)
-	    {
-	      int cl = strlen (p->command);
-	      match = STREQN (p->command, name, cl);
-	    }
-	  else if (flags & JM_SUBSTRING)
-	    match = strcasestr (p->command, name) != (char *)0;
-	  else
-	    match = STREQN (p->command, name, wl);
+          int match;
+          if (flags & JM_EXACT)
+            {
+              int cl = strlen (p->command);
+              match = STREQN (p->command, name, cl);
+            }
+          else if (flags & JM_SUBSTRING)
+            match = strcasestr (p->command, name) != (char *)0;
+          else
+            match = STREQN (p->command, name, wl);
 
-	  if (match == 0)
-	    {
-	      p = p->next;
-	      continue;
-	    }
-	  else if (flags & JM_FIRSTMATCH)
-	    return i;		/* return first match */
-	  else if (job != NO_JOB)
-	    {
-	      if (this_shell_builtin)
-	        builtin_error (_("%s: ambiguous job spec"), name);
-	      else
-	        internal_error (_("%s: ambiguous job spec"), name);
-	      return DUP_JOB;
-	    }
-	  else
-	    job = i;
+          if (match == 0)
+            {
+              p = p->next;
+              continue;
+            }
+          else if (flags & JM_FIRSTMATCH)
+            return i; /* return first match */
+          else if (job != NO_JOB)
+            {
+              if (this_shell_builtin)
+                builtin_error (_ ("%s: ambiguous job spec"), name);
+              else
+                internal_error (_ ("%s: ambiguous job spec"), name);
+              return DUP_JOB;
+            }
+          else
+            job = i;
         }
       while (p != j->pipe);
     }
@@ -677,7 +682,7 @@ get_job_spec (WORD_LIST *list)
     case '-':
       return js.j_previous;
 
-    case '?':			/* Substring search requested. */
+    case '?': /* Substring search requested. */
       jflags |= JM_SUBSTRING;
       word++;
       /* FALLTHROUGH */
@@ -699,35 +704,35 @@ display_signal_list (WORD_LIST *list, int forcecols)
     {
       int column = 0;
       for (int i = 1; i < NSIG; i++)
-	{
-	  const char *name = signal_name (i);
-	  if (STREQN (name, "SIGJUNK", 7) || STREQN (name, "Unknown", 7))
-	    continue;
+        {
+          const char *name = signal_name (i);
+          if (STREQN (name, "SIGJUNK", 7) || STREQN (name, "Unknown", 7))
+            continue;
 
-	  if (posixly_correct && !forcecols)
-	    {
-	      /* This is for the kill builtin.  POSIX.2 says the signal names
-		 are displayed without the `SIG' prefix. */
-	      if (STREQN (name, "SIG", 3))
-		name += 3;
-	      printf ("%s%s", name, (i == NSIG - 1) ? "" : " ");
-	    }
-	  else
-	    {
-	      printf ("%2d) %s", i, name);
+          if (posixly_correct && !forcecols)
+            {
+              /* This is for the kill builtin.  POSIX.2 says the signal names
+                 are displayed without the `SIG' prefix. */
+              if (STREQN (name, "SIG", 3))
+                name += 3;
+              printf ("%s%s", name, (i == NSIG - 1) ? "" : " ");
+            }
+          else
+            {
+              printf ("%2d) %s", i, name);
 
-	      if (++column < 5)
-		printf ("\t");
-	      else
-		{
-		  printf ("\n");
-		  column = 0;
-		}
-	    }
-	}
+              if (++column < 5)
+                printf ("\t");
+              else
+                {
+                  printf ("\n");
+                  column = 0;
+                }
+            }
+        }
 
       if ((posixly_correct && !forcecols) || column != 0)
-	printf ("\n");
+        printf ("\n");
       return result;
     }
 
@@ -736,45 +741,47 @@ display_signal_list (WORD_LIST *list, int forcecols)
     {
       int64_t lsignum;
       if (legal_number (list->word->word, &lsignum))
-	{
-	  /* This is specified by Posix.2 so that exit statuses can be
-	     mapped into signal numbers. */
-	  if (lsignum > 128)
-	    lsignum -= 128;
-	  if (lsignum < 0 || lsignum >= NSIG)
-	    {
-	      sh_invalidsig (list->word->word);
-	      result = EXECUTION_FAILURE;
-	      list = (WORD_LIST *)list->next;
-	      continue;
-	    }
+        {
+          /* This is specified by Posix.2 so that exit statuses can be
+             mapped into signal numbers. */
+          if (lsignum > 128)
+            lsignum -= 128;
+          if (lsignum < 0 || lsignum >= NSIG)
+            {
+              sh_invalidsig (list->word->word);
+              result = EXECUTION_FAILURE;
+              list = (WORD_LIST *)list->next;
+              continue;
+            }
 
-	  int signum = lsignum;
-	  const char *name = signal_name (signum);
-	  if (STREQN (name, "SIGJUNK", 7) || STREQN (name, "Unknown", 7))
-	    {
-	      list = (WORD_LIST *)list->next;
-	      continue;
-	    }
-	  /* POSIX.2 says that `kill -l signum' prints the signal name without
-	     the `SIG' prefix. */
-	  printf ("%s\n", (this_shell_builtin == kill_builtin && signum > 0) ? name + 3 : name);
-	}
+          int signum = lsignum;
+          const char *name = signal_name (signum);
+          if (STREQN (name, "SIGJUNK", 7) || STREQN (name, "Unknown", 7))
+            {
+              list = (WORD_LIST *)list->next;
+              continue;
+            }
+          /* POSIX.2 says that `kill -l signum' prints the signal name without
+             the `SIG' prefix. */
+          printf ("%s\n", (this_shell_builtin == kill_builtin && signum > 0)
+                              ? name + 3
+                              : name);
+        }
       else
-	{
-	  int dflags = DSIG_NOCASE;
-	  if (posixly_correct == 0 || this_shell_builtin != kill_builtin)
-	    dflags |= DSIG_SIGPREFIX;
-	  int signum = decode_signal (list->word->word, dflags);
-	  if (signum == NO_SIG)
-	    {
-	      sh_invalidsig (list->word->word);
-	      result = EXECUTION_FAILURE;
-	      list = (WORD_LIST *)list->next;
-	      continue;
-	    }
-	  printf ("%d\n", signum);
-	}
+        {
+          int dflags = DSIG_NOCASE;
+          if (posixly_correct == 0 || this_shell_builtin != kill_builtin)
+            dflags |= DSIG_SIGPREFIX;
+          int signum = decode_signal (list->word->word, dflags);
+          if (signum == NO_SIG)
+            {
+              sh_invalidsig (list->word->word);
+              result = EXECUTION_FAILURE;
+              list = (WORD_LIST *)list->next;
+              continue;
+            }
+          printf ("%d\n", signum);
+        }
       list = (WORD_LIST *)list->next;
     }
   return result;
@@ -806,24 +813,25 @@ builtin_address_internal (const char *name, int disabled_okay)
       j = shell_builtins[mid].name[0] - name[0];
 
       if (j == 0)
-	j = strcmp (shell_builtins[mid].name, name);
+        j = strcmp (shell_builtins[mid].name, name);
 
       if (j == 0)
-	{
-	  /* It must have a function pointer.  It must be enabled, or we
-	     must have explicitly allowed disabled functions to be found,
-	     and it must not have been deleted. */
-	  if (shell_builtins[mid].function &&
-	      ((shell_builtins[mid].flags & BUILTIN_DELETED) == 0) &&
-	      ((shell_builtins[mid].flags & BUILTIN_ENABLED) || disabled_okay))
-	    return &shell_builtins[mid];
-	  else
-	    return (struct builtin *)NULL;
-	}
+        {
+          /* It must have a function pointer.  It must be enabled, or we
+             must have explicitly allowed disabled functions to be found,
+             and it must not have been deleted. */
+          if (shell_builtins[mid].function
+              && ((shell_builtins[mid].flags & BUILTIN_DELETED) == 0)
+              && ((shell_builtins[mid].flags & BUILTIN_ENABLED)
+                  || disabled_okay))
+            return &shell_builtins[mid];
+          else
+            return (struct builtin *)NULL;
+        }
       if (j > 0)
-	hi = mid - 1;
+        hi = mid - 1;
       else
-	lo = mid + 1;
+        lo = mid + 1;
     }
   return (struct builtin *)NULL;
 }
@@ -833,7 +841,8 @@ sh_builtin_func_t *
 find_shell_builtin (const char *name)
 {
   current_builtin = builtin_address_internal (name, 0);
-  return current_builtin ? current_builtin->function : (sh_builtin_func_t *)NULL;
+  return current_builtin ? current_builtin->function
+                         : (sh_builtin_func_t *)NULL;
 }
 
 /* Return the address of builtin with NAME, whether it is enabled or not. */
@@ -841,7 +850,8 @@ sh_builtin_func_t *
 builtin_address (const char *name)
 {
   current_builtin = builtin_address_internal (name, 1);
-  return current_builtin ? current_builtin->function : (sh_builtin_func_t *)NULL;
+  return current_builtin ? current_builtin->function
+                         : (sh_builtin_func_t *)NULL;
 }
 
 /* Return the function implementing the builtin NAME, but only if it is a
@@ -850,9 +860,9 @@ sh_builtin_func_t *
 find_special_builtin (const char *name)
 {
   current_builtin = builtin_address_internal (name, 0);
-  return ((current_builtin && (current_builtin->flags & SPECIAL_BUILTIN)) ?
-  			current_builtin->function :
-  			(sh_builtin_func_t *)NULL);
+  return ((current_builtin && (current_builtin->flags & SPECIAL_BUILTIN))
+              ? current_builtin->function
+              : (sh_builtin_func_t *)NULL);
 }
 
 static int
@@ -872,14 +882,15 @@ void
 initialize_shell_builtins ()
 {
   qsort (shell_builtins, num_shell_builtins, sizeof (struct builtin),
-    (QSFUNC *)shell_builtin_compare);
+         (QSFUNC *)shell_builtin_compare);
 }
 
-#if !defined (HELP_BUILTIN)
+#if !defined(HELP_BUILTIN)
 void
 builtin_help ()
 {
-  printf ("%s: %s\n", this_command_name, _("help not available in this version"));
+  printf ("%s: %s\n", this_command_name,
+          _ ("help not available in this version"));
 }
 #endif
 
@@ -894,12 +905,15 @@ builtin_bind_variable (const char *name, const char *value, int flags)
 {
   SHELL_VAR *v;
 
-#if defined (ARRAY_VARS)
-  if (valid_array_reference (name, assoc_expand_once ? (VA_NOEXPAND | VA_ONEWORD) : 0) == 0)
+#if defined(ARRAY_VARS)
+  if (valid_array_reference (
+          name, assoc_expand_once ? (VA_NOEXPAND | VA_ONEWORD) : 0)
+      == 0)
     v = bind_variable (name, value, flags);
   else
-    v = assign_array_element (name, value, flags | (assoc_expand_once ? ASS_NOEXPAND : 0));
-#else /* !ARRAY_VARS */
+    v = assign_array_element (name, value,
+                              flags | (assoc_expand_once ? ASS_NOEXPAND : 0));
+#else  /* !ARRAY_VARS */
   v = bind_variable (name, value, flags);
 #endif /* !ARRAY_VARS */
 
@@ -919,15 +933,15 @@ builtin_unbind_variable (const char *vname)
   v = find_variable (vname);
   if (v && readonly_p (v))
     {
-      builtin_error (_("%s: cannot unset: readonly %s"), vname, "variable");
+      builtin_error (_ ("%s: cannot unset: readonly %s"), vname, "variable");
       return -2;
     }
   else if (v && non_unsettable_p (v))
     {
-      builtin_error (_("%s: cannot unset"), vname);
+      builtin_error (_ ("%s: cannot unset"), vname);
       return -2;
     }
   return unbind_variable (vname);
 }
 
-}  // namespace bash
+} // namespace bash

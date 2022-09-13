@@ -20,14 +20,14 @@
 
 #include "config.hh"
 
-#if defined (HAVE_TIMES)
+#if defined(HAVE_TIMES)
 
 #include <sys/types.h>
 
 #include "posixtime.hh"
 
-#if defined (HAVE_SYS_TIMES_H)
-#  include <sys/times.h>
+#if defined(HAVE_SYS_TIMES_H)
+#include <sys/times.h>
 #endif
 
 #include <cstdio>
@@ -76,9 +76,10 @@ print_clock_t (FILE *fp, clock_t t)
   minutes = timestamp / 60;
   seconds = timestamp % 60;
 
-  fprintf (fp, "%ldm%d%c%03ds",  minutes, seconds, locale_decpoint(), seconds_fraction);
+  fprintf (fp, "%ldm%d%c%03ds", minutes, seconds, locale_decpoint (),
+           seconds_fraction);
 }
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* HAVE_TIMES */

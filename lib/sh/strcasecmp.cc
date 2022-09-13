@@ -20,7 +20,7 @@
 
 #include "config.hh"
 
-#if !defined (HAVE_STRCASECMP)
+#if !defined(HAVE_STRCASECMP)
 
 #include "bashansi.hh"
 #include "chartypes.hh"
@@ -41,10 +41,11 @@ strncasecmp (const char *string1, const char *string2, size_t count)
   s2 = string2;
   do
     {
-      if ((r = TOLOWER ((unsigned char) *s1) - TOLOWER ((unsigned char) *s2)) != 0)
-	return r;
+      if ((r = TOLOWER ((unsigned char)*s1) - TOLOWER ((unsigned char)*s2))
+          != 0)
+        return r;
       if (*s1++ == '\0')
-	break;
+        break;
       s2++;
     }
   while (--count != 0);
@@ -66,10 +67,11 @@ strcasecmp (const char *string1, const char *string2)
   if (s1 == s2)
     return 0;
 
-  while ((r = TOLOWER ((unsigned char)*s1) - TOLOWER ((unsigned char)*s2)) == 0)
+  while ((r = TOLOWER ((unsigned char)*s1) - TOLOWER ((unsigned char)*s2))
+         == 0)
     {
       if (*s1++ == '\0')
-	return 0;
+        return 0;
       s2++;
     }
 

@@ -22,14 +22,14 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
 #include "common.hh"
+#include "shell.hh"
 
 // $BUILTIN shift
 // $FUNCTION shift_builtin
@@ -69,14 +69,14 @@ Shell::shift_builtin (WORD_LIST *list)
     return EXECUTION_SUCCESS;
   else if (times < 0)
     {
-      sh_erange (list ? list->word->word : NULL, _("shift count"));
+      sh_erange (list ? list->word->word : NULL, _ ("shift count"));
       return EXECUTION_FAILURE;
     }
   nargs = number_of_args ();
   if (times > nargs)
     {
       if (print_shift_error)
-	sh_erange (list ? list->word->word : NULL, _("shift count"));
+        sh_erange (list ? list->word->word : NULL, _ ("shift count"));
       return EXECUTION_FAILURE;
     }
   else if (times == nargs)
@@ -89,4 +89,4 @@ Shell::shift_builtin (WORD_LIST *list)
   return EXECUTION_SUCCESS;
 }
 
-}  // namespace bash
+} // namespace bash

@@ -20,14 +20,14 @@
 
 #include "config.hh"
 
-#if defined (HAVE_TIMEVAL)
+#if defined(HAVE_TIMEVAL)
 
 #include <cstdio>
 
 #include <sys/types.h>
 
-#include "posixtime.hh"
 #include "bashintl.hh"
+#include "posixtime.hh"
 
 namespace bash
 {
@@ -42,11 +42,11 @@ difftimeval (struct timeval *d, struct timeval *t1, struct timeval *t2)
       d->tv_usec += 1000000;
       d->tv_sec -= 1;
 #if !defined(__VMS)
-      if (d->tv_sec < 0)		/* ??? -- BSD/OS does this */
-	{
-	  d->tv_sec = 0;
-	  d->tv_usec = 0;
-	}
+      if (d->tv_sec < 0) /* ??? -- BSD/OS does this */
+        {
+          d->tv_sec = 0;
+          d->tv_usec = 0;
+        }
 #endif
     }
   return d;
@@ -91,7 +91,7 @@ divtimeval (struct timeval *d, int m)
    Barely-tested code from Deven T. Corzine <deven@ties.org>. */
 int
 timeval_to_cpu (struct timeval *rt, struct timeval *ut,
-                struct timeval *st)	/* real, user, sys */
+                struct timeval *st) /* real, user, sys */
 {
   struct timeval t1, t2;
 
@@ -102,7 +102,7 @@ timeval_to_cpu (struct timeval *rt, struct timeval *ut,
   for (int i = 0; i < 6; i++)
     {
       if ((t1.tv_sec > 99999999) || (t2.tv_sec > 99999999))
-	break;
+        break;
       t1.tv_sec *= 10;
       t1.tv_sec += t1.tv_usec / 100000;
       t1.tv_usec *= 10;
@@ -115,9 +115,9 @@ timeval_to_cpu (struct timeval *rt, struct timeval *ut,
   for (int i = 0; i < 4; i++)
     {
       if (t1.tv_sec < 100000000)
-	t1.tv_sec *= 10;
+        t1.tv_sec *= 10;
       else
-	t2.tv_sec /= 10;
+        t2.tv_sec /= 10;
     }
 
   return (t2.tv_sec == 0) ? 0 : t1.tv_sec / t2.tv_sec;
@@ -133,7 +133,7 @@ timeval_to_secs (struct timeval *tvp, time_t *sp, int *sfp)
 
   *sp = tvp->tv_sec;
 
-  *sfp = tvp->tv_usec % 1000000;	/* pretty much a no-op */
+  *sfp = tvp->tv_usec % 1000000; /* pretty much a no-op */
   rest = *sfp % 1000;
   *sfp = (*sfp * 1000) / 1000000;
   if (rest >= 500)
@@ -161,9 +161,10 @@ print_timeval (FILE *fp, struct timeval *tvp)
   minutes = timestamp / 60;
   seconds = timestamp % 60;
 
-  fprintf (fp, "%ldm%d%c%03ds",  minutes, seconds, locale_decpoint (), seconds_fraction);
+  fprintf (fp, "%ldm%d%c%03ds", minutes, seconds, locale_decpoint (),
+           seconds_fraction);
 }
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* HAVE_TIMEVAL */

@@ -115,28 +115,28 @@
 
 #include "config.hh"
 
-#if defined (PUSHD_AND_POPD)
+#if defined(PUSHD_AND_POPD)
 
-#if defined (HAVE_SYS_PARAM_H)
-#  include <sys/param.h>
+#if defined(HAVE_SYS_PARAM_H)
+#include <sys/param.h>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
 #include "tilde.hh"
 
-#include "shell.hh"
-#include "maxpath.hh"
 #include "common.hh"
+#include "maxpath.hh"
+#include "shell.hh"
 
 #include "builtext.hh"
 
 #ifdef LOADABLE_BUILTIN
-#  include "builtins.hh"
+#include "builtins.hh"
 #endif
 
 namespace bash
@@ -158,10 +158,10 @@ static int change_to_temp (char *);
 static void add_dirstack_element (char *);
 static int get_dirstack_index (int64_t, int, int *);
 
-#define NOCD		0x01
-#define ROTATE		0x02
-#define LONGFORM	0x04
-#define CLEARSTAK	0x08
+#define NOCD 0x01
+#define ROTATE 0x02
+#define LONGFORM 0x04
+#define CLEARSTAK 0x08
 
 int
 Shell::pushd_builtin (WORD_LIST *list)
@@ -183,14 +183,14 @@ Shell::pushd_builtin (WORD_LIST *list)
   if (list == 0)
     {
       if (directory_list_offset == 0)
-	{
-	  builtin_error (_("no other directory"));
-	  return EXECUTION_FAILURE;
-	}
+        {
+          builtin_error (_ ("no other directory"));
+          return EXECUTION_FAILURE;
+        }
 
       char *current_directory = get_working_directory ("pushd");
       if (current_directory == 0)
-	return EXECUTION_FAILURE;
+        return EXECUTION_FAILURE;
 
       int j = directory_list_offset - 1;
       char *temp = pushd_directory_list[j];
@@ -206,75 +206,77 @@ Shell::pushd_builtin (WORD_LIST *list)
     {
       char direction;
       if (ISOPTION (list->word->word, 'n'))
-	{
-	  flags |= NOCD;
-	}
+        {
+          flags |= NOCD;
+        }
       else if (ISOPTION (list->word->word, '-'))
-	{
-	  list = (WORD_LIST *)list->next;
-	  break;
-	}
+        {
+          list = (WORD_LIST *)list->next;
+          break;
+        }
       else if (list->word->word[0] == '-' && list->word->word[1] == '\0')
-	/* Let `pushd -' work like it used to. */
-	break;
+        /* Let `pushd -' work like it used to. */
+        break;
       else if (((direction = list->word->word[0]) == '+') || direction == '-')
-	{
-	  if (legal_number (list->word->word + 1, &num) == 0)
-	    {
-	      sh_invalidnum (list->word->word);
-	      builtin_usage ();
-	      return EX_USAGE;
-	    }
+        {
+          if (legal_number (list->word->word + 1, &num) == 0)
+            {
+              sh_invalidnum (list->word->word);
+              builtin_usage ();
+              return EX_USAGE;
+            }
 
-	  if (direction == '-')
-	    num = directory_list_offset - num;
+          if (direction == '-')
+            num = directory_list_offset - num;
 
-	  if (num > directory_list_offset || num < 0)
-	    {
-	      pushd_error (directory_list_offset, list->word->word);
-	      return EXECUTION_FAILURE;
-	    }
-	  flags |= ROTATE;
-	}
+          if (num > directory_list_offset || num < 0)
+            {
+              pushd_error (directory_list_offset, list->word->word);
+              return EXECUTION_FAILURE;
+            }
+          flags |= ROTATE;
+        }
       else if (*list->word->word == '-')
-	{
-	  sh_invalidopt (list->word->word);
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+          sh_invalidopt (list->word->word);
+          builtin_usage ();
+          return EX_USAGE;
+        }
       else
-	break;
+        break;
     }
 
   if (flags & ROTATE)
     {
       /* Rotate the stack num times.  Remember, the current
-	 directory acts like it is part of the stack. */
+         directory acts like it is part of the stack. */
       char *temp = get_working_directory ("pushd");
 
       if (num == 0)
-	{
-	  int j = ((flags & NOCD) == 0) ? change_to_temp (temp) : EXECUTION_SUCCESS;
-	  free (temp);
-	  return j;
-	}
+        {
+          int j = ((flags & NOCD) == 0) ? change_to_temp (temp)
+                                        : EXECUTION_SUCCESS;
+          free (temp);
+          return j;
+        }
 
       do
-	{
-	  char *top = pushd_directory_list[directory_list_offset - 1];
+        {
+          char *top = pushd_directory_list[directory_list_offset - 1];
 
-	  int j;
-	  for (j = directory_list_offset - 2; j > -1; j--)
-	    pushd_directory_list[j + 1] = pushd_directory_list[j];
+          int j;
+          for (j = directory_list_offset - 2; j > -1; j--)
+            pushd_directory_list[j + 1] = pushd_directory_list[j];
 
-	  pushd_directory_list[j + 1] = temp;
+          pushd_directory_list[j + 1] = temp;
 
-	  temp = top;
-	  num--;
-	}
+          temp = top;
+          num--;
+        }
       while (num);
 
-      int j = ((flags & NOCD) == 0) ? change_to_temp (temp) : EXECUTION_SUCCESS;
+      int j
+          = ((flags & NOCD) == 0) ? change_to_temp (temp) : EXECUTION_SUCCESS;
       free (temp);
       return j;
     }
@@ -288,13 +290,15 @@ Shell::pushd_builtin (WORD_LIST *list)
   if (current_directory == 0)
     return EXECUTION_FAILURE;
 
-  int j = ((flags & NOCD) == 0) ? cd_builtin (skipopt ? orig_list : list) : EXECUTION_SUCCESS;
+  int j = ((flags & NOCD) == 0) ? cd_builtin (skipopt ? orig_list : list)
+                                : EXECUTION_SUCCESS;
   if (j == EXECUTION_SUCCESS)
     {
-      add_dirstack_element ((flags & NOCD) ? savestring (list->word->word) : current_directory);
+      add_dirstack_element ((flags & NOCD) ? savestring (list->word->word)
+                                           : current_directory);
       dirs_builtin ((WORD_LIST *)NULL);
       if (flags & NOCD)
-	free (current_directory);
+        free (current_directory);
       return EXECUTION_SUCCESS;
     }
   else
@@ -318,76 +322,79 @@ Shell::popd_builtin (WORD_LIST *list)
   CHECK_HELPOPT (list);
 
   which_word = (char *)NULL;
-  for (flags = 0, which = 0, direction = '+'; list; list = (WORD_LIST *)list->next)
+  for (flags = 0, which = 0, direction = '+'; list;
+       list = (WORD_LIST *)list->next)
     {
       if (ISOPTION (list->word->word, 'n'))
-	{
-	  flags |= NOCD;
-	}
+        {
+          flags |= NOCD;
+        }
       else if (ISOPTION (list->word->word, '-'))
-	{
-	  list = (WORD_LIST *)list->next;
-	  break;
-	}
+        {
+          list = (WORD_LIST *)list->next;
+          break;
+        }
       else if (((direction = list->word->word[0]) == '+') || direction == '-')
-	{
-	  if (legal_number (list->word->word + 1, &which) == 0)
-	    {
-	      sh_invalidnum (list->word->word);
-	      builtin_usage ();
-	      return EX_USAGE;
-	    }
-	  which_word = list->word->word;
-	}
+        {
+          if (legal_number (list->word->word + 1, &which) == 0)
+            {
+              sh_invalidnum (list->word->word);
+              builtin_usage ();
+              return EX_USAGE;
+            }
+          which_word = list->word->word;
+        }
       else if (*list->word->word == '-')
-	{
-	  sh_invalidopt (list->word->word);
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+          sh_invalidopt (list->word->word);
+          builtin_usage ();
+          return EX_USAGE;
+        }
       else if (*list->word->word)
-	{
-	  builtin_error (_("%s: invalid argument"), list->word->word);
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+          builtin_error (_ ("%s: invalid argument"), list->word->word);
+          builtin_usage ();
+          return EX_USAGE;
+        }
       else
-	break;
+        break;
     }
 
-  if (which > directory_list_offset || (which < -directory_list_offset) || (directory_list_offset == 0 && which == 0))
+  if (which > directory_list_offset || (which < -directory_list_offset)
+      || (directory_list_offset == 0 && which == 0))
     {
       pushd_error (directory_list_offset, which_word ? which_word : "");
       return EXECUTION_FAILURE;
     }
 
   /* Handle case of no specification, or top of stack specification. */
-  if ((direction == '+' && which == 0) ||
-      (direction == '-' && which == directory_list_offset))
+  if ((direction == '+' && which == 0)
+      || (direction == '-' && which == directory_list_offset))
     {
-      int i = ((flags & NOCD) == 0) ? cd_to_string (pushd_directory_list[directory_list_offset - 1])
-      				: EXECUTION_SUCCESS;
+      int i = ((flags & NOCD) == 0) ? cd_to_string (
+                  pushd_directory_list[directory_list_offset - 1])
+                                    : EXECUTION_SUCCESS;
       if (i != EXECUTION_SUCCESS)
-	return i;
+        return i;
       free (pushd_directory_list[--directory_list_offset]);
     }
   else
     {
       /* Since an offset other than the top directory was specified,
-	 remove that directory from the list and shift the remainder
-	 of the list into place. */
+         remove that directory from the list and shift the remainder
+         of the list into place. */
       int i = (direction == '+') ? directory_list_offset - which : which;
       if (i < 0 || i > directory_list_offset)
-	{
-	  pushd_error (directory_list_offset, which_word ? which_word : "");
-	  return EXECUTION_FAILURE;
-	}
+        {
+          pushd_error (directory_list_offset, which_word ? which_word : "");
+          return EXECUTION_FAILURE;
+        }
       free (pushd_directory_list[i]);
       directory_list_offset--;
 
       /* Shift the remainder of the list into place. */
       for (; i < directory_list_offset; i++)
-	pushd_directory_list[i] = pushd_directory_list[i + 1];
+        pushd_directory_list[i] = pushd_directory_list[i + 1];
     }
 
   dirs_builtin ((WORD_LIST *)NULL);
@@ -402,48 +409,49 @@ Shell::dirs_builtin (WORD_LIST *list)
   const char *w;
 
   CHECK_HELPOPT (list);
-  for (flags = vflag = index_flag = 0, desired_index = -1, w = ""; list; list = (WORD_LIST *)list->next)
+  for (flags = vflag = index_flag = 0, desired_index = -1, w = ""; list;
+       list = (WORD_LIST *)list->next)
     {
       if (ISOPTION (list->word->word, 'l'))
-	{
-	  flags |= LONGFORM;
-	}
+        {
+          flags |= LONGFORM;
+        }
       else if (ISOPTION (list->word->word, 'c'))
-	{
-	  flags |= CLEARSTAK;
-	}
+        {
+          flags |= CLEARSTAK;
+        }
       else if (ISOPTION (list->word->word, 'v'))
-	{
-	  vflag |= 2;
-	}
+        {
+          vflag |= 2;
+        }
       else if (ISOPTION (list->word->word, 'p'))
-	{
-	  vflag |= 1;
-	}
+        {
+          vflag |= 1;
+        }
       else if (ISOPTION (list->word->word, '-'))
-	{
-	  list = (WORD_LIST *)list->next;
-	  break;
-	}
+        {
+          list = (WORD_LIST *)list->next;
+          break;
+        }
       else if (*list->word->word == '+' || *list->word->word == '-')
-	{
-	  int sign;
-	  int64_t i;
-	  if (legal_number (w = list->word->word + 1, &i) == 0)
-	    {
-	      sh_invalidnum (list->word->word);
-	      builtin_usage ();
-	      return EX_USAGE;
-	    }
-	  sign = (*list->word->word == '+') ? 1 : -1;
-	  desired_index = get_dirstack_index (i, sign, &index_flag);
-	}
+        {
+          int sign;
+          int64_t i;
+          if (legal_number (w = list->word->word + 1, &i) == 0)
+            {
+              sh_invalidnum (list->word->word);
+              builtin_usage ();
+              return EX_USAGE;
+            }
+          sign = (*list->word->word == '+') ? 1 : -1;
+          desired_index = get_dirstack_index (i, sign, &index_flag);
+        }
       else
-	{
-	  sh_invalidopt (list->word->word);
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+          sh_invalidopt (list->word->word);
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
 
   if (flags & CLEARSTAK)
@@ -452,13 +460,14 @@ Shell::dirs_builtin (WORD_LIST *list)
       return EXECUTION_SUCCESS;
     }
 
-  if (index_flag && (desired_index < 0 || desired_index > directory_list_offset))
+  if (index_flag
+      && (desired_index < 0 || desired_index > directory_list_offset))
     {
       pushd_error (directory_list_offset, w);
       return EXECUTION_FAILURE;
     }
 
-#define DIRSTACK_FORMAT(temp) \
+#define DIRSTACK_FORMAT(temp)                                                 \
   (flags & LONGFORM) ? temp : polite_directory_format (temp)
 
   /* The first directory printed is always the current working directory. */
@@ -466,38 +475,39 @@ Shell::dirs_builtin (WORD_LIST *list)
     {
       char *temp = get_working_directory ("dirs");
       if (temp == 0)
-	temp = savestring (_("<no current directory>"));
+        temp = savestring (_ ("<no current directory>"));
       if (vflag & 2)
-	printf ("%2d  %s", 0, DIRSTACK_FORMAT (temp));
+        printf ("%2d  %s", 0, DIRSTACK_FORMAT (temp));
       else
-	printf ("%s", DIRSTACK_FORMAT (temp));
+        printf ("%s", DIRSTACK_FORMAT (temp));
       free (temp);
       if (index_flag)
-	{
-	  putchar ('\n');
-	  return sh_chkwrite (EXECUTION_SUCCESS);
-	}
+        {
+          putchar ('\n');
+          return sh_chkwrite (EXECUTION_SUCCESS);
+        }
     }
 
-#define DIRSTACK_ENTRY(i) \
-  (flags & LONGFORM) ? pushd_directory_list[i] \
-		     : polite_directory_format (pushd_directory_list[i])
+#define DIRSTACK_ENTRY(i)                                                     \
+  (flags & LONGFORM) ? pushd_directory_list[i]                                \
+                     : polite_directory_format (pushd_directory_list[i])
 
   /* Now print the requested directory stack entries. */
   if (index_flag)
     {
       if (vflag & 2)
-	printf ("%2d  %s", directory_list_offset - desired_index,
-			   DIRSTACK_ENTRY (desired_index));
+        printf ("%2d  %s", directory_list_offset - desired_index,
+                DIRSTACK_ENTRY (desired_index));
       else
-	printf ("%s", DIRSTACK_ENTRY (desired_index));
+        printf ("%s", DIRSTACK_ENTRY (desired_index));
     }
   else
     for (int i = directory_list_offset - 1; i >= 0; i--)
       if (vflag >= 2)
-	printf ("\n%2d  %s", directory_list_offset - (int)i, DIRSTACK_ENTRY (i));
+        printf ("\n%2d  %s", directory_list_offset - (int)i,
+                DIRSTACK_ENTRY (i));
       else
-	printf ("%s%s", (vflag & 1) ? "\n" : " ", DIRSTACK_ENTRY (i));
+        printf ("%s%s", (vflag & 1) ? "\n" : " ", DIRSTACK_ENTRY (i));
 
   putchar ('\n');
 
@@ -508,9 +518,9 @@ static void
 pushd_error (int offset, const char *arg)
 {
   if (offset == 0)
-    builtin_error (_("directory stack empty"));
+    builtin_error (_ ("directory stack empty"));
   else
-    sh_erange (arg, _("directory stack index"));
+    sh_erange (arg, _ ("directory stack index"));
 }
 
 static void
@@ -557,7 +567,8 @@ static void
 add_dirstack_element (char *dir)
 {
   if (directory_list_offset == directory_list_size)
-    pushd_directory_list = strvec_resize (pushd_directory_list, directory_list_size += 10);
+    pushd_directory_list
+        = strvec_resize (pushd_directory_list, directory_list_size += 10);
   pushd_directory_list[directory_list_offset++] = dir;
 }
 
@@ -574,7 +585,7 @@ get_dirstack_index (int64_t ind, int sign, int *indexp)
   else if (ind == directory_list_offset)
     {
       if (indexp)
-	*indexp = sign > 0 ? 2 : 1;
+        *indexp = sign > 0 ? 2 : 1;
       return 0;
     }
   else if (ind >= 0 && ind <= directory_list_offset)
@@ -628,38 +639,40 @@ get_directory_stack (int flags)
 
   for (int i = 0; i < directory_list_offset; i++)
     {
-      const char *d = (flags&1) ? (char *)polite_directory_format (pushd_directory_list[i])
-		    : pushd_directory_list[i];
+      const char *d
+          = (flags & 1)
+                ? (char *)polite_directory_format (pushd_directory_list[i])
+                : pushd_directory_list[i];
       ret = make_word_list (make_word (d), ret);
     }
   /* Now the current directory. */
   char *d = get_working_directory ("dirstack");
-  bool free_d = false;	/* sentinel to decide whether or not to free d */
+  bool free_d = false; /* sentinel to decide whether or not to free d */
   if (d == 0)
     d = (char *)".";
   else
     {
-      char *t = (flags&1) ? (char *)polite_directory_format (d) : d;
+      char *t = (flags & 1) ? (char *)polite_directory_format (d) : d;
       /* polite_directory_format sometimes returns its argument unchanged.
-	 If it does not, we can free d right away.  If it does, we need to
-	 mark d to be deleted later. */
+         If it does not, we can free d right away.  If it does, we need to
+         mark d to be deleted later. */
       if (t != d)
-	{
-	  free (d);
-	  d = t;
-	}
+        {
+          free (d);
+          d = t;
+        }
       else /* t == d, so d is what we want */
-	free_d = 1;
+        free_d = 1;
     }
   ret = make_word_list (make_word (d), ret);
   if (free_d)
     free (d);
-  return ret;	/* was (REVERSE_LIST (ret, (WORD_LIST *)); */
+  return ret; /* was (REVERSE_LIST (ret, (WORD_LIST *)); */
 }
 
 #ifdef LOADABLE_BUILTIN
-char * const dirs_doc[] = {
-N_("Display the list of currently remembered directories.  Directories\n\
+char *const dirs_doc[] = {
+  N_ ("Display the list of currently remembered directories.  Directories\n\
     find their way onto the list with the `pushd' command; you can get\n\
     back up through the list with the `popd' command.\n\
     \n\
@@ -680,8 +693,8 @@ N_("Display the list of currently remembered directories.  Directories\n\
   (char *)NULL
 };
 
-char * const pushd_doc[] = {
-N_("Adds a directory to the top of the directory stack, or rotates\n\
+char *const pushd_doc[]
+    = { N_ ("Adds a directory to the top of the directory stack, or rotates\n\
     the stack, making the new top of the stack the current working\n\
     directory.  With no arguments, exchanges the top two directories.\n\
     \n\
@@ -702,11 +715,10 @@ N_("Adds a directory to the top of the directory stack, or rotates\n\
     	new current working directory.\n\
     \n\
     The `dirs' builtin displays the directory stack."),
-  (char *)NULL
-};
+        (char *)NULL };
 
-char * const popd_doc[] = {
-N_("Removes entries from the directory stack.  With no arguments, removes\n\
+char *const popd_doc[] = {
+  N_ ("Removes entries from the directory stack.  With no arguments, removes\n\
     the top directory from the stack, and changes to the new top directory.\n\
     \n\
     Options:\n\
@@ -726,34 +738,22 @@ N_("Removes entries from the directory stack.  With no arguments, removes\n\
   (char *)NULL
 };
 
-struct builtin pushd_struct = {
-	"pushd",
-	pushd_builtin,
-	BUILTIN_ENABLED,
-	pushd_doc,
-	"pushd [+N | -N] [-n] [dir]",
-	0
-};
+struct builtin pushd_struct = { "pushd",
+                                pushd_builtin,
+                                BUILTIN_ENABLED,
+                                pushd_doc,
+                                "pushd [+N | -N] [-n] [dir]",
+                                0 };
 
-struct builtin popd_struct = {
-	"popd",
-	popd_builtin,
-	BUILTIN_ENABLED,
-	popd_doc,
-	"popd [+N | -N] [-n]",
-	0
-};
+struct builtin popd_struct
+    = { "popd",   popd_builtin,          BUILTIN_ENABLED,
+        popd_doc, "popd [+N | -N] [-n]", 0 };
 
 struct builtin dirs_struct = {
-	"dirs",
-	dirs_builtin,
-	BUILTIN_ENABLED,
-	dirs_doc,
-	"dirs [-clpv] [+N] [-N]",
-	0
+  "dirs", dirs_builtin, BUILTIN_ENABLED, dirs_doc, "dirs [-clpv] [+N] [-N]", 0
 };
 #endif /* LOADABLE_BUILTIN */
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* PUSHD_AND_POPD */

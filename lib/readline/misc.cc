@@ -19,8 +19,8 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "readline.hh"
 #include "history.hh"
+#include "readline.hh"
 #include "rlprivate.hh"
 
 namespace readline
@@ -42,7 +42,7 @@ Readline::_rl_arg_overflow ()
       rl_ding ();
       rl_restore_prompt ();
       rl_clear_message ();
-      RL_UNSETSTATE(RL_STATE_NUMERICARG);
+      RL_UNSETSTATE (RL_STATE_NUMERICARG);
       return 1;
     }
   return 0;
@@ -59,29 +59,29 @@ Readline::_rl_arg_dispatch (_rl_arg_cxt cxt, int c)
 
   /* If we see a key bound to `universal-argument' after seeing digits,
       it ends the argument but is otherwise ignored. */
-  if (c >= 0 && _rl_keymap[c].type == ISFUNC &&
-      _rl_keymap[c].value.function == &Readline::rl_universal_argument)
+  if (c >= 0 && _rl_keymap[c].type == ISFUNC
+      && _rl_keymap[c].value.function == &Readline::rl_universal_argument)
     {
       if ((cxt & NUM_SAWDIGITS) == 0)
-	{
-	  rl_numeric_arg *= 4;
-	  return 1;
-	}
+        {
+          rl_numeric_arg *= 4;
+          return 1;
+        }
       else if (RL_ISSTATE (RL_STATE_CALLBACK))
         {
           _rl_argcxt |= NUM_READONE;
-          return 0;	/* XXX */
+          return 0; /* XXX */
         }
       else
-	{
-	  key = _rl_bracketed_read_key ();
-	  rl_restore_prompt ();
-	  rl_clear_message ();
-	  RL_UNSETSTATE(RL_STATE_NUMERICARG);
-	  if (key < 0)
-	    return -1;
-	  return _rl_dispatch (key, _rl_keymap);
-	}
+        {
+          key = _rl_bracketed_read_key ();
+          rl_restore_prompt ();
+          rl_clear_message ();
+          RL_UNSETSTATE (RL_STATE_NUMERICARG);
+          if (key < 0)
+            return -1;
+          return _rl_dispatch (key, _rl_keymap);
+        }
     }
 
   c = UNMETA (c);
@@ -89,7 +89,7 @@ Readline::_rl_arg_dispatch (_rl_arg_cxt cxt, int c)
   if (_rl_digit_p (c))
     {
       r = _rl_digit_value (c);
-      rl_numeric_arg = rl_explicit_arg ? (rl_numeric_arg * 10) +  r : r;
+      rl_numeric_arg = rl_explicit_arg ? (rl_numeric_arg * 10) + r : r;
       rl_explicit_arg = 1;
       _rl_argcxt |= NUM_SAWDIGITS;
     }
@@ -102,21 +102,22 @@ Readline::_rl_arg_dispatch (_rl_arg_cxt cxt, int c)
   else
     {
       /* Make M-- command equivalent to M--1 command. */
-      if ((_rl_argcxt & NUM_SAWMINUS) && rl_numeric_arg == 1 && rl_explicit_arg == 0)
-	rl_explicit_arg = 1;
+      if ((_rl_argcxt & NUM_SAWMINUS) && rl_numeric_arg == 1
+          && rl_explicit_arg == 0)
+        rl_explicit_arg = 1;
       rl_restore_prompt ();
       rl_clear_message ();
-      RL_UNSETSTATE(RL_STATE_NUMERICARG);
+      RL_UNSETSTATE (RL_STATE_NUMERICARG);
 
       r = _rl_dispatch (key, _rl_keymap);
       if (RL_ISSTATE (RL_STATE_CALLBACK))
-	{
-	  /* At worst, this will cause an extra redisplay.  Otherwise,
-	     we have to wait until the next character comes in. */
-	  if (rl_done == 0)
-	    ((*this).*rl_redisplay_function) ();
-	  r = 0;
-	}
+        {
+          /* At worst, this will cause an extra redisplay.  Otherwise,
+             we have to wait until the next character comes in. */
+          if (rl_done == 0)
+            ((*this).*rl_redisplay_function) ();
+          r = 0;
+        }
       return r;
     }
 
@@ -130,19 +131,19 @@ Readline::rl_digit_loop ()
   while (1)
     {
       if (_rl_arg_overflow ())
-	return 1;
+        return 1;
 
       int c = _rl_arg_getchar ();
 
       if (c < 0)
-	{
-	  _rl_abort_internal ();
-	  return -1;
-	}
+        {
+          _rl_abort_internal ();
+          return -1;
+        }
 
       int r = _rl_arg_dispatch (_rl_argcxt, c);
       if (r <= 0 || (RL_ISSTATE (RL_STATE_NUMERICARG) == 0))
-	return r;
+        return r;
     }
 }
 
@@ -183,14 +184,14 @@ Readline::_rl_arg_callback (_rl_arg_cxt cxt)
 
   c = _rl_arg_getchar ();
   if (c < 0)
-    return 1;		/* EOF */
+    return 1; /* EOF */
 
   if (_rl_argcxt & NUM_READONE)
     {
       _rl_argcxt &= ~NUM_READONE;
       rl_restore_prompt ();
       rl_clear_message ();
-      RL_UNSETSTATE(RL_STATE_NUMERICARG);
+      RL_UNSETSTATE (RL_STATE_NUMERICARG);
       rl_execute_next (c);
       return 0;
     }
@@ -218,12 +219,13 @@ Readline::rl_maybe_unsave_line ()
   if (_rl_saved_line_for_history)
     {
       /* Can't call with `1' because rl_undo_list might point to an undo
-	 list from a history entry, as in rl_replace_from_history() below. */
+         list from a history entry, as in rl_replace_from_history() below. */
       rl_replace_line (_rl_saved_line_for_history->line, 0);
-      rl_undo_list = dynamic_cast<UNDO_LIST *> (_rl_saved_line_for_history->data);
+      rl_undo_list
+          = dynamic_cast<UNDO_LIST *> (_rl_saved_line_for_history->data);
       delete _rl_saved_line_for_history;
       _rl_saved_line_for_history = nullptr;
-      rl_point = rl_end ();	/* rl_replace_line changes length */
+      rl_point = rl_end (); /* rl_replace_line changes length */
     }
   else
     rl_ding ();
@@ -232,14 +234,14 @@ Readline::rl_maybe_unsave_line ()
 void
 Readline::_rl_history_set_point ()
 {
-  rl_point = (_rl_history_preserve_point &&
-	      _rl_history_saved_point != static_cast<unsigned int> (-1))
-		? _rl_history_saved_point
-		: rl_end ();
+  rl_point = (_rl_history_preserve_point
+              && _rl_history_saved_point != static_cast<unsigned int> (-1))
+                 ? _rl_history_saved_point
+                 : rl_end ();
   if (rl_point > rl_end ())
     rl_point = rl_end ();
 
-#if defined (VI_MODE)
+#if defined(VI_MODE)
   if (rl_editing_mode == vi_mode && _rl_keymap != vi_insertion_keymap ())
     rl_point = 0;
 #endif /* VI_MODE */
@@ -261,29 +263,30 @@ Readline::_rl_revert_previous_lines ()
   unsigned int hpos = where_history ();
 
   HIST_ENTRY *entry = (hpos == static_cast<unsigned int> (the_history.size ()))
-			? previous_history () : current_history ();
+                          ? previous_history ()
+                          : current_history ();
   while (entry)
     {
       UNDO_LIST *ul;
       if ((ul = dynamic_cast<UNDO_LIST *> (entry->data)))
-	{
-	  if (ul == saved_undo_list)
-	    saved_undo_list = nullptr;
-	  /* Set up rl_line_buffer and other variables from history entry */
-	  rl_replace_from_history (entry);	/* entry->line is now current */
-	  entry->data = nullptr;		/* entry->data is now current undo list */
-	  /* Undo all changes to this history entry */
-	  while (rl_undo_list)
-	    rl_do_undo ();
-	  /* And copy the reverted line back to the history entry, preserving
-	     the timestamp. */
-	  entry->line = rl_line_buffer;
-	}
+        {
+          if (ul == saved_undo_list)
+            saved_undo_list = nullptr;
+          /* Set up rl_line_buffer and other variables from history entry */
+          rl_replace_from_history (entry); /* entry->line is now current */
+          entry->data = nullptr; /* entry->data is now current undo list */
+          /* Undo all changes to this history entry */
+          while (rl_undo_list)
+            rl_do_undo ();
+          /* And copy the reverted line back to the history entry, preserving
+             the timestamp. */
+          entry->line = rl_line_buffer;
+        }
       entry = previous_history ();
     }
 
   /* Restore history state */
-  rl_undo_list = saved_undo_list;	/* may have been set to null */
+  rl_undo_list = saved_undo_list; /* may have been set to null */
   history_set_pos (hpos);
 
   /* reset the line buffer */
@@ -300,23 +303,23 @@ Readline::rl_clear_history ()
   UNDO_LIST *ul, *saved_undo_list;
 
   saved_undo_list = rl_undo_list;
-  std::vector<HIST_ENTRY*> &hlist = the_history;	/* reference, not copy */
+  std::vector<HIST_ENTRY *> &hlist = the_history; /* reference, not copy */
 
-  for (std::vector<HIST_ENTRY*>::iterator it = hlist.begin ();
+  for (std::vector<HIST_ENTRY *>::iterator it = hlist.begin ();
        it != hlist.end (); ++it)
     {
       if ((ul = dynamic_cast<UNDO_LIST *> ((*it)->data)))
-	{
-	  if (ul == saved_undo_list)
-	    saved_undo_list = nullptr;
-	  delete ul;
-	  (*it)->data = nullptr;
-	}
+        {
+          if (ul == saved_undo_list)
+            saved_undo_list = nullptr;
+          delete ul;
+          (*it)->data = nullptr;
+        }
       delete *it;
     }
 
   hlist.clear ();
-  rl_undo_list = saved_undo_list;	/* should be NULL */
+  rl_undo_list = saved_undo_list; /* should be NULL */
 }
 
 /* **************************************************************** */
@@ -329,7 +332,8 @@ Readline::rl_clear_history ()
 int
 Readline::rl_beginning_of_history (int, int key)
 {
-  return rl_get_previous_history (1 + static_cast<int> (where_history ()), key);
+  return rl_get_previous_history (1 + static_cast<int> (where_history ()),
+                                  key);
 }
 
 /* Meta-> goes to the end of the history.  (The current line). */
@@ -356,15 +360,17 @@ Readline::rl_get_next_history (int count, int key)
 
   /* either not saved by rl_newline or at end of line, so set appropriately. */
   size_t rl_end = rl_line_buffer.size ();
-  if (_rl_history_saved_point == static_cast<unsigned int> (-1) && (rl_point || rl_end))
-    _rl_history_saved_point = (rl_point == rl_end) ? static_cast<unsigned int> (-1) : rl_point;
+  if (_rl_history_saved_point == static_cast<unsigned int> (-1)
+      && (rl_point || rl_end))
+    _rl_history_saved_point
+        = (rl_point == rl_end) ? static_cast<unsigned int> (-1) : rl_point;
 
   HIST_ENTRY *temp = nullptr;
   while (count)
     {
       temp = next_history ();
       if (!temp)
-	break;
+        break;
       --count;
     }
 
@@ -393,8 +399,10 @@ Readline::rl_get_previous_history (int count, int key)
 
   /* either not saved by rl_newline or at end of line, so set appropriately. */
   size_t rl_end = rl_line_buffer.size ();
-  if (_rl_history_saved_point == static_cast<unsigned int> (-1) && (rl_point || rl_end))
-    _rl_history_saved_point = (rl_point == rl_end) ? static_cast<unsigned int> (-1) : rl_point;
+  if (_rl_history_saved_point == static_cast<unsigned int> (-1)
+      && (rl_point || rl_end))
+    _rl_history_saved_point
+        = (rl_point == rl_end) ? static_cast<unsigned int> (-1) : rl_point;
 
   /* If we don't have a line saved, then save this one. */
   bool had_saved_line = (_rl_saved_line_for_history != nullptr);
@@ -408,7 +416,7 @@ Readline::rl_get_previous_history (int count, int key)
     {
       temp = previous_history ();
       if (temp == nullptr)
-	break;
+        break;
 
       old_temp = temp;
       --count;
@@ -442,8 +450,8 @@ Readline::set_saved_history ()
 {
   if (saved_history_logical_offset != static_cast<unsigned int> (-1))
     {
-      int count = static_cast<int> (where_history ()) -
-		  static_cast<int> (saved_history_logical_offset);
+      int count = static_cast<int> (where_history ())
+                  - static_cast<int> (saved_history_logical_offset);
       rl_get_previous_history (count, 0);
     }
   saved_history_logical_offset = static_cast<unsigned int> (-1);
@@ -458,8 +466,9 @@ Readline::rl_operate_and_get_next (int count, int c)
   /* Accept the current line. */
   rl_newline (1, c);
 
-  saved_history_logical_offset = rl_explicit_arg ? static_cast<unsigned int> (count)
-						 : (where_history () + 1);
+  saved_history_logical_offset = rl_explicit_arg
+                                     ? static_cast<unsigned int> (count)
+                                     : (where_history () + 1);
 
   _rl_saved_internal_startup_hook = _rl_internal_startup_hook;
   _rl_internal_startup_hook = &Readline::set_saved_history;
@@ -476,8 +485,8 @@ Readline::rl_operate_and_get_next (int count, int c)
 int
 Readline::rl_vi_editing_mode (int, int key)
 {
-#if defined (VI_MODE)
-  _rl_set_insert_mode (RL_IM_INSERT, 1);	/* vi mode ignores insert mode */
+#if defined(VI_MODE)
+  _rl_set_insert_mode (RL_IM_INSERT, 1); /* vi mode ignores insert mode */
   rl_editing_mode = vi_mode;
   rl_vi_insert_mode (1, key);
 #endif /* VI_MODE */
@@ -489,7 +498,8 @@ int
 Readline::rl_emacs_editing_mode (int, int)
 {
   rl_editing_mode = emacs_mode;
-  _rl_set_insert_mode (RL_IM_INSERT, 1); /* emacs mode default is insert mode */
+  _rl_set_insert_mode (RL_IM_INSERT,
+                       1); /* emacs mode default is insert mode */
   _rl_keymap = emacs_standard_keymap ();
 
   if (_rl_show_mode_in_prompt)
@@ -513,4 +523,4 @@ Readline::rl_overwrite_mode (int count, int)
   return 0;
 }
 
-}  // namespace readline
+} // namespace readline

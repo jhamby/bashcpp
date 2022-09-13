@@ -18,55 +18,55 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_SHELL_H_)
-#  define _SHELL_H_
+#if !defined(_SHELL_H_)
+#define _SHELL_H_
 
 #include "config.hh"
 
 #include "bashtypes.hh"
 #include "chartypes.hh"
 
-#if defined (HAVE_PWD_H)
-#  include <pwd.h>
+#if defined(HAVE_PWD_H)
+#include <pwd.h>
 #endif
 
+#include <cerrno>
+#include <csignal>
 #include <cstdio>
 #include <cstdlib>
-#include <csignal>
-#include <cerrno>
 
 #include <algorithm>
 #include <vector>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "posixstat.hh"
 #include "bashintl.hh"
+#include "posixstat.hh"
 
-#include "command.hh"
-#include "syntax.hh"
-#include "error.hh"
 #include "arrayfunc.hh"
-#include "quit.hh"
-#include "maxpath.hh"
-#include "subst.hh"
-#include "sig.hh"
-#include "pathnames.hh"
+#include "command.hh"
+#include "error.hh"
 #include "externs.hh"
 #include "jobs.hh"
-#include "shtty.hh"
+#include "maxpath.hh"
 #include "parser.hh"
+#include "pathnames.hh"
+#include "quit.hh"
+#include "shtty.hh"
+#include "sig.hh"
+#include "subst.hh"
+#include "syntax.hh"
 
 #ifdef DEBUG
-#  define YYDEBUG 1
+#define YYDEBUG 1
 #else
-#  define YYDEBUG 0
+#define YYDEBUG 0
 #endif
 
 // include the generated Bison C++ header after suppressing some warnings
-#if defined (__clang__)
+#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"
 #pragma clang diagnostic ignored "-Wsuggest-destructor-override"
@@ -75,118 +75,130 @@
 
 #include "parse.hh"
 
-#if defined (__clang__)
+#if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
 
-#if defined (READLINE)
+#if defined(READLINE)
 #include "readline.hh"
 #endif
 
-#if defined (HAVE_ICONV)
-#  include <iconv.h>
+#if defined(HAVE_ICONV)
+#include <iconv.h>
 #endif
 
 namespace bash
 {
 
 /* Flag values for history_control */
-enum hist_ctl_flags {
-  HC_IGNSPACE =		0x01,
-  HC_IGNDUPS =		0x02,
-  HC_ERASEDUPS =	0x04,
+enum hist_ctl_flags
+{
+  HC_IGNSPACE = 0x01,
+  HC_IGNDUPS = 0x02,
+  HC_ERASEDUPS = 0x04,
 
-  HC_IGNBOTH =	(HC_IGNSPACE | HC_IGNDUPS)
+  HC_IGNBOTH = (HC_IGNSPACE | HC_IGNDUPS)
 };
 
-#if defined (STRICT_POSIX)
-#  undef HISTEXPAND_DEFAULT
-#  define HISTEXPAND_DEFAULT	0
+#if defined(STRICT_POSIX)
+#undef HISTEXPAND_DEFAULT
+#define HISTEXPAND_DEFAULT 0
 #else
-#  if !defined (HISTEXPAND_DEFAULT)
-#    define HISTEXPAND_DEFAULT	1
-#  endif /* !HISTEXPAND_DEFAULT */
+#if !defined(HISTEXPAND_DEFAULT)
+#define HISTEXPAND_DEFAULT 1
+#endif /* !HISTEXPAND_DEFAULT */
 #endif
 
-#define HEREDOC_MAX		16
+#define HEREDOC_MAX 16
 
-constexpr int NO_PIPE =		 -1;
-constexpr int REDIRECT_BOTH =	 -2;
+constexpr int NO_PIPE = -1;
+constexpr int REDIRECT_BOTH = -2;
 
-constexpr int NO_VARIABLE =		 -1;
+constexpr int NO_VARIABLE = -1;
 
 /* Values that can be returned by execute_command (). */
-constexpr int EXECUTION_FAILURE =	  1;
-constexpr int EXECUTION_SUCCESS =	  0;
+constexpr int EXECUTION_FAILURE = 1;
+constexpr int EXECUTION_SUCCESS = 0;
 
 /* Usage messages by builtins result in a return status of 2. */
-constexpr int EX_BADUSAGE =		  2;
+constexpr int EX_BADUSAGE = 2;
 
-constexpr int EX_MISCERROR =		  2;
+constexpr int EX_MISCERROR = 2;
 
 /* Special exit statuses used by the shell, internally and externally. */
-constexpr int EX_RETRYFAIL =		124;
-constexpr int EX_WEXPCOMSUB =		125;
-constexpr int EX_BINARY_FILE =		126;
-constexpr int EX_NOEXEC =		126;
-constexpr int EX_NOINPUT =		126;
-constexpr int EX_NOTFOUND =		127;
+constexpr int EX_RETRYFAIL = 124;
+constexpr int EX_WEXPCOMSUB = 125;
+constexpr int EX_BINARY_FILE = 126;
+constexpr int EX_NOEXEC = 126;
+constexpr int EX_NOINPUT = 126;
+constexpr int EX_NOTFOUND = 127;
 
-constexpr int EX_SHERRBASE =	256;	/* all special error values are > this. */
+constexpr int EX_SHERRBASE = 256; /* all special error values are > this. */
 
-constexpr int EX_BADSYNTAX =	257;	/* shell syntax error */
-constexpr int EX_USAGE =	258;	/* syntax error in usage */
-constexpr int EX_REDIRFAIL =	259;	/* redirection failed */
-constexpr int EX_BADASSIGN =	260;	/* variable assignment error */
-constexpr int EX_EXPFAIL =	261;	/* word expansion failed */
-constexpr int EX_DISKFALLBACK =	262;	/* fall back to disk command from builtin */
+constexpr int EX_BADSYNTAX = 257; /* shell syntax error */
+constexpr int EX_USAGE = 258;     /* syntax error in usage */
+constexpr int EX_REDIRFAIL = 259; /* redirection failed */
+constexpr int EX_BADASSIGN = 260; /* variable assignment error */
+constexpr int EX_EXPFAIL = 261;   /* word expansion failed */
+constexpr int EX_DISKFALLBACK
+    = 262; /* fall back to disk command from builtin */
 
 /* Flag values that control parameter pattern substitution. */
-enum match_flags {
-  MATCH_ANY =		0x000,
-  MATCH_BEG =		0x001,
-  MATCH_END =		0x002,
+enum match_flags
+{
+  MATCH_ANY = 0x000,
+  MATCH_BEG = 0x001,
+  MATCH_END = 0x002,
 
-  MATCH_TYPEMASK =	0x003,
+  MATCH_TYPEMASK = 0x003,
 
-  MATCH_GLOBREP =	0x010,
-  MATCH_QUOTED =	0x020,
-  MATCH_ASSIGNRHS =	0x040,
-  MATCH_STARSUB =	0x080
+  MATCH_GLOBREP = 0x010,
+  MATCH_QUOTED = 0x020,
+  MATCH_ASSIGNRHS = 0x040,
+  MATCH_STARSUB = 0x080
 };
 
 /* Flags for skip_to_delim */
 
-enum sd_flags {
-  SD_NOTHROW =		0x001,	/* don't throw exception on fatal error. */
-  SD_INVERT =		0x002,	/* look for chars NOT in passed set */
-  SD_NOQUOTEDELIM =	0x004,	/* don't let single or double quotes act as delimiters */
-  SD_NOSKIPCMD =	0x008,	/* don't skip over $(, <(, or >( command/process substitution; parse them as commands */
-  SD_EXTGLOB =		0x010,	/* skip over extended globbing patterns if appropriate */
-  SD_IGNOREQUOTE =	0x020,	/* single and double quotes are not special */
-  SD_GLOB =		0x040,	/* skip over glob patterns like bracket expressions */
-  SD_NOPROCSUB =	0x080,	/* don't parse process substitutions as commands */
-  SD_COMPLETE =		0x100,	/* skip_to_delim during completion */
-  SD_HISTEXP =		0x200,	/* skip_to_delim during history expansion */
-  SD_ARITHEXP =		0x400	/* skip_to_delim during arithmetic expansion */
+enum sd_flags
+{
+  SD_NOTHROW = 0x001, /* don't throw exception on fatal error. */
+  SD_INVERT = 0x002,  /* look for chars NOT in passed set */
+  SD_NOQUOTEDELIM
+  = 0x004, /* don't let single or double quotes act as delimiters */
+  SD_NOSKIPCMD = 0x008, /* don't skip over $(, <(, or >( command/process
+                           substitution; parse them as commands */
+  SD_EXTGLOB = 0x010, /* skip over extended globbing patterns if appropriate */
+  SD_IGNOREQUOTE = 0x020, /* single and double quotes are not special */
+  SD_GLOB = 0x040,      /* skip over glob patterns like bracket expressions */
+  SD_NOPROCSUB = 0x080, /* don't parse process substitutions as commands */
+  SD_COMPLETE = 0x100,  /* skip_to_delim during completion */
+  SD_HISTEXP = 0x200,   /* skip_to_delim during history expansion */
+  SD_ARITHEXP = 0x400   /* skip_to_delim during arithmetic expansion */
 };
 
 static inline sd_flags
-operator | (const sd_flags &a, const sd_flags &b) {
-  return static_cast<sd_flags> (static_cast<uint32_t> (a) | static_cast<uint32_t> (b));
+operator| (const sd_flags &a, const sd_flags &b)
+{
+  return static_cast<sd_flags> (static_cast<uint32_t> (a)
+                                | static_cast<uint32_t> (b));
 }
 
 /* Information about the current user. */
-struct UserInfo {
-  UserInfo() : uid(static_cast<uid_t> (-1)), euid(static_cast<uid_t> (-1)),
-	       gid(static_cast<gid_t> (-1)), egid(static_cast<gid_t> (-1)) {}
+struct UserInfo
+{
+  UserInfo ()
+      : uid (static_cast<uid_t> (-1)), euid (static_cast<uid_t> (-1)),
+        gid (static_cast<gid_t> (-1)), egid (static_cast<gid_t> (-1))
+  {
+  }
 
   uid_t uid;
   uid_t euid;
   gid_t gid;
   gid_t egid;
   char *user_name;
-  char *shell;		/* shell from the password file */
+  char *shell; /* shell from the password file */
   char *home_dir;
 };
 
@@ -194,53 +206,55 @@ struct UserInfo {
 
 /* The Tokens.  Singing "The Lion Sleeps Tonight". */
 
-enum token_t {
-  NONE =	0,
-  EQEQ =	1,	/* "==" */
-  NEQ =		2,	/* "!=" */
-  LEQ =		3,	/* "<=" */
-  GEQ =		4,	/* ">=" */
-  STR =		5,	/* string */
-  NUM =		6,	/* number */
-  LAND =	7,	/* "&&" Logical AND */
-  LOR =		8,	/* "||" Logical OR */
-  LSH =		9,	/* "<<" Left SHift */
-  RSH =		10,	/* ">>" Right SHift */
-  OP_ASSIGN =	11,	/* op= expassign as in Posix.2 */
-  COND =	12,	/* exp1 ? exp2 : exp3 */
-  POWER =	13,	/* exp1**exp2 */
-  PREINC =	14,	/* ++var */
-  PREDEC =	15,	/* --var */
-  POSTINC =	16,	/* var++ */
-  POSTDEC =	17,	/* var-- */
-  EQ =		'=',
-  GT =		'>',
-  LT =		'<',
-  PLUS =	'+',
-  MINUS =	'-',
-  MUL =		'*',
-  DIV =		'/',
-  MOD =		'%',
-  NOT =		'!',
-  LPAR =	'(',
-  RPAR =	')',
-  BAND =	'&',	/* Bitwise AND */
-  BOR =		'|',	/* Bitwise OR. */
-  BXOR =	'^',	/* Bitwise eXclusive OR. */
-  BNOT =	'~',	/* Bitwise NOT; Two's complement. */
-  QUES =	'?',
-  COL =		':',
-  COMMA =	','
+enum token_t
+{
+  NONE = 0,
+  EQEQ = 1,       /* "==" */
+  NEQ = 2,        /* "!=" */
+  LEQ = 3,        /* "<=" */
+  GEQ = 4,        /* ">=" */
+  STR = 5,        /* string */
+  NUM = 6,        /* number */
+  LAND = 7,       /* "&&" Logical AND */
+  LOR = 8,        /* "||" Logical OR */
+  LSH = 9,        /* "<<" Left SHift */
+  RSH = 10,       /* ">>" Right SHift */
+  OP_ASSIGN = 11, /* op= expassign as in Posix.2 */
+  COND = 12,      /* exp1 ? exp2 : exp3 */
+  POWER = 13,     /* exp1**exp2 */
+  PREINC = 14,    /* ++var */
+  PREDEC = 15,    /* --var */
+  POSTINC = 16,   /* var++ */
+  POSTDEC = 17,   /* var-- */
+  EQ = '=',
+  GT = '>',
+  LT = '<',
+  PLUS = '+',
+  MINUS = '-',
+  MUL = '*',
+  DIV = '/',
+  MOD = '%',
+  NOT = '!',
+  LPAR = '(',
+  RPAR = ')',
+  BAND = '&', /* Bitwise AND */
+  BOR = '|',  /* Bitwise OR. */
+  BXOR = '^', /* Bitwise eXclusive OR. */
+  BNOT = '~', /* Bitwise NOT; Two's complement. */
+  QUES = '?',
+  COL = ':',
+  COMMA = ','
 };
 
 struct lvalue
 {
-  std::string tokstr;	/* possibly-rewritten lvalue if not nullptr */
-  int64_t tokval;	/* expression evaluated value */
-  SHELL_VAR *tokvar;	/* variable described by array or var reference */
-  int64_t ind;		/* array index if not -1 */
+  std::string tokstr; /* possibly-rewritten lvalue if not nullptr */
+  int64_t tokval;     /* expression evaluated value */
+  SHELL_VAR *tokvar;  /* variable described by array or var reference */
+  int64_t ind;        /* array index if not -1 */
 
-  void init ()
+  void
+  init ()
   {
     tokstr.clear ();
     tokvar = nullptr;
@@ -266,13 +280,12 @@ public:
   // Initialize with default values (defined in shell.c).
   SimpleState ();
 
-#if defined (VFORK_SUBSHELL)
-  SimpleState (int fd);		// TODO: Load initial values from pipe
+#if defined(VFORK_SUBSHELL)
+  SimpleState (int fd); // TODO: Load initial values from pipe
 #endif
 
   // Start of protected variables, ordered by decreasing alignment.
 protected:
-
   /* ************************************************************** */
   /*		Bash Variables (array/struct/ptr types)		    */
   /* ************************************************************** */
@@ -285,7 +298,7 @@ protected:
   /*		Bash Variables (size_t: 32/64-bit)		    */
   /* ************************************************************** */
 
-#if defined (HANDLE_MULTIBYTE)
+#if defined(HANDLE_MULTIBYTE)
   size_t ifs_firstc_len;
 #endif
 
@@ -316,7 +329,7 @@ protected:
   /* The process group of the pipeline currently being made. */
   pid_t pipeline_pgrp;
 
-#if defined (PGRP_PIPE)
+#if defined(PGRP_PIPE)
   /* Pipes which each shell uses to communicate with the process group leader
      until all of the processes in a pipeline have been started.  Then the
      process leader is allowed to continue. */
@@ -349,7 +362,7 @@ protected:
   /* Non-zero is the recursion depth for commands. */
   int indirection_level;
 
-#if defined (BUFFERED_INPUT)
+#if defined(BUFFERED_INPUT)
   /* The file descriptor from which the shell is reading input. */
   int default_buffered_input;
 #endif
@@ -374,8 +387,8 @@ protected:
   int last_command_exit_signal;
 
   int executing_builtin;
-  int executing_list;		/* list nesting level */
-  int comsub_ignore_return;	/* can be greater than 1 */
+  int executing_list;       /* list nesting level */
+  int comsub_ignore_return; /* can be greater than 1 */
   int subshell_level;
   int funcnest;
   int funcnest_max;
@@ -419,8 +432,8 @@ protected:
 
   // additional 32-bit variables
 
-  unsigned int zread_lind;	// read index in zread_lbuf
-  unsigned int zread_lused;	// bytes used in zread_lbuf
+  unsigned int zread_lind;  // read index in zread_lbuf
+  unsigned int zread_lused; // bytes used in zread_lbuf
 
   int list_optopt;
   int list_opttype;
@@ -428,8 +441,8 @@ protected:
   int export_env_index;
   int export_env_size;
 
-#if defined (READLINE)
-  int winsize_assignment;		/* currently assigning to LINES or COLUMNS */
+#if defined(READLINE)
+  int winsize_assignment; /* currently assigning to LINES or COLUMNS */
 #endif
 
   /* The number of lines read from input while creating the current command. */
@@ -473,7 +486,7 @@ public:
   /* The line number in a script where the word in a `case WORD', `select WORD'
      or `for WORD' begins.  This is a nested command maximum, since the array
      index is decremented after a case, select, or for command is parsed. */
-#define MAX_CASE_NEST	128
+#define MAX_CASE_NEST 128
   int word_lineno[MAX_CASE_NEST + 1];
   int word_top;
 
@@ -541,7 +554,7 @@ protected:
   bool ifs_is_set;
   bool ifs_is_null;
 
-#if defined (HANDLE_MULTIBYTE)
+#if defined(HANDLE_MULTIBYTE)
   char ifs_firstc[MB_LEN_MAX];
 #else
   char ifs_firstc;
@@ -550,8 +563,9 @@ protected:
   /* Set by expand_word_unsplit and several of the expand_string_XXX functions;
      used to inhibit splitting and re-joining $* on $IFS, primarily when doing
      assignment statements.  The idea is that if we're in a context where this
-     is set, we're not going to be performing word splitting, so we use the same
-     rules to expand $* as we would if it appeared within double quotes. */
+     is set, we're not going to be performing word splitting, so we use the
+     same rules to expand $* as we would if it appeared within double quotes.
+   */
   bool expand_no_split_dollar_star;
 
   /* Is this locale a UTF-8 locale? */
@@ -579,8 +593,8 @@ protected:
 
   /* Shared state from bashhist.c */
   bool remember_on_history;
-  char enable_history_list;		/* value for `set -o history' */
-  char literal_history;			/* controlled by `shopt lithist' */
+  char enable_history_list; /* value for `set -o history' */
+  char literal_history;     /* controlled by `shopt lithist' */
   char force_append_history;
   char command_oriented_history;
   bool current_command_first_line_saved;
@@ -589,7 +603,7 @@ protected:
   bool hist_last_line_pushed;
   char dont_save_function_defs;
 
-#if defined (BANG_HISTORY)
+#if defined(BANG_HISTORY)
   bool history_expansion_inhibited;
   bool double_quotes_inhibit_history_expansion;
 #endif /* BANG_HISTORY */
@@ -724,24 +738,25 @@ protected:
   /* Non-zero means look up and remember command names in a hash table, */
   char hashing_enabled;
 
-#if defined (BANG_HISTORY)
+#if defined(BANG_HISTORY)
   /* Non-zero means that we are doing history expansion.  The default.
      This means !22 gets the 22nd line of history. */
   char history_expansion;
   char histexp_flag;
 #endif /* BANG_HISTORY */
 
-  /* Non-zero means that we allow comments to appear in interactive commands. */
+  /* Non-zero means that we allow comments to appear in interactive commands.
+   */
   char interactive_comments;
 
-#if defined (RESTRICTED_SHELL)
+#if defined(RESTRICTED_SHELL)
   /* Non-zero means that this shell is `restricted'.  A restricted shell
      disallows: changing directories, command or path names containing `/',
      unsetting or resetting the values of $PATH and $SHELL, and any type of
      output redirection. */
-  char restricted;			/* currently restricted */
-  char restricted_shell;		/* shell was started in restricted mode. */
-#endif /* RESTRICTED_SHELL */
+  char restricted;       /* currently restricted */
+  char restricted_shell; /* shell was started in restricted mode. */
+#endif                   /* RESTRICTED_SHELL */
 
   /* Non-zero means that this shell is running in `privileged' mode.  This
      is required if the shell is to run setuid.  If the `-p' option is
@@ -749,7 +764,7 @@ protected:
      differ, disable_priv_mode is called to relinquish setuid status. */
   char privileged_mode;
 
-#if defined (BRACE_EXPANSION)
+#if defined(BRACE_EXPANSION)
   /* Zero means to disable brace expansion: foo{a,b} -> fooa foob */
   char brace_expansion;
 #endif
@@ -771,7 +786,7 @@ protected:
   /*								    */
   /* ************************************************************** */
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   char array_expand_once;
   char assoc_expand_once;
 #endif
@@ -783,7 +798,7 @@ protected:
   /* Non-zero means we expand aliases in commands. */
   char expand_aliases;
 
-#if defined (EXTENDED_GLOB)
+#if defined(EXTENDED_GLOB)
   char extended_glob;
 #endif
 
@@ -810,7 +825,7 @@ protected:
   char mail_warning;
   char no_exit_on_failed_exec;
 
-#if defined (PROGRAMMABLE_COMPLETION)
+#if defined(PROGRAMMABLE_COMPLETION)
   char prog_completion_enabled;
   char progcomp_alias;
 #endif
@@ -821,13 +836,13 @@ protected:
      decode_prompt_string. */
   char promptvars;
 
-#if defined (SYSLOG_HISTORY)
+#if defined(SYSLOG_HISTORY)
   char syslog_history;
 #endif
 
   char xpg_echo;
 
-#if defined (READLINE)
+#if defined(READLINE)
   char complete_fullquote;
   char dircomplete_expand;
   char dircomplete_expand_relpath;
@@ -874,10 +889,10 @@ protected:
   char autocd;
 
   /* Tells what state the shell was in when it started:
-	0 = non-interactive shell script
-	1 = interactive
-	2 = -c command
-	3 = wordexp evaluation
+        0 = non-interactive shell script
+        1 = interactive
+        2 = -c command
+        3 = wordexp evaluation
      This is a superset of the information provided by interactive_shell.
   */
   char startup_state;
@@ -909,32 +924,33 @@ protected:
   bool running_setuid;
 
   /* Values for the long-winded argument names. */
-  bool debugging;			/* Do debugging things. */
-  bool no_rc;				/* Don't execute ~/.bashrc */
-  bool no_profile;			/* Don't execute .profile */
-  bool do_version;			/* Display interesting version info. */
-  bool make_login_shell;		/* Make this shell be a `-bash' shell. */
-  bool want_initial_help;		/* --help option */
+  bool debugging;         /* Do debugging things. */
+  bool no_rc;             /* Don't execute ~/.bashrc */
+  bool no_profile;        /* Don't execute .profile */
+  bool do_version;        /* Display interesting version info. */
+  bool make_login_shell;  /* Make this shell be a `-bash' shell. */
+  bool want_initial_help; /* --help option */
 
-#if defined (DEBUGGER)
-  char debugging_mode;			/* In debugging mode with --debugger */
+#if defined(DEBUGGER)
+  char debugging_mode; /* In debugging mode with --debugger */
 #endif
-  bool no_line_editing;			/* non-zero -> don't do fancy line editing. */
-  bool dump_translatable_strings;	/* Dump strings in $"...", don't execute. */
-  bool dump_po_strings;			/* Dump strings in $"..." in po format */
-  bool wordexp_only;			/* Do word expansion only */
-  bool protected_mode;			/* No command substitution with --wordexp */
+  bool no_line_editing; /* non-zero -> don't do fancy line editing. */
+  bool dump_translatable_strings; /* Dump strings in $"...", don't execute. */
+  bool dump_po_strings;           /* Dump strings in $"..." in po format */
+  bool wordexp_only;              /* Do word expansion only */
+  bool protected_mode;            /* No command substitution with --wordexp */
 
-  bool pretty_print_mode;		/* pretty-print a shell script */
+  bool pretty_print_mode; /* pretty-print a shell script */
 
-  char posixly_correct;			/* Non-zero means posix.2 superset. */
+  char posixly_correct; /* Non-zero means posix.2 superset. */
 
-  bool read_from_stdin;			/* -s flag supplied */
-  bool want_pending_command;		/* -c flag supplied */
+  bool read_from_stdin;      /* -s flag supplied */
+  bool want_pending_command; /* -c flag supplied */
 
   bool shell_reinitialized;
 
-  /* Used by ttsave()/ttrestore() to check if there are valid saved settings. */
+  /* Used by ttsave()/ttrestore() to check if there are valid saved settings.
+   */
   bool ttsaved;
 
   /* from lib/sh/unicode.c */
@@ -942,7 +958,8 @@ protected:
   bool u32init;
   bool utf8locale;
 
-  /* set to true if the expression has already been run through word expansion */
+  /* set to true if the expression has already been run through word expansion
+   */
   bool already_expanded;
 
 #ifndef HAVE_LOCALE_CHARSET
@@ -950,8 +967,7 @@ protected:
 #endif
 };
 
-
-#if defined (READLINE)
+#if defined(READLINE)
 #define PARENT_CLASS , public readline::Readline
 #define RL_OVERRIDE override
 #else
@@ -959,68 +975,79 @@ protected:
 #define RL_OVERRIDE
 #endif
 
-
 /* Shell class, containing global variables and the methods that use them. */
 class Shell : public SimpleState PARENT_CLASS
 {
 public:
-  Shell (int argc, char **argv, char **env);
+  Shell ();
   virtual ~Shell () noexcept override;
+
+  // This start method replaces main() from the C version.
+  void start (int argc, char **argv, char **env);
+
+  // Early initialization before the subshell loop.
+  void early_init ();
+
+  // This is called from start () once, and possibly later for subshells.
+  void run_shell (int argc, char **argv, char **env);
 
   // public typedefs accessed from other classes
 
-  typedef int (Shell::*sh_builtin_func_t) (WORD_LIST *);	/* sh_wlist_func_t */
+  typedef int (Shell::*sh_builtin_func_t) (WORD_LIST *); /* sh_wlist_func_t */
   typedef void (Shell::*sh_vptrfunc_t) (void *);
 
   typedef char *(Shell::*tilde_hook_func_t) (char *);
 
-  struct JOB {
-    char *wd;			/* The working directory at time of invocation. */
-    PROCESS *pipe;		/* The pipeline of processes that make up this job. */
-#if defined (JOB_CONTROL)
-    COMMAND *deferred;		/* Commands that will execute when this job is done. */
-    sh_vptrfunc_t j_cleanup;	/* Cleanup function to call when job marked JDEAD */
-    void *cleanarg;		/* Argument passed to (*j_cleanup)() */
-#endif /* JOB_CONTROL */
-    pid_t pgrp;			/* The process ID of the process group (necessary). */
-    JOB_STATE state;		/* The state that this job is in. */
-    job_flags flags;		/* Flags word: J_NOTIFIED, J_FOREGROUND, or J_JOBCONTROL. */
+  struct JOB
+  {
+    char *wd;      /* The working directory at time of invocation. */
+    PROCESS *pipe; /* The pipeline of processes that make up this job. */
+#if defined(JOB_CONTROL)
+    COMMAND *deferred; /* Commands that will execute when this job is done. */
+    sh_vptrfunc_t
+        j_cleanup;   /* Cleanup function to call when job marked JDEAD */
+    void *cleanarg;  /* Argument passed to (*j_cleanup)() */
+#endif               /* JOB_CONTROL */
+    pid_t pgrp;      /* The process ID of the process group (necessary). */
+    JOB_STATE state; /* The state that this job is in. */
+    job_flags
+        flags; /* Flags word: J_NOTIFIED, J_FOREGROUND, or J_JOBCONTROL. */
   };
 
-// Define structs for jobs and collected job stats.
+  // Define structs for jobs and collected job stats.
 
-#define NO_JOB  -1		/* An impossible job array index. */
-#define DUP_JOB -2		/* A possible return value for get_job_spec (). */
-#define BAD_JOBSPEC -3		/* Bad syntax for job spec. */
+#define NO_JOB -1      /* An impossible job array index. */
+#define DUP_JOB -2     /* A possible return value for get_job_spec (). */
+#define BAD_JOBSPEC -3 /* Bad syntax for job spec. */
 
   // Job stats struct.
-  struct jobstats {
-    jobstats() : c_childmax(-1), j_current (NO_JOB), j_previous (NO_JOB) {}
+  struct jobstats
+  {
+    jobstats () : c_childmax (-1), j_current (NO_JOB), j_previous (NO_JOB) {}
 
     /* limits */
     long c_childmax;
     /* */
-    JOB *j_lastmade;		/* last job allocated by stop_pipeline */
-    JOB *j_lastasync;		/* last async job allocated by stop_pipeline */
+    JOB *j_lastmade;  /* last job allocated by stop_pipeline */
+    JOB *j_lastasync; /* last async job allocated by stop_pipeline */
     /* child process statistics */
-    int c_living;		/* running or stopped child processes */
-    int c_reaped;		/* exited child processes still in jobs list */
-    int c_injobs;		/* total number of child processes in jobs list */
+    int c_living; /* running or stopped child processes */
+    int c_reaped; /* exited child processes still in jobs list */
+    int c_injobs; /* total number of child processes in jobs list */
     /* child process totals */
-    int c_totforked;		/* total number of children this shell has forked */
-    int c_totreaped;		/* total number of children this shell has reaped */
+    int c_totforked; /* total number of children this shell has forked */
+    int c_totreaped; /* total number of children this shell has reaped */
     /* job counters and indices */
-    int j_lastj;		/* last (newest) job allocated */
-    int j_firstj;		/* first (oldest) job allocated */
-    int j_njobs;		/* number of non-NULL jobs in jobs array */
-    int j_ndead;		/* number of JDEAD jobs in jobs array */
+    int j_lastj;  /* last (newest) job allocated */
+    int j_firstj; /* first (oldest) job allocated */
+    int j_njobs;  /* number of non-NULL jobs in jobs array */
+    int j_ndead;  /* number of JDEAD jobs in jobs array */
     /* */
-    int j_current;		/* current job */
-    int j_previous;		/* previous job */
+    int j_current;  /* current job */
+    int j_previous; /* previous job */
   };
 
 protected:
-
   // typedefs moved from general.h so they can become method pointers to Shell.
 
   /* Map over jobs for job control. */
@@ -1046,18 +1073,22 @@ protected:
   typedef int (Shell::*sh_wdesc_func_t) (WORD_DESC *);
   typedef int (Shell::*sh_wlist_func_t) (WORD_LIST *);
 
-  typedef char *(Shell::*sh_string_func_t) (const std::string &);	/* like savestring, et al. */
+  typedef char *(Shell::*sh_string_func_t) (
+      const std::string &); /* like savestring, et al. */
 
-  typedef int (Shell::*sh_msg_func_t) (const std::string &, ...);	/* printf(3)-like */
-  typedef void (Shell::*sh_vmsg_func_t) (const std::string &, ...);	/* printf(3)-like */
+  typedef int (Shell::*sh_msg_func_t) (const std::string &,
+                                       ...); /* printf(3)-like */
+  typedef void (Shell::*sh_vmsg_func_t) (const std::string &,
+                                         ...); /* printf(3)-like */
 
   /* Specific function pointer typedefs.  Most of these could be done
      with #defines. */
-  typedef void (Shell::*sh_sv_func_t) (const std::string &);		/* sh_vcpfunc_t */
-  typedef void (Shell::*sh_free_func_t) (void *);			/* sh_vptrfunc_t */
-  typedef void (Shell::*sh_resetsig_func_t) (int);		/* sh_vintfunc_t */
+  typedef void (Shell::*sh_sv_func_t) (const std::string &); /* sh_vcpfunc_t */
+  typedef void (Shell::*sh_free_func_t) (void *);  /* sh_vptrfunc_t */
+  typedef void (Shell::*sh_resetsig_func_t) (int); /* sh_vintfunc_t */
 
-  typedef bool (Shell::*sh_ignore_func_t) (const std::string &);		/* sh_icpfunc_t */
+  typedef bool (Shell::*sh_ignore_func_t) (
+      const std::string &); /* sh_icpfunc_t */
 
   typedef int (Shell::*sh_assign_func_t) (const std::string &);
   typedef int (Shell::*sh_wassign_func_t) (WORD_DESC *, int);
@@ -1066,7 +1097,6 @@ protected:
   typedef void (Shell::*sh_unload_func_t) (const std::string &);
 
 public:
-
   // Called from generated parser on EOF.
   void handle_eof_input_unit ();
 
@@ -1075,12 +1105,12 @@ public:
 
   // typedefs for builtins (public for access from builtins struct)
 
-#if defined (ALIAS)
+#if defined(ALIAS)
   int alias_builtin (WORD_LIST *);
   int unalias_builtin (WORD_LIST *);
 #endif /* ALIAS */
 
-#if defined (READLINE)
+#if defined(READLINE)
   int bind_builtin (WORD_LIST *);
 #endif /* READLINE */
 
@@ -1088,7 +1118,7 @@ public:
   int continue_builtin (WORD_LIST *);
   int builtin_builtin (WORD_LIST *);
 
-#if defined (DEBUGGER)
+#if defined(DEBUGGER)
   int caller_builtin (WORD_LIST *);
 #endif /* DEBUGGER */
 
@@ -1107,26 +1137,26 @@ public:
   int exit_builtin (WORD_LIST *);
   int logout_builtin (WORD_LIST *);
 
-#if defined (HISTORY)
+#if defined(HISTORY)
   int fc_builtin (WORD_LIST *);
 #endif /* HISTORY */
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
   int fg_builtin (WORD_LIST *);
   int bg_builtin (WORD_LIST *);
 #endif /* JOB_CONTROL */
 
   int hash_builtin (WORD_LIST *);
 
-#if defined (HELP_BUILTIN)
+#if defined(HELP_BUILTIN)
   int help_builtin (WORD_LIST *);
 #endif /* HELP_BUILTIN */
 
-#if defined (HISTORY)
+#if defined(HISTORY)
   int history_builtin (WORD_LIST *);
 #endif /* HISTORY */
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
   int jobs_builtin (WORD_LIST *);
   int disown_builtin (WORD_LIST *);
 #endif /* JOB_CONTROL */
@@ -1142,7 +1172,7 @@ public:
   int shift_builtin (WORD_LIST *);
   int source_builtin (WORD_LIST *);
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
   int suspend_builtin (WORD_LIST *);
 #endif /* JOB_CONTROL */
 
@@ -1154,7 +1184,7 @@ public:
   int umask_builtin (WORD_LIST *);
   int wait_builtin (WORD_LIST *);
 
-#if defined (PUSHD_AND_POPD)
+#if defined(PUSHD_AND_POPD)
   int pushd_builtin (WORD_LIST *);
   int popd_builtin (WORD_LIST *);
   int dirs_builtin (WORD_LIST *);
@@ -1163,7 +1193,7 @@ public:
   int shopt_builtin (WORD_LIST *);
   int printf_builtin (WORD_LIST *);
 
-#if defined (PROGRAMMABLE_COMPLETION)
+#if defined(PROGRAMMABLE_COMPLETION)
   int complete_builtin (WORD_LIST *);
   int compgen_builtin (WORD_LIST *);
   int compopt_builtin (WORD_LIST *);
@@ -1190,21 +1220,21 @@ public:
     size_t slen = std::strlen (string);
     while (i < slen)
       {
-	switch (string[i])
-	  {
-	  case '$':
-	    w->flags |= W_HASDOLLAR;
-	    break;
-	  case '\\':
-	    break;	/* continue the loop */
-	  case '\'':
-	  case '`':
-	  case '"':
-	    w->flags |= W_QUOTED;
-	    break;
-	  }
+        switch (string[i])
+          {
+          case '$':
+            w->flags |= W_HASDOLLAR;
+            break;
+          case '\\':
+            break; /* continue the loop */
+          case '\'':
+          case '`':
+          case '"':
+            w->flags |= W_QUOTED;
+            break;
+          }
 
-	ADVANCE_CHAR (string, slen, i);
+        ADVANCE_CHAR (string, slen, i);
       }
 
     return w;
@@ -1235,32 +1265,32 @@ public:
       return nullptr;
 
     WORD_DESC *wd = make_word (s);
-    wd->flags |= (W_NOGLOB | W_NOSPLIT | W_QUOTED | W_DQUOTE);	/* no word splitting or globbing */
-#if defined (PROCESS_SUBSTITUTION)
-    wd->flags |= W_NOPROCSUB;	/* no process substitution */
+    wd->flags |= (W_NOGLOB | W_NOSPLIT | W_QUOTED
+                  | W_DQUOTE); /* no word splitting or globbing */
+#if defined(PROCESS_SUBSTITUTION)
+    wd->flags |= W_NOPROCSUB; /* no process substitution */
 #endif
     return new WORD_LIST (wd);
   }
 
-  ARITH_FOR_COM *
-  make_arith_for_command (WORD_LIST *exprs, COMMAND *action, int lineno);
+  ARITH_FOR_COM *make_arith_for_command (WORD_LIST *exprs, COMMAND *action,
+                                         int lineno);
 
-  SIMPLE_COM *
-  make_simple_command (ELEMENT element, COMMAND *command = nullptr);
+  SIMPLE_COM *make_simple_command (ELEMENT element,
+                                   COMMAND *command = nullptr);
 
-  FUNCTION_DEF *
-  make_function_def (WORD_DESC *, COMMAND *, int, int);
+  FUNCTION_DEF *make_function_def (WORD_DESC *, COMMAND *, int, int);
 
   void
   push_heredoc (REDIRECT *r)
   {
     if (need_here_doc >= HEREDOC_MAX)
       {
-	last_command_exit_value = EX_BADUSAGE;
-	need_here_doc = 0;
-	report_syntax_error (_("maximum here-document count exceeded"));
-	reset_parser ();
-	exit_shell (last_command_exit_value);
+        last_command_exit_value = EX_BADUSAGE;
+        need_here_doc = 0;
+        report_syntax_error (_ ("maximum here-document count exceeded"));
+        reset_parser ();
+        exit_shell (last_command_exit_value);
       }
     redir_stack[need_here_doc++] = r;
   }
@@ -1274,9 +1304,9 @@ public:
       command_error ("clean_simple_command", CMDERR_BADTYPE, 0, 0);
     else
       {
-	SIMPLE_COM *simple_com = dynamic_cast<SIMPLE_COM *> (command);
-	simple_com->words = simple_com->words->reverse ();
-	simple_com->redirects = simple_com->redirects->reverse ();
+        SIMPLE_COM *simple_com = dynamic_cast<SIMPLE_COM *> (command);
+        simple_com->words = simple_com->words->reverse ();
+        simple_com->redirects = simple_com->redirects->reverse ();
       }
 
     parser_state &= ~PST_REDIRLIST;
@@ -1285,11 +1315,10 @@ public:
 
   // Protected methods below
 protected:
-
   // Functions from parser.cc (previously in parse.y).
 
   // Report parser syntax error.
-  void report_syntax_error(const char *);
+  void report_syntax_error (const char *);
 
   int internal_getopt (WORD_LIST *, const char *);
   void reset_internal_getopt ();
@@ -1327,9 +1356,10 @@ protected:
 
   /* Functions from expr.c. */
 
-  enum eval_flags {
-    EXP_NONE =		0,
-    EXP_EXPANDED =	0x01
+  enum eval_flags
+  {
+    EXP_NONE = 0,
+    EXP_EXPANDED = 0x01
   };
 
   int64_t evalexp (const std::string &, eval_flags, bool *);
@@ -1362,9 +1392,10 @@ protected:
   void expr_unwind ();
   void expr_bind_variable (const std::string &, const std::string &);
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   int expr_skipsubscript (const char *, char *);
-  void expr_bind_array_element (const std::string &, arrayind_t, const std::string &);
+  void expr_bind_array_element (const std::string &, arrayind_t,
+                                const std::string &);
 #endif
 
   /* set -x support */
@@ -1376,15 +1407,15 @@ protected:
   void xtrace_reset ();
   char *indirection_level_string ();
 
-/* Functions from shell.c. */
-  void exit_shell (int) __attribute__((__noreturn__));
-  void sh_exit (int) __attribute__((__noreturn__));
-  void subshell_exit (int) __attribute__((__noreturn__));
+  /* Functions from shell.c. */
+  void exit_shell (int) __attribute__ ((__noreturn__));
+  void sh_exit (int) __attribute__ ((__noreturn__));
+  void subshell_exit (int) __attribute__ ((__noreturn__));
   void set_exit_status (int);
   void disable_priv_mode ();
   void unbind_args ();
 
-#if defined (RESTRICTED_SHELL)
+#if defined(RESTRICTED_SHELL)
   bool shell_is_restricted (const std::string &);
   bool maybe_make_restricted (const std::string &);
 #endif
@@ -1399,7 +1430,7 @@ protected:
   int read_command ();
 
   /* Functions from braces.c. */
-#if defined (BRACE_EXPANSION)
+#if defined(BRACE_EXPANSION)
   char **brace_expand (char *);
 #endif
 
@@ -1419,7 +1450,7 @@ protected:
   int get_current_prompt_level ();
   int set_current_prompt_level (int);
 
-#if defined (HISTORY)
+#if defined(HISTORY)
   const char *history_delimiting_chars (const std::string &);
 #endif
 
@@ -1436,7 +1467,7 @@ protected:
 
   /* Functions from jobs.h */
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 
   void
   making_children ()
@@ -1463,7 +1494,7 @@ protected:
       discard_pipeline (disposer);
   }
 
-#endif	// JOB_CONTROL
+#endif // JOB_CONTROL
 
   // Set already_making_children to false. This method is the same,
   // with or without JOB_CONTROL.
@@ -1558,9 +1589,13 @@ protected:
   void set_maxchild (int);
 
   /* Inline helper functions. */
-  bool has_job_control() { return job_control; }
+  bool
+  has_job_control ()
+  {
+    return job_control;
+  }
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
   void debug_print_pgrps ();
 
   int waitchld (pid_t, int);
@@ -1608,7 +1643,7 @@ protected:
   void mark_all_jobs_as_dead ();
   void mark_dead_jobs_as_notified (int);
   void restore_sigint_handler ();
-#if defined (PGRP_PIPE)
+#if defined(PGRP_PIPE)
   void pipe_read (int *);
 #endif
 #endif /* JOB_CONTROL */
@@ -1627,7 +1662,7 @@ protected:
   struct pipeline_saver *alloc_pipeline_saver ();
 
   ps_index_t bgp_getindex ();
-  void bgp_resize ();	/* XXX */
+  void bgp_resize (); /* XXX */
 
   /* from lib/sh/casemod.cc */
   char *sh_modcase (const char *, const char *, sh_modcase_flags);
@@ -1636,12 +1671,13 @@ protected:
   int sh_stataccess (const std::string &, int);
 
   /* enum for sh_makepath function defined in lib/sh/makepath.c */
-  enum mp_flags {
-    MP_NOFLAGS =	   0,
-    MP_DOTILDE =	0x01,
-    MP_DOCWD =		0x02,
-    MP_RMDOT =		0x04,
-    MP_IGNDOT =		0x08
+  enum mp_flags
+  {
+    MP_NOFLAGS = 0,
+    MP_DOTILDE = 0x01,
+    MP_DOCWD = 0x02,
+    MP_RMDOT = 0x04,
+    MP_IGNDOT = 0x08
   };
 
   /* from lib/sh/makepath.cc */
@@ -1656,7 +1692,8 @@ protected:
   u_bits32_t brand32 ();
   u_bits32_t get_urandom32 ();
 
-  /* Set the random number generator seed to the least-significant 32 bits of SEED. */
+  /* Set the random number generator seed to the least-significant 32 bits of
+   * SEED. */
   void
   sbrand (unsigned long seed)
   {
@@ -1707,53 +1744,54 @@ protected:
   char *sh_backslash_quote_for_double_quotes (const char *);
 
   /* include all functions from lib/sh/shtty.c here: they're very small. */
-  /* shtty.c -- abstract interface to the terminal, focusing on capabilities. */
+  /* shtty.c -- abstract interface to the terminal, focusing on capabilities.
+   */
 
   static int
-  ttgetattr(int fd, TTYSTRUCT *ttp)
+  ttgetattr (int fd, TTYSTRUCT *ttp)
   {
 #ifdef TERMIOS_TTY_DRIVER
-    return ::tcgetattr(fd, ttp);
+    return ::tcgetattr (fd, ttp);
 #else
-#  ifdef TERMIO_TTY_DRIVER
-    return ::ioctl(fd, TCGETA, ttp);
-#  else
-    return ::ioctl(fd, TIOCGETP, ttp);
-#  endif
+#ifdef TERMIO_TTY_DRIVER
+    return ::ioctl (fd, TCGETA, ttp);
+#else
+    return ::ioctl (fd, TIOCGETP, ttp);
+#endif
 #endif
   }
 
   static int
-  ttsetattr(int fd, TTYSTRUCT *ttp)
+  ttsetattr (int fd, TTYSTRUCT *ttp)
   {
 #ifdef TERMIOS_TTY_DRIVER
-    return ::tcsetattr(fd, TCSADRAIN, ttp);
+    return ::tcsetattr (fd, TCSADRAIN, ttp);
 #else
-#  ifdef TERMIO_TTY_DRIVER
-    return ::ioctl(fd, TCSETAW, ttp);
-#  else
-    return ::ioctl(fd, TIOCSETN, ttp);
-#  endif
+#ifdef TERMIO_TTY_DRIVER
+    return ::ioctl (fd, TCSETAW, ttp);
+#else
+    return ::ioctl (fd, TIOCSETN, ttp);
+#endif
 #endif
   }
 
   void
-  ttsave()
+  ttsave ()
   {
     if (ttsaved)
-     return;
-    (void) ttgetattr (0, &ttin);
-    (void) ttgetattr (1, &ttout);
+      return;
+    (void)ttgetattr (0, &ttin);
+    (void)ttgetattr (1, &ttout);
     ttsaved = true;
   }
 
   void
-  ttrestore()
+  ttrestore ()
   {
     if (!ttsaved)
       return;
-    (void) ttsetattr (0, &ttin);
-    (void) ttsetattr (1, &ttout);
+    (void)ttsetattr (0, &ttin);
+    (void)ttsetattr (1, &ttout);
     ttsaved = false;
   }
 
@@ -1776,36 +1814,36 @@ protected:
    * ttsetattr, the terminal will be in one-char-at-a-time mode.
    */
   static void
-  tt_setonechar(TTYSTRUCT *ttp)
+  tt_setonechar (TTYSTRUCT *ttp)
   {
-#if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
+#if defined(TERMIOS_TTY_DRIVER) || defined(TERMIO_TTY_DRIVER)
 
     /* XXX - might not want this -- it disables erase and kill processing. */
     ttp->c_lflag &= ~(static_cast<tcflag_t> (ICANON));
 
     ttp->c_lflag |= ISIG;
-#  ifdef IEXTEN
+#ifdef IEXTEN
     ttp->c_lflag |= IEXTEN;
-#  endif
+#endif
 
-    ttp->c_iflag |= ICRNL;	/* make sure we get CR->NL on input */
-    ttp->c_iflag &= ~(static_cast<tcflag_t> (INLCR));	/* but no NL->CR */
+    ttp->c_iflag |= ICRNL; /* make sure we get CR->NL on input */
+    ttp->c_iflag &= ~(static_cast<tcflag_t> (INLCR)); /* but no NL->CR */
 
-#  ifdef OPOST
+#ifdef OPOST
     ttp->c_oflag |= OPOST;
-#  endif
-#  ifdef ONLCR
+#endif
+#ifdef ONLCR
     ttp->c_oflag |= ONLCR;
-#  endif
-#  ifdef OCRNL
+#endif
+#ifdef OCRNL
     ttp->c_oflag &= ~(static_cast<tcflag_t> (OCRNL));
-#  endif
-#  ifdef ONOCR
+#endif
+#ifdef ONOCR
     ttp->c_oflag &= ~(static_cast<tcflag_t> (ONOCR));
-#  endif
-#  ifdef ONLRET
+#endif
+#ifdef ONLRET
     ttp->c_oflag &= ~(static_cast<tcflag_t> (ONLRET));
-#  endif
+#endif
 
     ttp->c_cc[VMIN] = 1;
     ttp->c_cc[VTIME] = 0;
@@ -1817,11 +1855,12 @@ protected:
 #endif
   }
 
-  /* Set the tty associated with FD and TTP into one-character-at-a-time mode */
+  /* Set the tty associated with FD and TTP into one-character-at-a-time mode
+   */
   static int
   ttfd_onechar (int fd, TTYSTRUCT *ttp)
   {
-    tt_setonechar(ttp);
+    tt_setonechar (ttp);
     return ttsetattr (fd, ttp);
   }
 
@@ -1842,9 +1881,9 @@ protected:
    * ttsetattr, the terminal will be in no-echo mode.
    */
   static void
-  tt_setnoecho(TTYSTRUCT *ttp)
+  tt_setnoecho (TTYSTRUCT *ttp)
   {
-#if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
+#if defined(TERMIOS_TTY_DRIVER) || defined(TERMIO_TTY_DRIVER)
     ttp->c_lflag &= ~(static_cast<tcflag_t> (ECHO | ECHOK | ECHONL));
 #else
     ttp->sg_flags &= ~ECHO;
@@ -1878,7 +1917,7 @@ protected:
   static void
   tt_seteightbit (TTYSTRUCT *ttp)
   {
-#if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
+#if defined(TERMIOS_TTY_DRIVER) || defined(TERMIO_TTY_DRIVER)
     ttp->c_iflag &= ~(static_cast<tcflag_t> (ISTRIP));
     ttp->c_cflag |= CS8;
     ttp->c_cflag &= ~(static_cast<tcflag_t> (PARENB));
@@ -1914,7 +1953,7 @@ protected:
   static void
   tt_setnocanon (TTYSTRUCT *ttp)
   {
-#if defined (TERMIOS_TTY_DRIVER) || defined (TERMIO_TTY_DRIVER)
+#if defined(TERMIOS_TTY_DRIVER) || defined(TERMIO_TTY_DRIVER)
     ttp->c_lflag &= ~(static_cast<tcflag_t> (ICANON));
 #endif
   }
@@ -1944,7 +1983,7 @@ protected:
    * ttsetattr, the terminal will be in cbreak, no-echo mode.
    */
   static void
-  tt_setcbreak(TTYSTRUCT *ttp)
+  tt_setcbreak (TTYSTRUCT *ttp)
   {
     tt_setonechar (ttp);
     tt_setnoecho (ttp);
@@ -1998,18 +2037,19 @@ protected:
   {
     ssize_t r;
 
-    check_signals ();	/* check for signals before a blocking read */
+    check_signals (); /* check for signals before a blocking read */
     while ((r = ::read (fd, buf, len)) < 0 && errno == EINTR)
       {
-	int t;
-	t = errno;
-	/* XXX - bash-5.0 */
-	/* We check executing_builtin and run traps here for backwards compatibility */
-	if (executing_builtin)
-	  check_signals_and_traps ();	/* XXX - should it be check_signals()? */
-	else
-	  check_signals ();
-	errno = t;
+        int t;
+        t = errno;
+        /* XXX - bash-5.0 */
+        /* We check executing_builtin and run traps here for backwards
+         * compatibility */
+        if (executing_builtin)
+          check_signals_and_traps (); /* XXX - should it be check_signals()? */
+        else
+          check_signals ();
+        errno = t;
       }
 
     return r;
@@ -2023,25 +2063,25 @@ protected:
      interrupts.  Any other error causes the loop to break. */
 
 #ifdef NUM_INTR
-#  undef NUM_INTR
+#undef NUM_INTR
 #endif
 #define NUM_INTR 3
 
   static ssize_t
   zreadretry (int fd, char *buf, size_t len)
   {
-    for (int nintr = 0; ; )
+    for (int nintr = 0;;)
       {
-	ssize_t r = ::read (fd, buf, len);
-	if (r >= 0)
-	  return r;
-	if (r == -1 && errno == EINTR)
-	  {
-	    if (++nintr >= NUM_INTR)
-	      return -1;
-	    continue;
-	  }
-	return r;
+        ssize_t r = ::read (fd, buf, len);
+        if (r >= 0)
+          return r;
+        if (r == -1 && errno == EINTR)
+          {
+            if (++nintr >= NUM_INTR)
+              return -1;
+            continue;
+          }
+        return r;
       }
   }
 
@@ -2056,7 +2096,8 @@ protected:
   }
 
   void
-  zreset () {
+  zreset ()
+  {
     zread_lind = zread_lused = 0;
   }
 
@@ -2092,26 +2133,26 @@ protected:
 
     for (n = nb, nt = 0;;)
       {
-	ssize_t i = ::write (fd, buf, n);
-	if (i > 0)
-	  {
-	    n -= static_cast<size_t> (i);
-	    if (n <= 0)
-	      return static_cast<ssize_t> (nb);
-	    buf += i;
-	  }
-	else if (i == 0)
-	  {
-	    if (++nt > 3)
-	      return static_cast<ssize_t> (nb - n);
-	  }
-	else if (errno != EINTR)
-	  return -1;
+        ssize_t i = ::write (fd, buf, n);
+        if (i > 0)
+          {
+            n -= static_cast<size_t> (i);
+            if (n <= 0)
+              return static_cast<ssize_t> (nb);
+            buf += i;
+          }
+        else if (i == 0)
+          {
+            if (++nt > 3)
+              return static_cast<ssize_t> (nb - n);
+          }
+        else if (errno != EINTR)
+          return -1;
       }
   }
 
   /* from bashhist.c */
-#if defined (BANG_HISTORY)
+#if defined(BANG_HISTORY)
   bool bash_history_inhibit_expansion (const std::string &, int);
 #endif
 
@@ -2122,13 +2163,13 @@ protected:
   {
     if (fdbp)
       {
-	std::vector<bool>::iterator it = fdbp->begin ();
-	while ((it = std::find (it, fdbp->end (), true)) != fdbp->end ())
-	  {
-	    int i = static_cast<int> (it - fdbp->begin ());
-	    ::close (i);
-	  }
-	fdbp->clear ();
+        std::vector<bool>::iterator it = fdbp->begin ();
+        while ((it = std::find (it, fdbp->end (), true)) != fdbp->end ())
+          {
+            int i = static_cast<int> (it - fdbp->begin ());
+            ::close (i);
+          }
+        fdbp->clear ();
       }
   }
 
@@ -2172,11 +2213,11 @@ protected:
   void coproc_setvars (Coproc *);
   void coproc_unsetvars (Coproc *);
 
-#if defined (PROCESS_SUBSTITUTION)
+#if defined(PROCESS_SUBSTITUTION)
   void close_all_files ();
 #endif
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   void restore_funcarray_state (void *);
 #endif
 
@@ -2193,14 +2234,16 @@ protected:
   /* Functions from redir.c */
 
   /* Values for flags argument to do_redirections */
-  enum redir_flags {
-    RX_ACTIVE =		0x01,	/* do it; don't just go through the motions */
-    RX_UNDOABLE =	0x02,	/* make a list to undo these redirections */
-    RX_CLEXEC =		0x04,	/* set close-on-exec for opened fds > 2 */
-    RX_INTERNAL =	0x08,
-    RX_USER =		0x10,
-    RX_SAVCLEXEC =	0x20,	/* set close-on-exec off in restored fd even though saved on has it on */
-    RX_SAVEFD =		0x40	/* fd used to save another even if < SHELL_FD_BASE */
+  enum redir_flags
+  {
+    RX_ACTIVE = 0x01,   /* do it; don't just go through the motions */
+    RX_UNDOABLE = 0x02, /* make a list to undo these redirections */
+    RX_CLEXEC = 0x04,   /* set close-on-exec for opened fds > 2 */
+    RX_INTERNAL = 0x08,
+    RX_USER = 0x10,
+    RX_SAVCLEXEC = 0x20, /* set close-on-exec off in restored fd even though
+                            saved on has it on */
+    RX_SAVEFD = 0x40     /* fd used to save another even if < SHELL_FD_BASE */
   };
 
   void redirection_error (REDIRECT *, int, const std::string &);
@@ -2216,9 +2259,13 @@ protected:
   /*		Private Shell Variables (ptr types)		    */
   /* ************************************************************** */
 
-//   int subshell_argc;
-//   char **subshell_argv;
-//   char **subshell_envp;
+  //   int subshell_argc;
+  //   char **subshell_argv;
+  //   char **subshell_envp;
+
+#if defined(NO_MAIN_ENV_ARG)
+  char **environ; /* used if no third argument to main() */
+#endif
 
   /* The current locale when the program begins */
   char *default_locale;
@@ -2239,7 +2286,6 @@ public:
   // The following are public for access from the Bison parser.
 
   COMMAND *global_command;
-
 
 protected:
   // Back to protected access.
@@ -2269,8 +2315,8 @@ protected:
 
   char *exec_argv0;
 
-  const char *command_execution_string;	/* argument to -c option */
-  const char *shell_script_filename; 	/* shell script */
+  const char *command_execution_string; /* argument to -c option */
+  const char *shell_script_filename;    /* shell script */
 
   FILE *default_input;
 
@@ -2297,10 +2343,11 @@ protected:
   char *
   extract_arithmetic_subst (const std::string &string, size_t *sindex)
   {
-    return extract_delimited_string (string, sindex, "$[", "[", "]", SX_NOFLAGS); /*]*/
+    return extract_delimited_string (string, sindex, "$[", "[", "]",
+                                     SX_NOFLAGS); /*]*/
   }
 
-#if defined (PROCESS_SUBSTITUTION)
+#if defined(PROCESS_SUBSTITUTION)
   /* Extract the <( or >( construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "<(".
      Make (SINDEX) get the position just after the matching ")". */
@@ -2308,7 +2355,8 @@ protected:
   extract_process_subst (const char *string, size_t *sindex, sx_flags xflags)
   {
     xflags |= (no_throw_on_fatal_error ? SX_NOTHROW : SX_NOFLAGS);
-    return xparse_dolparen (string, const_cast<char *> (string + *sindex), sindex, xflags);
+    return xparse_dolparen (string, const_cast<char *> (string + *sindex),
+                            sindex, xflags);
   }
 #endif /* PROCESS_SUBSTITUTION */
 
@@ -2338,7 +2386,8 @@ protected:
 
   /* This performs word splitting and quoted null character removal on
      STRING. */
-  WORD_LIST *list_string (const std::string &, const std::string &, quoted_flags);
+  WORD_LIST *list_string (const std::string &, const std::string &,
+                          quoted_flags);
 
   char *ifs_firstchar (int *);
   char *get_word_from_string (char **, const std::string &, char **);
@@ -2427,7 +2476,8 @@ protected:
   /* And remove such quoted special characters. */
   char *remove_quoted_escapes (char *);
 
-  /* Remove CTLNUL characters from STRING unless they are quoted with CTLESC. */
+  /* Remove CTLNUL characters from STRING unless they are quoted with CTLESC.
+   */
   char *remove_quoted_nulls (char *);
 
   /* Perform quote removal on STRING.  If QUOTED > 0, assume we are obeying the
@@ -2470,9 +2520,10 @@ protected:
 
   WORD_DESC *command_substitute (char *, int, int);
 
-  char *pat_subst (const std::string &, const std::string &, const std::string &, int);
+  char *pat_subst (const std::string &, const std::string &,
+                   const std::string &, int);
 
-#if defined (PROCESS_SUBSTITUTION)
+#if defined(PROCESS_SUBSTITUTION)
   int fifos_pending ();
   int num_fifos ();
   void unlink_fifo_list ();
@@ -2491,82 +2542,82 @@ protected:
   void reap_procsubs ();
 #endif
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   char *extract_array_assignment_list (const std::string &, int *);
 #endif
 
-#if defined (COND_COMMAND)
+#if defined(COND_COMMAND)
   char *remove_backslashes (const std::string &);
   char *cond_expand_word (WORD_DESC *, int);
 #endif
 
-  size_t
-  skip_to_delim (const std::string &, size_t, const std::string &, sd_flags);
+  size_t skip_to_delim (const std::string &, size_t, const std::string &,
+                        sd_flags);
 
-#if defined (BANG_HISTORY)
-  size_t
-  skip_to_histexp (const std::string &, size_t, const std::string &, sd_flags);
+#if defined(BANG_HISTORY)
+  size_t skip_to_histexp (const std::string &, size_t, const std::string &,
+                          sd_flags);
 #endif
 
-#if defined (READLINE)
-  unsigned int char_is_quoted (const std::string &, int);	/* rl_linebuf_func_t */
+#if defined(READLINE)
+  unsigned int char_is_quoted (const std::string &,
+                               int); /* rl_linebuf_func_t */
   bool unclosed_pair (const std::string &, int, const std::string &);
-  WORD_LIST *split_at_delims (const std::string &, int, const std::string &, int, sd_flags, int *, int *);
+  WORD_LIST *split_at_delims (const std::string &, int, const std::string &,
+                              int, sd_flags, int *, int *);
 #endif
 
   void invalidate_cached_quoted_dollar_at ();
 
   // private methods from subst.c
 
-  char *
-  string_extract (const std::string &, size_t *, const std::string &, sx_flags);
+  char *string_extract (const std::string &, size_t *, const std::string &,
+                        sx_flags);
 
-  char *
-  string_extract_double_quoted (const std::string &, size_t *, sx_flags);
+  char *string_extract_double_quoted (const std::string &, size_t *, sx_flags);
 
-  size_t
-  skip_double_quoted (const std::string &, size_t, size_t, sx_flags);
+  size_t skip_double_quoted (const std::string &, size_t, size_t, sx_flags);
 
-  char *
-  string_extract_single_quoted (const std::string &, size_t *);
+  char *string_extract_single_quoted (const std::string &, size_t *);
 
-  size_t
-  skip_single_quoted (const std::string &, size_t, size_t, sx_flags);
+  size_t skip_single_quoted (const std::string &, size_t, size_t, sx_flags);
 
-  char *
-  string_extract_verbatim (const std::string &, size_t, size_t *, const std::string &, sx_flags);
+  char *string_extract_verbatim (const std::string &, size_t, size_t *,
+                                 const std::string &, sx_flags);
 
-  char *
-  extract_delimited_string (const std::string &, size_t *, const std::string &,
-			    const std::string &, const std::string &, sx_flags);
+  char *extract_delimited_string (const std::string &, size_t *,
+                                  const std::string &, const std::string &,
+                                  const std::string &, sx_flags);
 
-  char *
-  extract_dollar_brace_string (const std::string &, size_t *, quoted_flags, sx_flags);
+  char *extract_dollar_brace_string (const std::string &, size_t *,
+                                     quoted_flags, sx_flags);
 
-  void
-  exp_throw_to_top_level (const std::exception &);
+  void exp_throw_to_top_level (const std::exception &);
 
-#if defined (ARRAY_VARS)
-  size_t
-  skip_matched_pair (const std::string &, size_t, char, char, valid_array_flags);
+#if defined(ARRAY_VARS)
+  size_t skip_matched_pair (const std::string &, size_t, char, char,
+                            valid_array_flags);
 
   /* Flags has 1 as a reserved value, since skip_matched_pair uses it for
      skipping over quoted strings and taking the first instance of the
      closing character. */
   size_t
-  skipsubscript (const std::string &string, size_t start, valid_array_flags flags)
+  skipsubscript (const std::string &string, size_t start,
+                 valid_array_flags flags)
   {
     return skip_matched_pair (string, start, '[', ']', flags);
   }
 #endif
 
   /* Evaluates to true if C is a character in $IFS. */
-  bool isifs (char c) {
+  bool
+  isifs (char c)
+  {
     return ifs_cmap[static_cast<unsigned char> (c)];
   }
 
-  SHELL_VAR *
-  do_compound_assignment (const std::string &, const std::string &, assign_flags);
+  SHELL_VAR *do_compound_assignment (const std::string &, const std::string &,
+                                     assign_flags);
 
   // from variables.c
 
@@ -2574,7 +2625,8 @@ protected:
 
   SHELL_VAR *set_if_not (const std::string &, const std::string &);
 
-  virtual void sh_set_lines_and_columns (unsigned int, unsigned int) RL_OVERRIDE;
+  virtual void sh_set_lines_and_columns (unsigned int,
+                                         unsigned int) RL_OVERRIDE;
   void set_pwd ();
   void set_ppid ();
   void make_funcname_visible (bool);
@@ -2590,7 +2642,7 @@ protected:
   SHELL_VAR *find_var_nameref (SHELL_VAR *);
   SHELL_VAR *find_var_nameref_for_create (const std::string &, int);
   SHELL_VAR *find_var_nameref_for_assignment (const std::string &, int);
-/* SHELL_VAR *find_internal (const std::string &, int); */
+  /* SHELL_VAR *find_internal (const std::string &, int); */
   SHELL_VAR *find_tempenv (const std::string &);
   SHELL_VAR *find_no_tempenv (const std::string &);
   SHELL_VAR *find_global (const std::string &);
@@ -2599,7 +2651,7 @@ protected:
   SHELL_VAR *find_no_invisible (const std::string &);
   SHELL_VAR *find_for_assignment (const std::string &);
   char *nameref_transform_name (const std::string &, int);
-//   SHELL_VAR *copy_variable (SHELL_VAR *);
+  //   SHELL_VAR *copy_variable (SHELL_VAR *);
   SHELL_VAR *make_local (const std::string &, int);
   SHELL_VAR *bind (const std::string &, const std::string &, int);
   SHELL_VAR *bind_global (const std::string &, const std::string &, int);
@@ -2617,7 +2669,7 @@ protected:
   SHELL_VAR **all_exported ();
   SHELL_VAR **local_exported ();
   SHELL_VAR **all_local (int);
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   SHELL_VAR **all_array ();
 #endif
   char **all_matching_prefix (const std::string &);
@@ -2636,7 +2688,8 @@ protected:
   int sh_unset_nodelay_mode (int) override;
 
   SHELL_VAR *bind_variable_value (SHELL_VAR *, const std::string &, int);
-  SHELL_VAR *bind_int_variable (const std::string &, const std::string &, assign_flags);
+  SHELL_VAR *bind_int_variable (const std::string &, const std::string &,
+                                assign_flags);
   SHELL_VAR *bind_var_to_int (const std::string &, int64_t);
 
   int assign_in_env (WORD_DESC *, int);
@@ -2693,7 +2746,8 @@ protected:
 
   int chkexport (const std::string &);
   void maybe_make_export_env ();
-  void update_export_env_inplace (const std::string &, int, const std::string &);
+  void update_export_env_inplace (const std::string &, int,
+                                  const std::string &);
   void put_command_name_into_env (const std::string &);
   void put_gnu_argv_flags_into_env (int64_t, const std::string &);
 
@@ -2703,7 +2757,7 @@ protected:
   void print_var_value (SHELL_VAR *, int);
   void print_var_function (SHELL_VAR *);
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   SHELL_VAR *make_new_array_variable (const std::string &);
   SHELL_VAR *make_local_array_variable (const std::string &, int);
 
@@ -2727,8 +2781,8 @@ protected:
 
   int get_random_number ();
 
-/* The `special variable' functions that get called when a particular
-   variable is set. */
+  /* The `special variable' functions that get called when a particular
+     variable is set. */
   void sv_ifs (const std::string &);
   void sv_path (const std::string &);
   void sv_mail (const std::string &);
@@ -2743,32 +2797,32 @@ protected:
   void sv_xtracefd (const std::string &);
   void sv_shcompat (const std::string &);
 
-#if defined (READLINE)
+#if defined(READLINE)
   void sv_comp_wordbreaks (const std::string &);
   void sv_terminal (const std::string &);
   void sv_hostfile (const std::string &);
   void sv_winsize (const std::string &);
 #endif
 
-#if defined (__CYGWIN__)
+#if defined(__CYGWIN__)
   void sv_home (const std::string &);
 #endif
 
-#if defined (HISTORY)
+#if defined(HISTORY)
   void sv_histsize (const std::string &);
   void sv_histignore (const std::string &);
   void sv_history_control (const std::string &);
-#  if defined (BANG_HISTORY)
+#if defined(BANG_HISTORY)
   void sv_histchars (const std::string &);
-#  endif
+#endif
   void sv_histtimefmt (const std::string &);
 #endif /* HISTORY */
 
-#if defined (HAVE_TZSET)
+#if defined(HAVE_TZSET)
   void sv_tz (const std::string &);
 #endif
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
   void sv_childmax (const std::string &);
 #endif
 
@@ -2797,27 +2851,27 @@ protected:
   char *tilde_expand (const std::string &);
 
 private:
-
-  // Here are the variables we can't trivially send to a different memory space.
+  // Here are the variables we can't trivially send to a different memory
+  // space.
 
   jobstats js;
 
   PROCESS *last_procsub_child;
 
-//  ps_index_t *pidstat_table;	// FIXME: what type is this
+  //  ps_index_t *pidstat_table;	// FIXME: what type is this
 
   bgpids bgpids;
 
   procchain procsubs;
 
   /* The array of known jobs. */
-  std::vector<JOB*> jobs;
+  std::vector<JOB *> jobs;
 
   /* The pipeline currently being built. */
   PROCESS *the_pipeline;
 
-#if defined (ARRAY_VARS)
-  int *pstatuses;		/* list of pipeline statuses */
+#if defined(ARRAY_VARS)
+  int *pstatuses; /* list of pipeline statuses */
   size_t statsize;
 #endif
 
@@ -2832,7 +2886,7 @@ private:
      the environment. */
   HASH_TABLE *shell_functions;
 
-#if defined (DEBUGGER)
+#if defined(DEBUGGER)
   /* The table of shell function definitions that the user defined or that
      came from the environment. */
   HASH_TABLE *shell_function_defs;
@@ -2853,7 +2907,7 @@ private:
      shell variables that are marked for export. */
   char **export_env;
 
-  HASH_TABLE *last_table_searched;	/* hash_lookup sets this */
+  HASH_TABLE *last_table_searched; /* hash_lookup sets this */
   VAR_CONTEXT *last_context_searched;
 
   /* variables from common.c */
@@ -2939,7 +2993,7 @@ private:
      `:' and `=~'. */
   char **tilde_additional_suffixes;
 
-#if defined (HAVE_ICONV)
+#if defined(HAVE_ICONV)
   iconv_t localconv;
 #endif
 
@@ -2949,10 +3003,12 @@ private:
   const char *primary_prompt;
   const char *secondary_prompt;
 
-  /* PROMPT_STRING_POINTER points to one of these, never to an actual string. */
+  /* PROMPT_STRING_POINTER points to one of these, never to an actual string.
+   */
   const char *ps1_prompt, *ps2_prompt;
 
-  /* Displayed after reading a command but before executing it in an interactive shell */
+  /* Displayed after reading a command but before executing it in an
+   * interactive shell */
   const char *ps0_prompt;
 
   /* Handle on the current prompt string.  Indirectly points through
@@ -2985,12 +3041,13 @@ private:
 // The global (constructed in shell.cc) pointer to the single shell object.
 extern Shell *the_shell;
 
-struct sh_input_line_state_t {
+struct sh_input_line_state_t
+{
   char *input_line;
   size_t input_line_index;
   size_t input_line_size;
   size_t input_line_len;
-#if defined (HANDLE_MULTIBYTE)
+#if defined(HANDLE_MULTIBYTE)
   char *input_property;
   size_t input_propsize;
 #endif
@@ -2999,7 +3056,8 @@ struct sh_input_line_state_t {
 /* Structure in which to save partial parsing state when doing things like
    PROMPT_COMMAND and bash_execute_unix_command execution. */
 
-struct sh_parser_state_t {
+struct sh_parser_state_t
+{
 
   /* parsing state */
   int parser_state;
@@ -3012,7 +3070,7 @@ struct sh_parser_state_t {
   int input_line_terminator;
   int eof_encountered;
 
-#if defined (HANDLE_MULTIBYTE)
+#if defined(HANDLE_MULTIBYTE)
   /* Nothing right now for multibyte state, but might want something later. */
 #endif
 
@@ -3020,12 +3078,12 @@ struct sh_parser_state_t {
 
   /* history state affecting or modified by the parser */
   int current_command_line_count;
-#if defined (HISTORY)
+#if defined(HISTORY)
   int remember_on_history;
   int history_expansion_inhibited;
 #endif
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   ARRAY *pipestatus;
 #endif
 
@@ -3036,6 +3094,6 @@ struct sh_parser_state_t {
   REDIRECT *redir_stack[HEREDOC_MAX];
 };
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* _SHELL_H_ */

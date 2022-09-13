@@ -1,5 +1,5 @@
 /* strcasestr.c - Find if one string appears as a substring of another string,
-		  without regard to case. */
+                  without regard to case. */
 
 /* Copyright (C) 2000 Free Software Foundation, Inc.
 
@@ -19,10 +19,10 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
 #include "chartypes.hh"
+#include "config.hh"
 
-#if !defined (HAVE_STRCASESTR)
+#if !defined(HAVE_STRCASESTR)
 
 /* Determine if s2 occurs in s1.  If so, return a pointer to the
    match in s1.  The compare is case insensitive.  This is a
@@ -34,7 +34,8 @@ strcasestr (const char *s1, const char *s2)
   int len = std::strlen (s1);
   int l = std::strlen (s2);
   for (int i = 0; (len - i) >= l; i++)
-    if ((TOLOWER ((unsigned char)s1[i]) == c) && (strncasecmp (s1 + i, s2, l) == 0))
+    if ((TOLOWER ((unsigned char)s1[i]) == c)
+        && (strncasecmp (s1 + i, s2, l) == 0))
       return (char *)s1 + i;
   return (char *)0;
 }

@@ -22,18 +22,18 @@
 
 #include "config.hh"
 
-#if defined (HAVE_POSIX_REGEXP)
+#if defined(HAVE_POSIX_REGEXP)
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+#include <unistd.h>
 #endif
 
 #include <cstdio>
 #include <regex.h>
 
+#include "externs.hh"
 #include "shell.hh"
 #include "variables.hh"
-#include "externs.hh"
 
 namespace bash
 {
@@ -44,7 +44,7 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
   regex_t regex;
   regmatch_t *matches;
   int rflags;
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   SHELL_VAR *rematch;
   ARRAY *amatch;
   char *subexp_str;
@@ -52,21 +52,21 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
 #endif
   int result;
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   rematch = nullptr;
 #endif
 
   rflags = REG_EXTENDED;
   if (match_ignore_case)
     rflags |= REG_ICASE;
-#if !defined (ARRAY_VARS)
+#if !defined(ARRAY_VARS)
   rflags |= REG_NOSUB;
 #endif
 
   if (::regcomp (&regex, pattern, rflags))
-    return 2;		/* flag for printing a warning here. */
+    return 2; /* flag for printing a warning here. */
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   matches = new regmatch_t[regex.re_nsub + 1];
 #else
   matches = nullptr;
@@ -76,9 +76,9 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
   if (::regexec (&regex, string, matches ? regex.re_nsub + 1 : 0, matches, 0))
     result = EXECUTION_FAILURE;
   else
-    result = EXECUTION_SUCCESS;		/* match */
+    result = EXECUTION_SUCCESS; /* match */
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
   subexp_len = std::strlen (string) + 10;
   subexp_str = new char[subexp_len + 1];
 
@@ -87,17 +87,18 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
      is the part that matched the first subexpression, and so on. */
   unbind_variable_noref ("BASH_REMATCH");
   rematch = make_new_array_variable ("BASH_REMATCH");
-  amatch = rematch->array();
+  amatch = rematch->array ();
 
-  if (matches && (flags & SHMAT_SUBEXP) && result == EXECUTION_SUCCESS && subexp_str)
+  if (matches && (flags & SHMAT_SUBEXP) && result == EXECUTION_SUCCESS
+      && subexp_str)
     {
       for (size_t subexp_ind = 0; subexp_ind <= regex.re_nsub; subexp_ind++)
-	{
-	  std::memset (subexp_str, 0, subexp_len);
-	  std::strncpy (subexp_str, string + matches[subexp_ind].rm_so,
-			matches[subexp_ind].rm_eo - matches[subexp_ind].rm_so);
-	  array_insert (amatch, subexp_ind, subexp_str);
-	}
+        {
+          std::memset (subexp_str, 0, subexp_len);
+          std::strncpy (subexp_str, string + matches[subexp_ind].rm_so,
+                        matches[subexp_ind].rm_eo - matches[subexp_ind].rm_so);
+          array_insert (amatch, subexp_ind, subexp_str);
+        }
     }
 
   delete[] subexp_str;
@@ -109,6 +110,6 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
   return result;
 }
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* HAVE_POSIX_REGEXP */

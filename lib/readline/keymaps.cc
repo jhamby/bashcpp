@@ -23,6 +23,6 @@
 
 #include "emacs_keymap.hh"
 
-#if defined (VI_MODE)
+#if defined(VI_MODE)
 #include "vi_keymap.hh"
 #endif

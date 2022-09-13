@@ -48,30 +48,30 @@
 
 #include "config.hh"
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 
 #include "bashtypes.hh"
 
 #include <csignal>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "jobs.hh"
-#include "execute_cmd.hh"
 #include "bashgetopt.hh"
 #include "common.hh"
+#include "execute_cmd.hh"
+#include "jobs.hh"
+#include "shell.hh"
 
 namespace bash
 {
 
-#define JSTATE_ANY	0x0
-#define JSTATE_RUNNING	0x1
-#define JSTATE_STOPPED	0x2
+#define JSTATE_ANY 0x0
+#define JSTATE_RUNNING 0x1
+#define JSTATE_STOPPED 0x2
 
 static int execute_list_with_replacements (WORD_LIST *);
 
@@ -97,36 +97,36 @@ Shell::jobs_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "lpnxrs")) != -1)
     {
       switch (opt)
-	{
-	case 'l':
-	  form = JLIST_LONG;
-	  break;
-	case 'p':
-	  form = JLIST_PID_ONLY;
-	  break;
-	case 'n':
-	  form = JLIST_CHANGED_ONLY;
-	  break;
-	case 'x':
-	  if (form != JLIST_STANDARD)
-	    {
-	      builtin_error (_("no other options allowed with `-x'"));
-	      return EXECUTION_FAILURE;
-	    }
-	  execute++;
-	  break;
-	case 'r':
-	  state = JSTATE_RUNNING;
-	  break;
-	case 's':
-	  state = JSTATE_STOPPED;
-	  break;
+        {
+        case 'l':
+          form = JLIST_LONG;
+          break;
+        case 'p':
+          form = JLIST_PID_ONLY;
+          break;
+        case 'n':
+          form = JLIST_CHANGED_ONLY;
+          break;
+        case 'x':
+          if (form != JLIST_STANDARD)
+            {
+              builtin_error (_ ("no other options allowed with `-x'"));
+              return EXECUTION_FAILURE;
+            }
+          execute++;
+          break;
+        case 'r':
+          state = JSTATE_RUNNING;
+          break;
+        case 's':
+          state = JSTATE_STOPPED;
+          break;
 
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
 
   list = loptend;
@@ -137,17 +137,17 @@ Shell::jobs_builtin (WORD_LIST *list)
   if (!list)
     {
       switch (state)
-	{
-	case JSTATE_ANY:
-	  list_all_jobs (form);
-	  break;
-	case JSTATE_RUNNING:
-	  list_running_jobs (form);
-	  break;
-	case JSTATE_STOPPED:
-	  list_stopped_jobs (form);
-	  break;
-	}
+        {
+        case JSTATE_ANY:
+          list_all_jobs (form);
+          break;
+        case JSTATE_RUNNING:
+          list_running_jobs (form);
+          break;
+        case JSTATE_STOPPED:
+          list_stopped_jobs (form);
+          break;
+        }
       return EXECUTION_SUCCESS;
     }
 
@@ -157,12 +157,12 @@ Shell::jobs_builtin (WORD_LIST *list)
       job = get_job_spec (list);
 
       if ((job == NO_JOB) || jobs == 0 || get_job_by_jid (job) == 0)
-	{
-	  sh_badjob (list->word->word);
-	  any_failed++;
-	}
+        {
+          sh_badjob (list->word->word);
+          any_failed++;
+        }
       else if (job != DUP_JOB)
-	list_one_job ((JOB *)NULL, form, 0, job);
+        list_one_job ((JOB *)NULL, form, 0, job);
 
       UNBLOCK_CHILD (oset);
       list = (WORD_LIST *)list->next;
@@ -176,18 +176,18 @@ execute_list_with_replacements (WORD_LIST *list)
   /* First do the replacement of job specifications with pids. */
   for (WORD_LIST *l = list; l; l = (WORD_LIST *)l->next)
     {
-      if (l->word->word[0] == '%')	/* we have a winner */
-	{
-	  int job = get_job_spec (l);
+      if (l->word->word[0] == '%') /* we have a winner */
+        {
+          int job = get_job_spec (l);
 
-	  /* A bad job spec is not really a job spec! Pass it through. */
-	  if (INVALID_JOB (job))
-	    continue;
+          /* A bad job spec is not really a job spec! Pass it through. */
+          if (INVALID_JOB (job))
+            continue;
 
-	  JOB *j = get_job_by_jid (job);
-	  free (l->word->word);
-	  l->word->word = itos (j->pgrp);
-	}
+          JOB *j = get_job_by_jid (job);
+          free (l->word->word);
+          l->word->word = itos (j->pgrp);
+        }
     }
 
   /* Next make a new simple command and execute it. */
@@ -208,26 +208,26 @@ execute_list_with_replacements (WORD_LIST *list)
 }
 #endif /* JOB_CONTROL */
 
-$BUILTIN disown
-$FUNCTION disown_builtin
-$DEPENDS_ON JOB_CONTROL
-$SHORT_DOC disown [-h] [-ar] [jobspec ... | pid ...]
-Remove jobs from current shell.
+// $BUILTIN disown
+// $FUNCTION disown_builtin
+// $DEPENDS_ON JOB_CONTROL
+// $SHORT_DOC disown [-h] [-ar] [jobspec ... | pid ...]
+// Remove jobs from current shell.
 
-Removes each JOBSPEC argument from the table of active jobs.  Without
-any JOBSPECs, the shell uses its notion of the current job.
+// Removes each JOBSPEC argument from the table of active jobs.  Without
+// any JOBSPECs, the shell uses its notion of the current job.
 
-Options:
-  -a	remove all jobs if JOBSPEC is not supplied
-  -h	mark each JOBSPEC so that SIGHUP is not sent to the job if the
-		shell receives a SIGHUP
-  -r	remove only running jobs
+// Options:
+//   -a    remove all jobs if JOBSPEC is not supplied
+//   -h    mark each JOBSPEC so that SIGHUP is not sent to the job if the
+//                 shell receives a SIGHUP
+//   -r    remove only running jobs
 
-Exit Status:
-Returns success unless an invalid option or JOBSPEC is given.
-$END
+// Exit Status:
+// Returns success unless an invalid option or JOBSPEC is given.
+// $END
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 int
 disown_builtin (WORD_LIST *list)
 {
@@ -240,21 +240,21 @@ disown_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "ahr")) != -1)
     {
       switch (opt)
-	{
-	case 'a':
-	  all_jobs = 1;
-	  break;
-	case 'h':
-	  nohup_only = 1;
-	  break;
-	case 'r':
-	  running_jobs = 1;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+        case 'a':
+          all_jobs = 1;
+          break;
+        case 'h':
+          nohup_only = 1;
+          break;
+        case 'r':
+          running_jobs = 1;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
   list = loptend;
   retval = EXECUTION_SUCCESS;
@@ -263,32 +263,33 @@ disown_builtin (WORD_LIST *list)
   if (list == 0 && (all_jobs || running_jobs))
     {
       if (nohup_only)
-	nohup_all_jobs (running_jobs);
+        nohup_all_jobs (running_jobs);
       else
-	delete_all_jobs (running_jobs);
+        delete_all_jobs (running_jobs);
       return EXECUTION_SUCCESS;
     }
 
   do
     {
       BLOCK_CHILD (set, oset);
-      job = (list && legal_number (list->word->word, &pid_value) && pid_value == (pid_t) pid_value)
-		? get_job_by_pid ((pid_t) pid_value, 0, 0)
-		: get_job_spec (list);
+      job = (list && legal_number (list->word->word, &pid_value)
+             && pid_value == (pid_t)pid_value)
+                ? get_job_by_pid ((pid_t)pid_value, 0, 0)
+                : get_job_spec (list);
 
       if (job == NO_JOB || jobs == 0 || INVALID_JOB (job))
-	{
-	  sh_badjob (list ? list->word->word : _("current"));
-	  retval = EXECUTION_FAILURE;
-	}
+        {
+          sh_badjob (list ? list->word->word : _ ("current"));
+          retval = EXECUTION_FAILURE;
+        }
       else if (nohup_only)
-	nohup_job (job);
+        nohup_job (job);
       else
-	delete_job (job, 1);
+        delete_job (job, 1);
       UNBLOCK_CHILD (oset);
 
       if (list)
-	list = (WORD_LIST *)list->next;
+        list = (WORD_LIST *)list->next;
     }
   while (list);
 
@@ -296,4 +297,4 @@ disown_builtin (WORD_LIST *list)
 }
 #endif /* JOB_CONTROL */
 
-}  // namespace bash
+} // namespace bash

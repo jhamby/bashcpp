@@ -114,16 +114,16 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "execute_cmd.hh"
-#include "test.hh"
 #include "common.hh"
+#include "execute_cmd.hh"
+#include "shell.hh"
+#include "test.hh"
 
 namespace bash
 {
@@ -141,19 +141,19 @@ Shell::test_builtin (WORD_LIST *list)
   if (list == 0)
     {
       if (this_command_name[0] == '[' && !this_command_name[1])
-	{
-	  builtin_error (_("missing `]'"));
-	  return EX_BADUSAGE;
-	}
+        {
+          builtin_error (_ ("missing `]'"));
+          return EX_BADUSAGE;
+        }
 
       return EXECUTION_FAILURE;
     }
 
-  argv = make_builtin_argv  (list, &argc);
+  argv = make_builtin_argv (list, &argc);
   result = test_command (argc, argv);
   free ((char *)argv);
 
   return result;
 }
 
-}  // namespace bash
+} // namespace bash

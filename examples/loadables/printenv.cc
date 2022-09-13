@@ -26,16 +26,16 @@
 #include <config.h>
 #include <stdio.h>
 
-#include "builtins.h"
-#include "shell.h"
 #include "bashgetopt.h"
+#include "builtins.h"
 #include "common.h"
+#include "shell.h"
 
 extern char **export_env;
 
 int
-printenv_builtin (list) 
-     WORD_LIST *list;
+printenv_builtin (list)
+WORD_LIST *list;
 {
   register char **envp;
   int opt;
@@ -45,21 +45,21 @@ printenv_builtin (list)
   while ((opt = internal_getopt (list, "")) != -1)
     {
       switch (opt)
-	{
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return (EX_USAGE);
-	}
+        {
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return (EX_USAGE);
+        }
     }
   list = loptend;
 
   /* printenv */
   if (list == 0)
     {
-      maybe_make_export_env ();		/* this allows minimal code */
+      maybe_make_export_env (); /* this allows minimal code */
       for (envp = export_env; *envp; envp++)
-	printf ("%s\n", *envp);
+        printf ("%s\n", *envp);
       return (EXECUTION_SUCCESS);
     }
 
@@ -73,22 +73,14 @@ printenv_builtin (list)
   else
     print_var_value (var, 0);
 
-  printf("\n");
+  printf ("\n");
   return (EXECUTION_SUCCESS);
 }
 
-char *printenv_doc[] = {
-	"Display environment.",
-	"",
-	"Print names and values of environment variables",
-	(char *)NULL
-};
+char *printenv_doc[]
+    = { "Display environment.", "",
+        "Print names and values of environment variables", (char *)NULL };
 
-struct builtin printenv_struct = {
-	"printenv",
-	printenv_builtin,
-	BUILTIN_ENABLED,
-	printenv_doc,
-	"printenv [varname]",
-	0
-};
+struct builtin printenv_struct
+    = { "printenv",   printenv_builtin,     BUILTIN_ENABLED,
+        printenv_doc, "printenv [varname]", 0 };

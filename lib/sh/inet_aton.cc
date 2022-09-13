@@ -59,28 +59,30 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)inet_addr.c	8.1 (Berkeley) 6/17/93";
-static char rcsid[] = "$Id: inet_addr.c,v 1.5 1996/08/14 03:48:37 drepper Exp $";
+static char rcsid[]
+    = "$Id: inet_addr.c,v 1.5 1996/08/14 03:48:37 drepper Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include "config.hh"
 
-#if !defined (HAVE_INET_ATON) && defined (HAVE_NETWORK) && defined (HAVE_NETINET_IN_H) && defined (HAVE_ARPA_INET_H)
+#if !defined(HAVE_INET_ATON) && defined(HAVE_NETWORK)                         \
+    && defined(HAVE_NETINET_IN_H) && defined(HAVE_ARPA_INET_H)
 
 #include <sys/types.h>
-#if defined (HAVE_SYS_PARAM_H)
+#if defined(HAVE_SYS_PARAM_H)
 #include <sys/param.h>
 #endif
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+#include <unistd.h>
 #endif
 
 #include <cctype>
 
 #ifndef INADDR_NONE
-#  define INADDR_NONE 0xffffffff
+#define INADDR_NONE 0xffffffff
 #endif
 
 /* these are compatibility routines, not needed on recent BSD releases */
@@ -110,100 +112,110 @@ inet_addr(const char *cp)
  * cannot distinguish between failure and a local broadcast address.
  */
 int
-inet_aton(const char *cp, struct in_addr *addr)
+inet_aton (const char *cp, struct in_addr *addr)
 {
-	u_bits32_t val;
-	int base, n;
-	unsigned char c;
-	u_int parts[4];
-	u_int *pp = parts;
+  u_bits32_t val;
+  int base, n;
+  unsigned char c;
+  u_int parts[4];
+  u_int *pp = parts;
 
-	c = *cp;
-	for (;;) {
-		/*
-		 * Collect number up to ``.''.
-		 * Values are specified as for C:
-		 * 0x=hex, 0=octal, isdigit=decimal.
-		 */
+  c = *cp;
+  for (;;)
+    {
+      /*
+       * Collect number up to ``.''.
+       * Values are specified as for C:
+       * 0x=hex, 0=octal, isdigit=decimal.
+       */
 #if 0
 		if (!isdigit(c))
 #else
-		if (c != '0' && c != '1' && c != '2' && c != '3' && c != '4' &&
-		    c != '5' && c != '6' && c != '7' && c != '8' && c != '9')
+      if (c != '0' && c != '1' && c != '2' && c != '3' && c != '4' && c != '5'
+          && c != '6' && c != '7' && c != '8' && c != '9')
 #endif
-			return 0;
-		val = 0; base = 10;
-		if (c == '0') {
-			c = *++cp;
-			if (c == 'x' || c == 'X')
-				base = 16, c = *++cp;
-			else
-				base = 8;
-		}
-		for (;;) {
-			if (isascii(c) && isdigit(c)) {
-				val = (val * base) + (c - '0');
-				c = *++cp;
-			} else if (base == 16 && isascii(c) && isxdigit(c)) {
-				val = (val << 4) |
-					(c + 10 - (islower(c) ? 'a' : 'A'));
-				c = *++cp;
-			} else
-				break;
-		}
-		if (c == '.') {
-			/*
-			 * Internet format:
-			 *	a.b.c.d
-			 *	a.b.c	(with c treated as 16 bits)
-			 *	a.b	(with b treated as 24 bits)
-			 */
-			if (pp >= parts + 3)
-				return 0;
-			*pp++ = val;
-			c = *++cp;
-		} else
-			break;
-	}
-	/*
-	 * Check for trailing characters.
-	 */
-	if (c != '\0' && (!isascii(c) || !isspace(c)))
-		return 0;
-	/*
-	 * Concoct the address according to
-	 * the number of parts specified.
-	 */
-	n = pp - parts + 1;
-	switch (n) {
+      return 0;
+      val = 0;
+      base = 10;
+      if (c == '0')
+        {
+          c = *++cp;
+          if (c == 'x' || c == 'X')
+            base = 16, c = *++cp;
+          else
+            base = 8;
+        }
+      for (;;)
+        {
+          if (isascii (c) && isdigit (c))
+            {
+              val = (val * base) + (c - '0');
+              c = *++cp;
+            }
+          else if (base == 16 && isascii (c) && isxdigit (c))
+            {
+              val = (val << 4) | (c + 10 - (islower (c) ? 'a' : 'A'));
+              c = *++cp;
+            }
+          else
+            break;
+        }
+      if (c == '.')
+        {
+          /*
+           * Internet format:
+           *	a.b.c.d
+           *	a.b.c	(with c treated as 16 bits)
+           *	a.b	(with b treated as 24 bits)
+           */
+          if (pp >= parts + 3)
+            return 0;
+          *pp++ = val;
+          c = *++cp;
+        }
+      else
+        break;
+    }
+  /*
+   * Check for trailing characters.
+   */
+  if (c != '\0' && (!isascii (c) || !isspace (c)))
+    return 0;
+  /*
+   * Concoct the address according to
+   * the number of parts specified.
+   */
+  n = pp - parts + 1;
+  switch (n)
+    {
 
-	case 0:
-		return 0;		/* initial nondigit */
+    case 0:
+      return 0; /* initial nondigit */
 
-	case 1:				/* a -- 32 bits */
-		break;
+    case 1: /* a -- 32 bits */
+      break;
 
-	case 2:				/* a.b -- 8.24 bits */
-		if (val > 0xffffff)
-			return 0;
-		val |= parts[0] << 24;
-		break;
+    case 2: /* a.b -- 8.24 bits */
+      if (val > 0xffffff)
+        return 0;
+      val |= parts[0] << 24;
+      break;
 
-	case 3:				/* a.b.c -- 8.8.16 bits */
-		if (val > 0xffff)
-			return 0;
-		val |= (parts[0] << 24) | (parts[1] << 16);
-		break;
+    case 3: /* a.b.c -- 8.8.16 bits */
+      if (val > 0xffff)
+        return 0;
+      val |= (parts[0] << 24) | (parts[1] << 16);
+      break;
 
-	case 4:				/* a.b.c.d -- 8.8.8.8 bits */
-		if (val > 0xff)
-			return 0;
-		val |= (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8);
-		break;
-	}
-	if (addr)
-		addr->s_addr = htonl(val);
-	return 1;
+    case 4: /* a.b.c.d -- 8.8.8.8 bits */
+      if (val > 0xff)
+        return 0;
+      val |= (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8);
+      break;
+    }
+  if (addr)
+    addr->s_addr = htonl (val);
+  return 1;
 }
 
 #endif /* !HAVE_INET_ATON */

@@ -23,26 +23,26 @@
 #include "bashtypes.hh"
 #include "externs.hh"
 
-#if defined (HAVE_SYS_PARAM_H)
-#  include <sys/param.h>
+#if defined(HAVE_SYS_PARAM_H)
+#include <sys/param.h>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#if defined (HAVE_LIMITS_H)
-#  include <climits>
+#if defined(HAVE_LIMITS_H)
+#include <climits>
 #endif
 
-#if !defined (HAVE_SYSCONF) || !defined (_SC_CLK_TCK)
-#  if !defined (CLK_TCK)
-#    if defined (HZ)
-#      define CLK_TCK HZ
-#    else
-#      define CLK_TCK 60
-#    endif
-#  endif /* !CLK_TCK */
+#if !defined(HAVE_SYSCONF) || !defined(_SC_CLK_TCK)
+#if !defined(CLK_TCK)
+#if defined(HZ)
+#define CLK_TCK HZ
+#else
+#define CLK_TCK 60
+#endif
+#endif /* !CLK_TCK */
 #endif /* !HAVE_SYSCONF && !_SC_CLK_TCK */
 
 namespace bash
@@ -56,13 +56,13 @@ get_clk_tck ()
   if (retval != 0)
     return retval;
 
-#if defined (HAVE_SYSCONF) && defined (_SC_CLK_TCK)
+#if defined(HAVE_SYSCONF) && defined(_SC_CLK_TCK)
   retval = ::sysconf (_SC_CLK_TCK);
-#else /* !SYSCONF || !_SC_CLK_TCK */
+#else  /* !SYSCONF || !_SC_CLK_TCK */
   retval = CLK_TCK;
 #endif /* !SYSCONF || !_SC_CLK_TCK */
 
   return retval;
 }
 
-}  // namespace bash
+} // namespace bash

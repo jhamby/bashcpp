@@ -23,19 +23,19 @@
 #include "bashtypes.hh"
 #include "posixstat.hh"
 
-#if defined (HAVE_SYS_PARAM_H)
-#  include <sys/param.h>
+#if defined(HAVE_SYS_PARAM_H)
+#include <sys/param.h>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "posixtime.hh"
 #include "bashintl.hh"
+#include "posixtime.hh"
 
-#include "shell.hh"
 #include "execute_cmd.hh"
+#include "shell.hh"
 
 #include "tilde.hh"
 
@@ -43,13 +43,14 @@ namespace bash
 {
 
 /* Values for flags word in struct _fileinfo */
-#define MBOX_INITIALIZED	0x01
+#define MBOX_INITIALIZED 0x01
 
 extern time_t shell_start_time;
 
 extern int mailstat (const char *, struct stat *);
 
-struct FileInfo {
+struct FileInfo
+{
   char *name;
   char *msg;
   time_t access_time;
@@ -127,30 +128,31 @@ find_mail_file (char *file)
   return -1;
 }
 
-#define RESET_MAIL_FILE(i) \
-  do \
-    { \
-      mailfiles[i]->access_time = mailfiles[i]->mod_time = 0; \
-      mailfiles[i]->file_size = 0; \
-      mailfiles[i]->flags = 0; \
-    } \
+#define RESET_MAIL_FILE(i)                                                    \
+  do                                                                          \
+    {                                                                         \
+      mailfiles[i]->access_time = mailfiles[i]->mod_time = 0;                 \
+      mailfiles[i]->file_size = 0;                                            \
+      mailfiles[i]->flags = 0;                                                \
+    }                                                                         \
   while (0)
 
-#define UPDATE_MAIL_FILE(i, finfo) \
-  do \
-    { \
-      mailfiles[i]->access_time = finfo.st_atime; \
-      mailfiles[i]->mod_time = finfo.st_mtime; \
-      mailfiles[i]->file_size = finfo.st_size; \
-      mailfiles[i]->flags |= MBOX_INITIALIZED; \
-    } \
+#define UPDATE_MAIL_FILE(i, finfo)                                            \
+  do                                                                          \
+    {                                                                         \
+      mailfiles[i]->access_time = finfo.st_atime;                             \
+      mailfiles[i]->mod_time = finfo.st_mtime;                                \
+      mailfiles[i]->file_size = finfo.st_size;                                \
+      mailfiles[i]->flags |= MBOX_INITIALIZED;                                \
+    }                                                                         \
   while (0)
 
 static void
 init_mail_file (int i)
 {
   mailfiles[i]->access_time = (mailfiles[i]->mod_time = last_time_mail_checked)
-				? last_time_mail_checked : shell_start_time;
+                                  ? last_time_mail_checked
+                                  : shell_start_time;
   mailfiles[i]->file_size = 0;
   mailfiles[i]->flags = 0;
 }
@@ -182,15 +184,15 @@ add_mail_file (char *file, char *msg)
   if (i >= 0)
     {
       if (mailstat (filename, &finfo) == 0)
-	UPDATE_MAIL_FILE (i, finfo);
+        UPDATE_MAIL_FILE (i, finfo);
 
       free (filename);
       return i;
     }
 
   i = mailfiles_count++;
-  mailfiles = (FILEINFO **)xrealloc
-		(mailfiles, mailfiles_count * sizeof (FILEINFO *));
+  mailfiles = (FILEINFO **)xrealloc (mailfiles,
+                                     mailfiles_count * sizeof (FILEINFO *));
 
   mailfiles[i] = alloc_mail_file (filename, msg);
   init_mail_file (i);
@@ -323,17 +325,17 @@ parse_mailpath_spec (char *str)
   for (s = str, pass_next = 0; s && *s; s++)
     {
       if (pass_next)
-	{
-	  pass_next = 0;
-	  continue;
-	}
+        {
+          pass_next = 0;
+          continue;
+        }
       if (*s == '\\')
-	{
-	  pass_next++;
-	  continue;
-	}
+        {
+          pass_next++;
+          continue;
+        }
       if (*s == '?' || *s == '%')
-	return s;
+        return s;
     }
   return (char *)NULL;
 }
@@ -341,13 +343,14 @@ parse_mailpath_spec (char *str)
 char *
 make_default_mailpath ()
 {
-#if defined (DEFAULT_MAIL_DIRECTORY)
+#if defined(DEFAULT_MAIL_DIRECTORY)
   char *mp;
 
   get_current_user_info ();
-  mp = (char *)xmalloc (2 + sizeof (DEFAULT_MAIL_DIRECTORY) + std::strlen (current_user.user_name));
+  mp = (char *)xmalloc (2 + sizeof (DEFAULT_MAIL_DIRECTORY)
+                        + std::strlen (current_user.user_name));
   std::strcpy (mp, DEFAULT_MAIL_DIRECTORY);
-  mp[sizeof(DEFAULT_MAIL_DIRECTORY) - 1] = '/';
+  mp[sizeof (DEFAULT_MAIL_DIRECTORY) - 1] = '/';
   std::strcpy (mp + sizeof (DEFAULT_MAIL_DIRECTORY), current_user.user_name);
   return mp;
 #else
@@ -375,10 +378,10 @@ remember_mail_dates ()
     {
       mailpaths = make_default_mailpath ();
       if (mailpaths)
-	{
-	  add_mail_file (mailpaths, (char *)NULL);
-	  free (mailpaths);
-	}
+        {
+          add_mail_file (mailpaths, (char *)NULL);
+          free (mailpaths);
+        }
       return;
     }
 
@@ -388,7 +391,7 @@ remember_mail_dates ()
     {
       char *mp = parse_mailpath_spec (mailfile);
       if (mp && *mp)
-	*mp++ = '\0';
+        *mp++ = '\0';
       add_mail_file (mailfile, mp);
       std::free (mailfile);
     }
@@ -409,9 +412,9 @@ remember_mail_dates ()
 void
 check_mail ()
 {
-//   char *current_mail_file, *message;
-//   int i, use_user_notification;
-//   char *dollar_underscore, *temp;
+  //   char *current_mail_file, *message;
+  //   int i, use_user_notification;
+  //   char *dollar_underscore, *temp;
 
   char *dollar_underscore = get_string_value ("_");
   if (dollar_underscore)
@@ -422,55 +425,56 @@ check_mail ()
       char *current_mail_file = mailfiles[i]->name;
 
       if (*current_mail_file == '\0')
-	continue;
+        continue;
 
       if (file_mod_date_changed (i))
-	{
-	  bool use_user_notification = mailfiles[i]->msg != (char *)NULL;
-	  const char *message = mailfiles[i]->msg ? mailfiles[i]->msg : _("You have mail in $_");
+        {
+          bool use_user_notification = mailfiles[i]->msg != (char *)NULL;
+          const char *message = mailfiles[i]->msg ? mailfiles[i]->msg
+                                                  : _ ("You have mail in $_");
 
-	  bind_variable ("_", current_mail_file, 0);
+          bind_variable ("_", current_mail_file, 0);
 
 #define atime mailfiles[i]->access_time
 #define mtime mailfiles[i]->mod_time
 
-	  /* Have to compute this before the call to update_mail_file, which
-	     resets all the information. */
-	  bool file_is_bigger = file_has_grown (i);
+          /* Have to compute this before the call to update_mail_file, which
+             resets all the information. */
+          bool file_is_bigger = file_has_grown (i);
 
-	  update_mail_file (i);
+          update_mail_file (i);
 
-	  /* If the user has just run a program which manipulates the
-	     mail file, then don't bother explaining that the mail
-	     file has been manipulated.  Since some systems don't change
-	     the access time to be equal to the modification time when
-	     the mail in the file is manipulated, check the size also.  If
-	     the file has not grown, continue. */
-	  if ((atime >= mtime) && !file_is_bigger)
-	    continue;
+          /* If the user has just run a program which manipulates the
+             mail file, then don't bother explaining that the mail
+             file has been manipulated.  Since some systems don't change
+             the access time to be equal to the modification time when
+             the mail in the file is manipulated, check the size also.  If
+             the file has not grown, continue. */
+          if ((atime >= mtime) && !file_is_bigger)
+            continue;
 
-	  /* If the mod time is later than the access time and the file
-	     has grown, note the fact that this is *new* mail. */
-	  if (use_user_notification == 0 && (atime < mtime) && file_is_bigger)
-	    message = _("You have new mail in $_");
+          /* If the mod time is later than the access time and the file
+             has grown, note the fact that this is *new* mail. */
+          if (use_user_notification == 0 && (atime < mtime) && file_is_bigger)
+            message = _ ("You have new mail in $_");
 #undef atime
 #undef mtime
 
-	  char *temp;
-	  if ((temp = expand_string_to_string (message, Q_DOUBLE_QUOTES)))
-	    {
-	      puts (temp);
-	      free (temp);
-	    }
-	  else
-	    putchar ('\n');
-	}
+          char *temp;
+          if ((temp = expand_string_to_string (message, Q_DOUBLE_QUOTES)))
+            {
+              puts (temp);
+              free (temp);
+            }
+          else
+            putchar ('\n');
+        }
 
       if (mail_warning && file_access_date_changed (i))
-	{
-	  update_mail_file (i);
-	  printf (_("The mail in %s has been read\n"), current_mail_file);
-	}
+        {
+          update_mail_file (i);
+          printf (_ ("The mail in %s has been read\n"), current_mail_file);
+        }
     }
 
   if (dollar_underscore)
@@ -482,4 +486,4 @@ check_mail ()
     unbind_variable ("_");
 }
 
-}  // namespace bash
+} // namespace bash

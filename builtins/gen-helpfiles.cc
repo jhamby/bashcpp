@@ -24,21 +24,21 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_SYS_FILE_H)
-#  include <sys/file.h>
+#if defined(HAVE_SYS_FILE_H)
+#include <sys/file.h>
 #endif
 
-#include "posixstat.hh"
 #include "filecntl.hh"
+#include "posixstat.hh"
 
-#include <cstdio>
 #include <cerrno>
+#include <cstdio>
 
 #include "builtins.hh"
 #include "tmpbuiltins.hh"
@@ -46,11 +46,11 @@
 #define whitespace(c) (((c) == ' ') || ((c) == '\t'))
 
 /* Flag values that builtins can have. */
-#define BUILTIN_FLAG_SPECIAL	0x01
+#define BUILTIN_FLAG_SPECIAL 0x01
 #define BUILTIN_FLAG_ASSIGNMENT 0x02
 #define BUILTIN_FLAG_POSIX_BUILTIN 0x04
 
-#define BASE_INDENT	4
+#define BASE_INDENT 4
 
 /* Non-zero means to produce separate help files for each builtin, named by
    the builtin name, in `./helpfiles'. */
@@ -81,19 +81,19 @@ main (int argc, char **argv)
       char *arg = argv[arg_index++];
 
       if (std::strcmp (arg, "-noproduction") == 0)
-	;
+        ;
       else if (std::strcmp (arg, "-H") == 0)
-	helpfile_directory = argv[arg_index++];
+        helpfile_directory = argv[arg_index++];
       else if (std::strcmp (arg, "-S") == 0)
-	single_longdoc_strings = 0;
+        single_longdoc_strings = 0;
       else
-	{
-	  std::fprintf (stderr, "%s: Unknown flag %s.\n", argv[0], arg);
-	  std::exit (2);
-	}
+        {
+          std::fprintf (stderr, "%s: Unknown flag %s.\n", argv[0], arg);
+          std::exit (2);
+        }
     }
 
-  write_helpfiles(shell_builtins);
+  write_helpfiles (shell_builtins);
 
   std::exit (0);
 }
@@ -123,7 +123,8 @@ write_helpfiles (struct builtin *builtins)
   i = mkdir ("helpfiles", 0777);
   if (i < 0 && errno != EEXIST)
     {
-      std::fprintf (stderr, "write_helpfiles: helpfiles: cannot create directory\n");
+      std::fprintf (stderr,
+                    "write_helpfiles: helpfiles: cannot create directory\n");
       return -1;
     }
 
@@ -135,20 +136,20 @@ write_helpfiles (struct builtin *builtins)
       fname = (char *)b.handle;
       helpfile = (char *)malloc (hdlen + strlen (fname) + 1);
       if (helpfile == 0)
-	{
-	  std::fprintf (stderr, "gen-helpfiles: cannot allocate memory\n");
-	  std::exit (1);
-	}
+        {
+          std::fprintf (stderr, "gen-helpfiles: cannot allocate memory\n");
+          std::exit (1);
+        }
 
       std::sprintf (helpfile, "helpfiles/%s", fname);
 
       helpfp = std::fopen (helpfile, "w");
       if (helpfp == 0)
-	{
-	  std::fprintf (stderr, "write_helpfiles: cannot open %s\n", helpfile);
-	  std::free (helpfile);
-	  continue;
-	}
+        {
+          std::fprintf (stderr, "write_helpfiles: cannot open %s\n", helpfile);
+          std::free (helpfile);
+          continue;
+        }
 
       write_documentation (helpfp, b.long_doc[0], 4);
 

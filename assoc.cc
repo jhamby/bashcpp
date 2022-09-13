@@ -27,16 +27,16 @@
 
 #include "config.hh"
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "shell.hh"
 #include "array.hh"
 #include "assoc.hh"
 #include "builtins/common.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -144,9 +144,9 @@ assoc_quote (HASH_TABLE *h)
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
-	t = quote_string ((char *)tlist->data);
-	FREE (tlist->data);
-	tlist->data = t;
+        t = quote_string ((char *)tlist->data);
+        FREE (tlist->data);
+        tlist->data = t;
       }
 
   return h;
@@ -167,9 +167,9 @@ assoc_quote_escapes (HASH_TABLE *h)
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
-	t = quote_escapes ((char *)tlist->data);
-	FREE (tlist->data);
-	tlist->data = t;
+        t = quote_escapes ((char *)tlist->data);
+        FREE (tlist->data);
+        tlist->data = t;
       }
 
   return h;
@@ -188,9 +188,9 @@ assoc_dequote (HASH_TABLE *h)
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
-	t = dequote_string ((char *)tlist->data);
-	FREE (tlist->data);
-	tlist->data = t;
+        t = dequote_string ((char *)tlist->data);
+        FREE (tlist->data);
+        tlist->data = t;
       }
 
   return h;
@@ -209,9 +209,9 @@ assoc_dequote_escapes (HASH_TABLE *h)
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
-	t = dequote_escapes ((char *)tlist->data);
-	FREE (tlist->data);
-	tlist->data = t;
+        t = dequote_escapes ((char *)tlist->data);
+        FREE (tlist->data);
+        tlist->data = t;
       }
 
   return h;
@@ -230,8 +230,8 @@ assoc_remove_quoted_nulls (HASH_TABLE *h)
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
-	t = remove_quoted_nulls ((char *)tlist->data);
-	tlist->data = t;
+        t = remove_quoted_nulls ((char *)tlist->data);
+        tlist->data = t;
       }
 
   return h;
@@ -263,7 +263,7 @@ assoc_subrange (HASH_TABLE *hash, arrayind_t start, arrayind_t nelem,
       dispose_words (save);
       return (char *)NULL;
     }
-  for (j = 0,h = t = l; l && j < nelem; j++)
+  for (j = 0, h = t = l; l && j < nelem; j++)
     {
       t = l;
       l = (WORD_LIST *)l->next;
@@ -278,13 +278,12 @@ assoc_subrange (HASH_TABLE *hash, arrayind_t start, arrayind_t nelem,
 
   dispose_words (save);
   return ret;
-
 }
 
 char *
 assoc_patsub (HASH_TABLE *h, const char *pat, const char *rep, int mflags)
 {
-  char	*t;
+  char *t;
   int pchar, qflags, pflags;
   WORD_LIST *wl, *save;
 
@@ -315,7 +314,7 @@ assoc_patsub (HASH_TABLE *h, const char *pat, const char *rep, int mflags)
 char *
 assoc_modcase (HASH_TABLE *h, const char *pat, int modop, int mflags)
 {
-  char	*t;
+  char *t;
   int pchar, qflags, pflags;
   WORD_LIST *wl, *save;
 
@@ -360,43 +359,44 @@ assoc_to_kvpair (HASH_TABLE *hash, int quoted)
   for (i = 0; i < hash->nbuckets; i++)
     for (tlist = hash_items (i, hash); tlist; tlist = tlist->next)
       {
-	if (ansic_shouldquote (tlist->key))
-	  istr = ansic_quote (tlist->key, 0, (int *)0);
-	else if (sh_contains_shell_metas (tlist->key))
-	  istr = sh_double_quote (tlist->key);
-	else if (ALL_ELEMENT_SUB (tlist->key[0]) && tlist->key[1] == '\0')
-	  istr = sh_double_quote (tlist->key);
-	else
-	  istr = tlist->key;
+        if (ansic_shouldquote (tlist->key))
+          istr = ansic_quote (tlist->key, 0, (int *)0);
+        else if (sh_contains_shell_metas (tlist->key))
+          istr = sh_double_quote (tlist->key);
+        else if (ALL_ELEMENT_SUB (tlist->key[0]) && tlist->key[1] == '\0')
+          istr = sh_double_quote (tlist->key);
+        else
+          istr = tlist->key;
 
-	vstr = tlist->data ? (ansic_shouldquote ((char *)tlist->data) ?
-				ansic_quote ((char *)tlist->data, 0, (int *)0) :
-				sh_double_quote ((char *)tlist->data))
-			   : (char *)0;
+        vstr = tlist->data
+                   ? (ansic_shouldquote ((char *)tlist->data)
+                          ? ansic_quote ((char *)tlist->data, 0, (int *)0)
+                          : sh_double_quote ((char *)tlist->data))
+                   : (char *)0;
 
-	elen = STRLEN (istr) + 4 + STRLEN (vstr);
-	RESIZE_MALLOCED_BUFFER (ret, rlen, (elen+1), rsize, rsize);
+        elen = STRLEN (istr) + 4 + STRLEN (vstr);
+        RESIZE_MALLOCED_BUFFER (ret, rlen, (elen + 1), rsize, rsize);
 
-	strcpy (ret+rlen, istr);
-	rlen += STRLEN (istr);
-	ret[rlen++] = ' ';
-	if (vstr)
-	  {
-	    strcpy (ret + rlen, vstr);
-	    rlen += STRLEN (vstr);
-	  }
-	else
-	  {
-	    strcpy (ret + rlen, "\"\"");
-	    rlen += 2;
-	  }
-	ret[rlen++] = ' ';
+        strcpy (ret + rlen, istr);
+        rlen += STRLEN (istr);
+        ret[rlen++] = ' ';
+        if (vstr)
+          {
+            strcpy (ret + rlen, vstr);
+            rlen += STRLEN (vstr);
+          }
+        else
+          {
+            strcpy (ret + rlen, "\"\"");
+            rlen += 2;
+          }
+        ret[rlen++] = ' ';
 
-	if (istr != tlist->key)
-	  FREE (istr);
+        if (istr != tlist->key)
+          FREE (istr);
 
-	FREE (vstr);
-    }
+        FREE (vstr);
+      }
 
   RESIZE_MALLOCED_BUFFER (ret, rlen, 1, rsize, 8);
   ret[rlen] = '\0';
@@ -429,40 +429,41 @@ assoc_to_assign (HASH_TABLE *hash, int quoted)
   for (i = 0; i < hash->nbuckets; i++)
     for (tlist = hash_items (i, hash); tlist; tlist = tlist->next)
       {
-	if (ansic_shouldquote (tlist->key))
-	  istr = ansic_quote (tlist->key, 0, (int *)0);
-	else if (sh_contains_shell_metas (tlist->key))
-	  istr = sh_double_quote (tlist->key);
-	else if (ALL_ELEMENT_SUB (tlist->key[0]) && tlist->key[1] == '\0')
-	  istr = sh_double_quote (tlist->key);
-	else
-	  istr = tlist->key;
+        if (ansic_shouldquote (tlist->key))
+          istr = ansic_quote (tlist->key, 0, (int *)0);
+        else if (sh_contains_shell_metas (tlist->key))
+          istr = sh_double_quote (tlist->key);
+        else if (ALL_ELEMENT_SUB (tlist->key[0]) && tlist->key[1] == '\0')
+          istr = sh_double_quote (tlist->key);
+        else
+          istr = tlist->key;
 
-	vstr = tlist->data ? (ansic_shouldquote ((char *)tlist->data) ?
-				ansic_quote ((char *)tlist->data, 0, (int *)0) :
-				sh_double_quote ((char *)tlist->data))
-			   : (char *)0;
+        vstr = tlist->data
+                   ? (ansic_shouldquote ((char *)tlist->data)
+                          ? ansic_quote ((char *)tlist->data, 0, (int *)0)
+                          : sh_double_quote ((char *)tlist->data))
+                   : (char *)0;
 
-	elen = STRLEN (istr) + 8 + STRLEN (vstr);
-	RESIZE_MALLOCED_BUFFER (ret, rlen, (elen+1), rsize, rsize);
+        elen = STRLEN (istr) + 8 + STRLEN (vstr);
+        RESIZE_MALLOCED_BUFFER (ret, rlen, (elen + 1), rsize, rsize);
 
-	ret[rlen++] = '[';
-	strcpy (ret+rlen, istr);
-	rlen += STRLEN (istr);
-	ret[rlen++] = ']';
-	ret[rlen++] = '=';
-	if (vstr)
-	  {
-	    strcpy (ret + rlen, vstr);
-	    rlen += STRLEN (vstr);
-	  }
-	ret[rlen++] = ' ';
+        ret[rlen++] = '[';
+        strcpy (ret + rlen, istr);
+        rlen += STRLEN (istr);
+        ret[rlen++] = ']';
+        ret[rlen++] = '=';
+        if (vstr)
+          {
+            strcpy (ret + rlen, vstr);
+            rlen += STRLEN (vstr);
+          }
+        ret[rlen++] = ' ';
 
-	if (istr != tlist->key)
-	  FREE (istr);
+        if (istr != tlist->key)
+          FREE (istr);
 
-	FREE (vstr);
-    }
+        FREE (vstr);
+      }
 
   RESIZE_MALLOCED_BUFFER (ret, rlen, 1, rsize, 8);
   ret[rlen++] = ')';
@@ -487,16 +488,16 @@ assoc_to_word_list_internal (HASH_TABLE *h, int t)
   char *w;
 
   if (h == 0 || assoc_empty (h))
-    return((WORD_LIST *)NULL);
+    return ((WORD_LIST *)NULL);
   list = (WORD_LIST *)NULL;
 
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
-	w = (t == 0) ? (char *)tlist->data : (char *)tlist->key;
-	list = make_word_list (make_bare_word(w), list);
+        w = (t == 0) ? (char *)tlist->data : (char *)tlist->key;
+        list = make_word_list (make_bare_word (w), list);
       }
-  return REVERSE_LIST(list, WORD_LIST *);
+  return REVERSE_LIST (list, WORD_LIST *);
 }
 
 WORD_LIST *
@@ -532,15 +533,15 @@ assoc_to_string (HASH_TABLE *h, const char *sep, int quoted)
   for (i = 0; i < h->nbuckets; i++)
     for (tlist = hash_items (i, h); tlist; tlist = tlist->next)
       {
-	w = (char *)tlist->data;
-	if (w == 0)
-	  continue;
-	t = quoted ? quote_string (w) : savestring (w);
-	list = make_word_list (make_bare_word(t), list);
-	FREE (t);
+        w = (char *)tlist->data;
+        if (w == 0)
+          continue;
+        t = quoted ? quote_string (w) : savestring (w);
+        list = make_word_list (make_bare_word (t), list);
+        FREE (t);
       }
 
-  l = REVERSE_LIST(list, WORD_LIST *);
+  l = REVERSE_LIST (list, WORD_LIST *);
 
   result = l ? string_list_internal (l, sep) : savestring ("");
   dispose_words (l);
@@ -548,6 +549,6 @@ assoc_to_string (HASH_TABLE *h, const char *sep, int quoted)
   return result;
 }
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* ARRAY_VARS */

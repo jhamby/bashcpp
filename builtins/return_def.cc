@@ -36,16 +36,16 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "execute_cmd.hh"
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "common.hh"
+#include "execute_cmd.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -64,9 +64,10 @@ Shell::return_builtin (WORD_LIST *list)
     sh_longjmp (return_catch, 1);
   else
     {
-      builtin_error (_("can only `return' from a function or sourced script"));
+      builtin_error (
+          _ ("can only `return' from a function or sourced script"));
       return EX_USAGE;
     }
 }
 
-}  // namespace bash
+} // namespace bash

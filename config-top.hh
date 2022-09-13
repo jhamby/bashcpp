@@ -1,4 +1,5 @@
-/* config-top.h - various user-settable options not under the control of autoconf. */
+/* config-top.h - various user-settable options not under the control of
+ * autoconf. */
 
 /* Copyright (C) 2002-2009 Free Software Foundation, Inc.
 
@@ -62,7 +63,7 @@
 
 /* The default value of the PATH variable. */
 #ifndef DEFAULT_PATH_VALUE
-#define DEFAULT_PATH_VALUE \
+#define DEFAULT_PATH_VALUE                                                    \
   "/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:."
 #endif
 
@@ -73,11 +74,10 @@
 /* The value for PATH when invoking `command -p'.  This is only used when
    the Posix.2 confstr () function, or CS_PATH define are not present. */
 #ifndef STANDARD_UTILS_PATH
-#define STANDARD_UTILS_PATH \
-  "/bin:/usr/bin:/sbin:/usr/sbin:/etc:/usr/etc"
+#define STANDARD_UTILS_PATH "/bin:/usr/bin:/sbin:/usr/sbin:/etc:/usr/etc"
 #endif
 
-#if defined (__clang__)
+#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmacro-redefined"
 #endif
@@ -86,7 +86,7 @@
 #define PPROMPT "\\s-\\v\\$ "
 #define SPROMPT "> "
 
-#if defined (__clang__)
+#if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
 
@@ -129,16 +129,16 @@
 /* Define if you want each line saved to the history list in bashhist.c:
    bash_add_history() to be sent to syslog(). */
 /* #define SYSLOG_HISTORY */
-#if defined (SYSLOG_HISTORY)
-#  define SYSLOG_FACILITY LOG_USER
-#  define SYSLOG_LEVEL LOG_INFO
-#  define OPENLOG_OPTS LOG_PID
+#if defined(SYSLOG_HISTORY)
+#define SYSLOG_FACILITY LOG_USER
+#define SYSLOG_LEVEL LOG_INFO
+#define OPENLOG_OPTS LOG_PID
 #endif
 
 /* Define if you want syslogging history to be controllable at runtime via a
    shell option; if defined, the value is the default for the syslog_history
    shopt option */
-#if defined (SYSLOG_HISTORY)
+#if defined(SYSLOG_HISTORY)
 /* #define SYSLOG_SHOPT 1 */
 #endif
 
@@ -148,24 +148,25 @@
 /* Define as 1 if you want to enable code that implements multiple coprocs
    executing simultaneously */
 #ifndef MULTIPLE_COPROCS
-#  define MULTIPLE_COPROCS 0
+#define MULTIPLE_COPROCS 0
 #endif
 
 /* Define to 0 if you want the checkwinsize option off by default, 1 if you
    want it on. */
-#define CHECKWINSIZE_DEFAULT	1
+#define CHECKWINSIZE_DEFAULT 1
 
 /* Define to 1 if you want to optimize for sequential array assignment when
    using indexed arrays, 0 if you want bash-4.2 behavior, which favors
    random access but is O(N) for each array assignment. */
-#define OPTIMIZE_SEQUENTIAL_ARRAY_ASSIGNMENT	1
+#define OPTIMIZE_SEQUENTIAL_ARRAY_ASSIGNMENT 1
 
 /* Define to 1 if you want to be able to export indexed arrays to processes
    using the foo=([0]=one [1]=two) and so on */
 /* #define ARRAY_EXPORT 1 */
 
 /* Define to 1 if you want the shell to exit if it is running setuid and its
-   attempt to drop privilege using setuid(getuid()) fails with errno == EAGAIN */
+   attempt to drop privilege using setuid(getuid()) fails with errno == EAGAIN
+ */
 /* #define EXIT_ON_SETUID_FAILURE 1 */
 
 /* Define to 1 if you want the shell to re-check $PATH if a hashed filename
@@ -181,7 +182,8 @@
    0 means the limit is not active. */
 #define SOURCENEST_MAX 0
 
-/* Define to use libc mktemp/mkstemp instead of replacements in lib/sh/tmpfile.c */
+/* Define to use libc mktemp/mkstemp instead of replacements in
+ * lib/sh/tmpfile.c */
 #define USE_MKTEMP
 #define USE_MKSTEMP
 #define USE_MKDTEMP
@@ -197,7 +199,7 @@
 /* Define to 0 if you want history expansion to be disabled by default in
    interactive shells; define to 1 for the historical behavior of enabling
    when the shell is interactive. */
-#define HISTEXPAND_DEFAULT	1
+#define HISTEXPAND_DEFAULT 1
 
 /* Undefine or define to 0 if you don't want to allow associative array
    assignment using a compound list of key-value pairs. */

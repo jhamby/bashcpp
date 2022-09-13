@@ -24,14 +24,14 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashtypes.hh"
 
-#include <cstdlib>
 #include <csignal>
+#include <cstdlib>
 
 #include "command.hh"
 #include "general.hh"
@@ -39,7 +39,7 @@
 
 static int nw;
 
-static void sigpipe (int)  __attribute__((__noreturn__));
+static void sigpipe (int) __attribute__ ((__noreturn__));
 
 static void
 sigpipe (int)

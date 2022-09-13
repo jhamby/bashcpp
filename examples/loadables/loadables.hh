@@ -18,7 +18,6 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef __LOADABLES_H_
 #define __LOADABLES_H_
 
@@ -26,9 +25,9 @@
 #include "config.h"
 #endif
 
-#include "builtins.h"
-#include "shell.h"
 #include "bashgetopt.h"
+#include "builtins.h"
 #include "common.h"
+#include "shell.h"
 
 #endif

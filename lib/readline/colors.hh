@@ -32,43 +32,43 @@ namespace readline
 
 /* The LS_COLORS variable is in a termcap-like format. */
 struct COLOR_EXT_TYPE
-  {
-    std::string ext;         	/* The extension we're looking for */
-    std::string seq;         	/* The sequence to output when we do */
-    COLOR_EXT_TYPE *next;	/* Next in list */
-  };
+{
+  std::string ext;      /* The extension we're looking for */
+  std::string seq;      /* The sequence to output when we do */
+  COLOR_EXT_TYPE *next; /* Next in list */
+};
 
 /* file extensions indicators (.txt, .log, .jpg, ...)
    Values are taken from $LS_COLORS in rl_parse_colors(). */
 extern COLOR_EXT_TYPE *_rl_color_ext_list;
 
-#define FILETYPE_INDICATORS				\
-  {							\
-    C_ORPHAN, C_FIFO, C_CHR, C_DIR, C_BLK, C_FILE,	\
-    C_LINK, C_SOCK, C_FILE, C_DIR			\
+#define FILETYPE_INDICATORS                                                   \
+  {                                                                           \
+    C_ORPHAN, C_FIFO, C_CHR, C_DIR, C_BLK, C_FILE, C_LINK, C_SOCK, C_FILE,    \
+        C_DIR                                                                 \
   }
 
-#if !defined (S_IXUGO)
-# define S_IXUGO (S_IXUSR | S_IXGRP | S_IXOTH)
+#if !defined(S_IXUGO)
+#define S_IXUGO (S_IXUSR | S_IXGRP | S_IXOTH)
 #endif
 
 enum filetype
-  {
-    unknown,
-    fifo,
-    chardev,
-    directory,
-    blockdev,
-    normal,
-    symbolic_link,
-    sock,
-    whiteout,
-    arg_directory
-  };
+{
+  unknown,
+  fifo,
+  chardev,
+  directory,
+  blockdev,
+  normal,
+  symbolic_link,
+  sock,
+  whiteout,
+  arg_directory
+};
 
 /* Prefix color, currently same as socket */
-#define C_PREFIX	C_SOCK
+#define C_PREFIX C_SOCK
 
-}  // namespace readline
+} // namespace readline
 
 #endif /* !_COLORS_H_ */

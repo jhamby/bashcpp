@@ -22,9 +22,9 @@
 
 #include <cstdio>
 
-#include "version.hh"
-#include "patchlevel.hh"
 #include "conftypes.hh"
+#include "patchlevel.hh"
+#include "version.hh"
 
 #include "bashintl.hh"
 
@@ -34,22 +34,25 @@ namespace bash
 extern const char *shell_name;
 
 /* Defines from version.h */
-extern const char * const dist_version = DISTVERSION;
+extern const char *const dist_version = DISTVERSION;
 extern const int patch_level = PATCHLEVEL;
 const int build_version = BUILDVERSION;
 #ifdef RELSTATUS
-const char * const release_status = RELSTATUS;
+const char *const release_status = RELSTATUS;
 #else
-const char * const release_status = nullptr;
+const char *const release_status = nullptr;
 #endif
 
 // A version string for use by the what command. Use a separate
 // declaration to satisfy -Wmissing-variable-declarations.
-extern const char * const sccs_version;
-extern const char * const sccs_version = SCCSVERSION;
+extern const char *const sccs_version;
+extern const char *const sccs_version = SCCSVERSION;
 
-const char * const bash_copyright = N_("Copyright (C) 2020 Free Software Foundation, Inc.");
-const char * const bash_license = N_("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n");
+const char *const bash_copyright
+    = N_ ("Copyright (C) 2020 Free Software Foundation, Inc.");
+const char *const bash_license
+    = N_ ("License GPLv3+: GNU GPL version 3 or later "
+          "<http://gnu.org/licenses/gpl.html>\n");
 
 /* Functions for getting, setting, and displaying the shell version. */
 
@@ -66,9 +69,11 @@ shell_version_string ()
   if (tt[0] == '\0')
     {
       if (release_status)
-	std::snprintf (tt, sizeof (tt), "%s.%d(%d)-%s", dist_version, patch_level, build_version, release_status);
+        std::snprintf (tt, sizeof (tt), "%s.%d(%d)-%s", dist_version,
+                       patch_level, build_version, release_status);
       else
-	std::snprintf (tt, sizeof (tt), "%s.%d(%d)", dist_version, patch_level, build_version);
+        std::snprintf (tt, sizeof (tt), "%s.%d(%d)", dist_version, patch_level,
+                       build_version);
     }
   return tt;
 }
@@ -76,14 +81,17 @@ shell_version_string ()
 void
 show_shell_version (bool extended)
 {
-  std::printf (_("GNU bash, version %s (%s)\n"), shell_version_string (), MACHTYPE);
+  std::printf (_ ("GNU bash, version %s (%s)\n"), shell_version_string (),
+               MACHTYPE);
   if (extended)
     {
-      std::printf ("%s\n", _(bash_copyright));
-      std::printf ("%s\n", _(bash_license));
-      std::printf ("%s\n", _("This is free software; you are free to change and redistribute it."));
-      std::printf ("%s\n", _("There is NO WARRANTY, to the extent permitted by law."));
+      std::printf ("%s\n", _ (bash_copyright));
+      std::printf ("%s\n", _ (bash_license));
+      std::printf ("%s\n", _ ("This is free software; you are free to change "
+                              "and redistribute it."));
+      std::printf (
+          "%s\n", _ ("There is NO WARRANTY, to the extent permitted by law."));
     }
 }
 
-}  // namespace bash
+} // namespace bash

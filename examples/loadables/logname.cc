@@ -20,24 +20,24 @@
 
 #include <config.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include <stdio.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include "builtins.h"
-#include "shell.h"
 #include "common.h"
+#include "shell.h"
 
-#if !defined (errno)
+#if !defined(errno)
 extern int errno;
 #endif
 
 int
 logname_builtin (list)
-     WORD_LIST *list;
+WORD_LIST *list;
 {
   char *np;
 
@@ -54,21 +54,14 @@ logname_builtin (list)
   return (EXECUTION_SUCCESS);
 }
 
-char *logname_doc[] = {
-	"Display user login name.",
-	"",
-	"Write the current user's login name to the standard output",
-	"and exit.  logname ignores the LOGNAME and USER variables.",
-	"logname ignores any non-option arguments.",
-	(char *)NULL
-};
-	
-struct builtin logname_struct = {
-	"logname",
-	logname_builtin,
-	BUILTIN_ENABLED,
-	logname_doc,
-	"logname",
-	0
-};
-	
+char *logname_doc[]
+    = { "Display user login name.",
+        "",
+        "Write the current user's login name to the standard output",
+        "and exit.  logname ignores the LOGNAME and USER variables.",
+        "logname ignores any non-option arguments.",
+        (char *)NULL };
+
+struct builtin logname_struct = { "logname",       logname_builtin,
+                                  BUILTIN_ENABLED, logname_doc,
+                                  "logname",       0 };

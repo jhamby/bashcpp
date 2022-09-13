@@ -19,23 +19,23 @@
 */
 
 #include <config.h>
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <cstdio>
 #include <cstring>
 
-#include "bashtypes.h"
 #include "bashintl.h"
+#include "bashtypes.h"
 
 #include "externs.h"
 
-#if defined (HAVE_ICONV)
-#  include <iconv.h>
+#if defined(HAVE_ICONV)
+#include <iconv.h>
 #endif
 
-#if defined (HAVE_LOCALE_CHARSET)
+#if defined(HAVE_LOCALE_CHARSET)
 extern "C" const char *locale_charset (void);
 #endif
 
@@ -59,7 +59,7 @@ static const char *
 curencoding ()
 {
   char *loc;
-#if defined (HAVE_LOCALE_CHARSET)
+#if defined(HAVE_LOCALE_CHARSET)
   loc = (char *)locale_charset ();
   return loc;
 #else
@@ -172,4 +172,4 @@ fnx_fromfs (char *string, size_t len)
 }
 #endif
 
-}  // namespace bash
+} // namespace bash

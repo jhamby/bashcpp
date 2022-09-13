@@ -55,24 +55,24 @@
 #include "bashtypes.hh"
 #include "posixstat.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "parser.hh"
 #include "execute_cmd.hh"
 #include "findcmd.hh"
 #include "hashcmd.hh"
+#include "parser.hh"
+#include "shell.hh"
 
-#if defined (ALIAS)
+#if defined(ALIAS)
 #include "alias.hh"
 #endif /* ALIAS */
 
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "common.hh"
 
 namespace bash
 {
@@ -83,28 +83,28 @@ extern int find_reserved_word (char *);
    it as a simple command. i.e., which file would this shell use to
    execve, or if it is a builtin command, or an alias.  Possible flag
    arguments:
-	-t		Returns the "type" of the object, one of
-			`alias', `keyword', `function', `builtin',
-			or `file'.
+        -t		Returns the "type" of the object, one of
+                        `alias', `keyword', `function', `builtin',
+                        or `file'.
 
-	-p		Returns the pathname of the file if -type is
-			a file.
+        -p		Returns the pathname of the file if -type is
+                        a file.
 
-	-a		Returns all occurrences of words, whether they
-			be a filename in the path, alias, function,
-			or builtin.
+        -a		Returns all occurrences of words, whether they
+                        be a filename in the path, alias, function,
+                        or builtin.
 
-	-f		Suppress shell function lookup, like `command'.
+        -f		Suppress shell function lookup, like `command'.
 
-	-P		Force a path search even in the presence of other
-			definitions.
+        -P		Force a path search even in the presence of other
+                        definitions.
 
    Order of evaluation:
-	alias
-	keyword
-	function
-	builtin
-	file
+        alias
+        keyword
+        function
+        builtin
+        file
  */
 
 int
@@ -113,32 +113,33 @@ Shell::type_builtin (WORD_LIST *list)
   if (list == 0)
     return EXECUTION_SUCCESS;
 
-  int dflags = CDESC_SHORTDESC;	/* default */
+  int dflags = CDESC_SHORTDESC; /* default */
   bool any_failed = false;
 
   /* Handle the obsolescent `-type', `-path', and `-all' by prescanning
      the arguments and converting those options to the form that
      internal_getopt recognizes. Converts `--type', `--path', and `--all'
      also. THIS SHOULD REALLY GO AWAY. */
-  for (WORD_LIST *l = list; l && l->word->word[0] == '-'; l = (WORD_LIST *)l->next)
+  for (WORD_LIST *l = list; l && l->word->word[0] == '-';
+       l = (WORD_LIST *)l->next)
     {
       char *flag = &(l->word->word[1]);
 
       if (STREQ (flag, "type") || STREQ (flag, "-type"))
-	{
-	  l->word->word[1] = 't';
-	  l->word->word[2] = '\0';
-	}
+        {
+          l->word->word[1] = 't';
+          l->word->word[2] = '\0';
+        }
       else if (STREQ (flag, "path") || STREQ (flag, "-path"))
-	{
-	  l->word->word[1] = 'p';
-	  l->word->word[2] = '\0';
-	}
+        {
+          l->word->word[1] = 'p';
+          l->word->word[2] = '\0';
+        }
       else if (STREQ (flag, "all") || STREQ (flag, "-all"))
-	{
-	  l->word->word[1] = 'a';
-	  l->word->word[2] = '\0';
-	}
+        {
+          l->word->word[1] = 'a';
+          l->word->word[2] = '\0';
+        }
     }
 
   reset_internal_getopt ();
@@ -146,30 +147,30 @@ Shell::type_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "afptP")) != -1)
     {
       switch (opt)
-	{
-	case 'a':
-	  dflags |= CDESC_ALL;
-	  break;
-	case 'f':
-	  dflags |= CDESC_NOFUNCS;
-	  break;
-	case 'p':
-	  dflags |= CDESC_PATH_ONLY;
-	  dflags &= ~(CDESC_TYPE|CDESC_SHORTDESC);
-	  break;
-	case 't':
-	  dflags |= CDESC_TYPE;
-	  dflags &= ~(CDESC_PATH_ONLY|CDESC_SHORTDESC);
-	  break;
-	case 'P':	/* shorthand for type -ap */
-	  dflags |= (CDESC_PATH_ONLY|CDESC_FORCE_PATH);
-	  dflags &= ~(CDESC_TYPE|CDESC_SHORTDESC);
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+        case 'a':
+          dflags |= CDESC_ALL;
+          break;
+        case 'f':
+          dflags |= CDESC_NOFUNCS;
+          break;
+        case 'p':
+          dflags |= CDESC_PATH_ONLY;
+          dflags &= ~(CDESC_TYPE | CDESC_SHORTDESC);
+          break;
+        case 't':
+          dflags |= CDESC_TYPE;
+          dflags &= ~(CDESC_PATH_ONLY | CDESC_SHORTDESC);
+          break;
+        case 'P': /* shorthand for type -ap */
+          dflags |= (CDESC_PATH_ONLY | CDESC_FORCE_PATH);
+          dflags &= ~(CDESC_TYPE | CDESC_SHORTDESC);
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
   list = loptend;
 
@@ -177,8 +178,8 @@ Shell::type_builtin (WORD_LIST *list)
     {
       bool found = describe_command (list->word->word, dflags);
 
-      if (!found && (dflags & (CDESC_PATH_ONLY|CDESC_TYPE)) == 0)
-	sh_notfound (list->word->word);
+      if (!found && (dflags & (CDESC_PATH_ONLY | CDESC_TYPE)) == 0)
+        sh_notfound (list->word->word);
 
       any_failed |= (found == 0);
       list = (WORD_LIST *)list->next;
@@ -212,26 +213,27 @@ describe_command (const char *command, int dflags)
   bool found = false, found_file = false;
   char *full_path = (char *)NULL;
 
-#if defined (ALIAS)
+#if defined(ALIAS)
   /* Command is an alias? */
   alias_t *alias;
-  if (((dflags & CDESC_FORCE_PATH) == 0) && expand_aliases && (alias = find_alias (command)))
+  if (((dflags & CDESC_FORCE_PATH) == 0) && expand_aliases
+      && (alias = find_alias (command)))
     {
       if (dflags & CDESC_TYPE)
-	puts ("alias");
+        puts ("alias");
       else if (dflags & CDESC_SHORTDESC)
-	printf (_("%s is aliased to `%s'\n"), command, alias->value);
+        printf (_ ("%s is aliased to `%s'\n"), command, alias->value);
       else if (dflags & CDESC_REUSABLE)
-	{
-	  char *x = sh_single_quote (alias->value);
-	  printf ("alias %s=%s\n", command, x);
-	  free (x);
-	}
+        {
+          char *x = sh_single_quote (alias->value);
+          printf ("alias %s=%s\n", command, x);
+          free (x);
+        }
 
       found = true;
 
       if (!all)
-	return true;
+        return true;
     }
 #endif /* ALIAS */
 
@@ -239,61 +241,63 @@ describe_command (const char *command, int dflags)
   if (((dflags & CDESC_FORCE_PATH) == 0) && find_reserved_word (command) >= 0)
     {
       if (dflags & CDESC_TYPE)
-	puts ("keyword");
+        puts ("keyword");
       else if (dflags & CDESC_SHORTDESC)
-	printf (_("%s is a shell keyword\n"), command);
+        printf (_ ("%s is a shell keyword\n"), command);
       else if (dflags & CDESC_REUSABLE)
-	printf ("%s\n", command);
+        printf ("%s\n", command);
 
       found = true;
 
       if (!all)
-	return true;
+        return true;
     }
 
   /* Command is a function? */
   SHELL_VAR *func;
-  if (((dflags & (CDESC_FORCE_PATH|CDESC_NOFUNCS)) == 0) && (func = find_function (command)))
+  if (((dflags & (CDESC_FORCE_PATH | CDESC_NOFUNCS)) == 0)
+      && (func = find_function (command)))
     {
       if (dflags & CDESC_TYPE)
-	puts ("function");
+        puts ("function");
       else if (dflags & CDESC_SHORTDESC)
-	{
-	  printf (_("%s is a function\n"), command);
+        {
+          printf (_ ("%s is a function\n"), command);
 
-	  /* We're blowing away THE_PRINTED_COMMAND here... */
+          /* We're blowing away THE_PRINTED_COMMAND here... */
 
-	  char *result = named_function_string (command, function_cell (func), FUNC_MULTILINE|FUNC_EXTERNAL);
-	  printf ("%s\n", result);
-	}
+          char *result = named_function_string (
+              command, function_cell (func), FUNC_MULTILINE | FUNC_EXTERNAL);
+          printf ("%s\n", result);
+        }
       else if (dflags & CDESC_REUSABLE)
-	printf ("%s\n", command);
+        printf ("%s\n", command);
 
       found = true;
 
       if (!all)
-	return true;
+        return true;
     }
 
   /* Command is a builtin? */
   if (((dflags & CDESC_FORCE_PATH) == 0) && find_shell_builtin (command))
     {
       if (dflags & CDESC_TYPE)
-	puts ("builtin");
+        puts ("builtin");
       else if (dflags & CDESC_SHORTDESC)
-	{
-	  if (posixly_correct && find_special_builtin (command) != 0)
-	    printf (_("%s is a special shell builtin\n"), command);
-	  else
-	    printf (_("%s is a shell builtin\n"), command);
-	}
+        {
+          if (posixly_correct && find_special_builtin (command) != 0)
+            printf (_ ("%s is a special shell builtin\n"), command);
+          else
+            printf (_ ("%s is a shell builtin\n"), command);
+        }
       else if (dflags & CDESC_REUSABLE)
-	printf ("%s\n", command);
+        printf ("%s\n", command);
 
       found = true;
 
       if (!all)
-	return true;
+        return true;
     }
 
   /* Command is a disk file? */
@@ -303,19 +307,19 @@ describe_command (const char *command, int dflags)
     {
       int f = file_status (command);
       if (f & FS_EXECABLE)
-	{
-	  if (dflags & CDESC_TYPE)
-	    puts ("file");
-	  else if (dflags & CDESC_SHORTDESC)
-	    printf (_("%s is %s\n"), command, command);
-	  else if (dflags & (CDESC_REUSABLE|CDESC_PATH_ONLY))
-	    printf ("%s\n", command);
+        {
+          if (dflags & CDESC_TYPE)
+            puts ("file");
+          else if (dflags & CDESC_SHORTDESC)
+            printf (_ ("%s is %s\n"), command, command);
+          else if (dflags & (CDESC_REUSABLE | CDESC_PATH_ONLY))
+            printf ("%s\n", command);
 
-	  /* There's no use looking in the hash table or in $PATH,
-	     because they're not consulted when an absolute program
-	     name is supplied. */
-	  return true;
-	}
+          /* There's no use looking in the hash table or in $PATH,
+             because they're not consulted when an absolute program
+             name is supplied. */
+          return true;
+        }
     }
 
   /* If the user isn't doing "-a", then we might care about
@@ -323,87 +327,91 @@ describe_command (const char *command, int dflags)
   if (!all || (dflags & CDESC_FORCE_PATH))
     {
       if ((full_path = phash_search (command)))
-	{
-	  if (dflags & CDESC_TYPE)
-	    puts ("file");
-	  else if (dflags & CDESC_SHORTDESC)
-	    printf (_("%s is hashed (%s)\n"), command, full_path);
-	  else if (dflags & (CDESC_REUSABLE|CDESC_PATH_ONLY))
-	    printf ("%s\n", full_path);
+        {
+          if (dflags & CDESC_TYPE)
+            puts ("file");
+          else if (dflags & CDESC_SHORTDESC)
+            printf (_ ("%s is hashed (%s)\n"), command, full_path);
+          else if (dflags & (CDESC_REUSABLE | CDESC_PATH_ONLY))
+            printf ("%s\n", full_path);
 
-	  free (full_path);
-	  return true;
-	}
+          free (full_path);
+          return true;
+        }
     }
 
   /* Now search through $PATH. */
   while (1)
     {
-      if (dflags & CDESC_STDPATH)	/* command -p, all cannot be non-zero */
-	{
-	  char *pathlist = conf_standard_path ();
-	  full_path = find_in_path (command, pathlist, FS_EXEC_PREFERRED|FS_NODIRS);
-	  free (pathlist);
-	  /* Will only go through this once, since all == 0 if STDPATH set */
-	}
+      if (dflags & CDESC_STDPATH) /* command -p, all cannot be non-zero */
+        {
+          char *pathlist = conf_standard_path ();
+          full_path = find_in_path (command, pathlist,
+                                    FS_EXEC_PREFERRED | FS_NODIRS);
+          free (pathlist);
+          /* Will only go through this once, since all == 0 if STDPATH set */
+        }
       else if (!all)
-	full_path = find_user_command (command);
+        full_path = find_user_command (command);
       else
-	full_path = user_command_matches (command, FS_EXEC_ONLY, found_file);	/* XXX - should that be FS_EXEC_PREFERRED? */
+        full_path = user_command_matches (
+            command, FS_EXEC_ONLY,
+            found_file); /* XXX - should that be FS_EXEC_PREFERRED? */
 
       if (full_path == 0)
-	break;
+        break;
 
       /* If we found the command as itself by looking through $PATH, it
-	 probably doesn't exist.  Check whether or not the command is an
-	 executable file.  If it's not, don't report a match.  This is
-	 the default posix mode behavior */
+         probably doesn't exist.  Check whether or not the command is an
+         executable file.  If it's not, don't report a match.  This is
+         the default posix mode behavior */
       if (STREQ (full_path, command) || posixly_correct)
-	{
-	  int f = file_status (full_path);
-	  if ((f & FS_EXECABLE) == 0)
-	    {
-	      free (full_path);
-	      full_path = (char *)NULL;
-	      if (!all)
-		break;
-	    }
-	  else if (ABSPATH (full_path))
-	    ;	/* placeholder; don't need to do anything yet */
-	  else if (dflags & (CDESC_REUSABLE|CDESC_PATH_ONLY|CDESC_SHORTDESC))
-	    {
-	      f = MP_DOCWD | ((dflags & CDESC_ABSPATH) ? MP_RMDOT : 0);
-	      char *x = sh_makepath ((char *)NULL, full_path, f);
-	      free (full_path);
-	      full_path = x;
-	    }
-	}
+        {
+          int f = file_status (full_path);
+          if ((f & FS_EXECABLE) == 0)
+            {
+              free (full_path);
+              full_path = (char *)NULL;
+              if (!all)
+                break;
+            }
+          else if (ABSPATH (full_path))
+            ; /* placeholder; don't need to do anything yet */
+          else if (dflags
+                   & (CDESC_REUSABLE | CDESC_PATH_ONLY | CDESC_SHORTDESC))
+            {
+              f = MP_DOCWD | ((dflags & CDESC_ABSPATH) ? MP_RMDOT : 0);
+              char *x = sh_makepath ((char *)NULL, full_path, f);
+              free (full_path);
+              full_path = x;
+            }
+        }
       /* If we require a full path and don't have one, make one */
       else if ((dflags & CDESC_ABSPATH) && ABSPATH (full_path) == 0)
-	{
-	  char *x = sh_makepath ((char *)NULL, full_path, MP_DOCWD|MP_RMDOT);
-	  free (full_path);
-	  full_path = x;
-	}
+        {
+          char *x = sh_makepath ((char *)NULL, full_path, MP_DOCWD | MP_RMDOT);
+          free (full_path);
+          full_path = x;
+        }
 
       found_file = true;
       found = true;
 
       if (dflags & CDESC_TYPE)
-	puts ("file");
+        puts ("file");
       else if (dflags & CDESC_SHORTDESC)
-	printf (_("%s is %s\n"), command, full_path);
-      else if (dflags & (CDESC_REUSABLE|CDESC_PATH_ONLY))
-	printf ("%s\n", full_path);
+        printf (_ ("%s is %s\n"), command, full_path);
+      else if (dflags & (CDESC_REUSABLE | CDESC_PATH_ONLY))
+        printf ("%s\n", full_path);
 
       free (full_path);
       full_path = (char *)NULL;
 
       if (!all)
-	break;
+        break;
     }
 
   return found;
 }
 
-}  // namespace bash
+} // namespace bash

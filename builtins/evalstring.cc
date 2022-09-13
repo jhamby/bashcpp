@@ -20,25 +20,25 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include <cstdio>
-#include <csignal>
 #include <cerrno>
+#include <csignal>
+#include <cstdio>
 
 #include "filecntl.hh"
 
-#include "shell.hh"
-#include "jobs.hh"
-#include "builtins.hh"
-#include "flags.hh"
-#include "parser.hh"
-#include "input.hh"
-#include "execute_cmd.hh"
-#include "trap.hh"
 #include "bashintl.hh"
+#include "builtins.hh"
+#include "execute_cmd.hh"
+#include "flags.hh"
+#include "input.hh"
+#include "jobs.hh"
+#include "parser.hh"
+#include "shell.hh"
+#include "trap.hh"
 
 #include "y.tab.hh"
 
@@ -49,7 +49,8 @@
 namespace bash
 {
 
-#define IS_BUILTIN(s)	(builtin_address_internal(s, 0) != (struct builtin *)NULL)
+#define IS_BUILTIN(s)                                                         \
+  (builtin_address_internal (s, 0) != (struct builtin *)NULL)
 
 int parse_and_execute_level = 0;
 
@@ -58,7 +59,7 @@ static int cat_file (REDIRECT *);
 #define PE_TAG "parse_and_execute top"
 #define PS_TAG "parse_string top"
 
-#if defined (HISTORY)
+#if defined(HISTORY)
 static void
 set_history_remembering ()
 {
@@ -81,39 +82,39 @@ Shell::should_suppress_fork (COMMAND *command)
 
   subshell = subshell_environment & SUBSHELL_PROCSUB;	/* salt to taste */
 #endif
-  return (startup_state == 2 && parse_and_execute_level == 1 &&
-	  running_trap == 0 &&
-	  *bash_input.location.string == '\0' &&
-	  parser_expanding_alias () == 0 &&
-	  command->type == cm_simple &&
-	  signal_is_trapped (EXIT_TRAP) == 0 &&
-	  signal_is_trapped (ERROR_TRAP) == 0 &&
-	  any_signals_trapped () < 0 &&
+  return (
+      startup_state == 2 && parse_and_execute_level == 1 && running_trap == 0
+      && *bash_input.location.string == '\0' && parser_expanding_alias () == 0
+      && command->type == cm_simple && signal_is_trapped (EXIT_TRAP) == 0
+      && signal_is_trapped (ERROR_TRAP) == 0 && any_signals_trapped () < 0 &&
 #if 0 /* TAG: bash-5.2 */
 	  (subshell || (command->redirects == 0 && command->value.Simple->redirects == 0)) &&
 #else
-	  command->redirects == 0 && command->value.Simple->redirects == 0 &&
+      command->redirects == 0 && command->value.Simple->redirects == 0 &&
 #endif
-	  ((command->flags & CMD_TIME_PIPELINE) == 0) &&
-	  ((command->flags & CMD_INVERT_RETURN) == 0));
+      ((command->flags & CMD_TIME_PIPELINE) == 0)
+      && ((command->flags & CMD_INVERT_RETURN) == 0));
 }
 
 bool
 Shell::can_optimize_connection (COMMAND *command)
 {
-  return (*bash_input.location.string == '\0' &&
-	  parser_expanding_alias () == 0 &&
-	  (command->value.Connection->connector == AND_AND || command->value.Connection->connector == OR_OR || command->value.Connection->connector == ';') &&
-	  command->value.Connection->second->type == cm_simple);
+  return (*bash_input.location.string == '\0' && parser_expanding_alias () == 0
+          && (command->value.Connection->connector == AND_AND
+              || command->value.Connection->connector == OR_OR
+              || command->value.Connection->connector == ';')
+          && command->value.Connection->second->type == cm_simple);
 }
 
 void
 Shell::optimize_fork (COMMAND *command)
 {
-  if (command->type == cm_connection &&
-      (command->value.Connection->connector == AND_AND || command->value.Connection->connector == OR_OR || command->value.Connection->connector == ';') &&
-      (command->value.Connection->second->flags & CMD_TRY_OPTIMIZING) &&
-      should_suppress_fork (command->value.Connection->second))
+  if (command->type == cm_connection
+      && (command->value.Connection->connector == AND_AND
+          || command->value.Connection->connector == OR_OR
+          || command->value.Connection->connector == ';')
+      && (command->value.Connection->second->flags & CMD_TRY_OPTIMIZING)
+      && should_suppress_fork (command->value.Connection->second))
     {
       command->value.Connection->second->flags |= CMD_NO_FORK;
       command->value.Connection->second->value.Simple->flags |= CMD_NO_FORK;
@@ -123,20 +124,19 @@ Shell::optimize_fork (COMMAND *command)
 void
 Shell::optimize_subshell_command (COMMAND *command)
 {
-  if (running_trap == 0 &&
-      command->type == cm_simple &&
-      signal_is_trapped (EXIT_TRAP) == 0 &&
-      signal_is_trapped (ERROR_TRAP) == 0 &&
-      any_signals_trapped () < 0 &&
-      command->redirects == 0 && command->value.Simple->redirects == 0 &&
-      ((command->flags & CMD_TIME_PIPELINE) == 0) &&
-      ((command->flags & CMD_INVERT_RETURN) == 0))
+  if (running_trap == 0 && command->type == cm_simple
+      && signal_is_trapped (EXIT_TRAP) == 0
+      && signal_is_trapped (ERROR_TRAP) == 0 && any_signals_trapped () < 0
+      && command->redirects == 0 && command->value.Simple->redirects == 0
+      && ((command->flags & CMD_TIME_PIPELINE) == 0)
+      && ((command->flags & CMD_INVERT_RETURN) == 0))
     {
       command->flags |= CMD_NO_FORK;
       command->value.Simple->flags |= CMD_NO_FORK;
     }
-  else if (command->type == cm_connection &&
-	   (command->value.Connection->connector == AND_AND || command->value.Connection->connector == OR_OR))
+  else if (command->type == cm_connection
+           && (command->value.Connection->connector == AND_AND
+               || command->value.Connection->connector == OR_OR))
     optimize_subshell_command (command->value.Connection->second);
 }
 
@@ -152,7 +152,8 @@ Shell::optimize_shell_function (COMMAND *command)
       fc->flags |= CMD_NO_FORK;
       fc->value.Simple->flags |= CMD_NO_FORK;
     }
-  else if (fc->type == cm_connection && can_optimize_connection (fc) && should_suppress_fork (fc->value.Connection->second))
+  else if (fc->type == cm_connection && can_optimize_connection (fc)
+           && should_suppress_fork (fc->value.Connection->second))
     {
       fc->value.Connection->second->flags |= CMD_NO_FORK;
       fc->value.Connection->second->value.Simple->flags |= CMD_NO_FORK;
@@ -166,18 +167,18 @@ parse_and_execute_cleanup (int old_running_trap)
   if (running_trap > 0)
     {
       /* We assume if we have a different value for running_trap than when
-	 we started (the only caller that cares is evalstring()), the
-	 original caller will perform the cleanup, and we should not step
-	 on them. */
+         we started (the only caller that cares is evalstring()), the
+         original caller will perform the cleanup, and we should not step
+         on them. */
       if (running_trap != old_running_trap)
-	run_trap_cleanup (running_trap - 1);
+        run_trap_cleanup (running_trap - 1);
       unfreeze_jobs_list ();
     }
 
   if (have_unwind_protects ())
-     run_unwind_frame (PE_TAG);
+    run_unwind_frame (PE_TAG);
   else
-    parse_and_execute_level = 0;			/* XXX */
+    parse_and_execute_level = 0; /* XXX */
 }
 
 static void
@@ -197,17 +198,17 @@ parse_prologue (char *string, int flags, const char *tag)
   unwind_protect_var (loop_level);
   unwind_protect_var (executing_list);
   unwind_protect_var (comsub_ignore_return);
-  if (flags & (SEVAL_NONINT|SEVAL_INTERACT))
+  if (flags & (SEVAL_NONINT | SEVAL_INTERACT))
     unwind_protect_var (interactive);
 
-#if defined (HISTORY)
+#if defined(HISTORY)
   if (parse_and_execute_level == 0)
     add_unwind_protect (set_history_remembering);
   else
-    unwind_protect_var (remember_on_history);	/* can be used in scripts */
-#  if defined (BANG_HISTORY)
+    unwind_protect_var (remember_on_history); /* can be used in scripts */
+#if defined(BANG_HISTORY)
   unwind_protect_var (history_expansion_inhibited);
-#  endif /* BANG_HISTORY */
+#endif /* BANG_HISTORY */
 #endif /* HISTORY */
 
   if (interactive_shell)
@@ -230,16 +231,16 @@ parse_prologue (char *string, int flags, const char *tag)
     add_unwind_protect_ptr (xfree, orig_string);
   end_unwind_frame ();
 
-  if (flags & (SEVAL_NONINT|SEVAL_INTERACT))
+  if (flags & (SEVAL_NONINT | SEVAL_INTERACT))
     interactive = (flags & SEVAL_NONINT) ? 0 : 1;
 
-#if defined (HISTORY)
+#if defined(HISTORY)
   if (flags & SEVAL_NOHIST)
     bash_history_disable ();
-#  if defined (BANG_HISTORY)
+#if defined(BANG_HISTORY)
   if (flags & SEVAL_NOHISTEXP)
     history_expansion_inhibited = 1;
-#  endif /* BANG_HISTORY */
+#endif /* BANG_HISTORY */
 #endif /* HISTORY */
 }
 
@@ -247,12 +248,12 @@ parse_prologue (char *string, int flags, const char *tag)
    execute_command () returns.  This frees STRING.  FLAGS is a
    flags word; look in common.h for the possible values.  Actions
    are:
-   	(flags & SEVAL_NONINT) -> interactive = 0;
-   	(flags & SEVAL_INTERACT) -> interactive = 1;
-   	(flags & SEVAL_NOHIST) -> call bash_history_disable ()
-   	(flags & SEVAL_NOFREE) -> don't free STRING when finished
-   	(flags & SEVAL_RESETLINE) -> reset line_number to 1
-   	(flags & SEVAL_NOHISTEXP) -> history_expansion_inhibited -> 1
+        (flags & SEVAL_NONINT) -> interactive = 0;
+        (flags & SEVAL_INTERACT) -> interactive = 1;
+        (flags & SEVAL_NOHIST) -> call bash_history_disable ()
+        (flags & SEVAL_NOFREE) -> don't free STRING when finished
+        (flags & SEVAL_RESETLINE) -> reset line_number to 1
+        (flags & SEVAL_NOHISTEXP) -> history_expansion_inhibited -> 1
 */
 
 int
@@ -269,7 +270,7 @@ Shell::parse_and_execute (char *string, const char *from_file, int flags)
 
   lreset = flags & SEVAL_RESETLINE;
 
-#if defined (HAVE_POSIX_SIGNALS)
+#if defined(HAVE_POSIX_SIGNALS)
   /* If we longjmp and are going to go on, use this to restore signal mask */
   sigemptyset ((sigset_t *)&pe_sigmask);
   sigprocmask (SIG_BLOCK, (sigset_t *)NULL, (sigset_t *)&pe_sigmask);
@@ -294,7 +295,7 @@ Shell::parse_and_execute (char *string, const char *from_file, int flags)
 
   /* We need to reset enough of the token state so we can start fresh. */
   if (current_token == yacc_EOF)
-    current_token = '\n';		/* reset_parser() ? */
+    current_token = '\n'; /* reset_parser() ? */
 
   with_input_from_string (string, from_file);
   clear_shell_input_line ();
@@ -303,207 +304,222 @@ Shell::parse_and_execute (char *string, const char *from_file, int flags)
       command = (COMMAND *)NULL;
 
       if (interrupt_state)
-	{
-	  last_result = EXECUTION_FAILURE;
-	  break;
-	}
+        {
+          last_result = EXECUTION_FAILURE;
+          break;
+        }
 
       /* Provide a location for functions which `longjmp (top_level)' to
-	 jump to.  This prevents errors in substitution from restarting
-	 the reader loop directly, for example. */
+         jump to.  This prevents errors in substitution from restarting
+         the reader loop directly, for example. */
       code = setjmp_nosigs (top_level);
 
       if (code)
-	{
-	  should_jump_to_top_level = 0;
-	  switch (code)
-	    {
-	    case ERREXIT:
-	      /* variable_context -> 0 is what eval.c:reader_loop() does in
-		 these circumstances.  Don't bother with cleanup here because
-		 we don't want to run the function execution cleanup stuff
-		 that will cause pop_context and other functions to run.
-		 XXX - change that if we want the function context to be
-		 unwound. */
-	      if (exit_immediately_on_error && variable_context)
-	        {
-	          discard_unwind_frame ("pe_dispose");
-		  variable_context = 0;	/* not in a function */
-	        }
-	      should_jump_to_top_level = 1;
-	      goto out;
-	    case FORCE_EOF:
-	    case EXITPROG:
-	      if (command)
-		run_unwind_frame ("pe_dispose");
-	      /* Remember to call longjmp (top_level) after the old
-		 value for it is restored. */
-	      should_jump_to_top_level = 1;
-	      goto out;
+        {
+          should_jump_to_top_level = 0;
+          switch (code)
+            {
+            case ERREXIT:
+              /* variable_context -> 0 is what eval.c:reader_loop() does in
+                 these circumstances.  Don't bother with cleanup here because
+                 we don't want to run the function execution cleanup stuff
+                 that will cause pop_context and other functions to run.
+                 XXX - change that if we want the function context to be
+                 unwound. */
+              if (exit_immediately_on_error && variable_context)
+                {
+                  discard_unwind_frame ("pe_dispose");
+                  variable_context = 0; /* not in a function */
+                }
+              should_jump_to_top_level = 1;
+              goto out;
+            case FORCE_EOF:
+            case EXITPROG:
+              if (command)
+                run_unwind_frame ("pe_dispose");
+              /* Remember to call longjmp (top_level) after the old
+                 value for it is restored. */
+              should_jump_to_top_level = 1;
+              goto out;
 
-	    case DISCARD:
-	      if (command)
-		run_unwind_frame ("pe_dispose");
-	      last_result = last_command_exit_value = EXECUTION_FAILURE; /* XXX */
-	      set_pipestatus_from_exit (last_command_exit_value);
-	      if (subshell_environment)
-		{
-		  should_jump_to_top_level = 1;
-		  goto out;
-		}
-	      else
-		{
+            case DISCARD:
+              if (command)
+                run_unwind_frame ("pe_dispose");
+              last_result = last_command_exit_value
+                  = EXECUTION_FAILURE; /* XXX */
+              set_pipestatus_from_exit (last_command_exit_value);
+              if (subshell_environment)
+                {
+                  should_jump_to_top_level = 1;
+                  goto out;
+                }
+              else
+                {
 #if 0
 		  dispose_command (command);	/* pe_dispose does this */
 #endif
-#if defined (HAVE_POSIX_SIGNALS)
-		  sigprocmask (SIG_SETMASK, (sigset_t *)&pe_sigmask, (sigset_t *)NULL);
+#if defined(HAVE_POSIX_SIGNALS)
+                  sigprocmask (SIG_SETMASK, (sigset_t *)&pe_sigmask,
+                               (sigset_t *)NULL);
 #endif
-		  continue;
-		}
+                  continue;
+                }
 
-	    default:
-	      command_error ("parse_and_execute", CMDERR_BADJUMP, code, 0);
-	      break;
-	    }
-	}
+            default:
+              command_error ("parse_and_execute", CMDERR_BADJUMP, code, 0);
+              break;
+            }
+        }
 
       if (parse_command () == 0)
-	{
-	  if ((flags & SEVAL_PARSEONLY) || (interactive_shell == 0 && read_but_dont_execute))
-	    {
-	      last_result = EXECUTION_SUCCESS;
-	      dispose_command (global_command);
-	      global_command = (COMMAND *)NULL;
-	    }
-	  else if ((command = global_command))
-	    {
-	      struct fd_bitmap *bitmap;
+        {
+          if ((flags & SEVAL_PARSEONLY)
+              || (interactive_shell == 0 && read_but_dont_execute))
+            {
+              last_result = EXECUTION_SUCCESS;
+              dispose_command (global_command);
+              global_command = (COMMAND *)NULL;
+            }
+          else if ((command = global_command))
+            {
+              struct fd_bitmap *bitmap;
 
-	      if (flags & SEVAL_FUNCDEF)
-		{
-		  const char *x;
+              if (flags & SEVAL_FUNCDEF)
+                {
+                  const char *x;
 
-		  /* If the command parses to something other than a straight
-		     function definition, or if we have not consumed the entire
-		     string, or if the parser has transformed the function
-		     name (as parsing will if it begins or ends with shell
-		     whitespace, for example), reject the attempt */
-		  if (command->type != cm_function_def ||
-		      ((x = parser_remaining_input ()) && *x) ||
-		      (STREQ (from_file, command->value.Function_def->name->word) == 0))
-		    {
-		      internal_warning (_("%s: ignoring function definition attempt"), from_file);
-		      should_jump_to_top_level = 0;
-		      last_result = last_command_exit_value = EX_BADUSAGE;
-		      set_pipestatus_from_exit (last_command_exit_value);
-		      reset_parser ();
-		      break;
-		    }
-		}
+                  /* If the command parses to something other than a straight
+                     function definition, or if we have not consumed the entire
+                     string, or if the parser has transformed the function
+                     name (as parsing will if it begins or ends with shell
+                     whitespace, for example), reject the attempt */
+                  if (command->type != cm_function_def
+                      || ((x = parser_remaining_input ()) && *x)
+                      || (STREQ (from_file,
+                                 command->value.Function_def->name->word)
+                          == 0))
+                    {
+                      internal_warning (
+                          _ ("%s: ignoring function definition attempt"),
+                          from_file);
+                      should_jump_to_top_level = 0;
+                      last_result = last_command_exit_value = EX_BADUSAGE;
+                      set_pipestatus_from_exit (last_command_exit_value);
+                      reset_parser ();
+                      break;
+                    }
+                }
 
-	      bitmap = new_fd_bitmap (FD_BITMAP_SIZE);
-	      begin_unwind_frame ("pe_dispose");
-	      add_unwind_protect_ptr (dispose_fd_bitmap, bitmap);
-	      add_unwind_protect_ptr (dispose_command, command);	/* XXX */
+              bitmap = new_fd_bitmap (FD_BITMAP_SIZE);
+              begin_unwind_frame ("pe_dispose");
+              add_unwind_protect_ptr (dispose_fd_bitmap, bitmap);
+              add_unwind_protect_ptr (dispose_command, command); /* XXX */
 
-	      global_command = (COMMAND *)NULL;
+              global_command = (COMMAND *)NULL;
 
-	      if ((subshell_environment & SUBSHELL_COMSUB) && comsub_ignore_return)
-		command->flags |= CMD_IGNORE_RETURN;
+              if ((subshell_environment & SUBSHELL_COMSUB)
+                  && comsub_ignore_return)
+                command->flags |= CMD_IGNORE_RETURN;
 
-#if defined (ONESHOT)
-	      /*
-	       * IF
-	       *   we were invoked as `bash -c' (startup_state == 2) AND
-	       *   parse_and_execute has not been called recursively AND
-	       *   we're not running a trap AND
-	       *   we have parsed the full command (string == '\0') AND
-	       *   we're not going to run the exit trap AND
-	       *   we have a simple command without redirections AND
-	       *   the command is not being timed AND
-	       *   the command's return status is not being inverted AND
-	       *   there aren't any traps in effect
-	       * THEN
-	       *   tell the execution code that we don't need to fork
-	       */
-	      if (should_suppress_fork (command))
-		{
-		  command->flags |= CMD_NO_FORK;
-		  command->value.Simple->flags |= CMD_NO_FORK;
-		}
+#if defined(ONESHOT)
+              /*
+               * IF
+               *   we were invoked as `bash -c' (startup_state == 2) AND
+               *   parse_and_execute has not been called recursively AND
+               *   we're not running a trap AND
+               *   we have parsed the full command (string == '\0') AND
+               *   we're not going to run the exit trap AND
+               *   we have a simple command without redirections AND
+               *   the command is not being timed AND
+               *   the command's return status is not being inverted AND
+               *   there aren't any traps in effect
+               * THEN
+               *   tell the execution code that we don't need to fork
+               */
+              if (should_suppress_fork (command))
+                {
+                  command->flags |= CMD_NO_FORK;
+                  command->value.Simple->flags |= CMD_NO_FORK;
+                }
 
-	      /* Can't optimize forks out here execept for simple commands.
-		 This knows that the parser sets up commands as left-side heavy
-		 (&& and || are left-associative) and after the single parse,
-		 if we are at the end of the command string, the last in a
-		 series of connection commands is
-		 command->value.Connection->second. */
-	      else if (command->type == cm_connection && can_optimize_connection (command))
-		{
-		  command->value.Connection->second->flags |= CMD_TRY_OPTIMIZING;
-		  command->value.Connection->second->value.Simple->flags |= CMD_TRY_OPTIMIZING;
-		}
+              /* Can't optimize forks out here execept for simple commands.
+                 This knows that the parser sets up commands as left-side heavy
+                 (&& and || are left-associative) and after the single parse,
+                 if we are at the end of the command string, the last in a
+                 series of connection commands is
+                 command->value.Connection->second. */
+              else if (command->type == cm_connection
+                       && can_optimize_connection (command))
+                {
+                  command->value.Connection->second->flags
+                      |= CMD_TRY_OPTIMIZING;
+                  command->value.Connection->second->value.Simple->flags
+                      |= CMD_TRY_OPTIMIZING;
+                }
 #endif /* ONESHOT */
 
-	      /* See if this is a candidate for $( <file ). */
-	      if (startup_state == 2 &&
-		  (subshell_environment & SUBSHELL_COMSUB) &&
-		  *bash_input.location.string == '\0' &&
-		  command->type == cm_simple && !command->redirects &&
-		  (command->flags & CMD_TIME_PIPELINE) == 0 &&
-		  command->value.Simple->words == 0 &&
-		  command->value.Simple->redirects &&
-		  command->value.Simple->redirects->next == 0 &&
-		  command->value.Simple->redirects->instruction == r_input_direction &&
-		  command->value.Simple->redirects->redirector.dest == 0)
-		{
-		  int r;
-		  r = cat_file (command->value.Simple->redirects);
-		  last_result = (r < 0) ? EXECUTION_FAILURE : EXECUTION_SUCCESS;
-		}
-	      else
-		last_result = execute_command_internal
-				(command, 0, NO_PIPE, NO_PIPE, bitmap);
-	      dispose_command (command);
-	      dispose_fd_bitmap (bitmap);
-	      discard_unwind_frame ("pe_dispose");
+              /* See if this is a candidate for $( <file ). */
+              if (startup_state == 2
+                  && (subshell_environment & SUBSHELL_COMSUB)
+                  && *bash_input.location.string == '\0'
+                  && command->type == cm_simple && !command->redirects
+                  && (command->flags & CMD_TIME_PIPELINE) == 0
+                  && command->value.Simple->words == 0
+                  && command->value.Simple->redirects
+                  && command->value.Simple->redirects->next == 0
+                  && command->value.Simple->redirects->instruction
+                         == r_input_direction
+                  && command->value.Simple->redirects->redirector.dest == 0)
+                {
+                  int r;
+                  r = cat_file (command->value.Simple->redirects);
+                  last_result
+                      = (r < 0) ? EXECUTION_FAILURE : EXECUTION_SUCCESS;
+                }
+              else
+                last_result = execute_command_internal (command, 0, NO_PIPE,
+                                                        NO_PIPE, bitmap);
+              dispose_command (command);
+              dispose_fd_bitmap (bitmap);
+              discard_unwind_frame ("pe_dispose");
 
-	      if (flags & SEVAL_ONECMD)
-		{
-		  reset_parser ();
-		  break;
-		}
-	    }
-	}
+              if (flags & SEVAL_ONECMD)
+                {
+                  reset_parser ();
+                  break;
+                }
+            }
+        }
       else
-	{
-	  last_result = EX_BADUSAGE;	/* was EXECUTION_FAILURE */
+        {
+          last_result = EX_BADUSAGE; /* was EXECUTION_FAILURE */
 
-	  if (interactive_shell == 0 && this_shell_builtin &&
-	      (this_shell_builtin == source_builtin || this_shell_builtin == eval_builtin) &&
-	      last_command_exit_value == EX_BADSYNTAX && posixly_correct && executing_command_builtin == 0)
-	    {
-	      should_jump_to_top_level = 1;
-	      code = ERREXIT;
-	      last_command_exit_value = EX_BADUSAGE;
-	    }
+          if (interactive_shell == 0 && this_shell_builtin
+              && (this_shell_builtin == source_builtin
+                  || this_shell_builtin == eval_builtin)
+              && last_command_exit_value == EX_BADSYNTAX && posixly_correct
+              && executing_command_builtin == 0)
+            {
+              should_jump_to_top_level = 1;
+              code = ERREXIT;
+              last_command_exit_value = EX_BADUSAGE;
+            }
 
-	  /* Since we are shell compatible, syntax errors in a script
-	     abort the execution of the script.  Right? */
-	  break;
-	}
+          /* Since we are shell compatible, syntax errors in a script
+             abort the execution of the script.  Right? */
+          break;
+        }
     }
 
- out:
+out:
 
   run_unwind_frame (PE_TAG);
 
   if (interrupt_state && parse_and_execute_level == 0)
     {
       /* An interrupt during non-interactive execution in an
-	 interactive shell (e.g. via $PROMPT_COMMAND) should
-	 not cause the shell to exit. */
+         interactive shell (e.g. via $PROMPT_COMMAND) should
+         not cause the shell to exit. */
       interactive = interactive_shell;
       throw_to_top_level ();
     }
@@ -530,13 +546,13 @@ parse_string (char *string, const char *from_file, int flags, char **endp)
 
   parse_prologue (string, flags, PS_TAG);
 
-#if defined (HAVE_POSIX_SIGNALS)
+#if defined(HAVE_POSIX_SIGNALS)
   /* If we longjmp and are going to go on, use this to restore signal mask */
   sigemptyset ((sigset_t *)&ps_sigmask);
   sigprocmask (SIG_BLOCK, (sigset_t *)NULL, (sigset_t *)&ps_sigmask);
 #endif
 
-/*itrace("parse_string: `%s'", string);*/
+  /*itrace("parse_string: `%s'", string);*/
   /* Reset the line number if the caller wants us to.  If we don't reset the
      line number, we have to subtract one, because we will add one just
      before executing the next command (resetting the line number sets it to
@@ -551,7 +567,7 @@ parse_string (char *string, const char *from_file, int flags, char **endp)
   ostring = string;
 
   with_input_from_string (string, from_file);
-  while (*(bash_input.location.string))		/* XXX - parser_expanding_alias () ? */
+  while (*(bash_input.location.string)) /* XXX - parser_expanding_alias () ? */
     {
       command = (COMMAND *)NULL;
 
@@ -561,56 +577,57 @@ parse_string (char *string, const char *from_file, int flags, char **endp)
 #endif
 
       /* Provide a location for functions which `longjmp (top_level)' to
-	 jump to. */
+         jump to. */
       code = setjmp_nosigs (top_level);
 
       if (code)
-	{
-#if defined (DEBUG)
-itrace("parse_string: longjmp executed: code = %d", code);
+        {
+#if defined(DEBUG)
+          itrace ("parse_string: longjmp executed: code = %d", code);
 #endif
-	  should_jump_to_top_level = 0;
-	  switch (code)
-	    {
-	    case FORCE_EOF:
-	    case ERREXIT:
-	    case EXITPROG:
-	    case DISCARD:		/* XXX */
-	      if (command)
-		dispose_command (command);
-	      /* Remember to call longjmp (top_level) after the old
-		 value for it is restored. */
-	      should_jump_to_top_level = 1;
-	      goto out;
+          should_jump_to_top_level = 0;
+          switch (code)
+            {
+            case FORCE_EOF:
+            case ERREXIT:
+            case EXITPROG:
+            case DISCARD: /* XXX */
+              if (command)
+                dispose_command (command);
+              /* Remember to call longjmp (top_level) after the old
+                 value for it is restored. */
+              should_jump_to_top_level = 1;
+              goto out;
 
-	    default:
-#if defined (HAVE_POSIX_SIGNALS)
-	      sigprocmask (SIG_SETMASK, (sigset_t *)&ps_sigmask, (sigset_t *)NULL);
+            default:
+#if defined(HAVE_POSIX_SIGNALS)
+              sigprocmask (SIG_SETMASK, (sigset_t *)&ps_sigmask,
+                           (sigset_t *)NULL);
 #endif
-	      command_error ("parse_string", CMDERR_BADJUMP, code, 0);
-	      break;
-	    }
-	}
+              command_error ("parse_string", CMDERR_BADJUMP, code, 0);
+              break;
+            }
+        }
 
       if (parse_command () == 0)
-	{
-	  dispose_command (global_command);
-	  global_command = (COMMAND *)NULL;
-	}
+        {
+          dispose_command (global_command);
+          global_command = (COMMAND *)NULL;
+        }
       else
-	{
-	  if ((flags & SEVAL_NOLONGJMP) == 0)
-	    {
-	      should_jump_to_top_level = 1;
-	      code = DISCARD;
-	    }
-	  else
-	    reset_parser ();	/* XXX - sets token_to_read */
-	  break;
-	}
+        {
+          if ((flags & SEVAL_NOLONGJMP) == 0)
+            {
+              should_jump_to_top_level = 1;
+              code = DISCARD;
+            }
+          else
+            reset_parser (); /* XXX - sets token_to_read */
+          break;
+        }
 
       if (current_token == yacc_EOF || current_token == shell_eof_token)
-	  break;
+        break;
     }
 
 out:
@@ -627,9 +644,9 @@ out:
   if (should_jump_to_top_level)
     {
       if (parse_and_execute_level == 0)
-	top_level_cleanup ();
+        top_level_cleanup ();
       if (code == DISCARD)
-	return -DISCARD;
+        return -DISCARD;
       jump_to_top_level (code);
     }
 
@@ -662,7 +679,7 @@ cat_file (REDIRECT *r)
       return -1;
     }
 
-  fd = open(fn, O_RDONLY);
+  fd = open (fn, O_RDONLY);
   if (fd < 0)
     {
       file_error (fn);
@@ -699,14 +716,14 @@ Shell::evalstring (char *string, const char *from_file, int flags)
       unwind_protect_var (return_catch_flag);
       unwind_protect_var (return_catch);
 
-      return_catch_flag++;	/* increment so we have a counter */
+      return_catch_flag++; /* increment so we have a counter */
       rcatch = setjmp_nosigs (return_catch);
     }
 
   if (rcatch)
     {
       /* We care about whether or not we are running the same trap we were
-	 when we entered this function. */
+         when we entered this function. */
       parse_and_execute_cleanup (was_trap);
       r = return_catch_value;
     }
@@ -718,13 +735,13 @@ Shell::evalstring (char *string, const char *from_file, int flags)
     {
       run_unwind_frame ("evalstring");
       if (rcatch && return_catch_flag)
-	{
-	  return_catch_value = r;
-	  sh_longjmp (return_catch, 1);
-	}
+        {
+          return_catch_value = r;
+          sh_longjmp (return_catch, 1);
+        }
     }
 
   return r;
 }
 
-}  // namespace bash
+} // namespace bash

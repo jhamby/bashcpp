@@ -1,4 +1,5 @@
-/* Copyright (C) 2001, 2006, 2009, 2010, 2012, 2015-2018 Free Software Foundation, Inc.
+/* Copyright (C) 2001, 2006, 2009, 2010, 2012, 2015-2018 Free Software
+   Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -13,32 +14,30 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-
 #include "config.hh"
 
-#if defined (HANDLE_MULTIBYTE)
-#include <cstdlib>
+#if defined(HANDLE_MULTIBYTE)
 #include <climits>
+#include <cstdlib>
 
 #include <cerrno>
 
 #include "general.hh"
-#include "shmbutil.hh"
-#include "shmbchar.hh"
 #include "shell.hh"
+#include "shmbchar.hh"
+#include "shmbutil.hh"
 
 namespace bash
 {
 
-#if defined (IS_BASIC_ASCII)
+#if defined(IS_BASIC_ASCII)
 
 /* Bit table of characters in the ISO C "basic character set".  */
-constexpr unsigned int is_basic_table [UCHAR_MAX / 32 + 1] =
-{
-  0x00001a00,           /* '\t' '\v' '\f' */
-  0xffffffef,           /* ' '...'#' '%'...'?' */
-  0xfffffffe,           /* 'A'...'Z' '[' '\\' ']' '^' '_' */
-  0x7ffffffe            /* 'a'...'z' '{' '|' '}' '~' */
+constexpr unsigned int is_basic_table[UCHAR_MAX / 32 + 1] = {
+  0x00001a00, /* '\t' '\v' '\f' */
+  0xffffffef, /* ' '...'#' '%'...'?' */
+  0xfffffffe, /* 'A'...'Z' '[' '\\' ']' '^' '_' */
+  0x7ffffffe  /* 'a'...'z' '{' '|' '}' '~' */
   /* The remaining bits are 0.  */
 };
 
@@ -63,16 +62,19 @@ mbstrlen (const char *s)
 
   size_t nc = 0;
   size_t mb_cur_max = MB_CUR_MAX;
-  while (*s && (clen = (f = is_basic (*s)) ? 1 : std::mbrlen(s, mb_cur_max, &mbs)) != 0)
+  while (
+      *s
+      && (clen = (f = is_basic (*s)) ? 1 : std::mbrlen (s, mb_cur_max, &mbs))
+             != 0)
     {
-      if (MB_INVALIDCH(clen))
-	{
-	  clen = 1;	/* assume single byte */
-	  mbs = mbsbak;
-	}
+      if (MB_INVALIDCH (clen))
+        {
+          clen = 1; /* assume single byte */
+          mbs = mbsbak;
+        }
 
       if (f == 0)
-	mbsbak = mbs;
+        mbsbak = mbs;
 
       s += clen;
       nc++;
@@ -87,7 +89,7 @@ const char *
 Shell::mbsmbchar (const char *s)
 {
   if (locale_utf8locale)
-    return utf8_mbsmbchar (s);	/* XXX */
+    return utf8_mbsmbchar (s); /* XXX */
 
   mbstate_t mbs;
   std::memset (&mbs, '\0', sizeof (std::mbstate_t));
@@ -99,35 +101,35 @@ Shell::mbsmbchar (const char *s)
   for (t = s; *t; t++)
     {
       if (is_basic (*t))
-	continue;
+        continue;
 
-      if (locale_utf8locale)		/* not used if above code active */
-	clen = utf8_mblen (t, mb_cur_max);
+      if (locale_utf8locale) /* not used if above code active */
+        clen = utf8_mblen (t, mb_cur_max);
       else
-	clen = std::mbrlen (t, mb_cur_max, &mbs);
+        clen = std::mbrlen (t, mb_cur_max, &mbs);
 
       if (clen == 0)
         return nullptr;
 
-      if (MB_INVALIDCH(clen))
-	continue;
+      if (MB_INVALIDCH (clen))
+        continue;
 
       if (clen > 1)
-	return t;
+        return t;
     }
   return nullptr;
 }
 
 size_t
-Shell::sh_mbsnlen(const char *src, size_t srclen, size_t maxlen)
+Shell::sh_mbsnlen (const char *src, size_t srclen, size_t maxlen)
 {
   size_t count;
   size_t sind;
   DECLARE_MBSTATE;
 
-  for (sind = count = 0; src[sind]; )
+  for (sind = count = 0; src[sind];)
     {
-      count++;		/* number of multibyte characters */
+      count++; /* number of multibyte characters */
       ADVANCE_CHAR (src, srclen, sind);
       if (sind > maxlen)
         break;
@@ -136,6 +138,6 @@ Shell::sh_mbsnlen(const char *src, size_t srclen, size_t maxlen)
   return count;
 }
 
-}  // namespace bash
+} // namespace bash
 
-#endif  // HANDLE_MULTIBYTE
+#endif // HANDLE_MULTIBYTE

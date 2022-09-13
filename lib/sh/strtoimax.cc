@@ -1,4 +1,5 @@
-/* strtoimax - convert string representation of a number into an int64_t value. */
+/* strtoimax - convert string representation of a number into an int64_t value.
+ */
 
 /* Copyright 1999-2020 Free Software Foundation, Inc.
 
@@ -22,35 +23,41 @@
 
 #include "config.hh"
 
-#if !defined (HAVE_STRTOIMAX)
+#if !defined(HAVE_STRTOIMAX)
 
 #if HAVE_INTTYPES_H
-#  include <inttypes.h>
+#include <inttypes.h>
 #endif
 
 #if HAVE_STDINT_H
-#  include <stdint.h>
+#include <stdint.h>
 #endif
 
 #if HAVE_STDLIB_H
-#  include <cstdlib>
+#include <cstdlib>
 #endif
 
 /* Verify a requirement at compile-time (unlike assert, which is runtime).  */
-#define verify(name, assertion) struct name { char a[(assertion) ? 1 : -1]; }
+#define verify(name, assertion)                                               \
+  struct name                                                                 \
+  {                                                                           \
+    char a[(assertion) ? 1 : -1];                                             \
+  }
 
 #ifndef HAVE_DECL_STRTOL
 "this configure-time declaration test was not run"
 #endif
 #if !HAVE_DECL_STRTOL
-extern long strtol (const char *, char **, int);
+    extern long
+    strtol (const char *, char **, int);
 #endif
 
 #ifndef HAVE_DECL_STRTOLL
 "this configure-time declaration test was not run"
 #endif
 #if !HAVE_DECL_STRTOLL
-extern long long strtoll (const char *, char **, int);
+    extern long long
+    strtoll (const char *, char **, int);
 #endif
 
 #ifdef strtoimax
@@ -60,9 +67,9 @@ extern long long strtoll (const char *, char **, int);
 int64_t
 strtoimax (const char *ptr, char **endptr, int base)
 {
-  verify(size_is_that_of_long_or_long_long,
-	 (sizeof (int64_t) == sizeof (long) ||
-	  sizeof (int64_t) == sizeof (long long)));
+  verify (size_is_that_of_long_or_long_long,
+          (sizeof (int64_t) == sizeof (long)
+           || sizeof (int64_t) == sizeof (long long)));
 
   if (sizeof (int64_t) != sizeof (long))
     return ::strtoll (ptr, endptr, base);
@@ -71,7 +78,7 @@ strtoimax (const char *ptr, char **endptr, int base)
 }
 
 #ifdef TESTING
-# include <stdio.h>
+#include <stdio.h>
 int
 main ()
 {
@@ -85,9 +92,9 @@ main ()
   printf ("sizeof long long: %d\n", sizeof (long long));
   printf ("sizeof long: %d\n", sizeof (long));
 
-  x = strtoimax("42", &endptr, 10);
-  y = strtoll("42", &endptr, 10);
-  z = strtol("42", &endptr, 10);
+  x = strtoimax ("42", &endptr, 10);
+  y = strtoll ("42", &endptr, 10);
+  z = strtol ("42", &endptr, 10);
 
   printf ("%lld %lld %ld\n", x, y, z);
 

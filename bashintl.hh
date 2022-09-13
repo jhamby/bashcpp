@@ -18,12 +18,12 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_BASHINTL_H_)
+#if !defined(_BASHINTL_H_)
 #define _BASHINTL_H_
 
-#if defined (BUILDTOOL)
-#  undef ENABLE_NLS
-#  define ENABLE_NLS 0
+#if defined(BUILDTOOL)
+#undef ENABLE_NLS
+#define ENABLE_NLS 0
 #endif
 
 /* Include this *after* config.h */
@@ -34,26 +34,28 @@
 namespace bash
 {
 
-#define _(msgid)	gettext(msgid)
-#define N_(msgid)	const_cast<char*>(msgid)
-#define D_(d, msgid)	dgettext(d, msgid)
+#define _(msgid) gettext (msgid)
+#define N_(msgid) const_cast<char *> (msgid)
+#define D_(d, msgid) dgettext (d, msgid)
 
-#define P_(m1, m2, n)	ngettext(m1, m2, n)
+#define P_(m1, m2, n) ngettext (m1, m2, n)
 
-#if defined (HAVE_SETLOCALE) && !defined (LC_ALL)
-#  undef HAVE_SETLOCALE
+#if defined(HAVE_SETLOCALE) && !defined(LC_ALL)
+#undef HAVE_SETLOCALE
 #endif
 
 // moved from locale.c for performance
 
-#if defined (HAVE_LOCALECONV)
+#if defined(HAVE_LOCALECONV)
 static inline char
 locale_decpoint ()
 {
   struct lconv *lv;
 
   lv = std::localeconv ();
-  return (lv && lv->decimal_point && lv->decimal_point[0]) ? lv->decimal_point[0] : '.';
+  return (lv && lv->decimal_point && lv->decimal_point[0])
+             ? lv->decimal_point[0]
+             : '.';
 }
 #else
 static inline char
@@ -63,6 +65,6 @@ locale_decpoint ()
 }
 #endif
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* !_BASHINTL_H_ */

@@ -18,81 +18,89 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if  !defined (__COMMON_H)
-#  define __COMMON_H
+#if !defined(__COMMON_H)
+#define __COMMON_H
 
 #include "command.hh"
 
 namespace bash
 {
 
-#define ISOPTION(s, c)	(s[0] == '-' && s[1] == c && !s[2])
-#define ISHELP(s)	(STREQ ((s), "--help"))
+#define ISOPTION(s, c) (s[0] == '-' && s[1] == c && !s[2])
+#define ISHELP(s) (STREQ ((s), "--help"))
 
-#define CHECK_HELPOPT(l) \
-do { \
-  if ((l) && (l)->word && ISHELP((l)->word->word)) \
-    { \
-      builtin_help (); \
-      return EX_USAGE; \
-    } \
-} while (0)
+#define CHECK_HELPOPT(l)                                                      \
+  do                                                                          \
+    {                                                                         \
+      if ((l) && (l)->word && ISHELP ((l)->word->word))                       \
+        {                                                                     \
+          builtin_help ();                                                    \
+          return EX_USAGE;                                                    \
+        }                                                                     \
+    }                                                                         \
+  while (0)
 
-#define CASE_HELPOPT \
-  case GETOPT_HELP: \
-    builtin_help (); \
+#define CASE_HELPOPT                                                          \
+  case GETOPT_HELP:                                                           \
+    builtin_help ();                                                          \
     return EX_USAGE
 
 /* Flag values for parse_and_execute () */
-enum parse_flags {
-  SEVAL_NONINT =	0x001,
-  SEVAL_INTERACT =	0x002,
-  SEVAL_NOHIST =	0x004,
-  SEVAL_NOFREE =	0x008,
-  SEVAL_RESETLINE =	0x010,
-  SEVAL_PARSEONLY =	0x020,
-  SEVAL_NOLONGJMP =	0x040,
-  SEVAL_FUNCDEF =	0x080,		/* only allow function definitions */
-  SEVAL_ONECMD =	0x100,		/* only allow a single command */
-  SEVAL_NOHISTEXP =	0x200		/* inhibit history expansion */
+enum parse_flags
+{
+  SEVAL_NONINT = 0x001,
+  SEVAL_INTERACT = 0x002,
+  SEVAL_NOHIST = 0x004,
+  SEVAL_NOFREE = 0x008,
+  SEVAL_RESETLINE = 0x010,
+  SEVAL_PARSEONLY = 0x020,
+  SEVAL_NOLONGJMP = 0x040,
+  SEVAL_FUNCDEF = 0x080,  /* only allow function definitions */
+  SEVAL_ONECMD = 0x100,   /* only allow a single command */
+  SEVAL_NOHISTEXP = 0x200 /* inhibit history expansion */
 };
 
 /* Flags for describe_command, shared between type.def and command.def */
-enum cmd_desc_flags {
-  CDESC_ALL =		0x001,	/* type -a */
-  CDESC_SHORTDESC =	0x002,	/* command -V */
-  CDESC_REUSABLE =	0x004,	/* command -v */
-  CDESC_TYPE =		0x008,	/* type -t */
-  CDESC_PATH_ONLY =	0x010,	/* type -p */
-  CDESC_FORCE_PATH =	0x020,	/* type -ap or type -P */
-  CDESC_NOFUNCS =	0x040,	/* type -f */
-  CDESC_ABSPATH =	0x080,	/* convert to absolute path, no ./ */
-  CDESC_STDPATH =	0x100	/* command -p */
+enum cmd_desc_flags
+{
+  CDESC_ALL = 0x001,        /* type -a */
+  CDESC_SHORTDESC = 0x002,  /* command -V */
+  CDESC_REUSABLE = 0x004,   /* command -v */
+  CDESC_TYPE = 0x008,       /* type -t */
+  CDESC_PATH_ONLY = 0x010,  /* type -p */
+  CDESC_FORCE_PATH = 0x020, /* type -ap or type -P */
+  CDESC_NOFUNCS = 0x040,    /* type -f */
+  CDESC_ABSPATH = 0x080,    /* convert to absolute path, no ./ */
+  CDESC_STDPATH = 0x100     /* command -p */
 };
 
 /* Flags for get_job_by_name */
-enum get_job_flags {
-  JM_PREFIX =		0x01,	/* prefix of job name */
-  JM_SUBSTRING =	0x02,	/* substring of job name */
-  JM_EXACT =		0x04,	/* match job name exactly */
-  JM_STOPPED =		0x08,	/* match stopped jobs only */
-  JM_FIRSTMATCH =	0x10	/* return first matching job */
+enum get_job_flags
+{
+  JM_PREFIX = 0x01,    /* prefix of job name */
+  JM_SUBSTRING = 0x02, /* substring of job name */
+  JM_EXACT = 0x04,     /* match job name exactly */
+  JM_STOPPED = 0x08,   /* match stopped jobs only */
+  JM_FIRSTMATCH = 0x10 /* return first matching job */
 };
 
 /* Flags for remember_args and value of changed_dollar_vars */
-enum remember_args_flags {
-  ARGS_NONE =		0x0,
-  ARGS_INVOC =		0x01,
-  ARGS_FUNC =		0x02,
-  ARGS_SETBLTIN =	0x04
+enum remember_args_flags
+{
+  ARGS_NONE = 0x0,
+  ARGS_INVOC = 0x01,
+  ARGS_FUNC = 0x02,
+  ARGS_SETBLTIN = 0x04
 };
 
 /* Maximum number of attribute letters */
 const int MAX_ATTRIBUTES = 16;
 
 /* Functions from common.c */
-void builtin_error (const char *, ...)  __attribute__((__format__ (printf, 1, 2)));
-void builtin_warning (const char *, ...)  __attribute__((__format__ (printf, 1, 2)));
+void builtin_error (const char *, ...)
+    __attribute__ ((__format__ (printf, 1, 2)));
+void builtin_warning (const char *, ...)
+    __attribute__ ((__format__ (printf, 1, 2)));
 void builtin_usage ();
 void no_args (WORD_LIST *);
 int no_options (WORD_LIST *);
@@ -130,7 +138,7 @@ int get_numeric_arg (WORD_LIST *, int, int64_t *);
 int get_exitstat (WORD_LIST *);
 int read_octal (const char *);
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 int get_job_by_name (const char *, int);
 int get_job_spec (WORD_LIST *);
 #endif
@@ -222,6 +230,6 @@ int force_execute_file (const char *, bool);
 int source_file (const char *, int);
 int fc_execute_file (const char *);
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* !__COMMON_H */

@@ -18,10 +18,10 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_QUIT_H_)
+#if !defined(_QUIT_H_)
 #define _QUIT_H_
 
-#include "sig.hh"	/* for sig_atomic_t */
+#include "sig.hh" /* for sig_atomic_t */
 
 namespace bash
 {
@@ -35,17 +35,23 @@ extern volatile sig_atomic_t terminating_signal;
    place.  The same scheme is used for terminating signals (e.g., SIGHUP)
    and the terminating_signal variable.  That calls a function which will
    end up exiting the shell. */
-#define QUIT \
-  do { \
-    if (terminating_signal) termsig_handler (terminating_signal); \
-    if (interrupt_state) throw_to_top_level (); \
-  } while (0)
+#define QUIT                                                                  \
+  do                                                                          \
+    {                                                                         \
+      if (terminating_signal)                                                 \
+        termsig_handler (terminating_signal);                                 \
+      if (interrupt_state)                                                    \
+        throw_to_top_level ();                                                \
+    }                                                                         \
+  while (0)
 
-#define CHECK_ALRM \
-  do { \
-    if (sigalrm_seen) \
-      sh_longjmp (alrmbuf, 1); \
-  } while (0)
+#define CHECK_ALRM                                                            \
+  do                                                                          \
+    {                                                                         \
+      if (sigalrm_seen)                                                       \
+        sh_longjmp (alrmbuf, 1);                                              \
+    }                                                                         \
+  while (0)
 
 #define SETINTERRUPT interrupt_state = 1
 #define CLRINTERRUPT interrupt_state = 0
@@ -58,31 +64,41 @@ extern volatile sig_atomic_t terminating_signal;
 /* The same sort of thing, this time just for signals that would ordinarily
    cause the shell to terminate. */
 
-#define CHECK_TERMSIG \
-  do { \
-    if (terminating_signal) termsig_handler (terminating_signal); \
-  } while (0)
+#define CHECK_TERMSIG                                                         \
+  do                                                                          \
+    {                                                                         \
+      if (terminating_signal)                                                 \
+        termsig_handler (terminating_signal);                                 \
+    }                                                                         \
+  while (0)
 
-#define LASTSIG() \
+#define LASTSIG()                                                             \
   (terminating_signal ? terminating_signal : (interrupt_state ? SIGINT : 0))
 
-#define CHECK_WAIT_INTR \
-  do { \
-    if (wait_intr_flag && wait_signal_received && this_shell_builtin && \
-	(this_shell_builtin == wait_builtin)) \
-      sh_longjmp (wait_intr_buf, 1); \
-  } while (0)
+#define CHECK_WAIT_INTR                                                       \
+  do                                                                          \
+    {                                                                         \
+      if (wait_intr_flag && wait_signal_received && this_shell_builtin        \
+          && (this_shell_builtin == wait_builtin))                            \
+        sh_longjmp (wait_intr_buf, 1);                                        \
+    }                                                                         \
+  while (0)
 
-#define RESET_SIGTERM \
-  do { \
-    sigterm_received = 0; \
-  } while (0)
+#define RESET_SIGTERM                                                         \
+  do                                                                          \
+    {                                                                         \
+      sigterm_received = 0;                                                   \
+    }                                                                         \
+  while (0)
 
-#define CHECK_SIGTERM \
-  do { \
-    if (sigterm_received) termsig_handler (SIGTERM); \
-  } while (0)
+#define CHECK_SIGTERM                                                         \
+  do                                                                          \
+    {                                                                         \
+      if (sigterm_received)                                                   \
+        termsig_handler (SIGTERM);                                            \
+    }                                                                         \
+  while (0)
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* _QUIT_H_ */

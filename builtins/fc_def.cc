@@ -51,45 +51,45 @@
 
 #include "config.hh"
 
-#if defined (HISTORY)
+#if defined(HISTORY)
 
-#if defined (HAVE_SYS_PARAM_H)
-#  include <sys/param.h>
+#if defined(HAVE_SYS_PARAM_H)
+#include <sys/param.h>
 #endif
 
 #include "bashtypes.hh"
 #include "posixstat.hh"
 
-#if defined (HAVE_SYS_FILE_H)
-#  include <sys/file.h>
+#if defined(HAVE_SYS_FILE_H)
+#include <sys/file.h>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "chartypes.hh"
 #include "bashintl.hh"
+#include "chartypes.hh"
 
-#include "shell.hh"
-#include "builtins.hh"
-#include "flags.hh"
-#include "parser.hh"
-#include "maxpath.hh"
-#include "history.hh"
 #include "bashgetopt.hh"
+#include "builtins.hh"
 #include "common.hh"
+#include "flags.hh"
+#include "history.hh"
+#include "maxpath.hh"
+#include "parser.hh"
+#include "shell.hh"
 
 namespace bash
 {
 
 #define HIST_INVALID INT_MIN
-#define HIST_ERANGE  INT_MIN+1
-#define HIST_NOTFOUND INT_MIN+2
+#define HIST_ERANGE INT_MIN + 1
+#define HIST_NOTFOUND INT_MIN + 2
 
 /* Values for the flags argument to fc_gethnum */
-#define HN_LISTING	0x01
-#define HN_FIRST	0x02
+#define HN_LISTING 0x01
+#define HN_FIRST 0x02
 
 extern int unlink (const char *);
 
@@ -127,7 +127,8 @@ extern bool suppress_debug_trap_verbose;
 */
 
 /* Data structure describing a list of global replacements to perform. */
-typedef struct repl {
+typedef struct repl
+{
   struct repl *next;
   char *pat;
   char *rep;
@@ -137,19 +138,22 @@ typedef struct repl {
 #define histline(i) (hlist[(i)]->line)
 #define histdata(i) (hlist[(i)]->data)
 
-#define FREE_RLIST() \
-	do { \
-		for (rl = rlist; rl; ) { \
-			REPL *r;	\
-			r = rl->next; \
-			if (rl->pat) \
-				free (rl->pat); \
-			if (rl->rep) \
-				free (rl->rep); \
-			free (rl); \
-			rl = r; \
-		} \
-	} while (0)
+#define FREE_RLIST()                                                          \
+  do                                                                          \
+    {                                                                         \
+      for (rl = rlist; rl;)                                                   \
+        {                                                                     \
+          REPL *r;                                                            \
+          r = rl->next;                                                       \
+          if (rl->pat)                                                        \
+            free (rl->pat);                                                   \
+          if (rl->rep)                                                        \
+            free (rl->rep);                                                   \
+          free (rl);                                                          \
+          rl = r;                                                             \
+        }                                                                     \
+    }                                                                         \
+  while (0)
 
 static char *fc_dosubs (char *, REPL *);
 static char *fc_gethist (char *, HIST_ENTRY **, int);
@@ -165,18 +169,18 @@ Shell::set_verbose_flag ()
 
 /* String to execute on a file that we want to edit. */
 #define FC_EDIT_COMMAND "${FCEDIT:-${EDITOR:-vi}}"
-#if defined (STRICT_POSIX)
-#  define POSIX_FC_EDIT_COMMAND "${FCEDIT:-ed}"
+#if defined(STRICT_POSIX)
+#define POSIX_FC_EDIT_COMMAND "${FCEDIT:-ed}"
 #else
-#  define POSIX_FC_EDIT_COMMAND "${FCEDIT:-${EDITOR:-ed}}"
+#define POSIX_FC_EDIT_COMMAND "${FCEDIT:-${EDITOR:-ed}}"
 #endif
 
 static void
 unlink_and_free (void *arg)
 {
   char *fn = (char *)arg;
-  unlink(fn);
-  xfree(fn);
+  unlink (fn);
+  xfree (fn);
 }
 
 int
@@ -190,38 +194,38 @@ Shell::fc_builtin (WORD_LIST *list)
 
   /* Parse out the options and set which of the two forms we're in. */
   reset_internal_getopt ();
-  lcurrent = list;		/* XXX */
+  lcurrent = list; /* XXX */
   int opt;
-  while (fc_number (loptend = lcurrent) == 0 &&
-	 (opt = internal_getopt (list, ":e:lnrs")) != -1)
+  while (fc_number (loptend = lcurrent) == 0
+         && (opt = internal_getopt (list, ":e:lnrs")) != -1)
     {
       switch (opt)
-	{
-	case 'n':
-	  numbering = 0;
-	  break;
+        {
+        case 'n':
+          numbering = 0;
+          break;
 
-	case 'l':
-	  listing = HN_LISTING;		/* for fc_gethnum */
-	  break;
+        case 'l':
+          listing = HN_LISTING; /* for fc_gethnum */
+          break;
 
-	case 'r':
-	  reverse = 1;
-	  break;
+        case 'r':
+          reverse = 1;
+          break;
 
-	case 's':
-	  execute = 1;
-	  break;
+        case 's':
+          execute = 1;
+          break;
 
-	case 'e':
-	  ename = list_optarg;
-	  break;
+        case 'e':
+          ename = list_optarg;
+          break;
 
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
 
   list = loptend;
@@ -237,55 +241,56 @@ Shell::fc_builtin (WORD_LIST *list)
       REPL *rl;
       char *sep;
       while (list && ((sep = (char *)strchr (list->word->word, '=')) != NULL))
-	{
-	  *sep++ = '\0';
-	  rl = (REPL *)xmalloc (sizeof (REPL));
-	  rl->next = (REPL *)NULL;
-	  rl->pat = savestring (list->word->word);
-	  rl->rep = savestring (sep);
+        {
+          *sep++ = '\0';
+          rl = (REPL *)xmalloc (sizeof (REPL));
+          rl->next = (REPL *)NULL;
+          rl->pat = savestring (list->word->word);
+          rl->rep = savestring (sep);
 
-	  if (rlist == NULL)
-	    rlist = rl;
-	  else
-	    {
-	      rl->next = rlist;
-	      rlist = rl;
-	    }
-	  list = (WORD_LIST *)list->next;
-	}
+          if (rlist == NULL)
+            rlist = rl;
+          else
+            {
+              rl->next = rlist;
+              rlist = rl;
+            }
+          list = (WORD_LIST *)list->next;
+        }
 
       /* If we have a list of substitutions to do, then reverse it
-	 to get the replacements in the proper order. */
+         to get the replacements in the proper order. */
 
       rlist = REVERSE_LIST (rlist, REPL *);
 
       HIST_ENTRY **hlist = history_list ();
 
       /* If we still have something in list, it is a command spec.
-	 Otherwise, we use the most recent command in time. */
-      char *command = fc_gethist (list ? list->word->word : (char *)NULL, hlist, 0);
+         Otherwise, we use the most recent command in time. */
+      char *command
+          = fc_gethist (list ? list->word->word : (char *)NULL, hlist, 0);
 
       if (command == NULL)
-	{
-	  builtin_error (_("no command found"));
-	  if (rlist)
-	    FREE_RLIST ();
+        {
+          builtin_error (_ ("no command found"));
+          if (rlist)
+            FREE_RLIST ();
 
-	  return EXECUTION_FAILURE;
-	}
+          return EXECUTION_FAILURE;
+        }
 
       if (rlist)
-	{
-	  char *newcom = fc_dosubs (command, rlist);
-	  free (command);
-	  FREE_RLIST ();
-	  command = newcom;
-	}
+        {
+          char *newcom = fc_dosubs (command, rlist);
+          free (command);
+          FREE_RLIST ();
+          command = newcom;
+        }
 
       fprintf (stderr, "%s\n", command);
-      fc_replhist (command);	/* replace `fc -s' with command */
+      fc_replhist (command); /* replace `fc -s' with command */
       /* Posix says that the re-executed commands should be entered into the
-	 history. */
+         history. */
       return parse_and_execute (command, "fc", SEVAL_NOHIST);
     }
 
@@ -296,7 +301,8 @@ Shell::fc_builtin (WORD_LIST *list)
     return EXECUTION_SUCCESS;
 
   int i;
-  for (i = 0; hlist[i]; i++);
+  for (i = 0; hlist[i]; i++)
+    ;
 
   /* With the Bash implementation of history, the current command line
      ("fc blah..." and so on) is already part of the history list by
@@ -310,7 +316,9 @@ Shell::fc_builtin (WORD_LIST *list)
      remember_on_history, command substitution in a shell when set -o history
      has been enabled (interactive or not) should use it in the last_hist
      calculation as if it were on. */
-  int rh = remember_on_history || ((subshell_environment & SUBSHELL_COMSUB) && enable_history_list);
+  int rh
+      = remember_on_history
+        || ((subshell_environment & SUBSHELL_COMSUB) && enable_history_list);
   int last_hist = i - rh - hist_last_line_added;
 
   /* Make sure that real_last is calculated the same way here and in
@@ -326,49 +334,49 @@ Shell::fc_builtin (WORD_LIST *list)
     while (last_hist >= 0 && hlist[last_hist] == 0)
       last_hist--;
   if (last_hist < 0)
-    last_hist = 0;		/* per POSIX */
+    last_hist = 0; /* per POSIX */
 
   int histbeg, histend;
   if (list)
     {
-      histbeg = fc_gethnum (list->word->word, hlist, listing|HN_FIRST);
+      histbeg = fc_gethnum (list->word->word, hlist, listing | HN_FIRST);
       list = (WORD_LIST *)list->next;
 
       if (list)
-	histend = fc_gethnum (list->word->word, hlist, listing);
+        histend = fc_gethnum (list->word->word, hlist, listing);
       else if (histbeg == real_last)
-	histend = listing ? real_last : histbeg;
+        histend = listing ? real_last : histbeg;
       else
-	histend = listing ? last_hist : histbeg;
+        histend = listing ? last_hist : histbeg;
     }
   else
     {
       /* The default for listing is the last 16 history items. */
       if (listing)
-	{
-	  histend = last_hist;
-	  histbeg = histend - 16 + 1;	/* +1 because loop below uses >= */
-	  if (histbeg < 0)
-	    histbeg = 0;
-	}
+        {
+          histend = last_hist;
+          histbeg = histend - 16 + 1; /* +1 because loop below uses >= */
+          if (histbeg < 0)
+            histbeg = 0;
+        }
       else
-	/* For editing, it is the last history command. */
-	histbeg = histend = last_hist;
+        /* For editing, it is the last history command. */
+        histbeg = histend = last_hist;
     }
 
   if (histbeg == HIST_INVALID || histend == HIST_INVALID)
     {
-      sh_erange ((char *)NULL, _("history specification"));
+      sh_erange ((char *)NULL, _ ("history specification"));
       return EXECUTION_FAILURE;
     }
   else if (histbeg == HIST_ERANGE || histend == HIST_ERANGE)
     {
-      sh_erange ((char *)NULL, _("history specification"));
+      sh_erange ((char *)NULL, _ ("history specification"));
       return EXECUTION_FAILURE;
     }
   else if (histbeg == HIST_NOTFOUND || histend == HIST_NOTFOUND)
     {
-      builtin_error (_("no command found"));
+      builtin_error (_ ("no command found"));
       return EXECUTION_FAILURE;
     }
 
@@ -384,35 +392,35 @@ Shell::fc_builtin (WORD_LIST *list)
     {
       bash_delete_last_history ();
       /* If we're editing a single command -- the last command in the
-	 history -- and we just removed the dummy command added by
-	 edit_and_execute_command (), we need to check whether or not we
-	 just removed the last command in the history and need to back
-	 the pointer up.  remember_on_history is off because we're running
-	 in parse_and_execute(). */
+         history -- and we just removed the dummy command added by
+         edit_and_execute_command (), we need to check whether or not we
+         just removed the last command in the history and need to back
+         the pointer up.  remember_on_history is off because we're running
+         in parse_and_execute(). */
       if (histbeg == histend && histend == last_hist && hlist[last_hist] == 0)
-	last_hist = histbeg = --histend;
+        last_hist = histbeg = --histend;
 
       if (hlist[last_hist] == 0)
-	last_hist--;
+        last_hist--;
       if (histend >= last_hist)
-	histend = last_hist;
+        histend = last_hist;
       else if (histbeg >= last_hist)
-	histbeg = last_hist;
+        histbeg = last_hist;
     }
 
   if (histbeg == HIST_INVALID || histend == HIST_INVALID)
     {
-      sh_erange ((char *)NULL, _("history specification"));
+      sh_erange ((char *)NULL, _ ("history specification"));
       return EXECUTION_FAILURE;
     }
   else if (histbeg == HIST_ERANGE || histend == HIST_ERANGE)
     {
-      sh_erange ((char *)NULL, _("history specification"));
+      sh_erange ((char *)NULL, _ ("history specification"));
       return EXECUTION_FAILURE;
     }
   else if (histbeg == HIST_NOTFOUND || histend == HIST_NOTFOUND)
     {
-      builtin_error (_("no command found"));
+      builtin_error (_ ("no command found"));
       return EXECUTION_FAILURE;
     }
 
@@ -438,27 +446,29 @@ Shell::fc_builtin (WORD_LIST *list)
   else
     {
       numbering = 0;
-      stream = sh_mktmpfp ("bash-fc", MT_USERANDOM|MT_USETMPDIR, &fn);
+      stream = sh_mktmpfp ("bash-fc", MT_USERANDOM | MT_USETMPDIR, &fn);
       if (stream == 0)
-	{
-	  builtin_error (_("%s: cannot open temp file: %s"), fn ? fn : "", strerror (errno));
-	  FREE (fn);
-	  return EXECUTION_FAILURE;
-	}
+        {
+          builtin_error (_ ("%s: cannot open temp file: %s"), fn ? fn : "",
+                         strerror (errno));
+          FREE (fn);
+          return EXECUTION_FAILURE;
+        }
     }
 
-  for (i = reverse ? histend : histbeg; reverse ? i >= histbeg : i <= histend; reverse ? i-- : i++)
+  for (i = reverse ? histend : histbeg; reverse ? i >= histbeg : i <= histend;
+       reverse ? i-- : i++)
     {
       QUIT;
       if (numbering)
-	fprintf (stream, "%d", i + history_base);
+        fprintf (stream, "%d", i + history_base);
       if (listing)
-	{
-	  if (posixly_correct)
-	    fputs ("\t", stream);
-	  else
-	    fprintf (stream, "\t%c", histdata (i) ? '*' : ' ');
-	}
+        {
+          if (posixly_correct)
+            fputs ("\t", stream);
+          else
+            fprintf (stream, "\t%c", histdata (i) ? '*' : ' ');
+        }
       fprintf (stream, "%s\n", histline (i));
     }
 
@@ -484,7 +494,8 @@ Shell::fc_builtin (WORD_LIST *list)
     }
   else
     {
-      const char *fcedit = posixly_correct ? POSIX_FC_EDIT_COMMAND : FC_EDIT_COMMAND;
+      const char *fcedit
+          = posixly_correct ? POSIX_FC_EDIT_COMMAND : FC_EDIT_COMMAND;
       command = (char *)xmalloc (3 + strlen (fcedit) + strlen (fn));
       sprintf (command, "%s %s", fcedit, fn);
     }
@@ -496,11 +507,11 @@ Shell::fc_builtin (WORD_LIST *list)
       return EXECUTION_FAILURE;
     }
 
-#if defined (READLINE)
-  /* If we're executing as part of a dispatched readline command like
-     {emacs,vi}_edit_and_execute_command, the readline state will indicate it.
-     We could remove the partial command from the history, but ksh93 doesn't
-     so we stay compatible. */
+#if defined(READLINE)
+    /* If we're executing as part of a dispatched readline command like
+       {emacs,vi}_edit_and_execute_command, the readline state will indicate
+       it. We could remove the partial command from the history, but ksh93
+       doesn't so we stay compatible. */
 #endif
 
   /* Make sure parse_and_execute doesn't turn this off, even though a
@@ -551,7 +562,8 @@ fc_gethnum (char *command, HIST_ENTRY **hlist, int mode)
   int sign = 1;
   /* Count history elements. */
   int i;
-  for (i = 0; hlist[i]; i++);
+  for (i = 0; hlist[i]; i++)
+    ;
 
   /* With the Bash implementation of history, the current command line
      ("fc blah..." and so on) is already part of the history list by
@@ -565,7 +577,9 @@ fc_gethnum (char *command, HIST_ENTRY **hlist, int mode)
      remember_on_history, command substitution in a shell when set -o history
      has been enabled (interactive or not) should use it in the last_hist
      calculation as if it were on. */
-  int rh = remember_on_history || ((subshell_environment & SUBSHELL_COMSUB) && enable_history_list);
+  int rh
+      = remember_on_history
+        || ((subshell_environment & SUBSHELL_COMSUB) && enable_history_list);
   int last_hist = i - rh - hist_last_line_added;
 
   if (i == last_hist && hlist[last_hist] == 0)
@@ -596,7 +610,7 @@ fc_gethnum (char *command, HIST_ENTRY **hlist, int mode)
       s++;
     }
 
-  if (s && DIGIT(*s))
+  if (s && DIGIT (*s))
     {
       int n = atoi (s);
       n *= sign;
@@ -604,38 +618,38 @@ fc_gethnum (char *command, HIST_ENTRY **hlist, int mode)
       /* We want to return something that is an offset to HISTORY_BASE. */
 
       /* If the value is negative or zero, then it is an offset from
-	 the current history item. */
+         the current history item. */
       /* We don't use HN_FIRST here, so we don't return different values
-	 depending on whether we're looking for the first or last in a
-	 pair of range arguments, but nobody else does, either. */
+         depending on whether we're looking for the first or last in a
+         pair of range arguments, but nobody else does, either. */
       if (n < 0)
-	{
-	  n += i + 1;
-	  return n < 0 ? 0 : n;
-	}
+        {
+          n += i + 1;
+          return n < 0 ? 0 : n;
+        }
       else if (n == 0)
-	return (sign == -1) ? (listing ? real_last : HIST_INVALID) : i;
+        return (sign == -1) ? (listing ? real_last : HIST_INVALID) : i;
       else
-	{
-	  /* If we're out of range (greater than I (last history entry) or
-	     less than HISTORY_BASE, we want to return different values
-	     based on whether or not we are looking for the first or last
-	     value in a desired range of history entries. */
-	  n -= history_base;
-	  if (n < 0)
-	    return mode & HN_FIRST ? 0 : i;
-	  else if (n >= i)
-	    return mode & HN_FIRST ? 0 : i;
-	  else
-	    return n;
-	}
+        {
+          /* If we're out of range (greater than I (last history entry) or
+             less than HISTORY_BASE, we want to return different values
+             based on whether or not we are looking for the first or last
+             value in a desired range of history entries. */
+          n -= history_base;
+          if (n < 0)
+            return mode & HN_FIRST ? 0 : i;
+          else if (n >= i)
+            return mode & HN_FIRST ? 0 : i;
+          else
+            return n;
+        }
     }
 
   int clen = strlen (command);
   for (int j = i; j >= 0; j--)
     {
       if (STREQN (command, histline (j), clen))
-	return j;
+        return j;
     }
   return HIST_NOTFOUND;
 }
@@ -693,10 +707,10 @@ fc_replhist (char *command)
   if (command && *command)
     {
       bash_delete_last_history ();
-      maybe_add_history (command);	/* Obeys HISTCONTROL setting. */
+      maybe_add_history (command); /* Obeys HISTCONTROL setting. */
     }
 }
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* HISTORY */

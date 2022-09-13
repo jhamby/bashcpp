@@ -18,35 +18,36 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_TRAP_H_)
+#if !defined(_TRAP_H_)
 #define _TRAP_H_
 
 #include "bashtypes.hh"
 
 #include <csignal>
 
-#if !defined (NSIG)
+#if !defined(NSIG)
 #define NSIG 64
 #endif /* !NSIG */
 
 #define NO_SIG -1
-#define DEFAULT_SIG	SIG_DFL
-#define IGNORE_SIG	SIG_IGN
+#define DEFAULT_SIG SIG_DFL
+#define IGNORE_SIG SIG_IGN
 
 /* Special shell trap names. */
-#define DEBUG_TRAP	NSIG
-#define ERROR_TRAP	NSIG+1
-#define RETURN_TRAP	NSIG+2
-#define EXIT_TRAP 	0
+#define DEBUG_TRAP NSIG
+#define ERROR_TRAP NSIG + 1
+#define RETURN_TRAP NSIG + 2
+#define EXIT_TRAP 0
 
 /* system signals plus special bash traps */
-#define BASH_NSIG	NSIG+3
+#define BASH_NSIG NSIG + 3
 
 /* Flags values for decode_signal() */
-enum decode_signal_flags {
-  DSIG_NOFLAGS =	   0,
-  DSIG_SIGPREFIX =	0x01,		/* don't allow `SIG' PREFIX */
-  DSIG_NOCASE =		0x02		/* case-insensitive comparison */
+enum decode_signal_flags
+{
+  DSIG_NOFLAGS = 0,
+  DSIG_SIGPREFIX = 0x01, /* don't allow `SIG' PREFIX */
+  DSIG_NOCASE = 0x02     /* case-insensitive comparison */
 };
 
 namespace bash
@@ -136,6 +137,6 @@ trap_string(int s)
 }
 #endif
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* _TRAP_H_ */

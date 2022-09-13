@@ -40,22 +40,22 @@
 
 #include <csignal>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
+#include "bashgetopt.hh"
+#include "common.hh"
 #include "execute_cmd.hh"
 #include "jobs.hh"
-#include "common.hh"
-#include "bashgetopt.hh"
+#include "shell.hh"
 
 namespace bash
 {
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 static int fg_bg (WORD_LIST *, bool);
 
 /* How to bring a job into the foreground. */
@@ -80,7 +80,8 @@ Shell::fg_builtin (WORD_LIST *list)
   for (t = list; t && t->next; t = (WORD_LIST *)t->next)
     ;
 
-  bool fg_bit = (t && t->word->word[0] == '&' && t->word->word[1] == '\0') == 0;
+  bool fg_bit
+      = (t && t->word->word[0] == '&' && t->word->word[1] == '\0') == 0;
 
   return fg_bg (list, fg_bit);
 }
@@ -100,7 +101,7 @@ Shell::fg_builtin (WORD_LIST *list)
 // Returns success unless job control is not enabled or an error occurs.
 // $END
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 /* How to put a job into the background. */
 int
 Shell::bg_builtin (WORD_LIST *list)
@@ -123,9 +124,9 @@ Shell::bg_builtin (WORD_LIST *list)
   do
     {
       if (fg_bg (list, 0) == EXECUTION_FAILURE)
-	r = EXECUTION_FAILURE;
+        r = EXECUTION_FAILURE;
       if (list)
-	list = (WORD_LIST *)list->next;
+        list = (WORD_LIST *)list->next;
     }
   while (list);
 
@@ -146,7 +147,7 @@ fg_bg (WORD_LIST *list, bool foreground)
   if (INVALID_JOB (job))
     {
       if (job != DUP_JOB)
-	sh_badjob (list ? list->word->word : _("current"));
+        sh_badjob (list ? list->word->word : _ ("current"));
 
       goto failure;
     }
@@ -155,28 +156,28 @@ fg_bg (WORD_LIST *list, bool foreground)
   /* Or if j->pgrp == shell_pgrp. */
   if (IS_JOBCONTROL (job) == 0)
     {
-      builtin_error (_("job %d started without job control"), job + 1);
+      builtin_error (_ ("job %d started without job control"), job + 1);
       goto failure;
     }
 
   if (foreground == 0)
     {
       old_async_pid = last_asynchronous_pid;
-      last_asynchronous_pid = j->pgrp;	/* As per Posix.2 5.4.2 */
+      last_asynchronous_pid = j->pgrp; /* As per Posix.2 5.4.2 */
     }
 
   status = start_job (job, foreground);
 
   if (status >= 0)
     {
-    /* win: */
+      /* win: */
       UNBLOCK_CHILD (oset);
       return foreground ? status : EXECUTION_SUCCESS;
     }
   else
     {
       if (foreground == 0)
-	last_asynchronous_pid = old_async_pid;
+        last_asynchronous_pid = old_async_pid;
 
     failure:
       UNBLOCK_CHILD (oset);
@@ -185,4 +186,4 @@ fg_bg (WORD_LIST *list, bool foreground)
 }
 #endif /* JOB_CONTROL */
 
-}  // namespace bash
+} // namespace bash

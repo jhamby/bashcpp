@@ -22,11 +22,11 @@
 #include "readline.hh"
 #include "rlprivate.hh"
 
-#include <sys/types.h>
 #include <fcntl.h>
+#include <sys/types.h>
 
-#if defined (TIOCSTAT_IN_SYS_IOCTL)
-#  include <sys/ioctl.h>
+#if defined(TIOCSTAT_IN_SYS_IOCTL)
+#include <sys/ioctl.h>
 #endif /* TIOCSTAT_IN_SYS_IOCTL */
 
 namespace readline
@@ -41,8 +41,9 @@ namespace readline
 #if defined(HANDLE_MULTIBYTE)
 
 unsigned int
-History::_rl_find_next_mbchar_internal (const std::string &string, unsigned int seed,
-					int count, find_mbchar_flags find_non_zero)
+History::_rl_find_next_mbchar_internal (const std::string &string,
+                                        unsigned int seed, int count,
+                                        find_mbchar_flags find_non_zero)
 {
   mbstate_t ps;
   unsigned int point;
@@ -57,7 +58,7 @@ History::_rl_find_next_mbchar_internal (const std::string &string, unsigned int 
   point = seed + _rl_adjust_point (string, seed, &ps);
   /* if _rl_adjust_point returns -1, the character or string is invalid.
      treat as a byte. */
-  if (point == seed - 1)	/* invalid */
+  if (point == seed - 1) /* invalid */
     return seed + 1;
 
   /* if this is true, means that seed was not pointing to a byte indicating
@@ -70,49 +71,52 @@ History::_rl_find_next_mbchar_internal (const std::string &string, unsigned int 
     {
       size_t len = string.size () - point;
       if (len == 0)
-	break;
+        break;
       if (_rl_utf8locale && UTF8_SINGLEBYTE (string[point]))
-	{
-	  tmp = 1;
-	  wc = static_cast<wchar_t> (string[point]);
-	  std::memset(&ps, 0, sizeof(mbstate_t));
-	}
+        {
+          tmp = 1;
+          wc = static_cast<wchar_t> (string[point]);
+          std::memset (&ps, 0, sizeof (mbstate_t));
+        }
       else
-	tmp = std::mbrtowc (&wc, string.c_str () + point, len, &ps);
+        tmp = std::mbrtowc (&wc, string.c_str () + point, len, &ps);
       if (MB_INVALIDCH (tmp))
-	{
-	  /* invalid bytes. assume a byte represents a character */
-	  point++;
-	  count--;
-	  /* reset states. */
-	  std::memset(&ps, 0, sizeof(mbstate_t));
-	}
+        {
+          /* invalid bytes. assume a byte represents a character */
+          point++;
+          count--;
+          /* reset states. */
+          std::memset (&ps, 0, sizeof (mbstate_t));
+        }
       else if (MB_NULLWCH (tmp))
-	break;			/* found wide '\0' */
+        break; /* found wide '\0' */
       else
-	{
-	  /* valid bytes */
-	  point += tmp;
-	  if (find_non_zero)
-	    {
-	      if (WCWIDTH (wc) == 0)
-		continue;
-	      else
-		count--;
-	    }
-	  else
-	    count--;
-	}
+        {
+          /* valid bytes */
+          point += tmp;
+          if (find_non_zero)
+            {
+              if (WCWIDTH (wc) == 0)
+                continue;
+              else
+                count--;
+            }
+          else
+            count--;
+        }
     }
 
   if (find_non_zero)
     {
-      tmp = std::mbrtowc (&wc, string.c_str () + point, string.size () - point, &ps);
-      while (MB_NULLWCH (tmp) == 0 && MB_INVALIDCH (tmp) == 0 && WCWIDTH (wc) == 0)
-	{
-	  point += tmp;
-	  tmp = std::mbrtowc (&wc, string.c_str () + point, string.size () - point, &ps);
-	}
+      tmp = std::mbrtowc (&wc, string.c_str () + point, string.size () - point,
+                          &ps);
+      while (MB_NULLWCH (tmp) == 0 && MB_INVALIDCH (tmp) == 0
+             && WCWIDTH (wc) == 0)
+        {
+          point += tmp;
+          tmp = std::mbrtowc (&wc, string.c_str () + point,
+                              string.size () - point, &ps);
+        }
     }
 
   return point;
@@ -121,7 +125,7 @@ History::_rl_find_next_mbchar_internal (const std::string &string, unsigned int 
 /* experimental -- needs to handle zero-width characters better */
 unsigned int
 History::_rl_find_prev_utf8char (const std::string &string, unsigned int seed,
-				 find_mbchar_flags find_non_zero)
+                                 find_mbchar_flags find_non_zero)
 {
   unsigned char b;
   int save, prev;
@@ -129,43 +133,48 @@ History::_rl_find_prev_utf8char (const std::string &string, unsigned int seed,
 
   prev = static_cast<int> (seed - 1);
   while (prev >= 0)
-   {
+    {
       b = static_cast<unsigned char> (string[static_cast<size_t> (prev)]);
       if (UTF8_SINGLEBYTE (b))
-	return static_cast<unsigned int> (prev);
+        return static_cast<unsigned int> (prev);
 
       save = prev;
 
       /* Move back until we're not in the middle of a multibyte char */
       if (UTF8_MBCHAR (b))
-	{
-	  while (prev > 0 && (b = static_cast<unsigned char> (
-		string[static_cast<size_t> (--prev)])) && UTF8_MBCHAR (b))
-	    ;
-	}
+        {
+          while (prev > 0
+                 && (b = static_cast<unsigned char> (
+                         string[static_cast<size_t> (--prev)]))
+                 && UTF8_MBCHAR (b))
+            ;
+        }
 
       if (UTF8_MBFIRSTCHAR (b))
-	{
-	  if (find_non_zero)
-	    {
-	      if (_rl_test_nonzero (string.c_str (), static_cast<unsigned int> (prev), len))
-		return static_cast<unsigned int> (prev);
-	      else		/* valid but WCWIDTH (wc) == 0 */
-		--prev;
-	    }
-	  else
-	    return static_cast<unsigned int> (prev);
-	}
+        {
+          if (find_non_zero)
+            {
+              if (_rl_test_nonzero (string.c_str (),
+                                    static_cast<unsigned int> (prev), len))
+                return static_cast<unsigned int> (prev);
+              else /* valid but WCWIDTH (wc) == 0 */
+                --prev;
+            }
+          else
+            return static_cast<unsigned int> (prev);
+        }
       else
-	return static_cast<unsigned int> (save);			/* invalid utf-8 multibyte sequence */
+        return static_cast<unsigned int> (
+            save); /* invalid utf-8 multibyte sequence */
     }
 
   return (prev < 0) ? 0 : static_cast<unsigned int> (prev);
 }
 
 unsigned int
-History::_rl_find_prev_mbchar_internal (const std::string &string, unsigned int seed,
-					find_mbchar_flags find_non_zero)
+History::_rl_find_prev_mbchar_internal (const std::string &string,
+                                        unsigned int seed,
+                                        find_mbchar_flags find_non_zero)
 {
   mbstate_t ps;
   unsigned int prev, non_zero_prev, point;
@@ -175,7 +184,7 @@ History::_rl_find_prev_mbchar_internal (const std::string &string, unsigned int 
   if (_rl_utf8locale)
     return _rl_find_prev_utf8char (string, seed, find_non_zero);
 
-  std::memset(&ps, 0, sizeof(mbstate_t));
+  std::memset (&ps, 0, sizeof (mbstate_t));
   unsigned int length = static_cast<unsigned int> (string.size ());
 
   if (length < seed)
@@ -184,40 +193,40 @@ History::_rl_find_prev_mbchar_internal (const std::string &string, unsigned int 
   prev = non_zero_prev = point = 0;
   while (point < seed)
     {
-      if (_rl_utf8locale && UTF8_SINGLEBYTE(string[point]))
-	{
-	  tmp = 1;
-	  wc = static_cast<wchar_t> (string[point]);
-	  std::memset(&ps, 0, sizeof(mbstate_t));
-	}
+      if (_rl_utf8locale && UTF8_SINGLEBYTE (string[point]))
+        {
+          tmp = 1;
+          wc = static_cast<wchar_t> (string[point]);
+          std::memset (&ps, 0, sizeof (mbstate_t));
+        }
       else
-	tmp = std::mbrtowc (&wc, &string[point], length - point, &ps);
+        tmp = std::mbrtowc (&wc, &string[point], length - point, &ps);
       if (MB_INVALIDCH (tmp))
-	{
-	  /* in this case, bytes are invalid or too short to compose
-	     multibyte char, so assume that the first byte represents
-	     a single character anyway. */
-	  tmp = 1;
-	  /* clear the state of the byte sequence, because
-	     in this case effect of mbstate is undefined  */
-	  std::memset(&ps, 0, sizeof (mbstate_t));
+        {
+          /* in this case, bytes are invalid or too short to compose
+             multibyte char, so assume that the first byte represents
+             a single character anyway. */
+          tmp = 1;
+          /* clear the state of the byte sequence, because
+             in this case effect of mbstate is undefined  */
+          std::memset (&ps, 0, sizeof (mbstate_t));
 
-	  /* Since we're assuming that this byte represents a single
-	     non-zero-width character, don't forget about it. */
-	  prev = point;
-	}
+          /* Since we're assuming that this byte represents a single
+             non-zero-width character, don't forget about it. */
+          prev = point;
+        }
       else if (MB_NULLWCH (tmp))
-	break;			/* Found '\0' char.  Can this happen? */
+        break; /* Found '\0' char.  Can this happen? */
       else
-	{
-	  if (find_non_zero)
-	    {
-	      if (WCWIDTH (wc) != 0)
-		prev = point;
-	    }
-	  else
-	    prev = point;
-	}
+        {
+          if (find_non_zero)
+            {
+              if (WCWIDTH (wc) != 0)
+                prev = point;
+            }
+          else
+            prev = point;
+        }
 
       point += tmp;
     }
@@ -239,19 +248,19 @@ History::_rl_get_char_len (const std::string &src, mbstate_t *ps)
   size_t tmp;
   if (l == 0)
     tmp = 0;
-  else if (_rl_utf8locale && UTF8_SINGLEBYTE(src[0]))
+  else if (_rl_utf8locale && UTF8_SINGLEBYTE (src[0]))
     tmp = 1;
   else
     {
       size_t mb_cur_max = MB_CUR_MAX;
-      tmp = std::mbrlen(src.c_str (), (l < mb_cur_max) ? l : mb_cur_max, ps);
+      tmp = std::mbrlen (src.c_str (), (l < mb_cur_max) ? l : mb_cur_max, ps);
     }
 
   if (tmp == static_cast<size_t> (-2))
     {
       /* too short to compose multibyte char */
       if (ps)
-	std::memset (ps, 0, sizeof(mbstate_t));
+        std::memset (ps, 0, sizeof (mbstate_t));
       return -2;
     }
   else if (tmp == static_cast<size_t> (-1))
@@ -259,7 +268,7 @@ History::_rl_get_char_len (const std::string &src, mbstate_t *ps)
       /* invalid to compose multibyte char */
       /* initialize the conversion state */
       if (ps)
-	std::memset (ps, 0, sizeof(mbstate_t));
+        std::memset (ps, 0, sizeof (mbstate_t));
       return -1;
     }
   else
@@ -272,7 +281,8 @@ History::_rl_get_char_len (const std::string &src, mbstate_t *ps)
    if point is invalid (greater than string length),
    it returns (size_t)(-1). */
 unsigned int
-History::_rl_adjust_point (const std::string &string, unsigned int point, mbstate_t *ps)
+History::_rl_adjust_point (const std::string &string, unsigned int point,
+                           mbstate_t *ps)
 {
   size_t length = string.size ();
 
@@ -283,26 +293,26 @@ History::_rl_adjust_point (const std::string &string, unsigned int point, mbstat
   while (pos < point)
     {
       size_t tmp;
-      if (_rl_utf8locale && UTF8_SINGLEBYTE(string[pos]))
-	tmp = 1;
+      if (_rl_utf8locale && UTF8_SINGLEBYTE (string[pos]))
+        tmp = 1;
       else
-	tmp = std::mbrlen (string.c_str () + pos, length - pos, ps);
+        tmp = std::mbrlen (string.c_str () + pos, length - pos, ps);
 
       if (MB_INVALIDCH (tmp))
-	{
-	  /* in this case, bytes are invalid or too short to compose
-	     multibyte char, so assume that the first byte represents
-	     a single character anyway. */
-	  pos++;
-	  /* clear the state of the byte sequence, because
-	     in this case effect of mbstate is undefined  */
-	  if (ps)
-	    std::memset (ps, 0, sizeof (mbstate_t));
-	}
+        {
+          /* in this case, bytes are invalid or too short to compose
+             multibyte char, so assume that the first byte represents
+             a single character anyway. */
+          pos++;
+          /* clear the state of the byte sequence, because
+             in this case effect of mbstate is undefined  */
+          if (ps)
+            std::memset (ps, 0, sizeof (mbstate_t));
+        }
       else if (MB_NULLWCH (tmp))
-	pos++;
+        pos++;
       else
-	pos += tmp;
+        pos += tmp;
     }
 
   return pos - point;
@@ -314,7 +324,7 @@ History::_rl_char_value (const std::string &buf, unsigned int ind)
   if (MB_LEN_MAX == 1 || rl_byte_oriented)
     return static_cast<wchar_t> (buf[ind]);
 
-  if (_rl_utf8locale && UTF8_SINGLEBYTE(buf[ind]))
+  if (_rl_utf8locale && UTF8_SINGLEBYTE (buf[ind]))
     return static_cast<wchar_t> (buf[ind]);
 
   size_t l = buf.size ();
@@ -334,4 +344,4 @@ History::_rl_char_value (const std::string &buf, unsigned int ind)
 }
 #endif /* HANDLE_MULTIBYTE */
 
-}  // namespace readline
+} // namespace readline

@@ -20,7 +20,7 @@
 
 #include "config.hh"
 
-#if defined (USE_VFPRINTF_EMULATION)
+#if defined(USE_VFPRINTF_EMULATION)
 
 #include <stdio.h>
 
@@ -33,9 +33,9 @@
 
 int
 vfprintf (iop, fmt, ap)
-     FILE *iop;
-     char *fmt;
-     va_list ap;
+FILE *iop;
+char *fmt;
+va_list ap;
 {
   int len;
   char localbuf[BUFSIZ];
@@ -45,7 +45,7 @@ vfprintf (iop, fmt, ap)
       iop->_flag &= ~_IONBF;
       iop->_ptr = iop->_base = localbuf;
       len = _doprnt (fmt, ap, iop);
-      (void) fflush (iop);
+      (void)fflush (iop);
       iop->_flag |= _IONBF;
       iop->_base = NULL;
       iop->_bufsiz = 0;
@@ -61,13 +61,13 @@ vfprintf (iop, fmt, ap)
  */
 int
 vsprintf (str, fmt, ap)
-     char *str, *fmt;
-     va_list ap;
+char *str, *fmt;
+va_list ap;
 {
   FILE f;
   int len;
 
-  f._flag = _IOWRT|_IOSTRG;
+  f._flag = _IOWRT | _IOSTRG;
   f._ptr = str;
   f._cnt = 32767;
   len = _doprnt (fmt, ap, &f);

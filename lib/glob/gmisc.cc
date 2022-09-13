@@ -22,15 +22,15 @@
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "shmbutil.hh"
 #include "chartypes.hh"
+#include "shmbutil.hh"
 
 #ifndef FNM_CASEFOLD
-#  include "strmatch.hh"
+#include "strmatch.hh"
 #endif
 #include "glob.hh"
 
@@ -38,18 +38,19 @@ namespace bash
 {
 
 /* Make sure these names continue to agree with what's in smatch.c */
-const unsigned char *glob_patscan (const unsigned char *, const unsigned char *, int);
+const unsigned char *glob_patscan (const unsigned char *,
+                                   const unsigned char *, int);
 
 /* Compile `gm_loop.hh' for single-byte characters. */
-#define CHAR	char
-#define INT	int
-#define L(CS)	CS
+#define CHAR char
+#define INT int
+#define L(CS) CS
 #define EXTGLOB_PATTERN_P extglob_pattern_p
 #define MATCH_PATTERN_CHAR match_pattern_char
 #define MATCHLEN umatchlen
-#define FOLD(c) ((flags & FNM_CASEFOLD) \
-	? std::tolower ((unsigned char)c) \
-	: ((unsigned char)c))
+#define FOLD(c)                                                               \
+  ((flags & FNM_CASEFOLD) ? std::tolower ((unsigned char)c)                   \
+                          : ((unsigned char)c))
 #ifndef LPAREN
 #define LPAREN '('
 #define RPAREN ')'
@@ -59,22 +60,22 @@ const unsigned char *glob_patscan (const unsigned char *, const unsigned char *,
 /* Compile `gm_loop.hh' again for multibyte characters. */
 #if HANDLE_MULTIBYTE
 
-#define CHAR	wchar_t
-#define INT	wint_t
-#define L(CS)	L##CS
+#define CHAR wchar_t
+#define INT wint_t
+#define L(CS) L##CS
 #define EXTGLOB_PATTERN_P wextglob_pattern_p
 #define MATCH_PATTERN_CHAR match_pattern_wchar
 #define MATCHLEN wmatchlen
 
-#define FOLD(c) ((flags & FNM_CASEFOLD) && std::iswupper (c) ? std::towlower (c) : (c))
+#define FOLD(c)                                                               \
+  ((flags & FNM_CASEFOLD) && std::iswupper (c) ? std::towlower (c) : (c))
 #define LPAREN L'('
 #define RPAREN L')'
 #include "gm_loop.hh"
 
 #endif /* HANDLE_MULTIBYTE */
 
-
-#if defined (EXTENDED_GLOB)
+#if defined(EXTENDED_GLOB)
 /* Skip characters in PAT and return the final occurrence of DIRSEP.  This
    is only called when extended_glob is set, so we have to skip over extglob
    patterns x(...) */
@@ -87,23 +88,23 @@ glob_dirscan (const char *pat, char dirsep)
   for (p = pat; p && *p; p++)
     {
       if (extglob_pattern_p (p))
-	{
-	  if (se == 0)
-	    se = p + std::strlen (p) - 1;
-	  pe = (char *)glob_patscan ((unsigned char *)(p + 2),
-				     (unsigned char *)se, 0);
-	  if (pe == 0)
-	    continue;
-	  else if (*pe == 0)
-	    break;
-	  p = pe - 1;	/* will do increment above */
-	  continue;
-	}
-      if (*p ==  dirsep)
-	d = p;
+        {
+          if (se == 0)
+            se = p + std::strlen (p) - 1;
+          pe = (char *)glob_patscan ((unsigned char *)(p + 2),
+                                     (unsigned char *)se, 0);
+          if (pe == 0)
+            continue;
+          else if (*pe == 0)
+            break;
+          p = pe - 1; /* will do increment above */
+          continue;
+        }
+      if (*p == dirsep)
+        d = p;
     }
   return d;
 }
 #endif /* EXTENDED_GLOB */
 
-}  // namespace bash
+} // namespace bash

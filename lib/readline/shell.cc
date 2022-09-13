@@ -1,5 +1,5 @@
 /* shell.c -- readline utility functions that are normally provided by
-	      bash when readline is linked as part of the shell. */
+              bash when readline is linked as part of the shell. */
 
 /* Copyright (C) 1997-2009,2017 Free Software Foundation, Inc.
 
@@ -27,13 +27,13 @@
 
 #include <sys/types.h>
 
-#if defined (HAVE_FCNTL_H)
+#if defined(HAVE_FCNTL_H)
 #include <fcntl.h>
 #endif
 
 #include "rlshell.hh"
 
-#if defined (HAVE_GETPWUID) && !defined (HAVE_GETPW_DECLS)
+#if defined(HAVE_GETPWUID) && !defined(HAVE_GETPW_DECLS)
 extern "C" struct passwd *getpwuid (uid_t);
 #endif /* HAVE_GETPWUID && !HAVE_GETPW_DECLS */
 
@@ -41,25 +41,25 @@ namespace readline
 {
 
 // Define the virtual destructor.
-ReadlineShell::~ReadlineShell() {}
+ReadlineShell::~ReadlineShell () {}
 
-#if defined (STANDALONE_READLINE)
+#if defined(STANDALONE_READLINE)
 
 #ifndef CHAR_BIT
-#  define CHAR_BIT 8
+#define CHAR_BIT 8
 #endif
 
 /* Nonzero if the integer type T is signed.  */
-#define TYPE_SIGNED(t) (! ((t) 0 < (t) -1))
+#define TYPE_SIGNED(t) (!((t)0 < (t)-1))
 
 /* Bound on length of the string representing an integer value of type T.
    Subtract one for the sign bit if T is signed;
    302 / 1000 is log10 (2) rounded up;
    add one for integer division truncation;
    add one more for a minus sign if t is signed.  */
-#define INT_STRLEN_BOUND(t) \
-  ((sizeof (t) * CHAR_BIT - TYPE_SIGNED (t)) * 302 / 1000 \
-   + 1 + TYPE_SIGNED (t))
+#define INT_STRLEN_BOUND(t)                                                   \
+  ((sizeof (t) * CHAR_BIT - TYPE_SIGNED (t)) * 302 / 1000 + 1                 \
+   + TYPE_SIGNED (t))
 
 /* All of these functions are resolved from bash if we are linking readline
    as part of bash. */
@@ -78,11 +78,11 @@ ReadlineShell::sh_single_quote (const char *string)
       *r++ = c;
 
       if (c == '\'')
-	{
-	  *r++ = '\\';	/* insert escaped single quote */
-	  *r++ = '\'';
-	  *r++ = '\'';	/* start new quoted string */
-	}
+        {
+          *r++ = '\\'; /* insert escaped single quote */
+          *r++ = '\'';
+          *r++ = '\''; /* start new quoted string */
+        }
     }
 
   *r++ = '\'';
@@ -93,32 +93,34 @@ ReadlineShell::sh_single_quote (const char *string)
 
 /* Set the environment variables LINES and COLUMNS to lines and cols,
    respectively. */
-#if defined (HAVE_SETENV)
+#if defined(HAVE_SETENV)
 static char setenv_buf[INT_STRLEN_BOUND (int) + 1];
 #else /* !HAVE_SETENV */
-#  if defined (HAVE_PUTENV)
-static char putenv_buf1[INT_STRLEN_BOUND (int) + 6 + 1];	/* sizeof("LINES=") == 6 */
-static char putenv_buf2[INT_STRLEN_BOUND (int) + 8 + 1];	/* sizeof("COLUMNS=") == 8 */
-#  endif /* HAVE_PUTENV */
+#if defined(HAVE_PUTENV)
+static char
+    putenv_buf1[INT_STRLEN_BOUND (int) + 6 + 1]; /* sizeof("LINES=") == 6 */
+static char
+    putenv_buf2[INT_STRLEN_BOUND (int) + 8 + 1]; /* sizeof("COLUMNS=") == 8 */
+#endif /* HAVE_PUTENV */
 #endif /* !HAVE_SETENV */
 
 void
 ReadlineShell::sh_set_lines_and_columns (unsigned int lines, unsigned int cols)
 {
-#if defined (HAVE_SETENV)
+#if defined(HAVE_SETENV)
   std::snprintf (setenv_buf, sizeof (setenv_buf), "%u", lines);
   ::setenv ("LINES", setenv_buf, 1);
 
   std::snprintf (setenv_buf, sizeof (setenv_buf), "%u", cols);
   ::setenv ("COLUMNS", setenv_buf, 1);
 #else /* !HAVE_SETENV */
-#  if defined (HAVE_PUTENV)
+#if defined(HAVE_PUTENV)
   std::snprintf (putenv_buf1, sizeof (putenv_buf1), "LINES=%u", lines);
   ::putenv (putenv_buf1);
 
   std::snprintf (putenv_buf2, sizeof (putenv_buf2), "COLUMNS=%u", cols);
   ::putenv (putenv_buf2);
-#  endif /* HAVE_PUTENV */
+#endif /* HAVE_PUTENV */
 #endif /* !HAVE_SETENV */
 }
 
@@ -138,33 +140,33 @@ ReadlineShell::sh_get_home_dir ()
     return home_dir;
 
   home_dir = (char *)NULL;
-#if defined (HAVE_GETPWUID)
-#  if defined (__TANDEM)
+#if defined(HAVE_GETPWUID)
+#if defined(__TANDEM)
   entry = ::getpwnam (getlogin ());
-#  else
+#else
   entry = ::getpwuid (getuid ());
-#  endif
+#endif
   if (entry)
     home_dir = savestring (entry->pw_dir);
 #endif
 
-#if defined (HAVE_GETPWENT)
-  ::endpwent ();		/* some systems need this */
+#if defined(HAVE_GETPWENT)
+  ::endpwent (); /* some systems need this */
 #endif
 
   return home_dir;
 }
 
-#if !defined (O_NDELAY)
-#  if defined (FNDELAY)
-#    define O_NDELAY FNDELAY
-#  endif
+#if !defined(O_NDELAY)
+#if defined(FNDELAY)
+#define O_NDELAY FNDELAY
+#endif
 #endif
 
 int
 ReadlineShell::sh_unset_nodelay_mode (int fd)
 {
-#if defined (HAVE_FCNTL)
+#if defined(HAVE_FCNTL)
   int flags, bflags;
 
   if ((flags = ::fcntl (fd, F_GETFL, 0)) < 0)
@@ -190,6 +192,6 @@ ReadlineShell::sh_unset_nodelay_mode (int fd)
   return 0;
 }
 
-#endif  // !SHELL
+#endif // !SHELL
 
-}  // namespace readline
+} // namespace readline

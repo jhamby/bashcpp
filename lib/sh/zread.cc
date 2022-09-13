@@ -22,12 +22,12 @@
 
 #include <sys/types.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include <csignal>
 #include <cerrno>
+#include <csignal>
 
 #include "shell.hh"
 
@@ -48,10 +48,10 @@ Shell::zreadc (int fd, char *cp)
       nr = zread (fd, zread_lbuf, ZBUFSIZ);
       zread_lind = 0;
       if (nr <= 0)
-	{
-	  zread_lused = 0;
-	  return nr;
-	}
+        {
+          zread_lused = 0;
+          return nr;
+        }
       zread_lused = static_cast<unsigned int> (nr);
     }
   if (cp)
@@ -71,10 +71,10 @@ Shell::zreadcintr (int fd, char *cp)
       nr = zreadintr (fd, zread_lbuf, ZBUFSIZ);
       zread_lind = 0;
       if (nr <= 0)
-	{
-	  zread_lused = 0;
-	  return nr;
-	}
+        {
+          zread_lused = 0;
+          return nr;
+        }
       zread_lused = static_cast<unsigned int> (nr);
     }
   if (cp)
@@ -92,14 +92,14 @@ Shell::zreadn (int fd, char *cp, size_t len)
   if (zread_lind == zread_lused || zread_lused == 0)
     {
       if (len > ZBUFSIZ)
-	len = ZBUFSIZ;
+        len = ZBUFSIZ;
       nr = zread (fd, zread_lbuf, len);
       zread_lind = 0;
       if (nr <= 0)
-	{
-	  zread_lused = 0;
-	  return nr;
-	}
+        {
+          zread_lused = 0;
+          return nr;
+        }
       zread_lused = static_cast<unsigned int> (nr);
     }
   if (cp)
@@ -107,4 +107,4 @@ Shell::zreadn (int fd, char *cp, size_t len)
   return 1;
 }
 
-}  // namespace bash
+} // namespace bash

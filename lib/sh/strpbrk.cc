@@ -2,8 +2,8 @@
 
 /* Copyright (C) 1991, 1994 Free Software Foundation, Inc.
 
-   NOTE: The canonical source of this file is maintained with the GNU C Library.
-   Bugs can be reported to bug-glibc@prep.ai.mit.edu.
+   NOTE: The canonical source of this file is maintained with the GNU C
+   Library. Bugs can be reported to bug-glibc@prep.ai.mit.edu.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -23,7 +23,7 @@
 
 #include "config.hh"
 
-#if !defined (HAVE_STRPBRK)
+#if !defined(HAVE_STRPBRK)
 
 /* Find the first occurrence in S of any character in ACCEPT.  */
 char *
@@ -33,8 +33,8 @@ strpbrk (const char *s, const char *accept)
     {
       const char *a = accept;
       while (*a != '\0')
-	if (*a++ == *s)
-	  return (char *) s;
+        if (*a++ == *s)
+          return (char *)s;
       ++s;
     }
 

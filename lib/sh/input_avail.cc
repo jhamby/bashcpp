@@ -1,5 +1,5 @@
 /* input_avail.c -- check whether or not data is available for reading on a
-		    specified file descriptor. */
+                    specified file descriptor. */
 
 /* Copyright (C) 2008,2009-2019 Free Software Foundation, Inc.
 
@@ -19,37 +19,37 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined (__TANDEM)
-#  include <floss.h>
+#if defined(__TANDEM)
+#include <floss.h>
 #endif
 
 #include "config.hh"
 
-#include <sys/types.h>
 #include <fcntl.h>
-#if defined (HAVE_SYS_FILE_H)
-#  include <sys/file.h>
+#include <sys/types.h>
+#if defined(HAVE_SYS_FILE_H)
+#include <sys/file.h>
 #endif /* HAVE_SYS_FILE_H */
 
-#if defined (HAVE_PSELECT) || defined (HAVE_SELECT)
-#  include <csignal>
+#if defined(HAVE_PSELECT) || defined(HAVE_SELECT)
+#include <csignal>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 
 #include "posixselect.hh"
 
-#if defined (FIONREAD_IN_SYS_IOCTL)
-#  include <sys/ioctl.h>
+#if defined(FIONREAD_IN_SYS_IOCTL)
+#include <sys/ioctl.h>
 #endif
 
-#include <cstdio>
 #include <cerrno>
+#include <cstdio>
 
-#if !defined (O_NDELAY) && defined (O_NONBLOCK)
-#  define O_NDELAY O_NONBLOCK	/* Posix style */
+#if !defined(O_NDELAY) && defined(O_NONBLOCK)
+#define O_NDELAY O_NONBLOCK /* Posix style */
 #endif
 
 #include "externs.hh"
@@ -71,7 +71,7 @@ input_avail (int fd)
   if (fd < 0)
     return -1;
 
-#if defined (HAVE_SELECT)
+#if defined(HAVE_SELECT)
   FD_ZERO (&readfds);
   FD_ZERO (&exceptfds);
   FD_SET (fd, &readfds);
@@ -80,7 +80,7 @@ input_avail (int fd)
   timeout.tv_usec = 0;
   result = ::select (fd + 1, &readfds, nullptr, &exceptfds, &timeout);
   return (result <= 0) ? 0 : 1;
-#elif defined (FIONREAD)
+#elif defined(FIONREAD)
   errno = 0;
   int chars_avail = 0;
   result = ::ioctl (fd, FIONREAD, &chars_avail);
@@ -92,4 +92,4 @@ input_avail (int fd)
 #endif
 }
 
-}  // namespace bash
+} // namespace bash

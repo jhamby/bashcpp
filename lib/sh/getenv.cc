@@ -1,5 +1,5 @@
 /* getenv.c - get environment variable value from the shell's variable
-	      list. */
+              list. */
 
 /* Copyright (C) 1997-2002 Free Software Foundation, Inc.
 
@@ -21,10 +21,10 @@
 
 #include "config.hh"
 
-#if defined (CAN_REDEFINE_GETENV)
+#if defined(CAN_REDEFINE_GETENV)
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "shell.hh"
@@ -57,29 +57,30 @@ bash::Shell::getenv (const char *name)
     {
       FREE (last_tempenv_value);
 
-      last_tempenv_value = value_cell (var) ? savestring (value_cell (var)) : nullptr;
+      last_tempenv_value
+          = value_cell (var) ? savestring (value_cell (var)) : nullptr;
       return last_tempenv_value;
     }
   else if (shell_variables)
     {
       var = find_variable (name);
       if (var && exported_p (var))
-	return value_cell (var);
+        return value_cell (var);
     }
   else if (environ)
     {
       int i, len;
 
       /* In some cases, s5r3 invokes getenv() before main(); BSD systems
-	 using gprof also exhibit this behavior.  This means that
-	 shell_variables will be 0 when this is invoked.  We look up the
-	 variable in the real environment in that case. */
+         using gprof also exhibit this behavior.  This means that
+         shell_variables will be 0 when this is invoked.  We look up the
+         variable in the real environment in that case. */
 
       for (i = 0, len = std::strlen (name); environ[i]; i++)
-	{
-	  if ((STREQN (environ[i], name, len)) && (environ[i][len] == '='))
-	    return environ[i] + len + 1;
-	}
+        {
+          if ((STREQN (environ[i], name, len)) && (environ[i][len] == '='))
+            return environ[i] + len + 1;
+        }
     }
 
   return nullptr;
@@ -153,7 +154,7 @@ setenv (const char *name, const char *value, int rewrite)
     }
 
   var = 0;
-  v = (char *)value;	/* some compilers need explicit cast */
+  v = (char *)value; /* some compilers need explicit cast */
   /* XXX - should we worry about readonly here? */
   if (rewrite == 0)
     var = find_variable (name);
@@ -181,11 +182,11 @@ _setenv (const char *name, const char *value, int rewrite)
 /* SUSv3 says unsetenv returns int; existing implementations (BSD) disagree. */
 
 #ifdef HAVE_STD_UNSETENV
-#define UNSETENV_RETURN(N)	return(N)
-#define UNSETENV_RETTYPE	int
+#define UNSETENV_RETURN(N) return (N)
+#define UNSETENV_RETTYPE int
 #else
-#define UNSETENV_RETURN(N)	return
-#define UNSETENV_RETTYPE	void
+#define UNSETENV_RETURN(N) return
+#define UNSETENV_RETTYPE void
 #endif
 
 UNSETENV_RETTYPE
@@ -194,10 +195,10 @@ unsetenv (const char *name)
   if (name == 0 || *name == '\0' || strchr (name, '=') != 0)
     {
       errno = EINVAL;
-      UNSETENV_RETURN(-1);
+      UNSETENV_RETURN (-1);
     }
 
-  /* XXX - should we just remove the export attribute here? */
+    /* XXX - should we just remove the export attribute here? */
 #if 1
   unbind_variable (name);
 #else
@@ -208,7 +209,7 @@ unsetenv (const char *name)
     VUNSETATTR (v, att_exported);
 #endif
 
-  UNSETENV_RETURN(0);
+  UNSETENV_RETURN (0);
 }
 
 #endif /* CAN_REDEFINE_GETENV */

@@ -1,5 +1,5 @@
 /* uconvert - convert string representations of decimal numbers into whole
-	      number/fractional value pairs. */
+              number/fractional value pairs. */
 
 /* Copyright (C) 2008,2009,2020 Free Software Foundation, Inc.
 
@@ -25,28 +25,33 @@
 
 #include "posixtime.hh"
 
-#if defined (HAVE_UNISTD_H)
+#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
 
-#include <cstdio>
 #include "chartypes.hh"
+#include <cstdio>
 
-#include "shell.hh"
 #include "builtins.hh"
+#include "shell.hh"
 
 namespace bash
 {
 
-#define DECIMAL	'.'		/* XXX - should use locale */
+#define DECIMAL '.' /* XXX - should use locale */
 
-#define RETURN(x) \
-do { \
-  if (ip) *ip = ipart * mult; \
-  if (up) *up = upart; \
-  if (ep) *ep = p; \
-  return x; \
-} while (0)
+#define RETURN(x)                                                             \
+  do                                                                          \
+    {                                                                         \
+      if (ip)                                                                 \
+        *ip = ipart * mult;                                                   \
+      if (up)                                                                 \
+        *up = upart;                                                          \
+      if (ep)                                                                 \
+        *ep = p;                                                              \
+      return x;                                                               \
+    }                                                                         \
+  while (0)
 
 /*
  * An incredibly simplistic floating point converter.
@@ -60,7 +65,7 @@ static constexpr int multiplier[7] = { 1, 100000, 10000, 1000, 100, 10, 1 };
    Return 1 if value converted; 0 if invalid integer for either whole or
    fractional parts. */
 int
-uconvert(char *s, long *ip, long *up, char **ep)
+uconvert (char *s, long *ip, long *up, char **ep)
 {
   int n, mult;
   long ipart, upart;
@@ -77,17 +82,18 @@ uconvert(char *s, long *ip, long *up, char **ep)
   else
     p = s;
 
-  for ( ; p && *p; p++)
+  for (; p && *p; p++)
     {
-      if (*p == DECIMAL)		/* decimal point */
-	break;
-      if (std::isdigit(*p) == 0)
-	RETURN(0);
+      if (*p == DECIMAL) /* decimal point */
+        break;
+      if (std::isdigit (*p) == 0)
+        RETURN (0);
       ipart = (ipart * 10) + (*p - '0');
     }
 
-  if (p == nullptr || *p == 0)	/* callers ensure p can never be 0; this is to shut up clang */
-    RETURN(1);
+  if (p == nullptr || *p == 0) /* callers ensure p can never be 0; this is to
+                                  shut up clang */
+    RETURN (1);
 
   if (*p == DECIMAL)
     p++;
@@ -95,15 +101,15 @@ uconvert(char *s, long *ip, long *up, char **ep)
   /* Look for up to six digits past a decimal point. */
   for (n = 0; n < 6 && p[n]; n++)
     {
-      if (std::isdigit(p[n]) == 0)
-	{
-	  if (ep)
-	    {
-	      upart *= multiplier[n];
-	      p += n;		/* To set EP */
-	    }
-	  RETURN(0);
-	}
+      if (std::isdigit (p[n]) == 0)
+        {
+          if (ep)
+            {
+              upart *= multiplier[n];
+              p += n; /* To set EP */
+            }
+          RETURN (0);
+        }
       upart = (upart * 10) + (p[n] - '0');
     }
 
@@ -111,16 +117,16 @@ uconvert(char *s, long *ip, long *up, char **ep)
   upart *= multiplier[n];
 
   if (n == 6 && p[6] >= '5' && p[6] <= '9')
-    upart++;			/* round up 1 */
+    upart++; /* round up 1 */
 
   if (ep)
     {
       p += n;
-      while (std::isdigit(*p))
-	p++;
+      while (std::isdigit (*p))
+        p++;
     }
 
-  RETURN(1);
+  RETURN (1);
 }
 
-}  // namespace bash
+} // namespace bash

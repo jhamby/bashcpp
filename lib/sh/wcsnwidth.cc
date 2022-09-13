@@ -1,5 +1,5 @@
 /* wcsnwidth.c - compute display width of wide character string, up to max
-		 specified width, return length. */
+                 specified width, return length. */
 
 /* Copyright (C) 2012 Free Software Foundation, Inc.
 
@@ -21,7 +21,7 @@
 
 #include "config.hh"
 
-#if defined (HANDLE_MULTIBYTE)
+#if defined(HANDLE_MULTIBYTE)
 
 #include <cwchar>
 
@@ -34,7 +34,7 @@ namespace bash
    PWCS.  If the display width exceeds MAX, return the number of wide chars
    from PWCS required to display MAX characters on the screen. */
 ssize_t
-wcsnwidth(const wchar_t *pwcs, size_t n, size_t max)
+wcsnwidth (const wchar_t *pwcs, size_t n, size_t max)
 {
   wchar_t wc;
 
@@ -44,7 +44,7 @@ wcsnwidth(const wchar_t *pwcs, size_t n, size_t max)
     {
       int l = ::wcwidth (wc);
       if (l < 0)
-	return -1;
+        return -1;
       else if (l == static_cast<int> (max - len))
         return ws - pwcs;
       else if (l > static_cast<int> (max - len))
@@ -54,6 +54,6 @@ wcsnwidth(const wchar_t *pwcs, size_t n, size_t max)
   return ws - pwcs;
 }
 
-}  // namespace bash
+} // namespace bash
 
 #endif

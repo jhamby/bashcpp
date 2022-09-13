@@ -21,8 +21,8 @@
 
 /* Make sure that this is included *after* config.h! */
 
-#if !defined (_EXTERNS_H_)
-#  define _EXTERNS_H_
+#if !defined(_EXTERNS_H_)
+#define _EXTERNS_H_
 
 #include <cstring>
 #include <ctime>
@@ -30,10 +30,10 @@
 #include <string>
 
 #ifdef HAVE_STDINT_H
-#  include <stdint.h>
+#include <stdint.h>
 #endif
 #ifdef HAVE_INTTYPES_H
-#  include <inttypes.h>
+#include <inttypes.h>
 #endif
 
 #include "general.hh"
@@ -96,28 +96,32 @@ void set_working_directory (const char *);
    go into a separate include file. */
 
 /* Enum type for the flags argument to sh_modcase. */
-enum sh_modcase_flags {
-  CASE_NOOP =		     0,
-  CASE_LOWER =		0x0001,
-  CASE_UPPER =		0x0002,
-  CASE_CAPITALIZE =	0x0004,
-  CASE_UNCAP =		0x0008,
-  CASE_TOGGLE =		0x0010,
-  CASE_TOGGLEALL =	0x0020,
-  CASE_UPFIRST =	0x0040,
-  CASE_LOWFIRST =	0x0080,
+enum sh_modcase_flags
+{
+  CASE_NOOP = 0,
+  CASE_LOWER = 0x0001,
+  CASE_UPPER = 0x0002,
+  CASE_CAPITALIZE = 0x0004,
+  CASE_UNCAP = 0x0008,
+  CASE_TOGGLE = 0x0010,
+  CASE_TOGGLEALL = 0x0020,
+  CASE_UPFIRST = 0x0040,
+  CASE_LOWFIRST = 0x0080,
 
-  CASE_USEWORDS =	0x1000
+  CASE_USEWORDS = 0x1000
 };
 
-static inline sh_modcase_flags&
-operator &= (sh_modcase_flags &a, const sh_modcase_flags &b) {
-  a = static_cast<sh_modcase_flags> (static_cast<uint32_t> (a) & static_cast<uint32_t> (b));
+static inline sh_modcase_flags &
+operator&= (sh_modcase_flags &a, const sh_modcase_flags &b)
+{
+  a = static_cast<sh_modcase_flags> (static_cast<uint32_t> (a)
+                                     & static_cast<uint32_t> (b));
   return a;
 }
 
 static inline sh_modcase_flags
-operator ~ (const sh_modcase_flags &a) {
+operator~(const sh_modcase_flags &a)
+{
   return static_cast<sh_modcase_flags> (~static_cast<uint32_t> (a));
 }
 
@@ -135,12 +139,13 @@ void print_clock_t (FILE *, clock_t);
 int sh_stat (const char *, struct stat *);
 
 /* Enum for functions defined in lib/sh/fmtulong.c */
-enum fmt_flags {
-  FL_NOFLAGS =		   0,
-  FL_PREFIX =		0x01,    /* add 0x, 0X, or 0 prefix as appropriate */
-  FL_ADDBASE =		0x02,    /* add base# prefix to converted value */
-  FL_HEXUPPER =		0x04,    /* use uppercase when converting to hex */
-  FL_UNSIGNED =		0x08    /* don't add any sign */
+enum fmt_flags
+{
+  FL_NOFLAGS = 0,
+  FL_PREFIX = 0x01,   /* add 0x, 0X, or 0 prefix as appropriate */
+  FL_ADDBASE = 0x02,  /* add base# prefix to converted value */
+  FL_HEXUPPER = 0x04, /* use uppercase when converting to hex */
+  FL_UNSIGNED = 0x08  /* don't add any sign */
 };
 
 std::string fmtulong (unsigned long, int, fmt_flags);
@@ -153,12 +158,20 @@ std::string fmtumax (uint64_t, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fnxform.c */
 
-#if defined (MACOSX)
+#if defined(MACOSX)
 char *fnx_fromfs (char *, size_t);
 char *fnx_tofs (char *, size_t);
 #else
-static inline char *fnx_fromfs (char *fname, size_t) { return fname; }
-static inline char *fnx_tofs (char *fname, size_t) { return fname; }
+static inline char *
+fnx_fromfs (char *fname, size_t)
+{
+  return fname;
+}
+static inline char *
+fnx_tofs (char *fname, size_t)
+{
+  return fname;
+}
 #endif
 
 /* Declarations for functions defined in lib/sh/input_avail.c */
@@ -219,12 +232,13 @@ int getmaxgroups ();
 long getmaxchild ();
 
 /* declarations for functions defined in lib/sh/pathcanon.c */
-enum path_flags {
-  PATH_NOFLAGS =	     0,
-  PATH_CHECKDOTDOT =	0x0001,
-  PATH_CHECKEXISTS =	0x0002,
-  PATH_HARDPATH =	0x0004,
-  PATH_NOALLOC =	0x0008
+enum path_flags
+{
+  PATH_NOFLAGS = 0,
+  PATH_CHECKDOTDOT = 0x0001,
+  PATH_CHECKEXISTS = 0x0002,
+  PATH_HARDPATH = 0x0004,
+  PATH_NOALLOC = 0x0008
 };
 
 char *sh_canonpath (const char *, path_flags);
@@ -235,8 +249,8 @@ char *sh_realpath (const char *, char *);
 
 /* declarations for functions defined in lib/sh/random.c */
 int brand ();
-void sbrand (unsigned long);		/* set bash random number generator. */
-void seedrand ();			/* seed generator randomly */
+void sbrand (unsigned long); /* set bash random number generator. */
+void seedrand ();            /* seed generator randomly */
 void seedrand32 ();
 u_bits32_t get_urandom32 ();
 
@@ -250,10 +264,11 @@ int sh_eaccess (const char *, int);
 int sh_regmatch (const char *, const char *, int);
 
 /* defines for flags argument to sh_regmatch. */
-enum sh_match_flags {
-  SHMAT_NOFLAGS =	    0,
-  SHMAT_SUBEXP =	0x001,	/* save subexpressions in SH_REMATCH */
-  SHMAT_PWARN =		0x002	/* print a warning message on invalid regexp */
+enum sh_match_flags
+{
+  SHMAT_NOFLAGS = 0,
+  SHMAT_SUBEXP = 0x001, /* save subexpressions in SH_REMATCH */
+  SHMAT_PWARN = 0x002   /* print a warning message on invalid regexp */
 };
 
 /* declarations for functions defined in lib/sh/shmbchar.c */
@@ -343,12 +358,13 @@ void timeval_to_secs (struct timeval *tvp, time_t *sp, int *sfp);
 void print_timeval (FILE *fp, struct timeval *tvp);
 
 /* declarations for functions defined in lib/sh/tmpfile.c */
-enum mktmp_flags {
-  MT_NOFLAGS =		     0,
-  MT_USETMPDIR =	0x0001,
-  MT_READWRITE =	0x0002,
-  MT_USERANDOM =	0x0004,
-  MT_TEMPLATE =		0x0008
+enum mktmp_flags
+{
+  MT_NOFLAGS = 0,
+  MT_USETMPDIR = 0x0001,
+  MT_READWRITE = 0x0002,
+  MT_USERANDOM = 0x0004,
+  MT_TEMPLATE = 0x0008
 };
 
 char *sh_mktmpname (char *, int);
@@ -368,7 +384,7 @@ int u32cconv (unsigned long, char *);
 void u32reset ();
 
 /* declarations for functions defined in lib/sh/wcsnwidth.c */
-#if defined (HANDLE_MULTIBYTE)
+#if defined(HANDLE_MULTIBYTE)
 ssize_t wcsnwidth (const wchar_t *, size_t, size_t);
 #endif
 
@@ -385,23 +401,24 @@ int zmapfd (int, char **, const char *);
 bool match_pattern_char (const char *, const char *, int);
 int umatchlen (const char *, size_t);
 
-#if defined (HANDLE_MULTIBYTE)
+#if defined(HANDLE_MULTIBYTE)
 bool match_pattern_wchar (const wchar_t *, const wchar_t *, int);
 int wmatchlen (const wchar_t *, size_t);
 #endif
 
 /* Declarations for functions defined in lib/sh/dprintf.c */
-#if !defined (HAVE_DPRINTF)
-void dprintf (int, const char *, ...)  __attribute__((__format__ (printf, 2, 3)));
+#if !defined(HAVE_DPRINTF)
+void dprintf (int, const char *, ...)
+    __attribute__ ((__format__ (printf, 2, 3)));
 #endif
 
 /* Declarations for functions defined in lib/sh/fpurge.c */
 
-#if defined (NEED_FPURGE_DECL)
-#if !defined (HAVE_DECL_FPURGE)
+#if defined(NEED_FPURGE_DECL)
+#if !defined(HAVE_DECL_FPURGE)
 
-#if defined (HAVE_FPURGE)
-#  define fpurge _bash_fpurge
+#if defined(HAVE_FPURGE)
+#define fpurge _bash_fpurge
 #endif
 int fpurge (FILE *stream);
 
@@ -409,75 +426,75 @@ int fpurge (FILE *stream);
 #endif /* NEED_FPURGE_DECL */
 
 /* Declarations for functions defined in lib/sh/getcwd.c */
-#if !defined (HAVE_GETCWD)
+#if !defined(HAVE_GETCWD)
 char *getcwd (char *, size_t);
 #endif
 
 /* Declarations for  functions defined in lib/sh/oslib.c */
 
-#if !defined (HAVE_DUP2) || defined (DUP2_BROKEN)
+#if !defined(HAVE_DUP2) || defined(DUP2_BROKEN)
 int dup2 (int, int);
 #endif
 
-#if !defined (HAVE_GETDTABLESIZE)
+#if !defined(HAVE_GETDTABLESIZE)
 int getdtablesize ();
 #endif /* !HAVE_GETDTABLESIZE */
 
-#if !defined (HAVE_GETHOSTNAME)
+#if !defined(HAVE_GETHOSTNAME)
 int gethostname (char *, int);
 #endif /* !HAVE_GETHOSTNAME */
 
 /* declarations for functions defined in lib/sh/strcasecmp.c */
-#if !defined (HAVE_STRCASECMP)
+#if !defined(HAVE_STRCASECMP)
 int strncasecmp (const char *, const char *, size_t);
 int strcasecmp (const char *, const char *);
 #endif /* HAVE_STRCASECMP */
 
 /* declarations for functions defined in lib/sh/strcasestr.c */
-#if !defined (HAVE_STRCASESTR)
+#if !defined(HAVE_STRCASESTR)
 char *strcasestr (const char *, const char *);
 #endif
 
 /* declarations for functions defined in lib/sh/strchrnul.c */
-#if !defined (HAVE_STRCHRNUL)
+#if !defined(HAVE_STRCHRNUL)
 char *strchrnul (const char *, int);
 #endif
 
 /* declarations for functions defined in lib/sh/strerror.c */
-#if !defined (HAVE_STRERROR) && !defined (strerror)
+#if !defined(HAVE_STRERROR) && !defined(strerror)
 char *strerror (int);
 #endif
 
 /* declarations for functions defined in lib/sh/strftime.c */
-#if !defined (HAVE_STRFTIME) && defined (NEED_STRFTIME_DECL)
+#if !defined(HAVE_STRFTIME) && defined(NEED_STRFTIME_DECL)
 size_t strftime (char *, size_t, const char *, const struct tm *);
 #endif
 
 /* global namespace declarations for functions defined in lib/sh/strnlen.c */
-#if !defined (HAVE_STRNLEN)
+#if !defined(HAVE_STRNLEN)
 size_t strnlen (const char *, size_t);
 #endif
 
 /* declarations for functions defined in lib/sh/strpbrk.c */
-#if !defined (HAVE_STRPBRK)
+#if !defined(HAVE_STRPBRK)
 char *strpbrk (const char *, const char *);
 #endif
 
 /* declarations for functions defined in lib/sh/strimax.c */
-#if !defined (HAVE_DECL_STRTOIMAX)
+#if !defined(HAVE_DECL_STRTOIMAX)
 int64_t strtoimax (const char *, char **, int);
 #endif
 
 /* declarations for functions defined in lib/sh/strumax.c */
-#if !defined (HAVE_DECL_STRTOUMAX)
+#if !defined(HAVE_DECL_STRTOUMAX)
 uint64_t strtoumax (const char *, char **, int);
 #endif
 
 // This value was previously stored in lib/sh/zread.c.
 #ifndef ZBUFSIZ
-#  define ZBUFSIZ 4096
+#define ZBUFSIZ 4096
 #endif
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* _EXTERNS_H_ */

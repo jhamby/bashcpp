@@ -19,7 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_FLAGS_H_)
+#if !defined(_FLAGS_H_)
 #define _FLAGS_H_
 
 /* Welcome to the world of Un*x, where everything is slightly backwards. */
@@ -30,7 +30,8 @@ const char FLAG_ERROR = -1;
 const char FLAG_UNKNOWN = 0;
 
 /* The thing that we build the array of flags out of. */
-struct flags_alist {
+struct flags_alist
+{
   char name;
   char *value;
 };
@@ -56,16 +57,16 @@ extern bool want_pending_command, read_from_stdin;
 extern char lexical_scoping;
 #endif
 
-#if defined (BRACE_EXPANSION)
+#if defined(BRACE_EXPANSION)
 extern char brace_expansion;
 #endif
 
-#if defined (BANG_HISTORY)
+#if defined(BANG_HISTORY)
 extern char history_expansion;
 extern char histexp_flag;
 #endif /* BANG_HISTORY */
 
-#if defined (RESTRICTED_SHELL)
+#if defined(RESTRICTED_SHELL)
 extern char restricted;
 extern char restricted_shell;
 #endif /* RESTRICTED_SHELL */
@@ -82,6 +83,6 @@ extern void initialize_flags ();
 #endif
 
 /* A macro for efficiency. */
-#define change_flag_char(flag, on_or_off)  change_flag (flag, on_or_off)
+#define change_flag_char(flag, on_or_off) change_flag (flag, on_or_off)
 
 #endif /* _FLAGS_H_ */

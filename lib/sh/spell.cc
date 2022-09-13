@@ -20,15 +20,15 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashtypes.hh"
 #include "posixdir.hh"
 #include "posixstat.hh"
 
-#if defined (HAVE_SYS_PARAM_H)
+#if defined(HAVE_SYS_PARAM_H)
 #include <sys/param.h>
 #endif
 
@@ -59,7 +59,7 @@ static int spdist (const char *, const char *);
  *	Stores corrected name in `newname'.
  */
 int
-spname(const char *oldname, char *newname)
+spname (const char *oldname, char *newname)
 {
   char guess[PATH_MAX + 1], best[PATH_MAX + 1];
 
@@ -67,34 +67,34 @@ spname(const char *oldname, char *newname)
   char *np = newname;
   for (;;)
     {
-      while (*op == '/')    /* Skip slashes */
-	*np++ = *op++;
+      while (*op == '/') /* Skip slashes */
+        *np++ = *op++;
       *np = '\0';
 
-      if (*op == '\0')    /* Exact or corrected */
-	{
-	  /* `.' is rarely the right thing. */
-	  if (oldname[1] == '\0' && newname[1] == '\0' &&
-		oldname[0] != '.' && newname[0] == '.')
-	    return -1;
-	  return std::strcmp(oldname, newname) != 0;
-	}
+      if (*op == '\0') /* Exact or corrected */
+        {
+          /* `.' is rarely the right thing. */
+          if (oldname[1] == '\0' && newname[1] == '\0' && oldname[0] != '.'
+              && newname[0] == '.')
+            return -1;
+          return std::strcmp (oldname, newname) != 0;
+        }
 
       /* Copy next component into guess */
       char *p;
       for (p = guess; *op != '/' && *op != '\0'; op++)
-	if (p < guess + PATH_MAX)
-	  *p++ = *op;
+        if (p < guess + PATH_MAX)
+          *p++ = *op;
       *p = '\0';
 
-      if (mindist(newname, guess, best) >= 3)
-	return -1;  /* Hopeless */
+      if (mindist (newname, guess, best) >= 3)
+        return -1; /* Hopeless */
 
       /*
        *  Add to end of newname
        */
       for (p = best; (*np = *p++); np++)
-	;
+        ;
     }
 }
 
@@ -102,18 +102,18 @@ spname(const char *oldname, char *newname)
  *  Search directory for a guess
  */
 static int
-mindist(const char *dir, const char *guess, char *best)
+mindist (const char *dir, const char *guess, char *best)
 {
-  int dist = 3;    /* Worst distance */
+  int dist = 3; /* Worst distance */
   if (*dir == '\0')
     dir = ".";
 
   DIR *fd;
-  if ((fd = ::opendir(dir)) == NULL)
+  if ((fd = ::opendir (dir)) == NULL)
     return dist;
 
   struct dirent *dp;
-  while ((dp = ::readdir(fd)) != NULL)
+  while ((dp = ::readdir (fd)) != NULL)
     {
       /*
        *  Look for a better guess.  If the new guess is as
@@ -121,16 +121,16 @@ mindist(const char *dir, const char *guess, char *best)
        *  any single character match will be a better match
        *  than ".".
        */
-      int x = spdist(dp->d_name, guess);
+      int x = spdist (dp->d_name, guess);
       if (x <= dist && x != 3)
-	{
-	  std::strcpy(best, dp->d_name);
-	  dist = x;
-	  if (dist == 0)    /* Exact match */
-	    break;
-	}
+        {
+          std::strcpy (best, dp->d_name);
+          dist = x;
+          if (dist == 0) /* Exact match */
+            break;
+        }
     }
-  (void) ::closedir(fd);
+  (void)::closedir (fd);
 
   /* Don't return `.' */
   if (best[0] == '.' && best[1] == '\0')
@@ -148,12 +148,12 @@ mindist(const char *dir, const char *guess, char *best)
  *      3 otherwise
  */
 static int
-spdist(const char *cur, const char *new_)
+spdist (const char *cur, const char *new_)
 {
   while (*cur == *new_)
     {
       if (*cur == '\0')
-	return 0;    /* Exact match */
+        return 0; /* Exact match */
       cur++;
       new_++;
     }
@@ -161,20 +161,21 @@ spdist(const char *cur, const char *new_)
   if (*cur)
     {
       if (*new_)
-	{
-	  if (cur[1] && new_[1] && cur[0] == new_[1] && cur[1] == new_[0] && strcmp (cur + 2, new_ + 2) == 0)
-	    return 1;  /* Transposition */
+        {
+          if (cur[1] && new_[1] && cur[0] == new_[1] && cur[1] == new_[0]
+              && strcmp (cur + 2, new_ + 2) == 0)
+            return 1; /* Transposition */
 
-	  if (strcmp (cur + 1, new_ + 1) == 0)
-	    return 2;  /* One character mismatch */
-	}
+          if (strcmp (cur + 1, new_ + 1) == 0)
+            return 2; /* One character mismatch */
+        }
 
-      if (strcmp(&cur[1], &new_[0]) == 0)
-	return 2;    /* Extra character */
+      if (strcmp (&cur[1], &new_[0]) == 0)
+        return 2; /* Extra character */
     }
 
-  if (*new_ && strcmp(cur, new_ + 1) == 0)
-    return 2;      /* Missing character */
+  if (*new_ && strcmp (cur, new_ + 1) == 0)
+    return 2; /* Missing character */
 
   return 3;
 }
@@ -202,4 +203,4 @@ dirspell (const char *dirname)
     }
 }
 
-}  // namespace bash
+} // namespace bash

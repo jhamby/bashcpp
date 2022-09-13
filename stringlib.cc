@@ -22,21 +22,21 @@
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "chartypes.hh"
 
 #include <sstream>
 
-#include "shell.hh"
 #include "pathexp.hh"
+#include "shell.hh"
 
 #include "glob.hh"
 
-#if defined (EXTENDED_GLOB)
-#  include "strmatch.hh"
+#if defined(EXTENDED_GLOB)
+#include "strmatch.hh"
 #endif
 
 namespace bash
@@ -58,15 +58,15 @@ find_string_in_alist (char *string, StringIntAlist *alist, int flags)
 
   for (i = r = 0; alist[i].word; i++)
     {
-#if defined (EXTENDED_GLOB)
+#if defined(EXTENDED_GLOB)
       if (flags)
-	r = strmatch (alist[i].word, string, FNM_EXTMATCH) != FNM_NOMATCH;
+        r = strmatch (alist[i].word, string, FNM_EXTMATCH) != FNM_NOMATCH;
       else
 #endif
-	r = STREQ (string, alist[i].word);
+        r = STREQ (string, alist[i].word);
 
       if (r)
-	return alist[i].token;
+        return alist[i].token;
     }
   return -1;
 }
@@ -95,15 +95,15 @@ find_index_in_alist (char *string, StringIntAlist *alist, int flags)
 
   for (i = r = 0; alist[i].word; i++)
     {
-#if defined (EXTENDED_GLOB)
+#if defined(EXTENDED_GLOB)
       if (flags)
-	r = strmatch (alist[i].word, string, FNM_EXTMATCH) != FNM_NOMATCH;
+        r = strmatch (alist[i].word, string, FNM_EXTMATCH) != FNM_NOMATCH;
       else
 #endif
-	r = STREQ (string, alist[i].word);
+        r = STREQ (string, alist[i].word);
 
       if (r)
-	return i;
+        return i;
     }
 
   return -1;
@@ -126,23 +126,23 @@ strsub (const char *str, const char *pat, const char *rep, bool global)
 
   int i;
   bool repl;
-  for (i = 0, repl = true; str[i]; )
+  for (i = 0, repl = true; str[i];)
     {
       if (repl && STREQN (str + i, pat, patlen))
-	{
-	  for (const char *r = rep; *r; )	/* can rep == "" */
-	    temp += *r++;
+        {
+          for (const char *r = rep; *r;) /* can rep == "" */
+            temp += *r++;
 
-	  i += patlen ? patlen : 1;	/* avoid infinite recursion */
-	  repl = global != 0;
-	}
+          i += patlen ? patlen : 1; /* avoid infinite recursion */
+          repl = global != 0;
+        }
       else
-	{
-	  temp += str[i++];
-	}
+        {
+          temp += str[i++];
+        }
     }
 
-  return savestring(temp);
+  return savestring (temp);
 }
 
 /* Replace all instances of C in STRING with TEXT.  TEXT may be empty or
@@ -159,26 +159,27 @@ strcreplace (const char *string, int c, const char *text, bool do_glob)
   for (p = string, ind = 0; p && *p; ++ind)
     {
       if (*p == c)
-	{
-	  if (len)
-	    {
-	      if (do_glob && (glob_pattern_p (text) || std::strchr (text, '\\')))
-		{
-		  char *t = quote_globbing_chars (text);
-		  ret.append (t);
-		  delete[] t;
-		}
-	      else
-		{
-		  ret.append (text);
-		}
-	    }
-	  p++;
-	  continue;
-	}
+        {
+          if (len)
+            {
+              if (do_glob
+                  && (glob_pattern_p (text) || std::strchr (text, '\\')))
+                {
+                  char *t = quote_globbing_chars (text);
+                  ret.append (t);
+                  delete[] t;
+                }
+              else
+                {
+                  ret.append (text);
+                }
+            }
+          p++;
+          continue;
+        }
 
       if (*p == '\\' && p[1] == c)
-	p++;
+        p++;
 
       ret += *p++;
     }
@@ -194,13 +195,13 @@ strip_trailing (char *string, int len, bool newlines_only)
 {
   while (len >= 0)
     {
-      if ((newlines_only && string[len] == '\n') ||
-	  (!newlines_only && whitespace (string[len])))
-	len--;
+      if ((newlines_only && string[len] == '\n')
+          || (!newlines_only && whitespace (string[len])))
+        len--;
       else
-	break;
+        break;
     }
   string[len + 1] = '\0';
 }
 
-}  // namespace bash
+} // namespace bash

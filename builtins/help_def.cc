@@ -45,31 +45,31 @@
 
 #include "config.hh"
 
-#if defined (HELP_BUILTIN)
+#if defined(HELP_BUILTIN)
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "filecntl.hh"
 
 #include "bashintl.hh"
 
-#include "shell.hh"
+#include "bashgetopt.hh"
 #include "builtins.hh"
+#include "common.hh"
 #include "execute_cmd.hh"
 #include "pathexp.hh"
-#include "common.hh"
-#include "bashgetopt.hh"
+#include "shell.hh"
 
-#include "strmatch.hh"
 #include "glob.hh"
+#include "strmatch.hh"
 
 namespace bash
 {
 
-extern const char * const bash_copyright;
-extern const char * const bash_license;
+extern const char *const bash_copyright;
+extern const char *const bash_license;
 
 static void show_builtin_command_help (void);
 static int open_helpfile (const char *);
@@ -92,21 +92,21 @@ Shell::help_builtin (WORD_LIST *list)
   while ((i = internal_getopt (list, "dms")) != -1)
     {
       switch (i)
-	{
-	case 'd':
-	  dflag = 1;
-	  break;
-	case 'm':
-	  mflag = 1;
-	  break;
-	case 's':
-	  sflag = 1;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+        case 'd':
+          dflag = 1;
+          break;
+        case 'm':
+          mflag = 1;
+          break;
+        case 's':
+          sflag = 1;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
   list = loptend;
 
@@ -121,9 +121,11 @@ Shell::help_builtin (WORD_LIST *list)
 
   if (glob_pattern_p (list->word->word) == 1)
     {
-      printf ("%s", ngettext ("Shell commands matching keyword `", "Shell commands matching keywords `", (list->next ? 2 : 1)));
+      printf ("%s", ngettext ("Shell commands matching keyword `",
+                              "Shell commands matching keywords `",
+                              (list->next ? 2 : 1)));
       print_word_list (list, ", ");
-      printf ("%s", _("'\n\n"));
+      printf ("%s", _ ("'\n\n"));
     }
 
   for (match_found = 0, pattern = ""; list; list = (WORD_LIST *)list->next)
@@ -132,48 +134,51 @@ Shell::help_builtin (WORD_LIST *list)
       plen = strlen (pattern);
 
       for (pass = 1, this_found = 0; pass < 3; pass++)
-	{
-	  for (i = 0; (name = shell_builtins[i].name); i++)
-	    {
-	      QUIT;
+        {
+          for (i = 0; (name = shell_builtins[i].name); i++)
+            {
+              QUIT;
 
-	      /* First pass: look for exact string or pattern matches.
-		 Second pass: look for prefix matches like bash-4.2 */
-	      if (pass == 1)
-	        m = (strcmp (pattern, name) == 0) ||
-		    (strmatch (pattern, name, FNMATCH_EXTFLAG) != FNM_NOMATCH);
-	      else
-		m = strncmp (pattern, name, plen) == 0;
+              /* First pass: look for exact string or pattern matches.
+                 Second pass: look for prefix matches like bash-4.2 */
+              if (pass == 1)
+                m = (strcmp (pattern, name) == 0)
+                    || (strmatch (pattern, name, FNMATCH_EXTFLAG)
+                        != FNM_NOMATCH);
+              else
+                m = strncmp (pattern, name, plen) == 0;
 
-	      if (m)
-	        {
-	          this_found = 1;
-	          match_found++;
-	          if (dflag)
-		    {
-		      show_desc (name, i);
-		      continue;
-		    }
-	          else if (mflag)
-		    {
-		      show_manpage (name, i);
-		      continue;
-		    }
+              if (m)
+                {
+                  this_found = 1;
+                  match_found++;
+                  if (dflag)
+                    {
+                      show_desc (name, i);
+                      continue;
+                    }
+                  else if (mflag)
+                    {
+                      show_manpage (name, i);
+                      continue;
+                    }
 
-	          printf ("%s: %s\n", name, _(shell_builtins[i].short_doc));
+                  printf ("%s: %s\n", name, _ (shell_builtins[i].short_doc));
 
-	          if (sflag == 0)
-		    show_longdoc (i);
-	        }
-	    }
-	  if (pass == 1 && this_found == 1)
-	    break;
-	}
+                  if (sflag == 0)
+                    show_longdoc (i);
+                }
+            }
+          if (pass == 1 && this_found == 1)
+            break;
+        }
     }
 
   if (match_found == 0)
     {
-      builtin_error (_("no help topics match `%s'.  Try `help help' or `man -k %s' or `info %s'."), pattern, pattern, pattern);
+      builtin_error (_ ("no help topics match `%s'.  Try `help help' or `man "
+                        "-k %s' or `info %s'."),
+                     pattern, pattern, pattern);
       return EXECUTION_FAILURE;
     }
 
@@ -195,7 +200,7 @@ builtin_help ()
 
   ind = (int)d;
 
-  printf ("%s: %s\n", this_command_name, _(shell_builtins[ind].short_doc));
+  printf ("%s: %s\n", this_command_name, _ (shell_builtins[ind].short_doc));
   show_longdoc (ind);
 }
 
@@ -207,7 +212,7 @@ open_helpfile (const char *name)
   fd = open (name, O_RDONLY);
   if (fd == -1)
     {
-      builtin_error (_("%s: cannot open: %s"), name, strerror (errno));
+      builtin_error (_ ("%s: cannot open: %s"), name, strerror (errno));
       return -1;
     }
   return fd;
@@ -225,19 +230,19 @@ show_longdoc (int i)
     {
       int fd = open_helpfile (doc[0]);
       if (fd < 0)
-	return;
+        return;
       zcatfd (fd, 1, doc[0]);
       close (fd);
     }
   else if (doc)
     for (int j = 0; doc[j]; j++)
-      printf ("%*s%s\n", BASE_INDENT, " ", _(doc[j]));
+      printf ("%*s%s\n", BASE_INDENT, " ", _ (doc[j]));
 }
 
 static void
 show_desc (const char *name, int i)
 {
-  const char * const* doc;
+  const char *const *doc;
   char *line;
   int fd, usefile;
 
@@ -248,7 +253,7 @@ show_desc (const char *name, int i)
     {
       fd = open_helpfile (doc[0]);
       if (fd < 0)
-	return;
+        return;
       int r = zmapfd (fd, &line, doc[0]);
       close (fd);
       /* XXX - handle errors if zmapfd returns < 0 */
@@ -261,7 +266,7 @@ show_desc (const char *name, int i)
     {
       putchar (line[j]);
       if (line[j] == '\n')
-	break;
+        break;
     }
 
   fflush (stdout);
@@ -284,12 +289,12 @@ show_manpage (const char *name, int i)
     {
       fd = open_helpfile (doc[0]);
       if (fd < 0)
-	return;
+        return;
       zmapfd (fd, &line, doc[0]);
       close (fd);
     }
   else
-    line = (char *)(doc ? _(doc[0]) : NULL);
+    line = (char *)(doc ? _ (doc[0]) : NULL);
 
   /* NAME */
   printf ("NAME\n");
@@ -298,29 +303,29 @@ show_manpage (const char *name, int i)
     {
       putchar (line[j]);
       if (line[j] == '\n')
-	break;
+        break;
     }
   printf ("\n");
 
   /* SYNOPSIS */
   printf ("SYNOPSIS\n");
-  printf ("%*s%s\n\n", BASE_INDENT, " ", _(shell_builtins[i].short_doc));
+  printf ("%*s%s\n\n", BASE_INDENT, " ", _ (shell_builtins[i].short_doc));
 
   /* DESCRIPTION */
   printf ("DESCRIPTION\n");
   if (usefile == 0)
     {
       for (int j = 0; doc[j]; j++)
-        printf ("%*s%s\n", BASE_INDENT, " ", _(doc[j]));
+        printf ("%*s%s\n", BASE_INDENT, " ", _ (doc[j]));
     }
   else
     {
       for (int j = 0; line && line[j]; j++)
-	{
-	  putchar (line[j]);
-	  if (line[j] == '\n')
-	    printf ("%*s", BASE_INDENT, " ");
-	}
+        {
+          putchar (line[j]);
+          if (line[j] == '\n')
+            printf ("%*s", BASE_INDENT, " ");
+        }
     }
   putchar ('\n');
 
@@ -333,9 +338,9 @@ show_manpage (const char *name, int i)
   printf ("%*s", BASE_INDENT, " ");
   show_shell_version (0);
   printf ("%*s", BASE_INDENT, " ");
-  printf ("%s\n", _(bash_copyright));
+  printf ("%s\n", _ (bash_copyright));
   printf ("%*s", BASE_INDENT, " ");
-  printf ("%s\n", _(bash_license));
+  printf ("%s\n", _ (bash_license));
 
   fflush (stdout);
   if (usefile)
@@ -346,14 +351,14 @@ static void
 dispcolumn (int i, char *buf, size_t bufsize, int width, int height)
 {
   /* first column */
-  const char *helpdoc = _(shell_builtins[i].short_doc);
+  const char *helpdoc = _ (shell_builtins[i].short_doc);
 
   buf[0] = (shell_builtins[i].flags & BUILTIN_ENABLED) ? ' ' : '*';
   strncpy (buf + 1, helpdoc, width - 2);
-  buf[width - 2] = '>';		/* indicate truncation */
+  buf[width - 2] = '>'; /* indicate truncation */
   buf[width - 1] = '\0';
   printf ("%s", buf);
-  if (((i << 1) >= num_shell_builtins) || (i+height >= num_shell_builtins))
+  if (((i << 1) >= num_shell_builtins) || (i + height >= num_shell_builtins))
     {
       printf ("\n");
       return;
@@ -365,22 +370,22 @@ dispcolumn (int i, char *buf, size_t bufsize, int width, int height)
     putc (' ', stdout);
 
   /* second column */
-  helpdoc = _(shell_builtins[i+height].short_doc);
+  helpdoc = _ (shell_builtins[i + height].short_doc);
 
-  buf[0] = (shell_builtins[i+height].flags & BUILTIN_ENABLED) ? ' ' : '*';
+  buf[0] = (shell_builtins[i + height].flags & BUILTIN_ENABLED) ? ' ' : '*';
   strncpy (buf + 1, helpdoc, width - 3);
-  buf[width - 3] = '>';		/* indicate truncation */
+  buf[width - 3] = '>'; /* indicate truncation */
   buf[width - 2] = '\0';
 
   printf ("%s\n", buf);
 }
 
-#if defined (HANDLE_MULTIBYTE)
+#if defined(HANDLE_MULTIBYTE)
 static void
 wdispcolumn (int i, char *buf, size_t bufsize, int width, int height)
 {
   /* first column */
-  const char *helpdoc = _(shell_builtins[i].short_doc);
+  const char *helpdoc = _ (shell_builtins[i].short_doc);
 
   wchar_t *wcstr = 0;
   size_t slen = mbstowcs ((wchar_t *)0, helpdoc, 0);
@@ -394,8 +399,8 @@ wdispcolumn (int i, char *buf, size_t bufsize, int width, int height)
   if (slen >= width)
     slen = width - 2;
   wcstr = (wchar_t *)xmalloc (sizeof (wchar_t) * (width + 2));
-  size_t n = mbstowcs (wcstr+1, helpdoc, slen + 1);
-  wcstr[n+1] = L'\0';
+  size_t n = mbstowcs (wcstr + 1, helpdoc, slen + 1);
+  wcstr[n + 1] = L'\0';
 
   /* Turn tabs and newlines into spaces for column display, since wcwidth
      returns -1 for them */
@@ -404,20 +409,20 @@ wdispcolumn (int i, char *buf, size_t bufsize, int width, int height)
       wcstr[j] = L' ';
 
   /* dispchars == number of characters that will be displayed */
-  int dispchars = wcsnwidth (wcstr+1, slen, width - 2);
+  int dispchars = wcsnwidth (wcstr + 1, slen, width - 2);
   /* dispcols == number of columns required to display DISPCHARS */
-  int dispcols = wcswidth (wcstr+1, dispchars) + 1;	/* +1 for ' ' or '*' */
+  int dispcols = wcswidth (wcstr + 1, dispchars) + 1; /* +1 for ' ' or '*' */
 
   wcstr[0] = (shell_builtins[i].flags & BUILTIN_ENABLED) ? L' ' : L'*';
 
-  if (dispcols >= width-2)
+  if (dispcols >= width - 2)
     {
-      wcstr[dispchars] = L'>';		/* indicate truncation */
-      wcstr[dispchars+1] = L'\0';
+      wcstr[dispchars] = L'>'; /* indicate truncation */
+      wcstr[dispchars + 1] = L'\0';
     }
 
   printf ("%ls", wcstr);
-  if (((i << 1) >= num_shell_builtins) || (i+height >= num_shell_builtins))
+  if (((i << 1) >= num_shell_builtins) || (i + height >= num_shell_builtins))
     {
       printf ("\n");
       free (wcstr);
@@ -429,12 +434,14 @@ wdispcolumn (int i, char *buf, size_t bufsize, int width, int height)
     putc (' ', stdout);
 
   /* second column */
-  helpdoc = _(shell_builtins[i+height].short_doc);
+  helpdoc = _ (shell_builtins[i + height].short_doc);
   slen = mbstowcs ((wchar_t *)0, helpdoc, 0);
   if (slen == (size_t)-1)
     {
       /* for now */
-      printf ("%c%s\n", (shell_builtins[i+height].flags & BUILTIN_ENABLED) ? ' ' : '*', helpdoc);
+      printf ("%c%s\n",
+              (shell_builtins[i + height].flags & BUILTIN_ENABLED) ? ' ' : '*',
+              helpdoc);
       free (wcstr);
       return;
     }
@@ -442,8 +449,8 @@ wdispcolumn (int i, char *buf, size_t bufsize, int width, int height)
   /* Reuse wcstr since it is already width wide chars long */
   if (slen >= width)
     slen = width - 2;
-  n = mbstowcs (wcstr+1, helpdoc, slen + 1);
-  wcstr[n+1] = L'\0';		/* make sure null-terminated */
+  n = mbstowcs (wcstr + 1, helpdoc, slen + 1);
+  wcstr[n + 1] = L'\0'; /* make sure null-terminated */
 
   /* Turn tabs and newlines into spaces for column display */
   for (int j = 1; j < n; j++)
@@ -451,17 +458,18 @@ wdispcolumn (int i, char *buf, size_t bufsize, int width, int height)
       wcstr[j] = L' ';
 
   /* dispchars == number of characters that will be displayed */
-  dispchars = wcsnwidth (wcstr+1, slen, width - 2);
-  dispcols = wcswidth (wcstr+1, dispchars) + 1;	/* +1 for ' ' or '*' */
+  dispchars = wcsnwidth (wcstr + 1, slen, width - 2);
+  dispcols = wcswidth (wcstr + 1, dispchars) + 1; /* +1 for ' ' or '*' */
 
-  wcstr[0] = (shell_builtins[i+height].flags & BUILTIN_ENABLED) ? L' ' : L'*';
+  wcstr[0]
+      = (shell_builtins[i + height].flags & BUILTIN_ENABLED) ? L' ' : L'*';
 
   /* The dispchars-1 is there for terminals that behave strangely when you
      have \n in the nth column for terminal width n; this is what bash-4.3
      did. */
   if (dispcols >= width - 2)
     {
-      wcstr[dispchars-1] = L'>';		/* indicate truncation */
+      wcstr[dispchars - 1] = L'>'; /* indicate truncation */
       wcstr[dispchars] = L'\0';
     }
 
@@ -474,8 +482,8 @@ wdispcolumn (int i, char *buf, size_t bufsize, int width, int height)
 static void
 show_builtin_command_help ()
 {
-  printf (
-_("These shell commands are defined internally.  Type `help' to see this list.\n\
+  printf (_ (
+      "These shell commands are defined internally.  Type `help' to see this list.\n\
 Type `help name' to find out more about the function `name'.\n\
 Use `info bash' to find out more about the shell in general.\n\
 Use `man -k' or `info' to find out more about commands not in this list.\n\
@@ -491,21 +499,21 @@ A star (*) next to a name means that the command is disabled.\n\
     width = sizeof (blurb);
   if (width <= 3)
     width = 40;
-  int height = (num_shell_builtins + 1) / 2;	/* number of rows */
+  int height = (num_shell_builtins + 1) / 2; /* number of rows */
 
   for (int i = 0; i < height; i++)
     {
       QUIT;
 
-#if defined (HANDLE_MULTIBYTE)
+#if defined(HANDLE_MULTIBYTE)
       if (MB_CUR_MAX > 1)
-	wdispcolumn (i, blurb, sizeof (blurb), width, height);
+        wdispcolumn (i, blurb, sizeof (blurb), width, height);
       else
 #endif
-	dispcolumn (i, blurb, sizeof (blurb), width, height);
+        dispcolumn (i, blurb, sizeof (blurb), width, height);
     }
 }
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* HELP_BUILTIN */

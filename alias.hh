@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_ALIAS_H_)
+#if !defined(_ALIAS_H_)
 #define _ALIAS_H_
 
 #include "hashlib.hh"
@@ -26,15 +26,16 @@
 namespace bash
 {
 
-struct alias_t {
+struct alias_t
+{
   char *name;
   char *value;
   char flags;
 };
 
 /* Values for `flags' member of struct alias. */
-#define AL_EXPANDNEXT		0x1
-#define AL_BEINGEXPANDED	0x2
+#define AL_EXPANDNEXT 0x1
+#define AL_BEINGEXPANDED 0x2
 
 /* The list of known aliases. */
 extern HASH_TABLE *aliases;
@@ -71,6 +72,6 @@ extern char *alias_expand (const char *);
 /* Helper definition for the parser */
 extern void clear_string_list_expander (alias_t *);
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* _ALIAS_H_ */

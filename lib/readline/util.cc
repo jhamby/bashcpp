@@ -22,11 +22,11 @@
 #include "readline.hh"
 #include "rlprivate.hh"
 
-#include <sys/types.h>
 #include <fcntl.h>
+#include <sys/types.h>
 
-#if defined (TIOCSTAT_IN_SYS_IOCTL)
-#  include <sys/ioctl.h>
+#if defined(TIOCSTAT_IN_SYS_IOCTL)
+#include <sys/ioctl.h>
 #endif /* TIOCSTAT_IN_SYS_IOCTL */
 
 namespace readline
@@ -53,7 +53,7 @@ Readline::_rl_abort_internal ()
 
   _rl_kill_kbd_macro ();
 
-  RL_UNSETSTATE (RL_STATE_MULTIKEY);	/* XXX */
+  RL_UNSETSTATE (RL_STATE_MULTIKEY); /* XXX */
 
   rl_last_func = nullptr;
 
@@ -73,14 +73,14 @@ Readline::_rl_null_function (int, int)
 }
 
 int
-#if defined (TIOCSTAT)
+#if defined(TIOCSTAT)
 Readline::rl_tty_status (int count, int key)
 #else
 Readline::rl_tty_status (int, int)
 #endif
 {
-#if defined (TIOCSTAT)
-  ::ioctl (1, TIOCSTAT, reinterpret_cast<char*> (0));
+#if defined(TIOCSTAT)
+  ::ioctl (1, TIOCSTAT, reinterpret_cast<char *> (0));
   rl_refresh_line (count, key);
 #else
   rl_ding ();
@@ -127,7 +127,8 @@ Readline::rl_tilde_expand (int, int)
   end = start;
   do
     end++;
-  while (whitespace (rl_line_buffer[end]) == 0 && end < rl_line_buffer.size ());
+  while (whitespace (rl_line_buffer[end]) == 0
+         && end < rl_line_buffer.size ());
 
   if (whitespace (rl_line_buffer[end]) || end >= rl_line_buffer.size ())
     end--;
@@ -183,4 +184,4 @@ Readline::_rl_errmsg (const char *format, ...)
   va_end (args);
 }
 
-}  // namespace readline
+} // namespace readline

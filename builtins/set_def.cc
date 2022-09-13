@@ -22,21 +22,21 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "parser.hh"
-#include "flags.hh"
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "common.hh"
+#include "flags.hh"
+#include "parser.hh"
+#include "shell.hh"
 
-#if defined (READLINE)
-#  include "input.hh"
-#  include "readline.hh"
+#if defined(READLINE)
+#include "input.hh"
+#include "readline.hh"
 #endif
 
 // $BUILTIN set
@@ -61,31 +61,31 @@
 //       Set the variable corresponding to option-name:
 //           allexport    same as -a
 //           braceexpand  same as -B
-#if defined (READLINE)
+#if defined(READLINE)
 //           emacs        use an emacs-style line editing interface
 #endif /* READLINE */
 //           errexit      same as -e
 //           errtrace     same as -E
 //           functrace    same as -T
 //           hashall      same as -h
-#if defined (BANG_HISTORY)
+#if defined(BANG_HISTORY)
 //           histexpand   same as -H
 #endif /* BANG_HISTORY */
-#if defined (HISTORY)
+#if defined(HISTORY)
 //           history      enable command history
 #endif
 //           ignoreeof    the shell will not exit upon reading EOF
 //           interactive-comments
 //                        allow comments to appear in interactive commands
 //           keyword      same as -k
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 //           monitor      same as -m
 #endif
 //           noclobber    same as -C
 //           noexec       same as -n
 //           noglob       same as -f
 //           nolog        currently accepted but ignored
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 //           notify       same as -b
 #endif
 //           nounset      same as -u
@@ -99,7 +99,7 @@
 //                        match the standard
 //           privileged   same as -p
 //           verbose      same as -v
-#if defined (READLINE)
+#if defined(READLINE)
 //           vi           use a vi-style line editing interface
 #endif /* READLINE */
 //           xtrace       same as -x
@@ -111,13 +111,13 @@
 //   -u  Treat unset variables as an error when substituting.
 //   -v  Print shell input lines as they are read.
 //   -x  Print commands and their arguments as they are executed.
-#if defined (BRACE_EXPANSION)
+#if defined(BRACE_EXPANSION)
 //   -B  the shell will perform brace expansion
 #endif /* BRACE_EXPANSION */
 //   -C  If set, disallow existing regular files to be overwritten
 //       by redirection of output.
 //   -E  If set, the ERR trap is inherited by shell functions.
-#if defined (BANG_HISTORY)
+#if defined(BANG_HISTORY)
 //   -H  Enable ! style history substitution.  This flag is on
 //       by default when the shell is interactive.
 #endif /* BANG_HISTORY */
@@ -154,17 +154,17 @@ static void print_all_shell_variables (void);
 static char set_ignoreeof (char, const char *);
 static char set_posix_mode (char, const char *);
 
-#if defined (READLINE)
+#if defined(READLINE)
 static char set_edit_mode (char, const char *);
 static char get_edit_mode (const char *);
 #endif
 
-#if defined (HISTORY)
+#if defined(HISTORY)
 static char bash_set_history (char, const char *);
 #endif
 
-static const char * const on = "on";
-static const char * const off = "off";
+static const char *const on = "on";
+static const char *const off = "off";
 
 #if 0
 static int previous_option_value;
@@ -175,68 +175,69 @@ static int previous_option_value;
    dynamically generate values.  If you add a new variable name here
    that doesn't have a corresponding single-character option letter, make
    sure to set the value appropriately in reset_shell_options. */
-const struct {
+const struct
+{
   const char *name;
   int letter;
   char *variable;
   setopt_set_func_t *set_func;
   setopt_get_func_t *get_func;
 } o_options[] = {
-  { "allexport",  'a', NULL, NULL, NULL },
-#if defined (BRACE_EXPANSION)
-  { "braceexpand",'B', NULL, NULL, NULL  },
+  { "allexport", 'a', NULL, NULL, NULL },
+#if defined(BRACE_EXPANSION)
+  { "braceexpand", 'B', NULL, NULL, NULL },
 #endif
-#if defined (READLINE)
-  { "emacs",     '\0', NULL, set_edit_mode, get_edit_mode },
+#if defined(READLINE)
+  { "emacs", '\0', NULL, set_edit_mode, get_edit_mode },
 #endif
-  { "errexit",	  'e', NULL, NULL, NULL  },
-  { "errtrace",	  'E', NULL, NULL, NULL  },
-  { "functrace",  'T', NULL, NULL, NULL  },
-  { "hashall",    'h', NULL, NULL, NULL  },
-#if defined (BANG_HISTORY)
-  { "histexpand", 'H', NULL, NULL, NULL  },
+  { "errexit", 'e', NULL, NULL, NULL },
+  { "errtrace", 'E', NULL, NULL, NULL },
+  { "functrace", 'T', NULL, NULL, NULL },
+  { "hashall", 'h', NULL, NULL, NULL },
+#if defined(BANG_HISTORY)
+  { "histexpand", 'H', NULL, NULL, NULL },
 #endif /* BANG_HISTORY */
-#if defined (HISTORY)
-  { "history",   '\0', &enable_history_list, bash_set_history, NULL },
+#if defined(HISTORY)
+  { "history", '\0', &enable_history_list, bash_set_history, NULL },
 #endif
   { "ignoreeof", '\0', &ignoreeof, set_ignoreeof, NULL },
   { "interactive-comments", '\0', &interactive_comments, NULL, NULL },
-  { "keyword",    'k', NULL, NULL, NULL  },
-#if defined (JOB_CONTROL)
-  { "monitor",	  'm', NULL, NULL, NULL  },
+  { "keyword", 'k', NULL, NULL, NULL },
+#if defined(JOB_CONTROL)
+  { "monitor", 'm', NULL, NULL, NULL },
 #endif
-  { "noclobber",  'C', NULL, NULL, NULL  },
-  { "noexec",	  'n', NULL, NULL, NULL  },
-  { "noglob",	  'f', NULL, NULL, NULL  },
-#if defined (HISTORY)
-  { "nolog",     '\0', &dont_save_function_defs, NULL, NULL },
+  { "noclobber", 'C', NULL, NULL, NULL },
+  { "noexec", 'n', NULL, NULL, NULL },
+  { "noglob", 'f', NULL, NULL, NULL },
+#if defined(HISTORY)
+  { "nolog", '\0', &dont_save_function_defs, NULL, NULL },
 #endif
-#if defined (JOB_CONTROL)
-  { "notify",	  'b', NULL, NULL, NULL  },
+#if defined(JOB_CONTROL)
+  { "notify", 'b', NULL, NULL, NULL },
 #endif /* JOB_CONTROL */
-  { "nounset",	  'u', NULL, NULL, NULL  },
-  { "onecmd",	  't', NULL, NULL, NULL },
-  { "physical",   'P', NULL, NULL, NULL  },
-  { "pipefail",  '\0', &pipefail_opt, NULL, NULL  },
-  { "posix",     '\0', &posixly_correct, set_posix_mode, NULL },
-  { "privileged", 'p', NULL, NULL, NULL  },
-  { "verbose",	  'v', NULL, NULL, NULL  },
-#if defined (READLINE)
-  { "vi",        '\0', NULL, set_edit_mode, get_edit_mode },
+  { "nounset", 'u', NULL, NULL, NULL },
+  { "onecmd", 't', NULL, NULL, NULL },
+  { "physical", 'P', NULL, NULL, NULL },
+  { "pipefail", '\0', &pipefail_opt, NULL, NULL },
+  { "posix", '\0', &posixly_correct, set_posix_mode, NULL },
+  { "privileged", 'p', NULL, NULL, NULL },
+  { "verbose", 'v', NULL, NULL, NULL },
+#if defined(READLINE)
+  { "vi", '\0', NULL, set_edit_mode, get_edit_mode },
 #endif
-  { "xtrace",	  'x', NULL, NULL, NULL  },
-  {NULL,	   0 , NULL, NULL, NULL },
+  { "xtrace", 'x', NULL, NULL, NULL },
+  { NULL, 0, NULL, NULL, NULL },
 };
 
-#define N_O_OPTIONS	(sizeof (o_options) / sizeof (o_options[0]))
+#define N_O_OPTIONS (sizeof (o_options) / sizeof (o_options[0]))
 
-#define GET_BINARY_O_OPTION_VALUE(i, name) \
-  ((o_options[i].get_func) ? (*o_options[i].get_func) (name) \
-			   : (*o_options[i].variable))
+#define GET_BINARY_O_OPTION_VALUE(i, name)                                    \
+  ((o_options[i].get_func) ? (*o_options[i].get_func) (name)                  \
+                           : (*o_options[i].variable))
 
-#define SET_BINARY_O_OPTION_VALUE(i, onoff, name) \
-  ((o_options[i].set_func) ? (*o_options[i].set_func) (onoff, name) \
-			   : (*o_options[i].variable = (onoff == FLAG_ON)))
+#define SET_BINARY_O_OPTION_VALUE(i, onoff, name)                             \
+  ((o_options[i].set_func) ? (*o_options[i].set_func) (onoff, name)           \
+                           : (*o_options[i].variable = (onoff == FLAG_ON)))
 
 static int
 find_minus_o_option (const char *name)
@@ -252,7 +253,7 @@ find_minus_o_option (const char *name)
 char
 minus_o_option_value (const char *name)
 {
-  int	i;
+  int i;
 
   i = find_minus_o_option (name);
   if (i < 0)
@@ -284,20 +285,20 @@ list_minus_o_opts (int mode, int reusable)
   for (int i = 0; o_options[i].name; i++)
     {
       if (o_options[i].letter)
-	{
-	  char value = 0;
-	  char *on_or_off = find_flag (o_options[i].letter);
-	  if (on_or_off == FLAG_UNKNOWN)
-	    on_or_off = &value;
-	  if (mode == -1 || mode == *on_or_off)
-	    print_minus_o_option (o_options[i].name, *on_or_off, reusable);
-	}
+        {
+          char value = 0;
+          char *on_or_off = find_flag (o_options[i].letter);
+          if (on_or_off == FLAG_UNKNOWN)
+            on_or_off = &value;
+          if (mode == -1 || mode == *on_or_off)
+            print_minus_o_option (o_options[i].name, *on_or_off, reusable);
+        }
       else
-	{
-	  char value = GET_BINARY_O_OPTION_VALUE (i, o_options[i].name);
-	  if (mode == -1 || mode == value)
-	    print_minus_o_option (o_options[i].name, value, reusable);
-	}
+        {
+          char value = GET_BINARY_O_OPTION_VALUE (i, o_options[i].name);
+          if (mode == -1 || mode == value)
+            print_minus_o_option (o_options[i].name, value, reusable);
+        }
     }
 }
 
@@ -320,22 +321,22 @@ get_current_options ()
   char *temp;
   int i, posixopts;
 
-  posixopts = num_posix_options ();	/* shopts modified by posix mode */
+  posixopts = num_posix_options (); /* shopts modified by posix mode */
   /* Make the buffer big enough to hold the set -o options and the shopt
      options modified by posix mode. */
   temp = (char *)xmalloc (1 + N_O_OPTIONS + posixopts);
   for (i = 0; o_options[i].name; i++)
     {
       if (o_options[i].letter)
-	temp[i] = *(find_flag (o_options[i].letter));
+        temp[i] = *(find_flag (o_options[i].letter));
       else
-	temp[i] = GET_BINARY_O_OPTION_VALUE (i, o_options[i].name);
+        temp[i] = GET_BINARY_O_OPTION_VALUE (i, o_options[i].name);
     }
 
   /* Add the shell options that are modified by posix mode to the end of the
      bitmap. They will be handled in set_current_options() */
-  get_posix_options (temp+i);
-  temp[i+posixopts] = '\0';
+  get_posix_options (temp + i);
+  temp[i + posixopts] = '\0';
   return temp;
 }
 
@@ -350,24 +351,24 @@ set_current_options (const char *bitmap)
     {
       char v = bitmap[i] ? FLAG_ON : FLAG_OFF;
       if (o_options[i].letter)
-	{
-	  /* We should not get FLAG_UNKNOWN here */
-	  char *on_or_off = find_flag (o_options[i].letter);
-	  char cv = *on_or_off ? FLAG_ON : FLAG_OFF;
-	  if (v != cv)
-	    change_flag (o_options[i].letter, v);
-	}
+        {
+          /* We should not get FLAG_UNKNOWN here */
+          char *on_or_off = find_flag (o_options[i].letter);
+          char cv = *on_or_off ? FLAG_ON : FLAG_OFF;
+          if (v != cv)
+            change_flag (o_options[i].letter, v);
+        }
       else
-	{
-	  char cv = GET_BINARY_O_OPTION_VALUE (i, o_options[i].name);
-	  cv = cv ? FLAG_ON : FLAG_OFF;
-	  if (v != cv)
-	    SET_BINARY_O_OPTION_VALUE (i, v, o_options[i].name);
-	}
+        {
+          char cv = GET_BINARY_O_OPTION_VALUE (i, o_options[i].name);
+          cv = cv ? FLAG_ON : FLAG_OFF;
+          if (v != cv)
+            SET_BINARY_O_OPTION_VALUE (i, v, o_options[i].name);
+        }
     }
 
   /* Now reset the variables changed by posix mode */
-  set_posix_options (bitmap+i);
+  set_posix_options (bitmap + i);
 }
 
 static char
@@ -387,8 +388,8 @@ static char
 set_posix_mode (char on_or_off, const char *option_name)
 {
   /* short-circuit on no-op */
-  if ((on_or_off == FLAG_ON && posixly_correct) ||
-      (on_or_off == FLAG_OFF && posixly_correct == 0))
+  if ((on_or_off == FLAG_ON && posixly_correct)
+      || (on_or_off == FLAG_OFF && posixly_correct == 0))
     return 0;
 
   posixly_correct = (on_or_off == FLAG_ON);
@@ -400,7 +401,7 @@ set_posix_mode (char on_or_off, const char *option_name)
   return 0;
 }
 
-#if defined (READLINE)
+#if defined(READLINE)
 /* Magic.  This code `knows' how readline handles rl_editing_mode. */
 static char
 set_edit_mode (char on_or_off, const char *option_name)
@@ -410,18 +411,19 @@ set_edit_mode (char on_or_off, const char *option_name)
       rl_variable_bind ("editing-mode", option_name);
 
       if (interactive)
-	with_input_from_stdin ();
+        with_input_from_stdin ();
       no_line_editing = false;
     }
   else
     {
       bool isemacs = rl_editing_mode == 1;
-      if ((isemacs && *option_name == 'e') || (!isemacs && *option_name == 'v'))
-	{
-	  if (interactive)
-	    with_input_from_stream (stdin, "stdin");
-	  no_line_editing = true;
-	}
+      if ((isemacs && *option_name == 'e')
+          || (!isemacs && *option_name == 'v'))
+        {
+          if (interactive)
+            with_input_from_stream (stdin, "stdin");
+          no_line_editing = true;
+        }
     }
   return !no_line_editing;
 }
@@ -430,11 +432,11 @@ static char
 get_edit_mode (const char *name)
 {
   return (*name == 'e' ? no_line_editing == 0 && rl_editing_mode == 1
-		       : no_line_editing == 0 && rl_editing_mode == 0);
+                       : no_line_editing == 0 && rl_editing_mode == 0);
 }
 #endif /* READLINE */
 
-#if defined (HISTORY)
+#if defined(HISTORY)
 static char
 bash_set_history (char on_or_off, const char *option_name)
 {
@@ -443,7 +445,7 @@ bash_set_history (char on_or_off, const char *option_name)
       enable_history_list = 1;
       bash_history_enable ();
       if (history_lines_this_session == 0)
-	load_history ();
+        load_history ();
     }
   else
     {
@@ -474,13 +476,15 @@ set_minus_o_option (int on_or_off, const char *option_name)
     }
   else
     {
-      if ((previous_option_value = change_flag (o_options[i].letter, on_or_off)) == FLAG_ERROR)
-	{
-	  sh_invalidoptname (option_name);
-	  return EXECUTION_FAILURE;
-	}
+      if ((previous_option_value
+           = change_flag (o_options[i].letter, on_or_off))
+          == FLAG_ERROR)
+        {
+          sh_invalidoptname (option_name);
+          return EXECUTION_FAILURE;
+        }
       else
-	return EXECUTION_SUCCESS;
+        return EXECUTION_SUCCESS;
     }
 }
 
@@ -502,10 +506,10 @@ print_all_shell_variables ()
     {
       vars = all_shell_functions ();
       if (vars)
-	{
-	  print_func_list (vars);
-	  free (vars);
-	}
+        {
+          print_func_list (vars);
+          free (vars);
+        }
     }
 }
 
@@ -521,19 +525,19 @@ set_shellopts ()
     {
       tflag[i] = 0;
       if (o_options[i].letter)
-	{
-	  char *ip = find_flag (o_options[i].letter);
-	  if (ip && *ip)
-	    {
-	      vsize += strlen (o_options[i].name) + 1;
-	      tflag[i] = 1;
-	    }
-	}
+        {
+          char *ip = find_flag (o_options[i].letter);
+          if (ip && *ip)
+            {
+              vsize += strlen (o_options[i].name) + 1;
+              tflag[i] = 1;
+            }
+        }
       else if (GET_BINARY_O_OPTION_VALUE (i, o_options[i].name))
-	{
-	  vsize += strlen (o_options[i].name) + 1;
-	  tflag[i] = 1;
-	}
+        {
+          vsize += strlen (o_options[i].name) + 1;
+          tflag[i] = 1;
+        }
     }
 
   value = (char *)xmalloc (vsize + 1);
@@ -541,15 +545,15 @@ set_shellopts ()
   for (i = vptr = 0; o_options[i].name; i++)
     {
       if (tflag[i])
-	{
-	  strcpy (value + vptr, o_options[i].name);
-	  vptr += strlen (o_options[i].name);
-	  value[vptr++] = ':';
-	}
+        {
+          strcpy (value + vptr, o_options[i].name);
+          vptr += strlen (o_options[i].name);
+          value[vptr++] = ':';
+        }
     }
 
   if (vptr)
-    vptr--;			/* cut off trailing colon */
+    vptr--; /* cut off trailing colon */
   value[vptr] = '\0';
 
   v = find_variable ("SHELLOPTS");
@@ -601,14 +605,16 @@ Shell::initialize_shell_options (bool no_shellopts)
       var = find_variable ("SHELLOPTS");
       /* set up any shell options we may have inherited. */
       if (var && imported_p (var))
-	{
-	  temp = (array_p (var) || assoc_p (var)) ? (char *)NULL : savestring (value_cell (var));
-	  if (temp)
-	    {
-	      parse_shellopts (temp);
-	      std::free (temp);
-	    }
-	}
+        {
+          temp = (array_p (var) || assoc_p (var))
+                     ? (char *)NULL
+                     : savestring (value_cell (var));
+          if (temp)
+            {
+              parse_shellopts (temp);
+              std::free (temp);
+            }
+        }
     }
 
   /* Set up the $SHELLOPTS variable. */
@@ -624,14 +630,14 @@ Shell::reset_shell_options ()
   pipefail_opt = 0;
   ignoreeof = 0;
 
-#if defined (STRICT_POSIX)
+#if defined(STRICT_POSIX)
   posixly_correct = true;
 #else
   posixly_correct = false;
 #endif
-#if defined (HISTORY)
+#if defined(HISTORY)
   dont_save_function_defs = 0;
-  remember_on_history = enable_history_list = 1;	/* XXX */
+  remember_on_history = enable_history_list = 1; /* XXX */
 #endif
 }
 
@@ -657,110 +663,111 @@ Shell::set_builtin (WORD_LIST *list)
   while ((flag_name = internal_getopt (list, optflags)) != -1)
     {
       switch (flag_name)
-	{
-	  case 'i':	/* don't allow set -i */
-	    s[0] = list_opttype;
-	    s[1] = 'i';
-	    s[2] = '\0';
-	    sh_invalidopt (s);
-	    builtin_usage ();
-	    return EX_USAGE;
-	  CASE_HELPOPT;
-	  case '?':
-	    builtin_usage ();
-	    return list_optopt == '?' ? EXECUTION_SUCCESS : EX_USAGE;
-	  default:
-	    break;
-	}
+        {
+        case 'i': /* don't allow set -i */
+          s[0] = list_opttype;
+          s[1] = 'i';
+          s[2] = '\0';
+          sh_invalidopt (s);
+          builtin_usage ();
+          return EX_USAGE;
+          CASE_HELPOPT;
+        case '?':
+          builtin_usage ();
+          return list_optopt == '?' ? EXECUTION_SUCCESS : EX_USAGE;
+        default:
+          break;
+        }
     }
 
   /* Do the set command.  While the list consists of words starting with
      '-' or '+' treat them as flags, otherwise, start assigning them to
      $1 ... $n. */
-  for (force_assignment = opts_changed = 0; list; )
+  for (force_assignment = opts_changed = 0; list;)
     {
       arg = list->word->word;
 
       /* If the argument is `--' or `-' then signal the end of the list
-	 and remember the remaining arguments. */
+         and remember the remaining arguments. */
       if (arg[0] == '-' && (!arg[1] || (arg[1] == '-' && !arg[2])))
-	{
-	  list = (WORD_LIST *)list->next;
+        {
+          list = (WORD_LIST *)list->next;
 
-	  /* `set --' unsets the positional parameters. */
-	  if (arg[1] == '-')
-	    force_assignment = 1;
+          /* `set --' unsets the positional parameters. */
+          if (arg[1] == '-')
+            force_assignment = 1;
 
-	  /* Until told differently, the old shell behaviour of
-	     `set - [arg ...]' being equivalent to `set +xv [arg ...]'
-	     stands.  Posix.2 says the behaviour is marked as obsolescent. */
-	  else
-	    {
-	      change_flag ('x', '+');
-	      change_flag ('v', '+');
-	      opts_changed = 1;
-	    }
+          /* Until told differently, the old shell behaviour of
+             `set - [arg ...]' being equivalent to `set +xv [arg ...]'
+             stands.  Posix.2 says the behaviour is marked as obsolescent. */
+          else
+            {
+              change_flag ('x', '+');
+              change_flag ('v', '+');
+              opts_changed = 1;
+            }
 
-	  break;
-	}
+          break;
+        }
 
       if ((on_or_off = *arg) && (on_or_off == '-' || on_or_off == '+'))
-	{
-	  while ((flag_name = *++arg))
-	    {
-	      if (flag_name == '?')
-		{
-		  builtin_usage ();
-		  return EXECUTION_SUCCESS;
-		}
-	      else if (flag_name == 'o') /* -+o option-name */
-		{
-		  char *option_name;
-		  WORD_LIST *opt;
+        {
+          while ((flag_name = *++arg))
+            {
+              if (flag_name == '?')
+                {
+                  builtin_usage ();
+                  return EXECUTION_SUCCESS;
+                }
+              else if (flag_name == 'o') /* -+o option-name */
+                {
+                  char *option_name;
+                  WORD_LIST *opt;
 
-		  opt = (WORD_LIST *)list->next;
+                  opt = (WORD_LIST *)list->next;
 
-		  if (opt == 0)
-		    {
-		      list_minus_o_opts (-1, (on_or_off == '+'));
-		      rv = sh_chkwrite (rv);
-		      continue;
-		    }
+                  if (opt == 0)
+                    {
+                      list_minus_o_opts (-1, (on_or_off == '+'));
+                      rv = sh_chkwrite (rv);
+                      continue;
+                    }
 
-		  option_name = opt->word->word;
+                  option_name = opt->word->word;
 
-		  if (option_name == 0 || *option_name == '\0' ||
-		      *option_name == '-' || *option_name == '+')
-		    {
-		      list_minus_o_opts (-1, (on_or_off == '+'));
-		      continue;
-		    }
-		  list = (WORD_LIST *)list->next; /* Skip over option name. */
+                  if (option_name == 0 || *option_name == '\0'
+                      || *option_name == '-' || *option_name == '+')
+                    {
+                      list_minus_o_opts (-1, (on_or_off == '+'));
+                      continue;
+                    }
+                  list = (WORD_LIST *)list->next; /* Skip over option name. */
 
-		  opts_changed = 1;
-		  if ((r = set_minus_o_option (on_or_off, option_name)) != EXECUTION_SUCCESS)
-		    {
-		      set_shellopts ();
-		      return r;
-		    }
-		}
-	      else if (change_flag (flag_name, on_or_off) == FLAG_ERROR)
-		{
-		  s[0] = on_or_off;
-		  s[1] = flag_name;
-		  s[2] = '\0';
-		  sh_invalidopt (s);
-		  builtin_usage ();
-		  set_shellopts ();
-		  return EXECUTION_FAILURE;
-		}
-	      opts_changed = 1;
-	    }
-	}
+                  opts_changed = 1;
+                  if ((r = set_minus_o_option (on_or_off, option_name))
+                      != EXECUTION_SUCCESS)
+                    {
+                      set_shellopts ();
+                      return r;
+                    }
+                }
+              else if (change_flag (flag_name, on_or_off) == FLAG_ERROR)
+                {
+                  s[0] = on_or_off;
+                  s[1] = flag_name;
+                  s[2] = '\0';
+                  sh_invalidopt (s);
+                  builtin_usage ();
+                  set_shellopts ();
+                  return EXECUTION_FAILURE;
+                }
+              opts_changed = 1;
+            }
+        }
       else
-	{
-	  break;
-	}
+        {
+          break;
+        }
       list = (WORD_LIST *)list->next;
     }
 
@@ -773,31 +780,34 @@ Shell::set_builtin (WORD_LIST *list)
   return rv;
 }
 
-}  // namespace bash
+} // namespace bash
 
-$BUILTIN unset
-$FUNCTION unset_builtin
-$SHORT_DOC unset [-f] [-v] [-n] [name ...]
-Unset values and attributes of shell variables and functions.
+// $BUILTIN unset
+// $FUNCTION unset_builtin
+// $SHORT_DOC unset [-f] [-v] [-n] [name ...]
+// Unset values and attributes of shell variables and functions.
 
-For each NAME, remove the corresponding variable or function.
+// For each NAME, remove the corresponding variable or function.
 
-Options:
-  -f	treat each NAME as a shell function
-  -v	treat each NAME as a shell variable
-  -n	treat each NAME as a name reference and unset the variable itself
-		rather than the variable it references
+// Options:
+//   -f    treat each NAME as a shell function
+//   -v    treat each NAME as a shell variable
+//   -n    treat each NAME as a name reference and unset the variable itself
+//                 rather than the variable it references
 
-Without options, unset first tries to unset a variable, and if that fails,
-tries to unset a function.
+// Without options, unset first tries to unset a variable, and if that fails,
+// tries to unset a function.
 
-Some variables cannot be unset; also see `readonly'.
+// Some variables cannot be unset; also see `readonly'.
 
-Exit Status:
-Returns success unless an invalid option is given or a NAME is read-only.
-$END
+// Exit Status:
+// Returns success unless an invalid option is given or a NAME is read-only.
+// $END
 
-#define NEXT_VARIABLE()	any_failed++; list = (WORD_LIST *)list->next; continue;
+#define NEXT_VARIABLE()                                                       \
+  any_failed++;                                                               \
+  list = (WORD_LIST *)list->next;                                             \
+  continue;
 
 namespace bash
 {
@@ -816,42 +826,43 @@ Shell::unset_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "fnv")) != -1)
     {
       switch (opt)
-	{
-	case 'f':
-	  global_unset_func = 1;
-	  break;
-	case 'v':
-	  global_unset_var = 1;
-	  break;
-	case 'n':
-	  nameref = 1;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+        case 'f':
+          global_unset_func = 1;
+          break;
+        case 'v':
+          global_unset_var = 1;
+          break;
+        case 'n':
+          nameref = 1;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
 
   list = loptend;
 
   if (global_unset_func && global_unset_var)
     {
-      builtin_error (_("cannot simultaneously unset a function and a variable"));
+      builtin_error (
+          _ ("cannot simultaneously unset a function and a variable"));
       return EXECUTION_FAILURE;
     }
   else if (unset_function && nameref)
     nameref = 0;
 
-#if defined (ARRAY_VARS)
-  vflags = assoc_expand_once ? (VA_NOEXPAND|VA_ONEWORD) : 0;
+#if defined(ARRAY_VARS)
+  vflags = assoc_expand_once ? (VA_NOEXPAND | VA_ONEWORD) : 0;
 #endif
 
   while (list)
     {
       SHELL_VAR *var;
       int tem;
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
       char *t;
 #endif
 
@@ -860,127 +871,138 @@ Shell::unset_builtin (WORD_LIST *list)
       unset_function = global_unset_func;
       unset_variable = global_unset_var;
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
       unset_array = 0;
       /* XXX valid array reference second arg was 0 */
-      if (!unset_function && nameref == 0 && valid_array_reference (name, vflags))
-	{
-	  t = strchr (name, '[');
-	  *t++ = '\0';
-	  unset_array++;
-	}
+      if (!unset_function && nameref == 0
+          && valid_array_reference (name, vflags))
+        {
+          t = strchr (name, '[');
+          *t++ = '\0';
+          unset_array++;
+        }
 #endif
       /* Get error checking out of the way first.  The low-level functions
-	 just perform the unset, relying on the caller to verify. */
+         just perform the unset, relying on the caller to verify. */
       valid_id = legal_identifier (name);
 
       /* Whether or not we are in posix mode, if neither -f nor -v appears,
-	 skip over trying to unset variables with invalid names and just
-	 treat them as potential shell function names. */
+         skip over trying to unset variables with invalid names and just
+         treat them as potential shell function names. */
       if (global_unset_func == 0 && global_unset_var == 0 && valid_id == 0)
-	{
-	  unset_variable = unset_array = 0;
-	  unset_function = 1;
-	}
+        {
+          unset_variable = unset_array = 0;
+          unset_function = 1;
+        }
 
       /* Bash allows functions with names which are not valid identifiers
-	 to be created when not in posix mode, so check only when in posix
-	 mode when unsetting a function. */
+         to be created when not in posix mode, so check only when in posix
+         mode when unsetting a function. */
       if (unset_function == 0 && valid_id == 0)
-	{
-	  sh_invalidid (name);
-	  NEXT_VARIABLE ();
-	}
+        {
+          sh_invalidid (name);
+          NEXT_VARIABLE ();
+        }
 
       /* Search for functions here if -f supplied or if NAME cannot be a
-	 variable name. */
+         variable name. */
       var = unset_function ? find_function (name)
-			   : (nameref ? find_variable_last_nameref (name, 0) : find_variable (name));
+                           : (nameref ? find_variable_last_nameref (name, 0)
+                                      : find_variable (name));
 
       /* Some variables (but not functions yet) cannot be unset, period. */
       if (var && unset_function == 0 && non_unsettable_p (var))
-	{
-	  builtin_error (_("%s: cannot unset"), name);
-	  NEXT_VARIABLE ();
-	}
+        {
+          builtin_error (_ ("%s: cannot unset"), name);
+          NEXT_VARIABLE ();
+        }
 
       /* if we have a nameref we want to use it */
-      if (var && unset_function == 0 && nameref == 0 && STREQ (name, name_cell(var)) == 0)
-	name = name_cell (var);
+      if (var && unset_function == 0 && nameref == 0
+          && STREQ (name, name_cell (var)) == 0)
+        name = name_cell (var);
 
       /* Posix.2 says try variables first, then functions.  If we would
-	 find a function after unsuccessfully searching for a variable,
-	 note that we're acting on a function now as if -f were
-	 supplied.  The readonly check below takes care of it. */
-      if (var == 0 && nameref == 0 &&  unset_variable == 0 && unset_function == 0)
-	{
-	  if ((var = find_function (name)))
-	    unset_function = 1;
-	}
+         find a function after unsuccessfully searching for a variable,
+         note that we're acting on a function now as if -f were
+         supplied.  The readonly check below takes care of it. */
+      if (var == 0 && nameref == 0 && unset_variable == 0
+          && unset_function == 0)
+        {
+          if ((var = find_function (name)))
+            unset_function = 1;
+        }
 
       /* Posix.2 says that unsetting readonly variables is an error. */
       if (var && readonly_p (var))
-	{
-	  builtin_error (_("%s: cannot unset: readonly %s"),
-			 var->name, unset_function ? "function" : "variable");
-	  NEXT_VARIABLE ();
-	}
+        {
+          builtin_error (_ ("%s: cannot unset: readonly %s"), var->name,
+                         unset_function ? "function" : "variable");
+          NEXT_VARIABLE ();
+        }
 
-      /* Unless the -f option is supplied, the name refers to a variable. */
-#if defined (ARRAY_VARS)
+        /* Unless the -f option is supplied, the name refers to a variable.
+         */
+#if defined(ARRAY_VARS)
       if (var && unset_array)
-	{
-	  /* Let unbind_array_element decide what to do with non-array vars */
-	  tem = unbind_array_element (var, t, vflags);	/* XXX new third arg */
-	  if (tem == -2 && array_p (var) == 0 && assoc_p (var) == 0)
-	    {
-	      builtin_error (_("%s: not an array variable"), var->name);
-	      NEXT_VARIABLE ();
-	    }
-	  else if (tem < 0)
-	    any_failed++;
-	}
+        {
+          /* Let unbind_array_element decide what to do with non-array vars
+           */
+          tem = unbind_array_element (var, t, vflags); /* XXX new third arg */
+          if (tem == -2 && array_p (var) == 0 && assoc_p (var) == 0)
+            {
+              builtin_error (_ ("%s: not an array variable"), var->name);
+              NEXT_VARIABLE ();
+            }
+          else if (tem < 0)
+            any_failed++;
+        }
       else
 #endif /* ARRAY_VARS */
-      /* If we're trying to unset a nameref variable whose value isn't a set
-	 variable, make sure we still try to unset the nameref's value */
-      if (var == 0 && nameref == 0 && unset_function == 0)
-	{
-	  var = find_variable_last_nameref (name, 0);
-	  if (var && nameref_p (var))
-	    {
-#if defined (ARRAY_VARS)
-	      if (valid_array_reference (nameref_cell (var), 0))
-		{
-		  tname = savestring (nameref_cell (var));
-		  if ((var = array_variable_part (tname, 0, &t, (int *)0)))
-		    tem = unbind_array_element (var, t, vflags);	/* XXX new third arg */
-		  free (tname);
-		}
-	      else
+        /* If we're trying to unset a nameref variable whose value isn't a
+           set variable, make sure we still try to unset the nameref's value
+         */
+        if (var == 0 && nameref == 0 && unset_function == 0)
+          {
+            var = find_variable_last_nameref (name, 0);
+            if (var && nameref_p (var))
+              {
+#if defined(ARRAY_VARS)
+                if (valid_array_reference (nameref_cell (var), 0))
+                  {
+                    tname = savestring (nameref_cell (var));
+                    if ((var = array_variable_part (tname, 0, &t, (int *)0)))
+                      tem = unbind_array_element (
+                          var, t, vflags); /* XXX new third arg */
+                    free (tname);
+                  }
+                else
 #endif
-		tem = unbind_variable (nameref_cell (var));
-	    }
-	  else
-	    tem = unbind_variable (name);
-	}
-      else
-	tem = unset_function ? unbind_func (name) : (nameref ? unbind_nameref (name) : unbind_variable (name));
+                  tem = unbind_variable (nameref_cell (var));
+              }
+            else
+              tem = unbind_variable (name);
+          }
+        else
+          tem = unset_function ? unbind_func (name)
+                               : (nameref ? unbind_nameref (name)
+                                          : unbind_variable (name));
 
       /* This is what Posix.2 says:  ``If neither -f nor -v
-	 is specified, the name refers to a variable; if a variable by
-	 that name does not exist, a function by that name, if any,
-	 shall be unset.'' */
-      if (tem == -1 && nameref == 0 && unset_function == 0 && unset_variable == 0)
-	tem = unbind_func (name);
+         is specified, the name refers to a variable; if a variable by
+         that name does not exist, a function by that name, if any,
+         shall be unset.'' */
+      if (tem == -1 && nameref == 0 && unset_function == 0
+          && unset_variable == 0)
+        tem = unbind_func (name);
 
-      name = list->word->word;		/* reset above for namerefs */
+      name = list->word->word; /* reset above for namerefs */
 
       /* SUSv3, POSIX.1-2001 say:  ``Unsetting a variable or function that
-	 was not previously set shall not be considered an error.'' */
+         was not previously set shall not be considered an error.'' */
 
       if (unset_function == 0)
-	stupidly_hack_special_variables (name);
+        stupidly_hack_special_variables (name);
 
       list = (WORD_LIST *)list->next;
     }
@@ -988,4 +1010,4 @@ Shell::unset_builtin (WORD_LIST *list)
   return any_failed ? EXECUTION_FAILURE : EXECUTION_SUCCESS;
 }
 
-}  // namespace bash
+} // namespace bash

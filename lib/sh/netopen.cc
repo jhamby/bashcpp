@@ -25,29 +25,29 @@
 
 #include "config.hh"
 
-#if defined (HAVE_NETWORK)
+#if defined(HAVE_NETWORK)
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <cstdio>
 #include <sys/types.h>
 
-#if defined (HAVE_SYS_SOCKET_H)
-#  include <sys/socket.h>
+#if defined(HAVE_SYS_SOCKET_H)
+#include <sys/socket.h>
 #endif
 
-#if defined (HAVE_NETINET_IN_H)
-#  include <netinet/in.h>
+#if defined(HAVE_NETINET_IN_H)
+#include <netinet/in.h>
 #endif
 
-#if defined (HAVE_NETDB_H)
-#  include <netdb.h>
+#if defined(HAVE_NETDB_H)
+#include <netdb.h>
 #endif
 
-#if defined (HAVE_ARPA_INET_H)
-#  include <arpa/inet.h>
+#if defined(HAVE_ARPA_INET_H)
+#include <arpa/inet.h>
 #endif
 
 #include "bashintl.hh"
@@ -59,7 +59,7 @@
 namespace bash
 {
 
-#if !defined (HAVE_INET_ATON)
+#if !defined(HAVE_INET_ATON)
 extern int inet_aton (const char *, struct in_addr *);
 #endif
 
@@ -87,23 +87,22 @@ _getaddr (char *host, struct in_addr *ap)
   if (host[0] >= '0' && host[0] <= '9')
     {
       /* If the first character is a digit, guess that it's an
-	 Internet address and return immediately if inet_aton succeeds. */
+         Internet address and return immediately if inet_aton succeeds. */
       r = inet_aton (host, ap);
       if (r)
-	return r;
+        return r;
     }
-#if !defined (HAVE_GETHOSTBYNAME)
+#if !defined(HAVE_GETHOSTBYNAME)
   return 0;
 #else
   h = gethostbyname (host);
   if (h && h->h_addr)
     {
-      bcopy(h->h_addr, (char *)ap, h->h_length);
+      bcopy (h->h_addr, (char *)ap, h->h_length);
       return 1;
     }
 #endif
   return 0;
-
 }
 
 /* Return 1 if SERV is a valid port number and stuff the converted value into
@@ -118,25 +117,25 @@ _getserv (char *serv, int proto, unsigned short *pp)
     {
       s = (unsigned short)(l & 0xFFFF);
       if (s != l)
-	return 0;
+        return 0;
       s = htons (s);
       if (pp)
-	*pp = s;
+        *pp = s;
       return 1;
     }
   else
-#if defined (HAVE_GETSERVBYNAME)
+#if defined(HAVE_GETSERVBYNAME)
     {
       struct servent *se;
 
       se = getservbyname (serv, (proto == 't') ? "tcp" : "udp");
       if (se == 0)
-	return 0;
+        return 0;
       if (pp)
-	*pp = se->s_port;	/* ports returned in network byte order */
+        *pp = se->s_port; /* ports returned in network byte order */
       return 1;
     }
-#else /* !HAVE_GETSERVBYNAME */
+#else  /* !HAVE_GETSERVBYNAME */
     return 0;
 #endif /* !HAVE_GETSERVBYNAME */
 }
@@ -146,33 +145,33 @@ _getserv (char *serv, int proto, unsigned short *pp)
  * traditional BSD mechanisms.  Returns the connected socket or -1 on error.
  */
 static int
-_netopen4(const char *host, const char *serv, int typ)
+_netopen4 (const char *host, const char *serv, int typ)
 {
   struct in_addr ina;
   struct sockaddr_in sin;
   unsigned short p;
   int s, e;
 
-  if (_getaddr(host, &ina) == 0)
+  if (_getaddr (host, &ina) == 0)
     {
-      internal_error (_("%s: host unknown"), host);
+      internal_error (_ ("%s: host unknown"), host);
       errno = EINVAL;
       return -1;
     }
 
-  if (_getserv(serv, typ, &p) == 0)
+  if (_getserv (serv, typ, &p) == 0)
     {
-      internal_error(_("%s: invalid service"), serv);
+      internal_error (_ ("%s: invalid service"), serv);
       errno = EINVAL;
       return -1;
     }
 
-  memset ((char *)&sin, 0, sizeof(sin));
+  memset ((char *)&sin, 0, sizeof (sin));
   sin.sin_family = AF_INET;
   sin.sin_port = p;
   sin.sin_addr = ina;
 
-  s = socket(AF_INET, (typ == 't') ? SOCK_STREAM : SOCK_DGRAM, 0);
+  s = socket (AF_INET, (typ == 't') ? SOCK_STREAM : SOCK_DGRAM, 0);
   if (s < 0)
     {
       sys_error ("socket");
@@ -182,13 +181,13 @@ _netopen4(const char *host, const char *serv, int typ)
   if (connect (s, (struct sockaddr *)&sin, sizeof (sin)) < 0)
     {
       e = errno;
-      sys_error("connect");
-      close(s);
+      sys_error ("connect");
+      close (s);
       errno = e;
       return -1;
     }
 
-  return(s);
+  return (s);
 }
 #endif /* ! HAVE_GETADDRINFO */
 
@@ -207,7 +206,7 @@ _netopen6 (const char *host, const char *serv, int typ)
 
   memset ((char *)&hints, 0, sizeof (hints));
   /* XXX -- if problems with IPv6, set to PF_INET for IPv4 only */
-#ifdef DEBUG	/* PF_INET is the one that works for me */
+#ifdef DEBUG /* PF_INET is the one that works for me */
   hints.ai_family = PF_INET;
 #else
   hints.ai_family = PF_UNSPEC;
@@ -218,37 +217,38 @@ _netopen6 (const char *host, const char *serv, int typ)
   if (gerr)
     {
       if (gerr == EAI_SERVICE)
-	internal_error ("%s: %s", serv, gai_strerror (gerr));
+        internal_error ("%s: %s", serv, gai_strerror (gerr));
       else
-	internal_error ("%s: %s", host, gai_strerror (gerr));
+        internal_error ("%s: %s", host, gai_strerror (gerr));
       errno = EINVAL;
       return -1;
     }
 
   for (res = res0; res; res = res->ai_next)
     {
-      if ((s = socket (res->ai_family, res->ai_socktype, res->ai_protocol)) < 0)
-	{
-	  if (res->ai_next)
-	    continue;
-	  sys_error ("socket");
-	  freeaddrinfo (res0);
-	  return -1;
-	}
+      if ((s = socket (res->ai_family, res->ai_socktype, res->ai_protocol))
+          < 0)
+        {
+          if (res->ai_next)
+            continue;
+          sys_error ("socket");
+          freeaddrinfo (res0);
+          return -1;
+        }
       if (connect (s, res->ai_addr, res->ai_addrlen) < 0)
-	{
-	  if (res->ai_next)
-	    {
-	      close (s);
-	      continue;
-	    }
-	  e = errno;
-	  sys_error ("connect");
-	  close (s);
-	  freeaddrinfo (res0);
-	  errno = e;
-	  return -1;
-	}
+        {
+          if (res->ai_next)
+            {
+              close (s);
+              continue;
+            }
+          e = errno;
+          sys_error ("connect");
+          close (s);
+          freeaddrinfo (res0);
+          errno = e;
+          return -1;
+        }
       freeaddrinfo (res0);
       break;
     }
@@ -262,7 +262,7 @@ _netopen6 (const char *host, const char *serv, int typ)
  * Returns the connected socket or -1 on error.
  */
 static int
-_netopen(const char *host, const char *serv, int typ)
+_netopen (const char *host, const char *serv, int typ)
 {
 #ifdef HAVE_GETADDRINFO
   return _netopen6 (host, serv, typ);
@@ -287,7 +287,7 @@ netopen (const char *path)
   t = std::strchr (s, '/');
   if (t == 0)
     {
-      internal_error (_("%s: bad network path specification"), path);
+      internal_error (_ ("%s: bad network path specification"), path);
       delete[] np;
       return -1;
     }
@@ -298,7 +298,7 @@ netopen (const char *path)
   return fd;
 }
 
-}  // namespace bash
+} // namespace bash
 
 #else /* !HAVE_NETWORK */
 
@@ -308,10 +308,10 @@ namespace bash
 int
 netopen (const char *path)
 {
-  internal_error (_("network operations not supported"));
+  internal_error (_ ("network operations not supported"));
   return -1;
 }
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* !HAVE_NETWORK */

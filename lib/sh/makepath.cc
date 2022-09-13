@@ -20,12 +20,12 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "shell.hh"
 #include "externs.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -41,16 +41,19 @@ static const char *nullpath = "";
    of DIR.  If (flags & MP_IGNDOT) is non-zero, a PATH that is "." or "./"
    is ignored. */
 
-#define MAKEDOT() \
-  do { \
-    xpath = new char[2]; \
-    xpath[0] = '.'; \
-    xpath[1] = '\0'; \
-    pathlen = 1; \
-  } while (0)
+#define MAKEDOT()                                                             \
+  do                                                                          \
+    {                                                                         \
+      xpath = new char[2];                                                    \
+      xpath[0] = '.';                                                         \
+      xpath[1] = '\0';                                                        \
+      pathlen = 1;                                                            \
+    }                                                                         \
+  while (0)
 
 char *
-Shell::sh_makepath (const std::string &path, const std::string &dir, mp_flags flags)
+Shell::sh_makepath (const std::string &path, const std::string &dir,
+                    mp_flags flags)
 {
   size_t dirlen, pathlen;
   const char *xdir, *s;
@@ -59,32 +62,34 @@ Shell::sh_makepath (const std::string &path, const std::string &dir, mp_flags fl
   if (path.empty ())
     {
       if (flags & MP_DOCWD)
-	{
-	  xpath = get_working_directory ("sh_makepath");
-	  if (xpath == nullptr)
-	    {
-	      ret = get_string_value ("PWD");
-	      if (ret)
-		xpath = savestring (ret);
-	    }
-	  if (xpath == nullptr)
-	    MAKEDOT();
-	  else
-	    pathlen = std::strlen (xpath);
-	}
+        {
+          xpath = get_working_directory ("sh_makepath");
+          if (xpath == nullptr)
+            {
+              ret = get_string_value ("PWD");
+              if (ret)
+                xpath = savestring (ret);
+            }
+          if (xpath == nullptr)
+            MAKEDOT ();
+          else
+            pathlen = std::strlen (xpath);
+        }
       else
-	MAKEDOT();
+        MAKEDOT ();
     }
-  else if ((flags & MP_IGNDOT) && path[0] == '.' && (path[1] == '\0' ||
-						     (path[1] == '/' && path[2] == '\0')))
+  else if ((flags & MP_IGNDOT) && path[0] == '.'
+           && (path[1] == '\0' || (path[1] == '/' && path[2] == '\0')))
     {
-      xpath = const_cast<char*> (nullpath);	// hopefully 'nullpath' is always the same pointer
+      xpath = const_cast<char *> (
+          nullpath); // hopefully 'nullpath' is always the same pointer
       pathlen = 0;
     }
   else
     {
       xpath = ((flags & MP_DOTILDE) && path[0] == '~')
-			? bash_tilde_expand (path.c_str (), 0) : const_cast<char*> (path.c_str ());
+                  ? bash_tilde_expand (path.c_str (), 0)
+                  : const_cast<char *> (path.c_str ());
       pathlen = std::strlen (xpath);
     }
 
@@ -118,4 +123,4 @@ Shell::sh_makepath (const std::string &path, const std::string &dir, mp_flags fl
   return ret;
 }
 
-}  // namespace bash
+} // namespace bash

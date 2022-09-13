@@ -20,17 +20,18 @@
 
 #include "config.hh"
 
-#if !defined (HAVE_SYS_SIGLIST) && !defined (HAVE_UNDER_SYS_SIGLIST) && !defined (HAVE_STRSIGNAL)
+#if !defined(HAVE_SYS_SIGLIST) && !defined(HAVE_UNDER_SYS_SIGLIST)            \
+    && !defined(HAVE_STRSIGNAL)
 
 #include "general.hh"
 
-#include <cstdio>
 #include <csignal>
+#include <cstdio>
 
 #include "siglist.hh"
 
-#if !defined (NSIG)
-#  include "trap.hh"
+#if !defined(NSIG)
+#include "trap.hh"
 #endif
 
 #include "bashintl.hh"
@@ -45,185 +46,185 @@ initialize_siglist ()
   for (i = 0; i < NSIG; i++)
     sys_siglist[i] = (char *)0x0;
 
-  sys_siglist[0] = _("Bogus signal");
+  sys_siglist[0] = _ ("Bogus signal");
 
-#if defined (SIGHUP)
-  sys_siglist[SIGHUP] = _("Hangup");
+#if defined(SIGHUP)
+  sys_siglist[SIGHUP] = _ ("Hangup");
 #endif
 
-#if defined (SIGINT)
-  sys_siglist[SIGINT] = _("Interrupt");
+#if defined(SIGINT)
+  sys_siglist[SIGINT] = _ ("Interrupt");
 #endif
 
-#if defined (SIGQUIT)
-  sys_siglist[SIGQUIT] = _("Quit");
+#if defined(SIGQUIT)
+  sys_siglist[SIGQUIT] = _ ("Quit");
 #endif
 
-#if defined (SIGILL)
-  sys_siglist[SIGILL] = _("Illegal instruction");
+#if defined(SIGILL)
+  sys_siglist[SIGILL] = _ ("Illegal instruction");
 #endif
 
-#if defined (SIGTRAP)
-  sys_siglist[SIGTRAP] = _("BPT trace/trap");
+#if defined(SIGTRAP)
+  sys_siglist[SIGTRAP] = _ ("BPT trace/trap");
 #endif
 
-#if defined (SIGIOT) && !defined (SIGABRT)
+#if defined(SIGIOT) && !defined(SIGABRT)
 #define SIGABRT SIGIOT
 #endif
 
-#if defined (SIGABRT)
-  sys_siglist[SIGABRT] = _("ABORT instruction");
+#if defined(SIGABRT)
+  sys_siglist[SIGABRT] = _ ("ABORT instruction");
 #endif
 
-#if defined (SIGEMT)
-  sys_siglist[SIGEMT] = _("EMT instruction");
+#if defined(SIGEMT)
+  sys_siglist[SIGEMT] = _ ("EMT instruction");
 #endif
 
-#if defined (SIGFPE)
-  sys_siglist[SIGFPE] = _("Floating point exception");
+#if defined(SIGFPE)
+  sys_siglist[SIGFPE] = _ ("Floating point exception");
 #endif
 
-#if defined (SIGKILL)
-  sys_siglist[SIGKILL] = _("Killed");
+#if defined(SIGKILL)
+  sys_siglist[SIGKILL] = _ ("Killed");
 #endif
 
-#if defined (SIGBUS)
-  sys_siglist[SIGBUS] = _("Bus error");
+#if defined(SIGBUS)
+  sys_siglist[SIGBUS] = _ ("Bus error");
 #endif
 
-#if defined (SIGSEGV)
-  sys_siglist[SIGSEGV] = _("Segmentation fault");
+#if defined(SIGSEGV)
+  sys_siglist[SIGSEGV] = _ ("Segmentation fault");
 #endif
 
-#if defined (SIGSYS)
-  sys_siglist[SIGSYS] = _("Bad system call");
+#if defined(SIGSYS)
+  sys_siglist[SIGSYS] = _ ("Bad system call");
 #endif
 
-#if defined (SIGPIPE)
-  sys_siglist[SIGPIPE] = _("Broken pipe");
+#if defined(SIGPIPE)
+  sys_siglist[SIGPIPE] = _ ("Broken pipe");
 #endif
 
-#if defined (SIGALRM)
-  sys_siglist[SIGALRM] = _("Alarm clock");
+#if defined(SIGALRM)
+  sys_siglist[SIGALRM] = _ ("Alarm clock");
 #endif
 
-#if defined (SIGTERM)
-  sys_siglist[SIGTERM] = _("Terminated");
+#if defined(SIGTERM)
+  sys_siglist[SIGTERM] = _ ("Terminated");
 #endif
 
-#if defined (SIGURG)
-  sys_siglist[SIGURG] = _("Urgent IO condition");
+#if defined(SIGURG)
+  sys_siglist[SIGURG] = _ ("Urgent IO condition");
 #endif
 
-#if defined (SIGSTOP)
-  sys_siglist[SIGSTOP] = _("Stopped (signal)");
+#if defined(SIGSTOP)
+  sys_siglist[SIGSTOP] = _ ("Stopped (signal)");
 #endif
 
-#if defined (SIGTSTP)
-  sys_siglist[SIGTSTP] = _("Stopped");
+#if defined(SIGTSTP)
+  sys_siglist[SIGTSTP] = _ ("Stopped");
 #endif
 
-#if defined (SIGCONT)
-  sys_siglist[SIGCONT] = _("Continue");
+#if defined(SIGCONT)
+  sys_siglist[SIGCONT] = _ ("Continue");
 #endif
 
-#if !defined (SIGCHLD) && defined (SIGCLD)
+#if !defined(SIGCHLD) && defined(SIGCLD)
 #define SIGCHLD SIGCLD
 #endif
 
-#if defined (SIGCHLD)
-  sys_siglist[SIGCHLD] = _("Child death or stop");
+#if defined(SIGCHLD)
+  sys_siglist[SIGCHLD] = _ ("Child death or stop");
 #endif
 
-#if defined (SIGTTIN)
-  sys_siglist[SIGTTIN] = _("Stopped (tty input)");
+#if defined(SIGTTIN)
+  sys_siglist[SIGTTIN] = _ ("Stopped (tty input)");
 #endif
 
-#if defined (SIGTTOU)
-  sys_siglist[SIGTTOU] = _("Stopped (tty output)");
+#if defined(SIGTTOU)
+  sys_siglist[SIGTTOU] = _ ("Stopped (tty output)");
 #endif
 
-#if defined (SIGIO)
-  sys_siglist[SIGIO] = _("I/O ready");
+#if defined(SIGIO)
+  sys_siglist[SIGIO] = _ ("I/O ready");
 #endif
 
-#if defined (SIGXCPU)
-  sys_siglist[SIGXCPU] = _("CPU limit");
+#if defined(SIGXCPU)
+  sys_siglist[SIGXCPU] = _ ("CPU limit");
 #endif
 
-#if defined (SIGXFSZ)
-  sys_siglist[SIGXFSZ] = _("File limit");
+#if defined(SIGXFSZ)
+  sys_siglist[SIGXFSZ] = _ ("File limit");
 #endif
 
-#if defined (SIGVTALRM)
-  sys_siglist[SIGVTALRM] = _("Alarm (virtual)");
+#if defined(SIGVTALRM)
+  sys_siglist[SIGVTALRM] = _ ("Alarm (virtual)");
 #endif
 
-#if defined (SIGPROF)
-  sys_siglist[SIGPROF] = _("Alarm (profile)");
+#if defined(SIGPROF)
+  sys_siglist[SIGPROF] = _ ("Alarm (profile)");
 #endif
 
-#if defined (SIGWINCH)
-  sys_siglist[SIGWINCH] = _("Window changed");
+#if defined(SIGWINCH)
+  sys_siglist[SIGWINCH] = _ ("Window changed");
 #endif
 
-#if defined (SIGLOST)
-  sys_siglist[SIGLOST] = _("Record lock");
+#if defined(SIGLOST)
+  sys_siglist[SIGLOST] = _ ("Record lock");
 #endif
 
-#if defined (SIGUSR1)
-  sys_siglist[SIGUSR1] = _("User signal 1");
+#if defined(SIGUSR1)
+  sys_siglist[SIGUSR1] = _ ("User signal 1");
 #endif
 
-#if defined (SIGUSR2)
-  sys_siglist[SIGUSR2] = _("User signal 2");
+#if defined(SIGUSR2)
+  sys_siglist[SIGUSR2] = _ ("User signal 2");
 #endif
 
-#if defined (SIGMSG)
-  sys_siglist[SIGMSG] = _("HFT input data pending");
+#if defined(SIGMSG)
+  sys_siglist[SIGMSG] = _ ("HFT input data pending");
 #endif
 
-#if defined (SIGPWR)
-  sys_siglist[SIGPWR] = _("power failure imminent");
+#if defined(SIGPWR)
+  sys_siglist[SIGPWR] = _ ("power failure imminent");
 #endif
 
-#if defined (SIGDANGER)
-  sys_siglist[SIGDANGER] = _("system crash imminent");
+#if defined(SIGDANGER)
+  sys_siglist[SIGDANGER] = _ ("system crash imminent");
 #endif
 
-#if defined (SIGMIGRATE)
-  sys_siglist[SIGMIGRATE] = _("migrate process to another CPU");
+#if defined(SIGMIGRATE)
+  sys_siglist[SIGMIGRATE] = _ ("migrate process to another CPU");
 #endif
 
-#if defined (SIGPRE)
-  sys_siglist[SIGPRE] = _("programming error");
+#if defined(SIGPRE)
+  sys_siglist[SIGPRE] = _ ("programming error");
 #endif
 
-#if defined (SIGGRANT)
-  sys_siglist[SIGGRANT] = _("HFT monitor mode granted");
+#if defined(SIGGRANT)
+  sys_siglist[SIGGRANT] = _ ("HFT monitor mode granted");
 #endif
 
-#if defined (SIGRETRACT)
-  sys_siglist[SIGRETRACT] = _("HFT monitor mode retracted");
+#if defined(SIGRETRACT)
+  sys_siglist[SIGRETRACT] = _ ("HFT monitor mode retracted");
 #endif
 
-#if defined (SIGSOUND)
-  sys_siglist[SIGSOUND] = _("HFT sound sequence has completed");
+#if defined(SIGSOUND)
+  sys_siglist[SIGSOUND] = _ ("HFT sound sequence has completed");
 #endif
 
-#if defined (SIGINFO)
-  sys_siglist[SIGINFO] = _("Information request");
+#if defined(SIGINFO)
+  sys_siglist[SIGINFO] = _ ("Information request");
 #endif
 
   for (i = 0; i < NSIG; i++)
     {
       if (!sys_siglist[i])
-	{
-	  sys_siglist[i] =
-	    (char *)xmalloc (INT_STRLEN_BOUND (int) + 1 + strlen (_("Unknown Signal #%d")));
+        {
+          sys_siglist[i] = (char *)xmalloc (
+              INT_STRLEN_BOUND (int) + 1 + strlen (_ ("Unknown Signal #%d")));
 
-	  sprintf ((char *)sys_siglist[i], _("Unknown Signal #%d"), i);
-	}
+          sprintf ((char *)sys_siglist[i], _ ("Unknown Signal #%d"), i);
+        }
     }
 }
 #endif /* !HAVE_SYS_SIGLIST && !HAVE_UNDER_SYS_SIGLIST && !HAVE_STRSIGNAL */

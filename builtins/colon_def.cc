@@ -71,4 +71,4 @@ Shell::false_builtin (WORD_LIST *ignore)
   return 1;
 }
 
-}  // namespace bash
+} // namespace bash

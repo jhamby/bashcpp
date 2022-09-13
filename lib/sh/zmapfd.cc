@@ -22,8 +22,8 @@
 
 #include <sys/types.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <cerrno>
@@ -37,7 +37,7 @@ namespace bash
 {
 
 #ifndef ZBUFSIZ
-#  define ZBUFSIZ 4096
+#define ZBUFSIZ 4096
 #endif
 
 /* Dump contents of file descriptor FD to *OSTR.  FN is the filename for
@@ -55,15 +55,15 @@ Shell::zmapfd (int fd, char **ostr, const char *fn)
     {
       nr = zread (fd, lbuf, sizeof (lbuf));
       if (nr == 0)
-	{
-	  break;
-	}
+        {
+          break;
+        }
       else if (nr < 0)
-	{
-	  if (ostr)
-	    *ostr = nullptr;
-	  return -1;
-	}
+        {
+          if (ostr)
+            *ostr = nullptr;
+          return -1;
+        }
 
       result.append (lbuf, nr);
       rind += nr;
@@ -75,4 +75,4 @@ Shell::zmapfd (int fd, char **ostr, const char *fn)
   return rind;
 }
 
-}  // namespace bash
+} // namespace bash

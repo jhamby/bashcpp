@@ -20,8 +20,8 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <climits>
@@ -29,16 +29,16 @@
 #include <cstring>
 
 #ifdef HAVE_STDINT_H
-#  include <stdint.h>
+#include <stdint.h>
 #endif
 #ifdef HAVE_INTTYPES_H
-#  include <inttypes.h>
+#include <inttypes.h>
 #endif
 
 #include <cerrno>
 
-#include "chartypes.hh"
 #include "bashintl.hh"
+#include "chartypes.hh"
 #include "externs.hh"
 
 #include "typemax.hh"
@@ -51,15 +51,16 @@ static const char *X_digs = "0123456789ABCDEF";
 
 /* XXX -- assumes uppercase letters, lowercase letters, and digits are
    contiguous */
-#define FMTCHAR(x) \
-  ((x) < 10) ? (x) + '0' \
-	     : (((x) < 36) ? (x) - 10 + 'a' \
-			   : (((x) < 62) ? (x) - 36 + 'A' \
-					 : (((x) == 62) ? '@' : '_')))
+#define FMTCHAR(x)                                                            \
+  ((x) < 10)                                                                  \
+      ? (x) + '0'                                                             \
+      : (((x) < 36)                                                           \
+             ? (x)-10 + 'a'                                                   \
+             : (((x) < 62) ? (x)-36 + 'A' : (((x) == 62) ? '@' : '_')))
 
 #ifndef LONG
-#  define LONG	long
-#  define UNSIGNED_LONG unsigned long
+#define LONG long
+#define UNSIGNED_LONG unsigned long
 #endif
 
 /* `unsigned long' (or unsigned long long) to string conversion for a given
@@ -77,7 +78,7 @@ fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
   if (base < 2 || base > 64)
     {
 #if 1
-      buf = _("invalid base");
+      buf = _ ("invalid base");
       errno = EINVAL;
       return buf;
 #else
@@ -97,45 +98,46 @@ fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
     {
     case 10:
       if (ui < 10)
-	{
-	  buf.insert (0, 1, static_cast<char> (ui));
-	  break;
-	}
+        {
+          buf.insert (0, 1, static_cast<char> (ui));
+          break;
+        }
       /* Favor signed arithmetic over unsigned arithmetic; it is faster on
-	 many machines. */
+         many machines. */
       if ((LONG)ui < 0)
-	{
-	  buf.insert (0, 1, static_cast<char> (ui % 10));
-	  si = ui / 10;
-	}
+        {
+          buf.insert (0, 1, static_cast<char> (ui % 10));
+          si = ui / 10;
+        }
       else
         si = ui;
       do
-	buf.insert (0, 1, static_cast<char> (si % 10));
+        buf.insert (0, 1, static_cast<char> (si % 10));
       while (si /= 10);
       break;
 
     case 8:
       do
-	buf.insert (0, 1, static_cast<char> (ui & 7));
+        buf.insert (0, 1, static_cast<char> (ui & 7));
       while (ui >>= 3);
       break;
 
     case 16:
       do
-	buf.insert (0, 1, (flags & FL_HEXUPPER) ? X_digs[ui & 15] : x_digs[ui & 15]);
+        buf.insert (0, 1,
+                    (flags & FL_HEXUPPER) ? X_digs[ui & 15] : x_digs[ui & 15]);
       while (ui >>= 4);
       break;
 
     case 2:
       do
-	buf.insert (0, 1, static_cast<char> (ui & 1));
+        buf.insert (0, 1, static_cast<char> (ui & 1));
       while (ui >>= 1);
       break;
 
     default:
       do
-	buf.insert (0, 1, FMTCHAR (ui % base));
+        buf.insert (0, 1, FMTCHAR (ui % base));
       while (ui /= base);
       break;
     }
@@ -143,19 +145,19 @@ fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
   if ((flags & FL_PREFIX) && (base == 8 || base == 16))
     {
       if (base == 16)
-	{
-	  buf.insert (0, 1, (flags & FL_HEXUPPER) ? 'X' : 'x');
-	  buf.insert (0, 1, '0');
-	}
+        {
+          buf.insert (0, 1, (flags & FL_HEXUPPER) ? 'X' : 'x');
+          buf.insert (0, 1, '0');
+        }
       else if (buf[0] != '0')
-	buf.insert (0, 1, '0');
+        buf.insert (0, 1, '0');
     }
   else if ((flags & FL_ADDBASE) && base != 10)
     {
       buf.insert (0, 1, '#');
       buf.insert (0, 1, static_cast<char> (base % 10));
       if (base > 10)
-	buf.insert (0, 1, static_cast<char> (base / 10));
+        buf.insert (0, 1, static_cast<char> (base / 10));
     }
 
   if (sign)
@@ -164,4 +166,4 @@ fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
   return buf;
 }
 
-}  // namespace bash
+} // namespace bash

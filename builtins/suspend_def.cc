@@ -38,21 +38,21 @@
 
 #include "config.hh"
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashtypes.hh"
 
 #include <csignal>
 
-#include "bashintl.hh"
-#include "shell.hh"
-#include "jobs.hh"
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "bashintl.hh"
+#include "common.hh"
+#include "jobs.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -84,19 +84,19 @@ Shell::suspend_builtin (WORD_LIST *list)
     switch (opt)
       {
       case 'f':
-	force++;
-	break;
-      CASE_HELPOPT;
+        force++;
+        break;
+        CASE_HELPOPT;
       default:
-	builtin_usage ();
-	return EX_USAGE;
+        builtin_usage ();
+        return EX_USAGE;
       }
 
   list = loptend;
 
   if (job_control == 0)
     {
-      sh_nojobs (_("cannot suspend"));
+      sh_nojobs (_ ("cannot suspend"));
       return EXECUTION_FAILURE;
     }
 
@@ -105,10 +105,10 @@ Shell::suspend_builtin (WORD_LIST *list)
       no_args (list);
 
       if (login_shell)
-	{
-	  builtin_error (_("cannot suspend a login shell"));
-	  return EXECUTION_FAILURE;
-	}
+        {
+          builtin_error (_ ("cannot suspend a login shell"));
+          return EXECUTION_FAILURE;
+        }
     }
 
   /* XXX - should we put ourselves back into the original pgrp now?  If so,
@@ -124,4 +124,4 @@ Shell::suspend_builtin (WORD_LIST *list)
 
 #endif /* JOB_CONTROL */
 
-}  // namespace bash
+} // namespace bash

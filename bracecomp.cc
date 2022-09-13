@@ -24,10 +24,10 @@
 
 #include "config.hh"
 
-#if defined (BRACE_EXPANSION) && defined (READLINE)
+#if defined(BRACE_EXPANSION) && defined(READLINE)
 
-#include "shell.hh"
 #include "readline.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -45,7 +45,7 @@ string_gcd (const char *s1, const char *s2)
   for (i = 0; *s1 && *s2; ++s1, ++s2, ++i)
     {
       if (*s1 != *s2)
-	break;
+        break;
     }
 
   return i;
@@ -62,8 +62,9 @@ really_munge_braces (char **array, int real_start, int real_end, int gcd_zero)
 
   if (real_start == real_end)
     {
-      x = array[real_start] ? sh_backslash_quote (array[real_start] + gcd_zero, 0, 0)
- 			    : sh_backslash_quote (array[0], 0, 0);
+      x = array[real_start]
+              ? sh_backslash_quote (array[real_start] + gcd_zero, 0, 0)
+              : sh_backslash_quote (array[0], 0, 0);
       return x;
     }
 
@@ -74,55 +75,56 @@ really_munge_braces (char **array, int real_start, int real_end, int gcd_zero)
     {
       gcd = strlen (array[start]);
       for (end = start + 1; end < real_end; end++)
-	{
-	  int temp;
+        {
+          int temp;
 
-	  temp = string_gcd (array[start], array[end]);
+          temp = string_gcd (array[start], array[end]);
 
-	  if (temp <= gcd_zero)
-	    break;
+          if (temp <= gcd_zero)
+            break;
 
-	  gcd = temp;
-	}
+          gcd = temp;
+        }
       end--;
 
       if (gcd_zero == 0 && start == real_start && end != (real_end - 1))
-	{
-	  /* In this case, add in a leading '{', because we are at
-	     top level, and there isn't a consistent prefix. */
-	  result_size += 1;
-	  result = (char *)xrealloc (result, result_size);
-	  result[0] = '{'; result[1] = '\0';
-	  flag++;
-	}
+        {
+          /* In this case, add in a leading '{', because we are at
+             top level, and there isn't a consistent prefix. */
+          result_size += 1;
+          result = (char *)xrealloc (result, result_size);
+          result[0] = '{';
+          result[1] = '\0';
+          flag++;
+        }
 
       /* Make sure we backslash quote every substring we insert into the
-	 resultant brace expression.  This is so the default filename
-	 quoting function won't inappropriately quote the braces. */
+         resultant brace expression.  This is so the default filename
+         quoting function won't inappropriately quote the braces. */
       if (start == end)
-	{
-	  x = savestring (array[start] + gcd_zero);
-	  subterm = sh_backslash_quote (x, 0, 0);
-	  free (x);
-	}
+        {
+          x = savestring (array[start] + gcd_zero);
+          subterm = sh_backslash_quote (x, 0, 0);
+          free (x);
+        }
       else
-	{
-	  /* If there is more than one element in the subarray,
-	     insert the (quoted) prefix and an opening brace. */
-	  tlen = gcd - gcd_zero;
-	  x = (char *)xmalloc (tlen + 1);
-	  strncpy (x, array[start] + gcd_zero, tlen);
-	  x[tlen] = '\0';
-	  subterm = sh_backslash_quote (x, 0, 0);
-	  free (x);
-	  result_size += strlen (subterm) + 1;
-	  result = (char *)xrealloc (result, result_size);
-	  strcat (result, subterm);
-	  free (subterm);
-	  strcat (result, "{");
-	  subterm = really_munge_braces (array, start, end + 1, gcd);
-	  subterm[strlen (subterm) - 1] = '}';
-	}
+        {
+          /* If there is more than one element in the subarray,
+             insert the (quoted) prefix and an opening brace. */
+          tlen = gcd - gcd_zero;
+          x = (char *)xmalloc (tlen + 1);
+          strncpy (x, array[start] + gcd_zero, tlen);
+          x[tlen] = '\0';
+          subterm = sh_backslash_quote (x, 0, 0);
+          free (x);
+          result_size += strlen (subterm) + 1;
+          result = (char *)xrealloc (result, result_size);
+          strcat (result, subterm);
+          free (subterm);
+          strcat (result, "{");
+          subterm = really_munge_braces (array, start, end + 1, gcd);
+          subterm[strlen (subterm) - 1] = '}';
+        }
 
       result_size += strlen (subterm) + 1;
       result = (char *)xrealloc (result, result_size);
@@ -153,7 +155,7 @@ hack_braces_completion (char **names)
 {
   int i = strvec_len (names);
   if (MB_CUR_MAX > 1 && i > 2)
-    qsort (names+1, i-1, sizeof (char *), (QSFUNC *)_strcompare);
+    qsort (names + 1, i - 1, sizeof (char *), (QSFUNC *)_strcompare);
 
   char *temp = really_munge_braces (names, 1, i, 0);
 
@@ -200,6 +202,6 @@ bash_brace_completion (int count, int ignore)
   return r;
 }
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* BRACE_EXPANSION && READLINE */

@@ -19,8 +19,8 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "readline.hh"
 #include "history.hh"
+#include "readline.hh"
 #include "rlprivate.hh"
 
 #include <sys/types.h>
@@ -51,7 +51,7 @@ Readline::_rl_with_macro_input (char *string)
   _rl_push_executing_macro ();
   rl_executing_macro = string;
   executing_macro_index = 0;
-  RL_SETSTATE(RL_STATE_MACROINPUT);
+  RL_SETSTATE (RL_STATE_MACROINPUT);
 }
 
 /* Return the next character available from a macro, or 0 if
@@ -70,12 +70,12 @@ Readline::_rl_next_macro_key ()
       return _rl_next_macro_key ();
     }
 
-#if defined (READLINE_CALLBACKS)
+#if defined(READLINE_CALLBACKS)
   c = rl_executing_macro[executing_macro_index++];
-  if (RL_ISSTATE (RL_STATE_CALLBACK) &&
-      RL_ISSTATE (RL_STATE_READCMD | RL_STATE_MOREINPUT) &&
-      rl_executing_macro[executing_macro_index] == 0)
-      _rl_pop_executing_macro ();
+  if (RL_ISSTATE (RL_STATE_CALLBACK)
+      && RL_ISSTATE (RL_STATE_READCMD | RL_STATE_MOREINPUT)
+      && rl_executing_macro[executing_macro_index] == 0)
+    _rl_pop_executing_macro ();
   return c;
 #else
   /* XXX - consider doing the same as the callback code, just not testing
@@ -90,12 +90,12 @@ Readline::_rl_peek_macro_key ()
   if (rl_executing_macro == nullptr)
     return 0;
 
-  if (rl_executing_macro[executing_macro_index] == '\0' &&
-      (rl_macro_list == nullptr || rl_macro_list->string == nullptr))
+  if (rl_executing_macro[executing_macro_index] == '\0'
+      && (rl_macro_list == nullptr || rl_macro_list->string == nullptr))
     return 0;
 
-  if (rl_executing_macro[executing_macro_index] == 0 &&
-      rl_macro_list && rl_macro_list->string)
+  if (rl_executing_macro[executing_macro_index] == 0 && rl_macro_list
+      && rl_macro_list->string)
     return rl_macro_list->string[0];
 
   return rl_executing_macro[executing_macro_index];
@@ -149,7 +149,7 @@ Readline::_rl_pop_executing_macro ()
   rl_macro_level--;
 
   if (rl_executing_macro == nullptr)
-    RL_UNSETSTATE(RL_STATE_MACROINPUT);
+    RL_UNSETSTATE (RL_STATE_MACROINPUT);
 }
 
 void
@@ -161,7 +161,7 @@ Readline::_rl_kill_kbd_macro ()
   rl_executing_macro = nullptr;
   executing_macro_index = 0;
 
-  RL_UNSETSTATE(RL_STATE_MACRODEF);
+  RL_UNSETSTATE (RL_STATE_MACRODEF);
 }
 
 /* Begin defining a keyboard macro.
@@ -182,12 +182,12 @@ Readline::rl_start_kbd_macro (int, int)
   if (rl_explicit_arg)
     {
       if (!rl_current_macro.empty ())
-	_rl_with_macro_input (savestring (rl_current_macro));
+        _rl_with_macro_input (savestring (rl_current_macro));
     }
   else
     rl_current_macro.clear ();
 
-  RL_SETSTATE(RL_STATE_MACRODEF);
+  RL_SETSTATE (RL_STATE_MACRODEF);
   return 0;
 }
 
@@ -203,9 +203,10 @@ Readline::rl_end_kbd_macro (int count, int)
       return 1;
     }
 
-  rl_current_macro.erase (rl_current_macro.size () - rl_executing_keyseq.size ());
+  rl_current_macro.erase (rl_current_macro.size ()
+                          - rl_executing_keyseq.size ());
 
-  RL_UNSETSTATE(RL_STATE_MACRODEF);
+  RL_UNSETSTATE (RL_STATE_MACRODEF);
 
   return rl_call_last_kbd_macro (--count, 0);
 }
@@ -220,7 +221,7 @@ Readline::rl_call_last_kbd_macro (int count, int)
 
   if (RL_ISSTATE (RL_STATE_MACRODEF))
     {
-      rl_ding ();		/* no recursive macros */
+      rl_ding (); /* no recursive macros */
       // erase the last character
       rl_current_macro.erase (rl_current_macro.size () - 1, 1);
       return 0;
@@ -254,4 +255,4 @@ Readline::rl_print_last_kbd_macro (int, int)
   return 0;
 }
 
-}  // namespace readline
+} // namespace readline

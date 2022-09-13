@@ -1,4 +1,5 @@
-/* undo.c - manage list of changes to lines, offering opportunity to undo them */
+/* undo.c - manage list of changes to lines, offering opportunity to undo them
+ */
 
 /* Copyright (C) 1987-2017 Free Software Foundation, Inc.
 
@@ -19,8 +20,8 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "readline.hh"
 #include "history.hh"
+#include "readline.hh"
 #include "rlprivate.hh"
 
 #include <sys/types.h>
@@ -45,61 +46,63 @@ Readline::rl_do_undo ()
   int waiting_for_begin;
   unsigned int start, end;
 
-#define TRANS(i) ((i) == static_cast<unsigned int>(-1) ? rl_point \
-			: ((i) == static_cast<unsigned int>(-2) ? rl_end () : (i)))
+#define TRANS(i)                                                              \
+  ((i) == static_cast<unsigned int> (-1)                                      \
+       ? rl_point                                                             \
+       : ((i) == static_cast<unsigned int> (-2) ? rl_end () : (i)))
 
   start = end = waiting_for_begin = 0;
   do
     {
       if (!rl_undo_list)
-	return 0;
+        return 0;
 
       _rl_doing_an_undo = true;
-      RL_SETSTATE(RL_STATE_UNDOING);
+      RL_SETSTATE (RL_STATE_UNDOING);
 
       UNDO_ENTRY entry = rl_undo_list->back ();
 
       /* To better support vi-mode, a start or end value of -1 means
-	 rl_point, and a value of -2 means rl_end. */
+         rl_point, and a value of -2 means rl_end. */
       if (entry.what == UNDO_DELETE || entry.what == UNDO_INSERT)
-	{
-	  start = TRANS (entry.start);
-	  end = TRANS (entry.end);
-	}
+        {
+          start = TRANS (entry.start);
+          end = TRANS (entry.end);
+        }
 
       switch (entry.what)
-	{
-	/* Undoing deletes means inserting some text. */
-	case UNDO_DELETE:
-	  rl_point = start;
-	  _rl_fix_point (1);
-	  rl_insert_text (entry.text);
-	  entry.text.clear ();
-	  break;
+        {
+        /* Undoing deletes means inserting some text. */
+        case UNDO_DELETE:
+          rl_point = start;
+          _rl_fix_point (1);
+          rl_insert_text (entry.text);
+          entry.text.clear ();
+          break;
 
-	/* Undoing inserts means deleting some text. */
-	case UNDO_INSERT:
-	  rl_delete_text (start, end);
-	  rl_point = start;
-	  _rl_fix_point (1);
-	  break;
+        /* Undoing inserts means deleting some text. */
+        case UNDO_INSERT:
+          rl_delete_text (start, end);
+          rl_point = start;
+          _rl_fix_point (1);
+          break;
 
-	/* Undoing an END means undoing everything 'til we get to a BEGIN. */
-	case UNDO_END:
-	  waiting_for_begin++;
-	  break;
+        /* Undoing an END means undoing everything 'til we get to a BEGIN. */
+        case UNDO_END:
+          waiting_for_begin++;
+          break;
 
-	/* Undoing a BEGIN means that we are done with this group. */
-	case UNDO_BEGIN:
-	  if (waiting_for_begin)
-	    waiting_for_begin--;
-	  else
-	    rl_ding ();
-	  break;
-	}
+        /* Undoing a BEGIN means that we are done with this group. */
+        case UNDO_BEGIN:
+          if (waiting_for_begin)
+            waiting_for_begin--;
+          else
+            rl_ding ();
+          break;
+        }
 
       _rl_doing_an_undo = false;
-      RL_UNSETSTATE(RL_STATE_UNDOING);
+      RL_UNSETSTATE (RL_STATE_UNDOING);
 
       rl_undo_list->pop_back ();
     }
@@ -137,14 +140,14 @@ Readline::rl_revert_line (int, int)
   else
     {
       while (rl_undo_list)
-	rl_do_undo ();
+        rl_do_undo ();
 
-#if defined (VI_MODE)
+#if defined(VI_MODE)
       if (rl_editing_mode == vi_mode)
-	rl_point = rl_mark = 0;
+        rl_point = rl_mark = 0;
 #endif
     }
-    return 0;
+  return 0;
 }
 
 /* Do some undoing of things that were done. */
@@ -152,19 +155,19 @@ int
 Readline::rl_undo_command (int count, int)
 {
   if (count < 0)
-    return 0;	/* Nothing to do. */
+    return 0; /* Nothing to do. */
 
   while (count)
     {
       if (rl_do_undo ())
-	count--;
+        count--;
       else
-	{
-	  rl_ding ();
-	  break;
-	}
+        {
+          rl_ding ();
+          break;
+        }
     }
   return 0;
 }
 
-}  // namespace readline
+} // namespace readline

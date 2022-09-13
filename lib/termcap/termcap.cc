@@ -1,6 +1,7 @@
 /* termcap.c - Work-alike for termcap, plus extra features. */
 
-/* Copyright (C) 1985, 1986, 1993,1994, 1995, 1998, 2001,2003,2005,2006,2008,2009 Free Software Foundation, Inc.
+/* Copyright (C) 1985, 1986, 1993,1994, 1995, 1998,
+   2001,2003,2005,2006,2008,2009 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -22,8 +23,8 @@
 #include "config.hh"
 
 /* Get the O_* definitions for open et al.  */
-#if defined (HAVE_SYS_FILE_H)
-#  include <sys/file.h>
+#if defined(HAVE_SYS_FILE_H)
+#include <sys/file.h>
 #endif
 
 #include <fcntl.h>
@@ -33,15 +34,15 @@
 #endif
 
 #ifdef HAVE_STDLIB_H
-#  include <cstdlib>
+#include <cstdlib>
 #endif
 
-#if defined (HAVE_STRING_H)
+#if defined(HAVE_STRING_H)
 #include <cstring>
 #endif
 
-#if !defined (HAVE_BCOPY)
-#  define bcopy(s, d, n)	memcpy ((d), (s), (n))
+#if !defined(HAVE_BCOPY)
+#define bcopy(s, d, n) memcpy ((d), (s), (n))
 #endif
 
 /* BUFSIZE is the initial size allocated for the buffer
@@ -77,7 +78,7 @@ memory_out ()
 
 static char *
 xmalloc (size)
-     unsigned size;
+unsigned size;
 {
   char *tem = malloc (size);
 
@@ -88,8 +89,8 @@ xmalloc (size)
 
 static char *
 xrealloc (ptr, size)
-     char *ptr;
-     unsigned size;
+char *ptr;
+unsigned size;
 {
   char *tem = realloc (ptr, size);
 
@@ -113,20 +114,17 @@ static char *tgetst1 ();
 
 static char *
 find_capability (bp, cap)
-     char *bp, *cap;
+char *bp, *cap;
 {
   for (; *bp; bp++)
-    if (bp[0] == ':'
-	&& bp[1] == cap[0]
-	&& bp[2] == cap[1])
+    if (bp[0] == ':' && bp[1] == cap[0] && bp[2] == cap[1])
       return &bp[4];
   return NULL;
 }
 
-__private_extern__
-int
+__private_extern__ int
 tgetnum (cap)
-     char *cap;
+char *cap;
 {
   char *ptr = find_capability (term_entry, cap);
   if (!ptr || ptr[-1] != '#')
@@ -134,10 +132,9 @@ tgetnum (cap)
   return atoi (ptr);
 }
 
-__private_extern__
-int
+__private_extern__ int
 tgetflag (cap)
-     char *cap;
+char *cap;
 {
   char *ptr = find_capability (term_entry, cap);
   return ptr && ptr[-1] == ':';
@@ -148,11 +145,10 @@ tgetflag (cap)
    to store the string.  That pointer is advanced over the space used.
    If AREA is null, space is allocated with `malloc'.  */
 
-__private_extern__
-char *
+__private_extern__ char *
 tgetstr (cap, area)
-     char *cap;
-     char **area;
+char *cap;
+char **area;
 {
   char *ptr = find_capability (term_entry, cap);
   if (!ptr || (ptr[-1] != '=' && ptr[-1] != '~'))
@@ -164,8 +160,7 @@ tgetstr (cap, area)
    gives meaning of character following \, or a space if no special meaning.
    Eight characters per line within the string.  */
 
-static char esctab[]
-  = " \007\010  \033\014 \
+static char esctab[] = " \007\010  \033\014 \
       \012 \
   \015 \011 \013 \
         ";
@@ -179,8 +174,8 @@ static char esctab[]
 
 static char *
 tgetst1 (ptr, area)
-     char *ptr;
-     char **area;
+char *ptr;
+char **area;
 {
   char *p, *r;
   int c;
@@ -197,8 +192,8 @@ tgetst1 (ptr, area)
       /* Compute size of block needed (may overestimate).  */
       p = ptr;
       while ((c = *p++) && c != ':' && c != '\n')
-	;
-      ret = (char *) xmalloc (p - ptr + 1);
+        ;
+      ret = (char *)xmalloc (p - ptr + 1);
     }
   else
     ret = *area;
@@ -210,35 +205,35 @@ tgetst1 (ptr, area)
   while ((c = *p++) && c != ':' && c != '\n')
     {
       if (c == '^')
-	{
-	  c = *p++;
-	  if (c == '?')
-	    c = 0177;
-	  else
-	    c &= 037;
-	}
+        {
+          c = *p++;
+          if (c == '?')
+            c = 0177;
+          else
+            c &= 037;
+        }
       else if (c == '\\')
-	{
-	  c = *p++;
-	  if (c >= '0' && c <= '7')
-	    {
-	      c -= '0';
-	      size = 0;
+        {
+          c = *p++;
+          if (c >= '0' && c <= '7')
+            {
+              c -= '0';
+              size = 0;
 
-	      while (++size < 3 && (c1 = *p) >= '0' && c1 <= '7')
-		{
-		  c *= 8;
-		  c += c1 - '0';
-		  p++;
-		}
-	    }
-	  else if (c >= 0100 && c < 0200)
-	    {
-	      c1 = esctab[(c & ~040) - 0100];
-	      if (c1 != ' ')
-		c = c1;
-	    }
-	}
+              while (++size < 3 && (c1 = *p) >= '0' && c1 <= '7')
+                {
+                  c *= 8;
+                  c += c1 - '0';
+                  p++;
+                }
+            }
+          else if (c >= 0100 && c < 0200)
+            {
+              c1 = esctab[(c & ~040) - 0100];
+              if (c1 != ' ')
+                c = c1;
+            }
+        }
       *r++ = c;
     }
   *r = '\0';
@@ -247,7 +242,7 @@ tgetst1 (ptr, area)
     *area = r + 1;
   return ret;
 }
-
+
 /* Outputting a string with padding.  */
 
 short ospeed;
@@ -258,23 +253,21 @@ __private_extern__ char PC = '\0';
 /* Actual baud rate if positive;
    - baud rate / 100 if negative.  */
 
-static int speeds[] =
-  {
+static int speeds[] = {
 #ifdef VMS
-    0, 50, 75, 110, 134, 150, -3, -6, -12, -18,
-    -20, -24, -36, -48, -72, -96, -192
-#else /* not VMS */
-    0, 50, 75, 110, 135, 150, -2, -3, -6, -12,
-    -18, -24, -48, -96, -192, -288, -384, -576, -1152
+  0,   50,  75,  110, 134, 150, -3,  -6,  -12,
+  -18, -20, -24, -36, -48, -72, -96, -192
+#else  /* not VMS */
+  0,   50,  75,  110, 135,  150,  -2,   -3,   -6,   -12,
+  -18, -24, -48, -96, -192, -288, -384, -576, -1152
 #endif /* not VMS */
-  };
+};
 
-__private_extern__
-int
+__private_extern__ int
 tputs (str, nlines, outfun)
-     char *str;
-     int nlines;
-     int (*outfun) ();
+char *str;
+int nlines;
+int (*outfun) ();
 {
   int padcount = 0;
   int speed;
@@ -285,7 +278,7 @@ tputs (str, nlines, outfun)
   /* For quite high speeds, convert to the smaller
      units to avoid overflow.  */
   if (speed > 10000)
-    speed = - speed / 100;
+    speed = -speed / 100;
 #else
   if (ospeed == 0)
     speed = tputs_baud_rate;
@@ -336,17 +329,17 @@ tputs (str, nlines, outfun)
 
   return 0;
 }
-
+
 /* Finding the termcap entry in the termcap data base.  */
 
 struct buffer
-  {
-    char *beg;
-    int size;
-    char *ptr;
-    int ateof;
-    int full;
-  };
+{
+  char *beg;
+  int size;
+  char *ptr;
+  int ateof;
+  int full;
+};
 
 /* Forward declarations of static functions.  */
 
@@ -357,27 +350,27 @@ static int name_match ();
 
 #ifdef VMS
 
-#include <rmsdef.h>
 #include <fab.h>
 #include <nam.h>
+#include <rmsdef.h>
 
 static int
 valid_filename_p (fn)
-     char *fn;
+char *fn;
 {
   struct FAB fab = cc$rms_fab;
   struct NAM nam = cc$rms_nam;
   char esa[NAM$C_MAXRSS];
 
   fab.fab$l_fna = fn;
-  fab.fab$b_fns = strlen(fn);
+  fab.fab$b_fns = strlen (fn);
   fab.fab$l_nam = &nam;
   fab.fab$l_fop = FAB$M_NAM;
 
   nam.nam$l_esa = esa;
   nam.nam$b_ess = sizeof esa;
 
-  return SYS$PARSE(&fab, 0, 0) == RMS$_NORMAL;
+  return SYS$PARSE (&fab, 0, 0) == RMS$_NORMAL;
 }
 
 #else /* !VMS */
@@ -385,10 +378,10 @@ valid_filename_p (fn)
 #ifdef MSDOS /* MW, May 1993 */
 static int
 valid_filename_p (fn)
-     char *fn;
+char *fn;
 {
-  return *fn == '\\' || *fn == '/' ||
-    (*fn >= 'A' && *fn <= 'z' && fn[1] == ':');
+  return *fn == '\\' || *fn == '/'
+         || (*fn >= 'A' && *fn <= 'z' && fn[1] == ':');
 }
 #else
 #define valid_filename_p(fn) (*(fn) == '/')
@@ -407,10 +400,9 @@ valid_filename_p (fn)
    0 if the data base is accessible but the type NAME is not defined
    in it, and some other value otherwise.  */
 
-__private_extern__
-int
+__private_extern__ int
 tgetent (bp, name)
-     char *bp, *name;
+char *bp, *name;
 {
   char *termcap_name;
   int fd;
@@ -420,8 +412,8 @@ tgetent (bp, name)
   char *term;
   int malloc_size = 0;
   int c;
-  char *tcenv;			/* TERMCAP value, if it contains :tc=.  */
-  char *indirect = NULL;	/* Terminal type in :tc= in TERMCAP value.  */
+  char *tcenv;           /* TERMCAP value, if it contains :tc=.  */
+  char *indirect = NULL; /* Terminal type in :tc= in TERMCAP value.  */
   int filep;
 
 #ifdef INTERNAL_TERMINAL
@@ -431,10 +423,10 @@ tgetent (bp, name)
     {
       term = INTERNAL_TERMINAL;
       if (!bp)
-	{
-	  malloc_size = 1 + strlen (term);
-	  bp = (char *) xmalloc (malloc_size);
-	}
+        {
+          malloc_size = 1 + strlen (term);
+          bp = (char *)xmalloc (malloc_size);
+        }
       strcpy (bp, term);
       goto ret;
     }
@@ -449,7 +441,7 @@ tgetent (bp, name)
   if (termcap_name && *termcap_name == '\0')
     termcap_name = NULL;
 #if 0
-#if defined (MSDOS) && !defined (TEST)
+#if defined(MSDOS) && !defined(TEST)
   if (termcap_name && (*termcap_name == '\\'
 		       || *termcap_name == '/'
 		       || termcap_name[1] == ':'))
@@ -467,29 +459,29 @@ tgetent (bp, name)
 
   if (termcap_name && !filep && !strcmp (name, getenv ("TERM")))
     {
-      indirect = tgetst1 (find_capability (termcap_name, "tc"), (char **) 0);
+      indirect = tgetst1 (find_capability (termcap_name, "tc"), (char **)0);
       if (!indirect)
-	{
-	  if (!bp)
-	    bp = termcap_name;
-	  else
-	    strcpy (bp, termcap_name);
-	  goto ret;
-	}
+        {
+          if (!bp)
+            bp = termcap_name;
+          else
+            strcpy (bp, termcap_name);
+          goto ret;
+        }
       else
-	{			/* It has tc=.  Need to read /etc/termcap.  */
-	  tcenv = termcap_name;
- 	  termcap_name = NULL;
-	}
+        { /* It has tc=.  Need to read /etc/termcap.  */
+          tcenv = termcap_name;
+          termcap_name = NULL;
+        }
     }
 
   if (!termcap_name || !filep)
     termcap_name = TERMCAP_FILE;
 
-  /* Here we know we must search a file and termcap_name has its name.  */
+    /* Here we know we must search a file and termcap_name has its name.  */
 
 #ifdef MSDOS
-  fd = open (termcap_name, O_RDONLY|O_TEXT, 0);
+  fd = open (termcap_name, O_RDONLY | O_TEXT, 0);
 #else
   fd = open (termcap_name, O_RDONLY, 0);
 #endif
@@ -498,13 +490,13 @@ tgetent (bp, name)
 
   buf.size = BUFSIZE;
   /* Add 1 to size to ensure room for terminating null.  */
-  buf.beg = (char *) xmalloc (buf.size + 1);
+  buf.beg = (char *)xmalloc (buf.size + 1);
   term = indirect ? indirect : name;
 
   if (!bp)
     {
       malloc_size = indirect ? strlen (tcenv) + 1 : buf.size;
-      bp = (char *) xmalloc (malloc_size);
+      bp = (char *)xmalloc (malloc_size);
     }
   bp1 = bp;
 
@@ -519,52 +511,52 @@ tgetent (bp, name)
     {
       /* Scan the file, reading it via buf, till find start of main entry.  */
       if (scan_file (term, fd, &buf) == 0)
-	{
-	  close (fd);
-	  free (buf.beg);
-	  if (malloc_size)
-	    free (bp);
-	  return 0;
-	}
+        {
+          close (fd);
+          free (buf.beg);
+          if (malloc_size)
+            free (bp);
+          return 0;
+        }
 
       /* Free old `term' if appropriate.  */
       if (term != name)
-	free (term);
+        free (term);
 
       /* If BP is malloc'd by us, make sure it is big enough.  */
       if (malloc_size)
-	{
-	  malloc_size = bp1 - bp + buf.size;
-	  termcap_name = (char *) xrealloc (bp, malloc_size);
-	  bp1 += termcap_name - bp;
-	  bp = termcap_name;
-	}
+        {
+          malloc_size = bp1 - bp + buf.size;
+          termcap_name = (char *)xrealloc (bp, malloc_size);
+          bp1 += termcap_name - bp;
+          bp = termcap_name;
+        }
 
       bp2 = bp1;
 
       /* Copy the line of the entry from buf into bp.  */
       termcap_name = buf.ptr;
       while ((*bp1++ = c = *termcap_name++) && c != '\n')
-	/* Drop out any \ newline sequence.  */
-	if (c == '\\' && *termcap_name == '\n')
-	  {
-	    bp1--;
-	    termcap_name++;
-	  }
+        /* Drop out any \ newline sequence.  */
+        if (c == '\\' && *termcap_name == '\n')
+          {
+            bp1--;
+            termcap_name++;
+          }
       *bp1 = '\0';
 
       /* Does this entry refer to another terminal type's entry?
-	 If something is found, copy it into heap and null-terminate it.  */
-      term = tgetst1 (find_capability (bp2, "tc"), (char **) 0);
+         If something is found, copy it into heap and null-terminate it.  */
+      term = tgetst1 (find_capability (bp2, "tc"), (char **)0);
     }
 
   close (fd);
   free (buf.beg);
 
   if (malloc_size)
-    bp = (char *) xrealloc (bp, bp1 - bp + 1);
+    bp = (char *)xrealloc (bp, bp1 - bp + 1);
 
- ret:
+ret:
   term_entry = bp;
   return 1;
 }
@@ -577,9 +569,9 @@ tgetent (bp, name)
 
 static int
 scan_file (str, fd, bufp)
-     char *str;
-     int fd;
-     struct buffer *bufp;
+char *str;
+int fd;
+struct buffer *bufp;
 {
   char *end;
 
@@ -595,16 +587,15 @@ scan_file (str, fd, bufp)
       /* Read a line into the buffer.  */
       end = NULL;
       do
-	{
-	  /* if it is continued, append another line to it,
-	     until a non-continued line ends.  */
-	  end = gobble_line (fd, bufp, end);
-	}
+        {
+          /* if it is continued, append another line to it,
+             until a non-continued line ends.  */
+          end = gobble_line (fd, bufp, end);
+        }
       while (!bufp->ateof && end[-2] == '\\');
 
-      if (*bufp->ptr != '#'
-	  && name_match (bufp->ptr, str))
-	return 1;
+      if (*bufp->ptr != '#' && name_match (bufp->ptr, str))
+        return 1;
 
       /* Discard the line just processed.  */
       bufp->ptr = end;
@@ -617,7 +608,7 @@ scan_file (str, fd, bufp)
 
 static int
 name_match (line, name)
-     char *line, *name;
+char *line, *name;
 {
   char *tem;
 
@@ -633,7 +624,7 @@ name_match (line, name)
 
 static int
 compare_contin (str1, str2)
-     char *str1, *str2;
+char *str1, *str2;
 {
   int c1, c2;
   while (1)
@@ -641,21 +632,22 @@ compare_contin (str1, str2)
       c1 = *str1++;
       c2 = *str2++;
       while (c1 == '\\' && *str1 == '\n')
-	{
-	  str1++;
-	  while ((c1 = *str1++) == ' ' || c1 == '\t');
-	}
+        {
+          str1++;
+          while ((c1 = *str1++) == ' ' || c1 == '\t')
+            ;
+        }
       if (c2 == '\0')
-	{
-	  /* End of type being looked up.  */
-	  if (c1 == '|' || c1 == ':')
-	    /* If end of name in data base, we win.  */
-	    return 0;
-	  else
-	    return 1;
+        {
+          /* End of type being looked up.  */
+          if (c1 == '|' || c1 == ':')
+            /* If end of name in data base, we win.  */
+            return 0;
+          else
+            return 1;
         }
       else if (c1 != c2)
-	return 1;
+        return 1;
     }
 }
 
@@ -674,9 +666,9 @@ compare_contin (str1, str2)
 
 static char *
 gobble_line (fd, bufp, append_end)
-     int fd;
-     struct buffer *bufp;
-     char *append_end;
+int fd;
+struct buffer *bufp;
+char *append_end;
 {
   char *end;
   int nread;
@@ -689,37 +681,38 @@ gobble_line (fd, bufp, append_end)
   while (1)
     {
       end = append_end;
-      while (*end && *end != '\n') end++;
+      while (*end && *end != '\n')
+        end++;
       if (*end)
         break;
       if (bufp->ateof)
-	return buf + bufp->full;
+        return buf + bufp->full;
       if (bufp->ptr == buf)
-	{
-	  if (bufp->full == bufp->size)
-	    {
-	      bufp->size *= 2;
-	      /* Add 1 to size to ensure room for terminating null.  */
-	      tem = (char *) xrealloc (buf, bufp->size + 1);
-	      bufp->ptr = (bufp->ptr - buf) + tem;
-	      append_end = (append_end - buf) + tem;
-	      bufp->beg = buf = tem;
-	    }
-	}
+        {
+          if (bufp->full == bufp->size)
+            {
+              bufp->size *= 2;
+              /* Add 1 to size to ensure room for terminating null.  */
+              tem = (char *)xrealloc (buf, bufp->size + 1);
+              bufp->ptr = (bufp->ptr - buf) + tem;
+              append_end = (append_end - buf) + tem;
+              bufp->beg = buf = tem;
+            }
+        }
       else
-	{
-	  append_end -= bufp->ptr - buf;
-	  bcopy (bufp->ptr, buf, bufp->full -= bufp->ptr - buf);
-	  bufp->ptr = buf;
-	}
+        {
+          append_end -= bufp->ptr - buf;
+          bcopy (bufp->ptr, buf, bufp->full -= bufp->ptr - buf);
+          bufp->ptr = buf;
+        }
       if (!(nread = read (fd, buf + bufp->full, bufp->size - bufp->full)))
-	bufp->ateof = 1;
+        bufp->ateof = 1;
       bufp->full += nread;
       buf[bufp->full] = '\0';
     }
   return end + 1;
 }
-
+
 #ifdef TEST
 
 #ifdef NULL
@@ -728,9 +721,8 @@ gobble_line (fd, bufp, append_end)
 
 #include <stdio.h>
 
-main (argc, argv)
-     int argc;
-     char **argv;
+main (argc, argv) int argc;
+char **argv;
 {
   char *term;
   char *buf;
@@ -738,8 +730,8 @@ main (argc, argv)
   term = argv[1];
   printf ("TERM: %s\n", term);
 
-  buf = (char *) tgetent (0, term);
-  if ((int) buf <= 0)
+  buf = (char *)tgetent (0, term);
+  if ((int)buf <= 0)
     {
       printf ("No entry.\n");
       return 0;
@@ -754,8 +746,7 @@ main (argc, argv)
   printf ("am: %d\n", tgetflag ("am"));
 }
 
-tprint (cap)
-     char *cap;
+tprint (cap) char *cap;
 {
   char *x = tgetstr (cap, 0);
   char *y;
@@ -764,10 +755,10 @@ tprint (cap)
   if (x)
     {
       for (y = x; *y; y++)
-	if (*y <= ' ' || *y == 0177)
-	  printf ("\\%0o", *y);
-	else
-	  putchar (*y);
+        if (*y <= ' ' || *y == 0177)
+          printf ("\\%0o", *y);
+        else
+          putchar (*y);
       free (x);
     }
   else

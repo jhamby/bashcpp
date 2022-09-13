@@ -21,34 +21,24 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
 #include "builtins.h"
 #include "shell.h"
+#include <stdio.h>
 
 int
 necho_builtin (list)
 WORD_LIST *list;
 {
-	print_word_list (list, " ");
-	printf("\n");
-	fflush (stdout);
-	return (EXECUTION_SUCCESS);
+  print_word_list (list, " ");
+  printf ("\n");
+  fflush (stdout);
+  return (EXECUTION_SUCCESS);
 }
 
-char *necho_doc[] = {
-	"Display arguments.",
-	"",
-	"Print the arguments to the standard output separated",
-	"by space characters and terminated with a newline.",
-	(char *)NULL
-};
-	
-struct builtin necho_struct = {
-	"echo",
-	necho_builtin,
-	BUILTIN_ENABLED,
-	necho_doc,
-	"echo [args]",
-	0
-};
-	
+char *necho_doc[]
+    = { "Display arguments.", "",
+        "Print the arguments to the standard output separated",
+        "by space characters and terminated with a newline.", (char *)NULL };
+
+struct builtin necho_struct
+    = { "echo", necho_builtin, BUILTIN_ENABLED, necho_doc, "echo [args]", 0 };

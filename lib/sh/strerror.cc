@@ -20,27 +20,27 @@
 
 #include "config.hh"
 
-#if !defined (HAVE_STRERROR)
+#if !defined(HAVE_STRERROR)
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_SYS_PARAM_H)
-#  include <sys/param.h>
+#if defined(HAVE_SYS_PARAM_H)
+#include <sys/param.h>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include <cstdio>
 #include <cerrno>
+#include <cstdio>
 
 #include "shell.hh"
 
 /* Return a string corresponding to the error number E.  From
    the ANSI C spec. */
-#if defined (strerror)
-#  undef strerror
+#if defined(strerror)
+#undef strerror
 #endif
 
 static char *errbase = "Unknown system error ";
@@ -49,7 +49,7 @@ char *
 strerror (int e)
 {
   static char emsg[40];
-#if defined (HAVE_SYS_ERRLIST)
+#if defined(HAVE_SYS_ERRLIST)
   extern int sys_nerr;
   extern char *sys_errlist[];
 

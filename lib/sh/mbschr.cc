@@ -22,9 +22,9 @@
 
 #include <cstdlib>
 
-#include "shmbutil.hh"
 #include "general.hh"
 #include "shell.hh"
+#include "shmbutil.hh"
 
 namespace bash
 {
@@ -41,7 +41,7 @@ Shell::mbschr (const std::string &s, int c)
   mbstate_t state;
 
   if (locale_utf8locale && c < 0x80)
-    return utf8_mbschr (s.c_str (), c);		/* XXX */
+    return utf8_mbschr (s.c_str (), c); /* XXX */
 
   /* The locale encodings with said weird property are BIG5, BIG5-HKSCS,
      GBK, GB18030, SHIFT_JIS, and JOHAB.  They exhibit the problem only
@@ -50,34 +50,34 @@ Shell::mbschr (const std::string &s, int c)
   if (static_cast<unsigned char> (c) >= '0' && locale_mb_cur_max > 1)
     {
       pos = s.c_str ();
-      std::memset (&state, '\0', sizeof(mbstate_t));
+      std::memset (&state, '\0', sizeof (mbstate_t));
       size_t strlength = s.size ();
 
       while (strlength > 0)
-	{
-	  size_t mblength;
-	  if (is_basic (*pos))
-	    mblength = 1;
-	  else
-	    {
-	      mblength = std::mbrlen (pos, strlength, &state);
-	      if (mblength == static_cast<size_t> (-2) ||
-		  mblength == static_cast<size_t> (-1) || mblength == 0)
-	        mblength = 1;
-	    }
+        {
+          size_t mblength;
+          if (is_basic (*pos))
+            mblength = 1;
+          else
+            {
+              mblength = std::mbrlen (pos, strlength, &state);
+              if (mblength == static_cast<size_t> (-2)
+                  || mblength == static_cast<size_t> (-1) || mblength == 0)
+                mblength = 1;
+            }
 
-	  if (mblength == 1 && c == static_cast<unsigned char> (*pos))
-	    return pos;
+          if (mblength == 1 && c == static_cast<unsigned char> (*pos))
+            return pos;
 
-	  strlength -= mblength;
-	  pos += mblength;
-	}
+          strlength -= mblength;
+          pos += mblength;
+        }
 
       return nullptr;
     }
   else
 #endif
-  return std::strchr (s.c_str (), c);
+    return std::strchr (s.c_str (), c);
 }
 
-}  // namespace bash
+} // namespace bash

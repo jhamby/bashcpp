@@ -19,24 +19,24 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#include <config.h>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <cstdarg>
 #include <cstdio>
 
 int
-dprintf(int fd, const char *format, ...)
+dprintf (int fd, const char *format, ...)
 {
   FILE *fp;
   int fd2, rc, r2;
   va_list args;
 
-  if ((fd2 = ::dup(fd)) < 0)
+  if ((fd2 = ::dup (fd)) < 0)
     return -1;
 
   fp = ::fdopen (fd2, "w");
@@ -51,7 +51,7 @@ dprintf(int fd, const char *format, ...)
   std::fflush (fp);
   va_end (args);
 
-  r2 = std::fclose (fp);	/* check here */
+  r2 = std::fclose (fp); /* check here */
 
   return rc;
 }

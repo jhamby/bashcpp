@@ -20,8 +20,8 @@
 
 #include <config.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 #include <errno.h>
 #include <string.h>
@@ -32,18 +32,18 @@
 #include <stdio.h>
 
 #include "builtins.h"
-#include "shell.h"
 #include "common.h"
+#include "shell.h"
 
 #include "bashgetopt.h"
 
-#if !defined (_POSIX_VERSION)
-#  define setpgid(pid, pgrp)      setpgrp (pid, pgrp)
+#if !defined(_POSIX_VERSION)
+#define setpgid(pid, pgrp) setpgrp (pid, pgrp)
 #endif
 
 int
 setpgid_builtin (list)
-      WORD_LIST *list;
+WORD_LIST *list;
 {
   register WORD_LIST *wl;
   int64_t pid_arg, pgid_arg;
@@ -75,7 +75,7 @@ setpgid_builtin (list)
     }
   if (pid_arg < 0)
     {
-      builtin_error("%s: negative pid  values not allowed", pidstr);
+      builtin_error ("%s: negative pid  values not allowed", pidstr);
       return (EXECUTION_FAILURE);
     }
   pid = pid_arg;
@@ -93,29 +93,26 @@ setpgid_builtin (list)
   pgid = pgid_arg;
 
   errno = 0;
-  if (setpgid(pid, pgid) < 0)
+  if (setpgid (pid, pgid) < 0)
     {
-      builtin_error("setpgid failed: %s", strerror (errno));
+      builtin_error ("setpgid failed: %s", strerror (errno));
       return (EXECUTION_FAILURE);
     }
   return (EXECUTION_SUCCESS);
 }
 
-const char *setpgid_doc[] = {
-	"invoke the setpgid(2) system call",
-	"",
-	"Arguments:",
-	"   pid : numeric process identifier, >= 0",
-	"   pgrpid: numeric process group identifier, >=0",
-	"See the setpgid(2) manual page.",
-	(const char *)NULL
-};
+const char *setpgid_doc[]
+    = { "invoke the setpgid(2) system call",
+        "",
+        "Arguments:",
+        "   pid : numeric process identifier, >= 0",
+        "   pgrpid: numeric process group identifier, >=0",
+        "See the setpgid(2) manual page.",
+        (const char *)NULL };
 
-struct builtin setpgid_struct = {
-	"setpgid",
-	setpgid_builtin,
-	BUILTIN_ENABLED,
-	(char **)setpgid_doc,
-	"setpgid pid pgrpid",
-	0
-};
+struct builtin setpgid_struct = { "setpgid",
+                                  setpgid_builtin,
+                                  BUILTIN_ENABLED,
+                                  (char **)setpgid_doc,
+                                  "setpgid pid pgrpid",
+                                  0 };

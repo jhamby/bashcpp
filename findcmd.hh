@@ -18,13 +18,13 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_FINDCMD_H_)
+#if !defined(_FINDCMD_H_)
 #define _FINDCMD_H_
 
 /* Flags for search_for_command */
-#define CMDSRCH_HASH		0x01
-#define CMDSRCH_STDPATH		0x02
-#define CMDSRCH_TEMPENV		0x04
+#define CMDSRCH_HASH 0x01
+#define CMDSRCH_STDPATH 0x02
+#define CMDSRCH_TEMPENV 0x04
 
 extern int file_status (const char *);
 extern bool executable_file (const char *);

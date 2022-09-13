@@ -22,12 +22,12 @@ EXTGLOB_PATTERN_P (const CHAR *pat)
 {
   switch (pat[0])
     {
-    case L('*'):
-    case L('+'):
-    case L('!'):
-    case L('@'):
-    case L('?'):
-      return pat[1] == L('(');	/* ) */
+    case L ('*'):
+    case L ('+'):
+    case L ('!'):
+    case L ('@'):
+    case L ('?'):
+      return pat[1] == L ('('); /* ) */
     default:
       return false;
     }
@@ -44,24 +44,24 @@ MATCH_PATTERN_CHAR (const CHAR *pat, const CHAR *string, int flags)
   CHAR c;
 
   if (*string == 0)
-    return *pat == L('*');	/* XXX  - allow only * to match empty string */
+    return *pat == L ('*'); /* XXX  - allow only * to match empty string */
 
   switch (c = *pat++)
     {
     default:
-      return FOLD(*string) == FOLD(c);
-    case L('\\'):
-      return FOLD(*string) == FOLD(*pat);
-    case L('?'):
-      return *pat == L('(') ? 1 : (*string != L'\0');
-    case L('*'):
+      return FOLD (*string) == FOLD (c);
+    case L ('\\'):
+      return FOLD (*string) == FOLD (*pat);
+    case L ('?'):
+      return *pat == L ('(') ? 1 : (*string != L'\0');
+    case L ('*'):
       return 1;
-    case L('+'):
-    case L('!'):
-    case L('@'):
-      return *pat ==  L('(') ? 1 : (FOLD(*string) == FOLD(c));
-    case L('['):
-      return *string != L('\0');
+    case L ('+'):
+    case L ('!'):
+    case L ('@'):
+      return *pat == L ('(') ? 1 : (FOLD (*string) == FOLD (c));
+    case L ('['):
+      return *string != L ('\0');
     }
 }
 
@@ -78,113 +78,115 @@ MATCHLEN (const CHAR *pat, size_t max)
   while ((c = *pat++))
     {
       switch (c)
-	{
-	default:
-	  matlen++;
-	  break;
-	case L('\\'):
-	  if (*pat == 0)
-	    return ++matlen;
-	  else
-	    {
-	      matlen++;
-	      pat++;
-	    }
-	  break;
-	case L('?'):
-	  if (*pat == LPAREN)
-	    return (matlen = -1);		/* XXX for now */
-	  else
-	    matlen++;
-	  break;
-	case L('*'):
-	  return (matlen = -1);
-	case L('+'):
-	case L('!'):
-	case L('@'):
-	  if (*pat == LPAREN)
-	    return (matlen = -1);		/* XXX for now */
-	  else
-	    matlen++;
-	  break;
-	case L('['):
-	  /* scan for ending `]', skipping over embedded [:...:] */
-	  bracklen = 1;
-	  c = *pat++;
-	  do
-	    {
-	      if (c == 0)
-		{
-		  pat--;			/* back up to NUL */
-	          matlen += bracklen;
-	          goto bad_bracket;
-	        }
-	      else if (c == L('\\'))
-		{
-		  /* *pat == backslash-escaped character */
-		  bracklen++;
-		  /* If the backslash or backslash-escape ends the string,
-		     bail.  The ++pat skips over the backslash escape */
-		  if (*pat == 0 || *++pat == 0)
-		    {
-		      matlen += bracklen;
-		      goto bad_bracket;
-		    }
-		}
-	      else if (c == L('[') && *pat == L(':'))	/* character class */
-		{
-		  pat++;
-		  bracklen++;
-		  in_cclass = 1;
-		}
-	      else if (in_cclass && c == L(':') && *pat == L(']'))
-		{
-		  pat++;
-		  bracklen++;
-		  in_cclass = 0;
-		}
-	      else if (c == L('[') && *pat == L('.'))	/* collating symbol */
-		{
-		  pat++;
-		  bracklen++;
-		  if (*pat == L(']'))	/* right bracket can appear as collating symbol */
-		    {
-		      pat++;
-		      bracklen++;
-		    }
-		  in_collsym = 1;
-		}
-	      else if (in_collsym && c == L('.') && *pat == L(']'))
-		{
-		  pat++;
-		  bracklen++;
-		  in_collsym = 0;
-		}
-	      else if (c == L('[') && *pat == L('='))	/* equivalence class */
-		{
-		  pat++;
-		  bracklen++;
-		  if (*pat == L(']'))	/* right bracket can appear as equivalence class */
-		    {
-		      pat++;
-		      bracklen++;
-		    }
-		  in_equiv = 1;
-		}
-	      else if (in_equiv && c == L('=') && *pat == L(']'))
-		{
-		  pat++;
-		  bracklen++;
-		  in_equiv = 0;
-		}
-	      else
-		bracklen++;
-	    }
-	  while ((c = *pat++) != L(']'));
-	  matlen++;		/* bracket expression can only match one char */
-bad_bracket:
-	  break;
-	}
+        {
+        default:
+          matlen++;
+          break;
+        case L ('\\'):
+          if (*pat == 0)
+            return ++matlen;
+          else
+            {
+              matlen++;
+              pat++;
+            }
+          break;
+        case L ('?'):
+          if (*pat == LPAREN)
+            return (matlen = -1); /* XXX for now */
+          else
+            matlen++;
+          break;
+        case L ('*'):
+          return (matlen = -1);
+        case L ('+'):
+        case L ('!'):
+        case L ('@'):
+          if (*pat == LPAREN)
+            return (matlen = -1); /* XXX for now */
+          else
+            matlen++;
+          break;
+        case L ('['):
+          /* scan for ending `]', skipping over embedded [:...:] */
+          bracklen = 1;
+          c = *pat++;
+          do
+            {
+              if (c == 0)
+                {
+                  pat--; /* back up to NUL */
+                  matlen += bracklen;
+                  goto bad_bracket;
+                }
+              else if (c == L ('\\'))
+                {
+                  /* *pat == backslash-escaped character */
+                  bracklen++;
+                  /* If the backslash or backslash-escape ends the string,
+                     bail.  The ++pat skips over the backslash escape */
+                  if (*pat == 0 || *++pat == 0)
+                    {
+                      matlen += bracklen;
+                      goto bad_bracket;
+                    }
+                }
+              else if (c == L ('[') && *pat == L (':')) /* character class */
+                {
+                  pat++;
+                  bracklen++;
+                  in_cclass = 1;
+                }
+              else if (in_cclass && c == L (':') && *pat == L (']'))
+                {
+                  pat++;
+                  bracklen++;
+                  in_cclass = 0;
+                }
+              else if (c == L ('[') && *pat == L ('.')) /* collating symbol */
+                {
+                  pat++;
+                  bracklen++;
+                  if (*pat == L (']')) /* right bracket can appear as collating
+                                          symbol */
+                    {
+                      pat++;
+                      bracklen++;
+                    }
+                  in_collsym = 1;
+                }
+              else if (in_collsym && c == L ('.') && *pat == L (']'))
+                {
+                  pat++;
+                  bracklen++;
+                  in_collsym = 0;
+                }
+              else if (c == L ('[') && *pat == L ('=')) /* equivalence class */
+                {
+                  pat++;
+                  bracklen++;
+                  if (*pat == L (']')) /* right bracket can appear as
+                                          equivalence class */
+                    {
+                      pat++;
+                      bracklen++;
+                    }
+                  in_equiv = 1;
+                }
+              else if (in_equiv && c == L ('=') && *pat == L (']'))
+                {
+                  pat++;
+                  bracklen++;
+                  in_equiv = 0;
+                }
+              else
+                bracklen++;
+            }
+          while ((c = *pat++) != L (']'));
+          matlen++; /* bracket expression can only match one char */
+        bad_bracket:
+          break;
+        }
     }
 
   return matlen;

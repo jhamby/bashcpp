@@ -33,7 +33,7 @@
 namespace readline
 {
 
-#if defined (COLOR_SUPPORT)
+#if defined(COLOR_SUPPORT)
 
 static bool get_funky_string (char **, const char **, bool, size_t *);
 
@@ -44,30 +44,30 @@ Readline::init_rl_color_indicators ()
     _rl_color_indicator = new std::string[NUM_COLORS];
 
   std::string *ci = _rl_color_indicator;
-  ci[0] = "\033[";	//  lc: Left of color sequence
-  ci[1] = "m";		//  rc: Right of color sequence
-  /*2*/			//  ec: End color (replaces lc+no+rc)
-  /*3*/			//  rs: Reset to ordinary colors
-  /*4*/			//  no: Normal
-  /*5*/			//  fi: File: default
-  ci[6] = "01;34";	//  di: Directory: bright blue
-  ci[7] = "01;36";	//  ln: Symlink: bright cyan
-  ci[8] = "33";		//  pi: Pipe: yellow/brown
-  ci[9] = "01;35";	//  so: Socket: bright magenta
-  ci[10] = "01;33";	//  bd: Block device: bright yellow
-  ci[11] = "01;33";	//  cd: Char device: bright yellow
-  /*12*/		//  mi: Missing file: undefined
-  /*13*/		//  or: Orphaned symlink: undefined
-  ci[14] = "01;32";	//  ex: Executable: bright green
-  ci[15] = "01;35";	//  do: Door: bright magenta
-  ci[16] = "37;41";	//  su: setuid: white on red
-  ci[17] = "30;43";	//  sg: setgid: black on yellow
-  ci[18] = "37;44";	//  st: sticky: black on blue
-  ci[19] = "34;42";	//  ow: other-writable: blue on green
-  ci[20] = "30;42";	//  tw: ow w/ sticky: black on green
-  ci[21] = "30;41";	//  ca: black on red
-  /*22*/		//  mh: disabled by default
-  ci[23] = "\033[K";	//  cl: clear to end of line
+  ci[0] = "\033[";   //  lc: Left of color sequence
+  ci[1] = "m";       //  rc: Right of color sequence
+  /*2*/              //  ec: End color (replaces lc+no+rc)
+  /*3*/              //  rs: Reset to ordinary colors
+  /*4*/              //  no: Normal
+  /*5*/              //  fi: File: default
+  ci[6] = "01;34";   //  di: Directory: bright blue
+  ci[7] = "01;36";   //  ln: Symlink: bright cyan
+  ci[8] = "33";      //  pi: Pipe: yellow/brown
+  ci[9] = "01;35";   //  so: Socket: bright magenta
+  ci[10] = "01;33";  //  bd: Block device: bright yellow
+  ci[11] = "01;33";  //  cd: Char device: bright yellow
+  /*12*/             //  mi: Missing file: undefined
+  /*13*/             //  or: Orphaned symlink: undefined
+  ci[14] = "01;32";  //  ex: Executable: bright green
+  ci[15] = "01;35";  //  do: Door: bright magenta
+  ci[16] = "37;41";  //  su: setuid: white on red
+  ci[17] = "30;43";  //  sg: setgid: black on yellow
+  ci[18] = "37;44";  //  st: sticky: black on blue
+  ci[19] = "34;42";  //  ow: other-writable: blue on green
+  ci[20] = "30;42";  //  tw: ow w/ sticky: black on green
+  ci[21] = "30;41";  //  ca: black on red
+  /*22*/             //  mh: disabled by default
+  ci[23] = "\033[K"; //  cl: clear to end of line
 }
 
 /* Parse a string as part of the LS_COLORS variable; this may involve
@@ -84,35 +84,43 @@ Readline::init_rl_color_indicators ()
    the input string, respectively.  */
 
 static bool
-get_funky_string (char **dest, const char **src, bool equals_end, size_t *output_count)
+get_funky_string (char **dest, const char **src, bool equals_end,
+                  size_t *output_count)
 {
-  unsigned char num;		/* For numerical codes */
-  size_t count;			/* Something to count with */
-  enum {
-    ST_GND, ST_BACKSLASH, ST_OCTAL, ST_HEX, ST_CARET, ST_END, ST_ERROR
+  unsigned char num; /* For numerical codes */
+  size_t count;      /* Something to count with */
+  enum
+  {
+    ST_GND,
+    ST_BACKSLASH,
+    ST_OCTAL,
+    ST_HEX,
+    ST_CARET,
+    ST_END,
+    ST_ERROR
   } state;
   const char *p;
   char *q;
 
-  p = *src;			/* We don't want to double-indirect */
-  q = *dest;			/* the whole darn time.  */
+  p = *src;  /* We don't want to double-indirect */
+  q = *dest; /* the whole darn time.  */
 
-  count = 0;			/* No characters counted in yet.  */
+  count = 0; /* No characters counted in yet.  */
   num = 0;
 
   bool exitloop = false;
-  state = ST_GND;		/* Start in ground state.  */
+  state = ST_GND; /* Start in ground state.  */
   while (!exitloop)
     {
       switch (state)
         {
-        case ST_GND:		/* Ground state (no escapes) */
+        case ST_GND: /* Ground state (no escapes) */
           switch (*p)
             {
             case ':':
             case '\0':
-              state = ST_END;	/* End of string */
-	      exitloop = true;
+              state = ST_END; /* End of string */
+              exitloop = true;
               break;
             case '\\':
               state = ST_BACKSLASH; /* Backslash scape sequence */
@@ -126,11 +134,11 @@ get_funky_string (char **dest, const char **src, bool equals_end, size_t *output
               if (equals_end)
                 {
                   state = ST_END; /* End */
-		  exitloop = true;
+                  exitloop = true;
                   break;
                 }
               /* else fall through */
-	      __attribute__ ((fallthrough));
+              __attribute__ ((fallthrough));
             default:
               *(q++) = *(p++);
               ++count;
@@ -138,7 +146,7 @@ get_funky_string (char **dest, const char **src, bool equals_end, size_t *output
             }
           break;
 
-        case ST_BACKSLASH:	/* Backslash escaped character */
+        case ST_BACKSLASH: /* Backslash escaped character */
           switch (*p)
             {
             case '0':
@@ -149,49 +157,49 @@ get_funky_string (char **dest, const char **src, bool equals_end, size_t *output
             case '5':
             case '6':
             case '7':
-              state = ST_OCTAL;	/* Octal sequence */
+              state = ST_OCTAL; /* Octal sequence */
               num = static_cast<unsigned char> (*p - '0');
               break;
             case 'x':
             case 'X':
-              state = ST_HEX;	/* Hex sequence */
+              state = ST_HEX; /* Hex sequence */
               num = 0;
               break;
-            case 'a':		/* Bell */
+            case 'a': /* Bell */
               num = '\a';
               break;
-            case 'b':		/* Backspace */
+            case 'b': /* Backspace */
               num = '\b';
               break;
-            case 'e':		/* Escape */
+            case 'e': /* Escape */
               num = 27;
               break;
-            case 'f':		/* Form feed */
+            case 'f': /* Form feed */
               num = '\f';
               break;
-            case 'n':		/* Newline */
+            case 'n': /* Newline */
               num = '\n';
               break;
-            case 'r':		/* Carriage return */
+            case 'r': /* Carriage return */
               num = '\r';
               break;
-            case 't':		/* Tab */
+            case 't': /* Tab */
               num = '\t';
               break;
-            case 'v':		/* Vtab */
+            case 'v': /* Vtab */
               num = '\v';
               break;
-            case '?':		/* Delete */
+            case '?': /* Delete */
               num = 127;
               break;
-            case '_':		/* Space */
+            case '_': /* Space */
               num = ' ';
               break;
-            case '\0':		/* End of string */
-              state = ST_ERROR;	/* Error! */
-	      exitloop = true;
+            case '\0':          /* End of string */
+              state = ST_ERROR; /* Error! */
+              exitloop = true;
               break;
-            default:		/* Escaped character like \ ^ : = */
+            default: /* Escaped character like \ ^ : = */
               num = static_cast<unsigned char> (*p);
               break;
             }
@@ -204,7 +212,7 @@ get_funky_string (char **dest, const char **src, bool equals_end, size_t *output
           ++p;
           break;
 
-        case ST_OCTAL:		/* Octal sequence */
+        case ST_OCTAL: /* Octal sequence */
           if (*p < '0' || *p > '7')
             {
               *(q++) = static_cast<char> (num);
@@ -215,7 +223,7 @@ get_funky_string (char **dest, const char **src, bool equals_end, size_t *output
             num = static_cast<unsigned char> ((num << 3) + (*(p++) - '0'));
           break;
 
-        case ST_HEX:		/* Hex sequence */
+        case ST_HEX: /* Hex sequence */
           switch (*p)
             {
             case '0':
@@ -236,7 +244,8 @@ get_funky_string (char **dest, const char **src, bool equals_end, size_t *output
             case 'd':
             case 'e':
             case 'f':
-              num = static_cast<unsigned char> ((num << 4) + (*(p++) - 'a') + 10);
+              num = static_cast<unsigned char> ((num << 4) + (*(p++) - 'a')
+                                                + 10);
               break;
             case 'A':
             case 'B':
@@ -244,7 +253,8 @@ get_funky_string (char **dest, const char **src, bool equals_end, size_t *output
             case 'D':
             case 'E':
             case 'F':
-              num = static_cast<unsigned char> ((num << 4) + (*(p++) - 'A') + 10);
+              num = static_cast<unsigned char> ((num << 4) + (*(p++) - 'A')
+                                                + 10);
               break;
             default:
               *(q++) = static_cast<char> (num);
@@ -254,8 +264,8 @@ get_funky_string (char **dest, const char **src, bool equals_end, size_t *output
             }
           break;
 
-        case ST_CARET:		/* Caret escape */
-          state = ST_GND;	/* Should be the next state... */
+        case ST_CARET:    /* Caret escape */
+          state = ST_GND; /* Should be the next state... */
           if (*p >= '@' && *p <= '~')
             {
               *(q++) = *(p++) & 037;
@@ -267,17 +277,17 @@ get_funky_string (char **dest, const char **src, bool equals_end, size_t *output
               ++count;
             }
           else
-	    {
-	      state = ST_ERROR;
-	      exitloop = true;
-	    }
+            {
+              state = ST_ERROR;
+              exitloop = true;
+            }
           break;
 
         case ST_END:
-	case ST_ERROR:
-	  /* we shouldn't get here */
+        case ST_ERROR:
+          /* we shouldn't get here */
           state = ST_ERROR;
-	  exitloop = true;
+          exitloop = true;
           break;
         }
     }
@@ -293,13 +303,13 @@ get_funky_string (char **dest, const char **src, bool equals_end, size_t *output
 void
 Readline::_rl_parse_colors ()
 {
-#if defined (COLOR_SUPPORT)
-  const char *p;		/* Pointer to character being parsed */
-  char *buf;			/* color_buf buffer pointer */
-  int state;			/* State of parser */
-  int ind_no;			/* Indicator number */
-  char label[3];		/* Indicator label */
-  COLOR_EXT_TYPE *ext;		/* Extension we are working on */
+#if defined(COLOR_SUPPORT)
+  const char *p;       /* Pointer to character being parsed */
+  char *buf;           /* color_buf buffer pointer */
+  int state;           /* State of parser */
+  int ind_no;          /* Indicator number */
+  char label[3];       /* Indicator label */
+  COLOR_EXT_TYPE *ext; /* Extension we are working on */
 
   p = sh_get_env_value ("LS_COLORS");
   if (p == nullptr || *p == '\0')
@@ -324,7 +334,7 @@ Readline::_rl_parse_colors ()
     {
       switch (state)
         {
-        case 1:		/* First label character */
+        case 1: /* First label character */
           switch (*p)
             {
             case ':':
@@ -343,76 +353,75 @@ Readline::_rl_parse_colors ()
 
               ++p;
 
-	      size_t buflen;
-              state = (get_funky_string (&buf, &p, true, &buflen)
-                       ? 4 : -1);
+              size_t buflen;
+              state = (get_funky_string (&buf, &p, true, &buflen) ? 4 : -1);
 
-	      ext->ext.assign (buf, buflen);
+              ext->ext.assign (buf, buflen);
               break;
 
             case '\0':
-              state = 0;	/* Done! */
+              state = 0; /* Done! */
               break;
 
-            default:	/* Assume it is file type label */
+            default: /* Assume it is file type label */
               label[0] = *(p++);
               state = 2;
               break;
             }
           break;
 
-        case 2:		/* Second label character */
+        case 2: /* Second label character */
           if (*p)
             {
               label[1] = *(p++);
               state = 3;
             }
           else
-            state = -1;	/* Error */
+            state = -1; /* Error */
           break;
 
-        case 3:		/* Equal sign after indicator label */
-          state = -1;	/* Assume failure...  */
-          if (*(p++) == '=')/* It *should* be...  */
+        case 3:              /* Equal sign after indicator label */
+          state = -1;        /* Assume failure...  */
+          if (*(p++) == '=') /* It *should* be...  */
             {
               for (ind_no = 0; indicator_name[ind_no] != nullptr; ++ind_no)
                 {
                   if (STREQ (label, indicator_name[ind_no]))
                     {
-		      size_t buflen;
-                      state = (get_funky_string (&buf, &p, false, &buflen)
-                               ? 1 : -1);
+                      size_t buflen;
+                      state
+                          = (get_funky_string (&buf, &p, false, &buflen) ? 1
+                                                                         : -1);
                       _rl_color_indicator[ind_no].assign (buf, buflen);
                       break;
                     }
                 }
               if (state == -1)
-		{
+                {
                   _rl_errmsg ("LS_COLORS: unrecognized prefix: %s", label);
                   /* recover from an unrecognized prefix */
                   while (p && *p && *p != ':')
-		    p++;
-		  if (p && *p == ':')
-		    state = 1;
-		  else if (p && *p == 0)
-		    state = 0;
-		}
+                    p++;
+                  if (p && *p == ':')
+                    state = 1;
+                  else if (p && *p == 0)
+                    state = 0;
+                }
             }
           break;
 
-        case 4:		/* Equal sign after *.ext */
+        case 4: /* Equal sign after *.ext */
           if (*(p++) == '=')
             {
-	      size_t buflen;
-              state = (get_funky_string (&buf, &p, false, &buflen)
-                       ? 1 : -1);
+              size_t buflen;
+              state = (get_funky_string (&buf, &p, false, &buflen) ? 1 : -1);
               ext->seq.assign (buf, buflen);
             }
           else
             state = -1;
           /* XXX - recover here as with an unrecognized prefix? */
           if (state == -1 && !ext->ext.empty ())
-	    _rl_errmsg ("LS_COLORS: syntax error: %s", ext->ext.c_str ());
+            _rl_errmsg ("LS_COLORS: syntax error: %s", ext->ext.c_str ());
           break;
         }
     }
@@ -432,11 +441,11 @@ Readline::_rl_parse_colors ()
           delete e2;
         }
       _rl_color_ext_list = nullptr;
-      _rl_colored_stats = 0;	/* can't have colored stats without colors */
+      _rl_colored_stats = 0; /* can't have colored stats without colors */
     }
-#else /* !COLOR_SUPPORT */
+#else  /* !COLOR_SUPPORT */
   ;
 #endif /* !COLOR_SUPPORT */
 }
 
-}  // namespace readline
+} // namespace readline

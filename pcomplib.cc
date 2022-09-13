@@ -20,23 +20,23 @@
 
 #include "config.hh"
 
-#if defined (PROGRAMMABLE_COMPLETION)
+#if defined(PROGRAMMABLE_COMPLETION)
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
 #include "pcomplete.hh"
+#include "shell.hh"
 
 namespace bash
 {
 
-static constexpr int COMPLETE_HASH_BUCKETS =	256;	/* must be power of two */
+static constexpr int COMPLETE_HASH_BUCKETS = 256; /* must be power of two */
 
-#define STRDUP(x)	((x) ? savestring (x) : (char *)NULL)
+#define STRDUP(x) ((x) ? savestring (x) : (char *)NULL)
 
 HASH_TABLE *prog_completes = (HASH_TABLE *)NULL;
 
@@ -91,7 +91,7 @@ compspec_copy (COMPSPEC *cs)
 
   newcs = (COMPSPEC *)xmalloc (sizeof (COMPSPEC));
 
-  newcs->refcount = 1; 	/* was cs->refcount, but this is a fresh copy */
+  newcs->refcount = 1; /* was cs->refcount, but this is a fresh copy */
   newcs->actions = cs->actions;
   newcs->options = cs->options;
 
@@ -156,7 +156,7 @@ progcomp_remove (char *cmd)
   if (item)
     {
       if (item->data)
-	free_progcomp (item->data);
+        free_progcomp (item->data);
       free (item->key);
       free (item);
       return 1;
@@ -170,7 +170,7 @@ progcomp_insert (char *cmd, COMPSPEC *cs)
   BUCKET_CONTENTS *item;
 
   if (cs == NULL)
-    programming_error (_("progcomp_insert: %s: NULL COMPSPEC"), cmd);
+    programming_error (_ ("progcomp_insert: %s: NULL COMPSPEC"), cmd);
 
   if (prog_completes == 0)
     progcomp_create ();
@@ -214,6 +214,6 @@ progcomp_walk (hash_wfunc *pfunc)
   hash_walk (prog_completes, pfunc);
 }
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* PROGRAMMABLE_COMPLETION */

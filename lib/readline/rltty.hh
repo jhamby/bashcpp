@@ -19,7 +19,7 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_RLTTY_H_)
+#if !defined(_RLTTY_H_)
 #define _RLTTY_H_
 
 #include "rlwinsize.hh"
@@ -28,19 +28,20 @@
    it is not already defined.  It is used both to determine if a
    special character is disabled and to disable certain special
    characters.  Posix systems should set to 0, USG systems to -1. */
-#if !defined (NEW_TTY_DRIVER) && !defined (_POSIX_VDISABLE)
-#  if defined (_SVR4_VDISABLE)
-#    define _POSIX_VDISABLE _SVR4_VDISABLE
-#  else
-#    if defined (_POSIX_VERSION)
-#      define _POSIX_VDISABLE 0
-#    else /* !_POSIX_VERSION */
-#      define _POSIX_VDISABLE -1
-#    endif /* !_POSIX_VERSION */
-#  endif /* !_SVR4_DISABLE */
+#if !defined(NEW_TTY_DRIVER) && !defined(_POSIX_VDISABLE)
+#if defined(_SVR4_VDISABLE)
+#define _POSIX_VDISABLE _SVR4_VDISABLE
+#else
+#if defined(_POSIX_VERSION)
+#define _POSIX_VDISABLE 0
+#else /* !_POSIX_VERSION */
+#define _POSIX_VDISABLE -1
+#endif /* !_POSIX_VERSION */
+#endif /* !_SVR4_DISABLE */
 #endif /* !NEW_TTY_DRIVER && !_POSIX_VDISABLE */
 
-struct _RL_TTY_CHARS {
+struct _RL_TTY_CHARS
+{
   unsigned char t_eof;
   unsigned char t_eol;
   unsigned char t_eol2;

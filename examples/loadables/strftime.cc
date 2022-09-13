@@ -22,8 +22,8 @@
 
 #include <config.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashtypes.h"
@@ -31,14 +31,14 @@
 
 #include <stdio.h>
 
-#include "builtins.h"
-#include "shell.h"
-#include "common.h"
 #include "bashgetopt.h"
+#include "builtins.h"
+#include "common.h"
+#include "shell.h"
 
 int
 strftime_builtin (list)
-     WORD_LIST *list;
+WORD_LIST *list;
 {
   char *format, *tbuf;
   size_t tbsize, tsize;
@@ -70,10 +70,10 @@ strftime_builtin (list)
     {
       n = legal_number (list->word->word, &i);
       if (n == 0 || i < 0 || i != (time_t)i)
-	{
-	  sh_invalidnum (list->word->word);
-	  return (EXECUTION_FAILURE);
-	}
+        {
+          sh_invalidnum (list->word->word);
+          return (EXECUTION_FAILURE);
+        }
       else
         secs = i;
     }
@@ -105,24 +105,23 @@ strftime_builtin (list)
 
 /* An array of strings forming the `long' documentation for a builtin xxx,
    which is printed by `help xxx'.  It must end with a NULL. */
-char *strftime_doc[] = {
-	"Display formatted time.",
-	"",
-	"Converts date and time format to a string and displays it on the",
-	"standard output.  If the optional second argument is supplied, it",
-	"is used as the number of seconds since the epoch to use in the",
-	"conversion, otherwise the current time is used.",
-	(char *)NULL
-};
+char *strftime_doc[]
+    = { "Display formatted time.",
+        "",
+        "Converts date and time format to a string and displays it on the",
+        "standard output.  If the optional second argument is supplied, it",
+        "is used as the number of seconds since the epoch to use in the",
+        "conversion, otherwise the current time is used.",
+        (char *)NULL };
 
 /* The standard structure describing a builtin command.  bash keeps an array
    of these structures.  The flags must include BUILTIN_ENABLED so the
    builtin can be used. */
 struct builtin strftime_struct = {
-	"strftime",		/* builtin name */
-	strftime_builtin,	/* function implementing the builtin */
-	BUILTIN_ENABLED,	/* initial flags for builtin */
-	strftime_doc,		/* array of long documentation strings. */
-	"strftime format [seconds]",	/* usage synopsis; becomes short_doc */
-	0			/* reserved for internal use */
+  "strftime",                  /* builtin name */
+  strftime_builtin,            /* function implementing the builtin */
+  BUILTIN_ENABLED,             /* initial flags for builtin */
+  strftime_doc,                /* array of long documentation strings. */
+  "strftime format [seconds]", /* usage synopsis; becomes short_doc */
+  0                            /* reserved for internal use */
 };

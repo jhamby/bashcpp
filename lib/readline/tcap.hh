@@ -19,22 +19,22 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_RLTCAP_H_)
+#if !defined(_RLTCAP_H_)
 #define _RLTCAP_H_
 
-#if defined (HAVE_TERMCAP_H)
-#  if defined (__linux__) && !defined (SPEED_T_IN_SYS_TYPES)
-#    include "rltty.hh"
-#  endif
-#  include <termcap.h>
-#elif defined (HAVE_NCURSES_TERMCAP_H)
-#  include <ncurses/termcap.h>
+#if defined(HAVE_TERMCAP_H)
+#if defined(__linux__) && !defined(SPEED_T_IN_SYS_TYPES)
+#include "rltty.hh"
+#endif
+#include <termcap.h>
+#elif defined(HAVE_NCURSES_TERMCAP_H)
+#include <ncurses/termcap.h>
 #else
 
 /* On Solaris2, sys/types.h #includes sys/reg.h, which #defines PC.
    Unfortunately, PC is a global variable used by the termcap library. */
 #ifdef PC
-#  undef PC
+#undef PC
 #endif
 
 extern char PC;

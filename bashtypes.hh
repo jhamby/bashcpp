@@ -18,25 +18,25 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_BASHTYPES_H_)
-#  define _BASHTYPES_H_
+#if !defined(_BASHTYPES_H_)
+#define _BASHTYPES_H_
 
 #include <sys/types.h>
 
-#if defined (HAVE_INTTYPES_H)
-#  include <inttypes.h>
+#if defined(HAVE_INTTYPES_H)
+#include <inttypes.h>
 #endif
 
-#if defined (HAVE_STDINT_H)
-#  include <stdint.h>
+#if defined(HAVE_STDINT_H)
+#include <stdint.h>
 #endif
 
 // Fake C++11 keywords for older C++ compilers.
-#if !defined (nullptr) && __cplusplus < 201103L
-# define noexcept throw ()
-# define override
-# define nullptr NULL
-# define constexpr const
+#if !defined(nullptr) && __cplusplus < 201103L
+#define noexcept throw ()
+#define override
+#define nullptr NULL
+#define constexpr const
 #endif
 
 #endif /* _BASHTYPES_H_ */

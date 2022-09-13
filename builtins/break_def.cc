@@ -34,15 +34,15 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "execute_cmd.hh"
 #include "common.hh"
+#include "execute_cmd.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -74,7 +74,7 @@ Shell::break_builtin (WORD_LIST *list)
 
   if (newbreak <= 0)
     {
-      sh_erange (list->word->word, _("loop count"));
+      sh_erange (list->word->word, _ ("loop count"));
       breaking = loop_level;
       return EXECUTION_FAILURE;
     }
@@ -115,7 +115,7 @@ Shell::continue_builtin (WORD_LIST *list)
 
   if (newcont <= 0)
     {
-      sh_erange (list->word->word, _("loop count"));
+      sh_erange (list->word->word, _ ("loop count"));
       breaking = loop_level;
       return EXECUTION_FAILURE;
     }
@@ -133,12 +133,12 @@ Shell::continue_builtin (WORD_LIST *list)
 static int
 check_loop_level ()
 {
-#if defined (BREAK_COMPLAINS)
+#if defined(BREAK_COMPLAINS)
   if (loop_level == 0 && posixly_correct == 0)
-    builtin_error (_("only meaningful in a `for', `while', or `until' loop"));
+    builtin_error (_ ("only meaningful in a `for', `while', or `until' loop"));
 #endif /* BREAK_COMPLAINS */
 
   return loop_level;
 }
 
-}  // namespace bash
+} // namespace bash

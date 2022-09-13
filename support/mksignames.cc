@@ -21,18 +21,18 @@
 
 #include "config.hh"
 
-#include <sys/types.h>
 #include <csignal>
+#include <sys/types.h>
 
 #include <cstdio>
 #include <cstdlib>
 
 /* Duplicated from signames.c */
-#if !defined (NSIG)
-#  define NSIG 64
+#if !defined(NSIG)
+#define NSIG 64
 #endif
 
-#define LASTSIG NSIG+2
+#define LASTSIG NSIG + 2
 
 /* Imported from signames.c */
 extern void initialize_signames ();
@@ -47,11 +47,12 @@ write_signames (FILE *stream)
   int i;
 
   fprintf (stream, "/* This file was automatically created by %s.\n",
-	   progname);
-  fprintf (stream, "   Do not edit.  Edit support/mksignames.c instead. */\n\n");
+           progname);
   fprintf (stream,
-	   "/* A translation list so we can be polite to our users. */\n");
-#if defined (CROSS_COMPILING)
+           "   Do not edit.  Edit support/mksignames.c instead. */\n\n");
+  fprintf (stream,
+           "/* A translation list so we can be polite to our users. */\n");
+#if defined(CROSS_COMPILING)
   fprintf (stream, "extern const char *signal_names[];\n\n");
   fprintf (stream, "extern void initialize_signames (void);\n\n");
 #else
@@ -92,12 +93,12 @@ main (int argc, char **argv)
 
   if (!stream)
     {
-      fprintf (stderr, "%s: %s: cannot open for writing\n",
-	       progname, stream_name);
+      fprintf (stderr, "%s: %s: cannot open for writing\n", progname,
+               stream_name);
       exit (2);
     }
 
-#if !defined (CROSS_COMPILING)
+#if !defined(CROSS_COMPILING)
   initialize_signames ();
 #endif
   write_signames (stream);

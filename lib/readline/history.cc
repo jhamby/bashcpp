@@ -37,11 +37,11 @@ namespace readline
 /* Destructor to delete the allocated history entries. */
 History::~History ()
 {
-  for (std::vector<HIST_ENTRY*>::iterator it = the_history.begin ();
+  for (std::vector<HIST_ENTRY *>::iterator it = the_history.begin ();
        it != the_history.end (); ++it)
-  {
-    delete *it;
-  }
+    {
+      delete *it;
+    }
 }
 
 /* empty virtual destructor for hist_data. */
@@ -70,7 +70,7 @@ History::hist_inittime ()
   char ts[32], *ret;
 
   time_t t = ::time (nullptr);
-#if defined (HAVE_VSNPRINTF)		/* assume snprintf if vsnprintf exists */
+#if defined(HAVE_VSNPRINTF) /* assume snprintf if vsnprintf exists */
   std::snprintf (ts, sizeof (ts) - 1, "X%lu", static_cast<unsigned long> (t));
 #else
   std::sprintf (ts, "X%lu", static_cast<unsigned long> (t));
@@ -90,21 +90,21 @@ History::add_history (const char *string)
   if (history_stifled && (history_length () == history_max_entries))
     {
       /* If the history is stifled, and history_length is zero,
-	 and it equals history_max_entries, we don't save items. */
+         and it equals history_max_entries, we don't save items. */
       if (the_history.empty ())
-	return;
+        return;
 
       /* Insert into the ring buffer, deleting oldest entry. */
       the_history[history_index_end++] = temp;
 
       if (history_index_end == history_length ())
-	history_index_end = 0;
+        history_index_end = 0;
 
       ++history_base;
     }
   else
     {
-      the_history.push_back(temp);
+      the_history.push_back (temp);
     }
 
   history_index_end++;
@@ -119,7 +119,7 @@ History::add_history_time (const char *string)
   if (string == nullptr || the_history.empty ())
     return;
 
-  hs = the_history.back();
+  hs = the_history.back ();
   hs->timestamp = savestring (string);
 }
 
@@ -127,7 +127,8 @@ History::add_history_time (const char *string)
    the old entry so you can dispose of the data.  In the case of an
    invalid WHICH, nullptr is returned. */
 HIST_ENTRY *
-History::replace_history_entry (unsigned int which, const std::string &line, histdata_t data)
+History::replace_history_entry (unsigned int which, const std::string &line,
+                                histdata_t data)
 {
   HIST_ENTRY *temp, *old_value;
 
@@ -159,17 +160,18 @@ History::_hs_append_history_line (unsigned int which, const char *line)
    WHICH >= 0 means to replace that particular history entry's data, as
    long as it matches OLD. */
 void
-History::_hs_replace_history_data (unsigned int which, histdata_t old, histdata_t new_)
+History::_hs_replace_history_data (unsigned int which, histdata_t old,
+                                   histdata_t new_)
 {
-  if (which < static_cast<unsigned int> (-2) || which >= the_history.size () ||
-      the_history.empty ())
+  if (which < static_cast<unsigned int> (-2) || which >= the_history.size ()
+      || the_history.empty ())
     return;
 
   if (static_cast<int> (which) >= 0)
     {
       HIST_ENTRY *entry = the_history[which];
       if (entry && entry->data == old)
-	entry->data = new_;
+        entry->data = new_;
       return;
     }
 
@@ -178,18 +180,18 @@ History::_hs_replace_history_data (unsigned int which, histdata_t old, histdata_
     {
       HIST_ENTRY *entry = the_history[i];
       if (entry == nullptr)
-	continue;
+        continue;
       if (entry->data == old)
-	{
-	  last = static_cast<int> (i);
-	  if (which == static_cast<unsigned int> (-1))
-	    entry->data = new_;
-	}
+        {
+          last = static_cast<int> (i);
+          if (which == static_cast<unsigned int> (-1))
+            entry->data = new_;
+        }
     }
   if (static_cast<int> (which) == -2 && last >= 0)
     {
       HIST_ENTRY *entry = the_history[static_cast<unsigned int> (last)];
-      entry->data = new_;	/* XXX - we don't check entry->old */
+      entry->data = new_; /* XXX - we don't check entry->old */
     }
 }
 
@@ -221,16 +223,18 @@ History::remove_history_range (unsigned int first, unsigned int last)
     return nullptr;
 
   size_t nentries = last - first + 1;
-  HIST_ENTRY **return_value = new HIST_ENTRY*[(nentries + 1) * sizeof (HIST_ENTRY *)];
+  HIST_ENTRY **return_value
+      = new HIST_ENTRY *[(nentries + 1) * sizeof (HIST_ENTRY *)];
 
   /* Return all the deleted entries in a list */
   unsigned int i;
-  for (i = first ; i <= last; i++)
+  for (i = first; i <= last; i++)
     return_value[i - first] = the_history[i];
   return_value[i - first] = nullptr;
 
   /* Erase the just-removed entries.  */
-  the_history.erase (the_history.begin () + first, the_history.begin () + last + 1);
+  the_history.erase (the_history.begin () + first,
+                     the_history.begin () + last + 1);
 
   return return_value;
 }
@@ -244,43 +248,50 @@ History::stifle_history (unsigned int max)
     // We also don't have to do anything if we can grow from the end.
     if (max < the_history.size () || history_index_end != the_history.size ())
       {
-	// If the new length is longer, insert blank entries to expand into.
-	if (max > the_history.size ())
-	  {
-	    the_history.insert (the_history.begin () + history_index_end,
-				static_cast<size_t> (max - history_max_entries), nullptr);
-	  }
-	else
-	  {
-	    // Delete the oldest entries and increase the base index.
-	    ssize_t diff = static_cast<ssize_t> (the_history.size () - max);
-	    ssize_t diff1 = std::min (diff, static_cast<ssize_t> (the_history.size () - history_index_end));
+        // If the new length is longer, insert blank entries to expand into.
+        if (max > the_history.size ())
+          {
+            the_history.insert (
+                the_history.begin () + history_index_end,
+                static_cast<size_t> (max - history_max_entries), nullptr);
+          }
+        else
+          {
+            // Delete the oldest entries and increase the base index.
+            ssize_t diff = static_cast<ssize_t> (the_history.size () - max);
+            ssize_t diff1
+                = std::min (diff, static_cast<ssize_t> (the_history.size ()
+                                                        - history_index_end));
 
-	    for (std::vector<HIST_ENTRY *>::iterator it = the_history.begin () + history_index_end;
-		 it != the_history.begin () + history_index_end + diff1; ++it)
-	      delete *it;
+            for (std::vector<HIST_ENTRY *>::iterator it
+                 = the_history.begin () + history_index_end;
+                 it != the_history.begin () + history_index_end + diff1; ++it)
+              delete *it;
 
-	    the_history.erase (the_history.begin () + history_index_end,
-			       the_history.begin () + history_index_end + diff1);
-	    history_base += diff1;
-	    diff -= diff1;
+            the_history.erase (the_history.begin () + history_index_end,
+                               the_history.begin () + history_index_end
+                                   + diff1);
+            history_base += diff1;
+            diff -= diff1;
 
-	    // We may need to remove entries from the left side as well.
-	    if (diff)
-	      {
-		for (std::vector<HIST_ENTRY *>::iterator it = the_history.begin ();
-		     it != the_history.begin () + diff; ++it)
-		  delete *it;
+            // We may need to remove entries from the left side as well.
+            if (diff)
+              {
+                for (std::vector<HIST_ENTRY *>::iterator it
+                     = the_history.begin ();
+                     it != the_history.begin () + diff; ++it)
+                  delete *it;
 
-		the_history.erase (the_history.begin (), the_history.begin () + diff);
-		history_base += diff;
-		history_index_end -= diff;
-	      }
-	  }
+                the_history.erase (the_history.begin (),
+                                   the_history.begin () + diff);
+                history_base += diff;
+                history_index_end -= diff;
+              }
+          }
       }
 
   history_stifled = true;
   history_max_entries = max;
 }
 
-}  // namespace readline
+} // namespace readline

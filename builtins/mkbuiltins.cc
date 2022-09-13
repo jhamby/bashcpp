@@ -21,47 +21,48 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_SYS_FILE_H)
-#  include <sys/file.h>
+#if defined(HAVE_SYS_FILE_H)
+#include <sys/file.h>
 #endif
 
-#include "posixstat.hh"
 #include "filecntl.hh"
+#include "posixstat.hh"
 
-#include <iostream>
-#include <fstream>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <iostream>
 
 #include <string>
 #include <vector>
 
-using std::string;
+using std::cerr;
 using std::ofstream;
 using std::ostringstream;
-using std::cerr;
+using std::string;
 
 namespace bash
 {
 
 static const char *DOCFILE = "builtins.texi";
 
-static inline bool whitespace(char c)
+static inline bool
+whitespace (char c)
 {
   return (c == ' ') || (c == '\t');
 }
 
 /* Flag values that builtins can have. */
-constexpr int BUILTIN_FLAG_SPECIAL =		0x01;
-constexpr int BUILTIN_FLAG_ASSIGNMENT =		0x02;
-constexpr int BUILTIN_FLAG_LOCALVAR =		0x04;
-constexpr int BUILTIN_FLAG_POSIX_BUILTIN =	0x08;
+constexpr int BUILTIN_FLAG_SPECIAL = 0x01;
+constexpr int BUILTIN_FLAG_ASSIGNMENT = 0x02;
+constexpr int BUILTIN_FLAG_LOCALVAR = 0x04;
+constexpr int BUILTIN_FLAG_POSIX_BUILTIN = 0x08;
 
 constexpr int BASE_INDENT = 4;
 
@@ -105,64 +106,63 @@ static string extern_filename;
 typedef std::vector<string> StrArray;
 
 /* Here is a structure defining a single BUILTIN. */
-struct Builtin {
-  Builtin(const string &n) : name(n), flags(0) {}
-  Builtin(const Builtin &rhs) : name(rhs.name), function(rhs.function),
-	shortdoc(rhs.shortdoc), docname(rhs.docname), longdoc(rhs.longdoc),
-	dependencies(rhs.dependencies), flags(rhs.flags) {}
-  string name;		/* The name of this builtin. */
-  string function;	/* The name of the function to call. */
-  string shortdoc;	/* The short documentation for this builtin. */
-  string docname;	/* Possible name for documentation string. */
-  StrArray longdoc;	/* The long documentation for this builtin. */
-  StrArray dependencies;/* std::vector of #define names. */
-  int flags;		/* Flags for this builtin. */
+struct Builtin
+{
+  Builtin (const string &n) : name (n), flags (0) {}
+  Builtin (const Builtin &rhs)
+      : name (rhs.name), function (rhs.function), shortdoc (rhs.shortdoc),
+        docname (rhs.docname), longdoc (rhs.longdoc),
+        dependencies (rhs.dependencies), flags (rhs.flags)
+  {
+  }
+  string name;           /* The name of this builtin. */
+  string function;       /* The name of the function to call. */
+  string shortdoc;       /* The short documentation for this builtin. */
+  string docname;        /* Possible name for documentation string. */
+  StrArray longdoc;      /* The long documentation for this builtin. */
+  StrArray dependencies; /* std::vector of #define names. */
+  int flags;             /* Flags for this builtin. */
 };
 
 /* This typedef replaces the old ARRAY implementation, for Builtins. */
 typedef std::vector<Builtin *> BltArray;
 
 /* Here is a structure which defines a DEF file. */
-struct DefFile {
-  DefFile (const std::string &f, int lnum) : filename (f), line_number (lnum) {}
-  string filename;	/* The name of the input def file. */
-  StrArray lines;	/* The contents of the file. */
-  string production;	/* The name of the production file. */
-  ofstream output;	/* Open file stream for PRODUCTION. */
-  BltArray builtins;	/* std::vector of Builtin *. */
-  int line_number;	/* The current line number. */
+struct DefFile
+{
+  DefFile (const std::string &f, int lnum) : filename (f), line_number (lnum)
+  {
+  }
+  string filename;   /* The name of the input def file. */
+  StrArray lines;    /* The contents of the file. */
+  string production; /* The name of the production file. */
+  ofstream output;   /* Open file stream for PRODUCTION. */
+  BltArray builtins; /* std::vector of Builtin *. */
+  int line_number;   /* The current line number. */
 };
 
 /* The array of all builtins encountered during execution of this code. */
 static BltArray saved_builtins;
 
 /* The Posix.2 so-called `special' builtins. */
-static const char *special_builtins[] =
-{
-  ":", ".", "source", "break", "continue", "eval", "exec", "exit",
-  "export", "readonly", "return", "set", "shift", "times", "trap", "unset",
-  nullptr
-};
+static const char *special_builtins[]
+    = { ":",     ".",     "source", "break",    "continue", "eval",
+        "exec",  "exit",  "export", "readonly", "return",   "set",
+        "shift", "times", "trap",   "unset",    nullptr };
 
 /* The builtin commands that take assignment statements as arguments. */
-static const char *assignment_builtins[] =
-{
-  "alias", "declare", "export", "local", "readonly", "typeset",
-  nullptr
-};
+static const char *assignment_builtins[] = { "alias", "declare",  "export",
+                                             "local", "readonly", "typeset",
+                                             nullptr };
 
-static const char *localvar_builtins[] =
-{
-  "declare", "local", "typeset", nullptr
-};
+static const char *localvar_builtins[]
+    = { "declare", "local", "typeset", nullptr };
 
 /* The builtin commands that are special to the POSIX search order. */
-static const char *posix_builtins[] =
-{
-  "alias", "bg", "cd", "command", "false", "fc", "fg", "getopts", "jobs",
-  "kill", "newgrp", "pwd", "read", "true", "umask", "unalias", "wait",
-  nullptr
-};
+static const char *posix_builtins[]
+    = { "alias", "bg",      "cd",    "command", "false",  "fc",
+        "fg",    "getopts", "jobs",  "kill",    "newgrp", "pwd",
+        "read",  "true",    "umask", "unalias", "wait",   nullptr };
 
 /* Forward declarations. */
 static bool is_special_builtin (const string &name);
@@ -172,7 +172,7 @@ static bool is_posix_builtin (const string &name);
 
 static void extract_info (const string &, ofstream &, ofstream &);
 
-static void file_error (const string &) __attribute__((__noreturn__));
+static void file_error (const string &) __attribute__ ((__noreturn__));
 
 static void line_error (DefFile &defs, const string &msg);
 
@@ -182,11 +182,13 @@ static void write_ifdefs (ofstream &stream, const StrArray &defines);
 static void write_endifs (ofstream &stream, const StrArray &defines);
 static void write_documentation (ofstream &, const StrArray &, int, int);
 static void write_longdocs (ofstream &stream, const BltArray &builtins);
-static void write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile);
+static void write_builtins (DefFile &defs, ofstream &structfile,
+                            ofstream &externfile);
 
 static void add_documentation (DefFile &defs, const string &line);
 
-static string get_arg (const string &for_whom, DefFile &defs, const string &str);
+static string get_arg (const string &for_whom, DefFile &defs,
+                       const string &str);
 
 static void must_be_building (const string &directive, DefFile &defs);
 
@@ -196,12 +198,12 @@ static string strip_whitespace (const string &string);
 static string remove_trailing_whitespace (const string &string);
 
 static inline const char *
-document_name(const Builtin &b)
+document_name (const Builtin &b)
 {
-  return !b.docname.empty() ? b.docname.c_str() : b.name.c_str();
+  return !b.docname.empty () ? b.docname.c_str () : b.name.c_str ();
 }
 
-}  /* namespace bash */
+} /* namespace bash */
 
 /* For each file mentioned on the command line, process it and
    write the information to STRUCTFILE and EXTERNFILE, while
@@ -209,7 +211,7 @@ document_name(const Builtin &b)
 int
 main (int argc, char **argv)
 {
-  string documentation_filename(bash::DOCFILE);
+  string documentation_filename (bash::DOCFILE);
 
   int arg_index = 1;
   while (arg_index < argc && argv[arg_index][0] == '-')
@@ -217,48 +219,48 @@ main (int argc, char **argv)
       char *arg = argv[arg_index++];
 
       if (std::strcmp (arg, "-externfile") == 0)
-	bash::extern_filename = argv[arg_index++];
+        bash::extern_filename = argv[arg_index++];
       else if (std::strcmp (arg, "-structfile") == 0)
-	bash::struct_filename = argv[arg_index++];
+        bash::struct_filename = argv[arg_index++];
       else if (std::strcmp (arg, "-noproduction") == 0)
-	bash::inhibit_production = true;
+        bash::inhibit_production = true;
       else if (std::strcmp (arg, "-nofunctions") == 0)
-	bash::inhibit_functions = true;
+        bash::inhibit_functions = true;
       else if (std::strcmp (arg, "-document") == 0)
         {
-	  bash::documentation_file.open(documentation_filename.c_str());
-	  if (!bash::documentation_file.is_open())
-	    bash::file_error (documentation_filename);
-	}
+          bash::documentation_file.open (documentation_filename.c_str ());
+          if (!bash::documentation_file.is_open ())
+            bash::file_error (documentation_filename);
+        }
       else if (std::strcmp (arg, "-D") == 0)
-	{
-	  bash::source_directory = argv[arg_index];
+        {
+          bash::source_directory = argv[arg_index];
 
-	  string &tmp = bash::source_directory;
-	  if (tmp[tmp.size() - 1] != '/')
-	    tmp += '/';
+          string &tmp = bash::source_directory;
+          if (tmp[tmp.size () - 1] != '/')
+            tmp += '/';
 
-	  arg_index++;
-	}
+          arg_index++;
+        }
       else if (std::strcmp (arg, "-documentonly") == 0)
-	{
-	  bash::only_documentation = true;
-	  bash::documentation_file.open(documentation_filename.c_str());
-	  if (!bash::documentation_file.is_open())
-	    bash::file_error (documentation_filename);
-	}
+        {
+          bash::only_documentation = true;
+          bash::documentation_file.open (documentation_filename.c_str ());
+          if (!bash::documentation_file.is_open ())
+            bash::file_error (documentation_filename);
+        }
       else if (std::strcmp (arg, "-H") == 0)
         {
-	  bash::separate_helpfiles = true;
-	  bash::helpfile_directory = argv[arg_index++];
+          bash::separate_helpfiles = true;
+          bash::helpfile_directory = argv[arg_index++];
         }
       else if (std::strcmp (arg, "-S") == 0)
-	bash::single_longdoc_strings = false;
+        bash::single_longdoc_strings = false;
       else
-	{
-	  cerr << argv[0] << ": Unknown flag " << arg << ".\n";
-	  std::exit (2);
-	}
+        {
+          cerr << argv[0] << ": Unknown flag " << arg << ".\n";
+          std::exit (2);
+        }
     }
 
   /* If there are no files to process, just quit now. */
@@ -266,35 +268,37 @@ main (int argc, char **argv)
     std::exit (0);
 
   ofstream structfile, externfile;
-  char temp_struct_filename[24];	// big enough for a 64-bit pid
+  char temp_struct_filename[24]; // big enough for a 64-bit pid
 
   if (!bash::only_documentation)
     {
       /* Open the files. */
-      if (!bash::struct_filename.empty())
-	{
-	  std::snprintf(temp_struct_filename, 24, "mk-%ld", static_cast<long> (::getpid()));
-	  structfile.open(temp_struct_filename);
+      if (!bash::struct_filename.empty ())
+        {
+          std::snprintf (temp_struct_filename, 24, "mk-%ld",
+                         static_cast<long> (::getpid ()));
+          structfile.open (temp_struct_filename);
 
-	  if (!structfile.is_open())
-	    bash::file_error (temp_struct_filename);
-	}
+          if (!structfile.is_open ())
+            bash::file_error (temp_struct_filename);
+        }
 
-      if (!bash::extern_filename.empty())
-	{
-	  externfile.open(bash::extern_filename.c_str());
+      if (!bash::extern_filename.empty ())
+        {
+          externfile.open (bash::extern_filename.c_str ());
 
-	  if (!externfile.is_open())
-	    bash::file_error (bash::extern_filename);
-	}
+          if (!externfile.is_open ())
+            bash::file_error (bash::extern_filename);
+        }
 
       /* Write out the headers. */
       bash::write_file_headers (structfile, externfile);
     }
 
-  if (bash::documentation_file.is_open())
+  if (bash::documentation_file.is_open ())
     {
-      bash::documentation_file << "@c Table of builtins created with " << argv[0] << ".\n";
+      bash::documentation_file << "@c Table of builtins created with "
+                               << argv[0] << ".\n";
       bash::documentation_file << "@ftable @asis\n";
     }
 
@@ -306,8 +310,8 @@ main (int argc, char **argv)
       arg = argv[arg_index++];
 
       string fname (arg);
-      if (fname[0] != '/' && !bash::source_directory.empty())
-	fname.insert (0, bash::source_directory);
+      if (fname[0] != '/' && !bash::source_directory.empty ())
+        fname.insert (0, bash::source_directory);
 
       bash::extract_info (fname, structfile, externfile);
     }
@@ -319,20 +323,21 @@ main (int argc, char **argv)
       bash::write_file_footers (structfile, externfile);
 
       if (structfile)
-	{
-	  bash::write_longdocs (structfile, bash::saved_builtins);
-	  structfile.close();
-	  ::rename (temp_struct_filename, bash::struct_filename.c_str());
-	}
+        {
+          bash::write_longdocs (structfile, bash::saved_builtins);
+          structfile.close ();
+          ::rename (temp_struct_filename, bash::struct_filename.c_str ());
+        }
     }
 
-  if (bash::documentation_file.is_open())
+  if (bash::documentation_file.is_open ())
     {
       bash::documentation_file << "@end ftable\n";
     }
 }
 
-namespace bash {
+namespace bash
+{
 
 /* **************************************************************** */
 /*								    */
@@ -344,7 +349,8 @@ namespace bash {
 typedef void (*mk_handler_func_t) (const string &, DefFile &, const string &);
 
 /* Structure handles processor directives. */
-struct HandlerEntry {
+struct HandlerEntry
+{
   const char *directive;
   mk_handler_func_t function;
 };
@@ -358,18 +364,16 @@ static void produces_handler (const string &, DefFile &, const string &);
 static void end_handler (const string &, DefFile &, const string &);
 static void docname_handler (const string &, DefFile &, const string &);
 
-static HandlerEntry handlers[] = {
-  { "BUILTIN",		&builtin_handler },
-  { "DOCNAME",		&docname_handler },
-  { "FUNCTION",		&function_handler },
-  { "SHORT_DOC",	&short_doc_handler },
-  { "$",		&comment_handler },
-  { "COMMENT",		&comment_handler },
-  { "DEPENDS_ON",	&depends_on_handler },
-  { "PRODUCES",		&produces_handler },
-  { "END",		&end_handler },
-  { nullptr, nullptr }
-};
+static HandlerEntry handlers[] = { { "BUILTIN", &builtin_handler },
+                                   { "DOCNAME", &docname_handler },
+                                   { "FUNCTION", &function_handler },
+                                   { "SHORT_DOC", &short_doc_handler },
+                                   { "$", &comment_handler },
+                                   { "COMMENT", &comment_handler },
+                                   { "DEPENDS_ON", &depends_on_handler },
+                                   { "PRODUCES", &produces_handler },
+                                   { "END", &end_handler },
+                                   { nullptr, nullptr } };
 
 /* Return the entry in the table of handlers for NAME. */
 static HandlerEntry *
@@ -400,16 +404,18 @@ static bool output_cpp_line_info = false;
    builtins found in each $BUILTIN.  Plain text found before the $PRODUCES
    is ignored, as is "$$ comment text". */
 void
-extract_info (const string &filename, ofstream &structfile, ofstream &externfile)
+extract_info (const string &filename, ofstream &structfile,
+              ofstream &externfile)
 {
   struct stat finfo;
   int fd;
   ssize_t nr;
 
-  if (::stat (filename.c_str(), &finfo) == -1)
+  if (::stat (filename.c_str (), &finfo) == -1)
     file_error (filename);
 
-  fd = ::open (filename.c_str(), O_RDONLY, 0644);		/* fix insecure permissions */
+  fd = ::open (filename.c_str (), O_RDONLY,
+               0644); /* fix insecure permissions */
 
   if (fd == -1)
     file_error (filename);
@@ -429,24 +435,24 @@ extract_info (const string &filename, ofstream &structfile, ofstream &externfile
   if (nr == 0)
     {
       cerr << "mkbuiltins: " << filename << ": skipping zero-length file\n";
-      delete [] buffer;
+      delete[] buffer;
       return;
     }
 
   /* Create and fill in the initial structure describing this file. */
-  DefFile defs (filename, 0);	/* filename and line number */
+  DefFile defs (filename, 0); /* filename and line number */
 
   /* Build the array of lines. */
   for (size_t i = 0; i < file_size; ++i)
     {
       size_t start = i;
       while (i < file_size && buffer[i] != '\n')
-	i++;
+        i++;
 
       buffer[i] = '\0';
-      if (!std::strncmp (&buffer[start], "// ", 3))	// skip C++ comment prefix
+      if (!std::strncmp (&buffer[start], "// ", 3)) // skip C++ comment prefix
         start += 3;
-      defs.lines.push_back(&buffer[start]);
+      defs.lines.push_back (&buffer[start]);
     }
 
   /* Begin processing the input file.  We don't write any output
@@ -455,78 +461,83 @@ extract_info (const string &filename, ofstream &structfile, ofstream &externfile
 
   /* Process each line in the array. */
   int i = 0;
-  for (StrArray::iterator it = defs.lines.begin(); it != defs.lines.end(); ++it, ++i)
+  for (StrArray::iterator it = defs.lines.begin (); it != defs.lines.end ();
+       ++it, ++i)
     {
       defs.line_number = i;
       string &line = *it;
 
       if (line[0] == '$')
-	{
-	  size_t j;
-	  HandlerEntry *handler;
+        {
+          size_t j;
+          HandlerEntry *handler;
 
-	  /* Isolate the directive. */
-	  for (j = 0; line[j] && !whitespace (line[j]); j++);
+          /* Isolate the directive. */
+          for (j = 0; line[j] && !whitespace (line[j]); j++)
+            ;
 
-	  string directive(line, 1, j - 1);
+          string directive (line, 1, j - 1);
 
-	  /* Get the function handler and call it. */
-	  handler = find_directive (directive.c_str());
+          /* Get the function handler and call it. */
+          handler = find_directive (directive.c_str ());
 
-	  if (!handler)
-	    {
-	      string tmp("Unknown directive `");
-	      tmp += directive;
-	      tmp += '\'';
-	      line_error (defs, tmp);
-	      continue;
-	    }
-	  else
-	    {
-	      /* Advance to the first non-whitespace character. */
-	      while (whitespace (line[j]))
-		j++;
+          if (!handler)
+            {
+              string tmp ("Unknown directive `");
+              tmp += directive;
+              tmp += '\'';
+              line_error (defs, tmp);
+              continue;
+            }
+          else
+            {
+              /* Advance to the first non-whitespace character. */
+              while (whitespace (line[j]))
+                j++;
 
-	      /* Call the directive handler with the FILE, and ARGS. */
-	      (*(handler->function)) (directive, defs, string(line, j));
-	    }
-	}
+              /* Call the directive handler with the FILE, and ARGS. */
+              (*(handler->function)) (directive, defs, string (line, j));
+            }
+        }
       else
-	{
-	  if (building_builtin)
-	    add_documentation (defs, line);
-	  else if (defs.output)
-	    {
-	      if (output_cpp_line_info)
-		{
-		  /* If we're handed an absolute pathname, don't prepend
-		     the directory name. */
-		  if (defs.filename[0] == '/')
-		    defs.output << "#line " << (defs.line_number + 1) << " \""
-			<< defs.filename << "\"\n";
-		  else
-		    defs.output << "#line " << (defs.line_number + 1) << " \""
-			<< (source_directory.empty() ? "./" : source_directory.c_str())
-			<< defs.filename << "\"\n";
+        {
+          if (building_builtin)
+            add_documentation (defs, line);
+          else if (defs.output)
+            {
+              if (output_cpp_line_info)
+                {
+                  /* If we're handed an absolute pathname, don't prepend
+                     the directory name. */
+                  if (defs.filename[0] == '/')
+                    defs.output << "#line " << (defs.line_number + 1) << " \""
+                                << defs.filename << "\"\n";
+                  else
+                    defs.output << "#line " << (defs.line_number + 1) << " \""
+                                << (source_directory.empty ()
+                                        ? "./"
+                                        : source_directory.c_str ())
+                                << defs.filename << "\"\n";
 
-		  output_cpp_line_info = false;
-		}
+                  output_cpp_line_info = false;
+                }
 
-	      defs.output << line << '\n';
-	    }
-	}
+              defs.output << line << '\n';
+            }
+        }
     }
 
   /* The file has been processed.  Write the extern definitions to the
      builtext.h file. */
   write_builtins (defs, structfile, externfile);
 
-  for (BltArray::iterator it = defs.builtins.begin(); it != defs.builtins.end(); ++it)
-  {
-    delete *it;
-  }
+  for (BltArray::iterator it = defs.builtins.begin ();
+       it != defs.builtins.end (); ++it)
+    {
+      delete *it;
+    }
 
-  delete [] buffer;
+  delete[] buffer;
 }
 
 /* **************************************************************** */
@@ -540,25 +551,25 @@ string
 strip_whitespace (const string &str)
 {
   size_t pos = 0;
-  while (pos < str.size() && whitespace (str[pos]))
-      pos++;
+  while (pos < str.size () && whitespace (str[pos]))
+    pos++;
 
-  size_t count = str.size() - pos;
+  size_t count = str.size () - pos;
   while (count > 0 && whitespace (str[pos + count - 1]))
-      count--;
+    count--;
 
-  return str.substr(pos, count);
+  return str.substr (pos, count);
 }
 
 /* Remove only the trailing whitespace from STRING. */
 string
 remove_trailing_whitespace (const string &str)
 {
-  size_t count = str.size();
+  size_t count = str.size ();
   while (count > 0 && whitespace (str[count - 1]))
-      count--;
+    count--;
 
-  return str.substr(0, count);
+  return str.substr (0, count);
 }
 
 /* Ensure that there is a argument in STRING and return it.
@@ -570,9 +581,9 @@ get_arg (const string &for_whom, DefFile &defs, const string &str)
 {
   string arg = strip_whitespace (str);
 
-  if (arg.empty())
+  if (arg.empty ())
     {
-      string tmp(for_whom);
+      string tmp (for_whom);
       tmp += " requires an argument";
       line_error (defs, tmp);
     }
@@ -586,7 +597,7 @@ must_be_building (const string &directive, DefFile &defs)
 {
   if (!building_builtin)
     {
-      string tmp(directive);
+      string tmp (directive);
       tmp += " must be inside of a $BUILTIN block";
       line_error (defs, tmp);
     }
@@ -598,7 +609,7 @@ current_builtin (const string &directive, DefFile &defs)
 {
   must_be_building (directive, defs);
 
-  return defs.builtins.back();
+  return defs.builtins.back ();
 }
 
 /* Add LINE to the long documentation for the current builtin.
@@ -610,10 +621,10 @@ add_documentation (DefFile &defs, const string &line)
 
   string stripped_line = remove_trailing_whitespace (line);
 
-  if (line.empty())
+  if (line.empty ())
     return;
 
-  builtin->longdoc.push_back(line);
+  builtin->longdoc.push_back (line);
 }
 
 /* How to handle the $BUILTIN directive. */
@@ -623,7 +634,7 @@ builtin_handler (const string &self, DefFile &defs, const string &arg)
   /* If we are already building a builtin, we cannot start a new one. */
   if (building_builtin)
     {
-      string tmp(self);
+      string tmp (self);
       tmp += " found before $END";
       line_error (defs, tmp);
       return;
@@ -634,7 +645,7 @@ builtin_handler (const string &self, DefFile &defs, const string &arg)
   /* Get the name of this builtin, and stick it in the array. */
   string name = get_arg (self, defs, arg);
 
-  Builtin *new_builtin = new Builtin(name);
+  Builtin *new_builtin = new Builtin (name);
 
   if (is_special_builtin (name))
     new_builtin->flags |= BUILTIN_FLAG_SPECIAL;
@@ -645,7 +656,7 @@ builtin_handler (const string &self, DefFile &defs, const string &arg)
   if (is_posix_builtin (name))
     new_builtin->flags |= BUILTIN_FLAG_POSIX_BUILTIN;
 
-  defs.builtins.push_back(new_builtin);
+  defs.builtins.push_back (new_builtin);
   building_builtin = true;
 }
 
@@ -657,12 +668,13 @@ function_handler (const string &self, DefFile &defs, const string &arg)
 
   if (builtin == nullptr)
     {
-      line_error (defs, "syntax error: no current builtin for $FUNCTION directive");
+      line_error (defs,
+                  "syntax error: no current builtin for $FUNCTION directive");
       std::exit (1);
     }
-  if (!builtin->function.empty())
+  if (!builtin->function.empty ())
     {
-      string tmp(builtin->name);
+      string tmp (builtin->name);
       tmp += " already has a function (";
       tmp += builtin->function;
       tmp += ')';
@@ -678,9 +690,9 @@ docname_handler (const string &self, DefFile &defs, const string &arg)
 {
   Builtin *builtin = current_builtin (self, defs);
 
-  if (!builtin->docname.empty())
+  if (!builtin->docname.empty ())
     {
-      string tmp(builtin->name);
+      string tmp (builtin->name);
       tmp += " already had a docname (";
       tmp += builtin->docname;
       tmp += ')';
@@ -696,9 +708,9 @@ short_doc_handler (const string &self, DefFile &defs, const string &arg)
 {
   Builtin *builtin = current_builtin (self, defs);
 
-  if (!builtin->shortdoc.empty())
+  if (!builtin->shortdoc.empty ())
     {
-      string tmp(builtin->name);
+      string tmp (builtin->name);
       tmp += " already has short documentation (";
       tmp += builtin->shortdoc;
       tmp += ')';
@@ -721,7 +733,7 @@ depends_on_handler (const string &self, DefFile &defs, const string &arg)
   Builtin *builtin = current_builtin (self, defs);
   string dependent = get_arg (self, defs, arg);
 
-  builtin->dependencies.push_back(dependent);
+  builtin->dependencies.push_back (dependent);
 }
 
 /* How to handle the $PRODUCES directive. */
@@ -735,9 +747,9 @@ produces_handler (const string &self, DefFile &defs, const string &arg)
 
   output_cpp_line_info = true;
 
-  if (!defs.production.empty())
+  if (!defs.production.empty ())
     {
-      string tmp(defs.filename);
+      string tmp (defs.filename);
       tmp += " already has a ";
       tmp += self;
       tmp += " definition";
@@ -748,15 +760,15 @@ produces_handler (const string &self, DefFile &defs, const string &arg)
       defs.production = get_arg (self, defs, arg);
 
       if (inhibit_production)
-	return;
+        return;
 
-      defs.output.open (defs.production.c_str());
+      defs.output.open (defs.production.c_str ());
 
-      if (!defs.output.is_open())
-	file_error (defs.production);
+      if (!defs.output.is_open ())
+        file_error (defs.production);
 
       defs.output << "/* " << defs.production << ", created from "
-		  << defs.filename << ". */\n";
+                  << defs.filename << ". */\n";
     }
 }
 
@@ -779,7 +791,7 @@ void
 line_error (DefFile &defs, const string &msg)
 {
   if (defs.filename[0] != '/')
-    cerr << (source_directory.empty() ? "./" : source_directory.c_str());
+    cerr << (source_directory.empty () ? "./" : source_directory.c_str ());
 
   cerr << defs.filename << ':' << (defs.line_number + 1) << ':';
   cerr << msg << '\n';
@@ -790,7 +802,7 @@ line_error (DefFile &defs, const string &msg)
 static void
 file_error (const string &filename)
 {
-  std::perror (filename.c_str());
+  std::perror (filename.c_str ());
   std::exit (2);
 }
 
@@ -801,10 +813,10 @@ file_error (const string &filename)
 /* **************************************************************** */
 
 /* Flags that mean something to write_documentation (). */
-constexpr int STRING_ARRAY =	0x01;
-constexpr int TEXINFO =		0x02;
+constexpr int STRING_ARRAY = 0x01;
+constexpr int TEXINFO = 0x02;
 // constexpr int PLAINTEXT =	0x04;
-constexpr int HELPFILE =	0x08;
+constexpr int HELPFILE = 0x08;
 
 static const char *structfile_header[] = {
   "/* builtins.cc -- the built in shell commands. */",
@@ -846,20 +858,16 @@ static const char *structfile_header[] = {
   "",
   "#include \"builtins.hh\"",
   nullptr
-  };
-
-static const char *structfile_footer[] = {
-  "  { nullptr, nullptr, 0, nullptr, nullptr, nullptr }",
-  "};",
-  "",
-//   "bash::Builtin *shell_builtins = static_shell_builtins;",
-//   "bash::Builtin *current_builtin;",
-//   "",
-  "int num_shell_builtins =",
-  "\tsizeof (static_shell_builtins) / sizeof (Builtin) - 1;",
-  "}",
-  nullptr
 };
+
+static const char *structfile_footer[]
+    = { "  { nullptr, nullptr, 0, nullptr, nullptr, nullptr }", "};", "",
+        //   "bash::Builtin *shell_builtins = static_shell_builtins;",
+        //   "bash::Builtin *current_builtin;",
+        //   "",
+        "int num_shell_builtins =",
+        "\tsizeof (static_shell_builtins) / sizeof (Builtin) - 1;", "}",
+        nullptr };
 
 /* Write out any necessary opening information for
    STRUCTFILE and EXTERNFILE. */
@@ -871,17 +879,19 @@ write_file_headers (ofstream &structfile, ofstream &externfile)
       for (int i = 0; structfile_header[i]; i++)
         structfile << structfile_header[i] << '\n';
 
-      structfile << "#include \"" << (extern_filename.empty() ? "builtext.hh"
-							: extern_filename.c_str())
-		 << "\"\n#include \"bashintl.h\"\n"
-		 << "\nnamespace bash {\n"
-		 << "\nbash::Builtin static_shell_builtins[] = {\n";
+      structfile << "#include \""
+                 << (extern_filename.empty () ? "builtext.hh"
+                                              : extern_filename.c_str ())
+                 << "\"\n#include \"bashintl.hh\"\n"
+                 << "\nnamespace bash {\n"
+                 << "\nbash::Builtin static_shell_builtins[] = {\n";
     }
 
-  if (externfile.is_open())
-    externfile << "/* " << (extern_filename.empty() ? "builtext.h" : extern_filename.c_str())
-	       << " - The list of builtins found in libbuiltins.a. */\n";
-
+  if (externfile.is_open ())
+    externfile << "/* "
+               << (extern_filename.empty () ? "builtext.h"
+                                            : extern_filename.c_str ())
+               << " - The list of builtins found in libbuiltins.a. */\n";
 }
 
 /* Write out any necessary closing information for
@@ -893,7 +903,7 @@ write_file_footers (ofstream &structfile, ofstream &)
   if (structfile)
     {
       for (int i = 0; structfile_footer[i]; i++)
-	structfile << structfile_footer[i] << '\n';
+        structfile << structfile_footer[i] << '\n';
     }
 }
 
@@ -903,100 +913,122 @@ void
 write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
 {
   /* Write out the information. */
-  if (!defs.builtins.empty())
+  if (!defs.builtins.empty ())
     {
-      for (BltArray::iterator it = defs.builtins.begin(); it != defs.builtins.end(); ++it)
-	{
-	  Builtin *builtin = *it;
+      for (BltArray::iterator it = defs.builtins.begin ();
+           it != defs.builtins.end (); ++it)
+        {
+          Builtin *builtin = *it;
 
-	  /* Write out any #ifdefs that may be there. */
-	  if (!only_documentation)
-	    {
-	      if (!builtin->dependencies.empty())
-		{
-		  write_ifdefs (externfile, builtin->dependencies);
-		  write_ifdefs (structfile, builtin->dependencies);
-		}
+          /* Write out any #ifdefs that may be there. */
+          if (!only_documentation)
+            {
+              if (!builtin->dependencies.empty ())
+                {
+                  write_ifdefs (externfile, builtin->dependencies);
+                  write_ifdefs (structfile, builtin->dependencies);
+                }
 
-	      /* Write the extern definition. */
-	      if (externfile.is_open())
-		{
-		  // these are now method pointers declared in shell.h
-		  if (!builtin->function.empty())
-		    externfile << "// extern int Shell::" << builtin->function << " (bash::WORD_LIST *);\n";
+              /* Write the extern definition. */
+              if (externfile.is_open ())
+                {
+                  // these are now method pointers declared in shell.h
+                  if (!builtin->function.empty ())
+                    externfile << "// extern int Shell::" << builtin->function
+                               << " (bash::WORD_LIST *);\n";
 
-		  externfile << "extern char * const " << document_name (*builtin) << "_doc[];\n";
-		}
+                  externfile << "extern char * const "
+                             << document_name (*builtin) << "_doc[];\n";
+                }
 
-	      /* Write the structure definition. */
-	      if (structfile.is_open())
-		{
-		  structfile << "  { \"" << builtin->name << "\", ";
+              /* Write the structure definition. */
+              if (structfile.is_open ())
+                {
+                  structfile << "  { \"" << builtin->name << "\", ";
 
-		  if (!builtin->function.empty() && !inhibit_functions)
-		    structfile << "&Shell::" << builtin->function << ", ";
-		  else
-		    structfile << "nullptr, ";
+                  if (!builtin->function.empty () && !inhibit_functions)
+                    structfile << "&Shell::" << builtin->function << ", ";
+                  else
+                    structfile << "nullptr, ";
 
-		  structfile << "BUILTIN_ENABLED | STATIC_BUILTIN"
-			     << ((builtin->flags & BUILTIN_FLAG_SPECIAL) ? " | SPECIAL_BUILTIN" : "")
-			     << ((builtin->flags & BUILTIN_FLAG_ASSIGNMENT) ? " | ASSIGNMENT_BUILTIN" : "")
-			     << ((builtin->flags & BUILTIN_FLAG_LOCALVAR) ? " | LOCALVAR_BUILTIN" : "")
-			     << ((builtin->flags & BUILTIN_FLAG_POSIX_BUILTIN) ? " | POSIX_BUILTIN" : "")
-			     << ", " << document_name (*builtin) << "_doc,\n";
+                  structfile << "BUILTIN_ENABLED | STATIC_BUILTIN"
+                             << ((builtin->flags & BUILTIN_FLAG_SPECIAL)
+                                     ? " | SPECIAL_BUILTIN"
+                                     : "")
+                             << ((builtin->flags & BUILTIN_FLAG_ASSIGNMENT)
+                                     ? " | ASSIGNMENT_BUILTIN"
+                                     : "")
+                             << ((builtin->flags & BUILTIN_FLAG_LOCALVAR)
+                                     ? " | LOCALVAR_BUILTIN"
+                                     : "")
+                             << ((builtin->flags & BUILTIN_FLAG_POSIX_BUILTIN)
+                                     ? " | POSIX_BUILTIN"
+                                     : "")
+                             << ", " << document_name (*builtin) << "_doc,\n";
 
-		  /* Don't translate short document summaries that are identical
-		     to command names */
-		  if (!builtin->shortdoc.empty() && builtin->name == builtin->shortdoc)
-		    {
-		      if (inhibit_functions)
-			structfile << "     \""
-			  << (!builtin->shortdoc.empty() ? builtin->shortdoc : builtin->name)
-			  << "\", \"" << document_name (*builtin) << "\" },\n";
-		      else
-			structfile << "     \""
-			  << (!builtin->shortdoc.empty() ? builtin->shortdoc : builtin->name)
-			  << "\", nullptr },\n";
-		    }
-		  else
-		    {
-		      if (inhibit_functions)
-			structfile << "     N_(\""
-			  << (!builtin->shortdoc.empty() ? builtin->shortdoc : builtin->name)
-			  << "\"), \"" << document_name (*builtin) << "\" },\n";
-		      else
-			structfile << "     N_(\""
-			  << (!builtin->shortdoc.empty() ? builtin->shortdoc : builtin->name)
-			  << "\"), nullptr },\n";
-		    }
-		}
+                  /* Don't translate short document summaries that are
+                     identical to command names */
+                  if (!builtin->shortdoc.empty ()
+                      && builtin->name == builtin->shortdoc)
+                    {
+                      if (inhibit_functions)
+                        structfile
+                            << "     \""
+                            << (!builtin->shortdoc.empty () ? builtin->shortdoc
+                                                            : builtin->name)
+                            << "\", \"" << document_name (*builtin)
+                            << "\" },\n";
+                      else
+                        structfile
+                            << "     \""
+                            << (!builtin->shortdoc.empty () ? builtin->shortdoc
+                                                            : builtin->name)
+                            << "\", nullptr },\n";
+                    }
+                  else
+                    {
+                      if (inhibit_functions)
+                        structfile
+                            << "     N_(\""
+                            << (!builtin->shortdoc.empty () ? builtin->shortdoc
+                                                            : builtin->name)
+                            << "\"), \"" << document_name (*builtin)
+                            << "\" },\n";
+                      else
+                        structfile
+                            << "     N_(\""
+                            << (!builtin->shortdoc.empty () ? builtin->shortdoc
+                                                            : builtin->name)
+                            << "\"), nullptr },\n";
+                    }
+                }
 
-	      if (structfile.is_open() || separate_helpfiles)
-	        {
-		  /* Save away a copy of this builtin for later writing of the
-		     long documentation strings. */
-		  Builtin *saved_copy = new Builtin(*builtin);
-		  saved_builtins.push_back (saved_copy);
-		}
+              if (structfile.is_open () || separate_helpfiles)
+                {
+                  /* Save away a copy of this builtin for later writing of the
+                     long documentation strings. */
+                  Builtin *saved_copy = new Builtin (*builtin);
+                  saved_builtins.push_back (saved_copy);
+                }
 
-	      /* Write out the matching #endif, if necessary. */
-	      if (!builtin->dependencies.empty())
-		{
-		  if (externfile.is_open())
-		    write_endifs (externfile, builtin->dependencies);
+              /* Write out the matching #endif, if necessary. */
+              if (!builtin->dependencies.empty ())
+                {
+                  if (externfile.is_open ())
+                    write_endifs (externfile, builtin->dependencies);
 
-		  if (structfile.is_open())
-		    write_endifs (structfile, builtin->dependencies);
-		}
-	    }
+                  if (structfile.is_open ())
+                    write_endifs (structfile, builtin->dependencies);
+                }
+            }
 
-	  if (documentation_file.is_open())
-	    {
-	      documentation_file << "@item " << builtin->name << '\n';
-	      write_documentation
-		(documentation_file, builtin->longdoc, 0, TEXINFO);
-	    }
-	}
+          if (documentation_file.is_open ())
+            {
+              documentation_file << "@item " << builtin->name << '\n';
+              write_documentation (documentation_file, builtin->longdoc, 0,
+                                   TEXINFO);
+            }
+        }
     }
 }
 
@@ -1004,32 +1036,33 @@ write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
 void
 write_longdocs (ofstream &stream, const BltArray &builtins)
 {
-  for (BltArray::const_iterator it = builtins.begin(); it != builtins.end(); ++it)
+  for (BltArray::const_iterator it = builtins.begin (); it != builtins.end ();
+       ++it)
     {
       const Builtin *builtin = *it;
 
-      if (!builtin->dependencies.empty())
-	write_ifdefs (stream, builtin->dependencies);
+      if (!builtin->dependencies.empty ())
+        write_ifdefs (stream, builtin->dependencies);
 
       /* Write the long documentation strings. */
       const char *dname = document_name (*builtin);
       stream << "char * const " << dname << "_doc[] =";
 
       if (separate_helpfiles)
-	{
-	  StrArray sarray;
-	  string tmp(helpfile_directory);
-	  tmp += '/';
-	  tmp += dname;
-	  sarray.push_back(tmp);
+        {
+          StrArray sarray;
+          string tmp (helpfile_directory);
+          tmp += '/';
+          tmp += dname;
+          sarray.push_back (tmp);
 
-	  write_documentation (stream, sarray, 0, STRING_ARRAY | HELPFILE);
-	}
+          write_documentation (stream, sarray, 0, STRING_ARRAY | HELPFILE);
+        }
       else
-	write_documentation (stream, builtin->longdoc, 0, STRING_ARRAY);
+        write_documentation (stream, builtin->longdoc, 0, STRING_ARRAY);
 
-      if (!builtin->dependencies.empty())
-	write_endifs (stream, builtin->dependencies);
+      if (!builtin->dependencies.empty ())
+        write_endifs (stream, builtin->dependencies);
 
       /* delete the builtin now that we're done with it. */
       delete builtin;
@@ -1045,20 +1078,21 @@ write_longdocs (ofstream &stream, const BltArray &builtins)
 void
 write_ifdefs (ofstream &stream, const StrArray &defines)
 {
-  if (!stream.is_open())
+  if (!stream.is_open ())
     return;
 
   stream << "#if ";
 
-  for (StrArray::const_iterator it = defines.begin(); it != defines.end(); ++it)
+  for (StrArray::const_iterator it = defines.begin (); it != defines.end ();
+       ++it)
     {
       if ((*it)[0] == '!')
-	stream << "!defined (" << it->substr(1) << ')';
+        stream << "!defined (" << it->substr (1) << ')';
       else
         stream << "defined (" << *it << ')';
 
-      if ((it + 1) != defines.end())
-	stream << " && ";
+      if ((it + 1) != defines.end ())
+        stream << " && ";
     }
 
   stream << '\n';
@@ -1071,17 +1105,18 @@ write_ifdefs (ofstream &stream, const StrArray &defines)
 void
 write_endifs (ofstream &stream, const StrArray &defines)
 {
-  if (!stream.is_open())
+  if (!stream.is_open ())
     return;
 
   stream << "#endif /* ";
 
-  for (StrArray::const_iterator it = defines.begin(); it != defines.end(); ++it)
+  for (StrArray::const_iterator it = defines.begin (); it != defines.end ();
+       ++it)
     {
       stream << *it;
 
-      if ((it + 1) != defines.end())
-	stream << " && ";
+      if ((it + 1) != defines.end ())
+        stream << " && ";
     }
 
   stream << " */\n";
@@ -1092,9 +1127,10 @@ write_endifs (ofstream &stream, const StrArray &defines)
    internationalization (gettext) and the single-string vs. multiple-strings
    issues. */
 void
-write_documentation (ofstream &stream, const StrArray &documentation, int indentation, int flags)
+write_documentation (ofstream &stream, const StrArray &documentation,
+                     int indentation, int flags)
 {
-  if (!stream.is_open())
+  if (!stream.is_open ())
     return;
 
   bool string_array = flags & STRING_ARRAY;
@@ -1102,117 +1138,122 @@ write_documentation (ofstream &stream, const StrArray &documentation, int indent
 
   if (string_array)
     {
-      stream << " {\n#if defined (HELP_BUILTIN)\n";	/* } */
+      stream << " {\n#if defined (HELP_BUILTIN)\n"; /* } */
       if (single_longdoc_strings)
-	{
-	  if (!filename_p)
-	    {
-	      if (!documentation.empty() && !documentation[0].empty())
-		stream << "N_(\"";
-	      else
-		stream << "N_(\" ";		/* the empty string translates specially. */
-	    }
-	  else
-	    stream << "\"";
-	}
+        {
+          if (!filename_p)
+            {
+              if (!documentation.empty () && !documentation[0].empty ())
+                stream << "N_(\"";
+              else
+                stream
+                    << "N_(\" "; /* the empty string translates specially. */
+            }
+          else
+            stream << "\"";
+        }
     }
 
-  int base_indent = (string_array && single_longdoc_strings && !filename_p) ? BASE_INDENT : 0;
+  int base_indent = (string_array && single_longdoc_strings && !filename_p)
+                        ? BASE_INDENT
+                        : 0;
 
   bool texinfo = flags & TEXINFO;
 
-  for (StrArray::const_iterator it = documentation.begin(); it != documentation.end(); ++it)\
+  for (StrArray::const_iterator it = documentation.begin ();
+       it != documentation.end (); ++it)
     {
       const string &line = *it;
 
       /* Allow #ifdef's to be written out verbatim, but don't put them into
-	 separate help files. */
-      if (!line.empty() && line[0] == '#')
-	{
-	  if (string_array && !filename_p && !single_longdoc_strings)
-	    stream << line << '\n';
-	  continue;
-	}
+         separate help files. */
+      if (!line.empty () && line[0] == '#')
+        {
+          if (string_array && !filename_p && !single_longdoc_strings)
+            stream << line << '\n';
+          continue;
+        }
 
       /* prefix with N_( for gettext */
       if (string_array && !single_longdoc_strings)
-	{
-	  if (!filename_p)
-	    {
-	      if (!line.empty())
-		stream << "  N_(\"";
-	      else
-		stream << "  N_(\" ";		/* the empty string translates specially. */
-	    }
-	  else
-	    stream << "  \"";
-	}
+        {
+          if (!filename_p)
+            {
+              if (!line.empty ())
+                stream << "  N_(\"";
+              else
+                stream
+                    << "  N_(\" "; /* the empty string translates specially. */
+            }
+          else
+            stream << "  \"";
+        }
 
       if (indentation)
-	for (int j = 0; j < indentation; j++)
-	  stream << ' ';
+        for (int j = 0; j < indentation; j++)
+          stream << ' ';
 
       /* Don't indent the first line, because of how the help builtin works. */
-      if (it == documentation.begin())
-	indentation += base_indent;
+      if (it == documentation.begin ())
+        indentation += base_indent;
 
       if (string_array)
-	{
-	  for (size_t j = 0; j < line.size(); j++)
-	    {
-	      switch (line[j])
-		{
-		case '\\':
-		case '"':
-		  stream << "\\" << line[j];
-		  break;
+        {
+          for (size_t j = 0; j < line.size (); j++)
+            {
+              switch (line[j])
+                {
+                case '\\':
+                case '"':
+                  stream << "\\" << line[j];
+                  break;
 
-		default:
-		  stream << line[j];
-		}
-	    }
+                default:
+                  stream << line[j];
+                }
+            }
 
-	  /* closing right paren for gettext */
-	  if (!single_longdoc_strings)
-	    {
-	      if (!filename_p)
-		stream << "\"),\n";
-	      else
-		stream << "\",\n";
-	    }
-	  else if ((it + 1) != documentation.end())
-	    /* don't add extra newline after last line */
-	    stream << "\\n\\\n";
-	}
+          /* closing right paren for gettext */
+          if (!single_longdoc_strings)
+            {
+              if (!filename_p)
+                stream << "\"),\n";
+              else
+                stream << "\",\n";
+            }
+          else if ((it + 1) != documentation.end ())
+            /* don't add extra newline after last line */
+            stream << "\\n\\\n";
+        }
       else if (texinfo)
-	{
-	  for (size_t j = 0; j < line.size(); j++)
-	    {
-	      switch (line[j])
-		{
-		case '@':
-		case '{':
-		case '}':
-		  stream << "@" << line[j];
-		  break;
+        {
+          for (size_t j = 0; j < line.size (); j++)
+            {
+              switch (line[j])
+                {
+                case '@':
+                case '{':
+                case '}':
+                  stream << "@" << line[j];
+                  break;
 
-		default:
-		  stream << line[j];
-		}
-	    }
-	  stream << '\n';
-	}
+                default:
+                  stream << line[j];
+                }
+            }
+          stream << '\n';
+        }
       else
-	stream << line << '\n';
+        stream << line << '\n';
     }
 
   /* closing right paren for gettext */
   if (string_array && single_longdoc_strings)
     {
       if (!filename_p)
-	stream << "\"),\n";
+        stream << "\"),\n";
       else
-	stream << "\",\n";
+        stream << "\",\n";
     }
 
   if (string_array)
@@ -1232,25 +1273,25 @@ _find_in_table (const char *name, const char *name_table[])
 static bool
 is_special_builtin (const string &name)
 {
-  return _find_in_table (name.c_str(), special_builtins);
+  return _find_in_table (name.c_str (), special_builtins);
 }
 
 static bool
 is_assignment_builtin (const string &name)
 {
-  return _find_in_table (name.c_str(), assignment_builtins);
+  return _find_in_table (name.c_str (), assignment_builtins);
 }
 
 static bool
 is_localvar_builtin (const string &name)
 {
-  return _find_in_table (name.c_str(), localvar_builtins);
+  return _find_in_table (name.c_str (), localvar_builtins);
 }
 
 static bool
 is_posix_builtin (const string &name)
 {
-  return _find_in_table (name.c_str(), posix_builtins);
+  return _find_in_table (name.c_str (), posix_builtins);
 }
 
-}  // namespace bash
+} // namespace bash

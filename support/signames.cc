@@ -22,13 +22,13 @@
 
 #include <cstdio>
 
-#include <sys/types.h>
 #include <csignal>
+#include <sys/types.h>
 
 #include <cstdlib>
 
-#if !defined (NSIG)
-#  define NSIG 64
+#if !defined(NSIG)
+#define NSIG 64
 #endif
 
 /*
@@ -38,7 +38,7 @@
  *	ERR == NSIG+1
  *	RETURN == NSIG+2
  */
-#define LASTSIG NSIG+2
+#define LASTSIG NSIG + 2
 
 /* exported to mksignames.c */
 extern void initialize_signames ();
@@ -46,30 +46,30 @@ extern const char *signal_names[];
 
 const char *signal_names[2 * (LASTSIG)];
 
-#define signal_names_size (sizeof(signal_names) / sizeof(signal_names[0]))
+#define signal_names_size (sizeof (signal_names) / sizeof (signal_names[0]))
 
 /* AIX 4.3 defines SIGRTMIN and SIGRTMAX as 888 and 999 respectively.
    I don't want to allocate so much unused space for the intervening signal
    numbers, so we just punt if SIGRTMAX is past the bounds of the
    signal_names array (handled in configure). */
-#if defined (SIGRTMAX) && defined (UNUSABLE_RT_SIGNALS)
-#  undef SIGRTMAX
-#  undef SIGRTMIN
+#if defined(SIGRTMAX) && defined(UNUSABLE_RT_SIGNALS)
+#undef SIGRTMAX
+#undef SIGRTMIN
 #endif
 
-#if defined (SIGRTMAX) || defined (SIGRTMIN)
-#  define RTLEN 14
-#  define RTLIM 256
+#if defined(SIGRTMAX) || defined(SIGRTMIN)
+#define RTLEN 14
+#define RTLIM 256
 #endif
 
-#if defined (BUILDTOOL)
+#if defined(BUILDTOOL)
 extern char *progname;
 #endif
 
 void
 initialize_signames ()
 {
-#if defined (SIGRTMAX) || defined (SIGRTMIN)
+#if defined(SIGRTMAX) || defined(SIGRTMIN)
   int rtmin, rtmax, rtcnt;
 #endif
 
@@ -93,353 +93,359 @@ initialize_signames ()
      of RT signals is odd, there is an extra SIGRTMIN+(x+1).
      These names are the ones used by ksh and /usr/xpg4/bin/sh on SunOS5. */
 
-#if defined (SIGRTMIN)
+#if defined(SIGRTMIN)
   rtmin = SIGRTMIN;
   signal_names[rtmin] = "SIGRTMIN";
 #endif
 
-#if defined (SIGRTMAX)
+#if defined(SIGRTMAX)
   rtmax = SIGRTMAX;
   signal_names[rtmax] = "SIGRTMAX";
 #endif
 
-#if defined (SIGRTMAX) && defined (SIGRTMIN)
+#if defined(SIGRTMAX) && defined(SIGRTMIN)
   if (rtmax > rtmin)
     {
       rtcnt = (rtmax - rtmin - 1) / 2;
       /* croak if there are too many RT signals */
       if (rtcnt >= RTLIM / 2)
-	{
-	  rtcnt = RTLIM / 2 - 1;
+        {
+          rtcnt = RTLIM / 2 - 1;
 #ifdef BUILDTOOL
-	  std::fprintf(stderr, "%s: error: more than %d real time signals, fix `%s'\n",
-			progname, RTLIM, progname);
+          std::fprintf (
+              stderr, "%s: error: more than %d real time signals, fix `%s'\n",
+              progname, RTLIM, progname);
 #endif
-	}
+        }
 
       for (int i = 1; i <= rtcnt; i++)
-	{
-	  signal_names[rtmin + i] = new char[RTLEN];
-	  if (signal_names[rtmin + i])
-	    std::sprintf (const_cast<char *> (signal_names[rtmin + i]), "SIGRTMIN+%d", i);
-	  signal_names[rtmax - i] = new char[RTLEN];
-	  if (signal_names[rtmax - i])
-	    std::sprintf (const_cast<char *> (signal_names[rtmax - i]), "SIGRTMAX-%d", i);
-	}
+        {
+          signal_names[rtmin + i] = new char[RTLEN];
+          if (signal_names[rtmin + i])
+            std::sprintf (const_cast<char *> (signal_names[rtmin + i]),
+                          "SIGRTMIN+%d", i);
+          signal_names[rtmax - i] = new char[RTLEN];
+          if (signal_names[rtmax - i])
+            std::sprintf (const_cast<char *> (signal_names[rtmax - i]),
+                          "SIGRTMAX-%d", i);
+        }
 
       if (rtcnt < RTLIM / 2 - 1 && rtcnt != (rtmax - rtmin) / 2)
-	{
-	  /* Need an extra RTMIN signal */
-	  signal_names[rtmin + rtcnt + 1] = new char[RTLEN];
-	  if (signal_names[rtmin + rtcnt + 1])
-	    std::sprintf (const_cast<char *> (signal_names[rtmin + rtcnt + 1]), "SIGRTMIN+%d", rtcnt + 1);
-	}
+        {
+          /* Need an extra RTMIN signal */
+          signal_names[rtmin + rtcnt + 1] = new char[RTLEN];
+          if (signal_names[rtmin + rtcnt + 1])
+            std::sprintf (const_cast<char *> (signal_names[rtmin + rtcnt + 1]),
+                          "SIGRTMIN+%d", rtcnt + 1);
+        }
     }
 #endif /* SIGRTMIN && SIGRTMAX */
 
-#if defined (SIGLOST)	/* resource lost (eg, record-lock lost) */
+#if defined(SIGLOST) /* resource lost (eg, record-lock lost) */
   signal_names[SIGLOST] = "SIGLOST";
 #endif
 
 /* AIX */
-#if defined (SIGMSG)	/* HFT input data pending */
+#if defined(SIGMSG) /* HFT input data pending */
   signal_names[SIGMSG] = "SIGMSG";
 #endif
 
-#if defined (SIGDANGER)	/* system crash imminent */
+#if defined(SIGDANGER) /* system crash imminent */
   signal_names[SIGDANGER] = "SIGDANGER";
 #endif
 
-#if defined (SIGMIGRATE) /* migrate process to another CPU */
+#if defined(SIGMIGRATE) /* migrate process to another CPU */
   signal_names[SIGMIGRATE] = "SIGMIGRATE";
 #endif
 
-#if defined (SIGPRE)	/* programming error */
+#if defined(SIGPRE) /* programming error */
   signal_names[SIGPRE] = "SIGPRE";
 #endif
 
-#if defined (SIGPHONE)	/* Phone interrupt */
+#if defined(SIGPHONE) /* Phone interrupt */
   signal_names[SIGPHONE] = "SIGPHONE";
 #endif
 
-#if defined (SIGVIRT)	/* AIX virtual time alarm */
+#if defined(SIGVIRT) /* AIX virtual time alarm */
   signal_names[SIGVIRT] = "SIGVIRT";
 #endif
 
-#if defined (SIGTINT)	/* Interrupt */
+#if defined(SIGTINT) /* Interrupt */
   signal_names[SIGTINT] = "SIGTINT";
 #endif
 
-#if defined (SIGALRM1)	/* m:n condition variables */
+#if defined(SIGALRM1) /* m:n condition variables */
   signal_names[SIGALRM1] = "SIGALRM1";
 #endif
 
-#if defined (SIGWAITING)	/* m:n scheduling */
+#if defined(SIGWAITING) /* m:n scheduling */
   signal_names[SIGWAITING] = "SIGWAITING";
 #endif
 
-#if defined (SIGGRANT)	/* HFT monitor mode granted */
+#if defined(SIGGRANT) /* HFT monitor mode granted */
   signal_names[SIGGRANT] = "SIGGRANT";
 #endif
 
-#if defined (SIGKAP)	/* keep alive poll from native keyboard */
+#if defined(SIGKAP) /* keep alive poll from native keyboard */
   signal_names[SIGKAP] = "SIGKAP";
 #endif
 
-#if defined (SIGRETRACT) /* HFT monitor mode retracted */
+#if defined(SIGRETRACT) /* HFT monitor mode retracted */
   signal_names[SIGRETRACT] = "SIGRETRACT";
 #endif
 
-#if defined (SIGSOUND)	/* HFT sound sequence has completed */
+#if defined(SIGSOUND) /* HFT sound sequence has completed */
   signal_names[SIGSOUND] = "SIGSOUND";
 #endif
 
-#if defined (SIGSAK)	/* Secure Attention Key */
+#if defined(SIGSAK) /* Secure Attention Key */
   signal_names[SIGSAK] = "SIGSAK";
 #endif
 
-#if defined (SIGCPUFAIL)	/* Predictive processor deconfiguration */
+#if defined(SIGCPUFAIL) /* Predictive processor deconfiguration */
   signal_names[SIGCPUFAIL] = "SIGCPUFAIL";
 #endif
 
-#if defined (SIGAIO)	/* Asynchronous I/O */
+#if defined(SIGAIO) /* Asynchronous I/O */
   signal_names[SIGAIO] = "SIGAIO";
 #endif
 
-#if defined (SIGLAB)	/* Security label changed */
+#if defined(SIGLAB) /* Security label changed */
   signal_names[SIGLAB] = "SIGLAB";
 #endif
 
 /* SunOS5 */
-#if defined (SIGLWP)	/* Solaris: special signal used by thread library */
+#if defined(SIGLWP) /* Solaris: special signal used by thread library */
   signal_names[SIGLWP] = "SIGLWP";
 #endif
 
-#if defined (SIGFREEZE)	/* Solaris: special signal used by CPR */
+#if defined(SIGFREEZE) /* Solaris: special signal used by CPR */
   signal_names[SIGFREEZE] = "SIGFREEZE";
 #endif
 
-#if defined (SIGTHAW)	/* Solaris: special signal used by CPR */
+#if defined(SIGTHAW) /* Solaris: special signal used by CPR */
   signal_names[SIGTHAW] = "SIGTHAW";
 #endif
 
-#if defined (SIGCANCEL)	/* Solaris: thread cancellation signal used by libthread */
+#if defined(SIGCANCEL) /* Solaris: thread cancellation signal used by         \
+                          libthread */
   signal_names[SIGCANCEL] = "SIGCANCEL";
 #endif
 
-#if defined (SIGXRES)	/* Solaris: resource control exceeded */
+#if defined(SIGXRES) /* Solaris: resource control exceeded */
   signal_names[SIGXRES] = "SIGXRES";
 #endif
 
-#if defined (SIGJVM1)	/* Solaris: Java Virtual Machine 1 */
+#if defined(SIGJVM1) /* Solaris: Java Virtual Machine 1 */
   signal_names[SIGJVM1] = "SIGJVM1";
 #endif
 
-#if defined (SIGJVM2)	/* Solaris: Java Virtual Machine 2 */
+#if defined(SIGJVM2) /* Solaris: Java Virtual Machine 2 */
   signal_names[SIGJVM2] = "SIGJVM2";
 #endif
 
-#if defined (SIGDGTIMER1)
+#if defined(SIGDGTIMER1)
   signal_names[SIGDGTIMER1] = "SIGDGTIMER1";
 #endif
 
-#if defined (SIGDGTIMER2)
+#if defined(SIGDGTIMER2)
   signal_names[SIGDGTIMER2] = "SIGDGTIMER2";
 #endif
 
-#if defined (SIGDGTIMER3)
+#if defined(SIGDGTIMER3)
   signal_names[SIGDGTIMER3] = "SIGDGTIMER3";
 #endif
 
-#if defined (SIGDGTIMER4)
+#if defined(SIGDGTIMER4)
   signal_names[SIGDGTIMER4] = "SIGDGTIMER4";
 #endif
 
-#if defined (SIGDGNOTIFY)
+#if defined(SIGDGNOTIFY)
   signal_names[SIGDGNOTIFY] = "SIGDGNOTIFY";
 #endif
 
 /* Apollo */
-#if defined (SIGAPOLLO)
+#if defined(SIGAPOLLO)
   signal_names[SIGAPOLLO] = "SIGAPOLLO";
 #endif
 
 /* HP-UX */
-#if defined (SIGDIL)	/* DIL signal (?) */
+#if defined(SIGDIL) /* DIL signal (?) */
   signal_names[SIGDIL] = "SIGDIL";
 #endif
 
 /* System V */
-#if defined (SIGCLD)	/* Like SIGCHLD.  */
+#if defined(SIGCLD) /* Like SIGCHLD.  */
   signal_names[SIGCLD] = "SIGCLD";
 #endif
 
-#if defined (SIGPWR)	/* power state indication */
+#if defined(SIGPWR) /* power state indication */
   signal_names[SIGPWR] = "SIGPWR";
 #endif
 
-#if defined (SIGPOLL)	/* Pollable event (for streams)  */
+#if defined(SIGPOLL) /* Pollable event (for streams)  */
   signal_names[SIGPOLL] = "SIGPOLL";
 #endif
 
 /* Unknown */
-#if defined (SIGWINDOW)
+#if defined(SIGWINDOW)
   signal_names[SIGWINDOW] = "SIGWINDOW";
 #endif
 
 /* Linux */
-#if defined (SIGSTKFLT)
+#if defined(SIGSTKFLT)
   signal_names[SIGSTKFLT] = "SIGSTKFLT";
 #endif
 
 /* FreeBSD */
-#if defined (SIGTHR)	/* thread interrupt */
+#if defined(SIGTHR) /* thread interrupt */
   signal_names[SIGTHR] = "SIGTHR";
 #endif
 
 /* Common */
-#if defined (SIGHUP)	/* hangup */
+#if defined(SIGHUP) /* hangup */
   signal_names[SIGHUP] = "SIGHUP";
 #endif
 
-#if defined (SIGINT)	/* interrupt */
+#if defined(SIGINT) /* interrupt */
   signal_names[SIGINT] = "SIGINT";
 #endif
 
-#if defined (SIGQUIT)	/* quit */
+#if defined(SIGQUIT) /* quit */
   signal_names[SIGQUIT] = "SIGQUIT";
 #endif
 
-#if defined (SIGILL)	/* illegal instruction (not reset when caught) */
+#if defined(SIGILL) /* illegal instruction (not reset when caught) */
   signal_names[SIGILL] = "SIGILL";
 #endif
 
-#if defined (SIGTRAP)	/* trace trap (not reset when caught) */
+#if defined(SIGTRAP) /* trace trap (not reset when caught) */
   signal_names[SIGTRAP] = "SIGTRAP";
 #endif
 
-#if defined (SIGIOT)	/* IOT instruction */
+#if defined(SIGIOT) /* IOT instruction */
   signal_names[SIGIOT] = "SIGIOT";
 #endif
 
-#if defined (SIGABRT)	/* Cause current process to dump core. */
+#if defined(SIGABRT) /* Cause current process to dump core. */
   signal_names[SIGABRT] = "SIGABRT";
 #endif
 
-#if defined (SIGEMT)	/* EMT instruction */
+#if defined(SIGEMT) /* EMT instruction */
   signal_names[SIGEMT] = "SIGEMT";
 #endif
 
-#if defined (SIGFPE)	/* floating point exception */
+#if defined(SIGFPE) /* floating point exception */
   signal_names[SIGFPE] = "SIGFPE";
 #endif
 
-#if defined (SIGKILL)	/* kill (cannot be caught or ignored) */
+#if defined(SIGKILL) /* kill (cannot be caught or ignored) */
   signal_names[SIGKILL] = "SIGKILL";
 #endif
 
-#if defined (SIGBUS)	/* bus error */
+#if defined(SIGBUS) /* bus error */
   signal_names[SIGBUS] = "SIGBUS";
 #endif
 
-#if defined (SIGSEGV)	/* segmentation violation */
+#if defined(SIGSEGV) /* segmentation violation */
   signal_names[SIGSEGV] = "SIGSEGV";
 #endif
 
-#if defined (SIGSYS)	/* bad argument to system call */
+#if defined(SIGSYS) /* bad argument to system call */
   signal_names[SIGSYS] = "SIGSYS";
 #endif
 
-#if defined (SIGPIPE)	/* write on a pipe with no one to read it */
+#if defined(SIGPIPE) /* write on a pipe with no one to read it */
   signal_names[SIGPIPE] = "SIGPIPE";
 #endif
 
-#if defined (SIGALRM)	/* alarm clock */
+#if defined(SIGALRM) /* alarm clock */
   signal_names[SIGALRM] = "SIGALRM";
 #endif
 
-#if defined (SIGTERM)	/* software termination signal from kill */
+#if defined(SIGTERM) /* software termination signal from kill */
   signal_names[SIGTERM] = "SIGTERM";
 #endif
 
-#if defined (SIGURG)	/* urgent condition on IO channel */
+#if defined(SIGURG) /* urgent condition on IO channel */
   signal_names[SIGURG] = "SIGURG";
 #endif
 
-#if defined (SIGSTOP)	/* sendable stop signal not from tty */
+#if defined(SIGSTOP) /* sendable stop signal not from tty */
   signal_names[SIGSTOP] = "SIGSTOP";
 #endif
 
-#if defined (SIGTSTP)	/* stop signal from tty */
+#if defined(SIGTSTP) /* stop signal from tty */
   signal_names[SIGTSTP] = "SIGTSTP";
 #endif
 
-#if defined (SIGCONT)	/* continue a stopped process */
+#if defined(SIGCONT) /* continue a stopped process */
   signal_names[SIGCONT] = "SIGCONT";
 #endif
 
-#if defined (SIGCHLD)	/* to parent on child stop or exit */
+#if defined(SIGCHLD) /* to parent on child stop or exit */
   signal_names[SIGCHLD] = "SIGCHLD";
 #endif
 
-#if defined (SIGTTIN)	/* to readers pgrp upon background tty read */
+#if defined(SIGTTIN) /* to readers pgrp upon background tty read */
   signal_names[SIGTTIN] = "SIGTTIN";
 #endif
 
-#if defined (SIGTTOU)	/* like TTIN for output if (tp->t_local&LTOSTOP) */
+#if defined(SIGTTOU) /* like TTIN for output if (tp->t_local&LTOSTOP) */
   signal_names[SIGTTOU] = "SIGTTOU";
 #endif
 
-#if defined (SIGIO)	/* input/output possible signal */
+#if defined(SIGIO) /* input/output possible signal */
   signal_names[SIGIO] = "SIGIO";
 #endif
 
-#if defined (SIGXCPU)	/* exceeded CPU time limit */
+#if defined(SIGXCPU) /* exceeded CPU time limit */
   signal_names[SIGXCPU] = "SIGXCPU";
 #endif
 
-#if defined (SIGXFSZ)	/* exceeded file size limit */
+#if defined(SIGXFSZ) /* exceeded file size limit */
   signal_names[SIGXFSZ] = "SIGXFSZ";
 #endif
 
-#if defined (SIGVTALRM)	/* virtual time alarm */
+#if defined(SIGVTALRM) /* virtual time alarm */
   signal_names[SIGVTALRM] = "SIGVTALRM";
 #endif
 
-#if defined (SIGPROF)	/* profiling time alarm */
+#if defined(SIGPROF) /* profiling time alarm */
   signal_names[SIGPROF] = "SIGPROF";
 #endif
 
-#if defined (SIGWINCH)	/* window changed */
+#if defined(SIGWINCH) /* window changed */
   signal_names[SIGWINCH] = "SIGWINCH";
 #endif
 
 /* 4.4 BSD */
-#if defined (SIGINFO) && !defined (_SEQUENT_)	/* information request */
+#if defined(SIGINFO) && !defined(_SEQUENT_) /* information request */
   signal_names[SIGINFO] = "SIGINFO";
 #endif
 
-#if defined (SIGUSR1)	/* user defined signal 1 */
+#if defined(SIGUSR1) /* user defined signal 1 */
   signal_names[SIGUSR1] = "SIGUSR1";
 #endif
 
-#if defined (SIGUSR2)	/* user defined signal 2 */
+#if defined(SIGUSR2) /* user defined signal 2 */
   signal_names[SIGUSR2] = "SIGUSR2";
 #endif
 
-#if defined (SIGKILLTHR)	/* BeOS: Kill Thread */
+#if defined(SIGKILLTHR) /* BeOS: Kill Thread */
   signal_names[SIGKILLTHR] = "SIGKILLTHR";
 #endif
 
   for (int i = 0; i < NSIG; i++)
     if (signal_names[i] == nullptr)
       {
-	signal_names[i] = new char[18];
-	if (signal_names[i])
-	  std::sprintf (const_cast<char *> (signal_names[i]), "SIGJUNK(%d)", i);
+        signal_names[i] = new char[18];
+        if (signal_names[i])
+          std::sprintf (const_cast<char *> (signal_names[i]), "SIGJUNK(%d)",
+                        i);
       }
 
   signal_names[NSIG] = "DEBUG";
-  signal_names[NSIG+1] = "ERR";
-  signal_names[NSIG+2] = "RETURN";
+  signal_names[NSIG + 1] = "ERR";
+  signal_names[NSIG + 2] = "RETURN";
 }

@@ -20,14 +20,14 @@
 
 #include "config.hh"
 
-#if defined (HANDLE_MULTIBYTE) && !defined (HAVE_WCSWIDTH)
+#if defined(HANDLE_MULTIBYTE) && !defined(HAVE_WCSWIDTH)
 
 #include <cwchar>
 
 #include "bashansi.hh"
 
 int
-wcswidth(const wchar_t *pwcs, size_t n)
+wcswidth (const wchar_t *pwcs, size_t n)
 {
   wchar_t wc;
   int len, l;
@@ -35,8 +35,8 @@ wcswidth(const wchar_t *pwcs, size_t n)
   len = 0;
   while (n-- > 0 && (wc = *pwcs++) != L'\0')
     {
-      if ((l = wcwidth(wc)) < 0)
-	return -1;
+      if ((l = wcwidth (wc)) < 0)
+        return -1;
       len += l;
     }
   return len;

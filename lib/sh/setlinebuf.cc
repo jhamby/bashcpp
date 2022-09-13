@@ -27,7 +27,7 @@
 namespace bash
 {
 
-#define LBUF_BUFSIZE	BUFSIZ
+#define LBUF_BUFSIZE BUFSIZ
 
 /* Cause STREAM to buffer lines as opposed to characters or blocks. */
 int
@@ -35,20 +35,20 @@ sh_setlinebuf (FILE *stream)
 {
   char *local_linebuf;
 
-#if !defined (HAVE_SETLINEBUF) && !defined (HAVE_SETVBUF)
+#if !defined(HAVE_SETLINEBUF) && !defined(HAVE_SETVBUF)
   return 0;
 #endif
 
   local_linebuf = nullptr;
 
-#if defined (HAVE_SETVBUF)
+#if defined(HAVE_SETVBUF)
 
-#  if defined (SETVBUF_REVERSED)
+#if defined(SETVBUF_REVERSED)
   return std::setvbuf (stream, _IOLBF, local_linebuf, LBUF_BUFSIZE);
-#  else /* !SETVBUF_REVERSED */
+#else  /* !SETVBUF_REVERSED */
   return std::setvbuf (stream, local_linebuf, _IOLBF, LBUF_BUFSIZE);
-#  endif /* !SETVBUF_REVERSED */
-# else /* !HAVE_SETVBUF */
+#endif /* !SETVBUF_REVERSED */
+#else  /* !HAVE_SETVBUF */
 
   setlinebuf (stream);
   return 0;
@@ -56,4 +56,4 @@ sh_setlinebuf (FILE *stream)
 #endif /* !HAVE_SETVBUF */
 }
 
-}  // namespace bash
+} // namespace bash

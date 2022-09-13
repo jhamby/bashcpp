@@ -23,8 +23,8 @@
 
 #include <config.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <stdio.h>
@@ -49,25 +49,23 @@
    EXECUTION_FAILURE to indicate failure. */
 int
 hello_builtin (list)
-     WORD_LIST *list;
+WORD_LIST *list;
 {
-  printf("hello world\n");
+  printf ("hello world\n");
   fflush (stdout);
   return (EXECUTION_SUCCESS);
 }
 
 int
 hello_builtin_load (s)
-     char *s;
+char *s;
 {
   printf ("hello builtin loaded\n");
   fflush (stdout);
   return (1);
 }
 
-void
-hello_builtin_unload (s)
-     char *s;
+void hello_builtin_unload (s) char *s;
 {
   printf ("hello builtin unloaded\n");
   fflush (stdout);
@@ -76,21 +74,18 @@ hello_builtin_unload (s)
 /* An array of strings forming the `long' documentation for a builtin xxx,
    which is printed by `help xxx'.  It must end with a NULL.  By convention,
    the first line is a short description. */
-char *hello_doc[] = {
-	"Sample builtin.",
-	"",
-	"this is the long doc for the sample hello builtin",
-	(char *)NULL
-};
+char *hello_doc[]
+    = { "Sample builtin.", "",
+        "this is the long doc for the sample hello builtin", (char *)NULL };
 
 /* The standard structure describing a builtin command.  bash keeps an array
    of these structures.  The flags must include BUILTIN_ENABLED so the
    builtin can be used. */
 struct builtin hello_struct = {
-	"hello",		/* builtin name */
-	hello_builtin,		/* function implementing the builtin */
-	BUILTIN_ENABLED,	/* initial flags for builtin */
-	hello_doc,		/* array of long documentation strings. */
-	"hello",		/* usage synopsis; becomes short_doc */
-	0			/* reserved for internal use */
+  "hello",         /* builtin name */
+  hello_builtin,   /* function implementing the builtin */
+  BUILTIN_ENABLED, /* initial flags for builtin */
+  hello_doc,       /* array of long documentation strings. */
+  "hello",         /* usage synopsis; becomes short_doc */
+  0                /* reserved for internal use */
 };

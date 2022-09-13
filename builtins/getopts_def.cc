@@ -64,24 +64,24 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "execute_cmd.hh"
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "common.hh"
+#include "execute_cmd.hh"
 #include "getopt.hh"
+#include "shell.hh"
 
 namespace bash
 {
 
-#define G_EOF		-1
-#define G_INVALID_OPT	-2
-#define G_ARG_MISSING	-3
+#define G_EOF -1
+#define G_INVALID_OPT -2
+#define G_ARG_MISSING -3
 
 static int getopts_unbind_variable (const char *);
 static int getopts_bind_variable (const char *, const char *);
@@ -115,7 +115,7 @@ getopts_bind_variable (const char *name, const char *value)
     {
       v = bind_variable (name, value, 0);
       if (v && (readonly_p (v) || noassign_p (v)))
-	return EX_MISCERROR;
+        return EX_MISCERROR;
       return v ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
     }
   else
@@ -157,8 +157,8 @@ dogetopts (int argc, char **argv)
 {
   int ret, special_error, old_opterr, i, n;
   char strval[2], numval[16];
-  char *optstr;			/* list of options */
-  char *name;			/* variable to get flag val */
+  char *optstr; /* list of options */
+  char *name;   /* variable to get flag val */
   char *t;
 
   if (argc < 3)
@@ -180,7 +180,7 @@ dogetopts (int argc, char **argv)
     {
       old_opterr = sh_opterr;
       optstr++;
-      sh_opterr = 0;		/* suppress diagnostic messages */
+      sh_opterr = 0; /* suppress diagnostic messages */
     }
 
   if (argc > 1)
@@ -194,7 +194,7 @@ dogetopts (int argc, char **argv)
   else if (rest_of_args == (WORD_LIST *)NULL)
     {
       for (i = 0; i < 10 && dollar_vars[i]; i++)
-	;
+        ;
 
       sh_getopt_restore_state (dollar_vars);
       ret = sh_getopt (i, dollar_vars, optstr);
@@ -204,12 +204,12 @@ dogetopts (int argc, char **argv)
       WORD_LIST *words;
       char **v;
 
-      i = number_of_args () + 1;	/* +1 for $0 */
+      i = number_of_args () + 1; /* +1 for $0 */
       v = strvec_create (i + 1);
       for (i = 0; i < 10 && dollar_vars[i]; i++)
-	v[i] = dollar_vars[i];
+        v[i] = dollar_vars[i];
       for (words = rest_of_args; words; words = (WORD_LIST *)words->next, i++)
-	v[i] = words->word->word;
+        v[i] = words->word->word;
       v[i] = (char *)NULL;
       sh_getopt_restore_state (v);
       ret = sh_getopt (i, v, optstr);
@@ -232,9 +232,9 @@ dogetopts (int argc, char **argv)
       numval[i = 15] = '\0';
       n = sh_optind;
       do
-	{
-	  numval[--i] = (n % 10) + '0';
-	}
+        {
+          numval[--i] = (n % 10) + '0';
+        }
       while (n /= 10);
     }
   bind_variable ("OPTIND", numval + i, 0);
@@ -247,9 +247,9 @@ dogetopts (int argc, char **argv)
   if (ret == '?')
     {
       if (sh_optarg == NULL)
-	ret = G_INVALID_OPT;
+        ret = G_INVALID_OPT;
       else if (sh_optarg[0] == '\0')
-	ret = G_ARG_MISSING;
+        ret = G_ARG_MISSING;
     }
 
   if (ret == G_EOF)
@@ -265,13 +265,13 @@ dogetopts (int argc, char **argv)
       ret = getopts_bind_variable (name, "?");
 
       if (special_error)
-	{
-	  strval[0] = (char)sh_optopt;
-	  strval[1] = '\0';
-	  bind_variable ("OPTARG", strval, 0);
-	}
+        {
+          strval[0] = (char)sh_optopt;
+          strval[1] = '\0';
+          bind_variable ("OPTARG", strval, 0);
+        }
       else
-	getopts_unbind_variable ("OPTARG");
+        getopts_unbind_variable ("OPTARG");
 
       return ret;
     }
@@ -280,24 +280,24 @@ dogetopts (int argc, char **argv)
     {
       /* Required argument missing. */
       if (special_error)
-	{
-	  ret = getopts_bind_variable (name, ":");
+        {
+          ret = getopts_bind_variable (name, ":");
 
-	  strval[0] = (char)sh_optopt;
-	  strval[1] = '\0';
-	  bind_variable ("OPTARG", strval, 0);
-	}
+          strval[0] = (char)sh_optopt;
+          strval[1] = '\0';
+          bind_variable ("OPTARG", strval, 0);
+        }
       else
-	{
-	  ret = getopts_bind_variable (name, "?");
-	  getopts_unbind_variable ("OPTARG");
-	}
+        {
+          ret = getopts_bind_variable (name, "?");
+          getopts_unbind_variable ("OPTARG");
+        }
       return ret;
     }
 
   bind_variable ("OPTARG", sh_optarg, 0);
 
-  strval[0] = (char) ret;
+  strval[0] = (char)ret;
   strval[1] = '\0';
   return getopts_bind_variable (name, strval);
 }
@@ -319,9 +319,9 @@ Shell::getopts_builtin (WORD_LIST *list)
   if ((ret = internal_getopt (list, "")) != -1)
     {
       if (ret == GETOPT_HELP)
-	builtin_help ();
+        builtin_help ();
       else
-	builtin_usage ();
+        builtin_usage ();
       return EX_USAGE;
     }
   list = loptend;
@@ -333,4 +333,4 @@ Shell::getopts_builtin (WORD_LIST *list)
   return ret;
 }
 
-}  // namespace bash
+} // namespace bash

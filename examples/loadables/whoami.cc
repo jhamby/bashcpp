@@ -23,14 +23,14 @@
 #include <config.h>
 #include <stdio.h>
 
-#include "builtins.h"
-#include "shell.h"
 #include "bashgetopt.h"
+#include "builtins.h"
 #include "common.h"
+#include "shell.h"
 
 int
 whoami_builtin (list)
-     WORD_LIST *list;
+WORD_LIST *list;
 {
   int opt;
 
@@ -38,12 +38,12 @@ whoami_builtin (list)
   while ((opt = internal_getopt (list, "")) != -1)
     {
       switch (opt)
-	{
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return (EX_USAGE);
-	}
+        {
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return (EX_USAGE);
+        }
     }
   list = loptend;
   if (list)
@@ -58,18 +58,8 @@ whoami_builtin (list)
   return (EXECUTION_SUCCESS);
 }
 
-char *whoami_doc[] = {
-	"Print user name",
-	"",
-	"Display name of current user.",
-	(char *)NULL
-};
+char *whoami_doc[]
+    = { "Print user name", "", "Display name of current user.", (char *)NULL };
 
-struct builtin whoami_struct = {
-	"whoami",
-	whoami_builtin,
-	BUILTIN_ENABLED,
-	whoami_doc,
-	"whoami",
-	0
-};
+struct builtin whoami_struct
+    = { "whoami", whoami_builtin, BUILTIN_ENABLED, whoami_doc, "whoami", 0 };

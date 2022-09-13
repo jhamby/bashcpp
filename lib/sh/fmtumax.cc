@@ -20,8 +20,8 @@
 
 #include "config.hh"
 
-#define LONG		int64_t
-#define UNSIGNED_LONG	uint64_t
-#define fmtulong	fmtumax
+#define LONG int64_t
+#define UNSIGNED_LONG uint64_t
+#define fmtulong fmtumax
 
 #include "fmtulong.cc"

@@ -44,22 +44,22 @@
 #include "bashtypes.hh"
 #include "filecntl.hh"
 
-#if defined (HAVE_SYS_FILE_H)
-#  include <sys/file.h>
+#if defined(HAVE_SYS_FILE_H)
+#include <sys/file.h>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "chartypes.hh"
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "posixstat.hh"
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "common.hh"
+#include "posixstat.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -86,18 +86,18 @@ Shell::umask_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "Sp")) != -1)
     {
       switch (opt)
-	{
-	case 'S':
-	  print_symbolically++;
-	  break;
-	case 'p':
-	  pflag++;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+        case 'S':
+          print_symbolically++;
+          break;
+        case 'p':
+          pflag++;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
 
   list = loptend;
@@ -105,41 +105,41 @@ Shell::umask_builtin (WORD_LIST *list)
   if (list)
     {
       if (DIGIT (*list->word->word))
-	{
-	  umask_value = read_octal (list->word->word);
+        {
+          umask_value = read_octal (list->word->word);
 
-	  /* Note that other shells just let you set the umask to zero
-	     by specifying a number out of range.  This is a problem
-	     with those shells.  We don't change the umask if the input
-	     is lousy. */
-	  if (umask_value == -1)
-	    {
-	      sh_erange (list->word->word, _("octal number"));
-	      return EXECUTION_FAILURE;
-	    }
-	}
+          /* Note that other shells just let you set the umask to zero
+             by specifying a number out of range.  This is a problem
+             with those shells.  We don't change the umask if the input
+             is lousy. */
+          if (umask_value == -1)
+            {
+              sh_erange (list->word->word, _ ("octal number"));
+              return EXECUTION_FAILURE;
+            }
+        }
       else
-	{
-	  umask_value = symbolic_umask (list);
-	  if (umask_value == -1)
-	    return EXECUTION_FAILURE;
-	}
+        {
+          umask_value = symbolic_umask (list);
+          if (umask_value == -1)
+            return EXECUTION_FAILURE;
+        }
       umask_arg = (mode_t)umask_value;
       umask (umask_arg);
       if (print_symbolically)
-	print_symbolic_umask (umask_arg);
+        print_symbolic_umask (umask_arg);
     }
-  else				/* Display the UMASK for this user. */
+  else /* Display the UMASK for this user. */
     {
       umask_arg = umask (022);
       umask (umask_arg);
 
       if (pflag)
-	printf ("umask%s ", (print_symbolically ? " -S" : ""));
+        printf ("umask%s ", (print_symbolically ? " -S" : ""));
       if (print_symbolically)
-	print_symbolic_umask (umask_arg);
+        print_symbolic_umask (umask_arg);
       else
-	printf ("%04lo\n", (unsigned long)umask_arg);
+        printf ("%04lo\n", (unsigned long)umask_arg);
     }
 
   return sh_chkwrite (EXECUTION_SUCCESS);
@@ -150,7 +150,7 @@ Shell::umask_builtin (WORD_LIST *list)
 static void
 print_symbolic_umask (mode_t um)
 {
-  char ubits[4], gbits[4], obits[4];		/* u=rwx,g=rwx,o=rwx */
+  char ubits[4], gbits[4], obits[4]; /* u=rwx,g=rwx,o=rwx */
   int i;
 
   i = 0;
@@ -195,93 +195,93 @@ parse_symbolic_mode (char *mode, int initial_bits)
 
       /* Parse the `who' portion of the symbolic mode clause. */
       while (member (*s, "agou"))
-	{
-	  switch (c = *s++)
-	    {
-	    case 'u':
-	      who |= S_IRWXU;
-	      continue;
-	    case 'g':
-	      who |= S_IRWXG;
-	      continue;
-	    case 'o':
-	      who |= S_IRWXO;
-	      continue;
-	    case 'a':
-	      who |= S_IRWXU | S_IRWXG | S_IRWXO;
-	      continue;
-	    default:
-	      break;
-	    }
-	}
+        {
+          switch (c = *s++)
+            {
+            case 'u':
+              who |= S_IRWXU;
+              continue;
+            case 'g':
+              who |= S_IRWXG;
+              continue;
+            case 'o':
+              who |= S_IRWXO;
+              continue;
+            case 'a':
+              who |= S_IRWXU | S_IRWXG | S_IRWXO;
+              continue;
+            default:
+              break;
+            }
+        }
 
       /* The operation is now sitting in *s. */
       op = *s++;
       switch (op)
-	{
-	case '+':
-	case '-':
-	case '=':
-	  break;
-	default:
-	  builtin_error (_("`%c': invalid symbolic mode operator"), op);
-	  return -1;
-	}
+        {
+        case '+':
+        case '-':
+        case '=':
+          break;
+        default:
+          builtin_error (_ ("`%c': invalid symbolic mode operator"), op);
+          return -1;
+        }
 
       /* Parse out the `perm' section of the symbolic mode clause. */
       while (member (*s, "rwx"))
-	{
-	  c = *s++;
+        {
+          c = *s++;
 
-	  switch (c)
-	    {
-	    case 'r':
-	      perm |= S_IRUGO;
-	      break;
-	    case 'w':
-	      perm |= S_IWUGO;
-	      break;
-	    case 'x':
-	      perm |= S_IXUGO;
-	      break;
-	    }
-	}
+          switch (c)
+            {
+            case 'r':
+              perm |= S_IRUGO;
+              break;
+            case 'w':
+              perm |= S_IWUGO;
+              break;
+            case 'x':
+              perm |= S_IXUGO;
+              break;
+            }
+        }
 
       /* Now perform the operation or return an error for a
-	 bad permission string. */
+         bad permission string. */
       if (!*s || *s == ',')
-	{
-	  if (who)
-	    perm &= who;
+        {
+          if (who)
+            perm &= who;
 
-	  switch (op)
-	    {
-	    case '+':
-	      bits |= perm;
-	      break;
-	    case '-':
-	      bits &= ~perm;
-	      break;
-	    case '=':
-	      if (who == 0)
-		who = S_IRWXU | S_IRWXG | S_IRWXO;
-	      bits &= ~who;
-	      bits |= perm;
-	      break;
+          switch (op)
+            {
+            case '+':
+              bits |= perm;
+              break;
+            case '-':
+              bits &= ~perm;
+              break;
+            case '=':
+              if (who == 0)
+                who = S_IRWXU | S_IRWXG | S_IRWXO;
+              bits &= ~who;
+              bits |= perm;
+              break;
 
-	    /* No other values are possible. */
-	    }
+              /* No other values are possible. */
+            }
 
-	  if (*s == '\0')
-	    break;
-	  else
-	    s++;	/* skip past ',' */
-	}
+          if (*s == '\0')
+            break;
+          else
+            s++; /* skip past ',' */
+        }
       else
-	{
-	  builtin_error (_("`%c': invalid symbolic mode character"), *s);
-	  return -1;
-	}
+        {
+          builtin_error (_ ("`%c': invalid symbolic mode character"), *s);
+          return -1;
+        }
     }
 
   return bits;
@@ -310,4 +310,4 @@ symbolic_umask (WORD_LIST *list)
   return um;
 }
 
-}  // namespace bash
+} // namespace bash

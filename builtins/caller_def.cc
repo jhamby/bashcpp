@@ -43,23 +43,23 @@
 
 #include <cstdio>
 
-#include "chartypes.hh"
 #include "bashtypes.hh"
+#include "chartypes.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <cerrno>
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "common.hh"
+#include "shell.hh"
 
 #ifdef LOADABLE_BUILTIN
-#  include "builtins.hh"
+#include "builtins.hh"
 #endif
 
 namespace bash
@@ -68,7 +68,7 @@ namespace bash
 int
 Shell::caller_builtin (WORD_LIST *list)
 {
-#if !defined (ARRAY_VARS)
+#if !defined(ARRAY_VARS)
   printf ("1 NULL\n");
   return EXECUTION_FAILURE;
 #else
@@ -89,16 +89,17 @@ Shell::caller_builtin (WORD_LIST *list)
   if (bash_source_a == 0 || array_empty (bash_source_a))
     return EXECUTION_FAILURE;
 
- if (no_options (list))
+  if (no_options (list))
     return EX_USAGE;
-  list = loptend;       /* skip over possible `--' */
+  list = loptend; /* skip over possible `--' */
 
   /* If there is no argument list, then give short form: line filename. */
   if (list == 0)
     {
       lineno_s = array_reference (bash_lineno_a, 0);
       source_s = array_reference (bash_source_a, 1);
-      printf("%s %s\n", lineno_s ? lineno_s : "NULL", source_s ? source_s : "NULL");
+      printf ("%s %s\n", lineno_s ? lineno_s : "NULL",
+              source_s ? source_s : "NULL");
       return EXECUTION_SUCCESS;
     }
 
@@ -108,13 +109,13 @@ Shell::caller_builtin (WORD_LIST *list)
   if (legal_number (list->word->word, &num))
     {
       lineno_s = array_reference (bash_lineno_a, num);
-      source_s = array_reference (bash_source_a, num+1);
-      funcname_s = array_reference (funcname_a, num+1);
+      source_s = array_reference (bash_source_a, num + 1);
+      funcname_s = array_reference (funcname_a, num + 1);
 
-      if (lineno_s == NULL|| source_s == NULL || funcname_s == NULL)
-	return EXECUTION_FAILURE;
+      if (lineno_s == NULL || source_s == NULL || funcname_s == NULL)
+        return EXECUTION_FAILURE;
 
-      printf("%s %s %s\n", lineno_s, funcname_s, source_s);
+      printf ("%s %s %s\n", lineno_s, funcname_s, source_s);
     }
   else
     {
@@ -128,8 +129,8 @@ Shell::caller_builtin (WORD_LIST *list)
 }
 
 #ifdef LOADABLE_BUILTIN
-static char *caller_doc[] = {
-N_("Returns the context of the current subroutine call.\n\
+static char *caller_doc[]
+    = { N_ ("Returns the context of the current subroutine call.\n\
     \n\
     Without EXPR, returns \"$line $filename\".  With EXPR, returns\n\
     \"$line $subroutine $filename\"; this extra information can be used to\n\
@@ -137,18 +138,11 @@ N_("Returns the context of the current subroutine call.\n\
     \n\
     The value of EXPR indicates how many call frames to go back before the\n\
     current one; the top frame is frame 0."),
-  (char *)NULL
-};
+        (char *)NULL };
 
-struct builtin caller_struct = {
-	"caller",
-	caller_builtin,
-	BUILTIN_ENABLED,
-	caller_doc,
-	"caller [EXPR]",
-	0
-};
+struct builtin caller_struct = { "caller",   caller_builtin,  BUILTIN_ENABLED,
+                                 caller_doc, "caller [EXPR]", 0 };
 
 #endif /* LOADABLE_BUILTIN */
 
-}  // namespace bash
+} // namespace bash

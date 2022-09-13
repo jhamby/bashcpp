@@ -1,5 +1,5 @@
 /* hashcmd.c - functions for managing a hash table mapping command names to
-	       full pathnames. */
+               full pathnames. */
 
 /* Copyright (C) 1997-2020 Free Software Foundation, Inc.
 
@@ -24,14 +24,14 @@
 #include "bashtypes.hh"
 #include "posixstat.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "shell.hh"
-#include "flags.hh"
 #include "findcmd.hh"
+#include "flags.hh"
 #include "hashcmd.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -76,7 +76,7 @@ phash_remove (const char *filename)
   if (item)
     {
       if (item->data)
-	phash_freedata (item->data);
+        phash_freedata (item->data);
       free (item->key);
       free (item);
       return 0;
@@ -90,7 +90,8 @@ phash_remove (const char *filename)
    in a directory in $PATH that is not an absolute pathname.
    FOUND is the initial value for times_found. */
 void
-phash_insert (const char *filename, const char *full_path, bool check_dot, int found)
+phash_insert (const char *filename, const char *full_path, bool check_dot,
+              int found)
 {
   BUCKET_CONTENTS *item;
 
@@ -102,18 +103,18 @@ phash_insert (const char *filename, const char *full_path, bool check_dot, int f
 
   item = hash_insert ((char *)filename, hashed_filenames, 0);
   if (item->data)
-    free (pathdata(item)->path);
+    free (pathdata (item)->path);
   else
     {
       item->key = savestring (filename);
       item->data = xmalloc (sizeof (PATH_DATA));
     }
-  pathdata(item)->path = savestring (full_path);
-  pathdata(item)->flags = 0;
+  pathdata (item)->path = savestring (full_path);
+  pathdata (item)->flags = 0;
   if (check_dot)
-    pathdata(item)->flags |= HASH_CHKDOT;
+    pathdata (item)->flags |= HASH_CHKDOT;
   if (*full_path != '/')
-    pathdata(item)->flags |= HASH_RELPATH;
+    pathdata (item)->flags |= HASH_RELPATH;
   item->times_found = found;
 }
 
@@ -140,22 +141,25 @@ phash_search (const char *filename)
   /* If this filename is hashed, but `.' comes before it in the path,
      see if ./filename is executable.  If the hashed value is not an
      absolute pathname, see if ./`hashed-value' exists. */
-  path = pathdata(item)->path;
-  if (pathdata(item)->flags & (HASH_CHKDOT|HASH_RELPATH))
+  path = pathdata (item)->path;
+  if (pathdata (item)->flags & (HASH_CHKDOT | HASH_RELPATH))
     {
-      tail = (pathdata(item)->flags & HASH_RELPATH) ? path : (char *)filename;	/* XXX - fix const later */
+      tail = (pathdata (item)->flags & HASH_RELPATH)
+                 ? path
+                 : (char *)filename; /* XXX - fix const later */
       /* If the pathname does not start with a `./', add a `./' to it. */
       if (tail[0] != '.' || tail[1] != '/')
-	{
-	  dotted_filename = (char *)xmalloc (3 + strlen (tail));
-	  dotted_filename[0] = '.'; dotted_filename[1] = '/';
-	  strcpy (dotted_filename + 2, tail);
-	}
+        {
+          dotted_filename = (char *)xmalloc (3 + strlen (tail));
+          dotted_filename[0] = '.';
+          dotted_filename[1] = '/';
+          strcpy (dotted_filename + 2, tail);
+        }
       else
-	dotted_filename = savestring (tail);
+        dotted_filename = savestring (tail);
 
       if (executable_file (dotted_filename))
-	return dotted_filename;
+        return dotted_filename;
 
       free (dotted_filename);
 
@@ -165,31 +169,32 @@ phash_search (const char *filename)
 #endif
 
       /* Watch out.  If this file was hashed to "./filename", and
-	 "./filename" is not executable, then return NULL. */
+         "./filename" is not executable, then return NULL. */
 
       /* Since we already know "./filename" is not executable, what
-	 we're really interested in is whether or not the `path'
-	 portion of the hashed filename is equivalent to the current
-	 directory, but only if it starts with a `.'.  (This catches
-	 ./. and so on.)  same_file () tests general Unix file
-	 equivalence -- same device and inode. */
+         we're really interested in is whether or not the `path'
+         portion of the hashed filename is equivalent to the current
+         directory, but only if it starts with a `.'.  (This catches
+         ./. and so on.)  same_file () tests general Unix file
+         equivalence -- same device and inode. */
       if (*path == '.')
-	{
-	  same = 0;
-	  tail = (char *)strrchr (path, '/');
+        {
+          same = 0;
+          tail = (char *)strrchr (path, '/');
 
-	  if (tail)
-	    {
-	      *tail = '\0';
-	      same = same_file (".", path, (struct stat *)NULL, (struct stat *)NULL);
-	      *tail = '/';
-	    }
+          if (tail)
+            {
+              *tail = '\0';
+              same = same_file (".", path, (struct stat *)NULL,
+                                (struct stat *)NULL);
+              *tail = '/';
+            }
 
-	  return same ? (char *)NULL : savestring (path);
-	}
+          return same ? (char *)NULL : savestring (path);
+        }
     }
 
   return savestring (path);
 }
 
-}  // namespace bash
+} // namespace bash

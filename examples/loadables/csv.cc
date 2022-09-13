@@ -1,5 +1,5 @@
 /* csv - process a line of csv data and populate an indexed array with the
-	 fields */
+         fields */
 
 /*
    Copyright (C) 2020 Free Software Foundation, Inc.
@@ -22,26 +22,26 @@
 
 #include <config.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 #include "bashansi.h"
 #include <stdio.h>
 
 #include "loadables.h"
 
-#define CSV_ARRAY_DEFAULT	"CSV"
+#define CSV_ARRAY_DEFAULT "CSV"
 
-#define NQUOTE	0
-#define DQUOTE	1
+#define NQUOTE 0
+#define DQUOTE 1
 
 /* Split LINE into comma-separated fields, storing each field into a separate
    element of array variable CSV, starting at index 0. The format of LINE is
    as described in RFC 4180. */
 static int
 csvsplit (csv, line)
-     SHELL_VAR *csv;
-     char *line;
+SHELL_VAR *csv;
+char *line;
 {
   arrayind_t ind;
   char *field, *prev, *buf, *xbuf;
@@ -55,33 +55,33 @@ csvsplit (csv, line)
   do
     {
       if (*prev == '"')
-	{
-	  if (xbuf == 0)
-	    xbuf = xmalloc (strlen (prev) + 1);
-	  buf = xbuf;
-	  b = 0;
-	  qstate = DQUOTE;
-	  for (field = ++prev; *field; field++)
-	    {
-	      if (qstate == DQUOTE && *field == '"' && field[1] == '"')
-		buf[b++] = *field++;	/* skip double quote */
-	      else if (qstate == DQUOTE && *field == '"')
-	        qstate = NQUOTE;
-	      else if (qstate == NQUOTE && *field == ',')
-		break;
-	      else
-		/* This copies any text between a closing double quote and the
-		   delimiter. If you want to change that, make sure to do the
-		   copy only if qstate == DQUOTE. */
-		buf[b++] = *field;
-	    }
-	  buf[b] = '\0';
-	}
+        {
+          if (xbuf == 0)
+            xbuf = xmalloc (strlen (prev) + 1);
+          buf = xbuf;
+          b = 0;
+          qstate = DQUOTE;
+          for (field = ++prev; *field; field++)
+            {
+              if (qstate == DQUOTE && *field == '"' && field[1] == '"')
+                buf[b++] = *field++; /* skip double quote */
+              else if (qstate == DQUOTE && *field == '"')
+                qstate = NQUOTE;
+              else if (qstate == NQUOTE && *field == ',')
+                break;
+              else
+                /* This copies any text between a closing double quote and the
+                   delimiter. If you want to change that, make sure to do the
+                   copy only if qstate == DQUOTE. */
+                buf[b++] = *field;
+            }
+          buf[b] = '\0';
+        }
       else
-	{
-	  buf = prev;
-	  field = prev + strcspn (prev, ",");
-	}
+        {
+          buf = prev;
+          field = prev + strcspn (prev, ",");
+        }
 
       delim = *field;
       *field = '\0';
@@ -92,19 +92,19 @@ csvsplit (csv, line)
       *field = delim;
 
       if (delim == ',')
-	prev = field + 1;
+        prev = field + 1;
     }
   while (delim == ',');
 
   if (xbuf)
     free (xbuf);
 
-  return (rval = ind);				/* number of fields */
+  return (rval = ind); /* number of fields */
 }
 
 int
 csv_builtin (list)
-     WORD_LIST *list;
+WORD_LIST *list;
 {
   int opt, rval;
   char *array_name, *csvstring;
@@ -117,15 +117,15 @@ csv_builtin (list)
   while ((opt = internal_getopt (list, "a:")) != -1)
     {
       switch (opt)
-	{
-	case 'a':
-	  array_name = list_optarg;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return (EX_USAGE);
-	}
+        {
+        case 'a':
+          array_name = list_optarg;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return (EX_USAGE);
+        }
     }
   list = loptend;
 
@@ -148,7 +148,7 @@ csv_builtin (list)
   if (v == 0 || readonly_p (v) || noassign_p (v))
     {
       if (v && readonly_p (v))
-	err_readonly (array_name);
+        err_readonly (array_name);
       return (EXECUTION_FAILURE);
     }
   else if (array_p (v) == 0)
@@ -175,32 +175,30 @@ csv_builtin (list)
    function returns 0, the load fails. */
 int
 csv_builtin_load (name)
-     char *name;
+char *name;
 {
   return (1);
 }
 
 /* Called when builtin is disabled. */
-void
-csv_builtin_unload (name)
-     char *name;
+void csv_builtin_unload (name) char *name;
 {
 }
 
 char *csv_doc[] = {
-	"Read comma-separated fields from a string.",
-	"",
-	"Parse STRING, a line of comma-separated values, into individual fields,",
-	"and store them into the indexed array ARRAYNAME starting at index 0.",
-	"If ARRAYNAME is not supplied, \"CSV\" is the default array name.",
-	(char *)NULL
+  "Read comma-separated fields from a string.",
+  "",
+  "Parse STRING, a line of comma-separated values, into individual fields,",
+  "and store them into the indexed array ARRAYNAME starting at index 0.",
+  "If ARRAYNAME is not supplied, \"CSV\" is the default array name.",
+  (char *)NULL
 };
 
 struct builtin csv_struct = {
-	"csv",			/* builtin name */
-	csv_builtin,		/* function implementing the builtin */
-	BUILTIN_ENABLED,	/* initial flags for builtin */
-	csv_doc,		/* array of long documentation strings. */
-	"csv [-a ARRAY] string",	/* usage synopsis; becomes short_doc */
-	0			/* reserved for internal use */
+  "csv",                   /* builtin name */
+  csv_builtin,             /* function implementing the builtin */
+  BUILTIN_ENABLED,         /* initial flags for builtin */
+  csv_doc,                 /* array of long documentation strings. */
+  "csv [-a ARRAY] string", /* usage synopsis; becomes short_doc */
+  0                        /* reserved for internal use */
 };

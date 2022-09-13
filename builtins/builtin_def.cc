@@ -36,14 +36,14 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "shell.hh"
-#include "execute_cmd.hh"
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "common.hh"
+#include "execute_cmd.hh"
+#include "shell.hh"
 
 namespace bash
 {
@@ -57,15 +57,15 @@ Shell::builtin_builtin (WORD_LIST *list)
 
   if (no_options (list))
     return EX_USAGE;
-  list = loptend;	/* skip over possible `--' */
+  list = loptend; /* skip over possible `--' */
 
   if (list == 0)
     return EXECUTION_SUCCESS;
 
   const char *command = list->word->word;
-#if defined (DISABLED_BUILTINS)
+#if defined(DISABLED_BUILTINS)
   function = builtin_address (command);
-#else /* !DISABLED_BUILTINS */
+#else  /* !DISABLED_BUILTINS */
   function = find_shell_builtin (command);
 #endif /* !DISABLED_BUILTINS */
 
@@ -77,10 +77,10 @@ Shell::builtin_builtin (WORD_LIST *list)
   else
     {
       this_command_name = command;
-      this_shell_builtin = function;	/* overwrite "builtin" as this builtin */
+      this_shell_builtin = function; /* overwrite "builtin" as this builtin */
       list = (WORD_LIST *)list->next;
       return (*function) (list);
     }
 }
 
-}  // namespace bash
+} // namespace bash

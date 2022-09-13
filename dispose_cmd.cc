@@ -22,8 +22,8 @@
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "shell.hh"
@@ -32,9 +32,7 @@ namespace bash
 {
 
 // Virtual destructor for COMMAND. Subclasses will free any additional data.
-COMMAND::~COMMAND () noexcept
-{
-}
+COMMAND::~COMMAND () noexcept {}
 
 // Virtual destructor for standard 'for' or ksh 'select' command.
 FOR_SELECT_COM::~FOR_SELECT_COM () noexcept
@@ -44,7 +42,7 @@ FOR_SELECT_COM::~FOR_SELECT_COM () noexcept
   delete action;
 }
 
-#if defined (ARITH_FOR_COMMAND)
+#if defined(ARITH_FOR_COMMAND)
 // Virtual destructor for arithmetic 'for' command.
 ARITH_FOR_COM::~ARITH_FOR_COM () noexcept
 {
@@ -56,22 +54,13 @@ ARITH_FOR_COM::~ARITH_FOR_COM () noexcept
 #endif
 
 // Virtual destructor for group command.
-GROUP_COM::~GROUP_COM () noexcept
-{
-  delete command;
-}
+GROUP_COM::~GROUP_COM () noexcept { delete command; }
 
 // Virtual destructor for subshell command.
-SUBSHELL_COM::~SUBSHELL_COM () noexcept
-{
-  delete command;
-}
+SUBSHELL_COM::~SUBSHELL_COM () noexcept { delete command; }
 
 // Virtual destructor for coprocess command.
-COPROC_COM::~COPROC_COM () noexcept
-{
-  delete command;
-}
+COPROC_COM::~COPROC_COM () noexcept { delete command; }
 
 // Virtual destructor for case command.
 CASE_COM::~CASE_COM () noexcept
@@ -96,10 +85,7 @@ IF_COM::~IF_COM () noexcept
 }
 
 // Virtual destructor for simple command.
-SIMPLE_COM::~SIMPLE_COM () noexcept
-{
-  delete words;
-}
+SIMPLE_COM::~SIMPLE_COM () noexcept { delete words; }
 
 // Virtual destructor for connection command.
 CONNECTION::~CONNECTION () noexcept
@@ -108,12 +94,9 @@ CONNECTION::~CONNECTION () noexcept
   delete second;
 }
 
-#if defined (DPAREN_ARITHMETIC)
+#if defined(DPAREN_ARITHMETIC)
 // Virtual destructor for arithmetic expression.
-ARITH_COM::~ARITH_COM () noexcept
-{
-  delete exp;
-}
+ARITH_COM::~ARITH_COM () noexcept { delete exp; }
 #endif
 
 // Virtual destructor for function definition.
@@ -123,7 +106,7 @@ FUNCTION_DEF::~FUNCTION_DEF () noexcept
   delete command;
 }
 
-#if defined (COND_COMMAND)
+#if defined(COND_COMMAND)
 // Virtual destructor for conditional command.
 COND_COM::~COND_COM () noexcept
 {
@@ -133,4 +116,4 @@ COND_COM::~COND_COM () noexcept
 }
 #endif /* COND_COMMAND */
 
-}  // namespace bash
+} // namespace bash

@@ -25,27 +25,27 @@
 #include "filecntl.hh"
 #include "posixstat.hh"
 
-#if defined (HAVE_SYS_PARAM_H)
-#  include <sys/param.h>
+#if defined(HAVE_SYS_PARAM_H)
+#include <sys/param.h>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include <cstdio>
 #include <cerrno>
+#include <cstdio>
 
 #include "shell.hh"
 
-#if defined (__CYGWIN__)
+#if defined(__CYGWIN__)
 #include <sys/cygwin.h>
 #endif /* __CYGWIN__ */
 
 namespace bash
 {
 
-#if defined (__CYGWIN__)
+#if defined(__CYGWIN__)
 static int
 _is_cygdrive (const char *path)
 {
@@ -63,7 +63,8 @@ _is_cygdrive (const char *path)
       char user_flags[MAXPATHLEN];
       char system_flags[MAXPATHLEN];
       /* Get the cygdrive info */
-      cygwin_internal (CW_GET_CYGDRIVE_INFO, user, system, user_flags, system_flags);
+      cygwin_internal (CW_GET_CYGDRIVE_INFO, user, system, user_flags,
+                       system_flags);
       first_time = 0;
     }
   return !strcasecmp (path, user) || !strcasecmp (path, system);
@@ -80,7 +81,7 @@ _path_isdir (const char *path)
   /* This should leave errno set to the correct value. */
   errno = 0;
   l = stat (path, &sb) == 0 && S_ISDIR (sb.st_mode);
-#if defined (__CYGWIN__)
+#if defined(__CYGWIN__)
   if (l == 0)
     l = _is_cygdrive (path);
 #endif
@@ -89,15 +90,15 @@ _path_isdir (const char *path)
 
 /* Canonicalize PATH, and return a new path.  The new path differs from PATH
    in that:
-	Multiple `/'s are collapsed to a single `/'.
-	Leading `./'s and trailing `/.'s are removed.
-	Trailing `/'s are removed.
-	Non-leading `../'s and trailing `..'s are handled by removing
-	portions of the path. */
+        Multiple `/'s are collapsed to a single `/'.
+        Leading `./'s and trailing `/.'s are removed.
+        Trailing `/'s are removed.
+        Non-leading `../'s and trailing `..'s are handled by removing
+        portions of the path. */
 
 /* Look for ROOTEDPATH, PATHSEP, DIRSEP, and ISDIRSEP in ../../general.h */
 
-#define DOUBLE_SLASH(p)	((p[0] == '/') && (p[1] == '/') && p[2] != '/')
+#define DOUBLE_SLASH(p) ((p[0] == '/') && (p[1] == '/') && p[2] != '/')
 
 char *
 sh_canonpath (const char *path, path_flags flags)
@@ -107,15 +108,18 @@ sh_canonpath (const char *path, path_flags flags)
   int rooted, double_slash_path;
 
   /* The result cannot be larger than the input PATH. */
-  result = (flags & PATH_NOALLOC) ? const_cast<char *> (path) : savestring (path);
+  result
+      = (flags & PATH_NOALLOC) ? const_cast<char *> (path) : savestring (path);
 
   /* POSIX.2 says to leave a leading `//' alone.  On cygwin, we skip over any
      leading `x:' (dos drive name). */
-  if ((rooted = ROOTEDPATH(path)))
+  if ((rooted = ROOTEDPATH (path)))
     {
       stub_char = DIRSEP;
-#if defined (__CYGWIN__)
-      base = (std::isalpha ((unsigned char)result[0]) && result[1] == ':') ? result + 3 : result + 1;
+#if defined(__CYGWIN__)
+      base = (std::isalpha ((unsigned char)result[0]) && result[1] == ':')
+                 ? result + 3
+                 : result + 1;
 #else
       base = result + 1;
 #endif
@@ -125,8 +129,10 @@ sh_canonpath (const char *path, path_flags flags)
   else
     {
       stub_char = '.';
-#if defined (__CYGWIN__)
-      base = (std::isalpha ((unsigned char)result[0]) && result[1] == ':') ? result + 2 : result;
+#if defined(__CYGWIN__)
+      base = (std::isalpha ((unsigned char)result[0]) && result[1] == ':')
+                 ? result + 2
+                 : result;
 #else
       base = result;
 #endif
@@ -145,70 +151,70 @@ sh_canonpath (const char *path, path_flags flags)
 
   while (*p)
     {
-      if (ISDIRSEP(p[0])) /* null element */
-	p++;
-      else if(p[0] == '.' && PATHSEP(p[1]))	/* . and ./ */
-	p += 1; 	/* don't count the separator in case it is nul */
-      else if (p[0] == '.' && p[1] == '.' && PATHSEP(p[2])) /* .. and ../ */
-	{
-	  p += 2; /* skip `..' */
-	  if (q > dotdot)	/* can backtrack */
-	    {
-	      if (flags & PATH_CHECKDOTDOT)
-		{
-		  char c;
+      if (ISDIRSEP (p[0])) /* null element */
+        p++;
+      else if (p[0] == '.' && PATHSEP (p[1])) /* . and ./ */
+        p += 1; /* don't count the separator in case it is nul */
+      else if (p[0] == '.' && p[1] == '.' && PATHSEP (p[2])) /* .. and ../ */
+        {
+          p += 2;         /* skip `..' */
+          if (q > dotdot) /* can backtrack */
+            {
+              if (flags & PATH_CHECKDOTDOT)
+                {
+                  char c;
 
-		  /* Make sure what we have so far corresponds to a valid
-		     path before we chop some of it off. */
-		  c = *q;
-		  *q = '\0';
-		  if (_path_isdir (result) == 0)
-		    {
-		      if ((flags & PATH_NOALLOC) == 0)
-			delete[] result;
-		      return nullptr;
-		    }
-		  *q = c;
-		}
+                  /* Make sure what we have so far corresponds to a valid
+                     path before we chop some of it off. */
+                  c = *q;
+                  *q = '\0';
+                  if (_path_isdir (result) == 0)
+                    {
+                      if ((flags & PATH_NOALLOC) == 0)
+                        delete[] result;
+                      return nullptr;
+                    }
+                  *q = c;
+                }
 
-	      while (--q > dotdot && ISDIRSEP(*q) == 0)
-		;
-	    }
-	  else if (rooted == 0)
-	    {
-	      /* /.. is / but ./../ is .. */
-	      if (q != base)
-		*q++ = DIRSEP;
-	      *q++ = '.';
-	      *q++ = '.';
-	      dotdot = q;
-	    }
-	}
-      else	/* real path element */
-	{
-	  /* add separator if not at start of work portion of result */
-	  if (q != base)
-	    *q++ = DIRSEP;
-	  while (*p && (ISDIRSEP(*p) == 0))
-	    *q++ = *p++;
-	  /* Check here for a valid directory with _path_isdir. */
-	  if (flags & PATH_CHECKEXISTS)
-	    {
-	      char c;
+              while (--q > dotdot && ISDIRSEP (*q) == 0)
+                ;
+            }
+          else if (rooted == 0)
+            {
+              /* /.. is / but ./../ is .. */
+              if (q != base)
+                *q++ = DIRSEP;
+              *q++ = '.';
+              *q++ = '.';
+              dotdot = q;
+            }
+        }
+      else /* real path element */
+        {
+          /* add separator if not at start of work portion of result */
+          if (q != base)
+            *q++ = DIRSEP;
+          while (*p && (ISDIRSEP (*p) == 0))
+            *q++ = *p++;
+          /* Check here for a valid directory with _path_isdir. */
+          if (flags & PATH_CHECKEXISTS)
+            {
+              char c;
 
-	      /* Make sure what we have so far corresponds to a valid
-		 path before we chop some of it off. */
-	      c = *q;
-	      *q = '\0';
-	      if (_path_isdir (result) == 0)
-		{
-		  if ((flags & PATH_NOALLOC) == 0)
-		    delete[] result;
-		  return nullptr;
-		}
-	      *q = c;
-	    }
-	}
+              /* Make sure what we have so far corresponds to a valid
+                 path before we chop some of it off. */
+              c = *q;
+              *q = '\0';
+              if (_path_isdir (result) == 0)
+                {
+                  if ((flags & PATH_NOALLOC) == 0)
+                    delete[] result;
+                  return nullptr;
+                }
+              *q = c;
+            }
+        }
     }
 
   /* Empty string is really ``.'' or `/', depending on what we started with. */
@@ -219,15 +225,15 @@ sh_canonpath (const char *path, path_flags flags)
   /* If the result starts with `//', but the original path does not, we
      can turn the // into /.  Because of how we set `base', this should never
      be true, but it's a sanity check. */
-  if (DOUBLE_SLASH(result) && double_slash_path == 0)
+  if (DOUBLE_SLASH (result) && double_slash_path == 0)
     {
-      if (result[2] == '\0')	/* short-circuit for bare `//' */
-	result[1] = '\0';
+      if (result[2] == '\0') /* short-circuit for bare `//' */
+        result[1] = '\0';
       else
-	std::memmove (result, result + 1, strlen (result + 1) + 1);
+        std::memmove (result, result + 1, strlen (result + 1) + 1);
     }
 
   return result;
 }
 
-}  // namespace bash
+} // namespace bash

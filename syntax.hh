@@ -1,6 +1,7 @@
 /* syntax.h -- Syntax definitions for the shell */
 
-/* Copyright (C) 2000, 2001, 2005, 2008, 2009-2020 Free Software Foundation, Inc.
+/* Copyright (C) 2000, 2001, 2005, 2008, 2009-2020 Free Software Foundation,
+   Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -36,13 +37,13 @@ static const char *shell_break_chars = "()<>;&| \t\n";
 
 static const char *shell_quote_chars = "\"`'";
 
-#if defined (PROCESS_SUBSTITUTION)
+#if defined(PROCESS_SUBSTITUTION)
 static const char *shell_exp_chars = "$<>";
 #else
 static const char *shell_exp_chars = "$";
 #endif
 
-#if defined (EXTENDED_GLOB)
+#if defined(EXTENDED_GLOB)
 static const char *ext_glob_chars = "@*+?!";
 #else
 static const char *ext_glob_chars = "";
@@ -54,59 +55,62 @@ static const char *shell_glob_chars = "*?[]^";
 
 /* Values for character flags in syntax tables */
 
-enum char_flags {
-  CWORD =		0x0000,	/* nothing special; an ordinary character */
-  CSHMETA =		0x0001,	/* shell meta character */
-  CSHBRK =		0x0002,	/* shell break character */
-  CBACKQ =		0x0004,	/* back quote */
-  CQUOTE =		0x0008,	/* shell quote character */
-  CSPECL =		0x0010,	/* special character that needs quoting */
-  CEXP =		0x0020,	/* shell expansion character */
-  CBSDQUOTE =		0x0040,	/* characters escaped by backslash in double quotes */
-  CBSHDOC =		0x0080,	/* characters escaped by backslash in here doc */
-  CGLOB =		0x0100,	/* globbing characters */
-  CXGLOB =		0x0200,	/* extended globbing characters */
-  CXQUOTE =		0x0400,	/* cquote + backslash */
-  CSPECVAR =		0x0800,	/* single-character shell variable name */
-  CSUBSTOP =		0x1000,	/* values of OP for ${word[:]OPstuff} */
-  CBLANK =		0x2000	/* whitespace (blank) character */
+enum char_flags
+{
+  CWORD = 0x0000,     /* nothing special; an ordinary character */
+  CSHMETA = 0x0001,   /* shell meta character */
+  CSHBRK = 0x0002,    /* shell break character */
+  CBACKQ = 0x0004,    /* back quote */
+  CQUOTE = 0x0008,    /* shell quote character */
+  CSPECL = 0x0010,    /* special character that needs quoting */
+  CEXP = 0x0020,      /* shell expansion character */
+  CBSDQUOTE = 0x0040, /* characters escaped by backslash in double quotes */
+  CBSHDOC = 0x0080,   /* characters escaped by backslash in here doc */
+  CGLOB = 0x0100,     /* globbing characters */
+  CXGLOB = 0x0200,    /* extended globbing characters */
+  CXQUOTE = 0x0400,   /* cquote + backslash */
+  CSPECVAR = 0x0800,  /* single-character shell variable name */
+  CSUBSTOP = 0x1000,  /* values of OP for ${word[:]OPstuff} */
+  CBLANK = 0x2000     /* whitespace (blank) character */
 };
 
 /* Defines for use by the rest of the shell. */
 // extern int sh_syntaxtab[];
 // extern int sh_syntabsiz;
 
-#define shellmeta(c)	(sh_syntaxtab[static_cast<unsigned char> (c)] & CSHMETA)
-#define shellbreak(c)	(sh_syntaxtab[static_cast<unsigned char> (c)] & CSHBRK)
-#define shellquote(c)	(sh_syntaxtab[static_cast<unsigned char> (c)] & CQUOTE)
-#define shellxquote(c)	(sh_syntaxtab[static_cast<unsigned char> (c)] & CXQUOTE)
+#define shellmeta(c) (sh_syntaxtab[static_cast<unsigned char> (c)] & CSHMETA)
+#define shellbreak(c) (sh_syntaxtab[static_cast<unsigned char> (c)] & CSHBRK)
+#define shellquote(c) (sh_syntaxtab[static_cast<unsigned char> (c)] & CQUOTE)
+#define shellxquote(c) (sh_syntaxtab[static_cast<unsigned char> (c)] & CXQUOTE)
 
-#define shellblank(c)	(sh_syntaxtab[static_cast<unsigned char> (c)] & CBLANK)
+#define shellblank(c) (sh_syntaxtab[static_cast<unsigned char> (c)] & CBLANK)
 
-#define parserblank(c)	((c) == ' ' || (c) == '\t')
+#define parserblank(c) ((c) == ' ' || (c) == '\t')
 
-#define issyntype(c, t)	((sh_syntaxtab[static_cast<unsigned char> (c)] & (t)) != 0)
-#define notsyntype(c,t) ((sh_syntaxtab[static_cast<unsigned char> (c)] & (t)) == 0)
+#define issyntype(c, t)                                                       \
+  ((sh_syntaxtab[static_cast<unsigned char> (c)] & (t)) != 0)
+#define notsyntype(c, t)                                                      \
+  ((sh_syntaxtab[static_cast<unsigned char> (c)] & (t)) == 0)
 
-#if defined (PROCESS_SUBSTITUTION)
-#  define shellexp(c)	((c) == '$' || (c) == '<' || (c) == '>')
+#if defined(PROCESS_SUBSTITUTION)
+#define shellexp(c) ((c) == '$' || (c) == '<' || (c) == '>')
 #else
-#  define shellexp(c)	((c) == '$')
+#define shellexp(c) ((c) == '$')
 #endif
 
-#if defined (EXTENDED_GLOB)
-#  define PATTERN_CHAR(c) \
-	((c) == '@' || (c) == '*' || (c) == '+' || (c) == '?' || (c) == '!')
+#if defined(EXTENDED_GLOB)
+#define PATTERN_CHAR(c)                                                       \
+  ((c) == '@' || (c) == '*' || (c) == '+' || (c) == '?' || (c) == '!')
 #else
-#  define PATTERN_CHAR(c) 0
+#define PATTERN_CHAR(c) 0
 #endif
 
-#define GLOB_CHAR(c) \
-	((c) == '*' || (c) == '?' || (c) == '[' || (c) == ']' || (c) == '^')
+#define GLOB_CHAR(c)                                                          \
+  ((c) == '*' || (c) == '?' || (c) == '[' || (c) == ']' || (c) == '^')
 
 #define CTLESC '\001'
 #define CTLNUL '\177'
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* _SYNTAX_H_ */

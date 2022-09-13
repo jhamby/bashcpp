@@ -20,15 +20,15 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_TILDE_H_)
-#  define _TILDE_H_
+#if !defined(_TILDE_H_)
+#define _TILDE_H_
 
 namespace readline
 {
 
 /* A function can be defined using prototypes and compile on both ANSI C
    and traditional C compilers with something like this:
-	extern char *func (char *, char *, int); */
+        extern char *func (char *, char *, int); */
 
 typedef char *tilde_hook_func_t (char *);
 
@@ -61,6 +61,6 @@ extern char *tilde_expand (const char *);
    tilde.  If there is no expansion, call tilde_expansion_failure_hook. */
 extern char *tilde_expand_word (const char *);
 
-}  // namespace readline
+} // namespace readline
 
 #endif /* _TILDE_H_ */

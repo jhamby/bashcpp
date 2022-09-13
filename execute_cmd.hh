@@ -18,33 +18,32 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_EXECUTE_CMD_H_)
+#if !defined(_EXECUTE_CMD_H_)
 #define _EXECUTE_CMD_H_
 
 namespace bash
 {
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
 struct func_array_state
-  {
-    ARRAY *funcname_a;
-    SHELL_VAR *funcname_v;
-    ARRAY *source_a;
-    SHELL_VAR *source_v;
-    ARRAY *lineno_a;
-    SHELL_VAR *lineno_v;
-  };
+{
+  ARRAY *funcname_a;
+  SHELL_VAR *funcname_v;
+  ARRAY *source_a;
+  SHELL_VAR *source_v;
+  ARRAY *lineno_a;
+  SHELL_VAR *lineno_v;
+};
 #endif
 
 /* Placeholder for later expansion to include more execution state */
 /* XXX - watch out for pid_t */
 struct execstate
-  {
-    pid_t pid;
-    int subshell_env;
-  };
+{
+  pid_t pid;
+  int subshell_env;
+};
 
-
-}  // namespace bash
+} // namespace bash
 
 #endif /* _EXECUTE_CMD_H_ */

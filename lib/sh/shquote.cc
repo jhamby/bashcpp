@@ -20,8 +20,8 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <cstdio>
@@ -38,48 +38,37 @@ namespace bash
 {
 
 /* Default set of characters that should be backslash-quoted in strings */
-static const char bstab[256] =
-  {
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 1, 1, 0, 0, 0, 0, 0,	/* TAB, NL */
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
+static const char bstab[256]
+    = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, /* TAB, NL */
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
-    1, 1, 1, 0, 1, 0, 1, 1,	/* SPACE, !, DQUOTE, DOL, AMP, SQUOTE */
-    1, 1, 1, 0, 1, 0, 0, 0,	/* LPAR, RPAR, STAR, COMMA */
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 1, 1, 0, 1, 1,	/* SEMI, LESSTHAN, GREATERTHAN, QUEST */
+        1, 1, 1, 0, 1, 0, 1, 1, /* SPACE, !, DQUOTE, DOL, AMP, SQUOTE */
+        1, 1, 1, 0, 1, 0, 0, 0, /* LPAR, RPAR, STAR, COMMA */
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, /* SEMI, LESSTHAN,
+                                                           GREATERTHAN, QUEST
+                                                         */
 
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 1, 1, 1, 1, 0,	/* LBRACK, BS, RBRACK, CARAT */
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, /* LBRACK, BS, RBRACK,
+                                                        CARAT */
 
-    1, 0, 0, 0, 0, 0, 0, 0,	/* BACKQ */
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 1, 1, 1, 0, 0,	/* LBRACE, BAR, RBRACE */
+        1, 0, 0, 0, 0, 0, 0, 0, /* BACKQ */
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 1, 1, 1, 0, 0, /* LBRACE, BAR, RBRACE */
 
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
-  };
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      };
 
 /* **************************************************************** */
 /*								    */
@@ -114,11 +103,11 @@ sh_single_quote (const char *string)
       *r++ = c;
 
       if (c == '\'')
-	{
-	  *r++ = '\\';	/* insert escaped single quote */
-	  *r++ = '\'';
-	  *r++ = '\'';	/* start new quoted string */
-	}
+        {
+          *r++ = '\\'; /* insert escaped single quote */
+          *r++ = '\'';
+          *r++ = '\''; /* start new quoted string */
+        }
     }
 
   *r++ = '\'';
@@ -148,22 +137,23 @@ Shell::sh_double_quote (const char *string)
 
   for (s = string; s && (c = *s); s++)
     {
-      /* Backslash-newline disappears within double quotes, so don't add one. */
+      /* Backslash-newline disappears within double quotes, so don't add one.
+       */
       if ((sh_syntaxtab[c] & CBSDQUOTE) && c != '\n')
-	*r++ = '\\';
+        *r++ = '\\';
 
-#if defined (HANDLE_MULTIBYTE)
-      if ((locale_utf8locale && (c & 0x80)) ||
-	  (locale_utf8locale == 0 && mb_cur_max > 1 && is_basic (c) == 0))
-	{
-	  COPY_CHAR_P (r, s, send);
-	  s--;		/* compensate for auto-increment in loop above */
-	  continue;
-	}
+#if defined(HANDLE_MULTIBYTE)
+      if ((locale_utf8locale && (c & 0x80))
+          || (locale_utf8locale == 0 && mb_cur_max > 1 && is_basic (c) == 0))
+        {
+          COPY_CHAR_P (r, s, send);
+          s--; /* compensate for auto-increment in loop above */
+          continue;
+        }
 #endif
 
       /* Assume that the string will not be further expanded, so no need to
-	 add CTLESC to protect CTLESC or CTLNUL. */
+         add CTLESC to protect CTLESC or CTLNUL. */
       *r++ = c;
     }
 
@@ -192,15 +182,17 @@ Shell::sh_mkdoublequoted (const char *s, int slen, int flags)
   while (*s)
     {
       if (flags && *s == '"')
-	*r++ = '\\';
+        *r++ = '\\';
 
-#if defined (HANDLE_MULTIBYTE)
-      if  (flags && ((locale_utf8locale && (*s & 0x80)) ||
-		     (locale_utf8locale == 0 && mb_cur_max > 1 && is_basic (*s) == 0)))
-	{
-	  COPY_CHAR_P (r, s, send);
-	  continue;
-	}
+#if defined(HANDLE_MULTIBYTE)
+      if (flags
+          && ((locale_utf8locale && (*s & 0x80))
+              || (locale_utf8locale == 0 && mb_cur_max > 1
+                  && is_basic (*s) == 0)))
+        {
+          COPY_CHAR_P (r, s, send);
+          continue;
+        }
 #endif
       *r++ = *s++;
     }
@@ -224,16 +216,16 @@ Shell::sh_un_double_quote (const char *string)
   for (const char *s = string; s && (c = *s); s++)
     {
       if (pass_next)
-	{
-	  *r++ = c;
-	  pass_next = false;
-	  continue;
-	}
-      if (c == '\\' && (sh_syntaxtab[(unsigned char) s[1]] & CBSDQUOTE))
-	{
-	  pass_next = true;
-	  continue;
-	}
+        {
+          *r++ = c;
+          pass_next = false;
+          continue;
+        }
+      if (c == '\\' && (sh_syntaxtab[(unsigned char)s[1]] & CBSDQUOTE))
+        {
+          pass_next = true;
+          continue;
+        }
       *r++ = c;
     }
 
@@ -267,32 +259,34 @@ Shell::sh_backslash_quote (const char *string, const char *table, int flags)
   char c;
   for (const char *s = string; s && (c = *s); s++)
     {
-#if defined (HANDLE_MULTIBYTE)
+#if defined(HANDLE_MULTIBYTE)
       /* XXX - isascii, even if is_basic(c) == 0 - works in most cases. */
       if (c >= 0 && c <= 127 && backslash_table[(unsigned char)c] == 1)
-	{
-	  *r++ = '\\';
-	  *r++ = c;
-	  continue;
-	}
-      if ((locale_utf8locale && (c & 0x80)) ||
-	  (locale_utf8locale == 0 && mb_cur_max > 1 && is_basic (c) == 0))
-	{
-	  COPY_CHAR_P (r, s, send);
-	  s--;		/* compensate for auto-increment in loop above */
-	  continue;
-	}
+        {
+          *r++ = '\\';
+          *r++ = c;
+          continue;
+        }
+      if ((locale_utf8locale && (c & 0x80))
+          || (locale_utf8locale == 0 && mb_cur_max > 1 && is_basic (c) == 0))
+        {
+          COPY_CHAR_P (r, s, send);
+          s--; /* compensate for auto-increment in loop above */
+          continue;
+        }
 #endif
       if (backslash_table[(unsigned char)c] == 1)
-	*r++ = '\\';
-      else if (c == '#' && s == string)			/* comment char */
-	*r++ = '\\';
-      else if ((flags&1) && c == '~' && (s == string || s[-1] == ':' || s[-1] == '='))
+        *r++ = '\\';
+      else if (c == '#' && s == string) /* comment char */
+        *r++ = '\\';
+      else if ((flags & 1) && c == '~'
+               && (s == string || s[-1] == ':' || s[-1] == '='))
         /* Tildes are special at the start of a word or after a `:' or `='
-	   (technically unquoted, but it doesn't make a difference in practice) */
-	*r++ = '\\';
-      else if ((flags&2) && shellblank((unsigned char)c))
-	*r++ = '\\';
+           (technically unquoted, but it doesn't make a difference in practice)
+         */
+        *r++ = '\\';
+      else if ((flags & 2) && shellblank ((unsigned char)c))
+        *r++ = '\\';
       *r++ = c;
     }
 
@@ -300,7 +294,7 @@ Shell::sh_backslash_quote (const char *string, const char *table, int flags)
   return result;
 }
 
-#if defined (PROMPT_STRING_DECODE)
+#if defined(PROMPT_STRING_DECODE)
 /* Quote characters that get special treatment when in double quotes in STRING
    using backslashes.  Return a new string. */
 char *
@@ -318,21 +312,22 @@ Shell::sh_backslash_quote_for_double_quotes (const char *string)
   char c;
   for (const char *s = string; s && (c = *s); s++)
     {
-      /* Backslash-newline disappears within double quotes, so don't add one. */
-      if ((sh_syntaxtab[(unsigned char) c] & CBSDQUOTE) && c != '\n')
-	*r++ = '\\';
+      /* Backslash-newline disappears within double quotes, so don't add one.
+       */
+      if ((sh_syntaxtab[(unsigned char)c] & CBSDQUOTE) && c != '\n')
+        *r++ = '\\';
       /* I should probably use the CSPECL flag for these in sh_syntaxtab[] */
       else if (c == CTLESC || c == CTLNUL)
-	*r++ = CTLESC;		/* could be '\\'? */
+        *r++ = CTLESC; /* could be '\\'? */
 
-#if defined (HANDLE_MULTIBYTE)
-      if ((locale_utf8locale && (c & 0x80)) ||
-	  (locale_utf8locale == 0 && mb_cur_max > 1 && is_basic (c) == 0))
-	{
-	  COPY_CHAR_P (r, s, send);
-	  s--;		/* compensate for auto-increment in loop above */
-	  continue;
-	}
+#if defined(HANDLE_MULTIBYTE)
+      if ((locale_utf8locale && (c & 0x80))
+          || (locale_utf8locale == 0 && mb_cur_max > 1 && is_basic (c) == 0))
+        {
+          COPY_CHAR_P (r, s, send);
+          s--; /* compensate for auto-increment in loop above */
+          continue;
+        }
 #endif
 
       *r++ = c;
@@ -375,27 +370,42 @@ sh_contains_shell_metas (const char *string)
   for (s = string; s && *s; s++)
     {
       switch (*s)
-	{
-	case ' ': case '\t': case '\n':		/* IFS white space */
-	case '\'': case '"': case '\\':		/* quoting chars */
-	case '|': case '&': case ';':		/* shell metacharacters */
-	case '(': case ')': case '<': case '>':
-	case '!': case '{': case '}':		/* reserved words */
-	case '*': case '[': case '?': case ']':	/* globbing chars */
-	case '^':
-	case '$': case '`':			/* expansion chars */
-	  return true;
-	case '~':				/* tilde expansion */
-	  if (s == string || s[-1] == '=' || s[-1] == ':')
-	    return true;
-	  break;
-	case '#':
-	  if (s == string)			/* comment char */
-	    return true;
-	  /* FALLTHROUGH */
-	default:
-	  break;
-	}
+        {
+        case ' ':
+        case '\t':
+        case '\n': /* IFS white space */
+        case '\'':
+        case '"':
+        case '\\': /* quoting chars */
+        case '|':
+        case '&':
+        case ';': /* shell metacharacters */
+        case '(':
+        case ')':
+        case '<':
+        case '>':
+        case '!':
+        case '{':
+        case '}': /* reserved words */
+        case '*':
+        case '[':
+        case '?':
+        case ']': /* globbing chars */
+        case '^':
+        case '$':
+        case '`': /* expansion chars */
+          return true;
+        case '~': /* tilde expansion */
+          if (s == string || s[-1] == '=' || s[-1] == ':')
+            return true;
+          break;
+        case '#':
+          if (s == string) /* comment char */
+            return true;
+          /* FALLTHROUGH */
+        default:
+          break;
+        }
     }
 
   return false;
@@ -409,9 +419,9 @@ sh_contains_quotes (const char *string)
   for (s = string; s && *s; s++)
     {
       if (*s == '\'' || *s == '"' || *s == '\\')
-	return true;
+        return true;
     }
   return false;
 }
 
-}  // namespace bash
+} // namespace bash

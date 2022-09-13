@@ -54,25 +54,25 @@
 #include "config.hh"
 
 #include "bashtypes.hh"
-#include "posixstat.hh"
 #include "filecntl.hh"
+#include "posixstat.hh"
 
-#if defined (HAVE_SYS_FILE_H)
-#  include <sys/file.h>
+#if defined(HAVE_SYS_FILE_H)
+#include <sys/file.h>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashintl.hh"
 
-#include "shell.hh"
-#include "execute_cmd.hh"
-#include "flags.hh"
-#include "findcmd.hh"
-#include "common.hh"
 #include "bashgetopt.hh"
+#include "common.hh"
+#include "execute_cmd.hh"
+#include "findcmd.hh"
+#include "flags.hh"
+#include "shell.hh"
 #include "trap.hh"
 
 namespace bash
@@ -103,9 +103,9 @@ maybe_pop_dollar_vars ()
   else
     pop_dollar_vars ();
   if (debugging_mode)
-    pop_args ();	/* restore BASH_ARGC and BASH_ARGV */
+    pop_args (); /* restore BASH_ARGC and BASH_ARGV */
   set_dollar_vars_unchanged ();
-  invalidate_cached_quoted_dollar_at ();	/* just invalidate to be safe */
+  invalidate_cached_quoted_dollar_at (); /* just invalidate to be safe */
 }
 
 /* Read and execute commands from the file passed as argument.  Guess what.
@@ -124,12 +124,12 @@ Shell::source_builtin (WORD_LIST *list)
 
   if (list == 0)
     {
-      builtin_error (_("filename argument required"));
+      builtin_error (_ ("filename argument required"));
       builtin_usage ();
       return EX_USAGE;
     }
 
-#if defined (RESTRICTED_SHELL)
+#if defined(RESTRICTED_SHELL)
   if (restricted && strchr (list->word->word, '/'))
     {
       sh_restricted (list->word->word);
@@ -148,20 +148,21 @@ Shell::source_builtin (WORD_LIST *list)
   if (filename == 0)
     {
       if (source_searches_cwd == 0)
-	{
-	  x = printable_filename (list->word->word, 0);
-	  builtin_error (_("%s: file not found"), x);
-	  if (x != list->word->word)
-	    free (x);
-	  if (posixly_correct && interactive_shell == 0 && executing_command_builtin == 0)
-	    {
-	      last_command_exit_value = EXECUTION_FAILURE;
-	      jump_to_top_level (EXITPROG);
-	    }
-	  return EXECUTION_FAILURE;
-	}
+        {
+          x = printable_filename (list->word->word, 0);
+          builtin_error (_ ("%s: file not found"), x);
+          if (x != list->word->word)
+            free (x);
+          if (posixly_correct && interactive_shell == 0
+              && executing_command_builtin == 0)
+            {
+              last_command_exit_value = EXECUTION_FAILURE;
+              jump_to_top_level (EXITPROG);
+            }
+          return EXECUTION_FAILURE;
+        }
       else
-	filename = savestring (list->word->word);
+        filename = savestring (list->word->word);
     }
 
   begin_unwind_frame ("source");
@@ -172,10 +173,11 @@ Shell::source_builtin (WORD_LIST *list)
       push_dollar_vars ();
       add_unwind_protect (maybe_pop_dollar_vars);
       if (debugging_mode || shell_compatibility_level <= 44)
-	init_bash_argv ();	/* Initialize BASH_ARGV and BASH_ARGC */
+        init_bash_argv (); /* Initialize BASH_ARGV and BASH_ARGC */
       remember_args ((WORD_LIST *)list->next, true);
       if (debugging_mode)
-	push_args ((WORD_LIST *)list->next);	/* Update BASH_ARGV and BASH_ARGC */
+        push_args (
+            (WORD_LIST *)list->next); /* Update BASH_ARGV and BASH_ARGC */
     }
   set_dollar_vars_unchanged ();
 
@@ -198,4 +200,4 @@ Shell::source_builtin (WORD_LIST *list)
   return result;
 }
 
-}  // namespace bash
+} // namespace bash

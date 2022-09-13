@@ -22,24 +22,24 @@
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
-#include "shell.hh"
-#include "pathexp.hh"
 #include "flags.hh"
+#include "pathexp.hh"
+#include "shell.hh"
 
-#include "shmbutil.hh"
 #include "bashintl.hh"
+#include "shmbutil.hh"
 
 #include "strmatch.hh"
 
-#if defined (USE_POSIX_GLOB_LIBRARY)
-#  include <glob.h>
+#if defined(USE_POSIX_GLOB_LIBRARY)
+#include <glob.h>
 typedef int posix_glob_errfunc_t (const char *, int);
 #else
-#  include "glob.hh"
+#include "glob.hh"
 #endif
 
 namespace bash
@@ -79,55 +79,55 @@ unquoted_glob_pattern_p (const char *string)
   while ((c = *string++))
     {
       switch (c)
-	{
-	case '?':
-	case '*':
-	  return true;
+        {
+        case '?':
+        case '*':
+          return true;
 
-	case '[':
-	  open = true;
-	  continue;
+        case '[':
+          open = true;
+          continue;
 
-	case ']':
-	  if (open)		/* XXX - if --open == 0? */
-	    return true;
-	  continue;
+        case ']':
+          if (open) /* XXX - if --open == 0? */
+            return true;
+          continue;
 
-	case '/':
-	  if (open)
-	    open = false;
+        case '/':
+          if (open)
+            open = false;
 
-	case '+':
-	case '@':
-	case '!':
-	  if (*string == '(')	/*)*/
-	    return true;
-	  continue;
+        case '+':
+        case '@':
+        case '!':
+          if (*string == '(') /*)*/
+            return true;
+          continue;
 
-	/* A pattern can't end with a backslash, but a backslash in the pattern
-	   can be special to the matching engine, so we note it in case we
-	   need it later. */
-	case '\\':
-	  if (*string != '\0' && *string != '/')
-	    {
-	      string++;
-	      continue;
-	    }
-	  else if (open && *string == '/')
-	    {
-	      string++;		/* quoted slashes in bracket expressions are ok */
-	      continue;
-	    }
-	  else if (*string == 0)
-	    return false;
+        /* A pattern can't end with a backslash, but a backslash in the pattern
+           can be special to the matching engine, so we note it in case we
+           need it later. */
+        case '\\':
+          if (*string != '\0' && *string != '/')
+            {
+              string++;
+              continue;
+            }
+          else if (open && *string == '/')
+            {
+              string++; /* quoted slashes in bracket expressions are ok */
+              continue;
+            }
+          else if (*string == 0)
+            return false;
 
-	case CTLESC:
-	  if (*string++ == '\0')
-	    return false;
-	}
+        case CTLESC:
+          if (*string++ == '\0')
+            return false;
+        }
 
-      /* Advance one fewer byte than an entire multibyte character to
-	 account for the auto-increment in the loop above. */
+        /* Advance one fewer byte than an entire multibyte character to
+           account for the auto-increment in the loop above. */
 #ifdef HANDLE_MULTIBYTE
       string--;
       ADVANCE_CHAR_P (string, send - string);
@@ -179,8 +179,8 @@ glob_char_p (const char *s)
     case '+':
     case '@':
     case '!':
-      if (s[1] == '(')	/*(*/
-	return true;
+      if (s[1] == '(') /*(*/
+        return true;
       break;
     }
   return false;
@@ -219,152 +219,156 @@ quote_string_for_globbing (const char *pathname, int qflags)
   for (i = j = 0; pathname[i]; i++)
     {
       /* Fix for CTLESC at the end of the string? */
-      if (pathname[i] == CTLESC && pathname[i+1] == '\0')
-	{
-	  temp[j++] = pathname[i++];
-	  break;
-	}
+      if (pathname[i] == CTLESC && pathname[i + 1] == '\0')
+        {
+          temp[j++] = pathname[i++];
+          break;
+        }
       /* If we are parsing regexp, turn CTLESC CTLESC into CTLESC. It's not an
-	 ERE special character, so we should just be able to pass it through. */
-      else if ((qflags & (QGLOB_REGEXP|QGLOB_CTLESC)) && pathname[i] == CTLESC &&
-		(pathname[i+1] == CTLESC || pathname[i+1] == CTLNUL))
-	{
-	  i++;
-	  temp[j++] = pathname[i];
-	  continue;
-	}
+         ERE special character, so we should just be able to pass it through.
+       */
+      else if ((qflags & (QGLOB_REGEXP | QGLOB_CTLESC))
+               && pathname[i] == CTLESC
+               && (pathname[i + 1] == CTLESC || pathname[i + 1] == CTLNUL))
+        {
+          i++;
+          temp[j++] = pathname[i];
+          continue;
+        }
       else if (pathname[i] == CTLESC)
-	{
-convert_to_backslash:
-	  if ((qflags & QGLOB_FILENAME) && pathname[i+1] == '/')
-	    continue;
-	  /* What to do if preceding char is backslash? */
-	  if (pathname[i+1] != CTLESC && (qflags & QGLOB_REGEXP) &&
-		ere_char (pathname[i+1]) == 0)
-	    continue;
-	  temp[j++] = '\\';
-	  i++;
-	  if (pathname[i] == '\0')
-	    break;
-	}
-      else if ((qflags & QGLOB_REGEXP) && (i == 0 || pathname[i-1] != CTLESC) &&
-		pathname[i] == '[')	/*]*/
-	{
-	  temp[j++] = pathname[i++];	/* open bracket */
-	  savej = j;
-	  savei = i;
-	  c = pathname[i++];	/* c == char after open bracket */
-	  if (c == '^')		/* ignore pattern negation */
-	    {
-	      temp[j++] = c;
-	      c = pathname[i++];
-	    }
-	  if (c == ']')		/* ignore right bracket if first char */
-	    {
-	      temp[j++] = c;
-	      c = pathname[i++];
-	    }
-	  do
-	    {
-	      if (c == 0)
-		goto endpat;
-	      else if (c == CTLESC)
-		{
-		  /* skip c, check for EOS, let assignment at end of loop */
-		  /* pathname[i] == backslash-escaped character */
-		  if (pathname[i] == 0)
-		    goto endpat;
-		  temp[j++] = pathname[i++];
-		}
-	      else if (c == '[' && pathname[i] == ':')
-		{
-		  temp[j++] = c;
-		  temp[j++] = pathname[i++];
-		  cclass = 1;
-		}
-	      else if (cclass && c == ':' && pathname[i] == ']')
-		{
-		  temp[j++] = c;
-		  temp[j++] = pathname[i++];
-		  cclass = 0;
-		}
-	      else if (c == '[' && pathname[i] == '=')
-		{
-		  temp[j++] = c;
-		  temp[j++] = pathname[i++];
-		  if (pathname[i] == ']')
-		    temp[j++] = pathname[i++];		/* right brack can be in equiv */
-		  equiv = 1;
-		}
-	      else if (equiv && c == '=' && pathname[i] == ']')
-		{
-		  temp[j++] = c;
-		  temp[j++] = pathname[i++];
-		  equiv = 0;
-		}
-	      else if (c == '[' && pathname[i] == '.')
-		{
-		  temp[j++] = c;
-		  temp[j++] = pathname[i++];
-		  if (pathname[i] == ']')
-		    temp[j++] = pathname[i++];		/* right brack can be in collsym */
-		  collsym = 1;
-		}
-	      else if (collsym && c == '.' && pathname[i] == ']')
-		{
-		  temp[j++] = c;
-		  temp[j++] = pathname[i++];
-		  collsym = 0;
-		}
-	      else
-		temp[j++] = c;
-	    }
-	  while (((c = pathname[i++]) != ']') && c != 0);
+        {
+        convert_to_backslash:
+          if ((qflags & QGLOB_FILENAME) && pathname[i + 1] == '/')
+            continue;
+          /* What to do if preceding char is backslash? */
+          if (pathname[i + 1] != CTLESC && (qflags & QGLOB_REGEXP)
+              && ere_char (pathname[i + 1]) == 0)
+            continue;
+          temp[j++] = '\\';
+          i++;
+          if (pathname[i] == '\0')
+            break;
+        }
+      else if ((qflags & QGLOB_REGEXP) && (i == 0 || pathname[i - 1] != CTLESC)
+               && pathname[i] == '[') /*]*/
+        {
+          temp[j++] = pathname[i++]; /* open bracket */
+          savej = j;
+          savei = i;
+          c = pathname[i++]; /* c == char after open bracket */
+          if (c == '^')      /* ignore pattern negation */
+            {
+              temp[j++] = c;
+              c = pathname[i++];
+            }
+          if (c == ']') /* ignore right bracket if first char */
+            {
+              temp[j++] = c;
+              c = pathname[i++];
+            }
+          do
+            {
+              if (c == 0)
+                goto endpat;
+              else if (c == CTLESC)
+                {
+                  /* skip c, check for EOS, let assignment at end of loop */
+                  /* pathname[i] == backslash-escaped character */
+                  if (pathname[i] == 0)
+                    goto endpat;
+                  temp[j++] = pathname[i++];
+                }
+              else if (c == '[' && pathname[i] == ':')
+                {
+                  temp[j++] = c;
+                  temp[j++] = pathname[i++];
+                  cclass = 1;
+                }
+              else if (cclass && c == ':' && pathname[i] == ']')
+                {
+                  temp[j++] = c;
+                  temp[j++] = pathname[i++];
+                  cclass = 0;
+                }
+              else if (c == '[' && pathname[i] == '=')
+                {
+                  temp[j++] = c;
+                  temp[j++] = pathname[i++];
+                  if (pathname[i] == ']')
+                    temp[j++]
+                        = pathname[i++]; /* right brack can be in equiv */
+                  equiv = 1;
+                }
+              else if (equiv && c == '=' && pathname[i] == ']')
+                {
+                  temp[j++] = c;
+                  temp[j++] = pathname[i++];
+                  equiv = 0;
+                }
+              else if (c == '[' && pathname[i] == '.')
+                {
+                  temp[j++] = c;
+                  temp[j++] = pathname[i++];
+                  if (pathname[i] == ']')
+                    temp[j++]
+                        = pathname[i++]; /* right brack can be in collsym */
+                  collsym = 1;
+                }
+              else if (collsym && c == '.' && pathname[i] == ']')
+                {
+                  temp[j++] = c;
+                  temp[j++] = pathname[i++];
+                  collsym = 0;
+                }
+              else
+                temp[j++] = c;
+            }
+          while (((c = pathname[i++]) != ']') && c != 0);
 
-	  /* If we don't find the closing bracket before we hit the end of
-	     the string, rescan string without treating it as a bracket
-	     expression (has implications for backslash and special ERE
-	     chars) */
-	  if (c == 0)
-	    {
-	      i = savei - 1;	/* -1 for autoincrement above */
-	      j = savej;
-	      continue;
-	    }
+          /* If we don't find the closing bracket before we hit the end of
+             the string, rescan string without treating it as a bracket
+             expression (has implications for backslash and special ERE
+             chars) */
+          if (c == 0)
+            {
+              i = savei - 1; /* -1 for autoincrement above */
+              j = savej;
+              continue;
+            }
 
-	  temp[j++] = c;	/* closing right bracket */
-	  i--;			/* increment will happen above in loop */
-	  continue;		/* skip double assignment below */
-	}
+          temp[j++] = c; /* closing right bracket */
+          i--;           /* increment will happen above in loop */
+          continue;      /* skip double assignment below */
+        }
       else if (pathname[i] == '\\' && (qflags & QGLOB_REGEXP) == 0)
-	{
-	  /* XXX - if not quoting regexp, use backslash as quote char. Should
-	     We just pass it through without treating it as special? That is
-	     what ksh93 seems to do. */
+        {
+          /* XXX - if not quoting regexp, use backslash as quote char. Should
+             We just pass it through without treating it as special? That is
+             what ksh93 seems to do. */
 
-	  /* If we want to pass through backslash unaltered, comment out these
-	     lines. */
-	  temp[j++] = '\\';
+          /* If we want to pass through backslash unaltered, comment out these
+             lines. */
+          temp[j++] = '\\';
 
-	  i++;
-	  if (pathname[i] == '\0')
-	    break;
-	  /* If we are turning CTLESC CTLESC into CTLESC, we need to do that
-	     even when the first CTLESC is preceded by a backslash. */
-	  if ((qflags & QGLOB_CTLESC) && pathname[i] == CTLESC &&
-		(pathname[i+1] == CTLESC || pathname[i+1] == CTLNUL))
-	    i++;	/* skip over the CTLESC */
-	  else if ((qflags & QGLOB_CTLESC) && pathname[i] == CTLESC)
-	    /* A little more general: if there is an unquoted backslash in the
-	       pattern and we are handling quoted characters in the pattern,
-	       convert the CTLESC to backslash and add the next character on
-	       the theory that the backslash will quote the next character
-	       but it would be inconsistent not to replace the CTLESC with
-	       another backslash here. We can't tell at this point whether the
-	       CTLESC comes from a backslash or other form of quoting in the
-	       original pattern. */
-	    goto convert_to_backslash;
-	}
+          i++;
+          if (pathname[i] == '\0')
+            break;
+          /* If we are turning CTLESC CTLESC into CTLESC, we need to do that
+             even when the first CTLESC is preceded by a backslash. */
+          if ((qflags & QGLOB_CTLESC) && pathname[i] == CTLESC
+              && (pathname[i + 1] == CTLESC || pathname[i + 1] == CTLNUL))
+            i++; /* skip over the CTLESC */
+          else if ((qflags & QGLOB_CTLESC) && pathname[i] == CTLESC)
+            /* A little more general: if there is an unquoted backslash in the
+               pattern and we are handling quoted characters in the pattern,
+               convert the CTLESC to backslash and add the next character on
+               the theory that the backslash will quote the next character
+               but it would be inconsistent not to replace the CTLESC with
+               another backslash here. We can't tell at this point whether the
+               CTLESC comes from a backslash or other form of quoting in the
+               original pattern. */
+            goto convert_to_backslash;
+        }
       else if (pathname[i] == '\\' && (qflags & QGLOB_REGEXP))
         last_was_backslash = 1;
       temp[j++] = pathname[i];
@@ -387,13 +391,13 @@ quote_globbing_chars (const char *string)
   send = string + slen;
 
   temp = new char[slen * 2 + 1];
-  for (t = temp, s = string; *s; )
+  for (t = temp, s = string; *s;)
     {
       if (glob_char_p (s))
-	*t++ = '\\';
+        *t++ = '\\';
 
       /* Copy a single (possibly multibyte) character from s to t,
-	 incrementing both. */
+         incrementing both. */
       COPY_CHAR_P (t, s, send);
     }
   *t = '\0';
@@ -404,21 +408,21 @@ quote_globbing_chars (const char *string)
 char **
 shell_glob_filename (const char *pathname, int qflags)
 {
-#if defined (USE_POSIX_GLOB_LIBRARY)
+#if defined(USE_POSIX_GLOB_LIBRARY)
   int i;
   char *temp, **results;
   glob_t filenames;
   int glob_flags;
 
-  temp = quote_string_for_globbing (pathname, QGLOB_FILENAME|qflags);
+  temp = quote_string_for_globbing (pathname, QGLOB_FILENAME | qflags);
 
   filenames.gl_offs = 0;
 
-#  if defined (GLOB_PERIOD)
+#if defined(GLOB_PERIOD)
   glob_flags = glob_dot_filenames ? GLOB_PERIOD : 0;
-#  else
+#else
   glob_flags = 0;
-#  endif /* !GLOB_PERIOD */
+#endif /* !GLOB_PERIOD */
 
   glob_flags |= (GLOB_ERR | GLOB_DOOFFS);
 
@@ -430,7 +434,7 @@ shell_glob_filename (const char *pathname, int qflags)
     return NULL;
   else if (i == GLOB_NOMATCH)
     filenames.gl_pathv = NULL;
-  else if (i != 0)		/* other error codes not in POSIX.2 */
+  else if (i != 0) /* other error codes not in POSIX.2 */
     filenames.gl_pathv = NULL;
 
   results = filenames.gl_pathv;
@@ -438,26 +442,26 @@ shell_glob_filename (const char *pathname, int qflags)
   if (results && ((GLOB_FAILED (results)) == 0))
     {
       if (should_ignore_glob_matches ())
-	ignore_glob_matches (results);
+        ignore_glob_matches (results);
       if (results && results[0])
-	strvec_sort (results, 1);		/* posix sort */
+        strvec_sort (results, 1); /* posix sort */
       else
-	{
-	  FREE (results);
-	  results = NULL;
-	}
+        {
+          FREE (results);
+          results = NULL;
+        }
     }
 
   return results;
 
-#else /* !USE_POSIX_GLOB_LIBRARY */
+#else  /* !USE_POSIX_GLOB_LIBRARY */
 
   char *temp, **results;
   int gflags, quoted_pattern;
 
   noglob_dot_filenames = glob_dot_filenames == 0;
 
-  temp = quote_string_for_globbing (pathname, QGLOB_FILENAME|qflags);
+  temp = quote_string_for_globbing (pathname, QGLOB_FILENAME | qflags);
   gflags = glob_star ? GX_GLOBSTAR : 0;
   results = glob_filename (temp, gflags);
   free (temp);
@@ -465,14 +469,14 @@ shell_glob_filename (const char *pathname, int qflags)
   if (results && ((GLOB_FAILED (results)) == 0))
     {
       if (should_ignore_glob_matches ())
-	ignore_glob_matches (results);
+        ignore_glob_matches (results);
       if (results && results[0])
-	strvec_sort (results, 1);		/* posix sort */
+        strvec_sort (results, 1); /* posix sort */
       else
-	{
-	  FREE (results);
-	  results = (char **)&glob_error_return;
-	}
+        {
+          FREE (results);
+          results = (char **)&glob_error_return;
+        }
     }
 
   return results;
@@ -481,13 +485,8 @@ shell_glob_filename (const char *pathname, int qflags)
 
 /* Stuff for GLOBIGNORE. */
 
-static struct ignorevar globignore =
-{
-  "GLOBIGNORE",
-  (struct ign *)0,
-  0,
-  (char *)0,
-  (sh_iv_item_func_t *)0,
+static struct ignorevar globignore = {
+  "GLOBIGNORE", (struct ign *)0, 0, (char *)0, (sh_iv_item_func_t *)0,
 };
 
 /* Set up to ignore some glob matches because the value of GLOBIGNORE
@@ -536,7 +535,7 @@ glob_name_is_acceptable (const char *name)
   for (p = globignore.ignores; p->val; p++)
     {
       if (strmatch (p->val, (char *)name, flags) != FNM_NOMATCH)
-	return false;
+        return false;
     }
   return true;
 }
@@ -560,9 +559,9 @@ ignore_globbed_names (char **names, sh_ignore_func_t *name_func)
   for (n = i = 0; names[i]; i++)
     {
       if ((*name_func) (names[i]))
-	newnames[n++] = names[i];
+        newnames[n++] = names[i];
       else
-	free (names[i]);
+        free (names[i]);
     }
 
   newnames[n] = (char *)NULL;
@@ -623,8 +622,9 @@ setup_ignore_patterns (struct ignorevar *ivp)
   this_ignoreval = get_string_value (ivp->varname);
 
   /* If nothing has changed then just exit now. */
-  if ((this_ignoreval && ivp->last_ignoreval && STREQ (this_ignoreval, ivp->last_ignoreval)) ||
-      (!this_ignoreval && !ivp->last_ignoreval))
+  if ((this_ignoreval && ivp->last_ignoreval
+       && STREQ (this_ignoreval, ivp->last_ignoreval))
+      || (!this_ignoreval && !ivp->last_ignoreval))
     return;
 
   /* Oops.  The ignore variable has changed.  Re-parse it. */
@@ -633,7 +633,7 @@ setup_ignore_patterns (struct ignorevar *ivp)
   if (ivp->ignores)
     {
       for (p = ivp->ignores; p->val; p++)
-	free(p->val);
+        free (p->val);
 
       free (ivp->ignores);
       ivp->ignores = (struct ign *)NULL;
@@ -655,19 +655,20 @@ setup_ignore_patterns (struct ignorevar *ivp)
   while ((colon_bit = split_ignorespec (this_ignoreval, &ptr)))
     {
       if (numitems + 1 >= maxitems)
-	{
-	  maxitems += 10;
-	  ivp->ignores = (struct ign *)xrealloc (ivp->ignores, maxitems * sizeof (struct ign));
-	}
+        {
+          maxitems += 10;
+          ivp->ignores = (struct ign *)xrealloc (
+              ivp->ignores, maxitems * sizeof (struct ign));
+        }
       ivp->ignores[numitems].val = colon_bit;
       ivp->ignores[numitems].len = strlen (colon_bit);
       ivp->ignores[numitems].flags = 0;
       if (ivp->item_func)
-	(*ivp->item_func) (&ivp->ignores[numitems]);
+        (*ivp->item_func) (&ivp->ignores[numitems]);
       numitems++;
     }
   ivp->ignores[numitems].val = (char *)NULL;
   ivp->num_ignores = numitems;
 }
 
-}  // namespace bash
+} // namespace bash

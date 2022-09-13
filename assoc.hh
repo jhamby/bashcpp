@@ -56,6 +56,6 @@ WORD_LIST *assoc_keys_to_word_list (HASH_TABLE *);
 
 char *assoc_to_string (HASH_TABLE *, const char *, int);
 
-}  // namespace bash
+} // namespace bash
 
 #endif /* _ASSOC_H_ */

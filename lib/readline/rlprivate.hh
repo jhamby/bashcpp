@@ -1,5 +1,5 @@
 /* rlprivate.h -- functions and variables global to the readline library,
-		  but not intended for use by applications. */
+                  but not intended for use by applications. */
 
 /* Copyright (C) 1999-2020 Free Software Foundation, Inc.
 
@@ -20,7 +20,7 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_RL_PRIVATE_H_)
+#if !defined(_RL_PRIVATE_H_)
 #define _RL_PRIVATE_H_
 
 namespace readline
@@ -32,14 +32,19 @@ namespace readline
  *									 *
  *************************************************************************/
 
-#define EMACS_MODE()		(rl_editing_mode == emacs_mode)
-#define VI_COMMAND_MODE()	(rl_editing_mode == vi_mode && _rl_keymap == vi_movement_keymap ())
-#define VI_INSERT_MODE()	(rl_editing_mode == vi_mode && _rl_keymap == vi_insertion_keymap ())
+#define EMACS_MODE() (rl_editing_mode == emacs_mode)
+#define VI_COMMAND_MODE()                                                     \
+  (rl_editing_mode == vi_mode && _rl_keymap == vi_movement_keymap ())
+#define VI_INSERT_MODE()                                                      \
+  (rl_editing_mode == vi_mode && _rl_keymap == vi_insertion_keymap ())
 
-#define RL_CHECK_SIGNALS() \
-	do { \
-	  if (_rl_caught_signal) _rl_signal_handler (_rl_caught_signal); \
-	} while (0)
+#define RL_CHECK_SIGNALS()                                                    \
+  do                                                                          \
+    {                                                                         \
+      if (_rl_caught_signal)                                                  \
+        _rl_signal_handler (_rl_caught_signal);                               \
+    }                                                                         \
+  while (0)
 
 #define RL_SIG_RECEIVED() (_rl_caught_signal != 0)
 #define RL_SIGINT_RECEIVED() (_rl_caught_signal == SIGINT)
@@ -49,35 +54,35 @@ namespace readline
 #define CUSTOM_INPUT_FUNC() (rl_getc_function != rl_getc)
 
 /* Callback data for reading numeric arguments */
-#define NUM_SAWMINUS	0x01
-#define NUM_SAWDIGITS	0x02
-#define NUM_READONE	0x04
+#define NUM_SAWMINUS 0x01
+#define NUM_SAWDIGITS 0x02
+#define NUM_READONE 0x04
 
 /* A context for reading key sequences longer than a single character when
    using the callback interface. */
-#define KSEQ_DISPATCHED	0x01
-#define KSEQ_SUBSEQ	0x02
-#define KSEQ_RECURSIVE	0x04
+#define KSEQ_DISPATCHED 0x01
+#define KSEQ_SUBSEQ 0x02
+#define KSEQ_RECURSIVE 0x04
 
 /* vi-mode commands that use result of motion command to define boundaries */
-#define VIM_DELETE	0x01
-#define VIM_CHANGE	0x02
-#define VIM_YANK	0x04
+#define VIM_DELETE 0x01
+#define VIM_CHANGE 0x02
+#define VIM_YANK 0x04
 
 /* various states for vi-mode commands that use motion commands.  reflects
    RL_READLINE_STATE */
-#define VMSTATE_READ	0x01
-#define VMSTATE_NUMARG	0x02
+#define VMSTATE_READ 0x01
+#define VMSTATE_NUMARG 0x02
 
-#define BRACK_PASTE_PREF	"\033[200~"
-#define BRACK_PASTE_SUFF	"\033[201~"
+#define BRACK_PASTE_PREF "\033[200~"
+#define BRACK_PASTE_SUFF "\033[201~"
 
-#define BRACK_PASTE_LAST	'~'
-#define BRACK_PASTE_SLEN	6
+#define BRACK_PASTE_LAST '~'
+#define BRACK_PASTE_SLEN 6
 
-#define BRACK_PASTE_INIT	"\033[?2004h"
-#define BRACK_PASTE_FINI	"\033[?2004l\r"
+#define BRACK_PASTE_INIT "\033[?2004h"
+#define BRACK_PASTE_FINI "\033[?2004l\r"
 
-}  // namespace readline
+} // namespace readline
 
 #endif /* _RL_PRIVATE_H_ */

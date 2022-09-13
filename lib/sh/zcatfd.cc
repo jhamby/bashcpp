@@ -22,8 +22,8 @@
 
 #include <sys/types.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <cerrno>
@@ -47,20 +47,20 @@ Shell::zcatfd (int fd, int ofd, const char *)
     {
       nr = zread (fd, lbuf, sizeof (lbuf));
       if (nr == 0)
-	break;
+        break;
       else if (nr < 0)
-	{
-	  rval = -1;
-	  break;
-	}
+        {
+          rval = -1;
+          break;
+        }
       else if (zwrite (ofd, lbuf, static_cast<size_t> (nr)) < 0)
-	{
-	  rval = -1;
-	  break;
-	}
+        {
+          rval = -1;
+          break;
+        }
     }
 
   return rval;
 }
 
-}  // namespace bash
+} // namespace bash

@@ -55,8 +55,8 @@
 // $SHORT_DOC wait [pid ...]
 // Wait for process completion and return exit status.
 
-// Waits for each process specified by a PID and reports its termination status.
-// If PID is not given, waits for all currently active child processes,
+// Waits for each process specified by a PID and reports its termination
+// status. If PID is not given, waits for all currently active child processes,
 // and the return status is zero.  PID must be a process ID.
 
 // Exit Status:
@@ -70,19 +70,19 @@
 
 #include <csignal>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "chartypes.hh"
 
-#include "shell.hh"
+#include "bashgetopt.hh"
+#include "common.hh"
 #include "execute_cmd.hh"
 #include "jobs.hh"
-#include "trap.hh"
+#include "shell.hh"
 #include "sig.hh"
-#include "common.hh"
-#include "bashgetopt.hh"
+#include "trap.hh"
 
 namespace bash
 {
@@ -92,7 +92,7 @@ extern int wait_signal_received;
 procenv_t wait_intr_buf;
 bool wait_intr_flag;
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 static int set_waitlist (WORD_LIST *);
 static void unset_waitlist (void);
 #endif
@@ -102,13 +102,13 @@ static void unset_waitlist (void);
    0.  If a list of pids or job specs are given, return the exit status of
    the last one waited for. */
 
-#define WAIT_RETURN(s) \
-  do \
-    { \
-      wait_signal_received = false; \
-      wait_intr_flag = false; \
-      return s;\
-    } \
+#define WAIT_RETURN(s)                                                        \
+  do                                                                          \
+    {                                                                         \
+      wait_signal_received = false;                                           \
+      wait_intr_flag = false;                                                 \
+      return s;                                                               \
+    }                                                                         \
   while (0)
 
 int
@@ -120,7 +120,7 @@ wait_builtin (WORD_LIST *list)
   SHELL_VAR *pidvar;
   struct procstat pstat;
 
-  USE_VAR(list);
+  USE_VAR (list);
 
   nflag = wflags = 0;
   vname = NULL;
@@ -129,43 +129,44 @@ wait_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "fnp:")) != -1)
     {
       switch (opt)
-	{
-#if defined (JOB_CONTROL)
-	case 'n':
-	  nflag = 1;
-	  break;
-	case 'f':
-	  wflags |= JWAIT_FORCE;
-	  break;
-	case 'p':
-	  vname = list_optarg;
-	  break;
+        {
+#if defined(JOB_CONTROL)
+        case 'n':
+          nflag = 1;
+          break;
+        case 'f':
+          wflags |= JWAIT_FORCE;
+          break;
+        case 'p':
+          vname = list_optarg;
+          break;
 #endif
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
   list = loptend;
 
   /* Sanity-check variable name if -p supplied. */
   if (vname)
     {
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
       int arrayflags;
 
-      arrayflags = assoc_expand_once ? (VA_NOEXPAND|VA_ONEWORD) : 0;
-      if (!legal_identifier (vname) && !valid_array_reference (vname, arrayflags))
+      arrayflags = assoc_expand_once ? (VA_NOEXPAND | VA_ONEWORD) : 0;
+      if (!legal_identifier (vname)
+          && !valid_array_reference (vname, arrayflags))
 #else
       if (!legal_identifier (vname))
 #endif
-	{
-	  sh_invalidid (vname);
-	  WAIT_RETURN (EXECUTION_FAILURE);
-	}
+        {
+          sh_invalidid (vname);
+          WAIT_RETURN (EXECUTION_FAILURE);
+        }
       if (builtin_unbind_variable (vname) == -2)
-	WAIT_RETURN (EXECUTION_FAILURE);
+        WAIT_RETURN (EXECUTION_FAILURE);
     }
 
   /* POSIX.2 says:  When the shell is waiting (by means of the wait utility)
@@ -184,15 +185,15 @@ wait_builtin (WORD_LIST *list)
       last_command_exit_signal = wait_signal_received;
       status = 128 + wait_signal_received;
       wait_sigint_cleanup ();
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
       if (wflags & JWAIT_WAITING)
-	unset_waitlist ();
+        unset_waitlist ();
 #endif
       WAIT_RETURN (status);
     }
 
   opt = first_pending_trap ();
-#if defined (SIGCHLD)
+#if defined(SIGCHLD)
   /* We special case SIGCHLD when not in posix mode because we don't break
      out of the wait even when the signal is trapped; we run the trap after
      the wait completes. See how it's handled in jobs.c:waitchld(). */
@@ -206,28 +207,28 @@ wait_builtin (WORD_LIST *list)
       WAIT_RETURN (status);
     }
 
-  /* We support jobs or pids.
-     wait <pid-or-job> [pid-or-job ...] */
+    /* We support jobs or pids.
+       wait <pid-or-job> [pid-or-job ...] */
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
   if (nflag)
     {
       if (list)
-	{
-	  opt = set_waitlist (list);
-	  if (opt == 0)
-	    WAIT_RETURN (127);
-	  wflags |= JWAIT_WAITING;
-	}
+        {
+          opt = set_waitlist (list);
+          if (opt == 0)
+            WAIT_RETURN (127);
+          wflags |= JWAIT_WAITING;
+        }
 
       status = wait_for_any_job (wflags, &pstat);
       if (vname && status >= 0)
-	bind_var_to_int (vname, pstat.pid);
+        bind_var_to_int (vname, pstat.pid);
 
       if (status < 0)
-	status = 127;
+        status = 127;
       if (list)
-	unset_waitlist ();
+        unset_waitlist ();
       WAIT_RETURN (status);
     }
 #endif
@@ -238,7 +239,7 @@ wait_builtin (WORD_LIST *list)
     {
       wait_for_background_pids (&pstat);
       if (vname)
-	bind_var_to_int (vname, pstat.pid);
+        bind_var_to_int (vname, pstat.pid);
       WAIT_RETURN (EXECUTION_SUCCESS);
     }
 
@@ -251,65 +252,65 @@ wait_builtin (WORD_LIST *list)
 
       w = list->word->word;
       if (DIGIT (*w))
-	{
-	  if (legal_number (w, &pid_value) && pid_value == (pid_t)pid_value)
-	    {
-	      pid = (pid_t)pid_value;
-	      status = wait_for_single_pid (pid, wflags|JWAIT_PERROR);
-	      pstat.pid = pid;
-	      pstat.status = status;
-	    }
-	  else
-	    {
-	      sh_badpid (w);
-	      pstat.pid = NO_PID;
-	      pstat.status = 127;
-	      WAIT_RETURN (EXECUTION_FAILURE);
-	    }
-	}
-#if defined (JOB_CONTROL)
+        {
+          if (legal_number (w, &pid_value) && pid_value == (pid_t)pid_value)
+            {
+              pid = (pid_t)pid_value;
+              status = wait_for_single_pid (pid, wflags | JWAIT_PERROR);
+              pstat.pid = pid;
+              pstat.status = status;
+            }
+          else
+            {
+              sh_badpid (w);
+              pstat.pid = NO_PID;
+              pstat.status = 127;
+              WAIT_RETURN (EXECUTION_FAILURE);
+            }
+        }
+#if defined(JOB_CONTROL)
       else if (*w && *w == '%')
-	/* Must be a job spec.  Check it out. */
-	{
-	  int job;
-	  sigset_t set, oset;
+        /* Must be a job spec.  Check it out. */
+        {
+          int job;
+          sigset_t set, oset;
 
-	  BLOCK_CHILD (set, oset);
-	  job = get_job_spec (list);
+          BLOCK_CHILD (set, oset);
+          job = get_job_spec (list);
 
-	  if (INVALID_JOB (job))
-	    {
-	      if (job != DUP_JOB)
-		sh_badjob (list->word->word);
-	      UNBLOCK_CHILD (oset);
-	      status = 127;	/* As per Posix.2, section 4.70.2 */
-	      pstat.pid = NO_PID;
-	      pstat.status = status;
-	      list = (WORD_LIST *)list->next;
-	      continue;
-	    }
+          if (INVALID_JOB (job))
+            {
+              if (job != DUP_JOB)
+                sh_badjob (list->word->word);
+              UNBLOCK_CHILD (oset);
+              status = 127; /* As per Posix.2, section 4.70.2 */
+              pstat.pid = NO_PID;
+              pstat.status = status;
+              list = (WORD_LIST *)list->next;
+              continue;
+            }
 
-	  /* Job spec used.  Wait for the last pid in the pipeline. */
-	  UNBLOCK_CHILD (oset);
-	  status = wait_for_job (job, wflags, &pstat);
-	}
+          /* Job spec used.  Wait for the last pid in the pipeline. */
+          UNBLOCK_CHILD (oset);
+          status = wait_for_job (job, wflags, &pstat);
+        }
 #endif /* JOB_CONTROL */
       else
-	{
-	  sh_badpid (w);
-	  pstat.pid = NO_PID;
-	  pstat.status = 127;
-	  status = EXECUTION_FAILURE;
-	}
+        {
+          sh_badpid (w);
+          pstat.pid = NO_PID;
+          pstat.status = 127;
+          status = EXECUTION_FAILURE;
+        }
 
       /* Don't waste time with a longjmp. */
       if (wait_signal_received)
-	{
-	  last_command_exit_signal = wait_signal_received;
-	  status = 128 + wait_signal_received;
-	  wait_sigint_cleanup ();
-	  WAIT_RETURN (status);
-	}
+        {
+          last_command_exit_signal = wait_signal_received;
+          status = 128 + wait_signal_received;
+          wait_sigint_cleanup ();
+          WAIT_RETURN (status);
+        }
 
       list = (WORD_LIST *)list->next;
     }
@@ -317,7 +318,7 @@ wait_builtin (WORD_LIST *list)
   WAIT_RETURN (status);
 }
 
-#if defined (JOB_CONTROL)
+#if defined(JOB_CONTROL)
 /* Take each valid pid or jobspec in LIST and mark the corresponding job as
    J_WAITING, so wait -n knows which jobs to wait for. Return the number of
    jobs we found. */
@@ -332,22 +333,22 @@ set_waitlist (WORD_LIST *list)
     {
       int job = NO_JOB;
       int64_t pid;
-      job = (l && legal_number (l->word->word, &pid) && pid == (pid_t) pid)
-		? get_job_by_pid ((pid_t) pid, 0, 0)
-		: get_job_spec (l);
+      job = (l && legal_number (l->word->word, &pid) && pid == (pid_t)pid)
+                ? get_job_by_pid ((pid_t)pid, 0, 0)
+                : get_job_spec (l);
       if (job == NO_JOB || jobs == 0 || INVALID_JOB (job))
-	{
-	  sh_badjob (l->word->word);
-	  continue;
-	}
+        {
+          sh_badjob (l->word->word);
+          continue;
+        }
       /* We don't check yet to see if one of the desired jobs has already
-	 terminated, but we could. We wait until wait_for_any_job(). This
-	 has the advantage of validating all the arguments. */
+         terminated, but we could. We wait until wait_for_any_job(). This
+         has the advantage of validating all the arguments. */
       if ((jobs[job]->flags & J_WAITING) == 0)
-	{
-	  njob++;
-	  jobs[job]->flags |= J_WAITING;
-	}
+        {
+          njob++;
+          jobs[job]->flags |= J_WAITING;
+        }
     }
   UNBLOCK_CHILD (oset);
   return njob;
@@ -367,4 +368,4 @@ unset_waitlist ()
 }
 #endif
 
-}  // namespace bash
+} // namespace bash

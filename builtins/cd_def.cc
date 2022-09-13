@@ -22,30 +22,30 @@
 
 #include "config.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashtypes.hh"
 #include "posixdir.hh"
 #include "posixstat.hh"
 
-#if defined (HAVE_SYS_PARAM_H)
+#if defined(HAVE_SYS_PARAM_H)
 #include <sys/param.h>
 #endif
 
-#include <fcntl.h>
 #include <cerrno>
+#include <fcntl.h>
 
 #include "bashintl.hh"
 
 #include "tilde.hh"
 
-#include "shell.hh"
+#include "bashgetopt.hh"
+#include "common.hh"
 #include "flags.hh"
 #include "maxpath.hh"
-#include "common.hh"
-#include "bashgetopt.hh"
+#include "shell.hh"
 
 #if 0
 extern const char * const bash_getcwd_errstr;
@@ -94,7 +94,7 @@ static int xattrfd = -1;
 //   -e	if the -P option is supplied, and the current working
 // 		directory cannot be determined successfully, exit with
 // 		a non-zero status
-#if defined (O_XATTR)
+#if defined(O_XATTR)
 //   -@	on systems that support it, present a file with extended
 // 		attributes as a directory containing the file attributes
 #endif
@@ -137,10 +137,11 @@ bindpwd (bool no_symlinks)
 
 #define tcwd the_current_working_directory
   char *dirname = tcwd ? (no_symlinks ? sh_physpath (tcwd, 0) : tcwd)
-  		 : get_working_directory ("cd");
+                       : get_working_directory ("cd");
 #undef tcwd
 
-  /* If canonicalization fails, reset dirname to the_current_working_directory */
+  /* If canonicalization fails, reset dirname to the_current_working_directory
+   */
   bool canon_failed = false;
   if (dirname == 0)
     {
@@ -186,24 +187,23 @@ resetpwd (const char *caller)
 }
 
 static int
-cdxattr (
-     char *dir,		/* don't assume we can always free DIR */
-     char **ndirp)	/* return new constructed directory name */
+cdxattr (char *dir,    /* don't assume we can always free DIR */
+         char **ndirp) /* return new constructed directory name */
 {
-#if defined (O_XATTR)
+#if defined(O_XATTR)
   int apfd, fd, r, e;
-  char buf[11+40+40];	/* construct new `fake' path for pwd */
+  char buf[11 + 40 + 40]; /* construct new `fake' path for pwd */
 
-  apfd = openat (AT_FDCWD, dir, O_RDONLY|O_NONBLOCK);
+  apfd = openat (AT_FDCWD, dir, O_RDONLY | O_NONBLOCK);
   if (apfd < 0)
     return -1;
   fd = openat (apfd, ".", O_XATTR);
   e = errno;
-  close (apfd);		/* ignore close error for now */
+  close (apfd); /* ignore close error for now */
   errno = e;
   if (fd < 0)
     return -1;
-  r = fchdir (fd);	/* assume fchdir exists everywhere with O_XATTR */
+  r = fchdir (fd); /* assume fchdir exists everywhere with O_XATTR */
   if (r < 0)
     {
       close (fd);
@@ -216,7 +216,7 @@ cdxattr (
      this directory.  This imposes a certain structure on /proc. */
   if (ndirp)
     {
-      sprintf (buf, "/proc/%d/fd/%d", getpid(), fd);
+      sprintf (buf, "/proc/%d/fd/%d", getpid (), fd);
       *ndirp = savestring (buf);
     }
 
@@ -234,21 +234,21 @@ cdxattr (
 static void
 resetxattr ()
 {
-#if defined (O_XATTR)
+#if defined(O_XATTR)
   if (xattrfd >= 0)
     {
       close (xattrfd);
       xattrfd = -1;
     }
 #else
-  xattrfd = -1;		/* not strictly necessary */
+  xattrfd = -1; /* not strictly necessary */
 #endif
 }
 
-#define LCD_DOVARS	0x001
-#define LCD_DOSPELL	0x002
-#define LCD_PRINTPATH	0x004
-#define LCD_FREEDIRNAME	0x008
+#define LCD_DOVARS 0x001
+#define LCD_DOSPELL 0x002
+#define LCD_PRINTPATH 0x004
+#define LCD_FREEDIRNAME 0x008
 
 /* This builtin is ultimately the way that all user-visible commands should
    change the current working directory.  It is called by cd_to_string (),
@@ -260,7 +260,7 @@ Shell::cd_builtin (WORD_LIST *list)
   char *dirname, *cdpath, *path, *temp;
   int path_index, no_symlinks, opt, lflag, e;
 
-#if defined (RESTRICTED_SHELL)
+#if defined(RESTRICTED_SHELL)
   if (restricted)
     {
       sh_restricted ((char *)NULL);
@@ -272,38 +272,38 @@ Shell::cd_builtin (WORD_LIST *list)
   no_symlinks = no_symbolic_links;
   xattrflag = 0;
   reset_internal_getopt ();
-#if defined (O_XATTR)
+#if defined(O_XATTR)
   while ((opt = internal_getopt (list, "eLP@")) != -1)
 #else
   while ((opt = internal_getopt (list, "eLP")) != -1)
 #endif
     {
       switch (opt)
-	{
-	case 'P':
-	  no_symlinks = 1;
-	  break;
-	case 'L':
-	  no_symlinks = 0;
-	  break;
-	case 'e':
-	  eflag = 1;
-	  break;
-#if defined (O_XATTR)
-	case '@':
-	  xattrflag = 1;
-	  break;
+        {
+        case 'P':
+          no_symlinks = 1;
+          break;
+        case 'L':
+          no_symlinks = 0;
+          break;
+        case 'e':
+          eflag = 1;
+          break;
+#if defined(O_XATTR)
+        case '@':
+          xattrflag = 1;
+          break;
 #endif
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
   list = loptend;
 
-  lflag = (cdable_vars ? LCD_DOVARS : 0) |
-	  ((interactive && cdspelling) ? LCD_DOSPELL : 0);
+  lflag = (cdable_vars ? LCD_DOVARS : 0)
+          | ((interactive && cdspelling) ? LCD_DOSPELL : 0);
   if (eflag && no_symlinks == 0)
     eflag = 0;
 
@@ -313,16 +313,16 @@ Shell::cd_builtin (WORD_LIST *list)
       dirname = get_string_value ("HOME");
 
       if (dirname == 0)
-	{
-	  builtin_error (_("HOME not set"));
-	  return EXECUTION_FAILURE;
-	}
+        {
+          builtin_error (_ ("HOME not set"));
+          return EXECUTION_FAILURE;
+        }
       lflag = 0;
     }
-#if defined (CD_COMPLAINS)
+#if defined(CD_COMPLAINS)
   else if (list->next)
     {
-      builtin_error (_("too many arguments"));
+      builtin_error (_ ("too many arguments"));
       return EXECUTION_FAILURE;
     }
 #endif
@@ -339,14 +339,14 @@ Shell::cd_builtin (WORD_LIST *list)
       dirname = get_string_value ("OLDPWD");
 
       if (dirname == 0)
-	{
-	  builtin_error (_("OLDPWD not set"));
-	  return EXECUTION_FAILURE;
-	}
+        {
+          builtin_error (_ ("OLDPWD not set"));
+          return EXECUTION_FAILURE;
+        }
 #if 0
       lflag = interactive ? LCD_PRINTPATH : 0;
 #else
-      lflag = LCD_PRINTPATH;		/* According to SUSv3 */
+      lflag = LCD_PRINTPATH; /* According to SUSv3 */
 #endif
     }
   else if (absolute_pathname (list->word->word))
@@ -358,33 +358,35 @@ Shell::cd_builtin (WORD_LIST *list)
       /* Find directory in $CDPATH. */
       path_index = 0;
       while ((path = extract_colon_unit (cdpath, &path_index)))
-	{
-	  /* OPT is 1 if the path element is non-empty */
-	  opt = path[0] != '\0';
-	  temp = sh_makepath (path, dirname, MP_DOTILDE);
-	  free (path);
+        {
+          /* OPT is 1 if the path element is non-empty */
+          opt = path[0] != '\0';
+          temp = sh_makepath (path, dirname, MP_DOTILDE);
+          free (path);
 
-	  if (change_to_directory (temp, no_symlinks, xattrflag))
-	    {
-	      /* POSIX.2 says that if a nonempty directory from CDPATH
-		 is used to find the directory to change to, the new
-		 directory name is echoed to stdout, whether or not
-		 the shell is interactive. */
-	      if (opt && (path = no_symlinks ? temp : the_current_working_directory))
-		printf ("%s\n", path);
+          if (change_to_directory (temp, no_symlinks, xattrflag))
+            {
+              /* POSIX.2 says that if a nonempty directory from CDPATH
+                 is used to find the directory to change to, the new
+                 directory name is echoed to stdout, whether or not
+                 the shell is interactive. */
+              if (opt
+                  && (path
+                      = no_symlinks ? temp : the_current_working_directory))
+                printf ("%s\n", path);
 
-	      free (temp);
+              free (temp);
 #if 0
 	      /* Posix.2 says that after using CDPATH, the resultant
 		 value of $PWD will not contain `.' or `..'. */
 	      return bindpwd (posixly_correct || no_symlinks);
 #else
-	      return bindpwd (no_symlinks);
+              return bindpwd (no_symlinks);
 #endif
-	    }
-	  else
-	    free (temp);
-	}
+            }
+          else
+            free (temp);
+        }
 
 #if 0
       /* changed for bash-4.2 Posix cd description steps 5-6 */
@@ -408,7 +410,7 @@ Shell::cd_builtin (WORD_LIST *list)
   if (change_to_directory (dirname, no_symlinks, xattrflag))
     {
       if (lflag & LCD_PRINTPATH)
-	printf ("%s\n", dirname);
+        printf ("%s\n", dirname);
       return bindpwd (no_symlinks);
     }
 
@@ -419,10 +421,10 @@ Shell::cd_builtin (WORD_LIST *list)
     {
       temp = get_string_value (dirname);
       if (temp && change_to_directory (temp, no_symlinks, xattrflag))
-	{
-	  printf ("%s\n", temp);
-	  return bindpwd (no_symlinks);
-	}
+        {
+          printf ("%s\n", temp);
+          return bindpwd (no_symlinks);
+        }
     }
 
   /* If the user requests it, try to find a directory name similar in
@@ -432,13 +434,13 @@ Shell::cd_builtin (WORD_LIST *list)
     {
       temp = dirspell (dirname);
       if (temp && change_to_directory (temp, no_symlinks, xattrflag))
-	{
-	  printf ("%s\n", temp);
-	  free (temp);
-	  return bindpwd (no_symlinks);
-	}
+        {
+          printf ("%s\n", temp);
+          free (temp);
+          return bindpwd (no_symlinks);
+        }
       else
-	FREE (temp);
+        FREE (temp);
     }
 
   e = errno;
@@ -483,30 +485,31 @@ Shell::pwd_builtin (WORD_LIST *list)
   while ((opt = internal_getopt (list, "LP")) != -1)
     {
       switch (opt)
-	{
-	case 'P':
-	  verbatim_pwd = pflag = 1;
-	  break;
-	case 'L':
-	  verbatim_pwd = 0;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return EX_USAGE;
-	}
+        {
+        case 'P':
+          verbatim_pwd = pflag = 1;
+          break;
+        case 'L':
+          verbatim_pwd = 0;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
   list = loptend;
 
 #define tcwd the_current_working_directory
 
   directory = tcwd ? (verbatim_pwd ? sh_physpath (tcwd, 0) : tcwd)
-		   : get_working_directory ("pwd");
+                   : get_working_directory ("pwd");
 
   /* Try again using getcwd() if canonicalization fails (for instance, if
      the file system has changed state underneath bash). */
-  if ((tcwd && directory == 0) ||
-      (posixly_correct && same_file (".", tcwd, (struct stat *)0, (struct stat *)0) == 0))
+  if ((tcwd && directory == 0)
+      || (posixly_correct
+          && same_file (".", tcwd, (struct stat *)0, (struct stat *)0) == 0))
     {
       if (directory && directory != tcwd)
         free (directory);
@@ -521,9 +524,9 @@ Shell::pwd_builtin (WORD_LIST *list)
       printf ("%s\n", directory);
       /* This is dumb but posix-mandated. */
       if (posixly_correct && pflag)
-	opt = setpwd (directory);
+        opt = setpwd (directory);
       if (directory != the_current_working_directory)
-	free (directory);
+        free (directory);
       return sh_chkwrite (opt);
     }
   else
@@ -553,7 +556,7 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
      (nolinks == 0) or the absolute physical pathname of NEWDIR
      (nolinks != 0). */
   char *tdir = nolinks ? sh_physpath (t, 0)
-		       : sh_canonpath (t, PATH_CHECKDOTDOT|PATH_CHECKEXISTS);
+                       : sh_canonpath (t, PATH_CHECKDOTDOT | PATH_CHECKEXISTS);
 
   int ndlen = strlen (newdir);
 
@@ -569,11 +572,12 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
       canon_failed = true;
     }
 
-  /* In POSIX mode, if we're resolving symlinks logically and sh_canonpath
-     returns NULL (because it checks the path, it will return NULL if the
-     resolved path doesn't exist), fail immediately. */
-#if defined (ENAMETOOLONG)
-  if (posixly_correct && !nolinks && canon_failed && (errno != ENAMETOOLONG || ndlen > PATH_MAX))
+    /* In POSIX mode, if we're resolving symlinks logically and sh_canonpath
+       returns NULL (because it checks the path, it will return NULL if the
+       resolved path doesn't exist), fail immediately. */
+#if defined(ENAMETOOLONG)
+  if (posixly_correct && !nolinks && canon_failed
+      && (errno != ENAMETOOLONG || ndlen > PATH_MAX))
 #else
   if (posixly_correct && !nolinks && canon_failed && ndlen > PATH_MAX)
 #endif
@@ -583,53 +587,53 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
 #else
       if (errno != ENOENT)
 #endif
-	errno = ENOTDIR;
+        errno = ENOTDIR;
       free (tdir);
       return false;
     }
 
   int r;
-#if defined (O_XATTR)
+#if defined(O_XATTR)
   if (xattrflag)
     {
       r = cdxattr (nolinks ? newdir : tdir, &ndir);
       if (r >= 0)
-	{
-	  canon_failed = false;
-	  free (tdir);
-	  tdir = ndir;
-	}
+        {
+          canon_failed = false;
+          free (tdir);
+          tdir = ndir;
+        }
       else
-	{
-	  err = errno;
-	  free (tdir);
-	  errno = err;
-	  return false;		/* no xattr */
-	}
+        {
+          err = errno;
+          free (tdir);
+          errno = err;
+          return false; /* no xattr */
+        }
     }
   else
 #endif
     {
       r = chdir (nolinks ? newdir : tdir);
       if (r >= 0)
-	resetxattr ();
+        resetxattr ();
     }
 
   /* If the chdir succeeds, update the_current_working_directory. */
   if (r == 0)
     {
       /* If canonicalization failed, but the chdir succeeded, reset the
-	 shell's idea of the_current_working_directory. */
+         shell's idea of the_current_working_directory. */
       if (canon_failed)
-	{
-	  t = resetpwd ("cd");
-	  if (t == 0)
-	    set_working_directory (tdir);
-	  else
-	    free (t);
-	}
+        {
+          t = resetpwd ("cd");
+          if (t == 0)
+            set_working_directory (tdir);
+          else
+            free (t);
+        }
       else
-	set_working_directory (tdir);
+        set_working_directory (tdir);
 
       free (tdir);
       return true;
@@ -653,9 +657,9 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
     {
       t = resetpwd ("cd");
       if (t == 0)
-	set_working_directory (tdir);
+        set_working_directory (tdir);
       else
-	free (t);
+        free (t);
 
       r = 1;
     }
@@ -669,4 +673,4 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
   return (bool)r;
 }
 
-}  // namespace bash
+} // namespace bash

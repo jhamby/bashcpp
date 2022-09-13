@@ -22,12 +22,12 @@
 
 #include "bashtypes.hh"
 
-#if defined (HAVE_SYS_RANDOM_H)
-#  include <sys/random.h>
+#if defined(HAVE_SYS_RANDOM_H)
+#include <sys/random.h>
 #endif
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "filecntl.hh"
@@ -59,7 +59,8 @@ intrand32 (u_bits32_t last)
      m = 2147483647, a = 16807, q = 127773, r = 2836
 
      There are lots of other combinations of constants to use; look at
-     https://www.gnu.org/software/gsl/manual/html_node/Other-random-number-generators.html#Other-random-number-generators */
+     https://www.gnu.org/software/gsl/manual/html_node/Other-random-number-generators.html#Other-random-number-generators
+   */
 
   bits32_t h, l, t;
   u_bits32_t ret;
@@ -81,14 +82,14 @@ Shell::genseed ()
   u_bits32_t iv;
 
   ::gettimeofday (&tv, nullptr);
-  iv = static_cast<u_bits32_t> (
-	reinterpret_cast<uintptr_t> (&intrand32));	// include a function ptr in the seed
-  iv = static_cast<u_bits32_t> (
-	tv.tv_sec ^ tv.tv_usec ^ ::getpid () ^ ::getppid () ^ current_user.uid ^ iv);
+  iv = static_cast<u_bits32_t> (reinterpret_cast<uintptr_t> (
+      &intrand32)); // include a function ptr in the seed
+  iv = static_cast<u_bits32_t> (tv.tv_sec ^ tv.tv_usec ^ ::getpid ()
+                                ^ ::getppid () ^ current_user.uid ^ iv);
   return iv;
 }
 
-#define BASH_RAND_MAX	32767		/* 0x7fff - 16 bits */
+#define BASH_RAND_MAX 32767 /* 0x7fff - 16 bits */
 
 /* Returns a pseudo-random number between 0 and 32767. */
 int
@@ -104,7 +105,7 @@ Shell::brand ()
   return ret & BASH_RAND_MAX;
 }
 
-#define BASH_RAND32_MAX	0x7fffffff	/* 32 bits */
+#define BASH_RAND32_MAX 0x7fffffff /* 32 bits */
 
 /* Returns a 32-bit pseudo-random number between 0 and 4294967295. */
 u_bits32_t
@@ -114,12 +115,11 @@ Shell::brand32 ()
   return rseed32 & BASH_RAND32_MAX;
 }
 
-
-#if !defined (HAVE_GETRANDOM)
+#if !defined(HAVE_GETRANDOM)
 /* Imperfect emulation of getrandom(2). */
 #ifndef GRND_NONBLOCK
-#  define GRND_NONBLOCK 1
-#  define GRND_RANDOM 2
+#define GRND_NONBLOCK 1
+#define GRND_RANDOM 2
 #endif
 
 static ssize_t
@@ -138,15 +138,15 @@ getrandom (void *buf, size_t len, unsigned int flags)
     {
       oflags = O_RDONLY;
       if (flags & GRND_NONBLOCK)
-	oflags |= O_NONBLOCK;
+        oflags |= O_NONBLOCK;
       urandfd = ::open ("/dev/urandom", oflags, 0);
       if (urandfd >= 0)
-	SET_CLOSE_ON_EXEC (urandfd);
+        SET_CLOSE_ON_EXEC (urandfd);
       else
-	{
-	  urand_unavail = 1;
-	  return -1;
-	}
+        {
+          urand_unavail = 1;
+          return -1;
+        }
     }
   if (urandfd >= 0 && (r = ::read (urandfd, buf, len)) == len)
     return r;
@@ -162,7 +162,7 @@ Shell::get_urandom32 ()
   if (getrandom (&ret, sizeof (ret), GRND_NONBLOCK) == sizeof (ret))
     return last_rand32 = ret;
 
-#if defined (HAVE_ARC4RANDOM)
+#if defined(HAVE_ARC4RANDOM)
   ret = arc4random ();
 #else
   if (subshell_environment)
@@ -174,4 +174,4 @@ Shell::get_urandom32 ()
   return last_rand32 = ret;
 }
 
-}  // namespace bash
+} // namespace bash

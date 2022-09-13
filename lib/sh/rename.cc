@@ -22,13 +22,13 @@
 
 #include "config.hh"
 
-#if !defined (HAVE_RENAME)
+#if !defined(HAVE_RENAME)
 
 #include "bashtypes.hh"
 #include "posixstat.hh"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include <cerrno>
@@ -44,12 +44,12 @@ rename (const char *from, const char *to)
   if (stat (to, &tb) < 0)
     {
       if (errno != ENOENT)
-	return -1;
+        return -1;
     }
   else
     {
       if (fb.st_dev == tb.st_dev && fb.st_ino == tb.st_ino)
-        return 0;		/* same file */
+        return 0; /* same file */
       if (unlink (to) < 0 && errno != ENOENT)
         return -1;
     }

@@ -98,8 +98,8 @@
 // $END
 
 // $BUILTIN if
-// $SHORT_DOC if COMMANDS; then COMMANDS; [ elif COMMANDS; then COMMANDS; ]... [ else COMMANDS; ] fi
-// Execute commands based on conditional.
+// $SHORT_DOC if COMMANDS; then COMMANDS; [ elif COMMANDS; then COMMANDS; ]...
+// [ else COMMANDS; ] fi Execute commands based on conditional.
 
 // The `if COMMANDS' list is executed.  If its exit status is zero, then the
 // `then COMMANDS' list is executed.  Otherwise, each `elif COMMANDS' list is
@@ -236,7 +236,7 @@
 // 		for directories given as arguments to `cd'.
 // GLOBIGNORE	A colon-separated list of patterns describing filenames to
 // 		be ignored by pathname expansion.
-#if defined (HISTORY)
+#if defined(HISTORY)
 // HISTFILE	The name of the file where your command history is stored.
 // HISTFILESIZE	The maximum number of lines this file can contain.
 // HISTSIZE	The maximum number of history lines that a running
@@ -274,14 +274,14 @@
 // 		value of `substring' means that the command word must
 // 		match a substring of the job.  Any other value means that
 // 		the command must be a prefix of a stopped job.
-#if defined (HISTORY)
-#  if defined (BANG_HISTORY)
+#if defined(HISTORY)
+#if defined(BANG_HISTORY)
 // histchars	Characters controlling history expansion and quick
 // 		substitution.  The first character is the history
 // 		substitution character, usually `!'.  The second is
 // 		the `quick substitution' character, usually `^'.  The
 // 		third is the `history comment' character, usually `#'.
-#  endif /* BANG_HISTORY */
+#endif /* BANG_HISTORY */
 // HISTIGNORE	A colon-separated list of patterns used to decide which
 // 		commands should be saved on the history list.
 #endif /* HISTORY */
