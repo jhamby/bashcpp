@@ -82,6 +82,11 @@ char *strcreplace (const char *, int, const char *, bool);
 void strip_leading (char *);
 void strip_trailing (char *, int, bool);
 
+/* Functions from error.cc */
+
+void itrace (const char *format, ...)
+    __attribute__ ((__format__ (printf, 1, 2)));
+
 /* Functions from version.c. */
 char *shell_version_string ();
 void show_shell_version (int);
@@ -148,13 +153,13 @@ enum fmt_flags
   FL_UNSIGNED = 0x08  /* don't add any sign */
 };
 
-std::string fmtulong (unsigned long, int, fmt_flags);
+char *fmtulong (unsigned long, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fmtulong.c */
-std::string fmtullong (unsigned long long, int, fmt_flags);
+char *fmtullong (unsigned long long, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fmtumax.c */
-std::string fmtumax (uint64_t, int, fmt_flags);
+char *fmtumax (uint64_t, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fnxform.c */
 
@@ -179,14 +184,14 @@ int input_avail (int);
 
 /* Inline declarations of functions previously defined in lib/sh/itos.c */
 
-static inline std::string
+static inline char *
 inttostr (int64_t i)
 {
   return fmtumax (static_cast<uint64_t> (i), 10, FL_NOFLAGS);
 }
 
 /* Integer to string conversion.  This now returns a string. */
-static inline std::string
+static inline char *
 itos (int64_t i)
 {
   return fmtumax (static_cast<uint64_t> (i), 10, FL_NOFLAGS);
@@ -194,13 +199,13 @@ itos (int64_t i)
 
 /* Integer to string conversion.  This conses the string using savestring;
    caller should delete it and be prepared to catch alloc exceptions. */
-static inline std::string
+static inline char *
 mitos (int64_t i)
 {
   return fmtumax (static_cast<uint64_t> (i), 10, FL_NOFLAGS);
 }
 
-static inline std::string
+static inline char *
 uinttostr (uint64_t i)
 {
   return fmtumax (i, 10, FL_UNSIGNED);
@@ -208,7 +213,7 @@ uinttostr (uint64_t i)
 
 /* Integer to string conversion.  This conses the string; the
    caller should delete it. */
-static inline std::string
+static inline char *
 uitos (uint64_t i)
 {
   return fmtumax (i, 10, FL_UNSIGNED);

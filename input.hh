@@ -24,16 +24,6 @@
 namespace bash
 {
 
-/* Function pointers can be declared as (Function *)foo. */
-// #if !defined (_FUNCTION_DEF)
-// #  define _FUNCTION_DEF
-// typedef int Function ();
-// typedef void VFunction ();
-// #endif /* _FUNCTION_DEF */
-
-typedef int sh_cget_func_t ();      /* sh_ivoidfunc_t */
-typedef int sh_cunget_func_t (int); /* sh_intfunc_t */
-
 enum stream_type
 {
   st_none,
@@ -85,6 +75,7 @@ union INPUT_STREAM
 #endif
 };
 
+#if 0
 struct BASH_INPUT
 {
   enum stream_type type;
@@ -139,6 +130,7 @@ extern int buffered_getchar ();
 extern int buffered_ungetchar (int);
 extern void with_input_from_buffered_stream (int, std::string);
 #endif /* BUFFERED_INPUT */
+#endif
 
 } // namespace bash
 

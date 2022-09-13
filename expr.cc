@@ -75,8 +75,6 @@
 #include "bashintl.hh"
 #include "chartypes.hh"
 
-#include "arrayfunc.hh"
-#include "execute_cmd.hh"
 #include "flags.hh"
 #include "shell.hh"
 #include "subst.hh"
@@ -162,11 +160,11 @@ Shell::expr_bind_variable (const std::string &lhs, const std::string &rhs)
 #else
   aflags = ASS_NOFLAGS;
 #endif
-  v = bind_int_variable (lhs, rhs, aflags);
+  v = bind_int_variable (lhs.c_str (), rhs.c_str (), aflags);
   if (v && v->readonly () || v->noassign ())
     throw bash_exception (FORCE_EOF); /* variable assignment error */
 
-  stupidly_hack_special_variables (lhs);
+  stupidly_hack_special_variables (lhs.c_str ());
 }
 
 #if defined(ARRAY_VARS)

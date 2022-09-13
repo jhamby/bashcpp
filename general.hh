@@ -46,10 +46,11 @@ namespace bash
 
 enum bash_exception_t
 {
-  FORCE_EOF = 1, // We want to stop parsing.
-  DISCARD = 2,   // Discard current command.
-  EXITPROG = 3,  // Unconditionally exit the program now.
-  ERREXIT = 4    // Exit due to error condition.
+  NOEXCEPTION = 0, // Report an error other than an exception.
+  FORCE_EOF = 1,   // We want to stop parsing.
+  DISCARD = 2,     // Discard current command.
+  EXITPROG = 3,    // Unconditionally exit the program now.
+  ERREXIT = 4      // Exit due to error condition.
 };
 
 /* General shell exception, including an exception type enum. */

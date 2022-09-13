@@ -47,7 +47,6 @@
 
 #include "bashgetopt.hh"
 #include "common.hh"
-#include "execute_cmd.hh"
 #include "flags.hh"
 #include "shell.hh"
 

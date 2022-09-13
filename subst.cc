@@ -25,7 +25,6 @@
 /* Include shell.h first for common defs. */
 #include "shell.hh"
 
-#include "execute_cmd.hh"
 #include "filecntl.hh"
 #include "flags.hh"
 #include "jobs.hh"

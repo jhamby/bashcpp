@@ -37,9 +37,9 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	siglist.cc bashline.cc bracecomp.cc error.cc \
 	stringlib.cc locale.cc findcmd.cc redir.cc \
 	pcomplete.cc pcomplib.cc syntax.cc \
-	alias.hh arrayfunc.hh array.hh assoc.hh bashintl.hh \
+	alias.hh array.hh assoc.hh bashintl.hh \
 	bashtypes.hh builtins.hh command.hh config-bot.hh config-top.hh \
-	conftypes.hh error.hh execute_cmd.hh externs.hh findcmd.hh flags.hh \
+	conftypes.hh externs.hh findcmd.hh flags.hh \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
 	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
 	siglist.hh subst.hh syntax.hh test.hh trap.hh variables.hh \

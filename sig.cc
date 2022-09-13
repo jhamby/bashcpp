@@ -28,7 +28,6 @@
 
 #include "bashintl.hh"
 
-#include "execute_cmd.hh"
 #include "shell.hh"
 
 #if defined(JOB_CONTROL)

@@ -121,7 +121,6 @@
 #include "bashintl.hh"
 
 #include "common.hh"
-#include "execute_cmd.hh"
 #include "shell.hh"
 #include "test.hh"
 

@@ -34,7 +34,6 @@
 #include <unistd.h>
 #endif
 
-#include "execute_cmd.hh"
 #include "findcmd.hh" /* matching prototypes and declarations */
 #include "flags.hh"
 #include "hashcmd.hh"

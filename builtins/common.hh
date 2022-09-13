@@ -214,7 +214,7 @@ void set_dirstack_element (int64_t, int, const char *);
 WORD_LIST *get_directory_stack (int);
 
 /* Functions from evalstring.c */
-int parse_and_execute (char *string, const char *from_file, int flags);
+int parse_and_execute (char *, const char *, parse_flags);
 int evalstring (char *string, const char *from_file, int flags);
 void parse_and_execute_cleanup (int old_running_trap);
 int parse_string (char *string, const char *from_file, int flags, char **endp);

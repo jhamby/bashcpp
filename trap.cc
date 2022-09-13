@@ -35,7 +35,6 @@
 
 #include "builtins.hh"
 #include "builtins/common.hh"
-#include "execute_cmd.hh"
 #include "flags.hh"
 #include "input.hh" /* for save_token_state, restore_token_state */
 #include "jobs.hh"

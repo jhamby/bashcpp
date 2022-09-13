@@ -29,7 +29,6 @@
 
 #include "bashintl.hh"
 
-#include "execute_cmd.hh"
 #include "pathexp.hh"
 #include "shell.hh"
 
@@ -62,11 +61,11 @@ static SHELL_VAR *assign_array_element_internal (SHELL_VAR *, const char *,
                                                  char *, char *, int,
                                                  const char *, int);
 
-static void assign_assoc_from_kvlist (SHELL_VAR *, WordList *, HashTable *,
+static void assign_assoc_from_kvlist (SHELL_VAR *, WORD_LIST *, HASH_TABLE *,
                                       int);
 
 static char *quote_assign (const char *);
-static void quote_array_assignment_chars (WordList *);
+static void quote_array_assignment_chars (WORD_LIST *);
 static char *quote_compound_array_word (char *, int);
 static char *array_value_internal (const char *, int, int, int *,
                                    arrayind_t *);

@@ -406,6 +406,50 @@ enum mkloc_var_flags
   MKLOC_INHERIT = 0x04
 };
 
+// Definitions previously in arrayfunc.hh.
+
+/* Flags for array_value_internal and callers array_value/get_array_value */
+enum av_flags
+{
+  AV_NOFLAGS = 0,
+  AV_ALLOWALL = 0x001,
+  AV_QUOTED = 0x002,
+  AV_USEIND = 0x004,
+  AV_USEVAL = 0x008,    /* XXX - should move this */
+  AV_ASSIGNRHS = 0x010, /* no splitting, special case ${a[@]} */
+  AV_NOEXPAND = 0x020   /* don't run assoc subscripts through word expansion */
+};
+
+/* Flags for valid_array_reference. Value 1 is reserved for skipsubscript() */
+enum valid_array_flags
+{
+  VA_NOFLAGS = 0,
+  VA_NOEXPAND = 0x001,
+  VA_ONEWORD = 0x002
+};
+
+// Definitions previously in execute_cmd.hh.
+
+#if defined(ARRAY_VARS)
+struct func_array_state
+{
+  ARRAY *funcname_a;
+  SHELL_VAR *funcname_v;
+  ARRAY *source_a;
+  SHELL_VAR *source_v;
+  ARRAY *lineno_a;
+  SHELL_VAR *lineno_v;
+};
+#endif
+
+/* Placeholder for later expansion to include more execution state */
+/* XXX - watch out for pid_t */
+struct execstate
+{
+  pid_t pid;
+  int subshell_env;
+};
+
 } // namespace bash
 
 #endif /* !_VARIABLES_H_ */

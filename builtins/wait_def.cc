@@ -78,7 +78,6 @@
 
 #include "bashgetopt.hh"
 #include "common.hh"
-#include "execute_cmd.hh"
 #include "jobs.hh"
 #include "shell.hh"
 #include "sig.hh"

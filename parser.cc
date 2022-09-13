@@ -42,9 +42,6 @@ namespace bash
 #define expanding_alias() 0
 #endif
 
-#if 0
-#endif
-
 #ifdef DEBUG
 static void
 debug_parser (int i)
@@ -101,18 +98,13 @@ init_yy_io (sh_cget_func_t *get, sh_cunget_func_t *unget,
   bash_input.name = name ? savestring (name) : (char *)NULL;
 
   /* XXX */
-#if defined(CRAY)
-  memcpy ((char *)&bash_input.location.string, (char *)&location.string,
-          sizeof (location));
-#else
   bash_input.location = location;
-#endif
   bash_input.getter = get;
   bash_input.ungetter = unget;
 }
 
 const char *
-yy_input_name ()
+Shell::yy_input_name ()
 {
   return bash_input.name ? bash_input.name : "stdin";
 }

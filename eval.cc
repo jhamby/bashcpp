@@ -35,7 +35,6 @@
 
 #include "builtins/common.hh"
 
-#include "execute_cmd.hh"
 #include "input.hh"
 
 namespace bash

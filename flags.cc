@@ -25,7 +25,6 @@
 #include <unistd.h>
 #endif
 
-#include "execute_cmd.hh"
 #include "flags.hh"
 #include "shell.hh"
 
@@ -209,7 +208,7 @@ set_current_flags (const char *bitmap)
 }
 
 void
-reset_shell_flags ()
+Shell::reset_shell_flags ()
 {
   mark_modified_vars = disallow_filename_globbing = false;
   place_keywords_in_env = read_but_dont_execute = just_one_command = false;
@@ -243,7 +242,7 @@ reset_shell_flags ()
 }
 
 void
-initialize_flags ()
+Shell::initialize_flags ()
 {
   int i;
 

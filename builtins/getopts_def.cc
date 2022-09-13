@@ -72,7 +72,6 @@
 
 #include "bashgetopt.hh"
 #include "common.hh"
-#include "execute_cmd.hh"
 #include "getopt.hh"
 #include "shell.hh"
 

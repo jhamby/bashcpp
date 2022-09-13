@@ -32,7 +32,6 @@
 
 #include "bashintl.hh"
 #include "builtins.hh"
-#include "execute_cmd.hh"
 #include "flags.hh"
 #include "input.hh"
 #include "jobs.hh"
@@ -257,7 +256,8 @@ parse_prologue (char *string, int flags, const char *tag)
 */
 
 int
-Shell::parse_and_execute (char *string, const char *from_file, int flags)
+Shell::parse_and_execute (char *string, const char *from_file,
+                          parse_flags flags)
 {
   int code, lreset;
   volatile int should_jump_to_top_level, last_result;

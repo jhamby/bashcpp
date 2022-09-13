@@ -23,7 +23,6 @@
 #if defined(READLINE)
 
 #include "builtins.hh"
-#include "execute_cmd.hh"
 #include "findcmd.hh"
 #include "flags.hh"
 #include "input.hh"

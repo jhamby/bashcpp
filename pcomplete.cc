@@ -37,7 +37,6 @@
 #include "bashintl.hh"
 
 #include "alias.hh"
-#include "execute_cmd.hh"
 #include "pathexp.hh"
 #include "pcomplete.hh"
 #include "shell.hh"

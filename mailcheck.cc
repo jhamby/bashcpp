@@ -34,7 +34,6 @@
 #include "bashintl.hh"
 #include "posixtime.hh"
 
-#include "execute_cmd.hh"
 #include "shell.hh"
 
 #include "tilde.hh"

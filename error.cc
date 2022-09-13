@@ -32,7 +32,6 @@
 
 #include "bashintl.hh"
 
-#include "execute_cmd.hh"
 #include "flags.hh"
 #include "input.hh"
 #include "shell.hh"
@@ -40,33 +39,8 @@
 namespace bash
 {
 
-#if 0
-extern int executing_line_number (void);
-
-#if defined(JOB_CONTROL)
-extern pid_t shell_pgrp;
-extern int give_terminal_to (pid_t, int);
-#endif /* JOB_CONTROL */
-
-#if defined(ARRAY_VARS)
-extern const char * const bash_badsub_errmsg;
-#endif
-
-static void error_prolog (int);
-
-/* The current maintainer of the shell.  You change this in the
-   Makefile. */
-#if !defined(MAINTAINER)
-#define MAINTAINER "bash-maintainers@gnu.org"
-#endif
-
-const char * const the_current_maintainer = MAINTAINER;
-
-char gnu_error_format = 0;
-#endif
-
-static void
-error_prolog (int print_lineno)
+void
+Shell::error_prolog (int print_lineno)
 {
   const char *ename;
   int line;
@@ -76,15 +50,15 @@ error_prolog (int print_lineno)
                                                   : -1;
 
   if (line > 0)
-    fprintf (stderr, "%s:%s%d: ", ename, gnu_error_format ? "" : _ (" line "),
-             line);
+    std::fprintf (stderr, "%s:%s%d: ", ename,
+                  gnu_error_format ? "" : _ (" line "), line);
   else
-    fprintf (stderr, "%s: ", ename);
+    std::fprintf (stderr, "%s: ", ename);
 }
 
 /* Return the name of the shell or the shell script for error reporting. */
 const char *
-get_name_for_error ()
+Shell::get_name_for_error ()
 {
   const char *name;
 #if defined(ARRAY_VARS)
@@ -92,21 +66,21 @@ get_name_for_error ()
   ARRAY *bash_source_a;
 #endif
 
-  name = (char *)NULL;
-  if (interactive_shell == 0)
+  name = nullptr;
+  if (!interactive_shell)
     {
 #if defined(ARRAY_VARS)
       bash_source_v = find_variable ("BASH_SOURCE");
-      if (bash_source_v && array_p (bash_source_v)
-          && (bash_source_a = array_cell (bash_source_v)))
+      if (bash_source_v && bash_source_v->array ()
+          && (bash_source_a = bash_source_v->array_value ()))
         name = array_reference (bash_source_a, 0);
-      if (name == 0 || *name == '\0') /* XXX - was just name == 0 */
+      if (name == nullptr || *name == '\0') /* XXX - was just name == 0 */
 #endif
         name = dollar_vars[0];
     }
-  if (name == 0 && shell_name && *shell_name)
+  if (name == nullptr && shell_name && *shell_name)
     name = base_pathname (shell_name);
-  if (name == 0)
+  if (name == nullptr)
 #if defined(PROGRAM)
     name = PROGRAM;
 #else
@@ -120,13 +94,13 @@ get_name_for_error ()
    sys_error so the filename is not interpreted as a printf-style
    format string. */
 void
-file_error (const char *filename)
+Shell::file_error (const char *filename)
 {
-  report_error ("%s: %s", filename, strerror (errno));
+  report_error ("%s: %s", filename, std::strerror (errno));
 }
 
 void
-programming_error (const char *format, ...)
+Shell::programming_error (const char *format, ...)
 {
   va_list args;
   char *h;
@@ -135,28 +109,28 @@ programming_error (const char *format, ...)
   give_terminal_to (shell_pgrp, 0);
 #endif /* JOB_CONTROL */
 
-  SH_VA_START (args, format);
+  va_start (args, format);
 
-  vfprintf (stderr, format, args);
-  fprintf (stderr, "\n");
+  std::vfprintf (stderr, format, args);
+  std::fprintf (stderr, "\n");
   va_end (args);
 
 #if defined(HISTORY)
   if (remember_on_history)
     {
       h = last_history_line ();
-      fprintf (stderr, _ ("last command: %s\n"), h ? h : "(null)");
+      std::fprintf (stderr, _ ("last command: %s\n"), h ? h : "(null)");
     }
 #endif
 
 #if 0
-  fprintf (stderr, "Report this to %s\n", the_current_maintainer);
+  std::fprintf (stderr, "Report this to %s\n", the_current_maintainer);
 #endif
 
-  fprintf (stderr, _ ("Aborting..."));
-  fflush (stderr);
+  std::fprintf (stderr, _ ("Aborting..."));
+  std::fflush (stderr);
 
-  abort ();
+  std::abort ();
 }
 
 /* Print an error message and, if `set -e' has been executed, exit the
@@ -164,16 +138,16 @@ programming_error (const char *format, ...)
    outside this file mostly to report substitution and expansion errors,
    and for bad invocation options. */
 void
-report_error (const char *format, ...)
+Shell::report_error (const char *format, ...)
 {
   va_list args;
 
   error_prolog (1);
 
-  SH_VA_START (args, format);
+  va_start (args, format);
 
-  vfprintf (stderr, format, args);
-  fprintf (stderr, "\n");
+  std::vfprintf (stderr, format, args);
+  std::fprintf (stderr, "\n");
 
   va_end (args);
   if (exit_immediately_on_error)
@@ -185,71 +159,71 @@ report_error (const char *format, ...)
 }
 
 void
-fatal_error (const char *format, ...)
+Shell::fatal_error (const char *format, ...)
 {
   va_list args;
 
   error_prolog (0);
 
-  SH_VA_START (args, format);
+  va_start (args, format);
 
-  vfprintf (stderr, format, args);
-  fprintf (stderr, "\n");
+  std::vfprintf (stderr, format, args);
+  std::fprintf (stderr, "\n");
 
   va_end (args);
   sh_exit (2);
 }
 
 void
-internal_error (const char *format, ...)
+Shell::internal_error (const char *format, ...)
 {
   va_list args;
 
   error_prolog (1);
 
-  SH_VA_START (args, format);
+  va_start (args, format);
 
-  vfprintf (stderr, format, args);
-  fprintf (stderr, "\n");
+  std::vfprintf (stderr, format, args);
+  std::fprintf (stderr, "\n");
 
   va_end (args);
 }
 
 void
-internal_warning (const char *format, ...)
+Shell::internal_warning (const char *format, ...)
 {
   va_list args;
 
   error_prolog (1);
-  fprintf (stderr, _ ("warning: "));
+  std::fprintf (stderr, _ ("warning: "));
 
-  SH_VA_START (args, format);
+  va_start (args, format);
 
-  vfprintf (stderr, format, args);
-  fprintf (stderr, "\n");
+  std::vfprintf (stderr, format, args);
+  std::fprintf (stderr, "\n");
 
   va_end (args);
 }
 
 void
-internal_inform (const char *format, ...)
+Shell::internal_inform (const char *format, ...)
 {
   va_list args;
 
   error_prolog (1);
   /* TRANSLATORS: this is a prefix for informational messages. */
-  fprintf (stderr, _ ("INFORM: "));
+  std::fprintf (stderr, _ ("INFORM: "));
 
-  SH_VA_START (args, format);
+  va_start (args, format);
 
-  vfprintf (stderr, format, args);
-  fprintf (stderr, "\n");
+  std::vfprintf (stderr, format, args);
+  std::fprintf (stderr, "\n");
 
   va_end (args);
 }
 
 void
-sys_error (const char *format, ...)
+Shell::sys_error (const char *format, ...)
 {
   int e;
   va_list args;
@@ -257,10 +231,10 @@ sys_error (const char *format, ...)
   e = errno;
   error_prolog (0);
 
-  SH_VA_START (args, format);
+  va_start (args, format);
 
-  vfprintf (stderr, format, args);
-  fprintf (stderr, ": %s\n", strerror (e));
+  std::vfprintf (stderr, format, args);
+  std::fprintf (stderr, ": %s\n", strerror (e));
 
   va_end (args);
 }
@@ -274,7 +248,7 @@ sys_error (const char *format, ...)
    the input file name is inserted only if it is different from the
    shell name. */
 void
-parser_error (int lineno, const char *format, ...)
+Shell::parser_error (int lineno, const char *format, ...)
 {
   va_list args;
   const char *ename, *iname;
@@ -283,21 +257,21 @@ parser_error (int lineno, const char *format, ...)
   iname = yy_input_name ();
 
   if (interactive)
-    fprintf (stderr, "%s: ", ename);
+    std::fprintf (stderr, "%s: ", ename);
   else if (interactive_shell)
-    fprintf (stderr, "%s: %s:%s%d: ", ename, iname,
-             gnu_error_format ? "" : _ (" line "), lineno);
+    std::fprintf (stderr, "%s: %s:%s%d: ", ename, iname,
+                  gnu_error_format ? "" : _ (" line "), lineno);
   else if (STREQ (ename, iname))
-    fprintf (stderr, "%s:%s%d: ", ename, gnu_error_format ? "" : _ (" line "),
-             lineno);
+    std::fprintf (stderr, "%s:%s%d: ", ename,
+                  gnu_error_format ? "" : _ (" line "), lineno);
   else
-    fprintf (stderr, "%s: %s:%s%d: ", ename, iname,
-             gnu_error_format ? "" : _ (" line "), lineno);
+    std::fprintf (stderr, "%s: %s:%s%d: ", ename, iname,
+                  gnu_error_format ? "" : _ (" line "), lineno);
 
-  SH_VA_START (args, format);
+  va_start (args, format);
 
-  vfprintf (stderr, format, args);
-  fprintf (stderr, "\n");
+  std::vfprintf (stderr, format, args);
+  std::fprintf (stderr, "\n");
 
   va_end (args);
 
@@ -306,78 +280,22 @@ parser_error (int lineno, const char *format, ...)
 }
 
 #ifdef DEBUG
-/* This assumes ASCII and is suitable only for debugging */
-char *
-strescape (const char *str)
-{
-  char *r, *result;
-  unsigned char *s;
-
-  r = result = (char *)xmalloc (strlen (str) * 2 + 1);
-
-  for (s = (unsigned char *)str; s && *s; s++)
-    {
-      if (*s < ' ')
-        {
-          *r++ = '^';
-          *r++ = *s + 64;
-        }
-      else if (*s == 127)
-        {
-          *r++ = '^';
-          *r++ = '?';
-        }
-      else
-        *r++ = *s;
-    }
-
-  *r = '\0';
-  return result;
-}
 
 void
 itrace (const char *format, ...)
 {
   va_list args;
 
-  fprintf (stderr, "TRACE: pid %ld: ", (long)getpid ());
+  std::fprintf (stderr, "TRACE: pid %ld: ", static_cast<long> (getpid ()));
 
-  SH_VA_START (args, format);
+  va_start (args, format);
 
-  vfprintf (stderr, format, args);
-  fprintf (stderr, "\n");
-
-  va_end (args);
-
-  fflush (stderr);
-}
-
-/* A trace function for silent debugging -- doesn't require a control
-   terminal. */
-void
-trace (const char *format, ...)
-{
-  va_list args;
-  static FILE *tracefp = (FILE *)NULL;
-
-  if (tracefp == NULL)
-    tracefp = fopen ("/tmp/bash-trace.log", "a+");
-
-  if (tracefp == NULL)
-    tracefp = stderr;
-  else
-    fcntl (fileno (tracefp), F_SETFD, 1); /* close-on-exec */
-
-  fprintf (tracefp, "TRACE: pid %ld: ", (long)getpid ());
-
-  SH_VA_START (args, format);
-
-  vfprintf (tracefp, format, args);
-  fprintf (tracefp, "\n");
+  std::vfprintf (stderr, format, args);
+  std::fprintf (stderr, "\n");
 
   va_end (args);
 
-  fflush (tracefp);
+  std::fflush (stderr);
 }
 
 #endif /* DEBUG */
@@ -393,10 +311,10 @@ static const char *const cmd_error_table[]
         N_ ("bad command type"),      /* CMDERR_BADTYPE */
         N_ ("bad connector"),         /* CMDERR_BADCONN */
         N_ ("bad jump"),              /* CMDERR_BADJUMP */
-        0 };
+        nullptr };
 
 void
-command_error (const char *func, int code, int e, int flags)
+Shell::command_error (const char *func, cmd_err_type code, bash_exception_t e)
 {
   if (code > CMDERR_LAST)
     code = CMDERR_DEFAULT;
@@ -404,31 +322,23 @@ command_error (const char *func, int code, int e, int flags)
   programming_error ("%s: %s: %d", func, _ (cmd_error_table[code]), e);
 }
 
-const char *
-command_errstr (int code)
-{
-  if (code > CMDERR_LAST)
-    code = CMDERR_DEFAULT;
-
-  return _ (cmd_error_table[code]);
-}
-
 #ifdef ARRAY_VARS
 void
-err_badarraysub (const char *s)
+Shell::err_badarraysub (const char *s)
 {
-  report_error ("%s: %s", s, _ (bash_badsub_errmsg));
+  // Note: this string is untranslated in the original code.
+  report_error ("%s: %s", s, N_ ("bad array subscript"));
 }
 #endif
 
 void
-err_unboundvar (const char *s)
+Shell::err_unboundvar (const char *s)
 {
   report_error (_ ("%s: unbound variable"), s);
 }
 
 void
-err_readonly (const char *s)
+Shell::err_readonly (const char *s)
 {
   report_error (_ ("%s: readonly variable"), s);
 }

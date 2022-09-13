@@ -46,7 +46,6 @@
 #include "filecntl.hh"
 
 #include "alias.hh"
-#include "execute_cmd.hh"
 #include "findcmd.hh"
 #include "flags.hh"
 #include "hashcmd.hh"

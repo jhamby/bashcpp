@@ -35,7 +35,6 @@
 
 #include "bashintl.hh"
 
-#include "execute_cmd.hh"
 #include "flags.hh"
 #include "shell.hh"
 #include "trap.hh"

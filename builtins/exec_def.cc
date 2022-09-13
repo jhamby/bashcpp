@@ -57,7 +57,6 @@
 
 #include "bashintl.hh"
 
-#include "execute_cmd.hh"
 #include "findcmd.hh"
 #include "shell.hh"
 
