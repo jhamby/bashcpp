@@ -199,18 +199,13 @@ class WORD_LIST : public GENERIC_LIST {
 public:
   WORD_LIST (WORD_DESC *word_) : word (word_) {}
 
+  // Constructor that takes another WORD_LIST to link to.
+  WORD_LIST (WORD_DESC *word_, WORD_LIST *n) : GENERIC_LIST (n), word (word_) {}
+
   // Non-virtual destructor should be safe here with the static_cast.
   ~WORD_LIST () noexcept {
     delete next ();
     delete word;
-  }
-
-  // Create a new WORD_LIST and hook it to the front of this one.
-  // Returns a pointer to the newly-created WORD_LIST.
-  WORD_LIST *prepend (WORD_DESC *new_word) {
-    WORD_LIST *new_list = new WORD_LIST (new_word);
-    new_list->next_ = this;
-    return new_list;
   }
 
   WORD_LIST *append (WORD_LIST *new_item) {
@@ -262,7 +257,7 @@ public:
 		rflags (flags_), instruction (instruction_) {}
 
   // Non-virtual destructor should be safe here with the static_cast.
-  ~REDIRECT ()
+  ~REDIRECT () noexcept
   {
     delete next ();
 

@@ -116,7 +116,12 @@ savestring(const std::string &s) {
 /* All structs which contain a `next' field should inherit from this
    class to get access to its reverse () method. */
 class GENERIC_LIST {
-public:
+protected:
+  // No-argument constructor.
+  GENERIC_LIST () {}
+
+  // Constructor that initializes the next element.
+  GENERIC_LIST (GENERIC_LIST *next) : next_ (next) {}
 
   // Children call this, then cast the result to their derived type.
   GENERIC_LIST *reverse_ ()
@@ -141,8 +146,6 @@ public:
 
       last->next_ = new_item;
     }
-
-protected:
   GENERIC_LIST *next_;
 };
 

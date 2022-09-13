@@ -154,7 +154,7 @@ inputunit:	simple_list simple_list_terminator
 word_list:	WORD
 			{ $$ = new WORD_LIST ($1); }
 	|	word_list WORD
-			{ $$ = $1->prepend ($2); }
+			{ $$ = new WORD_LIST ($2, $1); }
 	;
 
 redirection:	'>' WORD
@@ -812,7 +812,7 @@ case_clause_sequence:  pattern_list SEMI_SEMI
 pattern:	WORD
 			{ $$ = new WORD_LIST ($1); }
 	|	pattern '|' WORD
-			{ $$ = $1->prepend ($3); }
+			{ $$ = new WORD_LIST ($3, $1); }
 	;
 
 /* A list allows leading or trailing newlines and

@@ -42,8 +42,8 @@
 // especially those whose name start with YY_ or yy_.  They are
 // private implementation details that can be changed or removed.
 
-#ifndef YY_YY_PARSE_HH_INCLUDED
-# define YY_YY_PARSE_HH_INCLUDED
+#ifndef YY_YY__BASHCPP_PARSE_HH_INCLUDED
+# define YY_YY__BASHCPP_PARSE_HH_INCLUDED
 
 
 # include <cstdlib> // std::abort
@@ -179,7 +179,7 @@
 
 #line 26 "../bashcpp/parse.yy"
 namespace bash {
-#line 183 "parse.hh"
+#line 183 "../bashcpp/parse.hh"
 
 
 
@@ -2451,9 +2451,9 @@ switch (yykind)
 
 #line 26 "../bashcpp/parse.yy"
 } // bash
-#line 2455 "parse.hh"
+#line 2455 "../bashcpp/parse.hh"
 
 
 
 
-#endif // !YY_YY_PARSE_HH_INCLUDED
+#endif // !YY_YY__BASHCPP_PARSE_HH_INCLUDED
