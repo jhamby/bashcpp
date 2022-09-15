@@ -668,7 +668,14 @@ if test "$opt_job_control" = yes; then
 AC_DEFINE([JOB_CONTROL], [1], [Define if your operating system supports BSD-like job control.])
 fi
 
+# compile either jobs.cc or nojobs.cc, depending on this setting.
 AM_CONDITIONAL([JOB_CONTROL], [test x$opt_job_control = xyes])
+
+AC_DEFINE_UNQUOTED([PROGRAM], ["bash"], [The hardcoded program name.])
+AC_DEFINE_UNQUOTED([CONF_HOSTTYPE], ["$host_cpu"], [The host CPU name.])
+AC_DEFINE_UNQUOTED([CONF_OSTYPE], ["$host_os"], [The host OS name.])
+AC_DEFINE_UNQUOTED([CONF_MACHTYPE], ["$host"], [The host machine triplet.])
+AC_DEFINE_UNQUOTED([CONF_VENDOR], ["$host_vendor"], [The host vendor name.])
 
 # directory where we install dynamically loadable builtins
 if test -z "$loadablesdir"; then

@@ -109,7 +109,8 @@ host_triplet = @host@
 bin_PROGRAMS = bash$(EXEEXT)
 @JOB_CONTROL_TRUE@am__append_1 = jobs.cc
 @JOB_CONTROL_FALSE@am__append_2 = nojobs.cc
-noinst_PROGRAMS = mkbuiltins$(EXEEXT) psize$(EXEEXT)
+noinst_PROGRAMS = mkbuiltins$(EXEEXT) psize$(EXEEXT) \
+	mksignames$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
@@ -334,6 +335,10 @@ am__v_lt_1 =
 am_mkbuiltins_OBJECTS = $(BLTDIR)/mkbuiltins.$(OBJEXT)
 mkbuiltins_OBJECTS = $(am_mkbuiltins_OBJECTS)
 mkbuiltins_LDADD = $(LDADD)
+am_mksignames_OBJECTS = support/signames.$(OBJEXT) \
+	support/mksignames.$(OBJEXT)
+mksignames_OBJECTS = $(am_mksignames_OBJECTS)
+mksignames_LDADD = $(LDADD)
 am_psize_OBJECTS = $(BLTDIR)/psize.$(OBJEXT)
 psize_OBJECTS = $(am_psize_OBJECTS)
 psize_LDADD = $(LDADD)
@@ -464,7 +469,8 @@ am__depfiles_remade = $(BLTDIR)/$(DEPDIR)/alias_def.Po \
 	./$(DEPDIR)/shell.Po ./$(DEPDIR)/sig.Po ./$(DEPDIR)/siglist.Po \
 	./$(DEPDIR)/stringlib.Po ./$(DEPDIR)/subst.Po \
 	./$(DEPDIR)/syntax.Po ./$(DEPDIR)/test.Po ./$(DEPDIR)/trap.Po \
-	./$(DEPDIR)/variables.Po ./$(DEPDIR)/version.Po
+	./$(DEPDIR)/variables.Po ./$(DEPDIR)/version.Po \
+	support/$(DEPDIR)/mksignames.Po support/$(DEPDIR)/signames.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -512,9 +518,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(bash_SOURCES) $(mkbuiltins_SOURCES) $(psize_SOURCES)
-DIST_SOURCES = $(am__bash_SOURCES_DIST) $(mkbuiltins_SOURCES) \
+SOURCES = $(bash_SOURCES) $(mkbuiltins_SOURCES) $(mksignames_SOURCES) \
 	$(psize_SOURCES)
+DIST_SOURCES = $(am__bash_SOURCES_DIST) $(mkbuiltins_SOURCES) \
+	$(mksignames_SOURCES) $(psize_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -914,10 +921,12 @@ DEFSRC = $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
 
 mkbuiltins_SOURCES = $(BLTDIR)/mkbuiltins.cc
 psize_SOURCES = $(BLTDIR)/psize.cc
+mksignames_SOURCES = support/signames.cc support/mksignames.cc
 PSIZE = psize$(EXEEXT)
 MKBUILTINS = mkbuiltins$(EXEEXT)
+MKSIGNAMES = mksignames$(EXEEXT)
 DIRECTDEFINE = -D $(srcdir)
-CLEANFILES = builtins.cc builtext.hh pipesize.hh version.hh
+CLEANFILES = builtins.cc builtext.hh pipesize.hh version.hh signames.hh
 Program = bash$(EXEEXT)
 Version = @BASHVERS@
 all: config.hh
@@ -1362,6 +1371,20 @@ $(BLTDIR)/mkbuiltins.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
 mkbuiltins$(EXEEXT): $(mkbuiltins_OBJECTS) $(mkbuiltins_DEPENDENCIES) $(EXTRA_mkbuiltins_DEPENDENCIES) 
 	@rm -f mkbuiltins$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(mkbuiltins_OBJECTS) $(mkbuiltins_LDADD) $(LIBS)
+support/$(am__dirstamp):
+	@$(MKDIR_P) support
+	@: > support/$(am__dirstamp)
+support/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) support/$(DEPDIR)
+	@: > support/$(DEPDIR)/$(am__dirstamp)
+support/signames.$(OBJEXT): support/$(am__dirstamp) \
+	support/$(DEPDIR)/$(am__dirstamp)
+support/mksignames.$(OBJEXT): support/$(am__dirstamp) \
+	support/$(DEPDIR)/$(am__dirstamp)
+
+mksignames$(EXEEXT): $(mksignames_OBJECTS) $(mksignames_DEPENDENCIES) $(EXTRA_mksignames_DEPENDENCIES) 
+	@rm -f mksignames$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(mksignames_OBJECTS) $(mksignames_LDADD) $(LIBS)
 $(BLTDIR)/psize.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
 	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
 
@@ -1376,6 +1399,7 @@ mostlyclean-compile:
 	-rm -f $(RLDIR)/*.$(OBJEXT)
 	-rm -f $(SHDIR)/*.$(OBJEXT)
 	-rm -f $(TLDIR)/*.$(OBJEXT)
+	-rm -f support/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -1561,6 +1585,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trap.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/variables.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/version.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@support/$(DEPDIR)/mksignames.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@support/$(DEPDIR)/signames.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -1941,6 +1967,8 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f support/$(DEPDIR)/$(am__dirstamp)
+	-rm -f support/$(am__dirstamp)
 	-test -z "$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
 	-test -z "$(BLTDIR)/$(am__dirstamp)" || rm -f $(BLTDIR)/$(am__dirstamp)
 	-test -z "$(GLBDIR)/$(DEPDIR)/$(am__dirstamp)" || rm -f $(GLBDIR)/$(DEPDIR)/$(am__dirstamp)
@@ -2145,6 +2173,8 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/trap.Po
 	-rm -f ./$(DEPDIR)/variables.Po
 	-rm -f ./$(DEPDIR)/version.Po
+	-rm -f support/$(DEPDIR)/mksignames.Po
+	-rm -f support/$(DEPDIR)/signames.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -2373,6 +2403,8 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/trap.Po
 	-rm -f ./$(DEPDIR)/variables.Po
 	-rm -f ./$(DEPDIR)/version.Po
+	-rm -f support/$(DEPDIR)/mksignames.Po
+	-rm -f support/$(DEPDIR)/signames.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -2438,6 +2470,10 @@ builtext.hh builtins.cc: $(MKBUILTINS) $(DEFSRC)
 		$(RM) old-builtins.cc; \
 	 fi
 
+signames.hh: $(MKSIGNAMES)
+	$(RM) $@
+	./$(MKSIGNAMES) $@
+
 # manual dependencies on generated files
 builtins/common.$(OBJEXT): builtext.hh
 builtins/declare_def.$(OBJEXT): builtext.hh
@@ -2457,8 +2493,11 @@ parser.$(OBJEXT): builtext.hh
 redir.$(OBJEXT): pipesize.hh
 $(srcdir)/shell.hh: parse.hh
 sig.$(OBJEXT): builtext.hh
+signames.hh: support/signames.cc support/mksignames.cc $(MKSIGNAMES)
 subst.$(OBJEXT): builtext.hh
-trap.$(OBJEXT): builtext.hh
+support/mksignames.$(OBJEXT): config.hh
+support/signames.$(OBJEXT): config.hh
+trap.$(OBJEXT): builtext.hh signames.hh
 variables.$(OBJEXT): builtext.hh
 version.$(OBJEXT): version.hh
 

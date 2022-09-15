@@ -1,4 +1,4 @@
-/* common.h -- extern declarations for functions defined in common.c. */
+/* common.hh -- extern declarations for functions defined in common.cc. */
 
 /* Copyright (C) 1993-2020 Free Software Foundation, Inc.
 
@@ -60,6 +60,21 @@ enum parse_flags
   SEVAL_NOHISTEXP = 0x200 /* inhibit history expansion */
 };
 
+static inline parse_flags &
+operator|= (parse_flags &a, const parse_flags &b)
+{
+  a = static_cast<parse_flags> (static_cast<uint32_t> (a)
+                                | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline parse_flags
+operator| (const parse_flags &a, const parse_flags &b)
+{
+  return static_cast<parse_flags> (static_cast<uint32_t> (a)
+                                   | static_cast<uint32_t> (b));
+}
+
 /* Flags for describe_command, shared between type.def and command.def */
 enum cmd_desc_flags
 {
@@ -94,56 +109,9 @@ enum remember_args_flags
 };
 
 /* Maximum number of attribute letters */
-const int MAX_ATTRIBUTES = 16;
+static constexpr int MAX_ATTRIBUTES = 16;
 
-/* Functions from common.c */
-void builtin_error (const char *, ...)
-    __attribute__ ((__format__ (printf, 1, 2)));
-void builtin_warning (const char *, ...)
-    __attribute__ ((__format__ (printf, 1, 2)));
-void builtin_usage ();
-void no_args (WORD_LIST *);
-int no_options (WORD_LIST *);
-
-/* common error message functions */
-void sh_needarg (const char *);
-void sh_neednumarg (const char *);
-void sh_notfound (const char *);
-void sh_invalidopt (const char *);
-void sh_invalidoptname (const char *);
-void sh_invalidid (const char *);
-void sh_invalidnum (const char *);
-void sh_invalidsig (const char *);
-void sh_erange (const char *, const char *);
-void sh_badpid (const char *);
-void sh_badjob (const char *);
-void sh_readonly (const char *);
-void sh_nojobs (const char *);
-void sh_restricted (const char *);
-void sh_notbuiltin (const char *);
-void sh_wrerror ();
-void sh_ttyerror (int);
-int sh_chkwrite (int);
-
-char **make_builtin_argv (WORD_LIST *, int *);
-void remember_args (WORD_LIST *, bool);
-void shift_args (int);
-int number_of_args ();
-
-int dollar_vars_changed ();
-void set_dollar_vars_unchanged ();
-void set_dollar_vars_changed ();
-
-int get_numeric_arg (WORD_LIST *, int, int64_t *);
-int get_exitstat (WORD_LIST *);
-int read_octal (const char *);
-
-#if defined(JOB_CONTROL)
-int get_job_by_name (const char *, int);
-int get_job_spec (WORD_LIST *);
-#endif
-int display_signal_list (WORD_LIST *, int);
-
+#if 0
 struct builtin *builtin_address_internal (const char *, int);
 Shell::sh_builtin_func_t find_shell_builtin (const char *);
 Shell::sh_builtin_func_t builtin_address (const char *);
@@ -213,22 +181,7 @@ char *get_dirstack_element (int64_t, int);
 void set_dirstack_element (int64_t, int, const char *);
 WORD_LIST *get_directory_stack (int);
 
-/* Functions from evalstring.c */
-int parse_and_execute (char *, const char *, parse_flags);
-int evalstring (char *string, const char *from_file, int flags);
-void parse_and_execute_cleanup (int old_running_trap);
-int parse_string (char *string, const char *from_file, int flags, char **endp);
-int should_suppress_fork (COMMAND *);
-int can_optimize_connection (COMMAND *);
-void optimize_fork (COMMAND *);
-void optimize_subshell_command (COMMAND *);
-void optimize_shell_function (COMMAND *);
-
-/* Functions from evalfile.c */
-int maybe_execute_file (const char *, bool);
-int force_execute_file (const char *, bool);
-int source_file (const char *, int);
-int fc_execute_file (const char *);
+#endif
 
 } // namespace bash
 

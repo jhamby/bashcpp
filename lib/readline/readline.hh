@@ -42,6 +42,8 @@
 #include <pwd.h>
 #endif
 
+#include <csignal>
+
 #ifndef __attribute__
 #if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 8)
 #define __attribute__(x)
@@ -283,7 +285,7 @@ extern "C"
 }
 
 #if defined(HAVE_POSIX_SIGNALS)
-typedef struct sigaction sighandler_cxt;
+typedef struct ::sigaction sighandler_cxt;
 #define rl_sigaction(s, nh, oh) sigaction (s, nh, oh)
 #else
 typedef struct
@@ -3518,10 +3520,6 @@ private:
   sighandler_cxt old_tstp, old_ttou, old_ttin;
 #endif
 
-#if defined(SIGWINCH)
-  sighandler_cxt old_winch;
-#endif
-
 #if defined(HAVE_POSIX_SIGNALS)
   sigset_t sigint_set, sigint_oset;
   sigset_t sigwinch_set, sigwinch_oset;
@@ -3715,6 +3713,10 @@ private:
   /* ************************************************************** */
   /*    Private Readline Variables (32-bit or 64-bit aligned)	    */
   /* ************************************************************** */
+
+#if defined(SIGWINCH)
+  sighandler_cxt _rl_old_winch;
+#endif
 
 #if defined(HAVE_POSIX_SIGNALS)
   sigset_t _rl_orig_sigset;

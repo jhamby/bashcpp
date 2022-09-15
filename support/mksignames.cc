@@ -56,7 +56,7 @@ write_signames (FILE *stream)
   fprintf (stream, "extern const char *signal_names[];\n\n");
   fprintf (stream, "extern void initialize_signames (void);\n\n");
 #else
-  fprintf (stream, "const char *signal_names[NSIG + 4] = {\n");
+  fprintf (stream, "static const char *signal_names[NSIG + 4] = {\n");
 
   for (i = 0; i <= LASTSIG; i++)
     fprintf (stream, "    \"%s\",\n", signal_names[i]);

@@ -82,14 +82,15 @@ bash_SOURCES += $(DEFSRC) $(BLTDIR)/builtins.cc \
 	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh
 
 # programs for generating sources and used by the test cases
-noinst_PROGRAMS = mkbuiltins psize
+noinst_PROGRAMS = mkbuiltins psize mksignames
 
 mkbuiltins_SOURCES = $(BLTDIR)/mkbuiltins.cc
-
 psize_SOURCES = $(BLTDIR)/psize.cc
+mksignames_SOURCES = support/signames.cc support/mksignames.cc
 
 PSIZE = psize$(EXEEXT)
 MKBUILTINS = mkbuiltins$(EXEEXT)
+MKSIGNAMES = mksignames$(EXEEXT)
 
 DIRECTDEFINE = -D $(srcdir)
 HELPDIRDEFINE = @HELPDIRDEFINE@
@@ -118,7 +119,11 @@ builtext.hh builtins.cc: $(MKBUILTINS) $(DEFSRC)
 		$(RM) old-builtins.cc; \
 	 fi
 
-CLEANFILES = builtins.cc builtext.hh pipesize.hh version.hh
+signames.hh: $(MKSIGNAMES)
+	$(RM) $@
+	./$(MKSIGNAMES) $@
+
+CLEANFILES = builtins.cc builtext.hh pipesize.hh version.hh signames.hh
 
 # manual dependencies on generated files
 builtins/common.$(OBJEXT): builtext.hh
@@ -139,8 +144,11 @@ parser.$(OBJEXT): builtext.hh
 redir.$(OBJEXT): pipesize.hh
 $(srcdir)/shell.hh: parse.hh
 sig.$(OBJEXT): builtext.hh
+signames.hh: support/signames.cc support/mksignames.cc $(MKSIGNAMES)
 subst.$(OBJEXT): builtext.hh
-trap.$(OBJEXT): builtext.hh
+support/mksignames.$(OBJEXT): config.hh
+support/signames.$(OBJEXT): config.hh
+trap.$(OBJEXT): builtext.hh signames.hh
 variables.$(OBJEXT): builtext.hh
 version.$(OBJEXT): version.hh
 

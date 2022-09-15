@@ -49,15 +49,16 @@ extern volatile sig_atomic_t terminating_signal;
   do                                                                          \
     {                                                                         \
       if (sigalrm_seen)                                                       \
-        sh_longjmp (alrmbuf, 1);                                              \
+        throw sigalarm_interrupt ();                                          \
     }                                                                         \
   while (0)
 
 #define SETINTERRUPT interrupt_state = 1
 #define CLRINTERRUPT interrupt_state = 0
 
-#define ADDINTERRUPT interrupt_state++
-#define DELINTERRUPT interrupt_state--
+// Note: increment and decrement on volatile types is deprecated.
+#define ADDINTERRUPT interrupt_state = interrupt_state + 1
+#define DELINTERRUPT interrupt_state = interrupt_state - 1
 
 #define ISINTERRUPT interrupt_state != 0
 
@@ -80,7 +81,7 @@ extern volatile sig_atomic_t terminating_signal;
     {                                                                         \
       if (wait_intr_flag && wait_signal_received && this_shell_builtin        \
           && (this_shell_builtin == wait_builtin))                            \
-        sh_longjmp (wait_intr_buf, 1);                                        \
+        throw wait_interrupt ();                                              \
     }                                                                         \
   while (0)
 

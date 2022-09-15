@@ -265,7 +265,7 @@ Readline::_rl_sigwinch_handler_internal (int sig)
   _rl_caught_signal = sig;
 
   /* If another sigwinch handler has been installed, call it. */
-  oh = old_winch.sa_handler;
+  oh = _rl_old_winch.sa_handler;
   if (oh && oh != SIG_IGN && oh != SIG_DFL)
     (*oh) (sig);
 
@@ -450,7 +450,7 @@ Readline::rl_set_signals ()
 #if defined(SIGWINCH)
   if (rl_catch_sigwinch && !sigwinch_set_flag)
     {
-      rl_maybe_set_sighandler (SIGWINCH, rl_sigwinch_handler, &old_winch);
+      rl_maybe_set_sighandler (SIGWINCH, rl_sigwinch_handler, &_rl_old_winch);
       sigwinch_set_flag = true;
     }
 #endif /* SIGWINCH */
@@ -501,7 +501,7 @@ Readline::rl_clear_signals ()
   if (rl_catch_sigwinch && sigwinch_set_flag)
     {
       sigemptyset (&dummy.sa_mask);
-      rl_sigaction (SIGWINCH, &old_winch, &dummy);
+      rl_sigaction (SIGWINCH, &_rl_old_winch, &dummy);
       sigwinch_set_flag = false;
     }
 #endif

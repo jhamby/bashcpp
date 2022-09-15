@@ -85,7 +85,7 @@ SigHandler set_signal_handler (int, SigHandler); /* in sig.cc */
 /* These definitions are used both in POSIX and non-POSIX implementations. */
 
 static inline void
-block_signal (int signum, sigset_t &nvar, sigset_t &ovar)
+BLOCK_SIGNAL (int signum, sigset_t &nvar, sigset_t &ovar)
 {
   sigemptyset (&nvar);
   sigaddset (&nvar, signum);
@@ -94,14 +94,14 @@ block_signal (int signum, sigset_t &nvar, sigset_t &ovar)
 }
 
 static inline void
-unblock_signal (sigset_t &ovar)
+UNBLOCK_SIGNAL (sigset_t &ovar)
 {
   sigprocmask (SIG_SETMASK, &ovar, nullptr);
 }
 
 #if defined(HAVE_POSIX_SIGNALS)
-#define BLOCK_CHILD(nvar, ovar) block_signal (SIGCHLD, nvar, ovar)
-#define UNBLOCK_CHILD(ovar) unblock_signal (ovar)
+#define BLOCK_CHILD(nvar, ovar) BLOCK_SIGNAL (SIGCHLD, nvar, ovar)
+#define UNBLOCK_CHILD(ovar) UNBLOCK_SIGNAL (ovar)
 #else /* !HAVE_POSIX_SIGNALS */
 #define BLOCK_CHILD(nvar, ovar) ovar = sigblock (sigmask (SIGCHLD))
 #define UNBLOCK_CHILD(ovar) sigsetmask (ovar)
@@ -111,13 +111,13 @@ unblock_signal (sigset_t &ovar)
 extern "C"
 {
   /* Signal handlers from sig.c. */
-  void termsig_sighandler (int);
-  void sigint_sighandler (int);
-  void sigwinch_sighandler (int);
-  void sigterm_sighandler (int);
+  void termsig_sighandler_global (int);
+  void sigint_sighandler_global (int);
+  void sigwinch_sighandler_global (int);
+  void sigterm_sighandler_global (int);
 
   /* Signal handler from trap.c. */
-  void trap_handler (int);
+  void trap_handler_global (int);
 
   /* Extern variables */
   extern volatile sig_atomic_t sigwinch_received;
@@ -125,24 +125,6 @@ extern "C"
 
   // bool terminate_immediately;
 }
-
-/* Functions from sig.c. */
-void termsig_handler (int) __attribute__ ((__noreturn__));
-void initialize_signals (int);
-void initialize_terminating_signals ();
-void reset_terminating_signals ();
-void top_level_cleanup ();
-void restore_sigmask ();
-
-void set_sigwinch_handler ();
-void unset_sigwinch_handler ();
-
-/* Functions defined in trap.c. */
-SigHandler set_sigint_handler ();
-SigHandler trap_to_sighandler (int);
-
-int block_trapped_signals (sigset_t *, sigset_t *);
-int unblock_trapped_signals (sigset_t *);
 
 } // namespace bash
 

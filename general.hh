@@ -67,7 +67,27 @@ public:
 class subshell_child_start : public std::exception
 {
 public:
-  subshell_child_start () {}
+  virtual const char *what () const noexcept override;
+};
+
+// Exception used by builtins/read_def.cc
+
+class sigalarm_interrupt : public std::exception
+{
+  virtual const char *what () const noexcept override;
+};
+
+// Exception used by builtins/wait_def.cc
+
+class wait_interrupt : public std::exception
+{
+  virtual const char *what () const noexcept override;
+};
+
+// Exception used for returning from evaluation loops
+
+class return_exception : public std::exception
+{
   virtual const char *what () const noexcept override;
 };
 
@@ -75,10 +95,12 @@ public:
 
 class subst_expand_error : public std::exception
 {
+  virtual const char *what () const noexcept override;
 };
 
 class subst_expand_fatal : public subst_expand_error
 {
+  virtual const char *what () const noexcept override;
 };
 
 /* Global inline functions, previously C preprocessor macros. */

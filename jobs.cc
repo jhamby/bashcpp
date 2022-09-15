@@ -74,7 +74,7 @@
 
 #include "typemax.hh"
 
-#include "builtins/builtext.hh"
+#include "builtext.hh"
 #include "builtins/common.hh"
 
 #if defined(READLINE)
@@ -82,7 +82,7 @@
 #endif
 
 #if !defined(HAVE_KILLPG)
-extern int killpg (pid_t, int);
+extern "C" int killpg (pid_t, int);
 #endif
 
 #if !defined(DEFAULT_CHILD_MAX)

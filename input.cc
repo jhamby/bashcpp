@@ -69,7 +69,7 @@ static int local_index = 0, local_bufused = 0;
    interrupted by a signal.  We do the read ourselves, and restart it
    if it returns EINTR. */
 int
-getc_with_restart (FILE *stream)
+Shell::getc_with_restart (FILE *stream)
 {
   unsigned char uc;
 
@@ -129,11 +129,7 @@ ungetc_with_restart (int c, FILE *stream)
 
 /* A facility similar to stdio, but input-only. */
 
-#if defined(USING_BASH_MALLOC)
-#define MAX_INPUT_BUFFER_SIZE 8172
-#else
 #define MAX_INPUT_BUFFER_SIZE 8192
-#endif
 
 #if !defined(SEEK_CUR)
 #define SEEK_CUR 1
@@ -179,7 +175,7 @@ allocate_buffers (int n)
 
   /* Zero out the new buffers. */
   for (i = orig_nbuffers; i < nbuffers; i++)
-    buffers[i] = (BUFFERED_STREAM *)NULL;
+    buffers[i] = nullptr;
 }
 
 /* Construct and return a BUFFERED_STREAM corresponding to file descriptor
@@ -210,7 +206,7 @@ copy_buffered_stream (BUFFERED_STREAM *bp)
   BUFFERED_STREAM *nbp;
 
   if (!bp)
-    return (BUFFERED_STREAM *)NULL;
+    return nullptr;
 
   nbp = (BUFFERED_STREAM *)xmalloc (sizeof (BUFFERED_STREAM));
   xbcopy ((char *)bp, (char *)nbp, sizeof (BUFFERED_STREAM));
@@ -349,7 +345,7 @@ duplicate_buffered_stream (int fd1, int fd2)
       /* If the two objects share the same b_buffer, don't free it. */
       if (buffers[fd1] && buffers[fd1]->b_buffer
           && buffers[fd1]->b_buffer == buffers[fd2]->b_buffer)
-        buffers[fd2] = (BUFFERED_STREAM *)NULL;
+        buffers[fd2] = nullptr;
       /* If this buffer is shared with another fd, don't free the buffer */
       else if (buffers[fd2]->b_flag & B_SHAREDBUF)
         {
@@ -393,7 +389,7 @@ fd_to_buffered_stream (int fd)
   if (fstat (fd, &sb) < 0)
     {
       close (fd);
-      return (BUFFERED_STREAM *)NULL;
+      return nullptr;
     }
 
   size = (fd_is_seekable (fd)) ? min (sb.st_size, MAX_INPUT_BUFFER_SIZE) : 1;
@@ -411,7 +407,7 @@ open_buffered_stream (char *file)
   int fd;
 
   fd = open (file, O_RDONLY);
-  return (fd >= 0) ? fd_to_buffered_stream (fd) : (BUFFERED_STREAM *)NULL;
+  return (fd >= 0) ? fd_to_buffered_stream (fd) : nullptr;
 }
 
 /* Deallocate a buffered stream and free up its resources.  Make sure we
@@ -428,7 +424,7 @@ free_buffered_stream (BUFFERED_STREAM *bp)
   if (bp->b_buffer)
     free (bp->b_buffer);
   free (bp);
-  buffers[n] = (BUFFERED_STREAM *)NULL;
+  buffers[n] = nullptr;
 }
 
 /* Close the file descriptor associated with BP, a buffered stream, and free

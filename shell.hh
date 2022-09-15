@@ -47,6 +47,7 @@
 
 #include "command.hh"
 #include "externs.hh"
+#include "general.hh"
 #include "jobs.hh"
 #include "maxpath.hh"
 #include "parser.hh"
@@ -56,7 +57,10 @@
 #include "sig.hh"
 #include "subst.hh"
 #include "syntax.hh"
+#include "trap.hh"
 #include "variables.hh"
+
+#include "builtins/common.hh"
 
 #ifdef DEBUG
 #define YYDEBUG 1
@@ -272,6 +276,83 @@ struct EXPR_CONTEXT
   int noeval;
 };
 
+/* Flags which describe the current handling state of a signal. */
+enum sigmode_t
+{
+  SIG_INHERITED = 0x0,   /* Value inherited from parent. */
+  SIG_TRAPPED = 0x1,     /* Currently trapped. */
+  SIG_HARD_IGNORE = 0x2, /* Signal was ignored on shell entry. */
+  SIG_SPECIAL = 0x4,     /* Treat this signal specially. */
+  SIG_NO_TRAP = 0x8,     /* Signal cannot be trapped. */
+  SIG_INPROGRESS = 0x10, /* Signal handler currently executing. */
+  SIG_CHANGED = 0x20,    /* Trap value changed in trap handler. */
+  SIG_IGNORED = 0x40     /* The signal is currently being ignored. */
+};
+
+static inline sigmode_t &
+operator|= (sigmode_t &a, const sigmode_t &b)
+{
+  a = static_cast<sigmode_t> (static_cast<uint32_t> (a)
+                              | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline sigmode_t
+operator| (const sigmode_t &a, const sigmode_t &b)
+{
+  return static_cast<sigmode_t> (static_cast<uint32_t> (a)
+                                 | static_cast<uint32_t> (b));
+}
+
+static inline sigmode_t &
+operator&= (sigmode_t &a, const sigmode_t &b)
+{
+  a = static_cast<sigmode_t> (static_cast<uint32_t> (a)
+                              & static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline sigmode_t
+operator~(const sigmode_t &a)
+{
+  return static_cast<sigmode_t> (~static_cast<uint32_t> (a));
+}
+
+#define SPECIAL_TRAP(s)                                                       \
+  ((s) == EXIT_TRAP || (s) == DEBUG_TRAP || (s) == ERROR_TRAP                 \
+   || (s) == RETURN_TRAP)
+
+#define GETORIGSIG(sig)                                                       \
+  do                                                                          \
+    {                                                                         \
+      original_signals[sig] = set_signal_handler (sig, SIG_DFL);              \
+      set_signal_handler (sig, original_signals[sig]);                        \
+      if (original_signals[sig] == SIG_IGN)                                   \
+        sigmodes[sig] |= SIG_HARD_IGNORE;                                     \
+    }                                                                         \
+  while (0)
+
+#define SETORIGSIG(sig, handler)                                              \
+  do                                                                          \
+    {                                                                         \
+      original_signals[sig] = handler;                                        \
+      if (original_signals[sig] == SIG_IGN)                                   \
+        sigmodes[sig] |= SIG_HARD_IGNORE;                                     \
+    }                                                                         \
+  while (0)
+
+#define GET_ORIGINAL_SIGNAL(sig)                                              \
+  if (sig && sig < NSIG && original_signals[sig] == IMPOSSIBLE_TRAP_HANDLER)  \
+  GETORIGSIG (sig)
+
+// The global (constructed in shell.cc) pointer to the single shell object.
+extern Shell *the_shell;
+
+// Define two invalid references to indicate an invalid entry.
+
+#define IMPOSSIBLE_TRAP_HANDLER (reinterpret_cast<sighandler_t> (the_shell))
+#define IMPOSSIBLE_TRAP_NAME (reinterpret_cast<char *> (the_shell))
+
 /* Simple shell state: variables that can be memcpy'd to subshells. */
 class SimpleState
 {
@@ -450,6 +531,23 @@ protected:
   /* The number of lines in a command saved while we run parse_and_execute */
   int saved_command_line_count;
 
+  /* A count of signals received for which we have trap handlers. */
+  int pending_traps[NSIG];
+
+  /* Set to the number of the signal we're running the trap for + 1.
+     Used in execute_cmd.c and builtins/common.c to clean up when
+     parse_and_execute does not return normally after executing the
+     trap command (e.g., when `return' is executed in the trap command). */
+  int running_trap;
+
+  /* Set to last_command_exit_value before running a trap. */
+  int trap_saved_exit_value;
+
+  /* The (trapped) signal received while executing in the `wait' builtin */
+  int wait_signal_received;
+
+  int trapped_signal_received;
+
 public:
   // The following are accessed by the parser.
 
@@ -529,6 +627,11 @@ protected:
   /* When non-zero, we can read IN as an acceptable token, regardless of how
      many newlines we read. */
   int expecting_in_token;
+
+  /* An array of sigmode_t flags, one for each signal, describing what the
+     shell will do with a signal.  DEBUG_TRAP == NSIG; some code below
+     assumes this. */
+  sigmode_t sigmodes[BASH_NSIG];
 
   /* ************************************************************** */
   /*		Bash Variables (8-bit bool/char types)		    */
@@ -662,6 +765,9 @@ protected:
   /* Non-zero means to throw an error when globbing fails to match anything.
      Managed by builtins/shopt.def. */
   char fail_glob_expansion;
+
+  // We're waiting for a child.
+  bool waiting_for_child;
 
   /* ************************************************************** */
   /*								    */
@@ -948,8 +1054,10 @@ protected:
 
   bool shell_reinitialized;
 
-  /* Used by ttsave()/ttrestore() to check if there are valid saved settings.
-   */
+  /* Set to true to suppress the effect of `set v' in the DEBUG trap. */
+  bool suppress_debug_trap_verbose;
+
+  // Used by ttsave()/ttrestore() to check if there are valid saved settings.
   bool ttsaved;
 
   /* from lib/sh/unicode.c */
@@ -957,9 +1065,20 @@ protected:
   bool u32init;
   bool utf8locale;
 
-  /* set to true if the expression has already been run through word expansion
-   */
+  // Has the expression already been through word expansion?
   bool already_expanded;
+
+  // Have the terminating signals been initialized?
+  bool termsigs_initialized;
+
+  /* When true, we call the terminating signal handler immediately. */
+  bool terminate_immediately;
+
+  // Are we currently handling a terminating signal?
+  bool handling_termsig;
+
+  /* True if we've caught a trapped signal. */
+  bool catch_flag;
 
 #ifndef HAVE_LOCALE_CHARSET
   char charsetbuf[40];
@@ -973,6 +1092,8 @@ protected:
 #define PARENT_CLASS
 #define RL_OVERRIDE
 #endif
+
+struct sh_parser_state_t;
 
 /* Shell class, containing global variables and the methods that use them. */
 class Shell : public SimpleState PARENT_CLASS
@@ -1201,7 +1322,74 @@ public:
 
   int mapfile_builtin (WORD_LIST *);
 
-  // end of builtin definitions
+  // other functions moved from builtins/common.hh
+
+  /* Functions from common.c */
+  void builtin_error (const char *, ...)
+      __attribute__ ((__format__ (printf, 2, 3)));
+  void builtin_warning (const char *, ...)
+      __attribute__ ((__format__ (printf, 2, 3)));
+  void builtin_usage ();
+  void no_args (WORD_LIST *);
+  int no_options (WORD_LIST *);
+
+  /* common error message functions */
+  void sh_needarg (const char *);
+  void sh_neednumarg (const char *);
+  void sh_notfound (const char *);
+  void sh_invalidopt (const char *);
+  void sh_invalidoptname (const char *);
+  void sh_invalidid (const char *);
+  void sh_invalidnum (const char *);
+  void sh_invalidsig (const char *);
+  void sh_erange (const char *, const char *);
+  void sh_badpid (const char *);
+  void sh_badjob (const char *);
+  void sh_readonly (const char *);
+  void sh_nojobs (const char *);
+  void sh_restricted (const char *);
+  void sh_notbuiltin (const char *);
+  void sh_wrerror ();
+  void sh_ttyerror (int);
+  int sh_chkwrite (int);
+
+  char **make_builtin_argv (WORD_LIST *, int *);
+  void remember_args (WORD_LIST *, bool);
+  void shift_args (int);
+  int number_of_args ();
+
+  int dollar_vars_changed ();
+  void set_dollar_vars_unchanged ();
+  void set_dollar_vars_changed ();
+
+  int get_numeric_arg (WORD_LIST *, int, int64_t *);
+  int get_exitstat (WORD_LIST *);
+  int read_octal (const char *);
+
+#if defined(JOB_CONTROL)
+  int get_job_by_name (const char *, int);
+  int get_job_spec (WORD_LIST *);
+#endif
+  int display_signal_list (WORD_LIST *, int);
+
+  void read_tty_cleanup ();
+
+  /* Functions from evalstring.c */
+  int parse_and_execute (const char *, const char *, parse_flags);
+  int evalstring (char *, const char *, int);
+  void parse_and_execute_cleanup (int);
+  int parse_string (char *, const char *, int, char **);
+  int should_suppress_fork (COMMAND *);
+  int can_optimize_connection (COMMAND *);
+  void optimize_fork (COMMAND *);
+  void optimize_subshell_command (COMMAND *);
+  void optimize_shell_function (COMMAND *);
+
+  /* Functions from evalfile.c */
+  int maybe_execute_file (const char *, bool);
+  int force_execute_file (const char *, bool);
+  int source_file (const char *, int);
+  int fc_execute_file (const char *);
 
   /* callback from lib/sh/getenv.cc */
   char *getenv (const char *);
@@ -1313,12 +1501,23 @@ public:
     return command;
   }
 
+  // called from global signal handler functions
+  void termsig_sighandler (int);
+  void trap_handler (int);
+
   // Protected methods below
 protected:
   // Functions from parser.cc (previously in parse.y).
 
   // Report parser syntax error.
   void report_syntax_error (const char *);
+
+  sh_parser_state_t *save_parser_state (sh_parser_state_t *);
+  void restore_parser_state (sh_parser_state_t *);
+
+  // Functions provided by various builtins.
+
+  int evalstring (char *, const char *, parse_flags);
 
   int internal_getopt (WORD_LIST *, const char *);
   void reset_internal_getopt ();
@@ -1525,7 +1724,11 @@ protected:
   void err_unboundvar (const char *);
   void err_readonly (const char *);
 
-  void error_prolog (int print_lineno);
+  void error_prolog (int);
+
+  /* Functions from input.cc */
+
+  int getc_with_restart (FILE *);
 
   /* Functions from jobs.h */
 
@@ -2220,6 +2423,8 @@ protected:
 
   char *last_history_line ();
 
+  void maybe_save_shell_history ();
+
   /* Functions declared in execute_cmd.c, used by many other files */
 
   void
@@ -2315,17 +2520,454 @@ protected:
   char *redirection_expand (WORD_DESC *);
   int stdin_redirects (REDIRECT *);
 
-  /* Functions from trap.c */
-  void check_signals ();
-  void check_signals_and_traps ();
+  /* Functions from sig.cc */
+
+  void
+#if !defined(HAVE_SYS_SIGLIST) && !defined(HAVE_UNDER_SYS_SIGLIST)            \
+    && !defined(HAVE_STRSIGNAL)
+  initialize_signals (bool reinit)
+#else
+  initialize_signals (bool)
+#endif
+  {
+    initialize_shell_signals ();
+//   initialize_job_signals ();
+#if !defined(HAVE_SYS_SIGLIST) && !defined(HAVE_UNDER_SYS_SIGLIST)            \
+    && !defined(HAVE_STRSIGNAL)
+    if (!reinit)
+      initialize_siglist ();
+#endif /* !HAVE_SYS_SIGLIST && !HAVE_UNDER_SYS_SIGLIST && !HAVE_STRSIGNAL */
+  }
+
+  void
+  set_sigwinch_handler ()
+  {
+#if defined(SIGWINCH)
+    old_winch = set_signal_handler (SIGWINCH, &sigwinch_sighandler_global);
+#endif
+  }
+
+  void
+  unset_sigwinch_handler ()
+  {
+#if defined(SIGWINCH)
+    set_signal_handler (SIGWINCH, old_winch);
+#endif
+  }
+
+  void initialize_terminating_signals ();
+  void initialize_shell_signals ();
+  void reset_terminating_signals ();
+  void top_level_cleanup ();
+  void throw_to_top_level ();
+  void termsig_handler (int);
+  void sigint_sighandler (int);
+  void restore_default_signal (int);
+  void free_trap_strings ();
+  void reset_or_restore_signal_handlers (sh_resetsig_func_t);
+  SigHandler set_sigint_handler ();
+  int run_debug_trap ();
+
+  void
+  restore_sigmask ()
+  {
+#if defined(JOB_CONTROL) || defined(HAVE_POSIX_SIGNALS)
+    sigprocmask (SIG_SETMASK, &top_level_mask, nullptr);
+#endif
+  }
+
+  /* Functions from trap.cc */
+  void run_pending_traps ();
+  void initialize_traps ();
+#ifdef DEBUG
+  const char *trap_handler_string (int);
+#endif
+  int run_exit_trap ();
+  void set_trap_state (int);
+  int _run_trap_internal (int, const char *);
+  void set_signal (int, const char *);
+  void ignore_signal (int);
+
+  bool
+  signal_is_trapped (int sig)
+  {
+    return sigmodes[sig] & SIG_TRAPPED;
+  }
+
+  bool
+  signal_is_pending (int sig)
+  {
+    return pending_traps[sig];
+  }
+
+  bool
+  signal_is_special (int sig)
+  {
+    return sigmodes[sig] & SIG_SPECIAL;
+  }
+
+  bool
+  signal_is_ignored (int sig)
+  {
+    return sigmodes[sig] & SIG_IGNORED;
+  }
+
+  bool
+  signal_is_hard_ignored (int sig)
+  {
+    return sigmodes[sig] & SIG_HARD_IGNORE;
+  }
+
+  void
+  set_signal_hard_ignored (int sig)
+  {
+    sigmodes[sig] |= SIG_HARD_IGNORE;
+    original_signals[sig] = SIG_IGN;
+  }
+
+  void
+  set_signal_ignored (int sig)
+  {
+    original_signals[sig] = SIG_IGN;
+  }
+
+  bool
+  signal_in_progress (int sig)
+  {
+    return sigmodes[sig] & SIG_INPROGRESS;
+  }
+
+  void
+  run_error_trap ()
+  {
+    if ((sigmodes[ERROR_TRAP] & SIG_TRAPPED)
+        && ((sigmodes[ERROR_TRAP] & SIG_IGNORED) == 0)
+        && (sigmodes[ERROR_TRAP] & SIG_INPROGRESS) == 0)
+      _run_trap_internal (ERROR_TRAP, "error trap");
+  }
+
+  void
+  run_return_trap ()
+  {
+    if ((sigmodes[RETURN_TRAP] & SIG_TRAPPED)
+        && ((sigmodes[RETURN_TRAP] & SIG_IGNORED) == 0)
+        && (sigmodes[RETURN_TRAP] & SIG_INPROGRESS) == 0)
+      {
+        int old_exit_value = last_command_exit_value;
+        _run_trap_internal (RETURN_TRAP, "return trap");
+        last_command_exit_value = old_exit_value;
+      }
+  }
+
+  /* Run a trap set on SIGINT.  This is called from throw_to_top_level (), and
+     declared here to localize the trap functions. */
+  void
+  run_interrupt_trap (int will_throw)
+  {
+    if (will_throw && running_trap > 0)
+      run_trap_cleanup (running_trap - 1);
+    pending_traps[SIGINT] = 0; /* run_pending_traps does this */
+    catch_flag = 0;
+    _run_trap_internal (SIGINT, "interrupt trap");
+  }
+
+  /* Free a trap command string associated with SIG without changing signal
+     disposition.  Intended to be called from free_trap_strings()  */
+  void
+  free_trap_string (int sig)
+  {
+    change_signal (sig, reinterpret_cast<const char *> (DEFAULT_SIG));
+    sigmodes[sig] &= ~SIG_TRAPPED; /* XXX - SIG_INPROGRESS? */
+  }
+
+  /* Reset the handler for SIG to the original value but leave the trap string
+     in place. */
+  void
+  reset_signal (int sig)
+  {
+    set_signal_handler (sig, original_signals[sig]);
+    sigmodes[sig] &= ~SIG_TRAPPED; /* XXX - SIG_INPROGRESS? */
+  }
+
+  /* Set the handler signal SIG to the original and free any trap
+     command associated with it. */
+  void
+  restore_signal (int sig)
+  {
+    set_signal_handler (sig, original_signals[sig]);
+    change_signal (sig, reinterpret_cast<const char *> (DEFAULT_SIG));
+    sigmodes[sig] &= ~SIG_TRAPPED;
+  }
+
+  int
+  next_pending_trap (int start)
+  {
+    for (int i = start; i < NSIG; i++)
+      if (pending_traps[i])
+        return i;
+    return -1;
+  }
+
+  int
+  first_pending_trap ()
+  {
+    return next_pending_trap (1);
+  }
+
+  /* Return > 0 if any of the "real" signals (not fake signals like EXIT) are
+     trapped. */
+  int
+  any_signals_trapped ()
+  {
+    for (int i = 1; i < NSIG; i++)
+      if (sigmodes[i] & SIG_TRAPPED)
+        return i;
+    return -1;
+  }
+
+  void
+  clear_pending_traps ()
+  {
+    for (size_t i = 1; i < NSIG; i++)
+      pending_traps[i] = 0;
+  }
+
+  void
+  check_signals ()
+  {
+    CHECK_ALRM; /* set by the read builtin */
+    QUIT;
+  }
+
+  void
+  free_trap_command (int sig)
+  {
+    if ((sigmodes[sig] & SIG_TRAPPED) && trap_list[sig]
+        && (trap_list[sig] != reinterpret_cast<const char *> (IGNORE_SIG))
+        && (trap_list[sig] != reinterpret_cast<const char *> (DEFAULT_SIG))
+        && (trap_list[sig] != IMPOSSIBLE_TRAP_NAME))
+      delete[] const_cast<char *> (trap_list[sig]);
+  }
+
+  /* If SIG has a string assigned to it, get rid of it.  Then give it
+     VALUE. */
+  void
+  change_signal (int sig, const char *value)
+  {
+    if ((sigmodes[sig] & SIG_INPROGRESS) == 0)
+      free_trap_command (sig);
+    trap_list[sig] = value;
+
+    sigmodes[sig] |= SIG_TRAPPED;
+    if (value == reinterpret_cast<const char *> (IGNORE_SIG))
+      sigmodes[sig] |= SIG_IGNORED;
+    else
+      sigmodes[sig] &= ~SIG_IGNORED;
+    if (sigmodes[sig] & SIG_INPROGRESS)
+      sigmodes[sig] |= SIG_CHANGED;
+  }
+
+  void
+  get_original_signal (int sig)
+  {
+    /* If we aren't sure the of the original value, then get it. */
+    if (sig > 0 && sig < NSIG
+        && original_signals[sig] == IMPOSSIBLE_TRAP_HANDLER)
+      GETORIGSIG (sig);
+  }
+
+  void
+  get_all_original_signals ()
+  {
+    int i;
+
+    for (i = 1; i < NSIG; i++)
+      GET_ORIGINAL_SIGNAL (i);
+  }
+
+  void
+  set_original_signal (int sig, SigHandler handler)
+  {
+    if (sig > 0 && sig < NSIG
+        && original_signals[sig] == IMPOSSIBLE_TRAP_HANDLER)
+      SETORIGSIG (sig, handler);
+  }
+
+  /* Convenience functions the rest of the shell can use */
+  void
+  check_signals_and_traps ()
+  {
+    check_signals ();
+    run_pending_traps ();
+  }
+
+#if defined(JOB_CONTROL) && defined(SIGCHLD)
+
+  /* Make COMMAND_STRING be executed when SIGCHLD is caught iff SIGCHLD
+     is not already trapped.  IMPOSSIBLE_TRAP_HANDLER is used as a sentinel
+     to make sure that a SIGCHLD trap handler run via run_sigchld_trap can
+     reset the disposition to the default and not have the original signal
+     accidentally restored, undoing the user's command. */
+  void
+  maybe_set_sigchld_trap (const char *command_string)
+  {
+    if ((sigmodes[SIGCHLD] & SIG_TRAPPED) == 0
+        && trap_list[SIGCHLD] == IMPOSSIBLE_TRAP_NAME)
+      set_signal (SIGCHLD, command_string);
+  }
+
+  /* Temporarily set the SIGCHLD trap string to IMPOSSIBLE_TRAP_HANDLER.  Used
+     as a sentinel in run_sigchld_trap and maybe_set_sigchld_trap to see
+     whether or not a SIGCHLD trap handler reset SIGCHLD disposition to the
+     default. */
+  void
+  set_impossible_sigchld_trap ()
+  {
+    restore_default_signal (SIGCHLD);
+    change_signal (SIGCHLD, IMPOSSIBLE_TRAP_NAME);
+    sigmodes[SIGCHLD] &= ~SIG_TRAPPED; /* maybe_set_sigchld_trap checks this */
+  }
+
+  /* Act as if we received SIGCHLD NCHILD times and increment
+     pending_traps[SIGCHLD] by that amount.  This allows us to still run the
+     SIGCHLD trap once for each exited child. */
+  void
+  queue_sigchld_trap (int nchild)
+  {
+    if (nchild > 0)
+      {
+        catch_flag = 1;
+        pending_traps[SIGCHLD] += nchild;
+        trapped_signal_received = SIGCHLD;
+      }
+  }
+
+#endif /* JOB_CONTROL && SIGCHLD */
+
+  /* Set a trap for SIG only if SIG is not already trapped. */
+  void
+  trap_if_untrapped (int sig, const char *command)
+  {
+    if ((sigmodes[sig] & SIG_TRAPPED) == 0)
+      set_signal (sig, command);
+  }
+
+  void
+  set_debug_trap (const char *command)
+  {
+    set_signal (DEBUG_TRAP, command);
+  }
+
+  /* Separate function to call when functions and sourced files want to restore
+     the original version of the DEBUG trap before returning.  Unless the -T
+     option is set, source and shell function execution save the old debug trap
+     and unset the trap.  If the function or sourced file changes the DEBUG
+     trap, SIG_TRAPPED will be set and we don't bother restoring the original
+     trap string. This is used by both functions and the source builtin. */
+  void
+  maybe_set_debug_trap (const char *command)
+  {
+    trap_if_untrapped (DEBUG_TRAP, command);
+  }
+
+  void
+  set_error_trap (const char *command)
+  {
+    set_signal (ERROR_TRAP, command);
+  }
+
+  void
+  maybe_set_error_trap (const char *command)
+  {
+    trap_if_untrapped (ERROR_TRAP, command);
+  }
+
+  void
+  set_return_trap (char *command)
+  {
+    set_signal (RETURN_TRAP, command);
+  }
+
+  void
+  maybe_set_return_trap (const char *command)
+  {
+    trap_if_untrapped (RETURN_TRAP, command);
+  }
+
+  void
+  run_trap_cleanup (int sig)
+  {
+    /* XXX - should we clean up trap_list[sig] == IMPOSSIBLE_TRAP_HANDLER? */
+    sigmodes[sig] &= ~(SIG_INPROGRESS | SIG_CHANGED);
+  }
+
+  /* Reset trapped signals to their original values, but don't free the
+     trap strings.  Called by the command substitution code and other places
+     that create a "subshell environment". */
+  void
+  reset_signal_handlers ()
+  {
+    reset_or_restore_signal_handlers (&Shell::reset_signal);
+  }
+
+  /* Reset all trapped signals to their original values.  Signals set to be
+     ignored with trap '' SIGNAL should be ignored, so we make sure that they
+     are.  Called by child processes after they are forked. */
+  void
+  restore_original_signals ()
+  {
+    reset_or_restore_signal_handlers (&Shell::restore_signal);
+  }
+
+  /* Return the correct handler for signal SIG according to the values in
+     sigmodes[SIG]. */
+  SigHandler
+  trap_to_sighandler (int sig)
+  {
+    if (sigmodes[sig] & (SIG_IGNORED | SIG_HARD_IGNORE))
+      return SIG_IGN;
+    else if (sigmodes[sig] & SIG_TRAPPED)
+      return &trap_handler_global;
+    else
+      return SIG_DFL;
+  }
+
+  /* If a trap handler exists for signal SIG, then call it; otherwise just
+     return failure.  Returns true if it called the trap handler. */
+  bool
+  maybe_call_trap_handler (int sig)
+  {
+    /* Call the trap handler for SIG if the signal is trapped and not ignored.
+     */
+    if ((sigmodes[sig] & SIG_TRAPPED) && ((sigmodes[sig] & SIG_IGNORED) == 0))
+      {
+        switch (sig)
+          {
+          case SIGINT:
+            run_interrupt_trap (0);
+            break;
+          case EXIT_TRAP:
+            run_exit_trap ();
+            break;
+          case DEBUG_TRAP:
+            run_debug_trap ();
+            break;
+          case ERROR_TRAP:
+            run_error_trap ();
+            break;
+          default:
+            trap_handler (sig);
+            break;
+          }
+        return true;
+      }
+    else
+      return false;
+  }
 
   /* ************************************************************** */
   /*		Private Shell Variables (ptr types)		    */
   /* ************************************************************** */
-
-  //   int subshell_argc;
-  //   char **subshell_argv;
-  //   char **subshell_envp;
 
 #if defined(NO_MAIN_ENV_ARG)
   char **environ; /* used if no third argument to main() */
@@ -2996,6 +3638,16 @@ private:
 
   lvalue lastlval;
 
+  /* The list of things to do originally, before we started trapping. */
+  sighandler_t original_signals[NSIG];
+
+  /* For each signal, a slot for a string, which is a command to be
+     executed when that signal is received.  The slot can also contain
+     DEFAULT_SIG, which means do whatever you were going to do before
+     you were so rudely interrupted, or IGNORE_SIG, which says ignore
+     this signal. */
+  const char *trap_list[BASH_NSIG];
+
   /* private variables from subst.cc */
 
   /* Variables used to keep track of the characters in IFS. */
@@ -3090,10 +3742,16 @@ private:
 
   FILE *yyoutstream;
   FILE *yyerrstream;
-};
 
-// The global (constructed in shell.cc) pointer to the single shell object.
-extern Shell *the_shell;
+#if defined(SIGWINCH)
+  void (*old_winch) (int);
+#endif
+
+#if defined(JOB_CONTROL) || defined(HAVE_POSIX_SIGNALS)
+  /* The signal masks that this shell runs with. */
+  sigset_t top_level_mask;
+#endif /* JOB_CONTROL */
+};
 
 struct sh_input_line_state_t
 {
@@ -3109,7 +3767,6 @@ struct sh_input_line_state_t
 
 /* Structure in which to save partial parsing state when doing things like
    PROMPT_COMMAND and bash_execute_unix_command execution. */
-
 struct sh_parser_state_t
 {
 

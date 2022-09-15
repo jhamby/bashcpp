@@ -265,7 +265,7 @@ SimpleState::SimpleState ()
 
 Shell::Shell ()
     : SimpleState (), bashrc_file (DEFAULT_BASHRC), primary_prompt (PPROMPT),
-      secondary_prompt (SPROMPT), source (0), redir (0)
+      secondary_prompt (SPROMPT), source (0), redir (0), old_winch (SIG_DFL)
 {
   // alloc this 4K read buffer from the heap to keep the class size small
   zread_lbuf = new char[ZBUFSIZ];

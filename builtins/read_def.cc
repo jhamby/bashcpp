@@ -111,6 +111,7 @@ struct ttsave
   TTYSTRUCT attrs;
 };
 
+#if 0
 #if defined(READLINE)
 static void reset_attempted_completion_function ();
 static int set_itext (void);
@@ -124,11 +125,11 @@ static int read_mbchar (int, char *, int, int, int);
 #endif
 static void ttyrestore (void *ttp);
 
-static sighandler sigalrm (int);
+static SigHandler sigalrm (int);
 static void reset_alarm (void);
 
 /* Try this to see what the rest of the shell can do with the information. */
-procenv_t alrmbuf;
+// procenv_t alrmbuf;
 bool sigalrm_seen;
 
 static int reading, tty_modified;
@@ -136,6 +137,7 @@ static SigHandler *old_alrm;
 static unsigned char delim;
 
 static struct ttsave termsave;
+#endif
 
 /* In all cases, SIGALRM just sets a flag that we check periodically.  This
    avoids problems with the semi-tricky stuff we do with the xfree of
@@ -144,7 +146,7 @@ static struct ttsave termsave;
 /* Set a flag that CHECK_ALRM can check.  This relies on zread or read_builtin
    calling trap.c:check_signals(), which knows about sigalrm_seen and alrmbuf.
  */
-static sighandler
+static void
 sigalrm (int s)
 {
   sigalrm_seen = true;
@@ -192,28 +194,6 @@ Shell::read_builtin (WORD_LIST *list)
   int rlind;
   FILE *save_instream;
 #endif
-
-  USE_VAR (size);
-  USE_VAR (pass_next);
-  USE_VAR (print_ps2);
-  USE_VAR (saw_escape);
-  USE_VAR (input_is_pipe);
-  /*  USE_VAR(raw); */
-  USE_VAR (edit);
-  USE_VAR (tmsec);
-  USE_VAR (tmusec);
-  USE_VAR (nchars);
-  USE_VAR (silent);
-  USE_VAR (prompt);
-  USE_VAR (arrayname);
-#if defined(READLINE)
-  USE_VAR (rlbuf);
-  USE_VAR (rlind);
-  USE_VAR (itext);
-#endif
-  USE_VAR (list);
-  USE_VAR (ps2);
-  USE_VAR (lastsig);
 
   sigalrm_seen = reading = tty_modified = 0;
 

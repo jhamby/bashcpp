@@ -44,7 +44,7 @@
 #include "shell.hh"
 #include "trap.hh"
 
-#include "builtins/builtext.hh" /* for wait_builtin */
+#include "builtext.hh" /* for wait_builtin */
 #include "builtins/common.hh"
 
 namespace bash
@@ -69,6 +69,7 @@ namespace bash
 /* Return the fd from which we are actually getting input. */
 #define input_tty() (shell_tty != -1) ? shell_tty : fileno (stderr)
 
+#if 0
 extern void set_original_signal (int, SigHandler *);
 
 volatile pid_t last_made_pid = NO_PID;
@@ -91,6 +92,7 @@ char check_window_size = CHECKWINSIZE_DEFAULT;
 bool job_control = false;
 
 bool running_in_background = false; /* can't tell without job control */
+#endif
 
 /* STATUS and FLAGS are only valid if pid != NO_PID
    STATUS is only valid if (flags & PROC_RUNNING) == 0 */
@@ -111,6 +113,7 @@ struct proc_status
 #define PROC_BAD -1
 #define PROC_STILL_ALIVE -2
 
+#if 0
 static struct proc_status *pid_list = (struct proc_status *)NULL;
 static int pid_list_size;
 static int wait_sigint_received;
@@ -143,6 +146,7 @@ static int siginterrupt (int, int);
 #endif
 
 static void restore_sigint_handler (void);
+#endif
 
 /* Allocate new, or grow existing PID_LIST. */
 static void

@@ -33103,6 +33103,7 @@ printf "%s\n" "#define JOB_CONTROL 1" >>confdefs.h
 
 fi
 
+# compile either jobs.cc or nojobs.cc, depending on this setting.
  if test x$opt_job_control = xyes; then
   JOB_CONTROL_TRUE=
   JOB_CONTROL_FALSE='#'
@@ -33110,6 +33111,22 @@ else
   JOB_CONTROL_TRUE='#'
   JOB_CONTROL_FALSE=
 fi
+
+
+
+printf "%s\n" "#define PROGRAM \"bash\"" >>confdefs.h
+
+
+printf "%s\n" "#define CONF_HOSTTYPE \"$host_cpu\"" >>confdefs.h
+
+
+printf "%s\n" "#define CONF_OSTYPE \"$host_os\"" >>confdefs.h
+
+
+printf "%s\n" "#define CONF_MACHTYPE \"$host\"" >>confdefs.h
+
+
+printf "%s\n" "#define CONF_VENDOR \"$host_vendor\"" >>confdefs.h
 
 
 # directory where we install dynamically loadable builtins

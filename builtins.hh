@@ -27,13 +27,7 @@
 #include <unistd.h>
 #endif
 
-#include "command.hh"
-#include "general.hh"
 #include "shell.hh"
-
-#if defined(ALIAS)
-#include "alias.hh"
-#endif
 
 namespace bash
 {

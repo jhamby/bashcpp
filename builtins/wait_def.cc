@@ -86,14 +86,15 @@
 namespace bash
 {
 
+#if 0
 extern int wait_signal_received;
 
-procenv_t wait_intr_buf;
-bool wait_intr_flag;
+// bool wait_intr_flag;
 
 #if defined(JOB_CONTROL)
 static int set_waitlist (WORD_LIST *);
-static void unset_waitlist (void);
+static void unset_waitlist ();
+#endif
 #endif
 
 /* Wait for the pid in LIST to stop or die.  If no arguments are given, then
@@ -111,15 +112,13 @@ static void unset_waitlist (void);
   while (0)
 
 int
-wait_builtin (WORD_LIST *list)
+Shell::wait_builtin (WORD_LIST *list)
 {
   int status, code, opt, nflag;
   volatile int wflags;
   char *vname;
   SHELL_VAR *pidvar;
   struct procstat pstat;
-
-  USE_VAR (list);
 
   nflag = wflags = 0;
   vname = NULL;
@@ -285,7 +284,7 @@ wait_builtin (WORD_LIST *list)
               status = 127; /* As per Posix.2, section 4.70.2 */
               pstat.pid = NO_PID;
               pstat.status = status;
-              list = (WORD_LIST *)list->next;
+              list = list->next ();
               continue;
             }
 
@@ -311,7 +310,7 @@ wait_builtin (WORD_LIST *list)
           WAIT_RETURN (status);
         }
 
-      list = (WORD_LIST *)list->next;
+      list = list->next ();
     }
 
   WAIT_RETURN (status);
@@ -328,7 +327,7 @@ set_waitlist (WORD_LIST *list)
 
   BLOCK_CHILD (set, oset);
   int njob = 0;
-  for (WORD_LIST *l = list; l; l = (WORD_LIST *)l->next)
+  for (WORD_LIST *l = list; l; l = l->next ())
     {
       int job = NO_JOB;
       int64_t pid;

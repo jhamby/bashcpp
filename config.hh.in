@@ -42,6 +42,18 @@
    operator in the [[..]] conditional command. */
 #undef COND_REGEXP
 
+/* The host CPU name. */
+#undef CONF_HOSTTYPE
+
+/* The host machine triplet. */
+#undef CONF_MACHTYPE
+
+/* The host OS name. */
+#undef CONF_OSTYPE
+
+/* The host vendor name. */
+#undef CONF_VENDOR
+
 /* Define if you want support for ksh-like coprocesses and the `coproc'
    reserved word. */
 #undef COPROCESS_SUPPORT
@@ -936,6 +948,9 @@
 /* Define if you want ksh-like process substitution features with "<(file)".
    Requires FIFO support. */
 #undef PROCESS_SUBSTITUTION
+
+/* The hardcoded program name. */
+#undef PROGRAM
 
 /* Define for the programmable completion features and the complete builtin.
    */
