@@ -665,7 +665,7 @@ History::history_do_write (const char *filename, unsigned int nelements,
      with a shared history file, we don't want to leave the history file
      owned by root. */
   if (rv == 0 && exists)
-    mode = ::chown (histname, finfo.st_uid, finfo.st_gid);
+    (void) ::chown (histname, finfo.st_uid, finfo.st_gid);
 #endif
 
   delete[] histname;

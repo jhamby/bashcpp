@@ -447,7 +447,6 @@ Readline::rl_vi_bword (int count, int)
 
       if (rl_point > 0)
         {
-          opoint = rl_point;
           if (_rl_isident (rl_line_buffer[rl_point]))
             do
               opoint = _rl_vi_backup_point ();

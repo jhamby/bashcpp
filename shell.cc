@@ -309,7 +309,7 @@ Shell::run_shell (int argc, char **argv, char **env)
 
   if (want_initial_help)
     {
-      show_shell_usage (stdout, 1);
+      show_shell_usage (stdout, true);
       std::exit (EXECUTION_SUCCESS);
     }
 
@@ -390,7 +390,7 @@ Shell::run_shell (int argc, char **argv, char **env)
     }
 
   /* Now we run the shopt_alist and process the options. */
-  if (shopt_alist)
+  if (!shopt_alist.empty ())
     run_shopt_alist ();
 
   /* From here on in, the shell must be a normal functioning shell.
@@ -446,6 +446,8 @@ Shell::run_shell (int argc, char **argv, char **env)
     }
 
   int top_level_arg_index = arg_index;
+  // Note: Infer says this write is a dead store, but the variable is
+  // used in the catch block, so I think it's necessary to initialize it.
   char old_errexit_flag = exit_immediately_on_error;
 
   /* Give this shell a place to catch exceptions before executing the
@@ -494,14 +496,14 @@ Shell::run_shell (int argc, char **argv, char **env)
           if (wordexp_only)
             ; /* nothing yet */
           else if (command_execution_string)
-            arg_index = bind_args (argv, arg_index, argc, 0); /* $0 ... $n */
+            (void)bind_args (argv, arg_index, argc, 0); /* $0 ... $n */
           else if (arg_index != argc && read_from_stdin == 0)
             {
               shell_script_filename = argv[arg_index++];
-              arg_index = bind_args (argv, arg_index, argc, 1); /* $1 ... $n */
+              (void)bind_args (argv, arg_index, argc, 1); /* $1 ... $n */
             }
           else
-            arg_index = bind_args (argv, arg_index, argc, 1); /* $1 ... $n */
+            (void)bind_args (argv, arg_index, argc, 1); /* $1 ... $n */
 
           /* The startup files are run with `set -e' temporarily disabled. */
           if (!locally_skip_execution && !running_setuid)
@@ -689,7 +691,7 @@ Shell::parse_long_options (char **argv, int arg_start, int arg_end)
           if (longarg)
             {
               report_error (_ ("%s: invalid option"), argv[arg_index]);
-              show_shell_usage (stderr, 0);
+              show_shell_usage (stderr, false);
               std::exit (EX_BADUSAGE);
             }
           break; /* No such argument.  Maybe flag arg. */
@@ -781,7 +783,7 @@ Shell::parse_shell_options (char **argv, int arg_start, int arg_end)
                 {
                   report_error (_ ("%c%c: invalid option"), on_or_off,
                                 arg_character);
-                  show_shell_usage (stderr, 0);
+                  show_shell_usage (stderr, false);
                   std::exit (EX_BADUSAGE);
                 }
             }
@@ -804,7 +806,7 @@ Shell::exit_shell (int s)
   /* Clean up the terminal if we are in a state where it's been modified. */
 #if defined(READLINE)
   if (RL_ISSTATE (RL_STATE_TERMPREPPED) && rl_deprep_term_function)
-    ((*this).*rl_deprep_term_function) ();
+    (*(dynamic_cast<Readline *> (this)).*rl_deprep_term_function) ();
 #endif
   if (read_tty_modified ())
     read_tty_cleanup ();
@@ -992,7 +994,7 @@ Shell::run_startup_files ()
     {
       if (login_shell && !sourced_login)
         {
-          sourced_login = true;
+          // sourced_login = true; // not referenced again
 
           /* We don't execute .bashrc for login shells. */
           no_rc = true;
@@ -1426,7 +1428,7 @@ Shell::open_shell_script (const char *script_name)
       /* Check to see if the `file' in `bash file' is a binary file
          according to the same tests done by execute_simple_command (),
          and report an error and exit if it is. */
-      sample_len = ::read (fd, sample, sizeof (sample));
+      sample_len = static_cast<int> (::read (fd, sample, sizeof (sample)));
       if (sample_len < 0)
         {
           e = errno;
@@ -1538,7 +1540,7 @@ Shell::set_bash_input ()
    is non-zero, we close default_buffered_input even if it's the standard
    input (fd 0). */
 void
-unset_bash_input (int check_zero)
+Shell::unset_bash_input (int check_zero)
 {
 #if defined(BUFFERED_INPUT)
   if ((check_zero && default_buffered_input >= 0)
@@ -1562,7 +1564,7 @@ unset_bash_input (int check_zero)
 #endif
 
 void
-Shell::set_shell_name (char *argv0)
+Shell::set_shell_name (const char *argv0)
 {
   /* Here's a hack.  If the name of this shell is "sh", then don't do
      any startup files; just try to be more like /bin/sh. */
@@ -1589,27 +1591,6 @@ Shell::set_shell_name (char *argv0)
      If so, default the name of this shell to our name. */
   if (!shell_name || !*shell_name || (shell_name[0] == '-' && !shell_name[1]))
     shell_name = PROGRAM;
-}
-
-/* Some options are initialized to -1 so we have a way to determine whether
-   they were set on the command line. This is an issue when listing the option
-   values at invocation (`bash -o'), so we set the defaults here and reset
-   them after the call to list_minus_o_options (). */
-/* XXX - could also do this for histexp_flag, jobs_m_flag */
-void
-Shell::set_option_defaults ()
-{
-#if defined(HISTORY)
-  enable_history_list = 0;
-#endif
-}
-
-void
-Shell::reset_option_defaults ()
-{
-#if defined(HISTORY)
-  enable_history_list = -1;
-#endif
 }
 
 void
@@ -1667,12 +1648,12 @@ Shell::get_current_user_info ()
   struct passwd *entry;
 
   /* Don't fetch this more than once. */
-  if (current_user.user_name == 0)
+  if (current_user.user_name == nullptr)
     {
 #if defined(__TANDEM)
-      entry = getpwnam (getlogin ());
+      entry = ::getpwnam (getlogin ());
 #else
-      entry = getpwuid (current_user.uid);
+      entry = ::getpwuid (current_user.uid);
 #endif
       if (entry)
         {
@@ -1689,7 +1670,7 @@ Shell::get_current_user_info ()
           current_user.home_dir = savestring ("/");
         }
 #if defined(HAVE_GETPWENT)
-      endpwent ();
+      ::endpwent ();
 #endif
     }
 }
@@ -1718,13 +1699,13 @@ Shell::shell_initialize ()
      for restoring the original default signal handlers.  That function
      is called when we make a new child. */
   initialize_traps ();
-  initialize_signals (0);
+  initialize_signals (false);
 
   /* It's highly unlikely that this will change. */
-  if (current_host_name == 0)
+  if (current_host_name == nullptr)
     {
       /* Initialize current_host_name. */
-      if (gethostname (hostname, 255) < 0)
+      if (::gethostname (hostname, 255) < 0)
         current_host_name = "??host??";
       else
         current_host_name = savestring (hostname);
@@ -1830,14 +1811,13 @@ Shell::shell_reinitialize ()
   bashline_reinitialize ();
 #endif
 
-  shell_reinitialized = 1;
+  shell_reinitialized = true;
 }
 
 void
-Shell::show_shell_usage (FILE *fp, int extra)
+Shell::show_shell_usage (FILE *fp, bool extra)
 {
-  int i;
-  char *set_opts, *s, *t;
+  char *s, *t;
 
   if (extra)
     std::fprintf (fp, _ ("GNU bash, version %s-(%s)\n"),
@@ -1847,25 +1827,28 @@ Shell::show_shell_usage (FILE *fp, int extra)
                    "option] [option] script-file ...\n"),
                 shell_name, shell_name);
   std::fputs (_ ("GNU long options:\n"), fp);
-  for (i = 0; long_args[i].name; i++)
-    std::fprintf (fp, "\t--%s\n", long_args[i].name);
+  for (std::vector<LongArg>::iterator it = long_args.begin ();
+       it != long_args.end (); ++it)
+    std::fprintf (fp, "\t--%s\n", (*it).name);
 
   std::fputs (_ ("Shell options:\n"), fp);
   std::fputs (
       _ ("\t-ilrsD or -c command or -O shopt_option\t\t(invocation only)\n"),
       fp);
 
-  for (i = 0, set_opts = 0; shell_builtins[i].name; i++)
-    if (STREQ (shell_builtins[i].name, "set"))
+  char *set_opts = nullptr;
+  std::vector<Builtin>::iterator it;
+  for (it = shell_builtins.begin (); it != shell_builtins.end (); ++it)
+    if (STREQ ((*it).name, "set"))
       {
-        set_opts = savestring (shell_builtins[i].short_doc);
+        set_opts = savestring ((*it).short_doc);
         break;
       }
 
   if (set_opts)
     {
       s = std::strchr (set_opts, '[');
-      if (s == 0)
+      if (s == nullptr)
         s = set_opts;
       while (*++s == '-')
         ;
@@ -1896,32 +1879,15 @@ Shell::show_shell_usage (FILE *fp, int extra)
 }
 
 void
-Shell::add_shopt_to_alist (char *opt, int on_or_off)
-{
-  if (shopt_ind >= shopt_len)
-    {
-      shopt_len += 8;
-      shopt_alist = (STRING_INT_ALIST *)xrealloc (
-          shopt_alist, shopt_len * sizeof (shopt_alist[0]));
-    }
-  shopt_alist[shopt_ind].word = opt;
-  shopt_alist[shopt_ind].token = on_or_off;
-  shopt_ind++;
-}
-
-void
 Shell::run_shopt_alist ()
 {
-  int i;
+  std::vector<STRING_INT_ALIST>::iterator it;
 
-  for (i = 0; i < shopt_ind; i++)
-    if (shopt_setopt (shopt_alist[i].word, (shopt_alist[i].token == '-'))
-        != EXECUTION_SUCCESS)
+  for (it = shopt_alist.begin (); it != shopt_alist.end (); ++it)
+    if (shopt_setopt ((*it).word, ((*it).token == '-')) != EXECUTION_SUCCESS)
       std::exit (EX_BADUSAGE);
 
-  delete[] shopt_alist;
-  shopt_alist = 0;
-  shopt_ind = shopt_len = 0;
+  shopt_alist.clear ();
 }
 
 } // namespace bash

@@ -1154,7 +1154,7 @@ Readline::rl_display_match_list (char **matches, int len, int max)
 
   /* Find the length of the prefix common to all items: length as displayed
      characters (common_length) and as a byte index into the matches (sind) */
-  common_length = sind = 0;
+  sind = 0;
   if (_rl_completion_prefix_display_length > 0)
     {
       t = printable_part (matches[0]);
@@ -1170,7 +1170,7 @@ Readline::rl_display_match_list (char **matches, int len, int max)
           && common_length > ELLIPSIS_LEN)
         max -= (common_length - ELLIPSIS_LEN);
       else
-        common_length = sind = 0;
+        sind = 0;
     }
 #if defined(COLOR_SUPPORT)
   else if (_rl_colored_completion_prefix > 0)
@@ -1182,7 +1182,7 @@ Readline::rl_display_match_list (char **matches, int len, int max)
       sind
           = static_cast<int> (temp ? std::strlen (temp + 1) : std::strlen (t));
       if (common_length > max || sind > max)
-        common_length = sind = 0;
+        sind = 0;
     }
 #endif
 

@@ -269,7 +269,7 @@ Shell::create_variable_tables ()
    If PRIVMODE is true, don't import functions from ENV or
    parse $SHELLOPTS. */
 void
-Shell::init_variables (char **env, bool privmode)
+Shell::initialize_shell_variables (char **env, bool privmode)
 {
   create_variable_tables ();
 

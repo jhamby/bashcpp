@@ -495,8 +495,6 @@ protected:
   pid_t dollar_dollar_pid;
 
   int subshell_argc;
-  int shopt_ind;
-  int shopt_len;
 
   /* The random number seed.  You can change this by setting RANDOM. */
   u_bits32_t rseed;
@@ -633,6 +631,9 @@ protected:
   /* When non-zero, we can read IN as an acceptable token, regardless of how
      many newlines we read. */
   int expecting_in_token;
+
+  // The current line number.
+  int line_number;
 
   /* An array of sigmode_t flags, one for each signal, describing what the
      shell will do with a signal.  DEBUG_TRAP == NSIG; some code below
@@ -1347,6 +1348,8 @@ public:
 
   int set_login_shell (const char *, int);
 
+  void initialize_shell_builtins ();
+
   /* Functions from exit.def */
   void bash_logout ();
 
@@ -1455,6 +1458,7 @@ public:
 
   /* Functions from flags.cc */
   int change_flag (int, int);
+  void initialize_flags ();
 
   /* callback from lib/sh/getenv.cc */
   char *getenv (const char *);
@@ -1553,14 +1557,14 @@ public:
   COMMAND *
   clean_simple_command (COMMAND *command)
   {
-    if (typeid (*command) != typeid (SIMPLE_COM))
-      command_error ("clean_simple_command", CMDERR_BADTYPE, NOEXCEPTION);
-    else
+    SIMPLE_COM *simple_com = dynamic_cast<SIMPLE_COM *> (command);
+    if (simple_com)
       {
-        SIMPLE_COM *simple_com = dynamic_cast<SIMPLE_COM *> (command);
         simple_com->words = simple_com->words->reverse ();
         simple_com->redirects = simple_com->redirects->reverse ();
       }
+    else
+      command_error ("clean_simple_command", CMDERR_BADTYPE, NOEXCEPTION);
 
     parser_state &= ~PST_REDIRLIST;
     return command;
@@ -1850,6 +1854,7 @@ protected:
   {
     int fd;
 
+    // Infer warns that this is a resource leak. Hopefully it isn't one.
     fd = ::open (file, O_RDONLY);
     return (fd >= 0) ? fd_to_buffered_stream (fd) : nullptr;
   }
@@ -2623,6 +2628,8 @@ protected:
 
   void maybe_save_shell_history ();
 
+  void bash_history_reinit (bool);
+
   /* Functions declared in execute_cmd.c, used by many other files */
 
   void
@@ -2726,7 +2733,12 @@ protected:
 
   void start_debugger ();
 
-  void add_shopt_to_alist (char *, int);
+  void
+  add_shopt_to_alist (char *opt, int on_or_off)
+  {
+    shopt_alist.push_back (STRING_INT_ALIST (opt, on_or_off));
+  }
+
   void run_shopt_alist ();
 
   void execute_env_file (char *);
@@ -2741,14 +2753,32 @@ protected:
 
   bool uidget ();
 
-  void set_option_defaults ();
-  void reset_option_defaults ();
+  /* Some options are initialized to -1 so we have a way to determine whether
+     they were set on the command line. This is an issue when listing the
+     option values at invocation (`bash -o'), so we set the defaults here and
+     reset them after the call to list_minus_o_options (). */
+  /* XXX - could also do this for histexp_flag, jobs_m_flag */
+  void
+  set_option_defaults ()
+  {
+#if defined(HISTORY)
+    enable_history_list = 0;
+#endif
+  }
+
+  void
+  reset_option_defaults ()
+  {
+#if defined(HISTORY)
+    enable_history_list = -1;
+#endif
+  }
 
   void init_interactive ();
   void init_noninteractive ();
   void init_interactive_script ();
 
-  void show_shell_usage (FILE *, int);
+  void show_shell_usage (FILE *, bool);
 
   void init_long_args ();
   void set_shell_name (const char *);
@@ -3274,7 +3304,21 @@ protected:
 
   FILE *default_input;
 
-  StringIntAlist *shopt_alist;
+  std::vector<STRING_INT_ALIST> shopt_alist;
+
+  /* The thing that we build the array of builtins out of. */
+  struct Builtin
+  {
+    const char *name;            /* The name that the user types. */
+    sh_builtin_func_t function;  /* The address of the invoked function. */
+    const char *const *long_doc; /* NULL terminated array of strings. */
+    const char *short_doc;       /* Short version of documentation. */
+    void *handle;                /* dlsym() handle */
+    builtin_flags flags;         /* One or more of the #defines above. */
+  };
+
+  // TODO: initialize this vector at startup from generated builtins.cc.
+  std::vector<Builtin> shell_builtins;
 
   // definitions from subst.h
 
@@ -3564,7 +3608,7 @@ protected:
 
   SHELL_VAR *do_compound_assignment (const char *, const char *, assign_flags);
 
-  // from variables.c
+  // from variables.cc
 
   void validate_inherited_value (SHELL_VAR *, int);
 
@@ -3575,6 +3619,12 @@ protected:
   void set_pwd ();
   void set_ppid ();
   void make_funcname_visible (bool);
+
+  void initialize_shell_variables (char **, bool);
+
+  void delete_all_variables (HASH_TABLE *);
+
+  void reinit_special_variables ();
 
   SHELL_VAR *var_lookup (const char *, VAR_CONTEXT *);
 
@@ -3789,6 +3839,9 @@ protected:
   const char *yy_input_name ();
   void init_yy_io (sh_cget_func_t, sh_cunget_func_t, stream_type, const char *,
                    INPUT_STREAM);
+  void with_input_from_stdin ();
+  void with_input_from_stream (FILE *, const char *);
+  void initialize_bash_input ();
 
   // Methods in lib/tilde/tilde.c.
   size_t tilde_find_prefix (const char *, size_t *);

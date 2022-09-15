@@ -676,7 +676,6 @@ Readline::_rl_read_file (char *filename, size_t *sizep)
   char *buffer;
   int file;
 
-  file = -1;
   if (((file = ::open (filename, O_RDONLY, 0644)) < 0)
       || (::fstat (file, &finfo) < 0))
     {
@@ -922,7 +921,7 @@ static const char *const _rl_possible_meta_prefixes[]
 int
 Readline::parser_if (char *args)
 {
-  int boolvar = -1, strvar = -1;
+  int boolvar, strvar = -1;
 
   /* Push parser state. */
   if_stack.push_back (_rl_parsing_conditionalized_out);
@@ -1123,7 +1122,6 @@ Readline::parser_if (char *args)
           return 0;
         }
 
-      previ = i;
       valuearg = args + i;
       for (; args[i] && whitespace (args[i]) == 0; i++)
         ;
@@ -2360,7 +2358,7 @@ Readline::rl_invoking_keyseqs_in_map (rl_command_func_t function, Keymap map)
                       keyname[l++] = '\\';
 
                     keyname[l++] = static_cast<char> (c);
-                    keyname[l++] = '\0';
+                    keyname[l] = '\0';
                   }
 
                 std::strcat (keyname, seqs[i]);

@@ -672,17 +672,13 @@ int
 Shell::_run_trap_internal (int sig, const char *tag)
 {
   const char *trap_command;
-  char *old_trap;
   int trap_exit_value;
-  int old_modes, old_running, old_int;
   WORD_LIST *save_subst_varlist;
   HASH_TABLE *save_tempenv;
   sh_parser_state_t pstate;
 #if defined(ARRAY_VARS)
   ARRAY *ps;
 #endif
-
-  old_modes = old_running = -1;
 
   trap_exit_value = 0;
   trap_saved_exit_value = last_command_exit_value;
@@ -698,9 +694,9 @@ Shell::_run_trap_internal (int sig, const char *tag)
       ((sigmodes[sig] & SIG_INPROGRESS) == 0))
 #endif
     {
-      old_trap = const_cast<char *> (trap_list[sig]);
-      old_modes = sigmodes[sig];
-      old_running = running_trap;
+      char *old_trap = const_cast<char *> (trap_list[sig]);
+      int old_modes = sigmodes[sig];
+      int old_running = running_trap;
 
       sigmodes[sig] |= SIG_INPROGRESS;
       sigmodes[sig] &= ~SIG_CHANGED; /* just to be sure */
@@ -708,7 +704,7 @@ Shell::_run_trap_internal (int sig, const char *tag)
 
       running_trap = sig + 1;
 
-      old_int = interrupt_state; /* temporarily suppress pending interrupts */
+      int old_int = interrupt_state; /* temporarily suppress pending interrupts */
       CLRINTERRUPT;
 
 #if defined(ARRAY_VARS)

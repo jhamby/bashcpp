@@ -1381,7 +1381,6 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                   ne = new_ + nmax;
                   nd = newbytes;
                   nfd = new_ + nd;
-                  ofdf = old_face + oldbytes;
                   nfdf = new_face + newbytes;
 
                   goto dumb_update;
@@ -1450,12 +1449,11 @@ Readline::update_line (char *old, char *old_face, const char *new_,
       nfd = new_;
       nfdf = new_face;
       ofd = old;
-      ofdf = old_face;
       for (od = 0, oe = ofd; od < omax && *oe; oe++, od++)
         ;
       for (nd = 0, ne = nfd; nd < nmax && *ne; ne++, nd++)
         ;
-      od = nd = 0;
+      nd = 0;
       _rl_move_cursor_relative (0, old, old_face);
 
       bytes_to_insert = static_cast<unsigned int> (ne - nfd);
@@ -1504,9 +1502,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
       if (std::memcmp (old, new_, temp) == 0
           && std::memcmp (old_face, new_face, temp) == 0)
         {
-          new_offset = old_offset = temp; /* adding at the end */
           ofd = old + temp;
-          ofdf = old_face + temp;
           nfd = new_ + temp;
           nfdf = new_face + temp;
         }
@@ -1519,10 +1515,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
           if (omax == nmax && std::memcmp (new_, old, omax) == 0
               && std::memcmp (new_face, old_face, omax) == 0)
             {
-              old_offset = omax;
-              new_offset = nmax;
               ofd = old + omax;
-              ofdf = old_face + omax;
               nfd = new_ + nmax;
               nfdf = new_face + nmax;
             }
@@ -1591,7 +1584,6 @@ Readline::update_line (char *old, char *old_face, const char *new_,
           new_offset = _rl_find_prev_mbchar (
               new_, static_cast<unsigned int> (nfd - new_), MB_FIND_ANY);
           ofd = old + old_offset; /* equal by definition */
-          ofdf = old_face + old_offset;
           nfd = new_ + new_offset;
           nfdf = new_face + new_offset;
         }
@@ -1662,9 +1654,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
   if (wsatend)
     {
       ols = oe;
-      olsf = old_face + (ols - old);
       nls = ne;
-      nlsf = new_face + (nls - new_);
     }
 #if defined(HANDLE_MULTIBYTE)
   /* This may not work for stateful encoding, but who cares?  To handle
@@ -1696,8 +1686,6 @@ Readline::update_line (char *old, char *old_face, const char *new_,
           else
             nls++;
         }
-      olsf = old_face + (ols - old);
-      nlsf = new_face + (nls - new_);
     }
 
   /* count of invisible characters in the current invisible line. */
@@ -1933,9 +1921,6 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                         new_, 0, static_cast<unsigned int> (nls - new_), 1);
           /* if we changed nls and ols, we need to recompute lendiff */
           lendiff = static_cast<int> ((nls - nfd) - (ols - ofd));
-
-          nlsf = new_face + (nls - new_);
-          olsf = old_face + (ols - old);
         }
       else
         newwidth = _rl_col_width (new_, static_cast<unsigned int> (nfd - new_),

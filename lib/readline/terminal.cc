@@ -277,7 +277,7 @@ Readline::_rl_init_terminal_io (const char *terminal_name)
     {
       delete[] term_string_buffer;
       delete[] term_buffer;
-      buffer = term_buffer = term_string_buffer = nullptr;
+      term_buffer = term_string_buffer = nullptr;
 
       _rl_term_autowrap = 0; /* used by _rl_get_screen_size */
 

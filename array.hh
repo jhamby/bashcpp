@@ -135,7 +135,7 @@ ARRAY *array_from_string (char *, char *);
   do                                                                          \
     {                                                                         \
       (v) = find_variable (n);                                                \
-      (a) = ((v) && array_p ((v))) ? array_cell (v) : (ARRAY *)0;             \
+      (a) = ((v) && ((v)->array ())) ? (v)->array_value() : nullptr;          \
     }                                                                         \
   while (0)
 

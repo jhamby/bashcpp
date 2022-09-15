@@ -31,6 +31,10 @@
 #include <fcntl.h>
 #endif
 
+#if defined(HAVE_PWD_H)
+#include <pwd.h>
+#endif
+
 #include "rlshell.hh"
 
 #if defined(HAVE_GETPWUID) && !defined(HAVE_GETPW_DECLS)
@@ -43,14 +47,12 @@ namespace readline
 // Define the virtual destructor.
 ReadlineShell::~ReadlineShell () {}
 
-#if defined(STANDALONE_READLINE)
-
 #ifndef CHAR_BIT
 #define CHAR_BIT 8
 #endif
 
 /* Nonzero if the integer type T is signed.  */
-#define TYPE_SIGNED(t) (!((t)0 < (t)-1))
+#define TYPE_SIGNED(t) (!(static_cast<t> (0) < static_cast<t> (-1)))
 
 /* Bound on length of the string representing an integer value of type T.
    Subtract one for the sign bit if T is signed;
@@ -133,13 +135,13 @@ ReadlineShell::sh_get_env_value (const char *varname)
 char *
 ReadlineShell::sh_get_home_dir ()
 {
-  static char *home_dir = (char *)NULL;
+  static char *home_dir = nullptr;
   struct passwd *entry;
 
   if (home_dir)
     return home_dir;
 
-  home_dir = (char *)NULL;
+  home_dir = nullptr;
 #if defined(HAVE_GETPWUID)
 #if defined(__TANDEM)
   entry = ::getpwnam (getlogin ());
@@ -166,7 +168,6 @@ ReadlineShell::sh_get_home_dir ()
 int
 ReadlineShell::sh_unset_nodelay_mode (int fd)
 {
-#if defined(HAVE_FCNTL)
   int flags, bflags;
 
   if ((flags = ::fcntl (fd, F_GETFL, 0)) < 0)
@@ -187,11 +188,8 @@ ReadlineShell::sh_unset_nodelay_mode (int fd)
       flags &= ~bflags;
       return ::fcntl (fd, F_SETFL, flags);
     }
-#endif
 
   return 0;
 }
-
-#endif // !SHELL
 
 } // namespace readline

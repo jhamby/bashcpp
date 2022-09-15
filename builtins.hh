@@ -27,8 +27,6 @@
 #include <unistd.h>
 #endif
 
-#include "shell.hh"
-
 namespace bash
 {
 
@@ -47,20 +45,9 @@ enum builtin_flags
 
 const int BASE_INDENT = 4;
 
-/* The thing that we build the array of builtins out of. */
-struct Builtin
-{
-  const char *name;                  /* The name that the user types. */
-  Shell::sh_builtin_func_t function; /* The address of the invoked function. */
-  int flags;                         /* One or more of the #defines above. */
-  const char *const *long_doc;       /* NULL terminated array of strings. */
-  const char *short_doc;             /* Short version of documentation. */
-  void *handle;                      /* dlsym() handle */
-};
-
 /* Found in builtins.c, created by builtins/mkbuiltins. */
-extern int num_shell_builtins; /* Number of shell builtins. */
-extern Builtin static_shell_builtins[];
+// extern int num_shell_builtins; /* Number of shell builtins. */
+// extern Builtin static_shell_builtins[];
 // extern Builtin *shell_builtins;
 // extern Builtin *current_builtin;
 

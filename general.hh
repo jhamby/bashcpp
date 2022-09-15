@@ -204,6 +204,11 @@ public:
    with integers.  It is used in the parser for shell tokenization. */
 struct STRING_INT_ALIST
 {
+  STRING_INT_ALIST (const char *word_, int token_)
+      : word (word_), token (token_)
+  {
+  }
+
   const char *word;
   int token;
 };

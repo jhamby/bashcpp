@@ -55,24 +55,7 @@ STREQN (const char *a, const char *b, size_t n)
   return std::strncmp (a, b, n) == 0;
 }
 
-// This is either a pure virtual class or has a default implementation,
-// depending on whether we compile this library as part of bash or not.
-
-#ifdef SHELL
-
-class ReadlineShell
-{
-public:
-  virtual ~ReadlineShell ();
-
-  virtual char *sh_single_quote (const char *) = 0;
-  virtual void sh_set_lines_and_columns (unsigned int, unsigned int) = 0;
-  virtual char *sh_get_env_value (const char *) = 0;
-  virtual char *sh_get_home_dir () = 0;
-  virtual int sh_unset_nodelay_mode (int) = 0;
-};
-
-#else
+// This can't be an abstract class because we need to cast pointers to it.
 
 class ReadlineShell
 {
@@ -85,8 +68,6 @@ public:
   virtual char *sh_get_home_dir ();
   virtual int sh_unset_nodelay_mode (int);
 };
-
-#endif
 
 } // namespace readline
 

@@ -1166,7 +1166,7 @@ History::get_history_word_specifier (const char *spec, const char *from,
   char *result;
 
   /* The range of words to return doesn't exist yet. */
-  first = last = 0;
+  last = 0;
   result = nullptr;
 
   /* If we found a colon, then this *must* be a word specification.  If
