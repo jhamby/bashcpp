@@ -100,97 +100,97 @@ static struct
 {
   const char *name;
   char *value;
-  shopt_set_func_t *set_func;
+  Shell::shopt_set_func_t set_func;
 } shopt_vars[]
-    = { { "autocd", &autocd, (shopt_set_func_t *)NULL },
+    = { { "autocd", &autocd, nullptr },
 #if defined(ARRAY_VARS)
-        { "assoc_expand_once", &assoc_expand_once, (shopt_set_func_t *)NULL },
+        { "assoc_expand_once", &assoc_expand_once, nullptr },
 #endif
-        { "cdable_vars", &cdable_vars, (shopt_set_func_t *)NULL },
-        { "cdspell", &cdspelling, (shopt_set_func_t *)NULL },
-        { "checkhash", &check_hashed_filenames, (shopt_set_func_t *)NULL },
+        { "cdable_vars", &cdable_vars, nullptr },
+        { "cdspell", &cdspelling, nullptr },
+        { "checkhash", &check_hashed_filenames, nullptr },
 #if defined(JOB_CONTROL)
-        { "checkjobs", &check_jobs_at_exit, (shopt_set_func_t *)NULL },
+        { "checkjobs", &check_jobs_at_exit, nullptr },
 #endif
-        { "checkwinsize", &check_window_size, (shopt_set_func_t *)NULL },
+        { "checkwinsize", &check_window_size, nullptr },
 #if defined(HISTORY)
-        { "cmdhist", &command_oriented_history, (shopt_set_func_t *)NULL },
+        { "cmdhist", &command_oriented_history, nullptr },
 #endif
-        { "compat31", &shopt_compat31, set_compatibility_level },
-        { "compat32", &shopt_compat32, set_compatibility_level },
-        { "compat40", &shopt_compat40, set_compatibility_level },
-        { "compat41", &shopt_compat41, set_compatibility_level },
-        { "compat42", &shopt_compat42, set_compatibility_level },
-        { "compat43", &shopt_compat43, set_compatibility_level },
-        { "compat44", &shopt_compat44, set_compatibility_level },
+        { "compat31", &shopt_compat31, &Shell::set_compatibility_level },
+        { "compat32", &shopt_compat32, &Shell::set_compatibility_level },
+        { "compat40", &shopt_compat40, &Shell::set_compatibility_level },
+        { "compat41", &shopt_compat41, &Shell::set_compatibility_level },
+        { "compat42", &shopt_compat42, &Shell::set_compatibility_level },
+        { "compat43", &shopt_compat43, &Shell::set_compatibility_level },
+        { "compat44", &shopt_compat44, &Shell::set_compatibility_level },
 #if defined(READLINE)
         { "complete_fullquote", &complete_fullquote,
-          (shopt_set_func_t *)NULL },
-        { "direxpand", &dircomplete_expand, shopt_set_complete_direxpand },
-        { "dirspell", &dircomplete_spelling, (shopt_set_func_t *)NULL },
+          nullptr },
+        { "direxpand", &dircomplete_expand, &Shell::shopt_set_complete_direxpand },
+        { "dirspell", &dircomplete_spelling, nullptr },
 #endif
-        { "dotglob", &glob_dot_filenames, (shopt_set_func_t *)NULL },
-        { "execfail", &no_exit_on_failed_exec, (shopt_set_func_t *)NULL },
-        { "expand_aliases", &expand_aliases, (shopt_set_func_t *)NULL },
+        { "dotglob", &glob_dot_filenames, nullptr },
+        { "execfail", &no_exit_on_failed_exec, nullptr },
+        { "expand_aliases", &expand_aliases, nullptr },
 #if defined(DEBUGGER)
-        { "extdebug", &debugging_mode, shopt_set_debug_mode },
+        { "extdebug", &debugging_mode, &Shell::shopt_set_debug_mode },
 #endif
 #if defined(EXTENDED_GLOB)
-        { "extglob", &extended_glob, (shopt_set_func_t *)NULL },
+        { "extglob", &extended_glob, nullptr },
 #endif
-        { "extquote", &extended_quote, (shopt_set_func_t *)NULL },
-        { "failglob", &fail_glob_expansion, (shopt_set_func_t *)NULL },
+        { "extquote", &extended_quote, nullptr },
+        { "failglob", &fail_glob_expansion, nullptr },
 #if defined(READLINE)
-        { "force_fignore", &force_fignore, (shopt_set_func_t *)NULL },
+        { "force_fignore", &force_fignore, nullptr },
 #endif
-        { "globasciiranges", &glob_asciirange, (shopt_set_func_t *)NULL },
-        { "globstar", &glob_star, (shopt_set_func_t *)NULL },
-        { "gnu_errfmt", &gnu_error_format, (shopt_set_func_t *)NULL },
+        { "globasciiranges", &glob_asciirange, nullptr },
+        { "globstar", &glob_star, nullptr },
+        { "gnu_errfmt", &gnu_error_format, nullptr },
 #if defined(HISTORY)
-        { "histappend", &force_append_history, (shopt_set_func_t *)NULL },
+        { "histappend", &force_append_history, nullptr },
 #endif
 #if defined(READLINE)
-        { "histreedit", &history_reediting, (shopt_set_func_t *)NULL },
-        { "histverify", &hist_verify, (shopt_set_func_t *)NULL },
+        { "histreedit", &history_reediting, nullptr },
+        { "histverify", &hist_verify, nullptr },
         { "hostcomplete", &perform_hostname_completion,
-          shopt_enable_hostname_completion },
+          &Shell::shopt_enable_hostname_completion },
 #endif
-        { "huponexit", &hup_on_exit, (shopt_set_func_t *)NULL },
-        { "inherit_errexit", &inherit_errexit, (shopt_set_func_t *)NULL },
+        { "huponexit", &hup_on_exit, nullptr },
+        { "inherit_errexit", &inherit_errexit, nullptr },
         { "interactive_comments", &interactive_comments,
-          set_shellopts_after_change },
-        { "lastpipe", &lastpipe_opt, (shopt_set_func_t *)NULL },
+          &Shell::set_shellopts_after_change },
+        { "lastpipe", &lastpipe_opt, nullptr },
 #if defined(HISTORY)
-        { "lithist", &literal_history, (shopt_set_func_t *)NULL },
+        { "lithist", &literal_history, nullptr },
 #endif
-        { "localvar_inherit", &localvar_inherit, (shopt_set_func_t *)NULL },
-        { "localvar_unset", &localvar_unset, (shopt_set_func_t *)NULL },
+        { "localvar_inherit", &localvar_inherit, nullptr },
+        { "localvar_unset", &localvar_unset, nullptr },
         { "login_shell", &shopt_login_shell, set_login_shell },
-        { "mailwarn", &mail_warning, (shopt_set_func_t *)NULL },
+        { "mailwarn", &mail_warning, nullptr },
 #if defined(READLINE)
         { "no_empty_cmd_completion", &no_empty_command_completion,
-          (shopt_set_func_t *)NULL },
+          nullptr },
 #endif
-        { "nocaseglob", &glob_ignore_case, (shopt_set_func_t *)NULL },
-        { "nocasematch", &match_ignore_case, (shopt_set_func_t *)NULL },
-        { "nullglob", &allow_null_glob_expansion, (shopt_set_func_t *)NULL },
+        { "nocaseglob", &glob_ignore_case, nullptr },
+        { "nocasematch", &match_ignore_case, nullptr },
+        { "nullglob", &allow_null_glob_expansion, nullptr },
 #if defined(PROGRAMMABLE_COMPLETION)
-        { "progcomp", &prog_completion_enabled, (shopt_set_func_t *)NULL },
+        { "progcomp", &prog_completion_enabled, nullptr },
 #if defined(ALIAS)
-        { "progcomp_alias", &progcomp_alias, (shopt_set_func_t *)NULL },
+        { "progcomp_alias", &progcomp_alias, nullptr },
 #endif
 #endif
-        { "promptvars", &promptvars, (shopt_set_func_t *)NULL },
+        { "promptvars", &promptvars, nullptr },
 #if defined(RESTRICTED_SHELL)
-        { "restricted_shell", &restricted_shell, set_restricted_shell },
+        { "restricted_shell", &restricted_shell, &Shell::set_restricted_shell },
 #endif
-        { "shift_verbose", &print_shift_error, (shopt_set_func_t *)NULL },
-        { "sourcepath", &source_uses_path, (shopt_set_func_t *)NULL },
+        { "shift_verbose", &print_shift_error, nullptr },
+        { "sourcepath", &source_uses_path, nullptr },
 #if defined(SYSLOG_HISTORY) && defined(SYSLOG_SHOPT)
-        { "syslog_history", &syslog_history, (shopt_set_func_t *)NULL },
+        { "syslog_history", &syslog_history, nullptr },
 #endif
-        { "xpg_echo", &xpg_echo, (shopt_set_func_t *)NULL },
-        { (char *)0, (char *)0, (shopt_set_func_t *)NULL } };
+        { "xpg_echo", &xpg_echo, nullptr },
+        { nullptr, nullptr, nullptr } };
 
 #define N_SHOPT_OPTIONS (sizeof (shopt_vars) / sizeof (shopt_vars[0]))
 
@@ -378,7 +378,7 @@ Shell::toggle_shopts (int mode, WORD_LIST *list, int quiet)
   int ind, rval;
   SHELL_VAR *v;
 
-  for (l = list, rval = EXECUTION_SUCCESS; l; l = (WORD_LIST *)l->next)
+  for (l = list, rval = EXECUTION_SUCCESS; l; l = l->next ())
     {
       ind = find_shopt (l->word->word);
       if (ind < 0)
@@ -404,9 +404,9 @@ static void
 Shell::print_shopt (const char *name, int val, int flags)
 {
   if (flags & PFLAG)
-    printf ("shopt %s %s\n", val ? "-s" : "-u", name);
+    std::printf ("shopt %s %s\n", val ? "-s" : "-u", name);
   else
-    printf (OPTFMT, name, val ? on : off);
+    std::printf (OPTFMT, name, val ? on : off);
 }
 
 /* List the values of all or any of the `shopt' options.  Returns 0 if
@@ -671,7 +671,7 @@ Shell::get_shopt_options ()
   ret = strvec_create (n + 1);
   for (i = 0; shopt_vars[i].name; i++)
     ret[i] = savestring (shopt_vars[i].name);
-  ret[i] = (char *)NULL;
+  ret[i] = nullptr;
   return ret;
 }
 
@@ -686,7 +686,7 @@ Shell::shopt_setopt (const char *name, int mode)
   WORD_LIST *wl;
   int r;
 
-  wl = add_string_to_list (name, (WORD_LIST *)NULL);
+  wl = add_string_to_list (name, nullptr);
   r = toggle_shopts (mode, wl, 0);
   dispose_words (wl);
   return r;
@@ -698,7 +698,7 @@ Shell::shopt_listopt (const char *name, int reusable)
   int i;
 
   if (name == 0)
-    return list_shopts ((WORD_LIST *)NULL, reusable ? PFLAG : 0);
+    return list_shopts (nullptr, reusable ? PFLAG : 0);
 
   i = find_shopt (name);
   if (i < 0)
@@ -802,7 +802,7 @@ initialize_bashopts (int no_bashopts)
       if (var && imported_p (var))
         {
           temp = (array_p (var) || assoc_p (var))
-                     ? (char *)NULL
+                     ? nullptr
                      : savestring (value_cell (var));
           if (temp)
             {

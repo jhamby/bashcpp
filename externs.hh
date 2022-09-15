@@ -190,7 +190,7 @@ inttostr (int64_t i)
   return fmtumax (static_cast<uint64_t> (i), 10, FL_NOFLAGS);
 }
 
-/* Integer to string conversion.  This now returns a string. */
+/* Integer to string conversion. */
 static inline char *
 itos (int64_t i)
 {

@@ -143,9 +143,7 @@
 namespace bash
 {
 
-typedef char setopt_set_func_t (char, const char *);
-typedef char setopt_get_func_t (const char *);
-
+#if 0
 static int find_minus_o_option (const char *);
 
 static void print_minus_o_option (char *, int, int);
@@ -166,7 +164,6 @@ static char bash_set_history (char, const char *);
 static const char *const on = "on";
 static const char *const off = "off";
 
-#if 0
 static int previous_option_value;
 #endif
 
@@ -180,53 +177,53 @@ const struct
   const char *name;
   int letter;
   char *variable;
-  setopt_set_func_t *set_func;
-  setopt_get_func_t *get_func;
+  Shell::setopt_set_func_t set_func;
+  Shell::setopt_get_func_t get_func;
 } o_options[] = {
-  { "allexport", 'a', NULL, NULL, NULL },
+  { "allexport", 'a', nullptr, nullptr, nullptr },
 #if defined(BRACE_EXPANSION)
-  { "braceexpand", 'B', NULL, NULL, NULL },
+  { "braceexpand", 'B', nullptr, nullptr, nullptr },
 #endif
 #if defined(READLINE)
-  { "emacs", '\0', NULL, set_edit_mode, get_edit_mode },
+  { "emacs", '\0', nullptr, &Shell::set_edit_mode, &Shell::get_edit_mode },
 #endif
-  { "errexit", 'e', NULL, NULL, NULL },
-  { "errtrace", 'E', NULL, NULL, NULL },
-  { "functrace", 'T', NULL, NULL, NULL },
-  { "hashall", 'h', NULL, NULL, NULL },
+  { "errexit", 'e', nullptr, nullptr, nullptr },
+  { "errtrace", 'E', nullptr, nullptr, nullptr },
+  { "functrace", 'T', nullptr, nullptr, nullptr },
+  { "hashall", 'h', nullptr, nullptr, nullptr },
 #if defined(BANG_HISTORY)
-  { "histexpand", 'H', NULL, NULL, NULL },
+  { "histexpand", 'H', nullptr, nullptr, nullptr },
 #endif /* BANG_HISTORY */
 #if defined(HISTORY)
-  { "history", '\0', &enable_history_list, bash_set_history, NULL },
+  { "history", '\0', &enable_history_list, &Shell::bash_set_history, nullptr },
 #endif
-  { "ignoreeof", '\0', &ignoreeof, set_ignoreeof, NULL },
-  { "interactive-comments", '\0', &interactive_comments, NULL, NULL },
-  { "keyword", 'k', NULL, NULL, NULL },
+  { "ignoreeof", '\0', &ignoreeof, &Shell::set_ignoreeof, nullptr },
+  { "interactive-comments", '\0', &interactive_comments, nullptr, nullptr },
+  { "keyword", 'k', nullptr, nullptr, nullptr },
 #if defined(JOB_CONTROL)
-  { "monitor", 'm', NULL, NULL, NULL },
+  { "monitor", 'm', nullptr, nullptr, nullptr },
 #endif
-  { "noclobber", 'C', NULL, NULL, NULL },
-  { "noexec", 'n', NULL, NULL, NULL },
-  { "noglob", 'f', NULL, NULL, NULL },
+  { "noclobber", 'C', nullptr, nullptr, nullptr },
+  { "noexec", 'n', nullptr, nullptr, nullptr },
+  { "noglob", 'f', nullptr, nullptr, nullptr },
 #if defined(HISTORY)
-  { "nolog", '\0', &dont_save_function_defs, NULL, NULL },
+  { "nolog", '\0', &dont_save_function_defs, nullptr, nullptr },
 #endif
 #if defined(JOB_CONTROL)
-  { "notify", 'b', NULL, NULL, NULL },
+  { "notify", 'b', nullptr, nullptr, nullptr },
 #endif /* JOB_CONTROL */
-  { "nounset", 'u', NULL, NULL, NULL },
-  { "onecmd", 't', NULL, NULL, NULL },
-  { "physical", 'P', NULL, NULL, NULL },
-  { "pipefail", '\0', &pipefail_opt, NULL, NULL },
-  { "posix", '\0', &posixly_correct, set_posix_mode, NULL },
-  { "privileged", 'p', NULL, NULL, NULL },
-  { "verbose", 'v', NULL, NULL, NULL },
+  { "nounset", 'u', nullptr, nullptr, nullptr },
+  { "onecmd", 't', nullptr, nullptr, nullptr },
+  { "physical", 'P', nullptr, nullptr, nullptr },
+  { "pipefail", '\0', &pipefail_opt, nullptr, nullptr },
+  { "posix", '\0', &posixly_correct, &Shell::set_posix_mode, nullptr },
+  { "privileged", 'p', nullptr, nullptr, nullptr },
+  { "verbose", 'v', nullptr, nullptr, nullptr },
 #if defined(READLINE)
-  { "vi", '\0', NULL, set_edit_mode, get_edit_mode },
+  { "vi", '\0', nullptr, &Shell::set_edit_mode, &Shell::get_edit_mode },
 #endif
-  { "xtrace", 'x', NULL, NULL, NULL },
-  { NULL, 0, NULL, NULL, NULL },
+  { "xtrace", 'x', nullptr, nullptr, nullptr },
+  { nullptr, 0, nullptr, nullptr, nullptr },
 };
 
 #define N_O_OPTIONS (sizeof (o_options) / sizeof (o_options[0]))
@@ -311,7 +308,7 @@ get_minus_o_opts ()
   ret = (const char **)strvec_create (N_O_OPTIONS + 1);
   for (i = 0; o_options[i].name; i++)
     ret[i] = o_options[i].name;
-  ret[i] = (char *)NULL;
+  ret[i] = nullptr;
   return ret;
 }
 
@@ -607,7 +604,7 @@ Shell::initialize_shell_options (bool no_shellopts)
       if (var && imported_p (var))
         {
           temp = (array_p (var) || assoc_p (var))
-                     ? (char *)NULL
+                     ? nullptr
                      : savestring (value_cell (var));
           if (temp)
             {

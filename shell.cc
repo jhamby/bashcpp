@@ -110,100 +110,39 @@ main (int argc, char **argv, char **env)
 namespace bash
 {
 
-#if 0
-/* Some long-winded argument names. */
-typedef enum { Bool, Flag, Charp } arg_type;
-
-struct LongArg {
-  const char *name;
-  const arg_type type;
-  union {
-    bool *bool_ptr;
-    char *flag_ptr;
-    const char **charp_ptr;
-  } value;
-
-  LongArg() : name(0), type(Bool) {
-    value.bool_ptr = NULL;
-  }
-
-  LongArg(const char *n, bool *bp) : name(n), type(Bool) {
-    value.bool_ptr = bp;
-  }
-
-  LongArg(const char *n, char *fp) : name(n), type(Flag) {
-    value.flag_ptr = fp;
-  }
-
-  LongArg(const char *n, const char **cpp) : name(n), type(Charp) {
-    value.charp_ptr = cpp;
-  }
-};
-
-static const LongArg long_args[] = {
-  LongArg( "debug",		&debugging ),
+void
+Shell::init_long_args ()
+{
+  long_args.push_back (LongArg ("debug", &debugging));
 #if defined(DEBUGGER)
-  LongArg( "debugger",		&debugging_mode ),
+  long_args.push_back (LongArg ("debugger", &debugging_mode));
 #endif
-  LongArg( "dump-po-strings",	&dump_po_strings ),
-  LongArg( "dump-strings",	&dump_translatable_strings ),
-  LongArg( "help",		&want_initial_help ),
-  LongArg( "init-file",		&bashrc_file ),
-  LongArg( "login",		&make_login_shell ),
-  LongArg( "noediting",		&no_line_editing ),
-  LongArg( "noprofile",		&no_profile ),
-  LongArg( "norc",		&no_rc ),
-  LongArg( "posix",		&posixly_correct ),
-  LongArg( "pretty-print",	&pretty_print_mode ),
+  long_args.push_back (LongArg ("dump-po-strings", &dump_po_strings));
+  long_args.push_back (LongArg ("dump-strings", &dump_translatable_strings));
+  long_args.push_back (LongArg ("help", &want_initial_help));
+  long_args.push_back (LongArg ("init-file", &bashrc_file));
+  long_args.push_back (LongArg ("login", &make_login_shell));
+  long_args.push_back (LongArg ("noediting", &no_line_editing));
+  long_args.push_back (LongArg ("noprofile", &no_profile));
+  long_args.push_back (LongArg ("norc", &no_rc));
+  long_args.push_back (LongArg ("posix", &posixly_correct));
+  long_args.push_back (LongArg ("pretty-print", &pretty_print_mode));
 #if defined(WORDEXP_OPTION)
-  LongArg( "protected",		&protected_mode ),
+  long_args.push_back (LongArg ("protected", &protected_mode));
 #endif
-  LongArg( "rcfile",		&bashrc_file ),
+  long_args.push_back (LongArg ("rcfile", &bashrc_file));
 #if defined(RESTRICTED_SHELL)
-  LongArg( "restricted",	&restricted ),
+  long_args.push_back (LongArg ("restricted", &restricted));
 #endif
-  LongArg( "verbose",		&verbose_flag ),
-  LongArg( "version",		&do_version ),
+  long_args.push_back (LongArg ("verbose", &verbose_flag));
+  long_args.push_back (LongArg ("version", &do_version));
 #if defined(WORDEXP_OPTION)
-  LongArg( "wordexp",		&wordexp_only ),
+  long_args.push_back (LongArg ("wordexp", &wordexp_only));
 #endif
-  LongArg()	/* empty LongArg to end the list */
-};
+}
+
+#if 0
 #endif
-
-static int parse_long_options (char **, int, int);
-static int parse_shell_options (char **, int, int);
-static int bind_args (char **, int, int, int);
-
-static void start_debugger ();
-
-static void add_shopt_to_alist (char *, int);
-static void run_shopt_alist ();
-
-static void execute_env_file (char *);
-static void run_startup_files ();
-static int open_shell_script (const char *);
-static void set_bash_input ();
-static int run_one_command (const char *);
-
-#if defined(WORDEXP_OPTION)
-static int run_wordexp (const char *);
-#endif
-
-static bool uidget ();
-
-static void set_option_defaults ();
-static void reset_option_defaults ();
-
-static void init_interactive ();
-static void init_noninteractive ();
-static void init_interactive_script ();
-
-static void set_shell_name (char *);
-static void shell_initialize ();
-static void shell_reinitialize ();
-
-static void show_shell_usage (FILE *, int);
 
 #ifdef __CYGWIN__
 static void
@@ -269,6 +208,8 @@ Shell::Shell ()
 {
   // alloc this 4K read buffer from the heap to keep the class size small
   zread_lbuf = new char[ZBUFSIZ];
+
+  init_long_args ();
 }
 
 // Virtual destructor for Shell.
@@ -626,7 +567,7 @@ Shell::run_shell (int argc, char **argv, char **env)
 #if defined(BUFFERED_INPUT)
               default_buffered_input = ::fileno (stdin); /* == 0 */
 #else
-              std::setbuf (default_input, (char *)NULL);
+              std::setbuf (default_input, nullptr);
 #endif /* !BUFFERED_INPUT */
               read_from_stdin = true;
             }
@@ -706,7 +647,8 @@ Shell::run_shell (int argc, char **argv, char **env)
 int
 Shell::parse_long_options (char **argv, int arg_start, int arg_end)
 {
-  int arg_index, longarg, i;
+  int arg_index, longarg;
+  size_t i;
   char *arg_string;
 
   arg_index = arg_start;
@@ -730,7 +672,7 @@ Shell::parse_long_options (char **argv, int arg_start, int arg_end)
                 *long_args[i].value.bool_ptr = true;
               else if (long_args[i].type == Flag)
                 *long_args[i].value.flag_ptr = 1;
-              else if (argv[++arg_index] == 0)
+              else if (argv[++arg_index] == nullptr)
                 {
                   report_error (_ ("%s: option requires an argument"),
                                 long_args[i].name);
@@ -742,7 +684,7 @@ Shell::parse_long_options (char **argv, int arg_start, int arg_end)
               break;
             }
         }
-      if (long_args[i].name == 0)
+      if (long_args[i].name == nullptr)
         {
           if (longarg)
             {
@@ -802,7 +744,7 @@ Shell::parse_shell_options (char **argv, int arg_start, int arg_end)
 
             case 'o':
               o_option = argv[next_arg];
-              if (o_option == NULL)
+              if (o_option == nullptr)
                 {
                   set_option_defaults ();
                   list_minus_o_opts (-1, (on_or_off == '-') ? 0 : 1);
@@ -821,7 +763,7 @@ Shell::parse_shell_options (char **argv, int arg_start, int arg_end)
                  initializing posix mode, we save the options and process
                  them after initialization. */
               o_option = argv[next_arg];
-              if (o_option == 0)
+              if (o_option == nullptr)
                 {
                   shopt_listopt (o_option, (on_or_off == '-') ? 0 : 1);
                   break;
@@ -862,7 +804,7 @@ Shell::exit_shell (int s)
   /* Clean up the terminal if we are in a state where it's been modified. */
 #if defined(READLINE)
   if (RL_ISSTATE (RL_STATE_TERMPREPPED) && rl_deprep_term_function)
-    (*rl_deprep_term_function) ();
+    ((*this).*rl_deprep_term_function) ();
 #endif
   if (read_tty_modified ())
     read_tty_cleanup ();
@@ -905,26 +847,11 @@ Shell::exit_shell (int s)
   sh_exit (s);
 }
 
-/* A wrapper for exit that (optionally) can do other things, like malloc
-   statistics tracing. */
-void
-sh_exit (int s)
-{
-#if defined(MALLOC_DEBUG) && defined(USING_BASH_MALLOC)
-  if (malloc_trace_at_exit
-      && (subshell_environment & (SUBSHELL_COMSUB | SUBSHELL_PROCSUB)) == 0)
-    trace_malloc_stats (get_name_for_error (), (char *)NULL);
-    /* mlocation_write_table (); */
-#endif
-
-  std::exit (s);
-}
-
 /* Exit a subshell, which includes calling the exit trap.  We don't want to
    do any more cleanup, since a subshell is created as an exact copy of its
    parent. */
 void
-subshell_exit (int s)
+Shell::subshell_exit (int s)
 {
   std::fflush (stdout);
   std::fflush (stderr);
@@ -935,12 +862,6 @@ subshell_exit (int s)
     s = run_exit_trap ();
 
   sh_exit (s);
-}
-
-void
-Shell::set_exit_status (int s)
-{
-  set_pipestatus_from_exit (last_command_exit_value = s);
 }
 
 /* Source the bash startup files.  If POSIXLY_CORRECT is non-zero, we obey
@@ -970,8 +891,8 @@ Shell::set_exit_status (int s)
          bash			YES
 */
 
-static void
-execute_env_file (char *env_file)
+void
+Shell::execute_env_file (char *env_file)
 {
   char *fn;
 
@@ -1126,7 +1047,7 @@ Shell::run_startup_files ()
    value of `restricted'.  Don't actually do anything, just return a
    boolean value. */
 bool
-shell_is_restricted (const char *name)
+Shell::shell_is_restricted (const char *name)
 {
   const char *temp;
 
@@ -1172,8 +1093,8 @@ Shell::maybe_make_restricted (const char *name)
 
 /* Fetch the current set of uids and gids and return 1 if we're running
    setuid or setgid. */
-static bool
-uidget ()
+bool
+Shell::uidget ()
 {
   uid_t u;
 
@@ -1184,7 +1105,7 @@ uidget ()
       delete[] current_user.shell;
       delete[] current_user.home_dir;
       current_user.user_name = current_user.shell = current_user.home_dir
-          = NULL;
+          = nullptr;
     }
 
   current_user.uid = u;
@@ -1198,17 +1119,17 @@ uidget ()
 }
 
 void
-disable_priv_mode ()
+Shell::disable_priv_mode ()
 {
-  int e;
-
 #if HAVE_SETRESUID
   if (setresuid (current_user.uid, current_user.uid, current_user.uid) < 0)
 #else
   if (setuid (current_user.uid) < 0)
 #endif
     {
-      e = errno;
+#if defined(EXIT_ON_SETUID_FAILURE)
+      int e = errno;
+#endif
       sys_error (_ ("cannot set uid to %d: effective uid %d"),
                  current_user.uid, current_user.euid);
 #if defined(EXIT_ON_SETUID_FAILURE)
@@ -1328,9 +1249,9 @@ Shell::run_one_command (const char *command)
           return last_command_exit_value;
         case DISCARD:
           return last_command_exit_value = 1;
+        case NOEXCEPTION:
         default:
-          command_error ("run_one_command", CMDERR_BADJUMP,
-                         static_cast<int> (e.type), 0);
+          command_error ("run_one_command", CMDERR_BADJUMP, e.type);
         }
     }
 }
@@ -1342,14 +1263,14 @@ Shell::bind_args (char **argv, int arg_start, int arg_end, int start_index)
   int i;
   WORD_LIST *args, *tl;
 
-  for (i = arg_start, args = tl = (WORD_LIST *)NULL; i < arg_end; i++)
+  for (i = arg_start, args = tl = nullptr; i < arg_end; i++)
     {
-      if (args == 0)
-        args = tl = make_word_list (make_word (argv[i]), args);
+      if (args == nullptr)
+        args = tl = new WORD_LIST (make_word (argv[i]));
       else
         {
-          tl->next = make_word_list (make_word (argv[i]), (WORD_LIST *)NULL);
-          tl = (WORD_LIST *)(tl->next);
+          tl->set_next (new WORD_LIST (make_word (argv[i])));
+          tl = tl->next ();
         }
     }
 
@@ -1360,13 +1281,12 @@ Shell::bind_args (char **argv, int arg_start, int arg_end, int start_index)
           /* Posix.2 4.56.3 says that the first argument after sh -c command
              becomes $0, and the rest of the arguments become $1...$n */
           shell_name = savestring (args->word->word);
-          FREE (dollar_vars[0]);
+          delete[] dollar_vars[0];
           dollar_vars[0] = savestring (args->word->word);
-          remember_args ((WORD_LIST *)(args->next), true);
+          remember_args (args->next (), true);
           if (debugging_mode)
             {
-              push_args (
-                  (WORD_LIST *)(args->next)); /* BASH_ARGV and BASH_ARGC */
+              push_args (args->next ()); /* BASH_ARGV and BASH_ARGC */
               bash_argv_initialized = true;
             }
         }
@@ -1383,17 +1303,10 @@ Shell::bind_args (char **argv, int arg_start, int arg_end, int start_index)
             }
         }
 
-      dispose_words (args);
+      delete args;
     }
 
   return i;
-}
-
-void
-Shell::unbind_args ()
-{
-  remember_args ((WORD_LIST *)NULL, true);
-  pop_args (); /* Reset BASH_ARGV and BASH_ARGC */
 }
 
 void
@@ -1437,7 +1350,7 @@ Shell::open_shell_script (const char *script_name)
   filename = savestring (script_name);
 
   fd = open (filename, O_RDONLY);
-  if ((fd < 0) && (errno == ENOENT) && (absolute_program (filename) == 0))
+  if ((fd < 0) && (errno == ENOENT) && (!absolute_program (filename)))
     {
       e = errno;
       /* If it's not in the current directory, try looking through PATH
@@ -1445,7 +1358,7 @@ Shell::open_shell_script (const char *script_name)
       path_filename = find_path_file (script_name);
       if (path_filename)
         {
-          std::free (filename);
+          delete[] filename;
           filename = path_filename;
           fd = open (filename, O_RDONLY);
         }
@@ -1463,13 +1376,13 @@ Shell::open_shell_script (const char *script_name)
       sh_exit ((e == ENOENT) ? EX_NOTFOUND : EX_NOINPUT);
     }
 
-  std::free (dollar_vars[0]);
+  delete[] dollar_vars[0];
   dollar_vars[0]
       = exec_argv0 ? savestring (exec_argv0) : savestring (script_name);
   if (exec_argv0)
     {
-      std::free (exec_argv0);
-      exec_argv0 = (char *)NULL;
+      delete[] exec_argv0;
+      exec_argv0 = nullptr;
     }
 
   if (file_isdir (filename))
@@ -1496,7 +1409,7 @@ Shell::open_shell_script (const char *script_name)
     {
       t = itos (executing_line_number ());
       array_push (bash_lineno_a, t);
-      std::free (t);
+      delete[] t;
     }
   array_push (funcname_a, "main");
 #endif
@@ -1508,16 +1421,16 @@ Shell::open_shell_script (const char *script_name)
 #endif
 
   /* Only do this with non-tty file descriptors we can seek on. */
-  if (fd_is_tty == 0 && (lseek (fd, 0L, 1) != -1))
+  if (fd_is_tty == 0 && (::lseek (fd, 0L, 1) != -1))
     {
       /* Check to see if the `file' in `bash file' is a binary file
          according to the same tests done by execute_simple_command (),
          and report an error and exit if it is. */
-      sample_len = read (fd, sample, sizeof (sample));
+      sample_len = ::read (fd, sample, sizeof (sample));
       if (sample_len < 0)
         {
           e = errno;
-          if ((fstat (fd, &sb) == 0) && S_ISDIR (sb.st_mode))
+          if ((::fstat (fd, &sb) == 0) && S_ISDIR (sb.st_mode))
             {
 #if defined(EISDIR)
               errno = EISDIR;
@@ -1545,7 +1458,7 @@ Shell::open_shell_script (const char *script_name)
           std::exit (EX_BINARY_FILE);
         }
       /* Now rewind the file back to the beginning. */
-      lseek (fd, 0L, 0);
+      ::lseek (fd, 0L, 0);
     }
 
   /* Open the script.  But try to move the file descriptor to a randomly
@@ -1574,8 +1487,8 @@ Shell::open_shell_script (const char *script_name)
      like `bash -i /dev/stdin' is executed. */
   if (interactive_shell && fd_is_tty)
     {
-      dup2 (fd, 0);
-      close (fd);
+      ::dup2 (fd, 0);
+      ::close (fd);
       fd = 0;
 #if defined(BUFFERED_INPUT)
       default_buffered_input = 0;
@@ -1590,7 +1503,7 @@ Shell::open_shell_script (const char *script_name)
        before. */
     init_interactive_script ();
 
-  std::free (filename);
+  delete[] filename;
 
   reading_shell_script = true;
   return fd;
@@ -1639,7 +1552,7 @@ unset_bash_input (int check_zero)
   if (default_input)
     {
       std::fclose (default_input);
-      default_input = (FILE *)NULL;
+      default_input = nullptr;
     }
 #endif /* !BUFFERED_INPUT */
 }
@@ -1668,11 +1581,11 @@ Shell::set_shell_name (char *argv0)
     su_shell = true;
 
   shell_name = argv0 ? argv0 : PROGRAM;
-  FREE (dollar_vars[0]);
+  delete[] dollar_vars[0];
   dollar_vars[0] = savestring (shell_name);
 
   /* A program may start an interactive shell with
-          "execl ("/bin/bash", "-", NULL)".
+          "execl ("/bin/bash", "-", nullptr)".
      If so, default the name of this shell to our name. */
   if (!shell_name || !*shell_name || (shell_name[0] == '-' && !shell_name[1]))
     shell_name = PROGRAM;
@@ -1960,7 +1873,7 @@ Shell::show_shell_usage (FILE *fp, int extra)
       if (t)
         *t = '\0';
       std::fprintf (fp, _ ("\t-%s or -o option\n"), s);
-      std::free (set_opts);
+      delete[] set_opts;
     }
 
   if (extra)
@@ -2005,7 +1918,8 @@ Shell::run_shopt_alist ()
     if (shopt_setopt (shopt_alist[i].word, (shopt_alist[i].token == '-'))
         != EXECUTION_SUCCESS)
       std::exit (EX_BADUSAGE);
-  std::free (shopt_alist);
+
+  delete[] shopt_alist;
   shopt_alist = 0;
   shopt_ind = shopt_len = 0;
 }

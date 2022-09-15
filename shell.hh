@@ -38,6 +38,10 @@
 #include <algorithm>
 #include <vector>
 
+#if defined(HAVE_SYS_FILE_H)
+#include <sys/file.h>
+#endif
+
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
@@ -445,6 +449,8 @@ protected:
 #if defined(BUFFERED_INPUT)
   /* The file descriptor from which the shell is reading input. */
   int default_buffered_input;
+
+  int bash_input_fd_changed;
 #endif
 
   /* The current variable context.  This is really a count of how deep into
@@ -1217,7 +1223,22 @@ protected:
   typedef int (Shell::*sh_load_func_t) (const char *);
   typedef void (Shell::*sh_unload_func_t) (const char *);
 
+  typedef int (Shell::*sh_cget_func_t) ();      /* sh_ivoidfunc_t */
+  typedef int (Shell::*sh_cunget_func_t) (int); /* sh_intfunc_t */
+
 public:
+  // public function typedefs for global setopt struct
+  typedef int (Shell::*setopt_set_func_t) (int, const char *);
+  typedef int (Shell::*setopt_get_func_t) (const char *);
+
+  int set_edit_mode (int, const char *);
+  int get_edit_mode (const char *);
+  int bash_set_history (int, const char *);
+  int set_ignoreeof (int, const char *);
+  int set_posix_mode (int, const char *);
+
+  typedef int (Shell::*shopt_set_func_t) (const char *, int);
+
   // Called from generated parser on EOF.
   void handle_eof_input_unit ();
 
@@ -1324,6 +1345,49 @@ public:
 
   // other functions moved from builtins/common.hh
 
+  int set_login_shell (const char *, int);
+
+  /* Functions from exit.def */
+  void bash_logout ();
+
+  /* Functions from getopts.def */
+  void getopts_reset (int);
+
+  /* Functions from help.def */
+  void builtin_help ();
+
+  /* Functions from read.def */
+  void read_tty_cleanup ();
+  int read_tty_modified ();
+
+  /* Functions from set.def */
+  int minus_o_option_value (const char *);
+  void list_minus_o_opts (int, int);
+  char **get_minus_o_opts ();
+  int set_minus_o_option (int, const char *);
+
+  void set_shellopts ();
+  void parse_shellopts (const char *);
+  void initialize_shell_options (int);
+
+  void reset_shell_options ();
+
+  char *get_current_options ();
+  void set_current_options (const char *);
+
+  /* Functions from shopt.def */
+  void reset_shopt_options ();
+  char **get_shopt_options ();
+
+  int shopt_setopt (const char *, int);
+  int shopt_listopt (const char *, int);
+
+  void set_bashopts ();
+  void parse_bashopts (const char *);
+  void initialize_bashopts (int);
+
+  void set_compatibility_opts ();
+
   /* Functions from common.c */
   void builtin_error (const char *, ...)
       __attribute__ ((__format__ (printf, 2, 3)));
@@ -1372,8 +1436,6 @@ public:
 #endif
   int display_signal_list (WORD_LIST *, int);
 
-  void read_tty_cleanup ();
-
   /* Functions from evalstring.c */
   int parse_and_execute (const char *, const char *, parse_flags);
   int evalstring (char *, const char *, int);
@@ -1390,6 +1452,9 @@ public:
   int force_execute_file (const char *, bool);
   int source_file (const char *, int);
   int fc_execute_file (const char *);
+
+  /* Functions from flags.cc */
+  int change_flag (int, int);
 
   /* callback from lib/sh/getenv.cc */
   char *getenv (const char *);
@@ -1608,11 +1673,15 @@ protected:
 
   /* Functions from shell.c. */
   void exit_shell (int) __attribute__ ((__noreturn__));
-  void sh_exit (int) __attribute__ ((__noreturn__));
   void subshell_exit (int) __attribute__ ((__noreturn__));
-  void set_exit_status (int);
   void disable_priv_mode ();
-  void unbind_args ();
+
+  void
+  unbind_args ()
+  {
+    remember_args (nullptr, true);
+    pop_args (); /* Reset BASH_ARGV and BASH_ARGC */
+  }
 
 #if defined(RESTRICTED_SHELL)
   bool shell_is_restricted (const char *);
@@ -1650,6 +1719,8 @@ protected:
   int set_current_prompt_level (int);
 
 #if defined(HISTORY)
+  void bash_initialize_history ();
+  void load_history ();
   const char *history_delimiting_chars (const char *);
 #endif
 
@@ -1729,6 +1800,133 @@ protected:
   /* Functions from input.cc */
 
   int getc_with_restart (FILE *);
+
+  int
+  ungetc_with_restart (int c, FILE *)
+  {
+    if (local_index == 0 || c == EOF)
+      return EOF;
+    localbuf[--local_index] = static_cast<char> (c);
+    return c;
+  }
+
+  /* Make sure `buffers' has at least N elements. */
+  void
+  allocate_buffers (size_t n)
+  {
+    buffers.resize (n + 20);
+  }
+
+  BUFFERED_STREAM *make_buffered_stream (int, char *, size_t);
+
+  int
+  set_bash_input_fd (int fd)
+  {
+    if (bash_input.type == st_bstream)
+      bash_input.location.buffered_fd = fd;
+    else if (!interactive_shell)
+      default_buffered_input = fd;
+    return 0;
+  }
+
+  int
+  fd_is_bash_input (int fd)
+  {
+    if (bash_input.type == st_bstream && bash_input.location.buffered_fd == fd)
+      return 1;
+    else if (!interactive_shell && default_buffered_input == fd)
+      return 1;
+    return 0;
+  }
+
+  int save_bash_input (int, int);
+  int check_bash_input (int);
+  int duplicate_buffered_stream (int, int);
+  BUFFERED_STREAM *fd_to_buffered_stream (int);
+
+  /* Return a buffered stream corresponding to FILE, a file name. */
+  BUFFERED_STREAM *
+  open_buffered_stream (const char *file)
+  {
+    int fd;
+
+    fd = ::open (file, O_RDONLY);
+    return (fd >= 0) ? fd_to_buffered_stream (fd) : nullptr;
+  }
+
+  /* Deallocate a buffered stream and free up its resources.  Make sure we
+     zero out the slot in BUFFERS that points to BP. */
+  void
+  free_buffered_stream (BUFFERED_STREAM *bp)
+  {
+    if (!bp)
+      return;
+
+    size_t n = static_cast<size_t> (bp->b_fd);
+    if (bp->b_buffer)
+      delete[] bp->b_buffer;
+    delete bp;
+    buffers[n] = nullptr;
+  }
+
+  /* Close the file descriptor associated with BP, a buffered stream, and free
+     up the stream.  Return the status of closing BP's file descriptor. */
+  int
+  close_buffered_stream (BUFFERED_STREAM *bp)
+  {
+    if (!bp)
+      return 0;
+
+    int fd = bp->b_fd;
+    if (bp->b_flag & B_SHAREDBUF)
+      bp->b_buffer = nullptr;
+    free_buffered_stream (bp);
+    return ::close (fd);
+  }
+
+  /* Deallocate the buffered stream associated with file descriptor FD, and
+     close FD.  Return the status of the close on FD. */
+  int
+  close_buffered_fd (int fd)
+  {
+    if (fd < 0)
+      {
+        errno = EBADF;
+        return -1;
+      }
+    size_t sfd = static_cast<size_t> (fd);
+    if (sfd >= buffers.size () || !buffers[sfd])
+      return ::close (fd);
+    return close_buffered_stream (buffers[sfd]);
+  }
+
+  /* Make the BUFFERED_STREAM associated with buffers[FD] be BP, and return
+     the old BUFFERED_STREAM. */
+  BUFFERED_STREAM *
+  set_buffered_stream (int fd, BUFFERED_STREAM *bp)
+  {
+    size_t sfd = static_cast<size_t> (fd);
+    BUFFERED_STREAM *ret = buffers[sfd];
+    buffers[sfd] = bp;
+    return ret;
+  }
+
+  int b_fill_buffer (BUFFERED_STREAM *);
+  int sync_buffered_stream (int);
+  int buffered_getchar ();
+  int buffered_ungetchar (int);
+  void with_input_from_buffered_stream (int, const char *);
+
+  /* Push C back onto buffered stream BP. */
+  static int
+  bufstream_ungetc (int c, BUFFERED_STREAM *bp)
+  {
+    if (c == EOF || bp == nullptr || bp->b_inputp == 0)
+      return EOF;
+
+    bp->b_buffer[--bp->b_inputp] = static_cast<char> (c);
+    return c;
+  }
 
   /* Functions from jobs.h */
 
@@ -2519,6 +2717,56 @@ protected:
   int do_redirections (REDIRECT *, redir_flags);
   char *redirection_expand (WORD_DESC *);
   int stdin_redirects (REDIRECT *);
+
+  /* Functions from shell.cc */
+
+  int parse_long_options (char **, int, int);
+  int parse_shell_options (char **, int, int);
+  int bind_args (char **, int, int, int);
+
+  void start_debugger ();
+
+  void add_shopt_to_alist (char *, int);
+  void run_shopt_alist ();
+
+  void execute_env_file (char *);
+  void run_startup_files ();
+  int open_shell_script (const char *);
+  void set_bash_input ();
+  int run_one_command (const char *);
+
+#if defined(WORDEXP_OPTION)
+  int run_wordexp (const char *);
+#endif
+
+  bool uidget ();
+
+  void set_option_defaults ();
+  void reset_option_defaults ();
+
+  void init_interactive ();
+  void init_noninteractive ();
+  void init_interactive_script ();
+
+  void show_shell_usage (FILE *, int);
+
+  void init_long_args ();
+  void set_shell_name (const char *);
+  void shell_initialize ();
+  void shell_reinitialize ();
+
+  /* A wrapper for exit that (optionally) can do other things. */
+  static void
+  sh_exit (int s) __attribute__ ((__noreturn__))
+  {
+    std::exit (s);
+  }
+
+  void
+  set_exit_status (int s)
+  {
+    set_pipestatus_from_exit (last_command_exit_value = s);
+  }
 
   /* Functions from sig.cc */
 
@@ -3539,6 +3787,8 @@ protected:
   void reset_readahead_token ();
   WORD_LIST *parse_string_to_word_list (char *, int, const char *);
   const char *yy_input_name ();
+  void init_yy_io (sh_cget_func_t, sh_cunget_func_t, stream_type, const char *,
+                   INPUT_STREAM);
 
   // Methods in lib/tilde/tilde.c.
   size_t tilde_find_prefix (const char *, size_t *);
@@ -3743,6 +3993,17 @@ private:
   FILE *yyoutstream;
   FILE *yyerrstream;
 
+  struct BASH_INPUT
+  {
+    stream_type type;
+    char *name; /* freed by the parser */
+    INPUT_STREAM location;
+    sh_cget_func_t *getter;
+    sh_cunget_func_t *ungetter;
+  };
+
+  BASH_INPUT bash_input;
+
 #if defined(SIGWINCH)
   void (*old_winch) (int);
 #endif
@@ -3751,6 +4012,57 @@ private:
   /* The signal masks that this shell runs with. */
   sigset_t top_level_mask;
 #endif /* JOB_CONTROL */
+
+  /* This provides a way to map from a file descriptor to the buffer
+     associated with that file descriptor, rather than just the other
+     way around.  This is needed so that buffers are managed properly
+     in constructs like 3<&4.  buffers[x]->b_fd == x -- that is how the
+     correspondence is maintained. */
+  std::vector<BUFFERED_STREAM *> buffers;
+
+  /* Some long-winded argument names. */
+  typedef enum
+  {
+    Bool,
+    Flag,
+    Charp
+  } arg_type;
+
+  struct LongArg
+  {
+    const char *name;
+    const arg_type type;
+    union
+    {
+      bool *bool_ptr;
+      char *flag_ptr;
+      const char **charp_ptr;
+    } value;
+
+    LongArg () : name (nullptr), type (Bool) { value.bool_ptr = nullptr; }
+
+    LongArg (const char *n, bool *bp) : name (n), type (Bool)
+    {
+      value.bool_ptr = bp;
+    }
+
+    LongArg (const char *n, char *fp) : name (n), type (Flag)
+    {
+      value.flag_ptr = fp;
+    }
+
+    LongArg (const char *n, const char **cpp) : name (n), type (Charp)
+    {
+      value.charp_ptr = cpp;
+    }
+  };
+
+  // List of long command-line options and pointers to variables to set
+  std::vector<LongArg> long_args;
+
+  // Buffer for buffered input.
+  char localbuf[1024];
+  int local_index = 0, local_bufused = 0;
 };
 
 struct sh_input_line_state_t

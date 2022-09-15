@@ -188,7 +188,16 @@ protected:
 
     last->next_ = new_item;
   }
+
+  // Pointer to next entry, or nullptr.
   GENERIC_LIST *next_;
+
+public:
+  void
+  set_next (GENERIC_LIST *next)
+  {
+    next_ = next;
+  }
 };
 
 /* Here is a generic structure for associating character strings
