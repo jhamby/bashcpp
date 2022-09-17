@@ -464,7 +464,7 @@ line_isblank (const char *line)
   if (line == nullptr)
     return false; /* XXX */
   for (i = 0; line[i]; i++)
-    if (std::isblank (static_cast<unsigned char> (line[i])) == 0)
+    if (isblank (static_cast<unsigned char> (line[i])) == 0)
       break;
   return line[i] == '\0';
 }

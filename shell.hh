@@ -357,14 +357,14 @@ extern Shell *the_shell;
 
 // Define two invalid references to indicate an invalid entry.
 
-#define IMPOSSIBLE_TRAP_HANDLER (reinterpret_cast<sighandler_t> (the_shell))
+#define IMPOSSIBLE_TRAP_HANDLER (&std::exit)
 #define IMPOSSIBLE_TRAP_NAME (reinterpret_cast<char *> (the_shell))
 
 enum print_flags
 {
   FUNC_NOFLAGS = 0,
   FUNC_MULTILINE = 0x01,
-  FUNC_EXTERNAL = 0x02,
+  FUNC_EXTERNAL = 0x02
 };
 
 /* enum for sh_makepath function defined in lib/sh/makepath.c */
@@ -4467,7 +4467,8 @@ protected:
 
   // Buffer for buffered input.
   char localbuf[1024];
-  int local_index = 0, local_bufused = 0;
+  int local_index;
+  int local_bufused;
 
   // Temporary directory name buffer.
   char tdir_buf[PATH_MAX];

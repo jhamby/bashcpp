@@ -33,8 +33,8 @@ namespace bash
 #endif /* !NSIG */
 
 #define NO_SIG -1
-#define DEFAULT_SIG SIG_DFL
-#define IGNORE_SIG SIG_IGN
+#define DEFAULT_SIG reinterpret_cast<const char *> (0)
+#define IGNORE_SIG reinterpret_cast<const char *> (1)
 
 /* Special shell trap names. */
 #define DEBUG_TRAP NSIG
