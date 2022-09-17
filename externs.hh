@@ -29,31 +29,16 @@
 
 #include <string>
 
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
-
+#include "bashtypes.hh"
 #include "general.hh"
+#include "posixstat.hh"
+
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
+#endif
 
 namespace bash
 {
-
-/* Miscellaneous functions from parse.yy */
-#if 0
-int yyparse ();
-int return_EOF ();
-void push_token (int);
-char *xparse_dolparen (const char *, char *, int *, int);
-void reset_parser ();
-void reset_readahead_token ();
-WordList *parse_string_to_word_list (char *, int, const char *);
-#endif
-
-/* Declarations for functions needed by the parser. */
-COMMAND *connect_async_list (COMMAND *, COMMAND *, int);
 
 struct StringIntAlist;
 
@@ -334,7 +319,6 @@ void strlist_sort (STRINGLIST *);
 /* declarations for functions defined in lib/sh/stringvec.c */
 
 #if 0
-// TODO: refactor to use vector<char*>
 char **strvec_create (int);
 char **strvec_resize (char **, int);
 char **strvec_mcreate (int);
@@ -353,8 +337,20 @@ char **strvec_from_word_list (WORD_LIST *, int, int, int *);
 WORD_LIST *strvec_to_word_list (char **, int, int);
 #endif
 
+static inline void
+strvec_dispose (char **array)
+{
+  if (array == nullptr)
+    return;
+
+  for (int i = 0; array[i]; i++)
+    delete[] array[i];
+
+  delete[] array;
+}
+
 /* declarations for functions defined in lib/sh/strtrans.c */
-char *ansic_quote (const char *, unsigned int *);
+char *ansic_quote (const char *);
 bool ansic_shouldquote (const char *);
 char *ansiexpand (const char *, unsigned int, unsigned int, unsigned int *);
 
@@ -499,6 +495,181 @@ uint64_t strtoumax (const char *, char **, int);
 #ifndef ZBUFSIZ
 #define ZBUFSIZ 4096
 #endif
+
+// Inline functions moved from general.cc.
+
+/* Return non-zero if the characters from SAMPLE are not all valid
+   characters to be found in the first line of a shell script.  We
+   check up to the first newline, or SAMPLE_LEN, whichever comes first.
+   All of the characters must be printable or whitespace. */
+static inline bool
+check_binary_file (const char *sample, int sample_len)
+{
+  unsigned char c;
+
+  for (int i = 0; i < sample_len; i++)
+    {
+      c = static_cast<unsigned char> (sample[i]);
+      if (c == '\n')
+        return false;
+      if (c == '\0')
+        return true;
+    }
+
+  return false;
+}
+
+/* **************************************************************** */
+/*								    */
+/*		    Functions to manipulate pipes		    */
+/*								    */
+/* **************************************************************** */
+
+static inline int
+sh_openpipe (int *pv)
+{
+  int r;
+
+  if ((r = ::pipe (pv)) < 0)
+    return r;
+
+  pv[0] = move_to_high_fd (pv[0], 1, 64);
+  pv[1] = move_to_high_fd (pv[1], 1, 64);
+
+  return 0;
+}
+
+static inline int
+sh_closepipe (int *pv)
+{
+  if (pv[0] >= 0)
+    ::close (pv[0]);
+
+  if (pv[1] >= 0)
+    ::close (pv[1]);
+
+  pv[0] = pv[1] = -1;
+  return 0;
+}
+
+/* Just a wrapper for the define in include/filecntl.h */
+static inline int
+sh_setclexec (int fd)
+{
+  return SET_CLOSE_ON_EXEC (fd);
+}
+
+/* Return true if file descriptor FD is valid; false otherwise. */
+static inline bool
+sh_validfd (int fd)
+{
+  return ::fcntl (fd, F_GETFD, 0) >= 0;
+}
+
+static inline bool
+fd_ispipe (int fd)
+{
+  errno = 0;
+  return (::lseek (fd, 0L, SEEK_CUR) < 0) && (errno == ESPIPE);
+}
+
+#ifdef _POSIXSTAT_H_
+bool same_file (const char *, const char *, struct stat *, struct stat *);
+#endif
+
+/* **************************************************************** */
+/*								    */
+/*		    Functions to inspect pathnames		    */
+/*								    */
+/* **************************************************************** */
+
+static inline bool
+file_exists (const char *fn)
+{
+  struct stat sb;
+
+  return ::stat (fn, &sb) == 0;
+}
+
+static inline bool
+file_isdir (const char *fn)
+{
+  struct stat sb;
+
+  return (::stat (fn, &sb) == 0) && S_ISDIR (sb.st_mode);
+}
+
+static inline bool
+file_iswdir (const char *fn)
+{
+  return file_isdir (fn) && sh_eaccess (fn, W_OK) == 0;
+}
+
+/* Return 1 if STRING is "." or "..", optionally followed by a directory
+   separator */
+static inline bool
+path_dot_or_dotdot (const char *string)
+{
+  if (string == nullptr || *string == '\0' || *string != '.')
+    return false;
+
+  /* string[0] == '.' */
+  if (PATHSEP (string[1]) || (string[1] == '.' && PATHSEP (string[2])))
+    return true;
+
+  return false;
+}
+
+/* Return true if STRING contains an absolute pathname.  Used by `cd'
+   to decide whether or not to look up a directory name in $CDPATH. */
+static inline bool
+absolute_pathname (const char *string)
+{
+  if (string == nullptr || *string == '\0')
+    return false;
+
+  if (ABSPATH (string))
+    return true;
+
+  if (string[0] == '.' && PATHSEP (string[1])) /* . and ./ */
+    return true;
+
+  if (string[0] == '.' && string[1] == '.'
+      && PATHSEP (string[2])) /* .. and ../ */
+    return true;
+
+  return false;
+}
+
+/* Return the `basename' of the pathname in STRING (the stuff after the
+   last '/').  If STRING is `/', just return it. */
+static inline const char *
+base_pathname (const char *string)
+{
+  const char *p;
+
+  if (string[0] == '/' && string[1] == 0)
+    return string;
+
+  p = std::strrchr (string, '/');
+  return p ? ++p : string;
+}
+
+char *make_absolute (const char *, const char *);
+char *full_pathname (char *);
+char *printable_filename (const char *, int);
+
+char *extract_colon_unit (char *, size_t *);
+
+void tilde_initialize ();
+char *bash_tilde_find_word (const char *, int, size_t *);
+char *bash_tilde_expand (const char *, int);
+
+#if !defined(HAVE_GROUP_MEMBER)
+int group_member (gid_t);
+#endif
+
+char *conf_standard_path ();
 
 } // namespace bash
 

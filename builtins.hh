@@ -39,17 +39,11 @@ enum builtin_flags
   SPECIAL_BUILTIN = 0x08,    /* This is a Posix `special' builtin. */
   ASSIGNMENT_BUILTIN = 0x10, /* This builtin takes assignment statements. */
   POSIX_BUILTIN
-  = 0x20, /* This builtins is special in the Posix command search order. */
+  = 0x20, /* This builtin is special in the Posix command search order. */
   LOCALVAR_BUILTIN = 0x40 /* This builtin creates local variables */
 };
 
 const int BASE_INDENT = 4;
-
-/* Found in builtins.c, created by builtins/mkbuiltins. */
-// extern int num_shell_builtins; /* Number of shell builtins. */
-// extern Builtin static_shell_builtins[];
-// extern Builtin *shell_builtins;
-// extern Builtin *current_builtin;
 
 } // namespace bash
 

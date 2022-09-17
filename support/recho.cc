@@ -24,12 +24,9 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>
-#endif
+#include "config.hh"
 
-#include "bashansi.h"
-#include <stdio.h>
+#include <cstdio>
 
 static void strprint (const char *str);
 

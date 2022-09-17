@@ -23,9 +23,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "config.hh"
 
 #include <sys/types.h>
 #ifdef MAJOR_IN_MKDEV
@@ -34,22 +32,17 @@
 #ifdef MAJOR_IN_SYSMACROS
 #include <sys/sysmacros.h>
 #endif
-#include "posixstat.h"
-#include "posixtime.h"
-#include <errno.h>
+
+#include "posixstat.hh"
+#include "posixtime.hh"
+
 #include <grp.h>
 #include <pwd.h>
-#include <stdio.h>
 
-#include "bashansi.h"
-#include "builtins.h"
-#include "common.h"
-#include "getopt.h"
-#include "shell.h"
-
-#ifndef errno
-extern int errno;
-#endif
+#include "builtins.hh"
+#include "common.hh"
+#include "getopt.hh"
+#include "shell.hh"
 
 extern char **make_builtin_argv ();
 

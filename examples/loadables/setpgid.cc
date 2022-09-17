@@ -18,24 +18,20 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
-#include <errno.h>
-#include <string.h>
 
-#include "bashtypes.h"
-#include "posixtime.h"
+#include "bashtypes.hh"
+#include "posixtime.hh"
 
-#include <stdio.h>
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
-
-#include "bashgetopt.h"
+#include "bashgetopt.hh"
 
 #if !defined(_POSIX_VERSION)
 #define setpgid(pid, pgrp) setpgrp (pid, pgrp)

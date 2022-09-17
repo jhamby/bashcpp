@@ -36,7 +36,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -45,18 +45,11 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include "bashansi.h"
-#include <errno.h>
-#include <maxpath.h>
 
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
-
-#ifndef errno
-extern int errno;
-#endif
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 extern char *sh_realpath ();
 

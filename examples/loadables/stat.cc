@@ -26,25 +26,18 @@
 #include <unistd.h>
 #endif
 
-#include <stdio.h>
+#include "posixstat.hh"
+#include "posixtime.hh"
 
-#include "posixstat.h"
-#include "posixtime.h"
-#include <errno.h>
+#include <cerrno>
 #include <grp.h>
 #include <pwd.h>
-#include <stdio.h>
 #include <sys/types.h>
 
-#include "bashansi.h"
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
-
-#ifndef errno
-extern int errno;
-#endif
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 #define ST_NAME 0
 #define ST_DEV 1

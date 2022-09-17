@@ -18,15 +18,15 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "shell.h"
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "shell.hh"
 
 int
 sync_builtin (list)

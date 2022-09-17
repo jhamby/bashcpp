@@ -1,6 +1,4 @@
-/* copy_command.c -- copy a COMMAND structure.  This is needed
-   primarily for making function definitions, but I'm not sure
-   that anyone else will need it.  */
+/* copy_command.cc -- copy command objects.  */
 
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
@@ -40,16 +38,14 @@ copy_word_list (WORD_LIST *list)
 {
   WORD_LIST *new_list, *tl;
 
-  for (new_list = tl = (WORD_LIST *)NULL; list;
-       list = (WORD_LIST *)(list->next))
+  for (new_list = tl = nullptr; list; list = list->next ())
     {
       if (new_list == 0)
         new_list = tl = make_word_list (copy_word (list->word), new_list);
       else
         {
-          tl->next
-              = make_word_list (copy_word (list->word), (WORD_LIST *)NULL);
-          tl = (WORD_LIST *)(tl->next);
+          tl->next = make_word_list (copy_word (list->word), nullptr);
+          tl = tl->next ());
         }
     }
 
@@ -82,68 +78,18 @@ copy_case_clauses (PATTERN_LIST *clauses)
   return REVERSE_LIST (new_list, PATTERN_LIST *);
 }
 
-/* Copy a single redirect. */
-REDIRECT *
-copy_redirect (REDIRECT *redirect)
-{
-  REDIRECT *new_redirect;
-
-  new_redirect = (REDIRECT *)xmalloc (sizeof (REDIRECT));
-#if 0
-  FASTCOPY ((char *)redirect, (char *)new_redirect, (sizeof (REDIRECT)));
-#else
-  *new_redirect = *redirect; /* let the compiler do the fast structure copy */
-#endif
-
-  if (redirect->rflags & REDIR_VARASSIGN)
-    new_redirect->redirector.filename
-        = copy_word (redirect->redirector.filename);
-
-  switch (redirect->instruction)
-    {
-    case r_reading_until:
-    case r_deblank_reading_until:
-      new_redirect->here_doc_eof
-          = redirect->here_doc_eof ? savestring (redirect->here_doc_eof) : 0;
-      /*FALLTHROUGH*/
-    case r_reading_string:
-    case r_appending_to:
-    case r_output_direction:
-    case r_input_direction:
-    case r_inputa_direction:
-    case r_err_and_out:
-    case r_append_err_and_out:
-    case r_input_output:
-    case r_output_force:
-    case r_duplicating_input_word:
-    case r_duplicating_output_word:
-    case r_move_input_word:
-    case r_move_output_word:
-      new_redirect->redirectee.filename
-          = copy_word (redirect->redirectee.filename);
-      break;
-    case r_duplicating_input:
-    case r_duplicating_output:
-    case r_move_input:
-    case r_move_output:
-    case r_close_this:
-      break;
-    }
-  return new_redirect;
-}
-
 REDIRECT *
 copy_redirects (REDIRECT *list)
 {
   REDIRECT *new_list, *temp;
 
-  for (new_list = (REDIRECT *)NULL; list; list = list->next)
+  for (new_list = nullptr; list; list = list->next ())
     {
-      temp = copy_redirect (list);
-      temp->next = new_list;
+      temp = new REDIRECT (*list);
+      temp->set_next (new_list);
       new_list = temp;
     }
-  return REVERSE_LIST (new_list, REDIRECT *);
+  return new_list->reverse ();
 }
 
 static FOR_COM *
@@ -322,106 +268,89 @@ copy_function_def (FUNCTION_DEF *com)
 }
 
 /* Copy the command structure in COMMAND.  Return a pointer to the
-   copy.  Don't you forget to dispose_command () on this pointer
-   later! */
+   copy.  Don't forget to call delete on the returned copy. */
 COMMAND *
-copy_command (COMMAND *command)
+COMMAND::clone ()
 {
-  COMMAND *new_command;
+  return new COMMAND (*this);
+}
 
-  if (command == NULL)
-    return command;
+COMMAND *
+CONNECTION::clone ()
+{
+  return new CONNECTION (*this);
+}
 
-  new_command = (COMMAND *)xmalloc (sizeof (COMMAND));
-  FASTCOPY ((char *)command, (char *)new_command, sizeof (COMMAND));
-  new_command->flags = command->flags;
-  new_command->line = command->line;
+COMMAND *
+CASE_COM::clone ()
+{
+  return new CASE_COM (*this);
+}
 
-  if (command->redirects)
-    new_command->redirects = copy_redirects (command->redirects);
+COMMAND *
+FOR_SELECT_COM::clone ()
+{
+  return new FOR_SELECT_COM (*this);
+}
 
-  switch (command->type)
-    {
-    case cm_for:
-      new_command->value.For = copy_for_command (command->value.For);
-      break;
+COMMAND *
+ARITH_FOR_COM::clone ()
+{
+  return new ARITH_FOR_COM (*this);
+}
 
-#if defined(ARITH_FOR_COMMAND)
-    case cm_arith_for:
-      new_command->value.ArithFor
-          = copy_arith_for_command (command->value.ArithFor);
-      break;
-#endif
+COMMAND *
+IF_COM::clone ()
+{
+  return new IF_COM (*this);
+}
 
-#if defined(SELECT_COMMAND)
-    case cm_select:
-      new_command->value.Select
-          = (SELECT_COM *)copy_for_command ((FOR_COM *)command->value.Select);
-      break;
-#endif
+COMMAND *
+UNTIL_WHILE_COM::clone ()
+{
+  return new UNTIL_WHILE_COM (*this);
+}
 
-    case cm_group:
-      new_command->value.Group = copy_group_command (command->value.Group);
-      break;
+COMMAND *
+ARITH_COM::clone ()
+{
+  return new ARITH_COM (*this);
+}
 
-    case cm_subshell:
-      new_command->value.Subshell
-          = copy_subshell_command (command->value.Subshell);
-      break;
+COMMAND *
+COND_COM::clone ()
+{
+  return new COND_COM (*this);
+}
 
-    case cm_coproc:
-      new_command->value.Coproc = copy_coproc_command (command->value.Coproc);
-      break;
+COMMAND *
+SIMPLE_COM::clone ()
+{
+  return new SIMPLE_COM (*this);
+}
 
-    case cm_case:
-      new_command->value.Case = copy_case_command (command->value.Case);
-      break;
+COMMAND *
+FUNCTION_DEF::clone ()
+{
+  return new FUNCTION_DEF (*this);
+}
 
-    case cm_until:
-    case cm_while:
-      new_command->value.While = copy_while_command (command->value.While);
-      break;
+COMMAND *
+GROUP_COM::clone ()
+{
+  return new GROUP_COM (*this);
+}
 
-    case cm_if:
-      new_command->value.If = copy_if_command (command->value.If);
-      break;
+COMMAND *
+SUBSHELL_COM::clone ()
+{
+  return new SUBSHELL_COM (*this);
+}
 
-#if defined(DPAREN_ARITHMETIC)
-    case cm_arith:
-      new_command->value.Arith = copy_arith_command (command->value.Arith);
-      break;
-#endif
-
-#if defined(COND_COMMAND)
-    case cm_cond:
-      new_command->value.Cond = copy_cond_command (command->value.Cond);
-      break;
-#endif
-
-    case cm_simple:
-      new_command->value.Simple = copy_simple_command (command->value.Simple);
-      break;
-
-    case cm_connection:
-      {
-        CONNECTION *new_connection;
-
-        new_connection = (CONNECTION *)xmalloc (sizeof (CONNECTION));
-        new_connection->connector = command->value.Connection->connector;
-        new_connection->first
-            = copy_command (command->value.Connection->first);
-        new_connection->second
-            = copy_command (command->value.Connection->second);
-        new_command->value.Connection = new_connection;
-        break;
-      }
-
-    case cm_function_def:
-      new_command->value.Function_def
-          = copy_function_def (command->value.Function_def);
-      break;
-    }
-  return new_command;
+COMMAND *
+COPROC_COM::clone ()
+{
+  return new COPROC_COM (*this);
 }
 
 } // namespace bash

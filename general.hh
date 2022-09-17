@@ -23,6 +23,7 @@
 
 #include "bashtypes.hh"
 #include "chartypes.hh"
+#include "filecntl.hh"
 
 #if defined(HAVE_SYS_RESOURCE_H) && defined(RLIMTYPE)
 #if defined(HAVE_SYS_TIME_H)
@@ -422,7 +423,6 @@ void save_posix_options ();
 
 #if defined(RLIMTYPE)
 // for use from builtins.c
-struct RLIMTYPE;
 RLIMTYPE string_to_rlimtype (char *);
 void print_rlimtype (RLIMTYPE, int);
 #endif
@@ -433,8 +433,6 @@ class WORD_DESC;
 bool all_digits (const char *);
 bool legal_number (const char *, int64_t *);
 bool legal_identifier (const char *);
-bool importable_function_name (const char *, size_t);
-bool exportable_function_name (const char *);
 bool check_identifier (WORD_DESC *, int);
 bool valid_nameref_value (const char *, int);
 bool check_selfref (const char *, const char *, int);
@@ -443,47 +441,7 @@ bool line_isblank (const char *);
 int assignment (const char *, int);
 
 int sh_unset_nodelay_mode (int);
-int sh_setclexec (int);
-int sh_validfd (int);
-int fd_ispipe (int);
 int move_to_high_fd (int, int, int);
-int check_binary_file (const char *, int);
-
-#ifdef _POSIXSTAT_H_
-bool same_file (const char *, const char *, struct stat *, struct stat *);
-#endif
-
-int sh_openpipe (int *);
-int sh_closepipe (int *);
-
-bool file_exists (const char *);
-bool file_isdir (const char *);
-bool file_iswdir (const char *);
-bool path_dot_or_dotdot (const char *);
-bool absolute_pathname (const char *);
-bool absolute_program (const char *);
-
-char *make_absolute (const char *, const char *);
-const char *base_pathname (const char *);
-char *full_pathname (char *);
-const char *polite_directory_format (const char *);
-char *trim_pathname (char *, int);
-char *printable_filename (const char *, int);
-
-char *extract_colon_unit (char *, int *);
-
-void tilde_initialize ();
-char *bash_tilde_find_word (const char *, int, int *);
-char *bash_tilde_expand (const char *, int);
-
-#if !defined(HAVE_GROUP_MEMBER)
-int group_member (gid_t);
-#endif
-char **get_group_list (int *);
-int *get_group_array (int *);
-
-char *conf_standard_path ();
-int default_columns ();
 
 } // namespace bash
 

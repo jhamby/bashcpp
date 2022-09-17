@@ -26,6 +26,8 @@
 
 #include "posixwait.hh"
 
+#include <vector>
+
 namespace bash
 {
 

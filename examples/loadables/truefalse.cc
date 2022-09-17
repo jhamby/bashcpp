@@ -18,12 +18,12 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
-#include "bashtypes.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
+#include "bashtypes.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 int
 true_builtin (list)

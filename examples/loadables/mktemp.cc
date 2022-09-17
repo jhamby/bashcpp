@@ -18,16 +18,13 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
 
-#include "bashansi.h"
-#include <stdio.h>
-
-#include "loadables.h"
+#include "loadables.hh"
 
 #define DEFAULT_PREFIX "shtmp"
 

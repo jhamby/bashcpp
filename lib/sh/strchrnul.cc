@@ -23,7 +23,7 @@
 
 /* Find the first occurrence of C in S or the final NUL byte.  */
 extern "C++" const char *
-strchrnul (const char *s, int c_in)
+strchrnul (const char *s, int c_in) noexcept
 {
   char c;
   char *s1;

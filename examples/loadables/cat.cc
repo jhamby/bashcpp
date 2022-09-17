@@ -22,18 +22,10 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <errno.h>
-#include <fcntl.h>
+#include "config.hh"
 
-#include "builtins.h"
-#include "shell.h"
-
-#ifndef errno
-extern int errno;
-#endif
-
-extern char *strerror ();
-extern char **make_builtin_argv ();
+#include "builtins.hh"
+#include "shell.hh"
 
 static int
 fcopy (fd)

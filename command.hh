@@ -319,6 +319,43 @@ public:
   {
   }
 
+  // Shallow copy constructor.
+  REDIRECT (const REDIRECT &other)
+      : here_doc_eof (other.here_doc_eof), redirector (other.redirector),
+        redirectee (other.redirectee), rflags (other.rflags),
+        flags (other.flags), instruction (other.instruction)
+  {
+    if (other.rflags & REDIR_VARASSIGN)
+      redirector.r.filename = new WORD_DESC (*(other.redirector.r.filename));
+
+    switch (other.instruction)
+      {
+      case r_reading_until:
+      case r_deblank_reading_until:
+      case r_reading_string:
+      case r_appending_to:
+      case r_output_direction:
+      case r_input_direction:
+      case r_inputa_direction:
+      case r_err_and_out:
+      case r_append_err_and_out:
+      case r_input_output:
+      case r_output_force:
+      case r_duplicating_input_word:
+      case r_duplicating_output_word:
+      case r_move_input_word:
+      case r_move_output_word:
+        redirectee.r.filename = new WORD_DESC (*(other.redirectee.r.filename));
+        break;
+      case r_duplicating_input:
+      case r_duplicating_output:
+      case r_move_input:
+      case r_move_output:
+      case r_close_this:
+        break;
+      }
+  }
+
   // Non-virtual destructor should be safe here with the static_cast.
   ~REDIRECT () noexcept
   {
@@ -456,6 +493,8 @@ operator~(const cmd_flags &a)
   return static_cast<cmd_flags> (~static_cast<uint32_t> (a));
 }
 
+class Shell;
+
 /* What a command looks like (virtual base class). */
 class COMMAND
 {
@@ -465,7 +504,9 @@ public:
 
   virtual ~COMMAND () noexcept; /* virtual base class destructor */
 
-  virtual COMMAND *clone (); // return a new deep copy of the command
+  virtual COMMAND *clone (); // return a copy of the command
+
+  virtual void print (Shell *) = 0;
 
   virtual bool control_structure ();
 
@@ -493,6 +534,8 @@ public:
   virtual ~CONNECTION () noexcept override; /* virtual base class destructor */
 
   virtual COMMAND *clone () override; // return a new deep copy of the command
+
+  virtual void print (Shell *) override;
 
   COMMAND *first;  /* Pointer to the first command. */
   COMMAND *second; /* Pointer to the second command. */
@@ -583,9 +626,13 @@ public:
 
   virtual ~CASE_COM () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   WORD_DESC *word;       /* The thing to test. */
   PATTERN_LIST *clauses; /* The clauses to test against, or nullptr. */
+
+private:
+  void print_clauses (Shell *);
 };
 
 enum for_loop_type
@@ -607,6 +654,7 @@ public:
 
   virtual ~FOR_SELECT_COM () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   WORD_DESC *name;     /* The variable name to get mapped over. */
   WORD_LIST *map_list; /* The things to map over.  This is never nullptr. */
@@ -629,6 +677,7 @@ public:
 
   virtual ~ARITH_FOR_COM () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   WORD_LIST *init;
   WORD_LIST *test;
@@ -651,6 +700,7 @@ public:
 
   virtual ~IF_COM () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   COMMAND *test;       /* Thing to test. */
   COMMAND *true_case;  /* What to do if the test returned non-zero. */
@@ -678,6 +728,7 @@ public:
 
   virtual ~UNTIL_WHILE_COM () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   COMMAND *test;       /* Thing to test. */
   COMMAND *action;     /* Thing to do while test is non-zero. */
@@ -695,6 +746,7 @@ public:
 
   virtual ~ARITH_COM () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   WORD_LIST *exp;
 };
@@ -717,6 +769,7 @@ class COND_COM : public COMMAND
 public:
   virtual ~COND_COM () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   WORD_DESC *op;
   COND_COM *left, *right;
@@ -732,6 +785,7 @@ public:
 
   virtual ~SIMPLE_COM () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   virtual bool control_structure () override; // not a control structure
 
@@ -746,6 +800,7 @@ class FUNCTION_DEF : public COMMAND
 public:
   virtual ~FUNCTION_DEF () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   WORD_DESC *name;         /* The name of the function. */
   COMMAND *command;        /* The parsed execution tree. */
@@ -764,6 +819,7 @@ public:
 
   virtual ~GROUP_COM () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   COMMAND *command;
 };
@@ -780,6 +836,7 @@ public:
 
   virtual ~SUBSHELL_COM () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   virtual bool control_structure () override; // not a control structure
 
@@ -823,17 +880,13 @@ public:
 
   virtual ~COPROC_COM () noexcept override;
   virtual COMMAND *clone () override;
+  virtual void print (Shell *) override;
 
   virtual bool control_structure () override; // not a control structure
 
   std::string name;
   COMMAND *command; // The actual command to run.
 };
-
-#if 0
-extern COMMAND *global_command;
-extern Coproc sh_coproc;
-#endif
 
 /* Possible command errors */
 enum cmd_err_type
@@ -845,6 +898,9 @@ enum cmd_err_type
 
   CMDERR_LAST = 3
 };
+
+/* Declarations for functions needed by the parser. */
+COMMAND *connect_async_list (COMMAND *, COMMAND *, int);
 
 } // namespace bash
 

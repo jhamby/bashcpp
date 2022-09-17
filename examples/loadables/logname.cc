@@ -18,22 +18,15 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
 
-#include <errno.h>
-#include <stdio.h>
-
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
-
-#if !defined(errno)
-extern int errno;
-#endif
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 int
 logname_builtin (list)

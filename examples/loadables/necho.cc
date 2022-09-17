@@ -21,9 +21,11 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "builtins.h"
-#include "shell.h"
-#include <stdio.h>
+#include "builtins.hh"
+#include "shell.hh"
+
+namespace bash
+{
 
 int
 necho_builtin (list)
@@ -42,3 +44,5 @@ char *necho_doc[]
 
 struct builtin necho_struct
     = { "echo", necho_builtin, BUILTIN_ENABLED, necho_doc, "echo [args]", 0 };
+
+} // namespace bash

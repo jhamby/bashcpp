@@ -1086,7 +1086,7 @@ print_assoc_assignment (SHELL_VAR *var, int quoted)
 
 /* We need to reserve 1 for FLAGS, which we pass to skipsubscript. */
 bool
-valid_array_reference (const char *name, int flags)
+Shell::valid_array_reference (const char *name, valid_array_flags flags)
 {
   char *t = mbschr (name, '['); /* ] */
   bool isassoc = false;

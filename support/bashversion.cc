@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
 #include <cstdio>
 #include <cstdlib>
@@ -28,9 +28,9 @@
 #include <unistd.h>
 #endif
 
-#include "bashtypes.h"
-#include "conftypes.h"
-#include "version.h"
+#include "bashtypes.hh"
+#include "conftypes.hh"
+#include "version.hh"
 
 #define RFLAG 0x0001
 #define VFLAG 0x0002

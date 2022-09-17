@@ -20,21 +20,22 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
 
-#include "bashtypes.h"
-#include "posixtime.h"
+#include "bashtypes.hh"
+#include "posixtime.hh"
 
-#include <stdio.h>
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
+namespace bash
+{
 
 int
 strftime_builtin (list)
@@ -125,3 +126,5 @@ struct builtin strftime_struct = {
   "strftime format [seconds]", /* usage synopsis; becomes short_doc */
   0                            /* reserved for internal use */
 };
+
+} // namespace bash

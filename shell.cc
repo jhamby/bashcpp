@@ -170,7 +170,8 @@ SimpleState::SimpleState ()
 #endif
       rseed (1), rseed32 (1073741823), last_command_subst_pid (NO_PID),
       current_command_subst_pid (NO_PID), eof_encountered_limit (10),
-      word_top (-1), array_needs_making (true),
+      word_top (-1), indentation_amount (4), xtrace_fd (-1),
+      array_needs_making (true),
 #if defined(JOB_CONTROL)
       job_control (true),
 #endif
@@ -195,6 +196,7 @@ SimpleState::SimpleState ()
       posixly_correct (0)
 #endif
 {
+  // XXX - remove this if Linux doesn't need this path
 #if defined(PGRP_PIPE)
   // initialize the array here for strict C++03 compatibility
   pgrp_pipe[0] = -1;
@@ -210,6 +212,12 @@ Shell::Shell ()
   zread_lbuf = new char[ZBUFSIZ];
 
   init_long_args ();
+
+  posix_vars[0] = &interactive_comments;
+  posix_vars[1] = &source_uses_path;
+  posix_vars[2] = &expand_aliases;
+  posix_vars[3] = &inherit_errexit;
+  posix_vars[4] = &print_shift_error;
 }
 
 // Virtual destructor for Shell.

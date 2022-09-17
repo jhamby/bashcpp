@@ -20,27 +20,20 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
 
-#include "posixstat.h"
+#include "posixstat.hh"
 
-#include <errno.h>
-#include <stdio.h>
-
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
-
-#if !defined(errno)
-extern int errno;
-#endif
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 typedef int unix_link_syscall_t PARAMS ((const char *, const char *));
 

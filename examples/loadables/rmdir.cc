@@ -20,17 +20,11 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
-#include <errno.h>
-#include <stdio.h>
-
-#if !defined(errno)
-extern int errno;
-#endif
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 int
 rmdir_builtin (list)

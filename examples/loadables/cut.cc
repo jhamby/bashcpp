@@ -20,18 +20,16 @@
 
 /* See Makefile for compilation details. */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
-#include "bashansi.h"
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
 
-#include "loadables.h"
-#include "shmbutil.h"
+#include <fcntl.h>
+
+#include "loadables.hh"
+#include "shmbutil.hh"
 
 #define CUT_ARRAY_DEFAULT "CUTFIELDS"
 

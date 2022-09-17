@@ -21,6 +21,8 @@
 #if !defined(_INPUT_H_)
 #define _INPUT_H_
 
+#include "bashtypes.hh"
+
 namespace bash
 {
 

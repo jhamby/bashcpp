@@ -20,19 +20,14 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
+
 #include <dirent.h>
-#include <errno.h>
-#include <stdio.h>
-
-#if !defined(errno)
-extern int errno;
-#endif
 
 static int rm_file (const char *fname);
 

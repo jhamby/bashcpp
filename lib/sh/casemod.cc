@@ -24,21 +24,17 @@
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 
-#include <bashintl.hh>
-#include <bashtypes.hh>
-#include <externs.hh>
-#include <shell.hh>
+#include "bashintl.hh"
+#include "bashtypes.hh"
+#include "externs.hh"
+#include "shell.hh"
 
-#include <cctype>
-#include <cstdio>
-#include <cstdlib>
+#include "chartypes.hh"
+#include "shmbchar.hh"
+#include "shmbutil.hh"
+#include "typemax.hh"
 
-#include <chartypes.hh>
-#include <shmbchar.hh>
-#include <shmbutil.hh>
-#include <typemax.hh>
-
-#include <glob/strmatch.hh>
+#include "strmatch.hh"
 
 #include "externs.hh"
 

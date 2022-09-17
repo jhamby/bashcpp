@@ -27,12 +27,12 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bashansi.h"
-#include "bashtypes.h"
-#include <config.h>
+#include "config.hh"
+
 #include <grp.h>
 #include <pwd.h>
-#include <stdio.h>
+
+#include <cstdio>
 
 #ifdef HAVE_LIMITS_H
 #include <limits.h>
@@ -45,11 +45,10 @@ extern struct passwd *getpwuid ();
 #endif
 extern struct group *getgrgid ();
 
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
-#include "stdc.h"
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 #define ID_ALLGROUPS 0x001 /* -G */
 #define ID_GIDONLY 0x002   /* -g */

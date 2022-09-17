@@ -21,13 +21,11 @@
 #ifndef __LOADABLES_H_
 #define __LOADABLES_H_
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "config.hh"
 
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 #endif

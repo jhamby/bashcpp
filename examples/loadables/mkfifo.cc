@@ -20,25 +20,20 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
-#include "bashansi.h"
-#include "bashtypes.h"
-#include "posixstat.h"
-#include <errno.h>
-#include <stdio.h>
+#include "bashansi.hh"
+#include "bashtypes.hh"
+#include "posixstat.hh"
+
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
 
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
-
-#if !defined(errno)
-extern int errno;
-#endif
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 #define ISOCTAL(c) ((c) >= '0' && (c) <= '7')
 

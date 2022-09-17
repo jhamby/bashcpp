@@ -104,9 +104,9 @@ Shell::umask_builtin (WORD_LIST *list)
 
   if (list)
     {
-      if (DIGIT (*list->word->word))
+      if (std::isdigit (list->word->word[0]))
         {
-          umask_value = read_octal (list->word->word);
+          umask_value = read_octal (list->word->word.c_str ());
 
           /* Note that other shells just let you set the umask to zero
              by specifying a number out of range.  This is a problem
@@ -114,7 +114,7 @@ Shell::umask_builtin (WORD_LIST *list)
              is lousy. */
           if (umask_value == -1)
             {
-              sh_erange (list->word->word, _ ("octal number"));
+              sh_erange (list->word->word.c_str (), _ ("octal number"));
               return EXECUTION_FAILURE;
             }
         }
@@ -139,7 +139,7 @@ Shell::umask_builtin (WORD_LIST *list)
       if (print_symbolically)
         print_symbolic_umask (umask_arg);
       else
-        printf ("%04lo\n", (unsigned long)umask_arg);
+        printf ("%04lo\n", static_cast<unsigned long> (umask_arg));
     }
 
   return sh_chkwrite (EXECUTION_SUCCESS);
@@ -184,7 +184,7 @@ print_symbolic_umask (mode_t um)
 }
 
 int
-parse_symbolic_mode (char *mode, int initial_bits)
+Shell::parse_symbolic_mode (char *mode, int initial_bits)
 {
   int who, op, perm, bits, c;
   char *s;
@@ -302,7 +302,7 @@ symbolic_umask (WORD_LIST *list)
   /* All work is done with the complement of the umask -- it's
      more intuitive and easier to deal with.  It is complemented
      again before being returned. */
-  bits = parse_symbolic_mode (list->word->word, ~um & 0777);
+  bits = parse_symbolic_mode (list->word->word.c_str (), ~um & 0777);
   if (bits == -1)
     return -1;
 

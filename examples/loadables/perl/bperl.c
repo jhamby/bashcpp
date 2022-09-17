@@ -1,17 +1,12 @@
 /*
  * perl builtin
  */
-#include <config.h>
+#include "config.hh"
 
 #include <fcntl.h>
-#include <errno.h>
 
-#include "builtins.h"
-#include "shell.h"
-
-#ifndef errno
-extern int errno;
-#endif
+#include "builtins.hh"
+#include "shell.hh"
 
 extern char **make_builtin_argv ();
 extern char **export_env;

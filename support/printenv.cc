@@ -24,12 +24,11 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>
-#endif
+#include "config.hh"
 
-#include "bashansi.h"
-#include <stdio.h> /* puts */
+#include <cstdio> /* puts */
+#include <cstdlib>
+#include <cstring>
 
 extern char **environ;
 

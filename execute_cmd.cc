@@ -75,7 +75,7 @@
 
 #include "builtins/getopt.hh"
 
-#include "glob/strmatch.hh"
+#include "strmatch.hh"
 #include "tilde.hh"
 
 #if defined(BUFFERED_INPUT)

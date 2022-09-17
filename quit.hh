@@ -28,6 +28,7 @@ namespace bash
 
 /* Non-zero means SIGINT has already occurred. */
 extern volatile sig_atomic_t interrupt_state;
+
 extern volatile sig_atomic_t terminating_signal;
 
 /* Macro to call a great deal.  SIGINT just sets the interrupt_state variable.

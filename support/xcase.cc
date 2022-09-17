@@ -18,22 +18,16 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "config.hh"
 
-#include <ctype.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cctype>
+#include <cerrno>
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-
-#include "bashansi.h"
-#include <errno.h>
-
-#ifndef errno
-extern int errno;
 #endif
 
 extern int optind;

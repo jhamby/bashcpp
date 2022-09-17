@@ -443,9 +443,10 @@ fi
 AC_FUNC_ALLOCA
 AC_HEADER_MAJOR
 AC_CHECK_HEADERS([arpa/inet.h dirent.h fcntl.h grp.h inttypes.h langinfo.h libintl.h \
-		  malloc.h netdb.h netinet/in.h pwd.h regex.h sgtty.h stdint.h stdio_ext.h \
-		  strings.h sys/dir.h sys/file.h sys/ioctl.h sys/ndir.h sys/param.h sys/socket.h \
-		  sys/time.h sys/wait.h syslog.h termio.h termios.h unistd.h])
+                  malloc.h netdb.h netinet/in.h pwd.h regex.h sgtty.h stdint.h stdio_ext.h \
+                  strings.h sys/dir.h sys/file.h sys/ioctl.h sys/ndir.h sys/param.h \
+                  sys/random.h sys/resource.h sys/socket.h sys/time.h sys/wait.h syslog.h \
+                  termio.h termios.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL

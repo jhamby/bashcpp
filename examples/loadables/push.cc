@@ -21,22 +21,13 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
-#include <errno.h>
-#include <stdio.h>
+#include "config.hh"
 
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "jobs.h"
-#include "shell.h"
-
-#ifndef errno
-extern int errno;
-#endif
-
-extern pid_t dollar_dollar_pid;
-extern int last_command_exit_value;
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "jobs.hh"
+#include "shell.hh"
 
 int
 push_builtin (list)

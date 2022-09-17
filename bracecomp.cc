@@ -55,10 +55,10 @@ static char *
 really_munge_braces (char **array, int real_start, int real_end, int gcd_zero)
 {
   int start, end, gcd;
-  char *result, *subterm, *x;
-  int result_size, flag, tlen;
+  char *subterm, *x;
+  int tlen;
 
-  flag = 0;
+  bool flag = false;
 
   if (real_start == real_end)
     {
@@ -68,12 +68,11 @@ really_munge_braces (char **array, int real_start, int real_end, int gcd_zero)
       return x;
     }
 
-  result = (char *)xmalloc (result_size = 16);
-  *result = '\0';
+  std::string result;
 
   for (start = real_start; start < real_end; start = end + 1)
     {
-      gcd = strlen (array[start]);
+      gcd = std::strlen (array[start]);
       for (end = start + 1; end < real_end; end++)
         {
           int temp;
@@ -91,11 +90,8 @@ really_munge_braces (char **array, int real_start, int real_end, int gcd_zero)
         {
           /* In this case, add in a leading '{', because we are at
              top level, and there isn't a consistent prefix. */
-          result_size += 1;
-          result = (char *)xrealloc (result, result_size);
-          result[0] = '{';
-          result[1] = '\0';
-          flag++;
+          result.push_back ('{');
+          flag = true;
         }
 
       /* Make sure we backslash quote every substring we insert into the
@@ -105,37 +101,34 @@ really_munge_braces (char **array, int real_start, int real_end, int gcd_zero)
         {
           x = savestring (array[start] + gcd_zero);
           subterm = sh_backslash_quote (x, 0, 0);
-          free (x);
+          delete[] x;
         }
       else
         {
           /* If there is more than one element in the subarray,
              insert the (quoted) prefix and an opening brace. */
           tlen = gcd - gcd_zero;
-          x = (char *)xmalloc (tlen + 1);
-          strncpy (x, array[start] + gcd_zero, tlen);
+          x = new char[tlen + 1];
+          std::strncpy (x, array[start] + gcd_zero, tlen);
           x[tlen] = '\0';
           subterm = sh_backslash_quote (x, 0, 0);
-          free (x);
-          result_size += strlen (subterm) + 1;
-          result = (char *)xrealloc (result, result_size);
-          strcat (result, subterm);
-          free (subterm);
-          strcat (result, "{");
+          delete[] x;
+          result.append (subterm);
+          delete[] subterm;
+          result.push_back ('{');
           subterm = really_munge_braces (array, start, end + 1, gcd);
-          subterm[strlen (subterm) - 1] = '}';
+          subterm[std::strlen (subterm) - 1] = '}';
         }
 
-      result_size += strlen (subterm) + 1;
-      result = (char *)xrealloc (result, result_size);
-      strcat (result, subterm);
-      strcat (result, ",");
-      free (subterm);
+      result.append (subterm);
+      result.push_back (',');
+      delete[] subterm;
     }
 
-  if (gcd_zero == 0)
-    result[strlen (result) - 1] = flag ? '}' : '\0';
-  return result;
+  if (gcd_zero == 0 && flag)
+    result.push_back ('}');
+
+  return savestring (result);
 }
 
 static int

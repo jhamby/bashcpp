@@ -36,8 +36,8 @@
 #include <mbstr.h> /* mbschr */
 #endif
 
-#include "builtins/builtext.hh" /* for read_builtin */
-#include "builtins/common.hh"
+#include "builtext.hh" /* for read_builtin */
+#include "common.hh"
 
 #include "history.hh"
 #include "readline.hh"

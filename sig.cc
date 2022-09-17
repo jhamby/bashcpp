@@ -557,8 +557,8 @@ Shell::termsig_handler (int sig)
 
   /* Reset execution context */
   loop_level = continuing = breaking = funcnest = 0;
-  executing_list = comsub_ignore_return = return_catch_flag = wait_intr_flag
-      = 0;
+  executing_list = comsub_ignore_return = return_catch_flag = 0;
+  wait_intr_flag = false;
 
   run_exit_trap ();
 

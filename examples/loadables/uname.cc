@@ -23,10 +23,9 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
-#include <stdio.h>
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
 #if defined(HAVE_UNAME)
 #include <sys/utsname.h>
@@ -41,12 +40,10 @@ struct utsname
 };
 #endif
 
-#include <errno.h>
-
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 #define FLAG_SYSNAME 0x01  /* -s */
 #define FLAG_NODENAME 0x02 /* -n */
@@ -55,10 +52,6 @@ struct utsname
 #define FLAG_MACHINE 0x10  /* -m, -p */
 
 #define FLAG_ALL 0x1f
-
-#ifndef errno
-extern int errno;
-#endif
 
 static void uprint ();
 

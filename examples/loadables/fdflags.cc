@@ -20,17 +20,15 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
-#include "bashansi.h"
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
 
-#include "loadables.h"
+#include <fcntl.h>
+
+#include "loadables.hh"
 
 #ifndef FD_CLOEXEC
 #define FD_CLOEXEC 1

@@ -43,8 +43,7 @@
 #include "input.hh"
 #endif
 
-// Note: use path to the generated header file in objdir
-#include "builtins/pipesize.hh"
+#include "pipesize.hh"
 
 namespace bash
 {

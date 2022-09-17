@@ -62,21 +62,23 @@
  *    that all these features work on all manpages. (I didn't have the
  *    time to look through all the available manpages.)
  */
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+
+#include "config.hh"
 
 #define NROFF 0
 
-#include <ctype.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cctype>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <time.h>
+
+#include <ctime>
+
 #include <unistd.h>
 
 #define NULL_TERMINATED(n) ((n) + 1)

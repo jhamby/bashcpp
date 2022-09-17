@@ -20,15 +20,13 @@
 
 /* See Makefile for compilation details. */
 
-#include <config.h>
+#include "config.hh"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
-#include "bashansi.h"
-#include <stdio.h>
 
-#include "loadables.h"
+#include "loadables.hh"
 
 #define CSV_ARRAY_DEFAULT "CSV"
 

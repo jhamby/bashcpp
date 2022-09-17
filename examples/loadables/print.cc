@@ -20,27 +20,16 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "config.hh"
 
-#include "bashtypes.h"
+#include "bashtypes.hh"
 
-#include <errno.h>
-#include <limits.h>
-#include <stdio.h>
-
-#include "bashansi.h"
-#include "bashgetopt.h"
-#include "builtext.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
-#include "stdc.h"
-
-#if !defined(errno)
-extern int errno;
-#endif
+#include "bashansi.hh"
+#include "bashgetopt.hh"
+#include "builtext.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 int print_builtin ();
 static int printargs ();

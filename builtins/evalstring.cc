@@ -39,7 +39,7 @@
 #include "shell.hh"
 #include "trap.hh"
 
-#include "y.tab.hh"
+#include "parse.hh"
 
 #include "common.hh"
 

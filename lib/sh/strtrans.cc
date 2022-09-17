@@ -247,7 +247,7 @@ Shell::ansicstr (const char *string, unsigned int len, int flags, bool *sawc,
 /* Take a string STR, possibly containing non-printing characters, and turn it
    into a $'...' ANSI-C style quoted string.  Returns a new string. */
 char *
-ansic_quote (const char *str, unsigned int *rlen)
+ansic_quote (const char *str)
 {
   char *r, *ret;
   unsigned int l, rsize;
@@ -259,7 +259,7 @@ ansic_quote (const char *str, unsigned int *rlen)
 #endif
 
   if (str == 0 || *str == 0)
-    return (char *)0;
+    return nullptr;
 
   l = std::strlen (str);
   rsize = 4 * l + 4;
@@ -343,8 +343,6 @@ ansic_quote (const char *str, unsigned int *rlen)
 
   *r++ = '\'';
   *r = '\0';
-  if (rlen)
-    *rlen = r - ret;
   return ret;
 }
 

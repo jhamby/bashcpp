@@ -18,7 +18,8 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
+
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
@@ -26,10 +27,10 @@
 #include <cstdio>
 #include <cstring>
 
-#include "bashintl.h"
-#include "bashtypes.h"
+#include "bashintl.hh"
+#include "bashtypes.hh"
 
-#include "externs.h"
+#include "externs.hh"
 
 #if defined(HAVE_ICONV)
 #include <iconv.h>

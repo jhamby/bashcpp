@@ -862,7 +862,7 @@ Shell::exp0 ()
           expr_current.tokstr.clear (); /* keep it from being freed */
           expr_current.noeval = 1;
           readtok ();
-          stok = expr_current.curtok;
+          token_t stok = expr_current.curtok;
 
           /* post-increment or post-decrement */
           if (stok == POSTINC || stok == POSTDEC)
@@ -885,15 +885,13 @@ Shell::exp0 ()
 #endif
                     expr_bind_variable (expr_current.tokstr, vincdec);
                 }
-              free (vincdec);
+              delete[] vincdec;
               expr_current.curtok
                   = NUM; /* make sure x++=7 is flagged as an error */
             }
           else
             {
-              /* XXX - watch out for pointer aliasing issues here */
-              if (stok == STR) /* free new tokstr before old one is restored */
-                FREE (tokstr);
+              // copy contents of ec
               expr_current = ec;
             }
         }
@@ -905,32 +903,6 @@ Shell::exp0 ()
 
   return val;
 }
-
-#if 0
-void
-Shell::init_lvalue (struct lvalue *lv)
-{
-  lv->tokstr = 0;
-  lv->tokvar = 0;
-  lv->tokval = lv->ind = -1;
-}
-
-static struct lvalue *
-alloc_lvalue ()
-{
-  struct lvalue *lv;
-
-  lv = (struct lvalue *)xmalloc (sizeof (struct lvalue));
-  init_lvalue (lv);
-  return lv;
-}
-
-static void
-free_lvalue (struct lvalue *lv)
-{
-  free (lv);		/* should be inlined */
-}
-#endif
 
 int64_t
 Shell::expr_streval (std::string &tok, int e, struct lvalue *lvalue)

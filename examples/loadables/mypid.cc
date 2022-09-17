@@ -11,14 +11,14 @@
  * references to it do not attempt to access memory that is no longer part
  * of this process's address space.
  */
-#include <config.h>
 
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
+#include "config.hh"
 
-#include "builtins.h"
-#include "shell.h"
+#include "builtins.hh"
+#include "shell.hh"
+
+namespace bash
+{
 
 #define INIT_DYNAMIC_VAR(var, val, gfunc, afunc)                              \
   do                                                                          \
@@ -77,3 +77,5 @@ struct builtin enable_mypid_struct
     = { "enable_mypid",   enable_mypid_builtin,
         BUILTIN_ENABLED,  (char **)(void *)enable_mypid_doc,
         "enable_mypid N", 0 };
+
+} // namespace bash

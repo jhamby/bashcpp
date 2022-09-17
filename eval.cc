@@ -40,8 +40,7 @@
 namespace bash
 {
 
-static void send_pwd_to_eterm ();
-static SigHandler alrm_catcher (int);
+static void alrm_catcher (int);
 
 /* Read and execute commands until EOF is reached.  This assumes that
    the input source has already been initialized. */
@@ -67,7 +66,7 @@ Shell::reader_loop ()
          it if SIGINT is trapped in an interactive shell? */
       if (interactive_shell && signal_is_ignored (SIGINT) == 0
           && signal_is_trapped (SIGINT) == 0)
-        set_signal_handler (SIGINT, sigint_sighandler);
+        set_signal_handler (SIGINT, &sigint_sighandler_global);
 
       try
         {
@@ -80,7 +79,7 @@ Shell::reader_loop ()
               if (interactive_shell == 0 && read_but_dont_execute)
                 {
                   set_exit_status (EXECUTION_SUCCESS);
-                  dispose_command (global_command);
+                  delete global_command;
                   global_command = nullptr;
                 }
               else if ((current_command = global_command))
@@ -109,15 +108,7 @@ Shell::reader_loop ()
                   stdin_redir = false;
 
                   execute_command (current_command);
-
-                exec_done:
-                  QUIT;
-
-                  if (current_command)
-                    {
-                      dispose_command (current_command);
-                      current_command = nullptr;
-                    }
+                  goto exec_done;
                 }
             }
           else
@@ -129,6 +120,8 @@ Shell::reader_loop ()
             }
           if (just_one_command)
             EOF_Reached = true;
+
+          return last_command_exit_value;
         }
       catch (const bash_exception &e)
         {
@@ -161,18 +154,29 @@ Shell::reader_loop ()
               /* Obstack free command elements, etc. */
               if (current_command)
                 {
-                  dispose_command (current_command);
+                  delete current_command;
                   current_command = nullptr;
                 }
 
               restore_sigmask ();
               break;
 
+            case NOEXCEPTION:
             default:
-              command_error ("reader_loop", CMDERR_BADJUMP, code, 0);
+              command_error ("reader_loop", CMDERR_BADJUMP, e.type);
             }
+          return last_command_exit_value;
         }
     }
+exec_done:
+  QUIT;
+
+  if (current_command)
+    {
+      delete current_command;
+      current_command = nullptr;
+    }
+
   indirection_level--;
   return last_command_exit_value;
 }
@@ -182,7 +186,7 @@ int
 Shell::pretty_print_loop ()
 {
   COMMAND *current_command;
-  char *command_to_print;
+  const char *command_to_print;
   bool global_posix_mode, last_was_newline;
 
   global_posix_mode = posixly_correct;
@@ -215,7 +219,7 @@ Shell::pretty_print_loop ()
             return EXECUTION_FAILURE;
         }
     }
-  catch (const bash_exception &e)
+  catch (const bash_exception &)
     {
       return EXECUTION_FAILURE;
     }
@@ -223,16 +227,16 @@ Shell::pretty_print_loop ()
   return EXECUTION_SUCCESS;
 }
 
-static SigHandler
-alrm_catcher (int i)
+static void
+alrm_catcher (int)
 {
   const char *msg;
 
   msg = _ ("\007timed out waiting for input: auto-logout\n");
-  ssize_t ignored = ::write (1, msg, std::strlen (msg));
+  (void)::write (1, msg, std::strlen (msg));
 
-  bash_logout (); /* run ~/.bash_logout if this is a login shell */
-  throw bash_exception (EXITPROG);
+  the_shell->bash_logout (); /* run ~/.bash_logout if this is a login shell */
+  terminating_signal = SIGKILL; // XXX - throw EXITPROG as soon as possible
 }
 
 /* Send an escape sequence to emacs term mode to tell it the
@@ -240,35 +244,27 @@ alrm_catcher (int i)
 void
 Shell::send_pwd_to_eterm ()
 {
-  char *pwd, *f;
-
-  f = 0;
-  pwd = get_string_value ("PWD");
-  if (pwd == 0)
+  char *f = nullptr;
+  char *pwd = get_string_value ("PWD");
+  if (pwd == nullptr)
     f = pwd = get_working_directory ("eterm");
   std::fprintf (stderr, "\032/%s\n", pwd);
-  free (f);
+  delete[] f;
 }
 
 #if defined(ARRAY_VARS)
 /* Caller ensures that A has a non-zero number of elements */
-int
-execute_array_command (ARRAY *a, const void *v)
+void
+Shell::execute_array_command (ARRAY *a, const char *tag)
 {
-  const char *tag;
-  char **argv;
-  int argc, i;
-
-  tag = (const char *)v;
-  argc = 0;
-  argv = array_to_argv (a, &argc);
-  for (i = 0; i < argc; i++)
+  int argc = 0;
+  char **argv = array_to_argv (a, &argc);
+  for (int i = 0; i < argc; i++)
     {
       if (argv[i] && argv[i][0])
         execute_variable_command (argv[i], tag);
     }
   strvec_dispose (argv);
-  return 0;
 }
 #endif
 
@@ -282,33 +278,31 @@ Shell::execute_prompt_command ()
 #endif
 
   pcv = find_variable ("PROMPT_COMMAND");
-  if (pcv == 0 || var_isset (pcv) == 0 || invisible_p (pcv))
+  if (pcv == nullptr || !pcv->is_set () || pcv->invisible ())
     return;
 #if defined(ARRAY_VARS)
-  if (array_p (pcv))
+  if (pcv->array ())
     {
-      if ((pcmds = array_cell (pcv)) && array_num_elements (pcmds) > 0)
+      if ((pcmds = pcv->array_value ()) && array_num_elements (pcmds) > 0)
         execute_array_command (pcmds, "PROMPT_COMMAND");
       return;
     }
-  else if (assoc_p (pcv))
+  else if (pcv->assoc ())
     return; /* currently don't allow associative arrays here */
 #endif
 
-  command_to_execute = value_cell (pcv);
+  command_to_execute = pcv->str_value ();
   if (command_to_execute && *command_to_execute)
     execute_variable_command (command_to_execute, "PROMPT_COMMAND");
 }
 
-/* Call the YACC-generated parser and return the status of the parse.
+/* Call the Bison-generated parser and return the status of the parse.
    Input is read from the current input stream (bash_input).  yyparse
    leaves the parsed command in the global variable GLOBAL_COMMAND.
    This is where PROMPT_COMMAND is executed. */
 int
 Shell::parse_command ()
 {
-  int r;
-
   need_here_doc = 0;
   run_pending_traps ();
 
@@ -332,7 +326,7 @@ Shell::parse_command ()
     }
 
   current_command_line_count = 0;
-  r = yyparse ();
+  int r = yyparse ();
 
   if (need_here_doc)
     gather_here_documents ();
@@ -348,7 +342,7 @@ Shell::read_command ()
 {
   SHELL_VAR *tmout_var;
   int tmout_len, result;
-  SigHandler *old_alrm;
+  SigHandler old_alrm;
 
   set_current_prompt_level (1);
   global_command = nullptr;
@@ -362,13 +356,13 @@ Shell::read_command ()
     {
       tmout_var = find_variable ("TMOUT");
 
-      if (tmout_var && var_isset (tmout_var))
+      if (tmout_var && tmout_var->is_set ())
         {
-          tmout_len = atoi (value_cell (tmout_var));
+          tmout_len = ::atoi (tmout_var->str_value ());
           if (tmout_len > 0)
             {
-              old_alrm = set_signal_handler (SIGALRM, alrm_catcher);
-              alarm (tmout_len);
+              old_alrm = set_signal_handler (SIGALRM, &alrm_catcher);
+              ::alarm (static_cast<unsigned int> (tmout_len));
             }
         }
     }
@@ -380,7 +374,7 @@ Shell::read_command ()
 
   if (interactive && tmout_var && (tmout_len > 0))
     {
-      alarm (0);
+      ::alarm (0);
       set_signal_handler (SIGALRM, old_alrm);
     }
 

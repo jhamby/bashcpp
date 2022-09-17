@@ -40,9 +40,10 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <config.h>
+#include "config.hh"
 
-#include "posixstat.h"
+#include "posixstat.hh"
+
 #include <sys/types.h>
 
 #if defined(HAVE_UNISTD_H)
@@ -53,21 +54,11 @@
 #include <limits.h>
 #endif
 
-#include "bashansi.h"
-
-#include <errno.h>
-#include <stdio.h>
-
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "maxpath.h"
-#include "shell.h"
-#include "stdc.h"
-
-#if !defined(errno)
-extern int errno;
-#endif
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "maxpath.hh"
+#include "shell.hh"
 
 #if !defined(_POSIX_PATH_MAX)
 #define _POSIX_PATH_MAX 255

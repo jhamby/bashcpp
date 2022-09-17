@@ -20,11 +20,11 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "config.hh"
 
-#include "bashtypes.h"
-#include "filecntl.h"
-#include "posixstat.h"
+#include "bashtypes.hh"
+#include "filecntl.hh"
+#include "posixstat.hh"
 
 #include <signal.h>
 
@@ -32,19 +32,10 @@
 #include <unistd.h>
 #endif
 
-#include "bashansi.h"
-
-#include <errno.h>
-#include <stdio.h>
-
-#include "bashgetopt.h"
-#include "builtins.h"
-#include "common.h"
-#include "shell.h"
-
-#if !defined(errno)
-extern int errno;
-#endif
+#include "bashgetopt.hh"
+#include "builtins.hh"
+#include "common.hh"
+#include "shell.hh"
 
 typedef struct flist
 {

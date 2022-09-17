@@ -49,6 +49,7 @@
 #include "bashintl.hh"
 #include "posixstat.hh"
 
+#include "builtins.hh"
 #include "command.hh"
 #include "externs.hh"
 #include "general.hh"
@@ -117,6 +118,8 @@ enum hist_ctl_flags
 #endif
 
 #define HEREDOC_MAX 16
+
+#define NUM_POSIX_VARS 5
 
 constexpr int NO_PIPE = -1;
 constexpr int REDIRECT_BOTH = -2;
@@ -356,6 +359,30 @@ extern Shell *the_shell;
 
 #define IMPOSSIBLE_TRAP_HANDLER (reinterpret_cast<sighandler_t> (the_shell))
 #define IMPOSSIBLE_TRAP_NAME (reinterpret_cast<char *> (the_shell))
+
+enum print_flags
+{
+  FUNC_NOFLAGS = 0,
+  FUNC_MULTILINE = 0x01,
+  FUNC_EXTERNAL = 0x02,
+};
+
+/* enum for sh_makepath function defined in lib/sh/makepath.c */
+enum mp_flags
+{
+  MP_NOFLAGS = 0,
+  MP_DOTILDE = 0x01,
+  MP_DOCWD = 0x02,
+  MP_RMDOT = 0x04,
+  MP_IGNDOT = 0x08
+};
+
+static inline mp_flags
+operator| (const mp_flags &a, const mp_flags &b)
+{
+  return static_cast<mp_flags> (static_cast<uint32_t> (a)
+                                | static_cast<uint32_t> (b));
+}
 
 /* Simple shell state: variables that can be memcpy'd to subshells. */
 class SimpleState
@@ -606,6 +633,39 @@ public:
      ASSIGNMENT_WORD, yylval.word should be set to word_desc_to_read. */
   int token_to_read;
 
+  // Current printing indentation level.
+  int indentation;
+
+  // Indentation amount.
+  int indentation_amount;
+
+  // Increase the printing indentation level.
+  void
+  add_indentation ()
+  {
+    indentation += indentation_amount;
+  }
+
+  // Decrease the printing indentation level.
+  void
+  sub_indentation ()
+  {
+    indentation -= indentation_amount;
+  }
+
+  /* The depth of the group commands that we are currently printing.  This
+     includes the group command that is a function body. */
+  int group_command_nesting;
+
+  // When non-zero, skip the next indent.
+  int skip_this_indent;
+
+  /* Non-zero means stuff being printed is inside of a function def. */
+  int inside_function_def;
+
+  /* Non-zero means stuff being printed is inside of a connection. */
+  int printing_connection;
+
 protected:
   // Back to protected access.
 
@@ -635,10 +695,19 @@ protected:
   // The current line number.
   int line_number;
 
+  // File descriptor for xtrace output.
+  int xtrace_fd;
+
   /* An array of sigmode_t flags, one for each signal, describing what the
      shell will do with a signal.  DEBUG_TRAP == NSIG; some code below
      assumes this. */
   sigmode_t sigmodes[BASH_NSIG];
+
+  int ngroups;   // number of groups the user is a member of
+  int maxgroups; // max number of supplemental groups
+
+  /* The set of groups that this user is a member of. */
+  GETGROUPS_T *group_array;
 
   /* ************************************************************** */
   /*		Bash Variables (8-bit bool/char types)		    */
@@ -654,6 +723,8 @@ public:
      general, this means that the shell is at this moment reading input
      from the keyboard. */
   bool interactive;
+
+  bool was_heredoc;
 
 protected:
   // Back to protected access.
@@ -1087,6 +1158,9 @@ protected:
   /* True if we've caught a trapped signal. */
   bool catch_flag;
 
+  // Have the tilde expander strings been initialized?
+  bool tilde_strings_initialized;
+
 #ifndef HAVE_LOCALE_CHARSET
   char charsetbuf[40];
 #endif
@@ -1209,6 +1283,7 @@ protected:
   typedef int (Shell::*sh_msg_func_t) (const char *, ...); /* printf(3)-like */
   typedef void (Shell::*sh_vmsg_func_t) (const char *,
                                          ...); /* printf(3)-like */
+  typedef void (Shell::*PFUNC) (const char *, ...);
 
   /* Specific function pointer typedefs.  Most of these could be done
      with #defines. */
@@ -1327,10 +1402,13 @@ public:
   int umask_builtin (WORD_LIST *);
   int wait_builtin (WORD_LIST *);
 
+  int parse_symbolic_mode (char *, int);
+
 #if defined(PUSHD_AND_POPD)
   int pushd_builtin (WORD_LIST *);
   int popd_builtin (WORD_LIST *);
   int dirs_builtin (WORD_LIST *);
+  char *get_dirstack_from_string (char *);
 #endif /* PUSHD_AND_POPD */
 
   int shopt_builtin (WORD_LIST *);
@@ -1574,6 +1652,147 @@ public:
   void termsig_sighandler (int);
   void trap_handler (int);
 
+#if defined(SELECT_COMMAND)
+  void xtrace_print_select_command_head (FOR_SELECT_COM *);
+#endif
+
+  void xtrace_print_case_command_head (CASE_COM *);
+
+#if defined(DPAREN_ARITHMETIC) || defined(ARITH_FOR_COMMAND)
+  void xtrace_print_arith_cmd (WORD_LIST *);
+#endif
+
+  void make_command_string_internal (COMMAND *);
+
+#if defined(COND_COMMAND)
+  void print_cond_node (COND_COM *);
+#ifdef DEBUG
+  void debug_print_cond_command (COND_COM *cond);
+#endif
+  void xtrace_print_cond_term (cond_com_type, bool, WORD_DESC *, const char *,
+                               const char *);
+#endif
+
+  void
+  print_heredocs (REDIRECT *heredocs)
+  {
+    REDIRECT *hdtail;
+
+    cprintf (" ");
+    for (hdtail = heredocs; hdtail; hdtail = hdtail->next ())
+      {
+        print_redirection (hdtail);
+        cprintf ("\n");
+      }
+    was_heredoc = true;
+  }
+
+  void
+  print_heredoc_bodies (REDIRECT *heredocs)
+  {
+    REDIRECT *hdtail;
+
+    cprintf ("\n");
+    for (hdtail = heredocs; hdtail; hdtail = hdtail->next ())
+      {
+        print_heredoc_body (hdtail);
+        cprintf ("\n");
+      }
+    was_heredoc = true;
+  }
+
+  void cprintf (const char *, ...) __attribute__ ((__format__ (printf, 2, 3)));
+  void xprintf (const char *, ...) __attribute__ ((__format__ (printf, 2, 3)));
+
+  void
+  _print_word_list (WORD_LIST *list, const char *separator, PFUNC pfunc)
+  {
+    for (WORD_LIST *w = list; w; w = w->next ())
+      ((*this).*pfunc) ("%s%s", w->word->word.c_str (),
+                        w->next () ? separator : "");
+  }
+
+  void
+  print_word_list (WORD_LIST *list, const char *separator)
+  {
+    _print_word_list (list, separator, &Shell::xprintf);
+  }
+
+  void xtrace_set (int, FILE *);
+
+  void
+  xtrace_init ()
+  {
+    xtrace_set (-1, stderr);
+  }
+
+  void
+  xtrace_fdchk (int fd)
+  {
+    if (fd == xtrace_fd)
+      xtrace_reset ();
+  }
+
+  void
+  command_print_word_list (WORD_LIST *list, const char *separator)
+  {
+    _print_word_list (list, separator, &Shell::cprintf);
+  }
+
+  void
+  newline (const char *string)
+  {
+    cprintf ("\n");
+    indent (indentation);
+    if (string && *string)
+      cprintf ("%s", string);
+  }
+
+  void
+  indent (int count)
+  {
+    indentation_string.assign (static_cast<size_t> (count), ' ');
+    cprintf ("%s", indentation_string.c_str ());
+  }
+
+  void
+  semicolon ()
+  {
+    size_t size = the_printed_command.size ();
+    if (size
+        && (the_printed_command[size - 1] == '&'
+            || the_printed_command[size - 1] == '\n'))
+      return;
+    cprintf (";");
+  }
+
+  void
+  PRINT_DEFERRED_HEREDOCS (const char *x)
+  {
+    if (deferred_heredocs)
+      print_deferred_heredocs (x);
+  }
+
+  void print_redirection_list (REDIRECT *);
+
+  void print_heredoc_header (REDIRECT *);
+
+  void
+  print_heredoc_body (REDIRECT *redirect)
+  {
+    /* Here doc body */
+    cprintf ("%s%s", redirect->redirectee.r.filename->word.c_str (),
+             redirect->here_doc_eof.c_str ());
+  }
+
+  void print_redirection (REDIRECT *);
+
+  void print_function_def (FUNCTION_DEF *);
+
+  char *named_function_string (const char *, COMMAND *, print_flags);
+
+  void print_deferred_heredocs (const char *);
+
   // Protected methods below
 protected:
   // Functions from parser.cc (previously in parse.y).
@@ -1583,6 +1802,8 @@ protected:
 
   sh_parser_state_t *save_parser_state (sh_parser_state_t *);
   void restore_parser_state (sh_parser_state_t *);
+
+  int find_reserved_word (const char *);
 
   // Functions provided by various builtins.
 
@@ -1622,7 +1843,11 @@ protected:
   char **bash_directory_completion_matches (const char *);
   char *bash_dequote_text (const char *);
 
-  /* Functions from expr.c. */
+  /* Functions from arrayfunc.cc */
+
+  char *array_variable_name (const char *, int, char **, int *);
+
+  /* Functions from expr.cc */
 
   enum eval_flags
   {
@@ -1667,13 +1892,14 @@ protected:
 #endif
 
   /* set -x support */
-  void xtrace_init ();
 #ifdef NEED_XTRACE_SET_DECL
   void xtrace_set (int, FILE *);
 #endif
-  void xtrace_fdchk (int);
   void xtrace_reset ();
-  char *indirection_level_string ();
+  const char *indirection_level_string ();
+  void xtrace_print_assignment (const char *, const char *, bool, int);
+  void xtrace_print_word_list (WORD_LIST *, int);
+  void xtrace_print_for_command_head (FOR_SELECT_COM *);
 
   /* Functions from shell.c. */
   void exit_shell (int) __attribute__ ((__noreturn__));
@@ -1695,11 +1921,18 @@ protected:
   void unset_bash_input (int);
   void get_current_user_info ();
 
-  /* Functions from eval.c. */
+  /* Functions from eval.cc. */
   int reader_loop ();
   int pretty_print_loop ();
   int parse_command ();
   int read_command ();
+  void send_pwd_to_eterm ();
+
+#if defined(ARRAY_VARS)
+  void execute_array_command (ARRAY *, const char *);
+#endif
+
+  void execute_prompt_command ();
 
   /* Functions from braces.c. */
 #if defined(BRACE_EXPANSION)
@@ -2137,16 +2370,6 @@ protected:
 
   /* from lib/sh/eaccess.cc */
   int sh_stataccess (const char *, int);
-
-  /* enum for sh_makepath function defined in lib/sh/makepath.c */
-  enum mp_flags
-  {
-    MP_NOFLAGS = 0,
-    MP_DOTILDE = 0x01,
-    MP_DOCWD = 0x02,
-    MP_RMDOT = 0x04,
-    MP_IGNDOT = 0x08
-  };
 
   /* from lib/sh/makepath.cc */
   char *sh_makepath (const char *, const char *, mp_flags);
@@ -3243,82 +3466,26 @@ protected:
       return false;
   }
 
-  /* ************************************************************** */
-  /*		Private Shell Variables (ptr types)		    */
-  /* ************************************************************** */
-
-#if defined(NO_MAIN_ENV_ARG)
-  char **environ; /* used if no third argument to main() */
-#endif
-
-  /* The current locale when the program begins */
-  char *default_locale;
-
-  /* The current domain for textdomain(3). */
-  char *default_domain;
-  char *default_dir;
-
-  /* tracks the value of LC_ALL; used to override values for other locale
-     categories */
-  char *lc_all;
-
-  /* tracks the value of LC_ALL; used to provide defaults for locale
-     categories */
-  char *lang;
-
-public:
-  // The following are public for access from the Bison parser.
-
-  COMMAND *global_command;
-
-protected:
-  // Back to protected access.
-
-  /* Information about the current user. */
-  UserInfo current_user;
-
-  /* The current host's name. */
-  const char *current_host_name;
-
-  /* The environment that the shell passes to other commands. */
-  char **shell_environment;
-
-  /* The name of this shell, as taken from argv[0]. */
-  const char *shell_name;
-
-  /* The name of the .(shell)rc file. */
-  const char *bashrc_file;
-
-  /* These are extern so execute_simple_command can set them, and then
-     throw back to main to execute a shell script, instead of calling
-     main () again and resulting in indefinite, possibly fatal, stack
-     growth. */
-
-  char **subshell_argv;
-  char **subshell_envp;
-
-  char *exec_argv0;
-
-  const char *command_execution_string; /* argument to -c option */
-  const char *shell_script_filename;    /* shell script */
-
-  FILE *default_input;
-
-  std::vector<STRING_INT_ALIST> shopt_alist;
-
-  /* The thing that we build the array of builtins out of. */
-  struct Builtin
+  /* Print COMMAND (a command tree) on standard output. */
+  void
+  print_command (COMMAND *command)
   {
-    const char *name;            /* The name that the user types. */
-    sh_builtin_func_t function;  /* The address of the invoked function. */
-    const char *const *long_doc; /* NULL terminated array of strings. */
-    const char *short_doc;       /* Short version of documentation. */
-    void *handle;                /* dlsym() handle */
-    builtin_flags flags;         /* One or more of the #defines above. */
-  };
+    std::printf ("%s", make_command_string (command));
+  }
 
-  // TODO: initialize this vector at startup from generated builtins.cc.
-  std::vector<Builtin> shell_builtins;
+  /* Make a string which is the printed representation of the command
+     tree in COMMAND.  We return this string.  However, the string
+     buffer is reused, so you have to make a copy if you want it to
+     remain around. */
+  const char *
+  make_command_string (COMMAND *command)
+  {
+    the_printed_command.clear ();
+    was_heredoc = false;
+    deferred_heredocs = nullptr;
+    make_command_string_internal (command);
+    return the_printed_command.c_str ();
+  }
 
   // definitions from subst.h
 
@@ -3586,14 +3753,13 @@ protected:
   void exp_throw_to_top_level (const std::exception &);
 
 #if defined(ARRAY_VARS)
-  size_t skip_matched_pair (const char *, size_t, char, char,
-                            valid_array_flags);
+  size_t skip_matched_pair (const char *, size_t, char, char, int);
 
   /* Flags has 1 as a reserved value, since skip_matched_pair uses it for
      skipping over quoted strings and taking the first instance of the
      closing character. */
   size_t
-  skipsubscript (const char *string, size_t start, valid_array_flags flags)
+  skipsubscript (const char *string, size_t start, int flags)
   {
     return skip_matched_pair (string, start, '[', ']', flags);
   }
@@ -3819,7 +3985,8 @@ protected:
   void sv_childmax (const char *);
 #endif
 
-  // Methods that were previously static in variables.c.
+  // Methods implemented in variables.cc.
+
   void create_variable_tables ();
 
   /* The variable in NAME has just had its state changed.  Check to see if it
@@ -3827,9 +3994,11 @@ protected:
   void stupidly_hack_special_variables (const char *);
 
   // Methods implemented in parse.yy.
+
   int yyparse ();
 
-  // Methods implemented in parser.cc
+  // Methods implemented in parser.cc.
+
   char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
   int return_EOF ();
   void push_token (int);
@@ -3842,16 +4011,174 @@ protected:
   void with_input_from_stdin ();
   void with_input_from_stream (FILE *, const char *);
   void initialize_bash_input ();
+  void execute_variable_command (const char *, const char *);
 
-  // Methods in lib/tilde/tilde.c.
+  // Methods in lib/tilde/tilde.cc.
+
   size_t tilde_find_prefix (const char *, size_t *);
   char *tilde_expand_word (const char *);
   size_t tilde_find_suffix (const char *);
   char *tilde_expand (const char *);
 
-private:
-  // Here are the variables we can't trivially send to a different memory
-  // space.
+  // Methods in arrayfunc.cc.
+
+  bool valid_array_reference (const char *, valid_array_flags);
+
+  // Methods in general.cc.
+
+  // Enable/disable POSIX mode, restoring any saved state.
+  void posix_initialize (bool);
+
+  char *
+  get_posix_options (char *bitmap)
+  {
+    if (bitmap == nullptr)
+      bitmap = new char[NUM_POSIX_VARS];
+
+    for (int i = 0; i < NUM_POSIX_VARS; i++)
+      bitmap[i] = *(posix_vars[i]);
+    return bitmap;
+  }
+
+  void
+  save_posix_options ()
+  {
+    saved_posix_vars = get_posix_options (saved_posix_vars);
+  }
+
+  void
+  set_posix_options (const char *bitmap)
+  {
+    for (int i = 0; i < NUM_POSIX_VARS; i++)
+      *(posix_vars[i]) = bitmap[i];
+  }
+
+  bool valid_nameref_value (const char *, valid_array_flags);
+  bool check_selfref (const char *, const char *);
+  bool check_identifier (WORD_DESC *, bool);
+
+  // inlines moved from general.cc.
+
+  bool
+  exportable_function_name (const char *string)
+  {
+    if (absolute_program (string))
+      return false;
+    if (mbschr (string, '=') != nullptr)
+      return false;
+    return true;
+  }
+
+  bool legal_alias_name (const char *);
+  size_t assignment (const char *, int);
+
+  char *make_absolute (const char *, const char *);
+  char *full_pathname (char *);
+
+  /* Return 1 if STRING is an absolute program name; it is absolute if it
+     contains any slashes.  This is used to decide whether or not to look
+     up through $PATH. */
+  bool
+  absolute_program (const char *string)
+  {
+    return mbschr (string, '/') != nullptr;
+  }
+
+  const char *polite_directory_format (const char *);
+  char *trim_pathname (char *);
+
+  char *bash_special_tilde_expansions (char *);
+
+  void tilde_initialize ();
+
+  char *bash_tilde_expand (const char *, int);
+
+  void initialize_group_array ();
+
+  char **get_group_list (int *);
+  int *get_group_array (int *);
+
+  int default_columns ();
+
+  /* ************************************************************** */
+  /*		Private Shell Variables (ptr types)		    */
+  /* ************************************************************** */
+
+#if defined(NO_MAIN_ENV_ARG)
+  char **environ; /* used if no third argument to main() */
+#endif
+
+  /* The current locale when the program begins */
+  char *default_locale;
+
+  /* The current domain for textdomain(3). */
+  char *default_domain;
+  char *default_dir;
+
+  /* tracks the value of LC_ALL; used to override values for other locale
+     categories */
+  char *lc_all;
+
+  /* tracks the value of LC_ALL; used to provide defaults for locale
+     categories */
+  char *lang;
+
+public:
+  // The following are public for access from the Bison parser.
+
+  COMMAND *global_command;
+
+  // Accessed by print () methods.
+  REDIRECT *deferred_heredocs;
+
+protected:
+  // Back to protected access.
+
+  /* Information about the current user. */
+  UserInfo current_user;
+
+  /* The current host's name. */
+  const char *current_host_name;
+
+  /* The environment that the shell passes to other commands. */
+  char **shell_environment;
+
+  /* The name of this shell, as taken from argv[0]. */
+  const char *shell_name;
+
+  /* The name of the .(shell)rc file. */
+  const char *bashrc_file;
+
+  /* These are extern so execute_simple_command can set them, and then
+     throw back to main to execute a shell script, instead of calling
+     main () again and resulting in indefinite, possibly fatal, stack
+     growth. */
+
+  char **subshell_argv;
+  char **subshell_envp;
+
+  char *exec_argv0;
+
+  const char *command_execution_string; /* argument to -c option */
+  const char *shell_script_filename;    /* shell script */
+
+  FILE *default_input;
+
+  std::vector<STRING_INT_ALIST> shopt_alist;
+
+  /* The thing that we build the array of builtins out of. */
+  struct Builtin
+  {
+    const char *name;            /* The name that the user types. */
+    sh_builtin_func_t function;  /* The address of the invoked function. */
+    const char *const *long_doc; /* NULL terminated array of strings. */
+    const char *short_doc;       /* Short version of documentation. */
+    void *handle;                /* dlsym() handle */
+    builtin_flags flags;         /* One or more of the #defines above. */
+  };
+
+  // TODO: initialize this vector at startup from generated builtins.cc.
+  std::vector<Builtin> shell_builtins;
 
   jobstats js;
 
@@ -3915,10 +4242,22 @@ private:
 
   char *the_current_working_directory;
 
+  // The buffer used by print_cmd.cc. */
+  std::string the_printed_command;
+
+  // The FILE pointer used for xtrace.
+  FILE *xtrace_fp;
+
+  // Buffer to indicate the indirection level (PS4) when set -x is enabled.
+  std::string indirection_string;
+
+  // Buffer for the indentation string.
+  std::string indentation_string;
+
   /* The printed representation of the currently-executing command (same as
      the_printed_command), except when a trap is being executed.  Useful for
      a debugger to know where exactly the program is currently executing. */
-  char *the_printed_command_except_trap;
+  std::string the_printed_command_except_trap;
 
   /* The name of the command that is currently being executed.
      `test' needs this, for example. */
@@ -4113,9 +4452,25 @@ private:
   // List of long command-line options and pointers to variables to set
   std::vector<LongArg> long_args;
 
+  char *posix_vars[NUM_POSIX_VARS];
+
+  // Saved POSIX settings.
+  char *saved_posix_vars;
+
+  char **bash_tilde_prefixes;
+  char **bash_tilde_prefixes2;
+  char **bash_tilde_suffixes;
+  char **bash_tilde_suffixes2;
+
+  char **group_vector;
+  int *group_iarray;
+
   // Buffer for buffered input.
   char localbuf[1024];
   int local_index = 0, local_bufused = 0;
+
+  // Temporary directory name buffer.
+  char tdir_buf[PATH_MAX];
 };
 
 struct sh_input_line_state_t

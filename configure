@@ -26482,6 +26482,18 @@ then :
   printf "%s\n" "#define HAVE_SYS_PARAM_H 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_header_compile "$LINENO" "sys/random.h" "ac_cv_header_sys_random_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_random_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_SYS_RANDOM_H 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_header_compile "$LINENO" "sys/resource.h" "ac_cv_header_sys_resource_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_resource_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_SYS_RESOURCE_H 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_header_compile "$LINENO" "sys/socket.h" "ac_cv_header_sys_socket_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_socket_h" = xyes
 then :

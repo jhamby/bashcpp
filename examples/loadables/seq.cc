@@ -17,7 +17,7 @@
 /* Written as bash builtin by Chet Ramey. Portions from seq.c by Ulrich
  * Drepper. */
 
-#include <config.h>
+#include "config.hh"
 
 #include <sys/types.h>
 
@@ -25,16 +25,8 @@
 #include <unistd.h>
 #endif
 
-#include <errno.h>
-#include <stdio.h>
-
-#include "bashansi.h"
-#include "bashintl.h"
-#include "loadables.h"
-
-#ifndef errno
-extern int errno;
-#endif
+#include "bashintl.hh"
+#include "loadables.hh"
 
 #if defined(HAVE_LONG_DOUBLE) && HAVE_DECL_STRTOLD && !defined(STRTOLD_BROKEN)
 typedef long double floatmax_t;
