@@ -1,6 +1,7 @@
 /* parser.cc - Parser code previously in parse.y. */
 
 /* Copyright (C) 1989-2020 Free Software Foundation, Inc.
+   Copyright 2022, Jake Hamby.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -20,16 +21,10 @@
 
 #include "config.hh"
 
-#include "parser.hh"
 #include "shell.hh"
 
 namespace bash
 {
-
-/* Initial size to allocate for tokens, and the
-   amount to grow them by. */
-#define TOKEN_DEFAULT_INITIAL_SIZE 496
-#define TOKEN_DEFAULT_GROW_SIZE 512
 
 /* Should we call prompt_again? */
 #define SHOULD_PROMPT()                                                       \
@@ -43,13 +38,12 @@ namespace bash
 #endif
 
 #ifdef DEBUG
-static void
-debug_parser (int i)
+void
+Shell::debug_parser (parser::debug_level_type i)
 {
 #if YYDEBUG != 0
-  yydebug = i;
-  yyoutstream = stdout;
-  yyerrstream = stderr;
+  parser.set_debug_level (i);
+  parser.set_debug_stream (std::cerr);
 #endif
 }
 #endif
@@ -64,64 +58,39 @@ debug_parser (int i)
 
 /* Unconditionally returns end-of-file. */
 int
-return_EOF ()
+Shell::return_EOF ()
 {
   return EOF;
 }
 
-/* Variable containing the current get and unget functions.
-   See ./input.hh for a clearer description. */
-BASH_INPUT bash_input;
-
-/* Set all of the fields in BASH_INPUT to NULL.  Free bash_input.name if it
+/* Set all of the fields in BASH_INPUT to nullptr.  Free bash_input.name if it
    is non-null, avoiding a memory leak. */
 void
-initialize_bash_input ()
+Shell::initialize_bash_input ()
 {
   bash_input.type = st_none;
-  FREE (bash_input.name);
-  bash_input.name = (char *)NULL;
-  bash_input.location.file = (FILE *)NULL;
-  bash_input.location.string = (char *)NULL;
-  bash_input.getter = (sh_cget_func_t *)NULL;
-  bash_input.ungetter = (sh_cunget_func_t *)NULL;
+  delete[] bash_input.name;
+  bash_input.name = nullptr;
+  bash_input.location.file = nullptr;
+  bash_input.location.string = nullptr;
+  bash_input.getter = nullptr;
+  bash_input.ungetter = nullptr;
 }
 
 /* Set the contents of the current bash input stream from
    GET, UNGET, TYPE, NAME, and LOCATION. */
 void
-init_yy_io (sh_cget_func_t *get, sh_cunget_func_t *unget,
-            enum stream_type type, const char *name, INPUT_STREAM location)
+Shell::init_yy_io (sh_cget_func_t get, sh_cunget_func_t unget,
+            stream_type type, const char *name, INPUT_STREAM location)
 {
   bash_input.type = type;
-  FREE (bash_input.name);
-  bash_input.name = name ? savestring (name) : (char *)NULL;
+  delete[] bash_input.name;
+  bash_input.name = name ? savestring (name) : nullptr;
 
   /* XXX */
   bash_input.location = location;
   bash_input.getter = get;
   bash_input.ungetter = unget;
-}
-
-const char *
-Shell::yy_input_name ()
-{
-  return bash_input.name ? bash_input.name : "stdin";
-}
-
-/* Call this to get the next character of input. */
-static int
-yy_getc ()
-{
-  return *(bash_input.getter)) (;
-}
-
-/* Call this to unget C.  That is, to make C the next character
-   to be read. */
-static int
-yy_ungetc (int c)
-{
-  return *(bash_input.ungetter)) (c;
 }
 
 /* **************************************************************** */
@@ -131,9 +100,12 @@ yy_ungetc (int c)
 /* **************************************************************** */
 
 #if defined(READLINE)
-char *current_readline_prompt = (char *)NULL;
-char *current_readline_line = (char *)NULL;
+
+#if 0
+char *current_readline_prompt = nullptr;
+char *current_readline_line = nullptr;
 int current_readline_line_index = 0;
+#endif
 
 static int
 yy_readline_get ()
@@ -190,7 +162,7 @@ yy_readline_get ()
   if (current_readline_line[current_readline_line_index] == 0)
     {
       free (current_readline_line);
-      current_readline_line = (char *)NULL;
+      current_readline_line = nullptr;
       return yy_readline_get ();
     }
   else
@@ -372,7 +344,7 @@ static int cond_lineno;
 static int cond_token;
 #endif
 
-STREAM_SAVER *stream_list = (STREAM_SAVER *)NULL;
+STREAM_SAVER *stream_list = nullptr;
 
 void
 push_stream (int reset_lineno)
@@ -383,15 +355,15 @@ push_stream (int reset_lineno)
           sizeof (BASH_INPUT));
 
 #if defined(BUFFERED_INPUT)
-  saver->bstream = (BUFFERED_STREAM *)NULL;
+  saver->bstream = nullptr;
   /* If we have a buffered stream, clear out buffers[fd]. */
   if (bash_input.type == st_bstream && bash_input.location.buffered_fd >= 0)
-    saver->bstream = set_buffered_stream (bash_input.location.buffered_fd,
-                                          (BUFFERED_STREAM *)NULL);
+    saver->bstream
+        = set_buffered_stream (bash_input.location.buffered_fd, nullptr);
 #endif /* BUFFERED_INPUT */
 
   saver->line = line_number;
-  bash_input.name = (char *)NULL;
+  bash_input.name = nullptr;
   saver->next = stream_list;
   stream_list = saver;
   EOF_Reached = false;
@@ -523,7 +495,7 @@ typedef struct string_saver
   int flags;
 } STRING_SAVER;
 
-STRING_SAVER *pushed_string_list = (STRING_SAVER *)NULL;
+STRING_SAVER *pushed_string_list = nullptr;
 
 /*
  * Push the current shell_input_line onto a stack of such lines and make S
@@ -619,7 +591,7 @@ free_string_list ()
       free ((char *)t);
       t = t1;
     }
-  pushed_string_list = (STRING_SAVER *)NULL;
+  pushed_string_list = nullptr;
 }
 
 #endif /* ALIAS || DPAREN_ARITHMETIC */
@@ -642,7 +614,7 @@ void
 parser_save_alias ()
 {
 #if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
-  push_string ((char *)NULL, 0, (alias_t *)NULL);
+  push_string (nullptr, 0, nullptr);
   pushed_string_list->flags = PSH_SOURCE; /* XXX - for now */
 #else
   ;
@@ -690,7 +662,7 @@ clear_shell_input_line ()
 static char *
 read_a_line (int remove_quoted_newline)
 {
-  static char *line_buffer = (char *)NULL;
+  static char *line_buffer = nullptr;
   static int buffer_size = 0;
   int indx, c, peekc, pass_next;
 
@@ -724,7 +696,7 @@ read_a_line (int remove_quoted_newline)
           if (interactive && bash_input.type == st_stream)
             clearerr (stdin);
           if (indx == 0)
-            return (char *)NULL;
+            return nullptr;
           c = '\n';
         }
 
@@ -835,7 +807,7 @@ STRING_INT_ALIST word_token_alist[]
 #if defined(COPROCESS_SUPPORT)
         { "coproc", COPROC },
 #endif
-        { (char *)NULL, 0 } };
+        { nullptr, 0 } };
 
 /* other tokens that can be returned by read_token() */
 STRING_INT_ALIST other_token_alist[] = {
@@ -871,7 +843,7 @@ STRING_INT_ALIST other_token_alist[] = {
   { "|", '|' },
   { "&", '&' },
   { "newline", '\n' },
-  { (char *)NULL, 0 }
+  { nullptr, 0 }
 };
 
 /* others not listed here:
@@ -887,12 +859,12 @@ STRING_INT_ALIST other_token_alist[] = {
    can use them to decide when to add otherwise blank lines to the history. */
 
 /* The primary delimiter stack. */
-struct dstack dstack = { (char *)NULL, 0, 0 };
+struct dstack dstack = { nullptr, 0, 0 };
 
 /* A temporary delimiter stack to be used when decoding prompt strings.
    This is needed because command substitutions in prompt strings (e.g., PS2)
    can screw up the parser's quoting state. */
-static struct dstack temp_dstack = { (char *)NULL, 0, 0 };
+static struct dstack temp_dstack = { nullptr, 0, 0 };
 
 /* Macro for accessing the top delimiter on the stack.  Returns the
    delimiter or zero if none. */
@@ -954,7 +926,7 @@ shell_getc (int remove_quoted_newline)
 
   if (!shell_input_line
       || ((!shell_input_line[shell_input_line_index])
-          && (pushed_string_list == (STRING_SAVER *)NULL)))
+          && (pushed_string_list == nullptr)))
 #else  /* !ALIAS && !DPAREN_ARITHMETIC */
   if (!shell_input_line || !shell_input_line[shell_input_line_index])
 #endif /* !ALIAS && !DPAREN_ARITHMETIC */
@@ -1407,7 +1379,7 @@ push_token (int x)
 
 /* Place to remember the token.  We try to keep the buffer
    at a reasonable size, but it can grow. */
-static char *token = (char *)NULL;
+static char *token = nullptr;
 
 /* Current size of the token buffer. */
 static int token_buffer_size;
@@ -1514,7 +1486,7 @@ static int open_brace_count;
           && reserved_word_acceptable (last_read_token))                      \
         {                                                                     \
           int i;                                                              \
-          for (i = 0; word_token_alist[i].word != (char *)NULL; i++)          \
+          for (i = 0; word_token_alist[i].word != nullptr; i++)               \
             if (STREQ (tok, word_token_alist[i].word))                        \
               {                                                               \
                 if ((parser_state & PST_CASEPAT)                              \
@@ -1607,7 +1579,7 @@ alias_expand_token (char *tokstr)
            changed, make sure the code in shell_getc that deals with reaching
            the end of an expanded alias is changed with it. */
 #endif
-      expanded = ap ? mk_alexpansion (ap->value) : (char *)NULL;
+      expanded = ap ? mk_alexpansion (ap->value) : nullptr;
 
       if (expanded)
         {
@@ -1860,12 +1832,12 @@ reset_parser ()
   if (shell_input_line)
     {
       free (shell_input_line);
-      shell_input_line = (char *)NULL;
+      shell_input_line = nullptr;
       shell_input_line_size = shell_input_line_index = 0;
     }
 
   FREE (word_desc_to_read);
-  word_desc_to_read = (WORD_DESC *)NULL;
+  word_desc_to_read = nullptr;
 
   eol_ungetc_lookahead = 0;
 
@@ -1902,7 +1874,7 @@ read_token (int command)
       if (token_to_read == WORD || token_to_read == ASSIGNMENT_WORD)
         {
           yylval.word = word_desc_to_read;
-          word_desc_to_read = (WORD_DESC *)NULL;
+          word_desc_to_read = nullptr;
         }
       token_to_read = 0;
       return result;
@@ -3205,7 +3177,7 @@ xparse_dolparen (const char *base, char *string, int *indp, int flags)
   if (*string == 0)
     {
       if (flags & SX_NOALLOC)
-        return (char *)NULL;
+        return nullptr;
 
       ret = (char *)xmalloc (1);
       ret[0] = '\0';
@@ -3222,7 +3194,7 @@ xparse_dolparen (const char *base, char *string, int *indp, int flags)
   orig_eof_token = shell_eof_token;
 #if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
   saved_pushed_strings = pushed_string_list; /* separate parsing context */
-  pushed_string_list = (STRING_SAVER *)NULL;
+  pushed_string_list = nullptr;
 #endif
 
   /*(*/
@@ -3302,7 +3274,7 @@ xparse_dolparen (const char *base, char *string, int *indp, int flags)
     }
 
   if (flags & SX_NOALLOC)
-    return (char *)NULL;
+    return nullptr;
 
   if (nc == 0)
     {
@@ -3336,7 +3308,7 @@ parse_dparen (int c)
         {
           wd = alloc_word_desc ();
           wd->word = wval;
-          yylval.word_list = make_word_list (wd, (WORD_LIST *)NULL);
+          yylval.word_list = make_word_list (wd, nullptr);
           return ARITH_FOR_EXPRS;
         }
       else
@@ -3355,12 +3327,12 @@ parse_dparen (int c)
           wd = alloc_word_desc ();
           wd->word = wval;
           wd->flags = W_QUOTED | W_NOSPLIT | W_NOGLOB | W_DQUOTE;
-          yylval.word_list = make_word_list (wd, (WORD_LIST *)NULL);
+          yylval.word_list = make_word_list (wd, nullptr);
           return ARITH_CMD;
         }
       else if (cmdtyp == 0) /* nested subshell */
         {
-          push_string (wval, 0, (alias_t *)NULL);
+          push_string (wval, 0, nullptr);
           pushed_string_list->flags = PSH_DPAREN;
           if ((parser_state & PST_CASEPAT) == 0)
             parser_state |= PST_SUBSHELL;
@@ -3466,7 +3438,7 @@ cond_or ()
   if (cond_token == OR_OR)
     {
       r = cond_or ();
-      l = make_cond_node (COND_OR, (WORD_DESC *)NULL, l, r);
+      l = make_cond_node (COND_OR, nullptr, l, r);
     }
   return l;
 }
@@ -3480,7 +3452,7 @@ cond_and ()
   if (cond_token == AND_AND)
     {
       r = cond_and ();
-      l = make_cond_node (COND_AND, (WORD_DESC *)NULL, l, r);
+      l = make_cond_node (COND_AND, nullptr, l, r);
     }
   return l;
 }
@@ -3500,7 +3472,7 @@ cond_skip_newlines ()
   do                                                                          \
     {                                                                         \
       cond_token = COND_ERROR;                                                \
-      return (COND_COM *)NULL;                                                \
+      return nullptr;                                                         \
     }                                                                         \
   while (0)
 
@@ -3538,8 +3510,7 @@ cond_term ()
             parser_error (lineno, _ ("expected `)'"));
           COND_RETURN_ERROR ();
         }
-      term = make_cond_node (COND_EXPR, (WORD_DESC *)NULL, term,
-                             (COND_COM *)NULL);
+      term = make_cond_node (COND_EXPR, nullptr, term, nullptr);
       (void)cond_skip_newlines ();
     }
   else if (tok == BANG
@@ -3560,9 +3531,8 @@ cond_term ()
       tok = read_token (READ);
       if (tok == WORD)
         {
-          tleft = make_cond_node (COND_TERM, yylval.word, (COND_COM *)NULL,
-                                  (COND_COM *)NULL);
-          term = make_cond_node (COND_UNARY, op, tleft, (COND_COM *)NULL);
+          tleft = make_cond_node (COND_TERM, yylval.word, nullptr, nullptr);
+          term = make_cond_node (COND_UNARY, op, tleft, nullptr);
         }
       else
         {
@@ -3587,8 +3557,7 @@ cond_term ()
   else if (tok == WORD) /* left argument to binary operator */
     {
       /* lhs */
-      tleft = make_cond_node (COND_TERM, yylval.word, (COND_COM *)NULL,
-                              (COND_COM *)NULL);
+      tleft = make_cond_node (COND_TERM, yylval.word, nullptr, nullptr);
 
       /* binop */
       tok = read_token (READ);
@@ -3620,7 +3589,7 @@ cond_term ()
              the test command.  Similarly for [[ x && expr ]] or
              [[ x || expr ]] or [[ (x) ]]. */
           op = make_word ("-n");
-          term = make_cond_node (COND_UNARY, op, tleft, (COND_COM *)NULL);
+          term = make_cond_node (COND_UNARY, op, tleft, nullptr);
           cond_token = tok;
           return term;
         }
@@ -3651,8 +3620,7 @@ cond_term ()
 
       if (tok == WORD)
         {
-          tright = make_cond_node (COND_TERM, yylval.word, (COND_COM *)NULL,
-                                   (COND_COM *)NULL);
+          tright = make_cond_node (COND_TERM, yylval.word, nullptr, nullptr);
           term = make_cond_node (COND_BINARY, op, tleft, tright);
         }
       else
@@ -4331,7 +4299,7 @@ reset_readline_prompt ()
     {
       temp_prompt = (*prompt_string_pointer)
 			? decode_prompt_string (*prompt_string_pointer)
-			: (char *)NULL;
+			: nullptr;
 
       if (temp_prompt == 0)
 	{
@@ -4472,7 +4440,7 @@ prompt_again ()
 
   temp_prompt = *prompt_string_pointer
                     ? decode_prompt_string (*prompt_string_pointer)
-                    : (char *)NULL;
+                    : nullptr;
 
   if (temp_prompt == 0)
     {
@@ -4595,7 +4563,7 @@ decode_prompt_string (const char *string)
 
   result = (char *)xmalloc (result_size = PROMPT_GROWTH);
   result[result_index = 0] = 0;
-  temp = (char *)NULL;
+  temp = nullptr;
   const char *orig_string = string;
 
   while ((c = *string++))
@@ -4933,7 +4901,7 @@ decode_prompt_string (const char *string)
                 string++;
               result = sub_append_string (temp, result, &result_index,
                                           &result_size);
-              temp = (char *)NULL; /* Freed in sub_append_string (). */
+              temp = nullptr; /* Freed in sub_append_string (). */
               result[result_index] = '\0';
               break;
             }
@@ -4997,7 +4965,7 @@ decode_prompt_string (const char *string)
 int
 yyerror (const char *msg)
 {
-  report_syntax_error ((char *)NULL);
+  report_syntax_error (nullptr);
   reset_parser ();
   return 0;
 }
@@ -5013,7 +4981,7 @@ error_token_from_token (int tok)
   if ((t = find_token_in_alist (tok, other_token_alist, 0)))
     return t;
 
-  t = (char *)NULL;
+  t = nullptr;
   /* This stuff is dicy and needs closer inspection */
   switch (current_token)
     {
@@ -5034,7 +5002,7 @@ error_token_from_token (int tok)
         t = string_list_internal (yylval.word_list, " ; ");
       break;
     case COND_CMD:
-      t = (char *)NULL; /* punt */
+      t = nullptr; /* punt */
       break;
     }
 
@@ -5050,7 +5018,7 @@ error_token_from_text ()
   t = shell_input_line;
   i = shell_input_line_index;
   token_end = 0;
-  msg = (char *)NULL;
+  msg = nullptr;
 
   if (i && t[i] == '\0')
     i--;
@@ -5231,7 +5199,7 @@ Shell::handle_eof_input_unit ()
 
       last_shell_builtin = this_shell_builtin;
       this_shell_builtin = exit_builtin;
-      exit_builtin ((WORD_LIST *)NULL);
+      exit_builtin (nullptr);
     }
   else
     {
@@ -5286,7 +5254,7 @@ parse_string_to_word_list (char *s, int flags, const char *whom)
   echo_input_at_read = expand_aliases = 0;
 
   with_input_from_string (s, whom);
-  wl = (WORD_LIST *)NULL;
+  wl = nullptr;
 
   if (flags & 1)
     parser_state |= (PST_COMPASSIGN | PST_REPARSE);
@@ -5360,12 +5328,12 @@ parse_compound_assignment (int *retlenp)
 
   last_read_token = WORD; /* WORD to allow reserved words here */
 
-  token = (char *)NULL;
+  token = nullptr;
   token_buffer_size = 0;
 
   assignok = parser_state & PST_ASSIGNOK; /* XXX */
 
-  wl = (WORD_LIST *)NULL; /* ( */
+  wl = nullptr; /* ( */
   parser_state |= PST_COMPASSIGN;
 
   while ((tok = read_token (READ)) != ')')
@@ -5417,7 +5385,7 @@ parse_compound_assignment (int *retlenp)
       dispose_words (rl);
     }
   else
-    ret = (char *)NULL;
+    ret = nullptr;
 
   if (retlenp)
     *retlenp = (ret && *ret) ? strlen (ret) : 0;
@@ -5440,7 +5408,7 @@ save_parser_state (sh_parser_state_t *ps)
   if (ps == 0)
     ps = (sh_parser_state_t *)xmalloc (sizeof (sh_parser_state_t));
   if (ps == 0)
-    return (sh_parser_state_t *)NULL;
+    return nullptr;
 
   ps->parser_state = parser_state;
   ps->token_state = save_token_state ();
@@ -5551,7 +5519,7 @@ save_input_line_state (sh_input_line_state_t *ls)
   if (ls == 0)
     ls = (sh_input_line_state_t *)xmalloc (sizeof (sh_input_line_state_t));
   if (ls == 0)
-    return (sh_input_line_state_t *)NULL;
+    return nullptr;
 
   ls->input_line = shell_input_line;
   ls->input_line_size = shell_input_line_size;

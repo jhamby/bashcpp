@@ -4005,13 +4005,32 @@ protected:
   void reset_parser ();
   void reset_readahead_token ();
   WORD_LIST *parse_string_to_word_list (char *, int, const char *);
-  const char *yy_input_name ();
   void init_yy_io (sh_cget_func_t, sh_cunget_func_t, stream_type, const char *,
                    INPUT_STREAM);
   void with_input_from_stdin ();
   void with_input_from_stream (FILE *, const char *);
   void initialize_bash_input ();
   void execute_variable_command (const char *, const char *);
+
+  const char *
+  yy_input_name ()
+  {
+    return bash_input.name ? bash_input.name : "stdin";
+  }
+
+  /* Get the next character of input. */
+  int
+  yy_getc ()
+  {
+    return ((*this).*bash_input.getter) ();
+  }
+
+  /* Unget C. This makes C the next character to be read. */
+  int
+  yy_ungetc (int c)
+  {
+    return ((*this).*bash_input.ungetter) (c);
+  }
 
   // Methods in lib/tilde/tilde.cc.
 
@@ -4099,6 +4118,10 @@ protected:
   int *get_group_array (int *);
 
   int default_columns ();
+
+#ifdef DEBUG
+  void debug_parser (parser::debug_level_type);
+#endif
 
   /* ************************************************************** */
   /*		Private Shell Variables (ptr types)		    */
@@ -4390,11 +4413,13 @@ protected:
     stream_type type;
     char *name; /* freed by the parser */
     INPUT_STREAM location;
-    sh_cget_func_t *getter;
-    sh_cunget_func_t *ungetter;
+    sh_cget_func_t getter;
+    sh_cunget_func_t ungetter;
   };
 
   BASH_INPUT bash_input;
+
+  parser parser;
 
 #if defined(SIGWINCH)
   void (*old_winch) (int);
