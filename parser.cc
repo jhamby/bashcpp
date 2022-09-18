@@ -38,6 +38,7 @@ namespace bash
 #endif
 
 static void print_prompt ();
+static bool reserved_word_acceptable (int);
 
 /* Should we call prompt_again? */
 #define SHOULD_PROMPT()                                                       \
@@ -531,7 +532,7 @@ Shell::read_a_line (bool remove_quoted_newline)
           continue;
         }
 
-      /* If there is no more input, then we return NULL. */
+      /* If there is no more input, then we return nullptr. */
       if (c == EOF)
         {
           if (interactive && bash_input.type == st_stream)
@@ -627,73 +628,73 @@ Shell::read_secondary_line (bool remove_quoted_newline)
 /* Reserved words.  These are only recognized as the first word of a
    command. */
 static const STRING_INT_ALIST word_token_alist[]
-    = { { "if", parser::token::token_kind_type::IF },
-        { "then", parser::token::token_kind_type::THEN },
-        { "else", parser::token::token_kind_type::ELSE },
-        { "elif", parser::token::token_kind_type::ELIF },
-        { "fi", parser::token::token_kind_type::FI },
-        { "case", parser::token::token_kind_type::CASE },
-        { "esac", parser::token::token_kind_type::ESAC },
-        { "for", parser::token::token_kind_type::FOR },
+    = { { "if", parser::token::IF },
+        { "then", parser::token::THEN },
+        { "else", parser::token::ELSE },
+        { "elif", parser::token::ELIF },
+        { "fi", parser::token::FI },
+        { "case", parser::token::CASE },
+        { "esac", parser::token::ESAC },
+        { "for", parser::token::FOR },
 #if defined(SELECT_COMMAND)
-        { "select", parser::token::token_kind_type::SELECT },
+        { "select", parser::token::SELECT },
 #endif
-        { "while", parser::token::token_kind_type::WHILE },
-        { "until", parser::token::token_kind_type::UNTIL },
-        { "do", parser::token::token_kind_type::DO },
-        { "done", parser::token::token_kind_type::DONE },
-        { "in", parser::token::token_kind_type::IN },
-        { "function", parser::token::token_kind_type::FUNCTION },
+        { "while", parser::token::WHILE },
+        { "until", parser::token::UNTIL },
+        { "do", parser::token::DO },
+        { "done", parser::token::DONE },
+        { "in", parser::token::IN },
+        { "function", parser::token::FUNCTION },
 #if defined(COMMAND_TIMING)
-        { "time", parser::token::token_kind_type::TIME },
+        { "time", parser::token::TIME },
 #endif
-        { "{", static_cast<parser::token::token_kind_type> ('{') },
-        { "}", static_cast<parser::token::token_kind_type> ('}') },
-        { "!", parser::token::token_kind_type::BANG },
+        { "{", '{' },
+        { "}", '}' },
+        { "!", parser::token::BANG },
 #if defined(COND_COMMAND)
-        { "[[", parser::token::token_kind_type::COND_START },
-        { "]]", parser::token::token_kind_type::COND_END },
+        { "[[", parser::token::COND_START },
+        { "]]", parser::token::COND_END },
 #endif
 #if defined(COPROCESS_SUPPORT)
-        { "coproc", parser::token::token_kind_type::COPROC },
+        { "coproc", parser::token::COPROC },
 #endif
-        { nullptr, static_cast<parser::token::token_kind_type> (0) } };
+        { nullptr, 0 } };
 
 /* other tokens that can be returned by read_token() */
 static const STRING_INT_ALIST other_token_alist[] = {
   /* Multiple-character tokens with special values */
-  { "--", parser::token::token_kind_type::TIMEIGN },
-  { "-p", parser::token::token_kind_type::TIMEOPT },
-  { "&&", parser::token::token_kind_type::AND_AND },
-  { "||", parser::token::token_kind_type::OR_OR },
-  { ">>", parser::token::token_kind_type::GREATER_GREATER },
-  { "<<", parser::token::token_kind_type::LESS_LESS },
-  { "<&", parser::token::token_kind_type::LESS_AND },
-  { ">&", parser::token::token_kind_type::GREATER_AND },
-  { ";;", parser::token::token_kind_type::SEMI_SEMI },
-  { ";&", parser::token::token_kind_type::SEMI_AND },
-  { ";;&", parser::token::token_kind_type::SEMI_SEMI_AND },
-  { "<<-", parser::token::token_kind_type::LESS_LESS_MINUS },
-  { "<<<", parser::token::token_kind_type::LESS_LESS_LESS },
-  { "&>", parser::token::token_kind_type::AND_GREATER },
-  { "&>>", parser::token::token_kind_type::AND_GREATER_GREATER },
-  { "<>", parser::token::token_kind_type::LESS_GREATER },
-  { ">|", parser::token::token_kind_type::GREATER_BAR },
-  { "|&", parser::token::token_kind_type::BAR_AND },
-  { "EOF", parser::token::token_kind_type::yacc_EOF },
+  { "--", parser::token::TIMEIGN },
+  { "-p", parser::token::TIMEOPT },
+  { "&&", parser::token::AND_AND },
+  { "||", parser::token::OR_OR },
+  { ">>", parser::token::GREATER_GREATER },
+  { "<<", parser::token::LESS_LESS },
+  { "<&", parser::token::LESS_AND },
+  { ">&", parser::token::GREATER_AND },
+  { ";;", parser::token::SEMI_SEMI },
+  { ";&", parser::token::SEMI_AND },
+  { ";;&", parser::token::SEMI_SEMI_AND },
+  { "<<-", parser::token::LESS_LESS_MINUS },
+  { "<<<", parser::token::LESS_LESS_LESS },
+  { "&>", parser::token::AND_GREATER },
+  { "&>>", parser::token::AND_GREATER_GREATER },
+  { "<>", parser::token::LESS_GREATER },
+  { ">|", parser::token::GREATER_BAR },
+  { "|&", parser::token::BAR_AND },
+  { "EOF", parser::token::yacc_EOF },
   /* Tokens whose value is the character itself */
-  { ">", static_cast<parser::token::token_kind_type> ('>') },
-  { "<", static_cast<parser::token::token_kind_type> ('<') },
-  { "-", static_cast<parser::token::token_kind_type> ('-') },
-  { "{", static_cast<parser::token::token_kind_type> ('{') },
-  { "}", static_cast<parser::token::token_kind_type> ('}') },
-  { ";", static_cast<parser::token::token_kind_type> (';') },
-  { "(", static_cast<parser::token::token_kind_type> ('(') },
-  { ")", static_cast<parser::token::token_kind_type> (')') },
-  { "|", static_cast<parser::token::token_kind_type> ('|') },
-  { "&", static_cast<parser::token::token_kind_type> ('&') },
-  { "newline", static_cast<parser::token::token_kind_type> ('\n') },
-  { nullptr, static_cast<parser::token::token_kind_type> (0) }
+  { ">", '>' },
+  { "<", '<' },
+  { "-", '-' },
+  { "{", '{' },
+  { "}", '}' },
+  { ";", ';' },
+  { "(", '(' },
+  { ")", ')' },
+  { "|", '|' },
+  { "&", '&' },
+  { "newline", '\n' },
+  { nullptr, 0 }
 };
 
 /* others not listed here:
@@ -952,29 +953,28 @@ next_alias_char:
     }
 
 #if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
-    /* If UC is NULL, we have reached the end of the current input string.  If
-       pushed_string_list is non-empty, it's time to pop to the previous string
-       because we have fully consumed the result of the last alias expansion.
-       Do it transparently; just return the next character of the string popped
-       to. */
-    /* If pushed_string_list != 0 but pushed_string_list->expander == 0 (not
-       currently tested) and the flags value is not PSH_SOURCE, we are not
-       parsing an alias, we have just saved one (push_string, when called by
-       the parse_dparen code) In this case, just go on as well.  The PSH_SOURCE
-       case is handled below. */
+  /* If UC is nullptr, we have reached the end of the current input string.  If
+     pushed_string_list is non-empty, it's time to pop to the previous string
+     because we have fully consumed the result of the last alias expansion.
+     Do it transparently; just return the next character of the string popped
+     to. */
+  /* If pushed_string_list != 0 but pushed_string_list->expander == 0 (not
+     currently tested) and the flags value is not PSH_SOURCE, we are not
+     parsing an alias, we have just saved one (push_string, when called by
+     the parse_dparen code) In this case, just go on as well.  The PSH_SOURCE
+     case is handled below. */
 
-    /* If we're at the end of an alias expansion add a space to make sure that
-       the alias remains marked as being in use while we expand its last word.
-       This makes sure that pop_string doesn't mark the alias as not in use
-       before the string resulting from the alias expansion is tokenized and
-       checked for alias expansion, preventing recursion.  At this point, the
-       last character in shell_input_line is the last character of the alias
-       expansion.  We test that last character to determine whether or not to
-       return the space that will delimit the token and postpone the
-       pop_string. This set of conditions duplicates what used to be in
-       mk_alexpansion () below, with the addition that we don't add a space if
-       we're currently reading a quoted string or in a shell comment. */
-#ifndef OLD_ALIAS_HACK
+  /* If we're at the end of an alias expansion add a space to make sure that
+     the alias remains marked as being in use while we expand its last word.
+     This makes sure that pop_string doesn't mark the alias as not in use
+     before the string resulting from the alias expansion is tokenized and
+     checked for alias expansion, preventing recursion.  At this point, the
+     last character in shell_input_line is the last character of the alias
+     expansion.  We test that last character to determine whether or not to
+     return the space that will delimit the token and postpone the
+     pop_string. This set of conditions duplicates what used to be in
+     mk_alexpansion () below, with the addition that we don't add a space if
+     we're currently reading a quoted string or in a shell comment. */
   if (uc == 0 && pushed_string_list && pushed_string_list->flags != PSH_SOURCE
       && pushed_string_list->flags != PSH_DPAREN
       && (parser_state & PST_COMMENT) == 0
@@ -989,7 +989,6 @@ next_alias_char:
       parser_state |= PST_ENDALIAS;
       return ' '; /* END_ALIAS */
     }
-#endif
 
 pop_alias:
   /* This case works for PSH_DPAREN as well */
@@ -1153,7 +1152,7 @@ static int token_buffer_size;
 
 /* Function for yyparse to call.  yylex keeps track of
    the last two tokens read, and calls read_token.  */
-parser::token::token_kind_type
+parser::symbol_type
 Shell::yylex ()
 {
   if (interactive && (current_token == 0 || current_token == '\n'))
@@ -1178,7 +1177,9 @@ Shell::yylex ()
   two_tokens_ago = token_before_that;
   token_before_that = last_read_token;
   last_read_token = current_token;
-  current_token = read_token (READ);
+
+  parser::symbol_type symbol = read_token (READ);
+  current_token = symbol.kind ();
 
   if ((parser_state & PST_EOFTOKEN) && current_token == shell_eof_token)
     {
@@ -1188,7 +1189,7 @@ Shell::yylex ()
     }
   parser_state &= ~PST_EOFTOKEN; /* ??? */
 
-  return current_token;
+  return symbol;
 }
 
 void
@@ -1207,32 +1208,39 @@ Shell::gather_here_documents ()
   here_doc_first_line = false; /* just in case */
 }
 
-#if 0
-/* When non-zero, an open-brace used to create a group is awaiting a close
-   brace partner. */
-static int open_brace_count;
-#endif
-
 /* In the following three macros, `token' is always last_read_token */
 
 /* Are we in the middle of parsing a redirection where we are about to read
    a word?  This is used to make sure alias expansion doesn't happen in the
    middle of a redirection, even though we're parsing a simple command. */
-#define parsing_redirection(token)                                            \
-  (token == '<' || token == '>' || token == GREATER_GREATER                   \
-   || token == GREATER_BAR || token == LESS_GREATER                           \
-   || token == LESS_LESS_MINUS || token == LESS_LESS                          \
-   || token == LESS_LESS_LESS || token == LESS_AND || token == GREATER_AND    \
-   || token == AND_GREATER)
+static inline bool
+parsing_redirection (int token)
+{
+  return token == '<' || token == '>'
+         || token == parser::token::GREATER_GREATER
+         || token == parser::token::GREATER_BAR
+         || token == parser::token::LESS_GREATER
+         || token == parser::token::LESS_LESS_MINUS
+         || token == parser::token::LESS_LESS
+         || token == parser::token::LESS_LESS_LESS
+         || token == parser::token::LESS_AND
+         || token == parser::token::GREATER_AND
+         || token == parser::token::AND_GREATER;
+}
 
 /* Is `token' one that will allow a WORD to be read in a command position?
    We can read a simple command name on which we should attempt alias expansion
    or we can read an assignment statement. */
-#define command_token_position(token)                                         \
-  (((token) == ASSIGNMENT_WORD)                                               \
-   || ((parser_state & PST_REDIRLIST) && parsing_redirection (token) == 0)    \
-   || ((token) != SEMI_SEMI && (token) != SEMI_AND                            \
-       && (token) != SEMI_SEMI_AND && reserved_word_acceptable (token)))
+static inline bool
+command_token_position (int token, pstate_flags parser_state)
+{
+  return (token == parser::token::ASSIGNMENT_WORD)
+         || ((parser_state & PST_REDIRLIST) && !parsing_redirection (token))
+         || (token != parser::token::SEMI_SEMI
+             && token != parser::token::SEMI_AND
+             && token != parser::token::SEMI_SEMI_AND
+             && reserved_word_acceptable (token));
+}
 
 /* Are we in a position where we can read an assignment statement? */
 #define assignment_acceptable(token)                                          \
@@ -1251,21 +1259,23 @@ static int open_brace_count;
             if (STREQ (tok, word_token_alist[i].word))                        \
               {                                                               \
                 if ((parser_state & PST_CASEPAT)                              \
-                    && (word_token_alist[i].token != ESAC))                   \
+                    && (word_token_alist[i].token != parser::token::ESAC))    \
                   break;                                                      \
-                if (word_token_alist[i].token == TIME                         \
+                if (word_token_alist[i].token == parser::token::TIME          \
                     && time_command_acceptable () == 0)                       \
                   break;                                                      \
                 if ((parser_state & PST_CASEPAT) && last_read_token == '|'    \
-                    && word_token_alist[i].token == ESAC)                     \
+                    && word_token_alist[i].token == parser::token::ESAC)      \
                   break; /* Posix grammar rule 4 */                           \
-                if (word_token_alist[i].token == ESAC)                        \
+                if (word_token_alist[i].token == parser::token::ESAC)         \
                   parser_state &= ~(PST_CASEPAT | PST_CASESTMT);              \
-                else if (word_token_alist[i].token == CASE)                   \
+                else if (word_token_alist[i].token == parser::token::CASE)    \
                   parser_state |= PST_CASESTMT;                               \
-                else if (word_token_alist[i].token == COND_END)               \
+                else if (word_token_alist[i].token                            \
+                         == parser::token::COND_END)                          \
                   parser_state &= ~(PST_CONDCMD | PST_CONDEXPR);              \
-                else if (word_token_alist[i].token == COND_START)             \
+                else if (word_token_alist[i].token                            \
+                         == parser::token::COND_START)                        \
                   parser_state |= PST_CONDCMD;                                \
                 else if (word_token_alist[i].token == '{')                    \
                   open_brace_count++;                                         \
@@ -1292,38 +1302,14 @@ static int open_brace_count;
 
    Special cases that disqualify:
      In a pattern list in a case statement (parser_state & PST_CASEPAT). */
-
-static char *
-mk_alexpansion (char *s)
-{
-  int l;
-  char *r;
-
-  l = strlen (s);
-  r = (char *)xmalloc (l + 2);
-  strcpy (r, s);
-#ifdef OLD_ALIAS_HACK
-  /* If the last character in the alias is a newline, don't add a trailing
-     space to the expansion.  Works with shell_getc above. */
-  /* Need to do something about the case where the alias expansion contains
-     an unmatched quoted string, since appending this space affects the
-     subsequent output. */
-  if (l > 0 && r[l - 1] != ' ' && r[l - 1] != '\n'
-      && shellmeta (r[l - 1]) == 0)
-    r[l++] = ' ';
-#endif
-  r[l] = '\0';
-  return r;
-}
-
-int
-Shell::alias_expand_token (char *tokstr)
+Shell::alias_expand_token_result
+Shell::alias_expand_token (const char *tokstr)
 {
   char *expanded;
   alias_t *ap;
 
   if (((parser_state & PST_ALEXPNEXT)
-       || command_token_position (last_read_token))
+       || command_token_position (last_read_token, parser_state))
       && (parser_state & PST_CASEPAT) == 0)
     {
       ap = find_alias (tokstr);
@@ -1332,15 +1318,7 @@ Shell::alias_expand_token (char *tokstr)
       if (ap && (ap->flags & AL_BEINGEXPANDED))
         return NO_EXPANSION;
 
-#ifdef OLD_ALIAS_HACK
-        /* mk_alexpansion puts an extra space on the end of the alias
-           expansion, so the lookahead by the parser works right (the alias
-           needs to remain `in use' while parsing its last word to avoid alias
-           recursion for something like "alias echo=echo").  If this gets
-           changed, make sure the code in shell_getc that deals with reaching
-           the end of an expanded alias is changed with it. */
-#endif
-      expanded = ap ? mk_alexpansion (ap->value) : nullptr;
+      expanded = ap ? savestring (ap->value) : nullptr;
 
       if (expanded)
         {
@@ -1353,6 +1331,7 @@ Shell::alias_expand_token (char *tokstr)
     }
   return NO_EXPANSION;
 }
+
 #endif /* ALIAS */
 
 bool
@@ -1381,24 +1360,26 @@ Shell::time_command_acceptable ()
     case '\n':
       if (token_before_that == '|')
         return false;
+      __attribute__ ((fallthrough));
       /* FALLTHROUGH */
-    case parser::token::token_kind_type::AND_AND:
-    case parser::token::token_kind_type::OR_OR:
+
+    case parser::token::AND_AND:
+    case parser::token::OR_OR:
     case '&':
-    case parser::token::token_kind_type::WHILE:
-    case parser::token::token_kind_type::DO:
-    case parser::token::token_kind_type::UNTIL:
-    case parser::token::token_kind_type::IF:
-    case parser::token::token_kind_type::THEN:
-    case parser::token::token_kind_type::ELIF:
-    case parser::token::token_kind_type::ELSE:
-    case '{': /* } */
-    case '(': /* )( */
-    case ')': /* only valid in case statement */
-    case parser::token::token_kind_type::BANG:    /* ! time pipeline */
-    case parser::token::token_kind_type::TIME:    /* time time pipeline */
-    case parser::token::token_kind_type::TIMEOPT: /* time -p time pipeline */
-    case parser::token::token_kind_type::TIMEIGN: /* time -p -- ... */
+    case parser::token::WHILE:
+    case parser::token::DO:
+    case parser::token::UNTIL:
+    case parser::token::IF:
+    case parser::token::THEN:
+    case parser::token::ELIF:
+    case parser::token::ELSE:
+    case '{':                    /* } */
+    case '(':                    /* )( */
+    case ')':                    /* only valid in case statement */
+    case parser::token::BANG:    /* ! time pipeline */
+    case parser::token::TIME:    /* time time pipeline */
+    case parser::token::TIMEOPT: /* time -p time pipeline */
+    case parser::token::TIMEIGN: /* time -p -- ... */
       return true;
     default:
       return false;
@@ -1433,36 +1414,38 @@ Shell::time_command_acceptable ()
         `time' is returned as TIME if and only if it is immediately
         preceded by one of `;', `\n', `||', `&&', or `&'.
 */
-
-static int
-special_case_tokens (char *tokstr)
+int
+Shell::special_case_tokens (const char *tokstr)
 {
   /* Posix grammar rule 6 */
-  if ((last_read_token == WORD) &&
+  if ((last_read_token == parser::token::WORD) &&
 #if defined(SELECT_COMMAND)
-      ((token_before_that == FOR) || (token_before_that == CASE)
-       || (token_before_that == SELECT))
+      ((token_before_that == parser::token::FOR)
+       || (token_before_that == parser::token::CASE)
+       || (token_before_that == parser::token::SELECT))
       &&
 #else
-      ((token_before_that == FOR) || (token_before_that == CASE)) &&
+      ((token_before_that == parser::token::FOR)
+       || (token_before_that == parser::token::CASE))
+      &&
 #endif
-      (tokstr[0] == 'i' && tokstr[1] == 'n' && tokstr[2] == 0))
+      (tokstr[0] == 'i' && tokstr[1] == 'n' && tokstr[2] == '\0'))
     {
-      if (token_before_that == CASE)
+      if (token_before_that == parser::token::CASE)
         {
           parser_state |= PST_CASEPAT;
           esacs_needed_count++;
         }
       if (expecting_in_token)
         expecting_in_token--;
-      return IN;
+      return parser::token::IN;
     }
 
   /* XXX - leaving above code intact for now, but it should eventually be
      removed in favor of this clause. */
   /* Posix grammar rule 6 */
   if (expecting_in_token
-      && (last_read_token == WORD || last_read_token == '\n')
+      && (last_read_token == parser::token::WORD || last_read_token == '\n')
       && (tokstr[0] == 'i' && tokstr[1] == 'n' && tokstr[2] == 0))
     {
       if (parser_state & PST_CASESTMT)
@@ -1471,7 +1454,7 @@ special_case_tokens (char *tokstr)
           esacs_needed_count++;
         }
       expecting_in_token--;
-      return IN;
+      return parser::token::IN;
     }
   /* Posix grammar rule 6, third word in FOR: for i; do command-list; done */
   else if (expecting_in_token
@@ -1479,21 +1462,23 @@ special_case_tokens (char *tokstr)
            && (tokstr[0] == 'd' && tokstr[1] == 'o' && tokstr[2] == '\0'))
     {
       expecting_in_token--;
-      return DO;
+      return parser::token::DO;
     }
 
   /* for i do; command-list; done */
-  if (last_read_token == WORD &&
+  if (last_read_token == parser::token::WORD &&
 #if defined(SELECT_COMMAND)
-      (token_before_that == FOR || token_before_that == SELECT) &&
+      (token_before_that == parser::token::FOR
+       || token_before_that == parser::token::SELECT)
+      &&
 #else
-      (token_before_that == FOR) &&
+      (token_before_that == parser::token::FOR) &&
 #endif
       (tokstr[0] == 'd' && tokstr[1] == 'o' && tokstr[2] == '\0'))
     {
       if (expecting_in_token)
         expecting_in_token--;
-      return DO;
+      return parser::token::DO;
     }
 
   /* Ditto for ESAC in the CASE case.
@@ -1504,11 +1489,11 @@ special_case_tokens (char *tokstr)
      the designers disagree. */
   if (esacs_needed_count)
     {
-      if (last_read_token == IN && STREQ (tokstr, "esac"))
+      if (last_read_token == parser::token::IN && STREQ (tokstr, "esac"))
         {
           esacs_needed_count--;
           parser_state &= ~PST_CASEPAT;
-          return ESAC;
+          return parser::token::ESAC;
         }
     }
 
@@ -1526,10 +1511,10 @@ special_case_tokens (char *tokstr)
 
   /* We allow a `do' after a for ((...)) without an intervening
      list_terminator */
-  if (last_read_token == ARITH_FOR_EXPRS && tokstr[0] == 'd'
+  if (last_read_token == parser::token::ARITH_FOR_EXPRS && tokstr[0] == 'd'
       && tokstr[1] == 'o' && !tokstr[2])
-    return DO;
-  if (last_read_token == ARITH_FOR_EXPRS && tokstr[0] == '{'
+    return parser::token::DO;
+  if (last_read_token == parser::token::ARITH_FOR_EXPRS && tokstr[0] == '{'
       && tokstr[1] == '\0') /* } */
     {
       open_brace_count++;
@@ -1545,34 +1530,34 @@ special_case_tokens (char *tokstr)
 
 #if defined(COMMAND_TIMING)
   /* Handle -p after `time'. */
-  if (last_read_token == TIME && tokstr[0] == '-' && tokstr[1] == 'p'
-      && !tokstr[2])
-    return TIMEOPT;
+  if (last_read_token == parser::token::TIME && tokstr[0] == '-'
+      && tokstr[1] == 'p' && !tokstr[2])
+    return parser::token::TIMEOPT;
   /* Handle -- after `time'. */
-  if (last_read_token == TIME && tokstr[0] == '-' && tokstr[1] == '-'
-      && !tokstr[2])
-    return TIMEIGN;
+  if (last_read_token == parser::token::TIME && tokstr[0] == '-'
+      && tokstr[1] == '-' && !tokstr[2])
+    return parser::token::TIMEIGN;
   /* Handle -- after `time -p'. */
-  if (last_read_token == TIMEOPT && tokstr[0] == '-' && tokstr[1] == '-'
-      && !tokstr[2])
-    return TIMEIGN;
+  if (last_read_token == parser::token::TIMEOPT && tokstr[0] == '-'
+      && tokstr[1] == '-' && !tokstr[2])
+    return parser::token::TIMEIGN;
 #endif
 
 #if defined(COND_COMMAND) /* [[ */
   if ((parser_state & PST_CONDEXPR) && tokstr[0] == ']' && tokstr[1] == ']'
       && tokstr[2] == '\0')
-    return COND_END;
+    return parser::token::COND_END;
 #endif
 
   return -1;
 }
 
-/* Called from shell.c when Control-C is typed at top level.  Or
-   by the error rule at top level. */
+/* Called from shell.cc when Control-C is typed at top level, or by the error
+ * rule at top level. */
 void
-reset_parser ()
+Shell::reset_parser ()
 {
-  dstack.delimiter_depth = 0; /* No delimiters found so far. */
+  dstack.clear (); /* No delimiters found so far. */
   open_brace_count = 0;
 
 #if defined(EXTENDED_GLOB)
@@ -1581,7 +1566,7 @@ reset_parser ()
     extended_glob = global_extglob;
 #endif
 
-  parser_state = 0;
+  parser_state = PST_NOFLAGS;
   here_doc_first_line = 0;
 
 #if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
@@ -1590,14 +1575,10 @@ reset_parser ()
 #endif /* ALIAS || DPAREN_ARITHMETIC */
 
   /* This is where we resynchronize to the next newline on error/reset */
-  if (shell_input_line)
-    {
-      free (shell_input_line);
-      shell_input_line = nullptr;
-      shell_input_line_size = shell_input_line_index = 0;
-    }
+  shell_input_line.clear ();
+  shell_input_line_index = 0;
 
-  FREE (word_desc_to_read);
+  delete word_desc_to_read;
   word_desc_to_read = nullptr;
 
   eol_ungetc_lookahead = 0;
@@ -1607,16 +1588,9 @@ reset_parser ()
   token_to_read = '\n';
 }
 
-void
-reset_readahead_token ()
-{
-  if (token_to_read == '\n')
-    token_to_read = 0;
-}
-
 /* Read the next token.  Command can be READ (normal operation) or
    RESET (to normalize state). */
-parser::token::token_kind_type
+parser::symbol_type
 Shell::read_token (int command)
 {
   int character; /* Current character. */
@@ -1626,19 +1600,28 @@ Shell::read_token (int command)
   if (command == RESET)
     {
       reset_parser ();
-      return '\n';
+      return parser::symbol_type ('\n');
     }
 
   if (token_to_read)
     {
       result = token_to_read;
-      if (token_to_read == WORD || token_to_read == ASSIGNMENT_WORD)
-        {
-          yylval.word = word_desc_to_read;
-          word_desc_to_read = nullptr;
-        }
       token_to_read = 0;
-      return result;
+      if (token_to_read == parser::token::WORD)
+        {
+          parser::symbol_type word = parser::make_WORD (word_desc_to_read);
+          word_desc_to_read = nullptr;
+          return word;
+        }
+      else if (token_to_read == parser::token::ASSIGNMENT_WORD)
+        {
+          parser::symbol_type word
+              = parser::make_ASSIGNMENT_WORD (word_desc_to_read);
+          word_desc_to_read = nullptr;
+          return word;
+        }
+
+      return parser::symbol_type (result);
     }
 
 #if defined(COND_COMMAND)
@@ -1646,15 +1629,15 @@ Shell::read_token (int command)
     {
       cond_lineno = line_number;
       parser_state |= PST_CONDEXPR;
-      yylval.command = parse_cond_command ();
-      if (cond_token != COND_END)
+      COMMAND *command = parse_cond_command ();
+      if (cond_token != parser::token::COND_END)
         {
           cond_error ();
           return -1;
         }
-      token_to_read = COND_END;
+      token_to_read = parser::token::COND_END;
       parser_state &= ~(PST_CONDEXPR | PST_CONDCMD);
-      return COND_CMD;
+      return parser::token::COND_CMD;
     }
 #endif
 
@@ -1671,7 +1654,7 @@ re_read_token:
   if (character == EOF)
     {
       EOF_Reached = true;
-      return yacc_EOF;
+      return parser::make_yacc_EOF ();
     }
 
   /* If we hit the end of the string and we're not expanding an alias (e.g.,
@@ -1684,7 +1667,7 @@ re_read_token:
               bash_input.location.string);
 #endif
       EOF_Reached = true;
-      return yacc_EOF;
+      return parser::make_yacc_EOF ();
     }
 
   if MBTEST (character == '#' && (!interactive || interactive_comments))
@@ -1710,7 +1693,7 @@ re_read_token:
 
       parser_state &= ~PST_ASSIGNOK;
 
-      return character;
+      return parser::symbol_type (character);
     }
 
   if (parser_state & PST_REGEXP)
@@ -1748,17 +1731,17 @@ re_read_token:
                  look ahead one more character. */
               peek_char = shell_getc (1);
               if MBTEST (peek_char == '-')
-                return LESS_LESS_MINUS;
+                return parser::make_LESS_LESS_MINUS ();
               else if MBTEST (peek_char == '<')
-                return LESS_LESS_LESS;
+                return parser::make_LESS_LESS_LESS ();
               else
                 {
                   shell_ungetc (peek_char);
-                  return LESS_LESS;
+                  return parser::make_LESS_LESS ();
                 }
 
             case '>':
-              return GREATER_GREATER;
+              return parser::make_GREATER_GREATER ();
 
             case ';':
               parser_state |= PST_CASEPAT;
@@ -1768,18 +1751,18 @@ re_read_token:
 
               peek_char = shell_getc (1);
               if MBTEST (peek_char == '&')
-                return SEMI_SEMI_AND;
+                return parser::make_SEMI_SEMI_AND ();
               else
                 {
                   shell_ungetc (peek_char);
-                  return SEMI_SEMI;
+                  return parser::make_SEMI_SEMI ();
                 }
 
             case '&':
-              return AND_AND;
+              return parser::make_AND_AND ();
 
             case '|':
-              return OR_OR;
+              return parser::make_OR_OR ();
 
 #if defined(DPAREN_ARITHMETIC) || defined(ARITH_FOR_COMMAND)
             case '(': /* ) */
@@ -1792,33 +1775,33 @@ re_read_token:
             }
         }
       else if MBTEST (character == '<' && peek_char == '&')
-        return LESS_AND;
+        return parser::make_LESS_AND ();
       else if MBTEST (character == '>' && peek_char == '&')
-        return GREATER_AND;
+        return parser::make_GREATER_AND ();
       else if MBTEST (character == '<' && peek_char == '>')
-        return LESS_GREATER;
+        return parser::make_LESS_GREATER ();
       else if MBTEST (character == '>' && peek_char == '|')
-        return GREATER_BAR;
+        return parser::make_GREATER_BAR ();
       else if MBTEST (character == '&' && peek_char == '>')
         {
           peek_char = shell_getc (1);
           if MBTEST (peek_char == '>')
-            return AND_GREATER_GREATER;
+            return parser::make_AND_GREATER_GREATER ();
           else
             {
               shell_ungetc (peek_char);
-              return AND_GREATER;
+              return parser::make_AND_GREATER ();
             }
         }
       else if MBTEST (character == '|' && peek_char == '&')
-        return BAR_AND;
+        return parser::make_BAR_AND ();
       else if MBTEST (character == ';' && peek_char == '&')
         {
           parser_state |= PST_CASEPAT;
 #if defined(ALIAS)
           parser_state &= ~PST_ALEXPNEXT;
 #endif /* ALIAS */
-          return SEMI_AND;
+          return parser::make_SEMI_AND ();
         }
 
       shell_ungetc (peek_char);
@@ -1827,7 +1810,7 @@ re_read_token:
          definition, then let the reader know about it so that
          we will do the right thing with `{'. */
       if MBTEST (character == ')' && last_read_token == '('
-                 && token_before_that == WORD)
+                 && token_before_that == parser::token::WORD)
         {
           parser_state |= PST_ALLOWOPNBRC;
 #if defined(ALIAS)
@@ -1854,24 +1837,24 @@ re_read_token:
       if MBTEST ((character != '>' && character != '<')
                  || peek_char != '(') /*)*/
 #endif                                /* PROCESS_SUBSTITUTION */
-        return character;
+        return parser::symbol_type (character);
     }
 
   /* Hack <&- (close stdin) case.  Also <&N- (dup and close). */
   if MBTEST (character == '-'
-             && (last_read_token == LESS_AND
-                 || last_read_token == GREATER_AND))
-    return character;
+             && (last_read_token == parser::token::LESS_AND
+                 || last_read_token == parser::token::GREATER_AND))
+    return parser::symbol_type (character);
 
 tokword:
   /* Okay, if we got this far, we have to read a word.  Read one,
      and then check it against the known ones. */
-  result = read_token_word (character);
+  parser::symbol_type symbol = read_token_word (character);
 #if defined(ALIAS)
-  if (result == RE_READ_TOKEN)
+  if (symbol.kind () == RE_READ_TOKEN)
     goto re_read_token;
 #endif
-  return result;
+  return symbol;
 }
 
 /*
@@ -1880,33 +1863,39 @@ tokword:
  * reprompting the user, if necessary, after reading a newline, and returning
  * correct error values if it reads EOF.
  */
-#define P_FIRSTCLOSE 0x0001
-#define P_ALLOWESC 0x0002
-#define P_DQUOTE 0x0004
-#define P_COMMAND 0x0008   /* parsing a command, so look for comments */
-#define P_BACKQUOTE 0x0010 /* parsing a backquoted command substitution */
-#define P_ARRAYSUB                                                            \
-  0x0020                  /* parsing a [...] array subscript for assignment   \
-                           */
-#define P_DOLBRACE 0x0040 /* parsing a ${...} construct */
+
+enum parse_group_flags
+{
+  P_FIRSTCLOSE = 0x0001,
+  P_ALLOWESC = 0x0002,
+  P_DQUOTE = 0x0004,
+  P_COMMAND = 0x0008,   // parsing a command, so look for comments
+  P_BACKQUOTE = 0x0010, // parsing a backquoted command substitution
+  P_ARRAYSUB = 0x0020,  // parsing a [...] array subscript for assignment
+  P_DOLBRACE = 0x0040   // parsing a ${...} construct
+};
 
 /* Lexical state while parsing a grouping construct or $(...). */
-#define LEX_WASDOL 0x0001
-#define LEX_CKCOMMENT 0x0002
-#define LEX_INCOMMENT 0x0004
-#define LEX_PASSNEXT 0x0008
-#define LEX_RESWDOK 0x0010
-#define LEX_CKCASE 0x0020
-#define LEX_INCASE 0x0040
-#define LEX_INHEREDOC 0x0080
-#define LEX_HEREDELIM 0x0100 /* reading here-doc delimiter */
-#define LEX_STRIPDOC 0x0200  /* <<- strip tabs from here doc delim */
-#define LEX_QUOTEDDOC 0x0400 /* here doc with quoted delim */
-#define LEX_INWORD 0x0800
-#define LEX_GTLT 0x1000
+enum lexical_state_flags
+{
+  LEX_WASDOL = 0x0001,
+  LEX_CKCOMMENT = 0x0002,
+  LEX_INCOMMENT = 0x0004,
+  LEX_PASSNEXT = 0x0008,
+  LEX_RESWDOK = 0x0010,
+  LEX_CKCASE = 0x0020,
+  LEX_INCASE = 0x0040,
+  LEX_INHEREDOC = 0x0080,
+  LEX_HEREDELIM = 0x0100, // reading here-doc delimiter
+  LEX_STRIPDOC = 0x0200,  // <<- strip tabs from here doc delim
+  LEX_QUOTEDDOC = 0x0400, // here doc with quoted delim
+  LEX_INWORD = 0x0800,
+  LEX_GTLT = 0x1000
+};
 
 #define COMSUB_META(ch) ((ch) == ';' || (ch) == '&' || (ch) == '|')
 
+#if 0
 #define CHECK_NESTRET_ERROR()                                                 \
   do                                                                          \
     {                                                                         \
@@ -1930,11 +1919,13 @@ tokword:
     }                                                                         \
   while (0)
 
-static char matched_pair_error;
+// static char matched_pair_error;
+#endif
 
-static char *
-parse_matched_pair (int qc, /* `"' if this construct is within double quotes */
-                    int open, int close, int *lenp, int flags)
+char *
+Shell::parse_matched_pair (
+    int qc, /* `"' if this construct is within double quotes */
+    int open, int close, int *lenp, int flags)
 {
   int count, ch, prevch, tflags;
   int nestlen, ttranslen, start_lineno;
@@ -2920,7 +2911,7 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
 
 /* Recursively call the parser to parse a $(...) command substitution. */
 char *
-xparse_dolparen (const char *base, char *string, int *indp, int flags)
+Shell::xparse_dolparen (const char *base, char *string, int *indp, int flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
@@ -2997,7 +2988,7 @@ xparse_dolparen (const char *base, char *string, int *indp, int flags)
 
   /* Need to find how many characters parse_and_execute consumed, update
      *indp, if flags != 0, copy the portion of the string parsed into RET
-     and return it.  If flags & 1 (SX_NOALLOC) we can return NULL. */
+     and return it.  If flags & 1 (SX_NOALLOC) we can return nullptr. */
 
   /*(*/
   if (ep[-1] != ')')
@@ -3053,15 +3044,15 @@ xparse_dolparen (const char *base, char *string, int *indp, int flags)
    command, an arithmetic `for' command, or a nested subshell.  Returns
    the parsed token, -1 on error, or -2 if we didn't do anything and
    should just go on. */
-static int
-parse_dparen (int c)
+int
+Shell::parse_dparen (int c)
 {
   int cmdtyp, sline;
   char *wval;
   WORD_DESC *wd;
 
 #if defined(ARITH_FOR_COMMAND)
-  if (last_read_token == FOR)
+  if (last_read_token == parser::token::FOR)
     {
       arith_for_lineno = line_number;
       cmdtyp = parse_arith_cmd (&wval, 0);
@@ -3070,7 +3061,7 @@ parse_dparen (int c)
           wd = alloc_word_desc ();
           wd->word = wval;
           yylval.word_list = make_word_list (wd, nullptr);
-          return ARITH_FOR_EXPRS;
+          return parser::token::ARITH_FOR_EXPRS;
         }
       else
         return -1; /* ERROR */
@@ -3089,7 +3080,7 @@ parse_dparen (int c)
           wd->word = wval;
           wd->flags = W_QUOTED | W_NOSPLIT | W_NOGLOB | W_DQUOTE;
           yylval.word_list = make_word_list (wd, nullptr);
-          return ARITH_CMD;
+          return parser::token::ARITH_CMD;
         }
       else if (cmdtyp == 0) /* nested subshell */
         {
@@ -3161,12 +3152,12 @@ parse_arith_cmd (char **ep, int adddq)
 #endif /* DPAREN_ARITHMETIC || ARITH_FOR_COMMAND */
 
 #if defined(COND_COMMAND)
-static void
-cond_error ()
+void
+Shell::cond_error ()
 {
   char *etext;
 
-  if (EOF_Reached && cond_token != COND_ERROR) /* [[ */
+  if (EOF_Reached && cond_token != parser::token::COND_ERROR) /* [[ */
     parser_error (cond_lineno, _ ("unexpected EOF while looking for `]]'"));
   else if (cond_token != COND_ERROR)
     {
@@ -3196,7 +3187,7 @@ cond_or ()
   COND_COM *l, *r;
 
   l = cond_and ();
-  if (cond_token == OR_OR)
+  if (cond_token == parser::token::OR_OR)
     {
       r = cond_or ();
       l = make_cond_node (COND_OR, nullptr, l, r);
@@ -3210,7 +3201,7 @@ cond_and ()
   COND_COM *l, *r;
 
   l = cond_term ();
-  if (cond_token == AND_AND)
+  if (cond_token == parser::token::AND_AND)
     {
       r = cond_and ();
       l = make_cond_node (COND_AND, nullptr, l, r);
@@ -3218,8 +3209,8 @@ cond_and ()
   return l;
 }
 
-static int
-cond_skip_newlines ()
+int
+Shell::cond_skip_newlines ()
 {
   while ((cond_token = read_token (READ)) == '\n')
     {
@@ -3237,8 +3228,8 @@ cond_skip_newlines ()
     }                                                                         \
   while (0)
 
-static COND_COM *
-cond_term ()
+COND_COM *
+Shell::cond_term ()
 {
   WORD_DESC *op;
   COND_COM *term, *tleft, *tright;
@@ -3250,7 +3241,7 @@ cond_term ()
      skipping newlines, since this is a compound command. */
   tok = cond_skip_newlines ();
   lineno = line_number;
-  if (tok == COND_END)
+  if (tok == parser::token::COND_END)
     {
       COND_RETURN_ERROR ();
     }
@@ -3274,23 +3265,24 @@ cond_term ()
       term = make_cond_node (COND_EXPR, nullptr, term, nullptr);
       (void)cond_skip_newlines ();
     }
-  else if (tok == BANG
-           || (tok == WORD
+  else if (tok == parser::token::BANG
+           || (tok == parser::token::WORD
                && (yylval.word->word[0] == '!'
                    && yylval.word->word[1] == '\0')))
     {
-      if (tok == WORD)
+      if (tok == parser::token::WORD)
         dispose_word (yylval.word); /* not needed */
       term = cond_term ();
       if (term)
         term->flags ^= CMD_INVERT_RETURN;
     }
-  else if (tok == WORD && yylval.word->word[0] == '-' && yylval.word->word[1]
-           && yylval.word->word[2] == 0 && test_unop (yylval.word->word))
+  else if (tok == parser::token::WORD && yylval.word->word[0] == '-'
+           && yylval.word->word[1] && yylval.word->word[2] == 0
+           && test_unop (yylval.word->word))
     {
       op = yylval.word;
       tok = read_token (READ);
-      if (tok == WORD)
+      if (tok == parser::token::WORD)
         {
           tleft = make_cond_node (COND_TERM, yylval.word, nullptr, nullptr);
           term = make_cond_node (COND_UNARY, op, tleft, nullptr);
@@ -3322,7 +3314,7 @@ cond_term ()
 
       /* binop */
       tok = read_token (READ);
-      if (tok == WORD && test_binop (yylval.word->word))
+      if (tok == parser::token::WORD && test_binop (yylval.word->word))
         {
           op = yylval.word;
           if (op->word[0] == '='
@@ -3344,7 +3336,8 @@ cond_term ()
         op = make_word_from_token (tok); /* ( */
       /* There should be a check before blindly accepting the `)' that we have
          seen the opening `('. */
-      else if (tok == COND_END || tok == AND_AND || tok == OR_OR || tok == ')')
+      else if (tok == parser::token::COND_END || tok == parser::token::AND_AND
+               || tok == parser::token::OR_OR || tok == ')')
         {
           /* Special case.  [[ x ]] is equivalent to [[ -n x ]], just like
              the test command.  Similarly for [[ x && expr ]] or
@@ -3479,8 +3472,8 @@ token_is_ident (char *t, int i)
 }
 #endif
 
-static int
-read_token_word (int character)
+parser::symbol_type
+Shell::read_token_word (int character)
 {
   /* The value for YYLVAL when a WORD is read. */
   WORD_DESC *the_word;
@@ -3851,8 +3844,8 @@ got_token:
      Otherwise, it is just a word, and should be returned as such. */
   if MBTEST (all_digit_token
              && (character == '<' || character == '>'
-                 || last_read_token == LESS_AND
-                 || last_read_token == GREATER_AND))
+                 || last_read_token == parser::token::LESS_AND
+                 || last_read_token == parser::token::GREATER_AND))
     {
       if (legal_number (token, &lvalue) && (int)lvalue == lvalue)
         {
@@ -3955,18 +3948,18 @@ got_token:
 
   result = ((the_word->flags & (W_ASSIGNMENT | W_NOSPLIT))
             == (W_ASSIGNMENT | W_NOSPLIT))
-               ? ASSIGNMENT_WORD
-               : WORD;
+               ? parser::token::ASSIGNMENT_WORD
+               : parser::token::WORD;
 
   switch (last_read_token)
     {
-    case FUNCTION:
+    case parser::token::FUNCTION:
       parser_state |= PST_ALLOWOPNBRC;
       function_dstart = line_number;
       break;
-    case CASE:
-    case SELECT:
-    case FOR:
+    case parser::token::CASE:
+    case parser::token::SELECT:
+    case parser::token::FOR:
       if (word_top < MAX_CASE_NEST)
         word_top++;
       word_lineno[word_top] = line_number;
@@ -3977,9 +3970,9 @@ got_token:
   return result;
 }
 
-/* Return 1 if TOKSYM is a token that after being read would allow
-   a reserved word to be seen, else 0. */
-static int
+/* Return true if TOKSYM is a token that after being read would allow
+   a reserved word to be seen, else false. */
+static inline bool
 reserved_word_acceptable (int toksym)
 {
   switch (toksym)
@@ -3992,37 +3985,40 @@ reserved_word_acceptable (int toksym)
     case '&':
     case '{':
     case '}': /* XXX */
-    case AND_AND:
-    case BANG:
-    case BAR_AND:
-    case DO:
-    case DONE:
-    case ELIF:
-    case ELSE:
-    case ESAC:
-    case FI:
-    case IF:
-    case OR_OR:
-    case SEMI_SEMI:
-    case SEMI_AND:
-    case SEMI_SEMI_AND:
-    case THEN:
-    case TIME:
-    case TIMEOPT:
-    case TIMEIGN:
-    case COPROC:
-    case UNTIL:
-    case WHILE:
+    case parser::token::AND_AND:
+    case parser::token::BANG:
+    case parser::token::BAR_AND:
+    case parser::token::DO:
+    case parser::token::DONE:
+    case parser::token::ELIF:
+    case parser::token::ELSE:
+    case parser::token::ESAC:
+    case parser::token::FI:
+    case parser::token::IF:
+    case parser::token::OR_OR:
+    case parser::token::SEMI_SEMI:
+    case parser::token::SEMI_AND:
+    case parser::token::SEMI_SEMI_AND:
+    case parser::token::THEN:
+    case parser::token::TIME:
+    case parser::token::TIMEOPT:
+    case parser::token::TIMEIGN:
+    case parser::token::COPROC:
+    case parser::token::UNTIL:
+    case parser::token::WHILE:
     case 0:
-      return 1;
+      return true;
     default:
 #if defined(COPROCESS_SUPPORT)
-      if (last_read_token == WORD && token_before_that == COPROC)
-        return 1;
+      if (last_read_token == parser::token::WORD
+          && token_before_that == parser::token::COPROC)
+        return true;
 #endif
-      if (last_read_token == WORD && token_before_that == FUNCTION)
-        return 1;
-      return 0;
+      if (last_read_token == parser::token::WORD
+          && token_before_that == parser::token::FUNCTION)
+        return true;
+
+      return false;
     }
 }
 
@@ -4076,13 +4072,31 @@ reset_readline_prompt ()
 #endif /* 0 */
 
 #if defined(HISTORY)
+
 /* A list of tokens which can be followed by newlines, but not by
    semi-colons.  When concatenating multiple lines of history, the
    newline separator for such tokens is replaced with a space. */
-static const int no_semi_successors[]
-    = { '\n', '{',   '(',   ')',     ';',       '&',      '|',
-        CASE, DO,    ELSE,  IF,      SEMI_SEMI, SEMI_AND, SEMI_SEMI_AND,
-        THEN, UNTIL, WHILE, AND_AND, OR_OR,     IN,       0 };
+static const int no_semi_successors[] = { '\n',
+                                          '{',
+                                          '(',
+                                          ')',
+                                          ';',
+                                          '&',
+                                          '|',
+                                          parser::token::CASE,
+                                          parser::token::DO,
+                                          parser::token::ELSE,
+                                          parser::token::IF,
+                                          parser::token::SEMI_SEMI,
+                                          parser::token::SEMI_AND,
+                                          parser::token::SEMI_SEMI_AND,
+                                          parser::token::THEN,
+                                          parser::token::UNTIL,
+                                          parser::token::WHILE,
+                                          parser::token::AND_AND,
+                                          parser::token::OR_OR,
+                                          parser::token::IN,
+                                          0 };
 
 /* If we are not within a delimited expression, try to be smart
    about which separators can be semi-colons and which must be
@@ -4527,7 +4541,7 @@ decode_prompt_string (const char *string)
                         t = strrchr (t_string, '/');
                         if (t)
                           memmove (t_string, t + 1,
-                                   strlen (t)); /* strlen(t) to copy NULL */
+                                   strlen (t)); /* strlen(t) to copy nullptr */
                       }
                   }
 #undef ROOT_PATH
@@ -4746,23 +4760,23 @@ error_token_from_token (int tok)
   /* This stuff is dicy and needs closer inspection */
   switch (current_token)
     {
-    case WORD:
-    case ASSIGNMENT_WORD:
+    case parser::token::WORD:
+    case parser::token::ASSIGNMENT_WORD:
       if (yylval.word)
         t = savestring (yylval.word->word);
       break;
-    case NUMBER:
+    case parser::token::NUMBER:
       t = itos (yylval.number);
       break;
-    case ARITH_CMD:
+    case parser::token::ARITH_CMD:
       if (yylval.word_list)
         t = string_list (yylval.word_list);
       break;
-    case ARITH_FOR_EXPRS:
+    case parser::token::ARITH_FOR_EXPRS:
       if (yylval.word_list)
         t = string_list_internal (yylval.word_list, " ; ");
       break;
-    case COND_CMD:
+    case parser::token::COND_CMD:
       t = nullptr; /* punt */
       break;
     }
@@ -4829,7 +4843,7 @@ print_offending_line ()
 
 /* Report a syntax error with line numbers, etc.
    Call here for recoverable errors.  If you have a message to print,
-   then place it in MESSAGE, otherwise pass NULL and this will figure
+   then place it in MESSAGE, otherwise pass nullptr and this will figure
    out an appropriate message for you. */
 void
 Shell::report_syntax_error (const char *message)
@@ -4856,7 +4870,7 @@ Shell::report_syntax_error (const char *message)
     {
       if (ansic_shouldquote (msg))
         {
-          p = ansic_quote (msg, 0, NULL);
+          p = ansic_quote (msg);
           free (msg);
           msg = p;
         }
@@ -4949,7 +4963,7 @@ Shell::handle_eof_input_unit ()
               /* Reset the parsing state. */
               last_read_token = current_token = '\n';
               /* Reset the prompt string to be $PS1. */
-              prompt_string_pointer = NULL;
+              prompt_string_pointer = nullptr;
               prompt_again ();
               return;
             }
@@ -5031,7 +5045,7 @@ parse_string_to_word_list (char *s, int flags, const char *whom)
           line_number = orig_line_number + line_number - 1;
           orig_current_token = current_token;
           current_token = tok;
-          yyerror (NULL); /* does the right thing */
+          yyerror (nullptr); /* does the right thing */
           current_token = orig_current_token;
           if (wl)
             dispose_words (wl);
@@ -5112,7 +5126,7 @@ parse_compound_assignment (int *retlenp)
             parser_error (orig_line_number,
                           _ ("unexpected EOF while looking for matching `)'"));
           else
-            yyerror (NULL); /* does the right thing */
+            yyerror (nullptr); /* does the right thing */
           if (wl)
             dispose_words (wl);
           wl = &parse_string_error;
@@ -5344,7 +5358,7 @@ Shell::set_line_mbstate ()
   size_t mbclen;
   int ilen;
 
-  if (shell_input_line == NULL)
+  if (shell_input_line == nullptr)
     return;
   len = STRLEN (shell_input_line); /* XXX - shell_input_line_len ? */
   if (len == 0)

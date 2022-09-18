@@ -423,18 +423,13 @@ public:
    with integers.  It is used in the parser for shell tokenization. */
 struct STRING_INT_ALIST
 {
-  STRING_INT_ALIST (const char *word_, parser::token::token_kind_type token_)
+  STRING_INT_ALIST (const char *word_, int token_)
       : word (word_), token (token_)
   {
   }
 
-  STRING_INT_ALIST (const char *word_, int token_)
-      : word (word_), token (static_cast<parser::token_kind_type> (token_))
-  {
-  }
-
   const char *word;
-  parser::token::token_kind_type token;
+  int token;
 };
 
 /* Simple shell state: variables that can be memcpy'd to subshells. */
@@ -639,7 +634,7 @@ public:
   int shell_eof_token;
 
   /* The token currently being read. */
-  parser::token::token_kind_type current_token;
+  int current_token;
 
   /* variables from evalstring.c */
   int parse_and_execute_level;
@@ -735,15 +730,13 @@ protected:
 
   /* The last read token, or NULL.  read_token () uses this for context
      checking. */
-  parser::token_kind_type last_read_token;
+  int last_read_token;
 
   /* The token read prior to last_read_token. */
-  parser::token_kind_type token_before_that;
+  int token_before_that;
 
   /* The token read prior to token_before_that. */
-  parser::token_kind_type two_tokens_ago;
-
-  int global_extglob;
+  int two_tokens_ago;
 
   /* When non-zero, we have read the required tokens
      which allow ESAC to be the next one read. */
@@ -768,6 +761,10 @@ protected:
      lines, to avoid something being lost because it's pushed back with
      shell_ungetc when we're at the start of a line. */
   int eol_ungetc_lookahead;
+
+  /* When non-zero, an open-brace used to create a group is awaiting a close
+     brace partner. */
+  int open_brace_count;
 
   /* ************************************************************** */
   /*		Bash Variables (8-bit bool/char types)		    */
@@ -1045,6 +1042,7 @@ protected:
 
 #if defined(EXTENDED_GLOB)
   char extended_glob;
+  char global_extglob;
 #endif
 
   /* If non-zero, $'...' and $"..." are expanded when they appear within
@@ -1609,7 +1607,7 @@ public:
   char *getenv (const char *);
 
   // lexer called from Bison parser
-  parser::token::token_kind_type yylex ();
+  parser::symbol_type yylex ();
 
   /* Functions from make_cmd.cc */
 
@@ -1909,11 +1907,10 @@ protected:
   void pop_stream ();
 
   /* Save the current token state and return it in a new array. */
-  bash::parser::token::token_kind_type *
+  int *
   save_token_state ()
   {
-    bash::parser::token::token_kind_type *ret
-        = new bash::parser::token::token_kind_type[4];
+    int *ret = new int[4];
 
     ret[0] = last_read_token;
     ret[1] = token_before_that;
@@ -1923,7 +1920,7 @@ protected:
   }
 
   void
-  restore_token_state (bash::parser::token::token_kind_type *ts)
+  restore_token_state (int *ts)
   {
     if (ts == nullptr)
       return;
@@ -4177,7 +4174,6 @@ protected:
   int return_EOF ();
   void push_token (parser::token::token_kind_type);
   void reset_parser ();
-  void reset_readahead_token ();
   WORD_LIST *parse_string_to_word_list (char *, int, const char *);
   void init_yy_io (sh_cget_func_t, sh_cunget_func_t, stream_type, const char *,
                    INPUT_STREAM);
@@ -4229,6 +4225,10 @@ protected:
   char *tilde_expand_word (const char *);
   size_t tilde_find_suffix (const char *);
   char *tilde_expand (const char *);
+
+  // Methods in array.cc.
+
+  alias_t *find_alias (const char *);
 
   // Methods in arrayfunc.cc.
 
@@ -4330,13 +4330,27 @@ protected:
   const char *parser_remaining_input ();
   void discard_until (int);
 
-  parser::token::token_kind_type read_token (int);
+  parser::symbol_type read_token (int);
+  parser::symbol_type read_token_word (int);
 
 #if defined(ALIAS)
-  int alias_expand_token (char *);
+
+  enum alias_expand_token_result{ RE_READ_TOKEN = -99, NO_EXPANSION = -100 };
+
+  alias_expand_token_result alias_expand_token (const char *);
+
 #endif
 
   bool time_command_acceptable ();
+
+  int special_case_tokens (const char *);
+
+  void
+  reset_readahead_token ()
+  {
+    if (token_to_read == '\n')
+      token_to_read = 0;
+  }
 
   /* ************************************************************** */
   /*		Private Shell Variables (ptr types)		    */
