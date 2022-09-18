@@ -306,7 +306,7 @@ Shell::make_simple_command (ELEMENT element, COMMAND *command)
    the redirectee.word with the new input text.  If <<- is on,
    then remove leading TABS from each line. */
 void
-make_here_document (REDIRECT *temp, int lineno)
+Shell::make_here_document (REDIRECT *temp, int lineno)
 {
   int kill_leading, redir_len;
   char *redir_word, *document, *full_line;

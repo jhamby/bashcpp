@@ -794,7 +794,7 @@ public:
   /* Readline functions. */
   /* Read a line of input.  Prompt with PROMPT.  A nullptr PROMPT means none.
    */
-  char *readline (const char *);
+  std::string readline (const char *);
 
   void rl_set_prompt (const char *);
   unsigned int
@@ -1750,7 +1750,7 @@ private:
 
   /* readline.c */
   void readline_internal_setup ();
-  char *readline_internal_teardown (bool);
+  std::string readline_internal_teardown (bool);
   int readline_internal_char ();
 
   int _rl_dispatch_callback (_rl_keyseq_cxt *);
@@ -2511,7 +2511,7 @@ private:
   /* Read a line of input from the global rl_instream, doing output on
      the global rl_outstream.
      If rl_prompt is non-null, then that is our prompt. */
-  char *
+  std::string
   readline_internal ()
   {
     readline_internal_setup ();

@@ -67,7 +67,7 @@ typedef int hash_wfunc (BUCKET_CONTENTS *);
 // FIXME: make this a member function.
 #define hash_items(bucket, table)                                             \
   ((table && (bucket < table->nbuckets)) ? table->bucket_array[bucket]        \
-                                         : (BUCKET_CONTENTS *)NULL)
+                                         : nullptr)
 
 /* Default number of buckets in the hash table. */
 #define DEFAULT_HASH_BUCKETS 128 /* must be power of two */

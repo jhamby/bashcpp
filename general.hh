@@ -201,19 +201,6 @@ public:
   }
 };
 
-/* Here is a generic structure for associating character strings
-   with integers.  It is used in the parser for shell tokenization. */
-struct STRING_INT_ALIST
-{
-  STRING_INT_ALIST (const char *word_, int token_)
-      : word (word_), token (token_)
-  {
-  }
-
-  const char *word;
-  int token;
-};
-
 // Compare two strings for equality.
 static inline bool
 STREQ (const char *a, const char *b)

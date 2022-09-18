@@ -26,21 +26,48 @@
 namespace bash
 {
 
+/* Values for `flags' member of struct alias. */
+enum alias_flags
+{
+  AL_NOFLAGS = 0,
+  AL_EXPANDNEXT = 0x1,
+  AL_BEINGEXPANDED = 0x2
+};
+
+static inline alias_flags &
+operator|= (alias_flags &a, const alias_flags &b)
+{
+  a = static_cast<alias_flags> (static_cast<uint32_t> (a)
+                                | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline alias_flags &
+operator&= (alias_flags &a, const alias_flags &b)
+{
+  a = static_cast<alias_flags> (static_cast<uint32_t> (a)
+                                & static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline alias_flags
+operator~(const alias_flags &a)
+{
+  return static_cast<alias_flags> (~static_cast<uint32_t> (a));
+}
+
 struct alias_t
 {
   char *name;
   char *value;
-  char flags;
+  alias_flags flags;
 };
 
-/* Values for `flags' member of struct alias. */
-#define AL_EXPANDNEXT 0x1
-#define AL_BEINGEXPANDED 0x2
-
+#if 0
 /* The list of known aliases. */
 extern HASH_TABLE *aliases;
 
-extern void initialize_aliases (void);
+extern void initialize_aliases ();
 
 /* Scan the list of aliases looking for one with NAME.  Return NULL
    if the alias doesn't exist, else a pointer to the alias. */
@@ -58,10 +85,10 @@ extern void add_alias (const char *, const char *);
 extern int remove_alias (const char *);
 
 /* Remove all aliases. */
-extern void delete_all_aliases (void);
+extern void delete_all_aliases ();
 
 /* Return an array of all defined aliases. */
-extern alias_t **all_aliases (void);
+extern alias_t **all_aliases ();
 
 /* Expand a single word for aliases. */
 extern char *alias_expand_word (const char *);
@@ -71,6 +98,7 @@ extern char *alias_expand (const char *);
 
 /* Helper definition for the parser */
 extern void clear_string_list_expander (alias_t *);
+#endif
 
 } // namespace bash
 

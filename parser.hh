@@ -90,20 +90,6 @@ operator~(const pstate_flags &a)
   return static_cast<pstate_flags> (~static_cast<uint32_t> (a));
 }
 
-/* Definition of the delimiter stack.  Needed by parse.y and bashhist.c. */
-struct dstack
-{
-  /* DELIMITERS is a stack of the nested delimiters that we have
-     encountered so far. */
-  char *delimiters;
-
-  /* Offset into the stack of delimiters. */
-  int delimiter_depth;
-
-  /* How many slots are allocated to DELIMITERS. */
-  int delimiter_space;
-};
-
 /* States we can be in while scanning a ${...} expansion.  Shared between
    parse.y and subst.c */
 enum dolbrace_state_t
@@ -116,33 +102,5 @@ enum dolbrace_state_t
   DOLBRACE_QUOTE = 0x40, /* single quote is special in double quotes */
   DOLBRACE_QUOTE2 = 0x80 /* single quote is semi-special in double quotes */
 };
-
-#if 0
-/* variable declarations from parse.y */
-extern struct dstack dstack;
-
-extern const char *primary_prompt;
-extern const char *secondary_prompt;
-
-extern const char *current_prompt_string;
-
-extern const char *ps1_prompt;
-extern const char *ps2_prompt;
-extern const char *ps0_prompt;
-
-extern char expand_aliases;
-extern int current_command_line_count;
-extern int saved_command_line_count;
-extern int shell_eof_token;
-extern int current_token;
-extern int parser_state;
-extern int need_here_doc;
-
-extern char ignoreeof;
-extern int eof_encountered;
-extern int eof_encountered_limit;
-
-extern int line_number, line_number_base;
-#endif
 
 #endif /* _PARSER_H_ */

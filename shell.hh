@@ -49,6 +49,7 @@
 #include "bashintl.hh"
 #include "posixstat.hh"
 
+#include "alias.hh"
 #include "builtins.hh"
 #include "command.hh"
 #include "externs.hh"
@@ -384,6 +385,58 @@ operator| (const mp_flags &a, const mp_flags &b)
                                 | static_cast<uint32_t> (b));
 }
 
+/*
+ * Pushing and popping strings, implemented in parser.cc.
+ */
+
+enum push_string_flags
+{
+  PSH_NOFLAGS = 0,
+  PSH_ALIAS = 0x01,
+  PSH_DPAREN = 0x02,
+  PSH_SOURCE = 0x04,
+  PSH_ARRAY = 0x08
+};
+
+class STRING_SAVER : public GENERIC_LIST
+{
+public:
+  STRING_SAVER () : GENERIC_LIST () {}
+
+  STRING_SAVER *
+  next ()
+  {
+    return static_cast<STRING_SAVER *> (next_);
+  }
+
+  std::string saved_line;
+#if defined(ALIAS)
+  alias_t *expander; /* alias that caused this line to be pushed. */
+#endif
+  size_t saved_line_index;
+  int expand_alias; /* Value to set expand_alias to when string is popped. */
+  int saved_line_terminator;
+  push_string_flags flags;
+};
+
+/* Here is a generic structure for associating character strings
+   with integers.  It is used in the parser for shell tokenization. */
+struct STRING_INT_ALIST
+{
+  STRING_INT_ALIST (const char *word_, parser::token::token_kind_type token_)
+      : word (word_), token (token_)
+  {
+  }
+
+  STRING_INT_ALIST (const char *word_, int token_)
+      : word (word_), token (static_cast<parser::token_kind_type> (token_))
+  {
+  }
+
+  const char *word;
+  parser::token::token_kind_type token;
+};
+
 /* Simple shell state: variables that can be memcpy'd to subshells. */
 class SimpleState
 {
@@ -420,7 +473,7 @@ protected:
   /* from expr.cc: the OP in OP= */
   token_t assigntok;
 
-  // from bashhist.c
+  // from bashhist.cc
   int history_lines_this_session;
   int history_lines_in_file;
   int history_control;
@@ -586,7 +639,7 @@ public:
   int shell_eof_token;
 
   /* The token currently being read. */
-  int current_token;
+  parser::token::token_kind_type current_token;
 
   /* variables from evalstring.c */
   int parse_and_execute_level;
@@ -666,6 +719,14 @@ public:
   /* Non-zero means stuff being printed is inside of a connection. */
   int printing_connection;
 
+  /* The globally known line number. */
+  int line_number;
+
+#if defined(COND_COMMAND)
+  int cond_lineno;
+  int cond_token;
+#endif
+
 protected:
   // Back to protected access.
 
@@ -674,13 +735,13 @@ protected:
 
   /* The last read token, or NULL.  read_token () uses this for context
      checking. */
-  int last_read_token;
+  parser::token_kind_type last_read_token;
 
   /* The token read prior to last_read_token. */
-  int token_before_that;
+  parser::token_kind_type token_before_that;
 
   /* The token read prior to token_before_that. */
-  int two_tokens_ago;
+  parser::token_kind_type two_tokens_ago;
 
   int global_extglob;
 
@@ -691,9 +752,6 @@ protected:
   /* When non-zero, we can read IN as an acceptable token, regardless of how
      many newlines we read. */
   int expecting_in_token;
-
-  // The current line number.
-  int line_number;
 
   // File descriptor for xtrace output.
   int xtrace_fd;
@@ -706,8 +764,10 @@ protected:
   int ngroups;   // number of groups the user is a member of
   int maxgroups; // max number of supplemental groups
 
-  /* The set of groups that this user is a member of. */
-  GETGROUPS_T *group_array;
+  /* This implements one-character lookahead/lookbehind across physical input
+     lines, to avoid something being lost because it's pushed back with
+     shell_ungetc when we're at the start of a line. */
+  int eol_ungetc_lookahead;
 
   /* ************************************************************** */
   /*		Bash Variables (8-bit bool/char types)		    */
@@ -771,7 +831,7 @@ protected:
   /* True means that we have to remake EXPORT_ENV. */
   bool array_needs_making;
 
-  /* Shared state from bashhist.c */
+  /* Shared state from bashhist.cc */
   bool remember_on_history;
   char enable_history_list; /* value for `set -o history' */
   char literal_history;     /* controlled by `shopt lithist' */
@@ -789,7 +849,9 @@ protected:
 #endif /* BANG_HISTORY */
 
   /* Shared state from bashline.c */
+#if defined(READLINE)
   bool bash_readline_initialized;
+#endif
   bool hostname_list_initialized;
 
   /* variables from execute_cmd.h */
@@ -1160,6 +1222,11 @@ protected:
 
   // Have the tilde expander strings been initialized?
   bool tilde_strings_initialized;
+
+  // True if an unquoted backslash was seen during parsing.
+  bool unquoted_backslash;
+
+  bool here_doc_first_line;
 
 #ifndef HAVE_LOCALE_CHARSET
   char charsetbuf[40];
@@ -1616,6 +1683,8 @@ public:
 
   FUNCTION_DEF *make_function_def (WORD_DESC *, COMMAND *, int, int);
 
+  void make_here_document (REDIRECT *, int);
+
   void
   push_heredoc (REDIRECT *r)
   {
@@ -1803,6 +1872,68 @@ protected:
   sh_parser_state_t *save_parser_state (sh_parser_state_t *);
   void restore_parser_state (sh_parser_state_t *);
 
+#if defined(READLINE)
+
+  int yy_readline_get ();
+
+  int
+  yy_readline_unget (int c)
+  {
+    if (current_readline_line_index && !current_readline_line.empty ())
+      current_readline_line[--current_readline_line_index]
+          = static_cast<char> (c);
+    return c;
+  }
+
+  /* Will we be collecting another input line and printing a prompt? This uses
+     different conditions than SHOULD_PROMPT(), since readline allows a user to
+     embed a newline in the middle of the line it collects, which the parser
+     will interpret as a line break and command delimiter. */
+  bool
+  parser_will_prompt ()
+  {
+    return current_readline_line.empty ();
+  }
+
+#endif
+
+  int yy_string_get ();
+  int yy_string_unget (int);
+
+  void with_input_from_string (char *, const char *);
+
+  int yy_stream_get ();
+  int yy_stream_unget (int);
+
+  void push_stream (int);
+  void pop_stream ();
+
+  /* Save the current token state and return it in a new array. */
+  bash::parser::token::token_kind_type *
+  save_token_state ()
+  {
+    bash::parser::token::token_kind_type *ret
+        = new bash::parser::token::token_kind_type[4];
+
+    ret[0] = last_read_token;
+    ret[1] = token_before_that;
+    ret[2] = two_tokens_ago;
+    ret[3] = current_token;
+    return ret;
+  }
+
+  void
+  restore_token_state (bash::parser::token::token_kind_type *ts)
+  {
+    if (ts == nullptr)
+      return;
+
+    last_read_token = ts[0];
+    token_before_that = ts[1];
+    two_tokens_ago = ts[2];
+    current_token = ts[3];
+  }
+
   int find_reserved_word (const char *);
 
   // Functions provided by various builtins.
@@ -1939,16 +2070,53 @@ protected:
   char **brace_expand (char *);
 #endif
 
-  int parser_will_prompt ();
   int parser_in_command_position ();
 
-  void free_pushed_string_input ();
+  void
+  free_pushed_string_input ()
+  {
+#if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
+    free_string_list ();
+#endif
+  }
 
-  int parser_expanding_alias ();
-  void parser_save_alias ();
-  void parser_restore_alias ();
+  bool
+  parser_expanding_alias ()
+  {
+#if defined(ALIAS)
+    return pushed_string_list && pushed_string_list->expander;
+#else
+    return false;
+#endif
+  }
 
-  void clear_shell_input_line ();
+  void
+  parser_save_alias ()
+  {
+#if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
+    push_string (nullptr, 0, nullptr);
+    pushed_string_list->flags = PSH_SOURCE; /* XXX - for now */
+#else
+    ;
+#endif
+  }
+
+  void
+  parser_restore_alias ()
+  {
+#if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
+    if (pushed_string_list)
+      pop_string ();
+#else
+    ;
+#endif
+  }
+
+  void
+  clear_shell_input_line ()
+  {
+    shell_input_line.clear ();
+  }
 
   char *decode_prompt_string (const char *);
 
@@ -2842,7 +3010,7 @@ protected:
       }
   }
 
-  /* from bashhist.c */
+  /* from bashhist.cc */
 #if defined(BANG_HISTORY)
   bool bash_history_inhibit_expansion (const char *, int);
 #endif
@@ -2852,6 +3020,12 @@ protected:
   void maybe_save_shell_history ();
 
   void bash_history_reinit (bool);
+
+#if defined(HISTORY)
+  void maybe_add_history (const char *);
+#endif
+
+  char *pre_process_line (const char *, bool, bool);
 
   /* Functions declared in execute_cmd.c, used by many other files */
 
@@ -4001,7 +4175,7 @@ protected:
 
   char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
   int return_EOF ();
-  void push_token (int);
+  void push_token (parser::token::token_kind_type);
   void reset_parser ();
   void reset_readahead_token ();
   WORD_LIST *parse_string_to_word_list (char *, int, const char *);
@@ -4011,6 +4185,19 @@ protected:
   void with_input_from_stream (FILE *, const char *);
   void initialize_bash_input ();
   void execute_variable_command (const char *, const char *);
+
+  /* Return true if a stream of type TYPE is saved on the stack. */
+  bool
+  stream_on_stack (stream_type type)
+  {
+    STREAM_SAVER *s;
+
+    for (s = stream_list; s; s = s->next ())
+      if (s->bash_input.type == type)
+        return true;
+
+    return false;
+  }
 
   const char *
   yy_input_name ()
@@ -4031,6 +4218,10 @@ protected:
   {
     return ((*this).*bash_input.ungetter) (c);
   }
+
+  void set_line_mbstate ();
+  void pop_string ();
+  void free_string_list ();
 
   // Methods in lib/tilde/tilde.cc.
 
@@ -4122,6 +4313,30 @@ protected:
 #ifdef DEBUG
   void debug_parser (parser::debug_level_type);
 #endif
+
+  void push_string (char *, int, alias_t *);
+
+#if defined(ALIAS)
+  void clear_string_list_expander (alias_t *);
+#endif
+
+  const char *read_a_line (bool);
+  const char *read_secondary_line (bool);
+  void prompt_again ();
+
+  int shell_getc (bool);
+  void shell_ungetc (int);
+
+  const char *parser_remaining_input ();
+  void discard_until (int);
+
+  parser::token::token_kind_type read_token (int);
+
+#if defined(ALIAS)
+  int alias_expand_token (char *);
+#endif
+
+  bool time_command_acceptable ();
 
   /* ************************************************************** */
   /*		Private Shell Variables (ptr types)		    */
@@ -4400,6 +4615,14 @@ protected:
      editing is turned off.  Analogous to current_readline_prompt. */
   char *current_decoded_prompt;
 
+#if defined(READLINE)
+  char *current_readline_prompt;
+  std::string current_readline_line;
+  size_t current_readline_line_index;
+#endif
+
+  std::string read_a_line_buffer;
+
   WORD_DESC *word_desc_to_read;
 
   REDIRECTEE source;
@@ -4419,7 +4642,33 @@ protected:
 
   BASH_INPUT bash_input;
 
+  class STREAM_SAVER : public GENERIC_LIST
+  {
+  public:
+    STREAM_SAVER () : GENERIC_LIST () {}
+
+    STREAM_SAVER *
+    next ()
+    {
+      return static_cast<STREAM_SAVER *> (next_);
+    }
+
+    BASH_INPUT bash_input;
+    int line;
+
+#if defined(BUFFERED_INPUT)
+    BUFFERED_STREAM *bstream;
+#endif /* BUFFERED_INPUT */
+  };
+
   parser parser;
+
+  STREAM_SAVER *stream_list;
+
+  STRING_SAVER *pushed_string_list;
+
+  /* The set of groups that this user is a member of. */
+  GETGROUPS_T *group_array;
 
 #if defined(SIGWINCH)
   void (*old_winch) (int);
@@ -4489,6 +4738,18 @@ protected:
 
   char **group_vector;
   int *group_iarray;
+
+  /* These are used by read_token_word, in parser.cc. */
+
+  /* The primary delimiter stack. */
+  std::vector<char> dstack;
+
+  /* A temporary delimiter stack to be used when decoding prompt strings.
+     This is needed because command substitutions in prompt strings (e.g., PS2)
+     can screw up the parser's quoting state. */
+  std::vector<char> temp_dstack;
+
+  std::string shell_input_line_property;
 
   // Buffer for buffered input.
   char localbuf[1024];

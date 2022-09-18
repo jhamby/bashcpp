@@ -26,16 +26,23 @@
 namespace bash
 {
 
+#if defined(HANDLE_MULTIBYTE)
+#define last_shell_getc_is_singlebyte                                         \
+  ((shell_input_line_index > 1)                                               \
+       ? shell_input_line_property[shell_input_line_index - 1]                \
+       : 1)
+#define MBTEST(x) ((x) && last_shell_getc_is_singlebyte)
+#else
+#define last_shell_getc_is_singlebyte 1
+#define MBTEST(x) ((x))
+#endif
+
+static void print_prompt ();
+
 /* Should we call prompt_again? */
 #define SHOULD_PROMPT()                                                       \
   (interactive                                                                \
    && (bash_input.type == st_stdin || bash_input.type == st_stream))
-
-#if defined(ALIAS)
-#define expanding_alias() (pushed_string_list && pushed_string_list->expander)
-#else
-#define expanding_alias() 0
-#endif
 
 #ifdef DEBUG
 void
@@ -81,7 +88,7 @@ Shell::initialize_bash_input ()
    GET, UNGET, TYPE, NAME, and LOCATION. */
 void
 Shell::init_yy_io (sh_cget_func_t get, sh_cunget_func_t unget,
-            stream_type type, const char *name, INPUT_STREAM location)
+                   stream_type type, const char *name, INPUT_STREAM location)
 {
   bash_input.type = type;
   delete[] bash_input.name;
@@ -101,22 +108,14 @@ Shell::init_yy_io (sh_cget_func_t get, sh_cunget_func_t unget,
 
 #if defined(READLINE)
 
-#if 0
-char *current_readline_prompt = nullptr;
-char *current_readline_line = nullptr;
-int current_readline_line_index = 0;
-#endif
-
-static int
-yy_readline_get ()
+int
+Shell::yy_readline_get ()
 {
-  SigHandler *old_sigint;
-  int line_len;
-  unsigned char c;
+  SigHandler old_sigint;
 
-  if (current_readline_line == 0)
+  if (current_readline_line.empty ())
     {
-      if (bash_readline_initialized == 0)
+      if (!bash_readline_initialized)
         initialize_readline ();
 
 #if defined(JOB_CONTROL)
@@ -127,11 +126,10 @@ yy_readline_get ()
       old_sigint = IMPOSSIBLE_TRAP_HANDLER;
       if (signal_is_ignored (SIGINT) == 0)
         {
-          old_sigint
-              = (SigHandler *)set_signal_handler (SIGINT, sigint_sighandler);
+          old_sigint = set_signal_handler (SIGINT, &sigint_sighandler_global);
         }
 
-      sh_unset_nodelay_mode (fileno (rl_instream)); /* just in case */
+      sh_unset_nodelay_mode (::fileno (rl_instream)); /* just in case */
       current_readline_line
           = readline (current_readline_prompt ? current_readline_prompt : "");
 
@@ -147,70 +145,46 @@ yy_readline_get ()
       reset_readline_prompt ();
 #endif
 
-      if (current_readline_line == 0)
+      if (current_readline_line.empty ())
         return EOF;
 
       current_readline_line_index = 0;
-      line_len = strlen (current_readline_line);
-
-      current_readline_line
-          = (char *)xrealloc (current_readline_line, 2 + line_len);
-      current_readline_line[line_len++] = '\n';
-      current_readline_line[line_len] = '\0';
+      current_readline_line.push_back ('\n');
     }
 
-  if (current_readline_line[current_readline_line_index] == 0)
+  if (current_readline_line.size () == current_readline_line_index)
     {
-      free (current_readline_line);
-      current_readline_line = nullptr;
+      current_readline_line.clear ();
       return yy_readline_get ();
     }
   else
     {
-      c = current_readline_line[current_readline_line_index++];
-      return c;
+      return static_cast<unsigned char> (
+          current_readline_line[current_readline_line_index++]);
     }
 }
 
-static int
-yy_readline_unget (int c)
-{
-  if (current_readline_line_index && current_readline_line)
-    current_readline_line[--current_readline_line_index] = c;
-  return c;
-}
-
 void
-with_input_from_stdin ()
+Shell::with_input_from_stdin ()
 {
   INPUT_STREAM location;
 
   if (bash_input.type != st_stdin && stream_on_stack (st_stdin) == 0)
     {
-      location.string = current_readline_line;
-      init_yy_io (yy_readline_get, yy_readline_unget, st_stdin,
+      location.string = savestring (current_readline_line);
+      init_yy_io (&Shell::yy_readline_get, &Shell::yy_readline_unget, st_stdin,
                   "readline stdin", location);
     }
 }
 
-/* Will we be collecting another input line and printing a prompt? This uses
-   different conditions than SHOULD_PROMPT(), since readline allows a user to
-   embed a newline in the middle of the line it collects, which the parser
-   will interpret as a line break and command delimiter. */
-int
-parser_will_prompt ()
-{
-  return current_readline_line == 0
-         || current_readline_line[current_readline_line_index] == 0;
-}
-
-#else  /* !READLINE */
+#else /* !READLINE */
 
 void
-with_input_from_stdin ()
+Shell::with_input_from_stdin ()
 {
   with_input_from_stream (stdin, "stdin");
 }
+
 #endif /* !READLINE */
 
 /* **************************************************************** */
@@ -219,18 +193,15 @@ with_input_from_stdin ()
 /*								    */
 /* **************************************************************** */
 
-static int
-yy_string_get ()
+int
+Shell::yy_string_get ()
 {
-  char *string;
-  unsigned char c;
-
-  string = bash_input.location.string;
+  char *string = bash_input.location.string;
 
   /* If the string doesn't exist, or is empty, EOF found. */
   if (string && *string)
     {
-      c = *string++;
+      unsigned char c = static_cast<unsigned char> (*string++);
       bash_input.location.string = string;
       return c;
     }
@@ -238,20 +209,21 @@ yy_string_get ()
     return EOF;
 }
 
-static int
-yy_string_unget (int c)
+int
+Shell::yy_string_unget (int c)
 {
-  *(--bash_input.location.string) = c;
+  *(--bash_input.location.string) = static_cast<char> (c);
   return c;
 }
 
 void
-with_input_from_string (char *string, const char *name)
+Shell::with_input_from_string (char *string, const char *name)
 {
   INPUT_STREAM location;
 
   location.string = string;
-  init_yy_io (yy_string_get, yy_string_unget, st_string, name, location);
+  init_yy_io (&Shell::yy_string_get, &Shell::yy_string_unget, st_string, name,
+              location);
 }
 
 /* Count the number of characters we've consumed from
@@ -259,14 +231,14 @@ with_input_from_string (char *string, const char *name)
    returned from shell_getc. That is the true input location.  Rewind
    bash_input.location.string by that number of characters, so it points to the
    last character actually consumed by the parser. */
-static void
-rewind_input_string ()
+void
+Shell::rewind_input_string ()
 {
-  int xchars;
+  size_t xchars;
 
   /* number of unconsumed characters in the input -- XXX need to take newlines
      into account, e.g., $(...\n) */
-  xchars = shell_input_line_len - shell_input_line_index;
+  xchars = shell_input_line.size () - shell_input_line_index;
   if (bash_input.location.string[-1] == '\n')
     xchars++;
 
@@ -293,8 +265,8 @@ rewind_input_string ()
    signals received during a read(2) will not cause the read to be restarted.
    We will need to restart it ourselves. */
 
-static int
-yy_stream_get ()
+int
+Shell::yy_stream_get ()
 {
   int result;
 
@@ -308,51 +280,28 @@ yy_stream_get ()
   return result;
 }
 
-static int
-yy_stream_unget (int c)
+int
+Shell::yy_stream_unget (int c)
 {
   return ungetc_with_restart (c, bash_input.location.file);
 }
 
 void
-with_input_from_stream (FILE *stream, const char *name)
+Shell::with_input_from_stream (FILE *stream, const char *name)
 {
   INPUT_STREAM location;
 
   location.file = stream;
-  init_yy_io (yy_stream_get, yy_stream_unget, st_stream, name, location);
+  init_yy_io (&Shell::yy_stream_get, &Shell::yy_stream_unget, st_stream, name,
+              location);
 }
 
-typedef struct stream_saver
-{
-  struct stream_saver *next;
-  BASH_INPUT bash_input;
-  int line;
-#if defined(BUFFERED_INPUT)
-  BUFFERED_STREAM *bstream;
-#endif /* BUFFERED_INPUT */
-} STREAM_SAVER;
-
-/* The globally known line number. */
-int line_number = 0;
-
-/* The line number offset set by assigning to LINENO.  Not currently used. */
-int line_number_base = 0;
-
-#if defined(COND_COMMAND)
-static int cond_lineno;
-static int cond_token;
-#endif
-
-STREAM_SAVER *stream_list = nullptr;
-
 void
-push_stream (int reset_lineno)
+Shell::push_stream (int reset_lineno)
 {
-  STREAM_SAVER *saver = (STREAM_SAVER *)xmalloc (sizeof (STREAM_SAVER));
+  STREAM_SAVER *saver = new STREAM_SAVER ();
 
-  xbcopy ((char *)&bash_input, (char *)&(saver->bash_input),
-          sizeof (BASH_INPUT));
+  saver->bash_input = bash_input;
 
 #if defined(BUFFERED_INPUT)
   saver->bstream = nullptr;
@@ -364,15 +313,16 @@ push_stream (int reset_lineno)
 
   saver->line = line_number;
   bash_input.name = nullptr;
-  saver->next = stream_list;
+  saver->set_next (stream_list);
   stream_list = saver;
   EOF_Reached = false;
+
   if (reset_lineno)
     line_number = 0;
 }
 
 void
-pop_stream ()
+Shell::pop_stream ()
 {
   if (!stream_list)
     EOF_Reached = true;
@@ -381,7 +331,7 @@ pop_stream ()
       STREAM_SAVER *saver = stream_list;
 
       EOF_Reached = false;
-      stream_list = stream_list->next;
+      stream_list = stream_list->next ();
 
       init_yy_io (saver->bash_input.getter, saver->bash_input.ungetter,
                   saver->bash_input.type, saver->bash_input.name,
@@ -413,46 +363,9 @@ pop_stream ()
 
       line_number = saver->line;
 
-      FREE (saver->bash_input.name);
-      free (saver);
+      delete[] saver->bash_input.name;
+      delete saver;
     }
-}
-
-/* Return 1 if a stream of type TYPE is saved on the stack. */
-int
-stream_on_stack (enum stream_type type)
-{
-  STREAM_SAVER *s;
-
-  for (s = stream_list; s; s = s->next)
-    if (s->bash_input.type == type)
-      return 1;
-  return 0;
-}
-
-/* Save the current token state and return it in a malloced array. */
-int *
-save_token_state ()
-{
-  int *ret;
-
-  ret = (int *)xmalloc (4 * sizeof (int));
-  ret[0] = last_read_token;
-  ret[1] = token_before_that;
-  ret[2] = two_tokens_ago;
-  ret[3] = current_token;
-  return ret;
-}
-
-void
-restore_token_state (int *ts)
-{
-  if (ts == 0)
-    return;
-  last_read_token = ts[0];
-  token_before_that = ts[1];
-  two_tokens_ago = ts[2];
-  current_token = ts[3];
 }
 
 /*
@@ -473,31 +386,6 @@ restore_token_state (int *ts)
  */
 
 /*
- * Pushing and popping strings.  This works together with shell_getc to
- * implement alias expansion on a per-token basis.
- */
-
-#define PSH_ALIAS 0x01
-#define PSH_DPAREN 0x02
-#define PSH_SOURCE 0x04
-#define PSH_ARRAY 0x08
-
-typedef struct string_saver
-{
-  struct string_saver *next;
-  int expand_alias; /* Value to set expand_alias to when string is popped. */
-  char *saved_line;
-#if defined(ALIAS)
-  alias_t *expander; /* alias that caused this line to be pushed. */
-#endif
-  size_t saved_line_size, saved_line_index;
-  int saved_line_terminator;
-  int flags;
-} STRING_SAVER;
-
-STRING_SAVER *pushed_string_list = nullptr;
-
-/*
  * Push the current shell_input_line onto a stack of such lines and make S
  * the current input.  Used when expanding aliases.  EXPAND is used to set
  * the value of expand_next_token when the string is popped, so that the
@@ -505,23 +393,23 @@ STRING_SAVER *pushed_string_list = nullptr;
  * alias expands to multiple words.  TOKEN is the token that was expanded
  * into S; it is saved and used to prevent infinite recursive expansion.
  */
-static void
-push_string (char *s, int expand, alias_t *ap)
+void
+Shell::push_string (char *s, int expand, alias_t *ap)
 {
-  STRING_SAVER *temp = (STRING_SAVER *)xmalloc (sizeof (STRING_SAVER));
+  STRING_SAVER *temp = new STRING_SAVER ();
 
   temp->expand_alias = expand;
   temp->saved_line = shell_input_line;
-  temp->saved_line_size = shell_input_line_size;
   temp->saved_line_index = shell_input_line_index;
   temp->saved_line_terminator = shell_input_line_terminator;
-  temp->flags = 0;
+
 #if defined(ALIAS)
   temp->expander = ap;
   if (ap)
     temp->flags = PSH_ALIAS;
 #endif
-  temp->next = pushed_string_list;
+
+  temp->set_next (pushed_string_list);
   pushed_string_list = temp;
 
 #if defined(ALIAS)
@@ -530,7 +418,6 @@ push_string (char *s, int expand, alias_t *ap)
 #endif
 
   shell_input_line = s;
-  shell_input_line_size = STRLEN (s);
   shell_input_line_index = 0;
   shell_input_line_terminator = '\0';
 #if 0
@@ -546,15 +433,13 @@ push_string (char *s, int expand, alias_t *ap)
  * when it thinks it has consumed the string generated by an alias expansion
  * and needs to return to the original input line.
  */
-static void
-pop_string ()
+void
+Shell::pop_string ()
 {
   STRING_SAVER *t;
 
-  FREE (shell_input_line);
   shell_input_line = pushed_string_list->saved_line;
   shell_input_line_index = pushed_string_list->saved_line_index;
-  shell_input_line_size = pushed_string_list->saved_line_size;
   shell_input_line_terminator = pushed_string_list->saved_line_terminator;
 
   if (pushed_string_list->expand_alias)
@@ -563,32 +448,31 @@ pop_string ()
     parser_state &= ~PST_ALEXPNEXT;
 
   t = pushed_string_list;
-  pushed_string_list = pushed_string_list->next;
+  pushed_string_list = pushed_string_list->next ();
 
 #if defined(ALIAS)
   if (t->expander)
     t->expander->flags &= ~AL_BEINGEXPANDED;
 #endif
 
-  free ((char *)t);
+  delete t;
 
   set_line_mbstate ();
 }
 
-static void
-free_string_list ()
+void
+Shell::free_string_list ()
 {
   STRING_SAVER *t, *t1;
 
   for (t = pushed_string_list; t;)
     {
-      t1 = t->next;
-      FREE (t->saved_line);
+      t1 = t->next ();
 #if defined(ALIAS)
       if (t->expander)
         t->expander->flags &= ~AL_BEINGEXPANDED;
 #endif
-      free ((char *)t);
+      delete t;
       t = t1;
     }
   pushed_string_list = nullptr;
@@ -596,75 +480,30 @@ free_string_list ()
 
 #endif /* ALIAS || DPAREN_ARITHMETIC */
 
-void
-free_pushed_string_input ()
-{
-#if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
-  free_string_list ();
-#endif
-}
-
-int
-parser_expanding_alias ()
-{
-  return expanding_alias ();
-}
-
-void
-parser_save_alias ()
-{
-#if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
-  push_string (nullptr, 0, nullptr);
-  pushed_string_list->flags = PSH_SOURCE; /* XXX - for now */
-#else
-  ;
-#endif
-}
-
-void
-parser_restore_alias ()
-{
-#if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
-  if (pushed_string_list)
-    pop_string ();
-#else
-  ;
-#endif
-}
-
 #if defined(ALIAS)
 /* Before freeing AP, make sure that there aren't any cases of pointer
    aliasing that could cause us to reference freed memory later on. */
 void
-clear_string_list_expander (alias_t *ap)
+Shell::clear_string_list_expander (alias_t *ap)
 {
   STRING_SAVER *t;
 
-  for (t = pushed_string_list; t; t = t->next)
+  for (t = pushed_string_list; t; t = t->next ())
     {
       if (t->expander && t->expander == ap)
-        t->expander = 0;
+        t->expander = nullptr;
     }
 }
 #endif
 
-void
-clear_shell_input_line ()
-{
-  if (shell_input_line)
-    shell_input_line[shell_input_line_index = 0] = '\0';
-}
-
 /* Return a line of text, taken from wherever yylex () reads input.
-   If there is no more input, then we return NULL.  If REMOVE_QUOTED_NEWLINE
+   If there is no more input, then we return nullptr.  If REMOVE_QUOTED_NEWLINE
    is non-zero, we remove unquoted \<newline> pairs.  This is used by
    read_secondary_line to read here documents. */
-static char *
-read_a_line (int remove_quoted_newline)
+const char *
+Shell::read_a_line (bool remove_quoted_newline)
 {
-  static char *line_buffer = nullptr;
-  static int buffer_size = 0;
-  int indx, c, peekc, pass_next;
+  int c, peekc;
 
 #if defined(READLINE)
   if (no_line_editing && SHOULD_PROMPT ())
@@ -673,7 +512,9 @@ read_a_line (int remove_quoted_newline)
 #endif
     print_prompt ();
 
-  pass_next = indx = 0;
+  read_a_line_buffer.clear ();
+
+  bool pass_next = false;
   while (1)
     {
       /* Allow immediate exit if interrupted during input. */
@@ -694,15 +535,11 @@ read_a_line (int remove_quoted_newline)
       if (c == EOF)
         {
           if (interactive && bash_input.type == st_stream)
-            clearerr (stdin);
-          if (indx == 0)
+            ::clearerr (stdin);
+          if (read_a_line_buffer.empty ())
             return nullptr;
           c = '\n';
         }
-
-      /* `+2' in case the final character in the buffer is a newline or we
-         have to handle CTLESC or CTLNUL. */
-      RESIZE_MALLOCED_BUFFER (line_buffer, indx, 2, buffer_size, 128);
 
       /* IF REMOVE_QUOTED_NEWLINES is non-zero, we are reading a
          here document with an unquoted delimiter.  In this case,
@@ -712,8 +549,8 @@ read_a_line (int remove_quoted_newline)
          quoting a backslash-newline pair appears in the line. */
       if (pass_next)
         {
-          line_buffer[indx++] = c;
-          pass_next = 0;
+          read_a_line_buffer.push_back (static_cast<char> (c));
+          pass_next = false;
         }
       else if (c == '\\' && remove_quoted_newline)
         {
@@ -727,8 +564,9 @@ read_a_line (int remove_quoted_newline)
           else
             {
               yy_ungetc (peekc);
-              pass_next = 1;
-              line_buffer[indx++] = c; /* Preserve the backslash. */
+              pass_next = true;
+              /* Preserve the backslash. */
+              read_a_line_buffer.push_back (static_cast<char> (c));
             }
         }
       else
@@ -737,15 +575,13 @@ read_a_line (int remove_quoted_newline)
              is unquoted. In this case, we will be expanding the lines and
              need to make sure CTLESC and CTLNUL in the input are quoted. */
           if (remove_quoted_newline && (c == CTLESC || c == CTLNUL))
-            line_buffer[indx++] = CTLESC;
-          line_buffer[indx++] = c;
+            read_a_line_buffer.push_back (CTLESC);
+
+          read_a_line_buffer.push_back (static_cast<char> (c));
         }
 
       if (c == '\n')
-        {
-          line_buffer[indx] = '\0';
-          return line_buffer;
-        }
+        return read_a_line_buffer.c_str ();
     }
 }
 
@@ -754,16 +590,17 @@ read_a_line (int remove_quoted_newline)
    document.  REMOVE_QUOTED_NEWLINE is non-zero if we should remove
    newlines quoted with backslashes while reading the line.  It is
    non-zero unless the delimiter of the here document was quoted. */
-char *
-read_secondary_line (int remove_quoted_newline)
+const char *
+Shell::read_secondary_line (bool remove_quoted_newline)
 {
-  char *ret;
-  int n, c;
+  const char *ret;
 
   prompt_string_pointer = &ps2_prompt;
   if (SHOULD_PROMPT ())
     prompt_again ();
+
   ret = read_a_line (remove_quoted_newline);
+
 #if defined(HISTORY)
   if (ret && remember_on_history && (parser_state & PST_HEREDOC))
     {
@@ -777,6 +614,7 @@ read_secondary_line (int remove_quoted_newline)
       maybe_add_history (ret);
     }
 #endif /* HISTORY */
+
   return ret;
 }
 
@@ -788,62 +626,74 @@ read_secondary_line (int remove_quoted_newline)
 
 /* Reserved words.  These are only recognized as the first word of a
    command. */
-STRING_INT_ALIST word_token_alist[]
-    = { { "if", IF },         { "then", THEN },   { "else", ELSE },
-        { "elif", ELIF },     { "fi", FI },       { "case", CASE },
-        { "esac", ESAC },     { "for", FOR },
+static const STRING_INT_ALIST word_token_alist[]
+    = { { "if", parser::token::token_kind_type::IF },
+        { "then", parser::token::token_kind_type::THEN },
+        { "else", parser::token::token_kind_type::ELSE },
+        { "elif", parser::token::token_kind_type::ELIF },
+        { "fi", parser::token::token_kind_type::FI },
+        { "case", parser::token::token_kind_type::CASE },
+        { "esac", parser::token::token_kind_type::ESAC },
+        { "for", parser::token::token_kind_type::FOR },
 #if defined(SELECT_COMMAND)
-        { "select", SELECT },
+        { "select", parser::token::token_kind_type::SELECT },
 #endif
-        { "while", WHILE },   { "until", UNTIL }, { "do", DO },
-        { "done", DONE },     { "in", IN },       { "function", FUNCTION },
+        { "while", parser::token::token_kind_type::WHILE },
+        { "until", parser::token::token_kind_type::UNTIL },
+        { "do", parser::token::token_kind_type::DO },
+        { "done", parser::token::token_kind_type::DONE },
+        { "in", parser::token::token_kind_type::IN },
+        { "function", parser::token::token_kind_type::FUNCTION },
 #if defined(COMMAND_TIMING)
-        { "time", TIME },
+        { "time", parser::token::token_kind_type::TIME },
 #endif
-        { "{", '{' },         { "}", '}' },       { "!", BANG },
+        { "{", static_cast<parser::token::token_kind_type> ('{') },
+        { "}", static_cast<parser::token::token_kind_type> ('}') },
+        { "!", parser::token::token_kind_type::BANG },
 #if defined(COND_COMMAND)
-        { "[[", COND_START }, { "]]", COND_END },
+        { "[[", parser::token::token_kind_type::COND_START },
+        { "]]", parser::token::token_kind_type::COND_END },
 #endif
 #if defined(COPROCESS_SUPPORT)
-        { "coproc", COPROC },
+        { "coproc", parser::token::token_kind_type::COPROC },
 #endif
-        { nullptr, 0 } };
+        { nullptr, static_cast<parser::token::token_kind_type> (0) } };
 
 /* other tokens that can be returned by read_token() */
-STRING_INT_ALIST other_token_alist[] = {
+static const STRING_INT_ALIST other_token_alist[] = {
   /* Multiple-character tokens with special values */
-  { "--", TIMEIGN },
-  { "-p", TIMEOPT },
-  { "&&", AND_AND },
-  { "||", OR_OR },
-  { ">>", GREATER_GREATER },
-  { "<<", LESS_LESS },
-  { "<&", LESS_AND },
-  { ">&", GREATER_AND },
-  { ";;", SEMI_SEMI },
-  { ";&", SEMI_AND },
-  { ";;&", SEMI_SEMI_AND },
-  { "<<-", LESS_LESS_MINUS },
-  { "<<<", LESS_LESS_LESS },
-  { "&>", AND_GREATER },
-  { "&>>", AND_GREATER_GREATER },
-  { "<>", LESS_GREATER },
-  { ">|", GREATER_BAR },
-  { "|&", BAR_AND },
-  { "EOF", yacc_EOF },
+  { "--", parser::token::token_kind_type::TIMEIGN },
+  { "-p", parser::token::token_kind_type::TIMEOPT },
+  { "&&", parser::token::token_kind_type::AND_AND },
+  { "||", parser::token::token_kind_type::OR_OR },
+  { ">>", parser::token::token_kind_type::GREATER_GREATER },
+  { "<<", parser::token::token_kind_type::LESS_LESS },
+  { "<&", parser::token::token_kind_type::LESS_AND },
+  { ">&", parser::token::token_kind_type::GREATER_AND },
+  { ";;", parser::token::token_kind_type::SEMI_SEMI },
+  { ";&", parser::token::token_kind_type::SEMI_AND },
+  { ";;&", parser::token::token_kind_type::SEMI_SEMI_AND },
+  { "<<-", parser::token::token_kind_type::LESS_LESS_MINUS },
+  { "<<<", parser::token::token_kind_type::LESS_LESS_LESS },
+  { "&>", parser::token::token_kind_type::AND_GREATER },
+  { "&>>", parser::token::token_kind_type::AND_GREATER_GREATER },
+  { "<>", parser::token::token_kind_type::LESS_GREATER },
+  { ">|", parser::token::token_kind_type::GREATER_BAR },
+  { "|&", parser::token::token_kind_type::BAR_AND },
+  { "EOF", parser::token::token_kind_type::yacc_EOF },
   /* Tokens whose value is the character itself */
-  { ">", '>' },
-  { "<", '<' },
-  { "-", '-' },
-  { "{", '{' },
-  { "}", '}' },
-  { ";", ';' },
-  { "(", '(' },
-  { ")", ')' },
-  { "|", '|' },
-  { "&", '&' },
-  { "newline", '\n' },
-  { nullptr, 0 }
+  { ">", static_cast<parser::token::token_kind_type> ('>') },
+  { "<", static_cast<parser::token::token_kind_type> ('<') },
+  { "-", static_cast<parser::token::token_kind_type> ('-') },
+  { "{", static_cast<parser::token::token_kind_type> ('{') },
+  { "}", static_cast<parser::token::token_kind_type> ('}') },
+  { ";", static_cast<parser::token::token_kind_type> (';') },
+  { "(", static_cast<parser::token::token_kind_type> ('(') },
+  { ")", static_cast<parser::token::token_kind_type> (')') },
+  { "|", static_cast<parser::token::token_kind_type> ('|') },
+  { "&", static_cast<parser::token::token_kind_type> ('&') },
+  { "newline", static_cast<parser::token::token_kind_type> ('\n') },
+  { nullptr, static_cast<parser::token::token_kind_type> (0) }
 };
 
 /* others not listed here:
@@ -855,61 +705,23 @@ STRING_INT_ALIST other_token_alist[] = {
         COND_CMD		look at yylval.command
 */
 
-/* These are used by read_token_word, but appear up here so that shell_getc
-   can use them to decide when to add otherwise blank lines to the history. */
-
-/* The primary delimiter stack. */
-struct dstack dstack = { nullptr, 0, 0 };
-
-/* A temporary delimiter stack to be used when decoding prompt strings.
-   This is needed because command substitutions in prompt strings (e.g., PS2)
-   can screw up the parser's quoting state. */
-static struct dstack temp_dstack = { nullptr, 0, 0 };
-
-/* Macro for accessing the top delimiter on the stack.  Returns the
-   delimiter or zero if none. */
-#define current_delimiter(ds)                                                 \
-  (ds.delimiter_depth ? ds.delimiters[ds.delimiter_depth - 1] : 0)
-
-#define push_delimiter(ds, character)                                         \
-  do                                                                          \
-    {                                                                         \
-      if (ds.delimiter_depth + 2 > ds.delimiter_space)                        \
-        ds.delimiters = (char *)xrealloc (                                    \
-            ds.delimiters, (ds.delimiter_space += 10) * sizeof (char));       \
-      ds.delimiters[ds.delimiter_depth] = character;                          \
-      ds.delimiter_depth++;                                                   \
-    }                                                                         \
-  while (0)
-
-#define pop_delimiter(ds) ds.delimiter_depth--
-
 /* Return the next shell input character.  This always reads characters
    from shell_input_line; when that line is exhausted, it is time to
    read the next line.  This is called by read_token when the shell is
    processing normal command input. */
-
-/* This implements one-character lookahead/lookbehind across physical input
-   lines, to avoid something being lost because it's pushed back with
-   shell_ungetc when we're at the start of a line. */
-static int eol_ungetc_lookahead = 0;
-
-static int unquoted_backslash = 0;
-
-static int
-shell_getc (int remove_quoted_newline)
+int
+Shell::shell_getc (bool remove_quoted_newline)
 {
-  int i;
-  int c, truncating, last_was_backslash;
+  int c;
   unsigned char uc;
 
   QUIT;
 
-  last_was_backslash = 0;
+  bool last_was_backslash = false;
   if (sigwinch_received)
     {
       sigwinch_received = 0;
-      get_new_window_size (0, (int *)0, (int *)0);
+      get_new_window_size (0, nullptr, nullptr);
     }
 
   if (eol_ungetc_lookahead)
@@ -924,36 +736,32 @@ shell_getc (int remove_quoted_newline)
      something on the pushed list of strings, then we don't want to go
      off and get another line.  We let the code down below handle it. */
 
-  if (!shell_input_line
+  if (shell_input_line.empty ()
       || ((!shell_input_line[shell_input_line_index])
           && (pushed_string_list == nullptr)))
 #else  /* !ALIAS && !DPAREN_ARITHMETIC */
-  if (!shell_input_line || !shell_input_line[shell_input_line_index])
+  if (shell_input_line.empty () || !shell_input_line[shell_input_line_index])
 #endif /* !ALIAS && !DPAREN_ARITHMETIC */
     {
       line_number++;
 
       /* Let's not let one really really long line blow up memory allocation */
-      if (shell_input_line && shell_input_line_size >= 32768)
-        {
-          free (shell_input_line);
-          shell_input_line = 0;
-          shell_input_line_size = 0;
-        }
+      if (shell_input_line.capacity () >= 32768)
+        shell_input_line.reserve (0);
 
     restart_read:
 
       /* Allow immediate exit if interrupted during input. */
       QUIT;
 
-      i = truncating = 0;
+      int i = 0, truncating = 0;
       shell_input_line_terminator = 0;
 
       /* If the shell is interactive, but not currently printing a prompt
          (interactive_shell && interactive == 0), we don't want to print
          notifies or cleanup the jobs -- we want to defer it until we do
          print the next prompt. */
-      if (interactive_shell == 0 || SHOULD_PROMPT ())
+      if (!interactive_shell || SHOULD_PROMPT ())
         {
 #if defined(JOB_CONTROL)
           /* This can cause a problem when reading a command as the result
@@ -994,42 +802,11 @@ shell_getc (int remove_quoted_newline)
                 {
                   if (i == 0)
                     shell_input_line_terminator = EOF;
-                  shell_input_line[i] = '\0';
                   c = EOF;
                   break;
                 }
               continue;
             }
-
-          /* Theoretical overflow */
-          /* If we can't put 256 bytes more into the buffer, allocate
-             everything we can and fill it as full as we can. */
-          /* XXX - we ignore rest of line using `truncating' flag */
-          if (shell_input_line_size > (SIZE_MAX - 256))
-            {
-              size_t n;
-
-              n = SIZE_MAX - i; /* how much more can we put into the buffer? */
-              if (n <= 2) /* we have to save 1 for the newline added below */
-                {
-                  if (truncating == 0)
-                    internal_warning (
-                        _ ("shell_getc: shell_input_line_size (%zu) exceeds "
-                           "SIZE_MAX (%lu): line truncated"),
-                        shell_input_line_size, (unsigned long)SIZE_MAX);
-                  shell_input_line[i] = '\0';
-                  truncating = 1;
-                }
-              if (shell_input_line_size < SIZE_MAX)
-                {
-                  shell_input_line_size = SIZE_MAX;
-                  shell_input_line = (char *)xrealloc (shell_input_line,
-                                                       shell_input_line_size);
-                }
-            }
-          else
-            RESIZE_MALLOCED_BUFFER (shell_input_line, i, 2,
-                                    shell_input_line_size, 256);
 
           if (c == EOF)
             {
@@ -1039,89 +816,81 @@ shell_getc (int remove_quoted_newline)
               if (i == 0)
                 shell_input_line_terminator = EOF;
 
-              shell_input_line[i] = '\0';
               break;
             }
 
           if (truncating == 0 || c == '\n')
-            shell_input_line[i++] = c;
+            shell_input_line.push_back (static_cast<char> (c));
 
           if (c == '\n')
             {
-              shell_input_line[--i] = '\0';
               current_command_line_count++;
               break;
             }
 
-          last_was_backslash = last_was_backslash == 0 && c == '\\';
+          last_was_backslash = (!last_was_backslash && c == '\\');
         }
 
       shell_input_line_index = 0;
-      shell_input_line_len = i; /* == strlen (shell_input_line) */
 
       set_line_mbstate ();
 
 #if defined(HISTORY)
-      if (remember_on_history && shell_input_line && shell_input_line[0])
+      if (remember_on_history && !shell_input_line.empty ())
         {
           char *expansions;
 #if defined(BANG_HISTORY)
           /* If the current delimiter is a single quote, we should not be
              performing history expansion, even if we're on a different
              line from the original single quote. */
-          if (current_delimiter (dstack) == '\'')
+          if (dstack.back () == '\'')
             history_quoting_state = '\'';
-          else if (current_delimiter (dstack) == '"')
+          else if (dstack.back () == '"')
             history_quoting_state = '"';
           else
             history_quoting_state = 0;
 #endif
           /* Calling with a third argument of 1 allows remember_on_history to
              determine whether or not the line is saved to the history list */
-          expansions = pre_process_line (shell_input_line, 1, 1);
+          expansions
+              = pre_process_line (shell_input_line.c_str (), true, true);
 #if defined(BANG_HISTORY)
           history_quoting_state = 0;
 #endif
-          if (expansions != shell_input_line)
+          if (expansions != shell_input_line.c_str ())
             {
-              free (shell_input_line);
               shell_input_line = expansions;
-              shell_input_line_len
-                  = shell_input_line ? strlen (shell_input_line) : 0;
-              if (shell_input_line_len == 0)
-                current_command_line_count--;
+              delete[] expansions;
 
-              /* We have to force the xrealloc below because we don't know
-                 the true allocated size of shell_input_line anymore. */
-              shell_input_line_size = shell_input_line_len;
+              if (shell_input_line.empty ())
+                current_command_line_count--;
 
               set_line_mbstate ();
             }
         }
       /* Try to do something intelligent with blank lines encountered while
          entering multi-line commands.  XXX - this is grotesque */
-      else if (remember_on_history && shell_input_line
-               && shell_input_line[0] == '\0'
+      else if (remember_on_history && !shell_input_line.empty ()
                && current_command_line_count > 1)
         {
-          if (current_delimiter (dstack))
+          if (!dstack.empty ())
             /* We know shell_input_line[0] == 0 and we're reading some sort of
                quoted string.  This means we've got a line consisting of only
                a newline in a quoted string.  We want to make sure this line
                gets added to the history. */
-            maybe_add_history (shell_input_line);
+            maybe_add_history (shell_input_line.c_str ());
           else
             {
               const char *hdcs;
-              hdcs = history_delimiting_chars (shell_input_line);
+              hdcs = history_delimiting_chars (shell_input_line.c_str ());
               if (hdcs && hdcs[0] == ';')
-                maybe_add_history (shell_input_line);
+                maybe_add_history (shell_input_line.c_str ());
             }
         }
 
 #endif /* HISTORY */
 
-      if (shell_input_line)
+      if (!shell_input_line.empty ())
         {
           /* Lines that signify the end of the shell's input should not be
              echoed.  We should not echo lines while parsing command
@@ -1132,11 +901,10 @@ shell_getc (int remove_quoted_newline)
           if (echo_input_at_read
               && (shell_input_line[0] || shell_input_line_terminator != EOF)
               && shell_eof_token == 0)
-            fprintf (stderr, "%s\n", shell_input_line);
+            std::fprintf (stderr, "%s\n", shell_input_line.c_str ());
         }
       else
         {
-          shell_input_line_size = 0;
           prompt_string_pointer = &current_prompt_string;
           if (SHOULD_PROMPT ())
             prompt_again ();
@@ -1147,21 +915,15 @@ shell_getc (int remove_quoted_newline)
          not already end in an EOF character.  */
       if (shell_input_line_terminator != EOF)
         {
-          if (shell_input_line_size < SIZE_MAX - 3
-              && (shell_input_line_len + 3 > shell_input_line_size))
-            shell_input_line = (char *)xrealloc (
-                shell_input_line, 1 + (shell_input_line_size += 2));
-
           /* Don't add a newline to a string that ends with a backslash if
              we're going to be removing quoted newlines, since that will eat
              the backslash.  Add another backslash instead (will be removed by
              word expansion). */
-          if (bash_input.type == st_string && expanding_alias () == 0
+          if (bash_input.type == st_string && !parser_expanding_alias ()
               && last_was_backslash && c == EOF && remove_quoted_newline)
-            shell_input_line[shell_input_line_len] = '\\';
+            shell_input_line.push_back ('\\');
           else
-            shell_input_line[shell_input_line_len] = '\n';
-          shell_input_line[shell_input_line_len + 1] = '\0';
+            shell_input_line.push_back ('\n');
 
 #if 0
 	  set_line_mbstate ();		/* XXX - this is wasteful */
@@ -1170,13 +932,8 @@ shell_getc (int remove_quoted_newline)
           /* This is kind of an abstraction violation, but there's no need to
              go through the entire shell_input_line again with a call to
              set_line_mbstate(). */
-          if (shell_input_line_len + 2 > shell_input_line_propsize)
-            {
-              shell_input_line_propsize = shell_input_line_len + 2;
-              shell_input_line_property = (char *)xrealloc (
-                  shell_input_line_property, shell_input_line_propsize);
-            }
-          shell_input_line_property[shell_input_line_len] = 1;
+          shell_input_line_property.reserve (shell_input_line.size () + 1);
+          shell_input_line_property[shell_input_line.size ()] = 1;
 #endif
 #endif
         }
@@ -1184,13 +941,13 @@ shell_getc (int remove_quoted_newline)
 
 next_alias_char:
   if (shell_input_line_index == 0)
-    unquoted_backslash = 0;
+    unquoted_backslash = false;
 
-  uc = shell_input_line[shell_input_line_index];
+  uc = static_cast<unsigned char> (shell_input_line[shell_input_line_index]);
 
   if (uc)
     {
-      unquoted_backslash = unquoted_backslash == 0 && uc == '\\';
+      unquoted_backslash = (!unquoted_backslash && uc == '\\');
       shell_input_line_index++;
     }
 
@@ -1225,10 +982,9 @@ next_alias_char:
       shell_input_line_index > 0
       && shellblank (shell_input_line[shell_input_line_index - 1]) == 0
       && shell_input_line[shell_input_line_index - 1] != '\n'
-      && unquoted_backslash == 0
+      && !unquoted_backslash
       && shellmeta (shell_input_line[shell_input_line_index - 1]) == 0
-      && (current_delimiter (dstack) != '\''
-          && current_delimiter (dstack) != '"'))
+      && (dstack.back () != '\'' && dstack.back () != '"'))
     {
       parser_state |= PST_ENDALIAS;
       return ' '; /* END_ALIAS */
@@ -1241,7 +997,8 @@ pop_alias:
     {
       parser_state &= ~PST_ENDALIAS;
       pop_string ();
-      uc = shell_input_line[shell_input_line_index];
+      uc = static_cast<unsigned char> (
+          shell_input_line[shell_input_line_index]);
       if (uc)
         shell_input_line_index++;
     }
@@ -1261,13 +1018,13 @@ pop_alias:
          character).  If it's not the last character, we need to consume the
          quoted newline and move to the next character in the expansion. */
 #if defined(ALIAS)
-      if (expanding_alias ()
+      if (parser_expanding_alias ()
           && shell_input_line[shell_input_line_index + 1] == '\0')
         {
           uc = 0;
           goto pop_alias;
         }
-      else if (expanding_alias ()
+      else if (parser_expanding_alias ()
                && shell_input_line[shell_input_line_index + 1] != '\0')
         {
           shell_input_line_index++; /* skip newline */
@@ -1311,30 +1068,32 @@ pop_alias:
    character different than we read, shell_input_line_property doesn't need
    to change when manipulating shell_input_line.  The define for
    last_shell_getc_is_singlebyte should take care of it, though. */
-static void
-shell_ungetc (int c)
+void
+Shell::shell_ungetc (int c)
 {
-  if (shell_input_line && shell_input_line_index)
-    shell_input_line[--shell_input_line_index] = c;
+  if (!shell_input_line.empty () && shell_input_line_index)
+    shell_input_line[--shell_input_line_index] = static_cast<char> (c);
   else
     eol_ungetc_lookahead = c;
 }
 
 const char *
-parser_remaining_input ()
+Shell::parser_remaining_input ()
 {
-  if (shell_input_line == 0)
-    return 0;
-  if ((int)shell_input_line_index < 0
-      || shell_input_line_index >= shell_input_line_len)
+  if (shell_input_line.empty ())
+    return nullptr;
+
+  if (static_cast<int> (shell_input_line_index) < 0
+      || shell_input_line_index >= shell_input_line.size ())
     return ""; /* XXX */
-  return shell_input_line + shell_input_line_index;
+
+  return &shell_input_line[shell_input_line_index];
 }
 
 /* Discard input until CHARACTER is seen, then push that character back
    onto the input stream. */
-static void
-discard_until (int character)
+void
+Shell::discard_until (int character)
 {
   int c;
 
@@ -1346,7 +1105,7 @@ discard_until (int character)
 }
 
 void
-execute_variable_command (const char *command, const char *vname)
+Shell::execute_variable_command (const char *command, const char *vname)
 {
   char *last_lastarg;
   sh_parser_state_t ps;
@@ -1361,14 +1120,14 @@ execute_variable_command (const char *command, const char *vname)
 
   restore_parser_state (&ps);
   bind_variable ("_", last_lastarg, 0);
-  FREE (last_lastarg);
+  delete[] last_lastarg;
 
   if (token_to_read == '\n') /* reset_parser was called */
     token_to_read = 0;
 }
 
 void
-push_token (int x)
+Shell::push_token (parser::token::token_kind_type x)
 {
   two_tokens_ago = token_before_that;
   token_before_that = last_read_token;
@@ -1377,12 +1136,14 @@ push_token (int x)
   current_token = x;
 }
 
+#if 0
 /* Place to remember the token.  We try to keep the buffer
    at a reasonable size, but it can grow. */
 static char *token = nullptr;
 
 /* Current size of the token buffer. */
 static int token_buffer_size;
+#endif
 
 /* Command to read_token () explaining what we want it to do. */
 #define READ 0
@@ -1392,7 +1153,7 @@ static int token_buffer_size;
 
 /* Function for yyparse to call.  yylex keeps track of
    the last two tokens read, and calls read_token.  */
-int
+parser::token::token_kind_type
 Shell::yylex ()
 {
   if (interactive && (current_token == 0 || current_token == '\n'))
@@ -1421,7 +1182,7 @@ Shell::yylex ()
 
   if ((parser_state & PST_EOFTOKEN) && current_token == shell_eof_token)
     {
-      current_token = yacc_EOF;
+      current_token = parser::token::yacc_EOF;
       if (bash_input.type == st_string)
         rewind_input_string ();
     }
@@ -1431,26 +1192,26 @@ Shell::yylex ()
 }
 
 void
-gather_here_documents ()
+Shell::gather_here_documents ()
 {
-  int r;
-
-  r = 0;
-  here_doc_first_line = 1;
+  int r = 0;
+  here_doc_first_line = true;
   while (need_here_doc > 0)
     {
       parser_state |= PST_HEREDOC;
       make_here_document (redir_stack[r++], line_number);
       parser_state &= ~PST_HEREDOC;
       need_here_doc--;
-      redir_stack[r - 1] = 0; /* XXX */
+      redir_stack[r - 1] = nullptr; /* XXX */
     }
-  here_doc_first_line = 0; /* just in case */
+  here_doc_first_line = false; /* just in case */
 }
 
+#if 0
 /* When non-zero, an open-brace used to create a group is awaiting a close
    brace partner. */
 static int open_brace_count;
+#endif
 
 /* In the following three macros, `token' is always last_read_token */
 
@@ -1555,8 +1316,8 @@ mk_alexpansion (char *s)
   return r;
 }
 
-static int
-alias_expand_token (char *tokstr)
+int
+Shell::alias_expand_token (char *tokstr)
 {
   char *expanded;
   alias_t *ap;
@@ -1594,11 +1355,11 @@ alias_expand_token (char *tokstr)
 }
 #endif /* ALIAS */
 
-static int
-time_command_acceptable ()
+bool
+Shell::time_command_acceptable ()
 {
 #if defined(COMMAND_TIMING)
-  int i;
+  size_t i;
 
   if (posixly_correct && shell_compatibility_level > 41)
     {
@@ -1606,11 +1367,11 @@ time_command_acceptable ()
          begins with a `-', Posix says to not return `time' as the token.
          This was interp 267. */
       i = shell_input_line_index;
-      while (i < shell_input_line_len
+      while (i < shell_input_line.size ()
              && (shell_input_line[i] == ' ' || shell_input_line[i] == '\t'))
         i++;
       if (shell_input_line[i] == '-')
-        return 0;
+        return false;
     }
 
   switch (last_read_token)
@@ -1619,31 +1380,31 @@ time_command_acceptable ()
     case ';':
     case '\n':
       if (token_before_that == '|')
-        return 0;
+        return false;
       /* FALLTHROUGH */
-    case AND_AND:
-    case OR_OR:
+    case parser::token::token_kind_type::AND_AND:
+    case parser::token::token_kind_type::OR_OR:
     case '&':
-    case WHILE:
-    case DO:
-    case UNTIL:
-    case IF:
-    case THEN:
-    case ELIF:
-    case ELSE:
-    case '{':     /* } */
-    case '(':     /* )( */
-    case ')':     /* only valid in case statement */
-    case BANG:    /* ! time pipeline */
-    case TIME:    /* time time pipeline */
-    case TIMEOPT: /* time -p time pipeline */
-    case TIMEIGN: /* time -p -- ... */
-      return 1;
+    case parser::token::token_kind_type::WHILE:
+    case parser::token::token_kind_type::DO:
+    case parser::token::token_kind_type::UNTIL:
+    case parser::token::token_kind_type::IF:
+    case parser::token::token_kind_type::THEN:
+    case parser::token::token_kind_type::ELIF:
+    case parser::token::token_kind_type::ELSE:
+    case '{': /* } */
+    case '(': /* )( */
+    case ')': /* only valid in case statement */
+    case parser::token::token_kind_type::BANG:    /* ! time pipeline */
+    case parser::token::token_kind_type::TIME:    /* time time pipeline */
+    case parser::token::token_kind_type::TIMEOPT: /* time -p time pipeline */
+    case parser::token::token_kind_type::TIMEIGN: /* time -p -- ... */
+      return true;
     default:
-      return 0;
+      return false;
     }
 #else
-  return 0;
+  return false;
 #endif /* COMMAND_TIMING */
 }
 
@@ -1855,8 +1616,8 @@ reset_readahead_token ()
 
 /* Read the next token.  Command can be READ (normal operation) or
    RESET (to normalize state). */
-static int
-read_token (int command)
+parser::token::token_kind_type
+Shell::read_token (int command)
 {
   int character; /* Current character. */
   int peek_char; /* Temporary look-ahead character. */
@@ -4422,8 +4183,8 @@ history_delimiting_chars (const char *line)
 
 /* Issue a prompt, or prepare to issue a prompt when the next character
    is read. */
-static void
-prompt_again ()
+void
+Shell::prompt_again ()
 {
   char *temp_prompt;
 
@@ -4483,8 +4244,8 @@ set_current_prompt_level (int x)
 static void
 print_prompt ()
 {
-  fprintf (stderr, "%s", current_decoded_prompt);
-  fflush (stderr);
+  std::fprintf (stderr, "%s", current_decoded_prompt);
+  std::fflush (stderr);
 }
 
 #if defined(HISTORY)
@@ -5574,8 +5335,8 @@ restore_input_line_state (sh_input_line_state_t *ls)
 /* We don't let the property buffer get larger than this unless the line is */
 #define MAX_PROPSIZE 32768
 
-static void
-set_line_mbstate ()
+void
+Shell::set_line_mbstate ()
 {
   int c;
   size_t i, previ, len;

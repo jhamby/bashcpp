@@ -47,11 +47,9 @@ static void alrm_catcher (int);
 int
 Shell::reader_loop ()
 {
-  int our_indirection_level;
-
   COMMAND *current_command = nullptr;
 
-  our_indirection_level = ++indirection_level;
+  int our_indirection_level = ++indirection_level;
 
   if (just_one_command)
     reset_readahead_token ();

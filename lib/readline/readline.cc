@@ -155,10 +155,9 @@ Readline::rl_set_prompt (const char *prompt)
 
 /* Read a line of input.  Prompt with PROMPT.  An empty PROMPT means
    none.  A return value of nullptr means that EOF was encountered. */
-char *
+std::string
 Readline::readline (const char *prompt)
 {
-  char *value;
 #if 0
   int in_callback;
 #endif
@@ -189,7 +188,8 @@ Readline::readline (const char *prompt)
   rl_set_signals ();
 #endif
 
-  value = readline_internal ();
+  std::string value = readline_internal ();
+
   if (rl_deprep_term_function)
     ((*this).*rl_deprep_term_function) ();
 
@@ -230,7 +230,7 @@ Readline::readline_internal_setup ()
   /* If we're not echoing, we still want to at least print a prompt, because
      rl_redisplay will not do it for us.  If the calling application has a
      custom redisplay function, though, let that function handle it. */
-  if (_rl_echoing_p == 0 && rl_redisplay_function == &Readline::rl_redisplay)
+  if (!_rl_echoing_p && rl_redisplay_function == &Readline::rl_redisplay)
     {
       if (rl_prompt && rl_already_prompted == 0)
         {
@@ -254,7 +254,7 @@ Readline::readline_internal_setup ()
   RL_CHECK_SIGNALS ();
 }
 
-char *
+std::string
 Readline::readline_internal_teardown (bool eof)
 {
   char *temp;
@@ -294,7 +294,7 @@ Readline::readline_internal_teardown (bool eof)
   /* Restore normal cursor, if available. */
   _rl_set_insert_mode (RL_IM_INSERT, 0);
 
-  return eof ? nullptr : savestring (rl_line_buffer);
+  return eof ? std::string () : rl_line_buffer;
 }
 
 void

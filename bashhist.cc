@@ -26,7 +26,6 @@
 #include "flags.hh"
 #include "input.hh"
 #include "parser.hh"
-#include "parser.hh"  /* for the struct dstack stuff. */
 #include "pathexp.hh" /* for the struct ignorevar stuff */
 #include "shell.hh"
 
