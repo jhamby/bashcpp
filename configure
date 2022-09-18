@@ -28183,6 +28183,12 @@ then :
   printf "%s\n" "#define HAVE_SETRESUID 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_func "$LINENO" "setvbuf" "ac_cv_func_setvbuf"
+if test "x$ac_cv_func_setvbuf" = xyes
+then :
+  printf "%s\n" "#define HAVE_SETVBUF 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_func "$LINENO" "socket" "ac_cv_func_socket"
 if test "x$ac_cv_func_socket" = xyes
 then :

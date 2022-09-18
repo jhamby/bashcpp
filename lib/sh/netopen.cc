@@ -66,12 +66,7 @@ extern int inet_aton (const char *, struct in_addr *);
 #ifndef HAVE_GETADDRINFO
 static int _getaddr (char *, struct in_addr *);
 static int _getserv (char *, int, unsigned short *);
-static int _netopen4 (const char *, const char *, int);
-#else /* HAVE_GETADDRINFO */
-static int _netopen6 (const char *, const char *, int);
 #endif
-
-static int _netopen (const char *, const char *, int);
 
 #ifndef HAVE_GETADDRINFO
 /* Stuff the internet address corresponding to HOST into AP, in network
@@ -144,8 +139,8 @@ _getserv (char *serv, int proto, unsigned short *pp)
  * Open a TCP or UDP connection to HOST on port SERV.  Uses the
  * traditional BSD mechanisms.  Returns the connected socket or -1 on error.
  */
-static int
-_netopen4 (const char *host, const char *serv, int typ)
+int
+Shell::_netopen4 (const char *host, const char *serv, int typ)
 {
   struct in_addr ina;
   struct sockaddr_in sin;
@@ -166,7 +161,7 @@ _netopen4 (const char *host, const char *serv, int typ)
       return -1;
     }
 
-  memset ((char *)&sin, 0, sizeof (sin));
+  std::memset (&sin, 0, sizeof (sin));
   sin.sin_family = AF_INET;
   sin.sin_port = p;
   sin.sin_addr = ina;
@@ -197,14 +192,13 @@ _netopen4 (const char *host, const char *serv, int typ)
  * which provides support for IPv6.  Returns the connected socket or -1
  * on error.
  */
-static int
-_netopen6 (const char *host, const char *serv, int typ)
+int
+Shell::_netopen6 (const char *host, const char *serv, int typ)
 {
-  int s, e;
   struct addrinfo hints, *res, *res0;
   int gerr;
 
-  memset ((char *)&hints, 0, sizeof (hints));
+  std::memset (&hints, 0, sizeof (hints));
   /* XXX -- if problems with IPv6, set to PF_INET for IPv4 only */
 #ifdef DEBUG /* PF_INET is the one that works for me */
   hints.ai_family = PF_INET;
@@ -224,6 +218,7 @@ _netopen6 (const char *host, const char *serv, int typ)
       return -1;
     }
 
+  int s = -1;
   for (res = res0; res; res = res->ai_next)
     {
       if ((s = socket (res->ai_family, res->ai_socktype, res->ai_protocol))
@@ -242,7 +237,7 @@ _netopen6 (const char *host, const char *serv, int typ)
               close (s);
               continue;
             }
-          e = errno;
+          int e = errno;
           sys_error ("connect");
           close (s);
           freeaddrinfo (res0);
@@ -257,26 +252,11 @@ _netopen6 (const char *host, const char *serv, int typ)
 #endif /* HAVE_GETADDRINFO */
 
 /*
- * Open a TCP or UDP connection to HOST on port SERV.  Uses getaddrinfo(3)
- * if available, falling back to the traditional BSD mechanisms otherwise.
- * Returns the connected socket or -1 on error.
- */
-static int
-_netopen (const char *host, const char *serv, int typ)
-{
-#ifdef HAVE_GETADDRINFO
-  return _netopen6 (host, serv, typ);
-#else
-  return _netopen4 (host, serv, typ);
-#endif
-}
-
-/*
  * Open a TCP or UDP connection given a path like `/dev/tcp/host/port' to
  * host `host' on port `port' and return the connected socket.
  */
 int
-netopen (const char *path)
+Shell::netopen (const char *path)
 {
   char *np, *s, *t;
   int fd;
@@ -285,7 +265,7 @@ netopen (const char *path)
 
   s = np + 9;
   t = std::strchr (s, '/');
-  if (t == 0)
+  if (t == nullptr)
     {
       internal_error (_ ("%s: bad network path specification"), path);
       delete[] np;
@@ -306,7 +286,7 @@ namespace bash
 {
 
 int
-netopen (const char *path)
+Shell::netopen (const char *path)
 {
   internal_error (_ ("network operations not supported"));
   return -1;

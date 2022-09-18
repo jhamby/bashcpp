@@ -563,6 +563,9 @@
 /* Define to 1 if you have the `setresuid' function. */
 #undef HAVE_SETRESUID
 
+/* Define to 1 if you have the `setvbuf' function. */
+#undef HAVE_SETVBUF
+
 /* Define to 1 if you have the <sgtty.h> header file. */
 #undef HAVE_SGTTY_H
 

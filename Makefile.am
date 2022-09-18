@@ -132,6 +132,7 @@ builtins/evalstring.$(OBJEXT): builtext.hh
 builtins/exit_def.$(OBJEXT): builtext.hh
 builtins/mkbuiltins.$(OBJEXT): config.hh
 builtins/pushd_def.$(OBJEXT): builtext.hh
+builtins/shopt_def.$(OBJEXT): version.hh
 builtins/ulimit_def.$(OBJEXT): pipesize.hh
 builtins/psize.$(OBJEXT): config.hh
 bashline.$(OBJEXT): builtext.hh

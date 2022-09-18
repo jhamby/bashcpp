@@ -65,7 +65,7 @@ static const char *X_digs = "0123456789ABCDEF";
 
 /* `unsigned long' (or unsigned long long) to string conversion for a given
    base. */
-std::string
+char *
 fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
 {
   std::string buf;
@@ -80,7 +80,7 @@ fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
 #if 1
       buf = _ ("invalid base");
       errno = EINVAL;
-      return buf;
+      return savestring (buf);
 #else
       base = 10;
 #endif
@@ -163,7 +163,7 @@ fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
   if (sign)
     buf.insert (0, 1, '-');
 
-  return buf;
+  return savestring (buf);
 }
 
 } // namespace bash

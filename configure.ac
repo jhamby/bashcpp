@@ -484,7 +484,7 @@ AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf eaccess getaddrinfo \
 		localeconv localtime_r lstat mbschr mbsnrtowcs mkdir mkdtemp \
 		mkfifo mkstemp mmap nl_langinfo pathconf pselect putenv random \
 		readlink regcomp regexec rename select setdtablesize setenv setitimer \
-		setlocale setresgid setresuid socket stpcpy strcasecmp \
+		setlocale setresgid setresuid setvbuf socket stpcpy strcasecmp \
 		strcasestr strchrnul strerror strncasecmp strnlen \
 		strsignal strtoimax strtoumax sysconf tcgetattr \
 		times ttyname tzset ulimit uname vprintf vsnprintf waitpid \

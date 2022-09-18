@@ -348,18 +348,18 @@ public:
 
   typedef void (Readline::*rl_voidfunc_t) ();
   typedef void (Readline::*rl_vintfunc_t) (int);
-  typedef void (Readline::*rl_vcpfunc_t) (char *);
-  typedef void (Readline::*rl_vcppfunc_t) (char **);
+  typedef void (Readline::*rl_vcpfunc_t) (std::string &);
+//   typedef void (Readline::*rl_vcppfunc_t) (char **);
 
   typedef char *(Readline::*rl_cpvfunc_t) ();
   typedef char *(Readline::*rl_cpifunc_t) (int);
-  typedef char *(Readline::*rl_cpcpfunc_t) (char *);
-  typedef char *(Readline::*rl_cpcppfunc_t) (char **);
+  typedef char *(Readline::*rl_cpcpfunc_t) (std::string &);
+//   typedef char *(Readline::*rl_cpcppfunc_t) (char **);
 
-  typedef int (Readline::*_rl_sv_func_t) (const char *);
+  typedef int (Readline::*_rl_sv_func_t) (const std::string &);
 
   /* typedef from bind.c */
-  typedef int (Readline::*_rl_parser_func_t) (char *);
+  typedef int (Readline::*_rl_parser_func_t) (std::string &);
 
   /* fill in more as needed */
   /* `Generic' callback data and functions */

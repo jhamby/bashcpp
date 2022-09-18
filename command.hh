@@ -767,13 +767,19 @@ enum cond_com_type
 class COND_COM : public COMMAND
 {
 public:
+  COND_COM (int line_, cond_com_type type_, WORD_DESC *op_, COND_COM *left_,
+            COND_COM *right_)
+      : COMMAND (line_), op (op_), left (left_), right (right_), type (type_)
+  {
+  }
+
   virtual ~COND_COM () noexcept override;
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
 
   WORD_DESC *op;
   COND_COM *left, *right;
-  int type;
+  cond_com_type type;
 };
 #endif
 

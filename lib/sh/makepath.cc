@@ -52,14 +52,13 @@ static const char *nullpath = "";
   while (0)
 
 char *
-Shell::sh_makepath (const std::string &path, const std::string &dir,
-                    mp_flags flags)
+Shell::sh_makepath (const char *path, const char *dir, mp_flags flags)
 {
   size_t dirlen, pathlen;
   const char *xdir, *s;
   char *ret, *xpath, *r;
 
-  if (path.empty ())
+  if (path == nullptr || *path == '\0')
     {
       if (flags & MP_DOCWD)
         {
@@ -88,13 +87,13 @@ Shell::sh_makepath (const std::string &path, const std::string &dir,
   else
     {
       xpath = ((flags & MP_DOTILDE) && path[0] == '~')
-                  ? bash_tilde_expand (path.c_str (), 0)
-                  : const_cast<char *> (path.c_str ());
+                  ? bash_tilde_expand (path, 0)
+                  : const_cast<char *> (path);
       pathlen = std::strlen (xpath);
     }
 
-  xdir = dir.c_str ();
-  dirlen = dir.size ();
+  xdir = dir;
+  dirlen = std::strlen (xdir);
   if ((flags & MP_RMDOT) && dir[0] == '.' && dir[1] == '/')
     {
       xdir += 2;
@@ -115,9 +114,7 @@ Shell::sh_makepath (const std::string &path, const std::string &dir,
   while ((*r++ = *s++))
     ;
 
-  // hopefully we don't get a different pointer value for path.c_str () than
-  // we did earlier in the function.
-  if (xpath != path.c_str () && xpath != nullpath)
+  if (xpath != path && xpath != nullpath)
     delete[] xpath;
 
   return ret;

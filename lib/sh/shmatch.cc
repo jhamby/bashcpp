@@ -87,7 +87,7 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
      is the part that matched the first subexpression, and so on. */
   unbind_variable_noref ("BASH_REMATCH");
   rematch = make_new_array_variable ("BASH_REMATCH");
-  amatch = rematch->array ();
+  amatch = rematch->array_value ();
 
   if (matches && (flags & SHMAT_SUBEXP) && result == EXECUTION_SUCCESS
       && subexp_str)

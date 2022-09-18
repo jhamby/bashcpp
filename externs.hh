@@ -234,7 +234,7 @@ enum path_flags
 char *sh_canonpath (const char *, path_flags);
 
 /* declarations for functions defined in lib/sh/pathphys.c */
-char *sh_physpath (const char *, int);
+char *sh_physpath (const char *);
 char *sh_realpath (const char *, char *);
 
 /* declarations for functions defined in lib/sh/random.c */

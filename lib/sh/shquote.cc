@@ -353,7 +353,7 @@ sh_quote_reusable (const char *s, int flags)
       ret[2] = '\0';
     }
   else if (ansic_shouldquote (s))
-    ret = ansic_quote (s, nullptr);
+    ret = ansic_quote (s);
   else if (flags)
     ret = sh_backslash_quote (s, 0, 1);
   else

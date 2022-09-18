@@ -66,13 +66,13 @@ _path_readlink (const char *path, char *buf, int bufsiz)
  */
 
 char *
-sh_physpath (const char *path, int flags)
+sh_physpath (const char *path)
 {
   char tbuf[PATH_MAX + 1], linkbuf[PATH_MAX + 1];
   char *result, *p, *q, *qsave, *qbase, *workpath;
   int double_slash_path, linklen, nlink;
 
-  linklen = std::strlen (path);
+  linklen = static_cast<int> (std::strlen (path));
 
 #if 0
   /* First sanity check -- punt immediately if the name is too long. */
@@ -178,7 +178,7 @@ sh_physpath (const char *path, int flags)
             error:
               delete[] result;
               delete[] workpath;
-              return NULL;
+              return nullptr;
             }
 
           linkbuf[linklen] = '\0';
@@ -249,31 +249,31 @@ sh_physpath (const char *path, int flags)
 }
 
 char *
-sh_realpath (const char *pathname, char *resolved)
+Shell::sh_realpath (const char *pathname, char *resolved)
 {
   char *tdir, *wd;
 
-  if (pathname == 0 || *pathname == '\0')
+  if (pathname == nullptr || *pathname == '\0')
     {
-      errno = (pathname == 0) ? EINVAL : ENOENT;
-      return (char *)NULL;
+      errno = (pathname == nullptr) ? EINVAL : ENOENT;
+      return nullptr;
     }
 
-  if (ABSPATH (pathname) == 0)
+  if (!ABSPATH (pathname))
     {
       wd = get_working_directory ("sh_realpath");
-      if (wd == 0)
-        return (char *)NULL;
-      tdir = sh_makepath (wd, (char *)pathname, 0);
+      if (wd == nullptr)
+        return nullptr;
+      tdir = sh_makepath (wd, pathname, MP_NOFLAGS);
       delete[] wd;
     }
   else
     tdir = savestring (pathname);
 
-  wd = sh_physpath (tdir, 0);
+  wd = sh_physpath (tdir);
   delete[] tdir;
 
-  if (resolved == 0)
+  if (resolved == nullptr)
     return wd;
 
   if (wd)

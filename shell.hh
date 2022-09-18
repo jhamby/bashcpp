@@ -432,6 +432,53 @@ struct STRING_INT_ALIST
   int token;
 };
 
+// Flags used when matching pairs of grouping constructs.
+enum parse_group_flags
+{
+  P_NOFLAGS = 0,
+  P_FIRSTCLOSE = 0x0001,
+  P_ALLOWESC = 0x0002,
+  P_DQUOTE = 0x0004,
+  P_COMMAND = 0x0008,   // parsing a command, so look for comments
+  P_BACKQUOTE = 0x0010, // parsing a backquoted command substitution
+  P_ARRAYSUB = 0x0020,  // parsing a [...] array subscript for assignment
+  P_DOLBRACE = 0x0040   // parsing a ${...} construct
+};
+
+static inline parse_group_flags
+operator& (const parse_group_flags &a, const parse_group_flags &b)
+{
+  return static_cast<parse_group_flags> (static_cast<uint32_t> (a)
+                                         & static_cast<uint32_t> (b));
+}
+
+/* Lexical state while parsing a grouping construct or $(...). */
+enum lexical_state_flags
+{
+  LEX_NOFLAGS = 0,
+  LEX_WASDOL = 0x0001,
+  LEX_CKCOMMENT = 0x0002,
+  LEX_INCOMMENT = 0x0004,
+  LEX_PASSNEXT = 0x0008,
+  LEX_RESWDOK = 0x0010,
+  LEX_CKCASE = 0x0020,
+  LEX_INCASE = 0x0040,
+  LEX_INHEREDOC = 0x0080,
+  LEX_HEREDELIM = 0x0100, // reading here-doc delimiter
+  LEX_STRIPDOC = 0x0200,  // <<- strip tabs from here doc delim
+  LEX_QUOTEDDOC = 0x0400, // here doc with quoted delim
+  LEX_INWORD = 0x0800,
+  LEX_GTLT = 0x1000
+};
+
+static inline lexical_state_flags &
+operator|= (lexical_state_flags &a, const lexical_state_flags &b)
+{
+  a = static_cast<lexical_state_flags> (static_cast<uint32_t> (a)
+                                        | static_cast<uint32_t> (b));
+  return a;
+}
+
 /* Simple shell state: variables that can be memcpy'd to subshells. */
 class SimpleState
 {
@@ -2542,6 +2589,34 @@ protected:
   /* from lib/sh/mbschr.cc */
   const char *mbschr (const char *, int);
 
+  /* from lib/sh/netopen.cc */
+
+#ifndef HAVE_GETADDRINFO
+  int _netopen4 (const char *, const char *, int);
+#else /* HAVE_GETADDRINFO */
+  int _netopen6 (const char *, const char *, int);
+#endif
+
+  int netopen (const char *);
+
+  /*
+   * Open a TCP or UDP connection to HOST on port SERV.  Uses getaddrinfo(3)
+   * if available, falling back to the traditional BSD mechanisms otherwise.
+   * Returns the connected socket or -1 on error.
+   */
+  int
+  _netopen (const char *host, const char *serv, int typ)
+  {
+#ifdef HAVE_GETADDRINFO
+    return _netopen6 (host, serv, typ);
+#else
+    return _netopen4 (host, serv, typ);
+#endif
+  }
+
+  /* from lib/sh/pathphys.cc */
+  char *sh_realpath (const char *, char *);
+
   /* from lib/sh/random.c */
   u_bits32_t genseed ();
   int brand ();
@@ -3883,6 +3958,7 @@ protected:
 #if defined(COND_COMMAND)
   char *remove_backslashes (const char *);
   char *cond_expand_word (WORD_DESC *, int);
+  void cond_error ();
 #endif
 
   size_t skip_to_delim (const char *, size_t, const char *, sd_flags);
@@ -4336,7 +4412,6 @@ protected:
 #if defined(ALIAS)
 
   enum alias_expand_token_result{ RE_READ_TOKEN = -99, NO_EXPANSION = -100 };
-
   alias_expand_token_result alias_expand_token (const char *);
 
 #endif
@@ -4351,6 +4426,63 @@ protected:
     if (token_to_read == '\n')
       token_to_read = 0;
   }
+
+  char *parse_matched_pair (int, int, int, int *, parse_group_flags);
+
+  /* This is kind of bogus -- we slip a mini recursive-descent parser in
+     here to handle the conditional statement syntax. */
+  COMMAND *
+  parse_cond_command ()
+  {
+    COND_COM *cexp;
+
+    global_extglob = extended_glob;
+    cexp = cond_expr ();
+    return cexp;
+  }
+
+  COND_COM *
+  cond_expr ()
+  {
+    return cond_or ();
+  }
+
+  COND_COM *
+  cond_or ()
+  {
+    COND_COM *l, *r;
+
+    l = cond_and ();
+    if (cond_token == parser::token::OR_OR)
+      {
+        r = cond_or ();
+        l = new COND_COM (line_number, COND_OR, nullptr, l, r);
+      }
+    return l;
+  }
+
+  COND_COM *
+  cond_and ()
+  {
+    COND_COM *l, *r;
+
+    l = cond_term ();
+    if (cond_token == parser::token::AND_AND)
+      {
+        r = cond_and ();
+        l = new COND_COM (line_number, COND_AND, nullptr, l, r);
+      }
+    return l;
+  }
+
+  int cond_skip_newlines ();
+  COND_COM *cond_term ();
+
+#if defined(DPAREN_ARITHMETIC) || defined(ARITH_FOR_COMMAND)
+
+  int parse_dparen (int);
+
+#endif
 
   /* ************************************************************** */
   /*		Private Shell Variables (ptr types)		    */

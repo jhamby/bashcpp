@@ -105,7 +105,6 @@ Readline::rl_callback_handler_install (const char *prompt,
 void
 Readline::rl_callback_read_char ()
 {
-  char *line;
   int eof;
 
   if (rl_linefunc == nullptr)
@@ -241,7 +240,7 @@ Readline::rl_callback_read_char ()
 
           if (rl_done)
             {
-              line = readline_internal_teardown (eof);
+              std::string line (readline_internal_teardown (eof));
 
               if (rl_deprep_term_function)
                 ((*this).*rl_deprep_term_function) ();

@@ -1629,7 +1629,7 @@ Shell::read_token (int command)
     {
       cond_lineno = line_number;
       parser_state |= PST_CONDEXPR;
-      COMMAND *command = parse_cond_command ();
+      COMMAND *cond_command = parse_cond_command ();
       if (cond_token != parser::token::COND_END)
         {
           cond_error ();
@@ -1637,7 +1637,7 @@ Shell::read_token (int command)
         }
       token_to_read = parser::token::COND_END;
       parser_state &= ~(PST_CONDEXPR | PST_CONDCMD);
-      return parser::token::COND_CMD;
+      return parser::make_COND_CMD (cond_command);
     }
 #endif
 
@@ -1660,7 +1660,7 @@ re_read_token:
   /* If we hit the end of the string and we're not expanding an alias (e.g.,
      we are eval'ing a string that is an incomplete command), return EOF */
   if (character == '\0' && bash_input.type == st_string
-      && expanding_alias () == 0)
+      && !parser_expanding_alias ())
     {
 #if defined(DEBUG)
       itrace ("shell_getc: bash_input.location.string = `%s'",
@@ -1864,35 +1864,6 @@ tokword:
  * correct error values if it reads EOF.
  */
 
-enum parse_group_flags
-{
-  P_FIRSTCLOSE = 0x0001,
-  P_ALLOWESC = 0x0002,
-  P_DQUOTE = 0x0004,
-  P_COMMAND = 0x0008,   // parsing a command, so look for comments
-  P_BACKQUOTE = 0x0010, // parsing a backquoted command substitution
-  P_ARRAYSUB = 0x0020,  // parsing a [...] array subscript for assignment
-  P_DOLBRACE = 0x0040   // parsing a ${...} construct
-};
-
-/* Lexical state while parsing a grouping construct or $(...). */
-enum lexical_state_flags
-{
-  LEX_WASDOL = 0x0001,
-  LEX_CKCOMMENT = 0x0002,
-  LEX_INCOMMENT = 0x0004,
-  LEX_PASSNEXT = 0x0008,
-  LEX_RESWDOK = 0x0010,
-  LEX_CKCASE = 0x0020,
-  LEX_INCASE = 0x0040,
-  LEX_INHEREDOC = 0x0080,
-  LEX_HEREDELIM = 0x0100, // reading here-doc delimiter
-  LEX_STRIPDOC = 0x0200,  // <<- strip tabs from here doc delim
-  LEX_QUOTEDDOC = 0x0400, // here doc with quoted delim
-  LEX_INWORD = 0x0800,
-  LEX_GTLT = 0x1000
-};
-
 #define COMSUB_META(ch) ((ch) == ';' || (ch) == '&' || (ch) == '|')
 
 #if 0
@@ -1925,20 +1896,21 @@ enum lexical_state_flags
 char *
 Shell::parse_matched_pair (
     int qc, /* `"' if this construct is within double quotes */
-    int open, int close, int *lenp, int flags)
+    int open, int close, int *lenp, parse_group_flags flags)
 {
-  int count, ch, prevch, tflags;
+  int count, ch, prevch;
   int nestlen, ttranslen, start_lineno;
-  char *ret, *nestret, *ttrans;
-  int retind, retsize, rflags;
-  int dolbrace_state;
+//   char *ret, *nestret, *ttrans;
+//   int retind, retsize;
+  parse_group_flags rflags;
+  dolbrace_state_t dolbrace_state;
 
-  dolbrace_state = (flags & P_DOLBRACE) ? DOLBRACE_PARAM : 0;
+  dolbrace_state = (flags & P_DOLBRACE) ? DOLBRACE_PARAM : DOLBRACE_NOFLAGS;
 
   /*itrace("parse_matched_pair[%d]: open = %c close = %c flags = %d",
    * line_number, open, close, flags);*/
   count = 1;
-  tflags = 0;
+  lexical_state_flags tflags = LEX_NOFLAGS;
 
   if ((flags & P_COMMAND) && qc != '`' && qc != '\'' && qc != '"'
       && (flags & P_DQUOTE) == 0)
@@ -1947,8 +1919,7 @@ Shell::parse_matched_pair (
   /* RFLAGS is the set of flags we want to pass to recursive calls. */
   rflags = (qc == '"') ? P_DQUOTE : (flags & P_DQUOTE);
 
-  ret = (char *)xmalloc (retsize = 64);
-  retind = 0;
+  std::string ret;
 
   start_lineno = line_number;
   ch = EOF; /* just in case */
@@ -3159,7 +3130,7 @@ Shell::cond_error ()
 
   if (EOF_Reached && cond_token != parser::token::COND_ERROR) /* [[ */
     parser_error (cond_lineno, _ ("unexpected EOF while looking for `]]'"));
-  else if (cond_token != COND_ERROR)
+  else if (cond_token != parser::token::COND_ERROR)
     {
       if ((etext = error_token_from_token (cond_token)))
         {
@@ -3173,40 +3144,6 @@ Shell::cond_error ()
         parser_error (cond_lineno,
                       _ ("syntax error in conditional expression"));
     }
-}
-
-static COND_COM *
-cond_expr ()
-{
-  return cond_or ();
-}
-
-static COND_COM *
-cond_or ()
-{
-  COND_COM *l, *r;
-
-  l = cond_and ();
-  if (cond_token == parser::token::OR_OR)
-    {
-      r = cond_or ();
-      l = make_cond_node (COND_OR, nullptr, l, r);
-    }
-  return l;
-}
-
-static COND_COM *
-cond_and ()
-{
-  COND_COM *l, *r;
-
-  l = cond_term ();
-  if (cond_token == parser::token::AND_AND)
-    {
-      r = cond_and ();
-      l = make_cond_node (COND_AND, nullptr, l, r);
-    }
-  return l;
 }
 
 int
@@ -3416,18 +3353,6 @@ Shell::cond_term ()
       COND_RETURN_ERROR ();
     }
   return term;
-}
-
-/* This is kind of bogus -- we slip a mini recursive-descent parser in
-   here to handle the conditional statement syntax. */
-static COMMAND *
-parse_cond_command ()
-{
-  COND_COM *cexp;
-
-  global_extglob = extended_glob;
-  cexp = cond_expr ();
-  return make_cond_command (cexp);
 }
 #endif
 

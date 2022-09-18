@@ -33,20 +33,18 @@ namespace bash
 int
 sh_setlinebuf (FILE *stream)
 {
-  char *local_linebuf;
-
 #if !defined(HAVE_SETLINEBUF) && !defined(HAVE_SETVBUF)
   return 0;
 #endif
 
-  local_linebuf = nullptr;
-
 #if defined(HAVE_SETVBUF)
 
+  char *local_linebuf = nullptr;
+
 #if defined(SETVBUF_REVERSED)
-  return std::setvbuf (stream, _IOLBF, local_linebuf, LBUF_BUFSIZE);
+  return setvbuf (stream, _IOLBF, local_linebuf, LBUF_BUFSIZE);
 #else  /* !SETVBUF_REVERSED */
-  return std::setvbuf (stream, local_linebuf, _IOLBF, LBUF_BUFSIZE);
+  return setvbuf (stream, local_linebuf, _IOLBF, LBUF_BUFSIZE);
 #endif /* !SETVBUF_REVERSED */
 #else  /* !HAVE_SETVBUF */
 
