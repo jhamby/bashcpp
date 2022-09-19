@@ -48,6 +48,7 @@
 namespace bash
 {
 
+#if 0
 /* This variable means to not expand associative array subscripts more than
    once, when performing variable expansion. */
 char assoc_expand_once = 0;
@@ -69,6 +70,7 @@ static void quote_array_assignment_chars (WORD_LIST *);
 static char *quote_compound_array_word (char *, int);
 static char *array_value_internal (const char *, int, int, int *,
                                    arrayind_t *);
+#endif
 
 /* Standard error message to use when encountering an invalid array subscript
  */

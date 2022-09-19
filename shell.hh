@@ -423,6 +423,7 @@ public:
    with integers.  It is used in the parser for shell tokenization. */
 struct STRING_INT_ALIST
 {
+  CONSTEXPR
   STRING_INT_ALIST (const char *word_, int token_)
       : word (word_), token (token_)
   {
@@ -433,7 +434,7 @@ struct STRING_INT_ALIST
 };
 
 // Flags used when matching pairs of grouping constructs.
-enum parse_group_flags
+enum pgroup_flags
 {
   P_NOFLAGS = 0,
   P_FIRSTCLOSE = 0x0001,
@@ -445,11 +446,11 @@ enum parse_group_flags
   P_DOLBRACE = 0x0040   // parsing a ${...} construct
 };
 
-static inline parse_group_flags
-operator& (const parse_group_flags &a, const parse_group_flags &b)
+static inline pgroup_flags
+operator& (const pgroup_flags &a, const pgroup_flags &b)
 {
-  return static_cast<parse_group_flags> (static_cast<uint32_t> (a)
-                                         & static_cast<uint32_t> (b));
+  return static_cast<pgroup_flags> (static_cast<uint32_t> (a)
+                                    & static_cast<uint32_t> (b));
 }
 
 /* Lexical state while parsing a grouping construct or $(...). */
@@ -477,6 +478,27 @@ operator|= (lexical_state_flags &a, const lexical_state_flags &b)
   a = static_cast<lexical_state_flags> (static_cast<uint32_t> (a)
                                         | static_cast<uint32_t> (b));
   return a;
+}
+
+static inline lexical_state_flags &
+operator&= (lexical_state_flags &a, const lexical_state_flags &b)
+{
+  a = static_cast<lexical_state_flags> (static_cast<uint32_t> (a)
+                                        & static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline lexical_state_flags
+operator& (const lexical_state_flags &a, const lexical_state_flags &b)
+{
+  return static_cast<lexical_state_flags> (static_cast<uint32_t> (a)
+                                           & static_cast<uint32_t> (b));
+}
+
+static inline lexical_state_flags
+operator~(const lexical_state_flags &a)
+{
+  return static_cast<lexical_state_flags> (~static_cast<uint32_t> (a));
 }
 
 /* Simple shell state: variables that can be memcpy'd to subshells. */
@@ -2164,13 +2186,11 @@ protected:
 
   char *decode_prompt_string (const char *);
 
-  int get_current_prompt_level ();
-  int set_current_prompt_level (int);
-
 #if defined(HISTORY)
   void bash_initialize_history ();
   void load_history ();
   const char *history_delimiting_chars (const char *);
+  int prompt_history_number (const char *);
 #endif
 
   /* Declarations for functions defined in locale.c */
@@ -3762,12 +3782,11 @@ protected:
   /* Extract the <( or >( construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "<(".
      Make (SINDEX) get the position just after the matching ")". */
-  char *
+  std::string
   extract_process_subst (const char *string, size_t *sindex, sx_flags xflags)
   {
     xflags |= (no_throw_on_fatal_error ? SX_NOTHROW : SX_NOFLAGS);
-    return xparse_dolparen (string, const_cast<char *> (string + *sindex),
-                            sindex, xflags);
+    return xparse_dolparen (string, sindex, xflags);
   }
 #endif /* PROCESS_SUBSTITUTION */
 
@@ -4246,7 +4265,7 @@ protected:
 
   // Methods implemented in parser.cc.
 
-  char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
+  std::string xparse_dolparen (const std::string &, size_t *, sx_flags);
   int return_EOF ();
   void push_token (parser::token::token_kind_type);
   void reset_parser ();
@@ -4257,6 +4276,13 @@ protected:
   void with_input_from_stream (FILE *, const char *);
   void initialize_bash_input ();
   void execute_variable_command (const char *, const char *);
+  std::string parse_comsub (int, int, int, pgroup_flags);
+  int parse_arith_cmd (char **, int);
+
+#if defined(ARRAY_VARS)
+  int token_is_assignment (char *, int);
+  int token_is_ident (char *, int);
+#endif
 
   /* Return true if a stream of type TYPE is saved on the stack. */
   bool
@@ -4427,7 +4453,7 @@ protected:
       token_to_read = 0;
   }
 
-  char *parse_matched_pair (int, int, int, int *, parse_group_flags);
+  std::string parse_matched_pair (int, int, int, pgroup_flags);
 
   /* This is kind of bogus -- we slip a mini recursive-descent parser in
      here to handle the conditional statement syntax. */
@@ -4479,10 +4505,83 @@ protected:
   COND_COM *cond_term ();
 
 #if defined(DPAREN_ARITHMETIC) || defined(ARITH_FOR_COMMAND)
-
   int parse_dparen (int);
-
 #endif
+
+  /* Return true if TOKSYM is a token that after being read would allow
+     a reserved word to be seen, else false. */
+  bool
+  reserved_word_acceptable (int toksym)
+  {
+    switch (toksym)
+      {
+      case '\n':
+      case ';':
+      case '(':
+      case ')':
+      case '|':
+      case '&':
+      case '{':
+      case '}': /* XXX */
+      case parser::token::AND_AND:
+      case parser::token::BANG:
+      case parser::token::BAR_AND:
+      case parser::token::DO:
+      case parser::token::DONE:
+      case parser::token::ELIF:
+      case parser::token::ELSE:
+      case parser::token::ESAC:
+      case parser::token::FI:
+      case parser::token::IF:
+      case parser::token::OR_OR:
+      case parser::token::SEMI_SEMI:
+      case parser::token::SEMI_AND:
+      case parser::token::SEMI_SEMI_AND:
+      case parser::token::THEN:
+      case parser::token::TIME:
+      case parser::token::TIMEOPT:
+      case parser::token::TIMEIGN:
+      case parser::token::COPROC:
+      case parser::token::UNTIL:
+      case parser::token::WHILE:
+      case 0:
+        return true;
+      default:
+#if defined(COPROCESS_SUPPORT)
+        if (last_read_token == parser::token::WORD
+            && token_before_that == parser::token::COPROC)
+          return true;
+#endif
+        if (last_read_token == parser::token::WORD
+            && token_before_that == parser::token::FUNCTION)
+          return true;
+
+        return false;
+      }
+  }
+
+  int
+  get_current_prompt_level ()
+  {
+    return (current_prompt_string && current_prompt_string == ps2_prompt) ? 2
+                                                                          : 1;
+  }
+
+  void
+  set_current_prompt_level (int x)
+  {
+    prompt_string_pointer = (x == 2) ? &ps2_prompt : &ps1_prompt;
+    current_prompt_string = *prompt_string_pointer;
+  }
+
+  void
+  print_prompt ()
+  {
+    std::fprintf (stderr, "%s", current_decoded_prompt);
+    std::fflush (stderr);
+  }
+
+  char *parse_compound_assignment (size_t *);
 
   /* ************************************************************** */
   /*		Private Shell Variables (ptr types)		    */

@@ -46,6 +46,7 @@
 namespace bash
 {
 
+#if 0
 #define ALIAS_HASH_BUCKETS 64 /* must be power of two */
 
 typedef int sh_alias_map_func_t (alias_t *);
@@ -67,6 +68,7 @@ int alias_expand_all = 0;
 
 /* The list of aliases that we have. */
 HASH_TABLE *aliases = (HASH_TABLE *)NULL;
+#endif
 
 void
 initialize_aliases ()

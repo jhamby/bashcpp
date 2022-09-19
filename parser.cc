@@ -28,8 +28,8 @@ namespace bash
 
 #if defined(HANDLE_MULTIBYTE)
 #define last_shell_getc_is_singlebyte                                         \
-  ((shell_input_line_index > 1)                                               \
-       ? shell_input_line_property[shell_input_line_index - 1]                \
+  ((shell_input_line.size () > 1)                                             \
+       ? shell_input_line_property[shell_input_line.size () - 1]              \
        : 1)
 #define MBTEST(x) ((x) && last_shell_getc_is_singlebyte)
 #else
@@ -627,74 +627,68 @@ Shell::read_secondary_line (bool remove_quoted_newline)
 
 /* Reserved words.  These are only recognized as the first word of a
    command. */
-static const STRING_INT_ALIST word_token_alist[]
-    = { { "if", parser::token::IF },
-        { "then", parser::token::THEN },
-        { "else", parser::token::ELSE },
-        { "elif", parser::token::ELIF },
-        { "fi", parser::token::FI },
-        { "case", parser::token::CASE },
-        { "esac", parser::token::ESAC },
-        { "for", parser::token::FOR },
+static constexpr STRING_INT_ALIST word_token_alist[]
+    = { STRING_INT_ALIST ("if", parser::token::IF),
+        STRING_INT_ALIST ("then", parser::token::THEN),
+        STRING_INT_ALIST ("else", parser::token::ELSE),
+        STRING_INT_ALIST ("elif", parser::token::ELIF),
+        STRING_INT_ALIST ("fi", parser::token::FI),
+        STRING_INT_ALIST ("case", parser::token::CASE),
+        STRING_INT_ALIST ("esac", parser::token::ESAC),
+        STRING_INT_ALIST ("for", parser::token::FOR),
 #if defined(SELECT_COMMAND)
-        { "select", parser::token::SELECT },
+        STRING_INT_ALIST ("select", parser::token::SELECT),
 #endif
-        { "while", parser::token::WHILE },
-        { "until", parser::token::UNTIL },
-        { "do", parser::token::DO },
-        { "done", parser::token::DONE },
-        { "in", parser::token::IN },
-        { "function", parser::token::FUNCTION },
+        STRING_INT_ALIST ("while", parser::token::WHILE),
+        STRING_INT_ALIST ("until", parser::token::UNTIL),
+        STRING_INT_ALIST ("do", parser::token::DO),
+        STRING_INT_ALIST ("done", parser::token::DONE),
+        STRING_INT_ALIST ("in", parser::token::IN),
+        STRING_INT_ALIST ("function", parser::token::FUNCTION),
 #if defined(COMMAND_TIMING)
-        { "time", parser::token::TIME },
+        STRING_INT_ALIST ("time", parser::token::TIME),
 #endif
-        { "{", '{' },
-        { "}", '}' },
-        { "!", parser::token::BANG },
+        STRING_INT_ALIST ("{", '{'),
+        STRING_INT_ALIST ("}", '}'),
+        STRING_INT_ALIST ("!", parser::token::BANG),
 #if defined(COND_COMMAND)
-        { "[[", parser::token::COND_START },
-        { "]]", parser::token::COND_END },
+        STRING_INT_ALIST ("[[", parser::token::COND_START),
+        STRING_INT_ALIST ("]]", parser::token::COND_END),
 #endif
 #if defined(COPROCESS_SUPPORT)
-        { "coproc", parser::token::COPROC },
+        STRING_INT_ALIST ("coproc", parser::token::COPROC),
 #endif
-        { nullptr, 0 } };
+        STRING_INT_ALIST (nullptr, 0) };
 
 /* other tokens that can be returned by read_token() */
-static const STRING_INT_ALIST other_token_alist[] = {
+static constexpr STRING_INT_ALIST other_token_alist[] = {
   /* Multiple-character tokens with special values */
-  { "--", parser::token::TIMEIGN },
-  { "-p", parser::token::TIMEOPT },
-  { "&&", parser::token::AND_AND },
-  { "||", parser::token::OR_OR },
-  { ">>", parser::token::GREATER_GREATER },
-  { "<<", parser::token::LESS_LESS },
-  { "<&", parser::token::LESS_AND },
-  { ">&", parser::token::GREATER_AND },
-  { ";;", parser::token::SEMI_SEMI },
-  { ";&", parser::token::SEMI_AND },
-  { ";;&", parser::token::SEMI_SEMI_AND },
-  { "<<-", parser::token::LESS_LESS_MINUS },
-  { "<<<", parser::token::LESS_LESS_LESS },
-  { "&>", parser::token::AND_GREATER },
-  { "&>>", parser::token::AND_GREATER_GREATER },
-  { "<>", parser::token::LESS_GREATER },
-  { ">|", parser::token::GREATER_BAR },
-  { "|&", parser::token::BAR_AND },
-  { "EOF", parser::token::yacc_EOF },
+  STRING_INT_ALIST ("--", parser::token::TIMEIGN),
+  STRING_INT_ALIST ("-p", parser::token::TIMEOPT),
+  STRING_INT_ALIST ("&&", parser::token::AND_AND),
+  STRING_INT_ALIST ("||", parser::token::OR_OR),
+  STRING_INT_ALIST (">>", parser::token::GREATER_GREATER),
+  STRING_INT_ALIST ("<<", parser::token::LESS_LESS),
+  STRING_INT_ALIST ("<&", parser::token::LESS_AND),
+  STRING_INT_ALIST (">&", parser::token::GREATER_AND),
+  STRING_INT_ALIST (";;", parser::token::SEMI_SEMI),
+  STRING_INT_ALIST (";&", parser::token::SEMI_AND),
+  STRING_INT_ALIST (";;&", parser::token::SEMI_SEMI_AND),
+  STRING_INT_ALIST ("<<-", parser::token::LESS_LESS_MINUS),
+  STRING_INT_ALIST ("<<<", parser::token::LESS_LESS_LESS),
+  STRING_INT_ALIST ("&>", parser::token::AND_GREATER),
+  STRING_INT_ALIST ("&>>", parser::token::AND_GREATER_GREATER),
+  STRING_INT_ALIST ("<>", parser::token::LESS_GREATER),
+  STRING_INT_ALIST (">|", parser::token::GREATER_BAR),
+  STRING_INT_ALIST ("|&", parser::token::BAR_AND),
+  STRING_INT_ALIST ("EOF", parser::token::yacc_EOF),
   /* Tokens whose value is the character itself */
-  { ">", '>' },
-  { "<", '<' },
-  { "-", '-' },
-  { "{", '{' },
-  { "}", '}' },
-  { ";", ';' },
-  { "(", '(' },
-  { ")", ')' },
-  { "|", '|' },
-  { "&", '&' },
-  { "newline", '\n' },
-  { nullptr, 0 }
+  STRING_INT_ALIST (">", '>'), STRING_INT_ALIST ("<", '<'),
+  STRING_INT_ALIST ("-", '-'), STRING_INT_ALIST ("{", '{'),
+  STRING_INT_ALIST ("}", '}'), STRING_INT_ALIST (";", ';'),
+  STRING_INT_ALIST ("(", '('), STRING_INT_ALIST (")", ')'),
+  STRING_INT_ALIST ("|", '|'), STRING_INT_ALIST ("&", '&'),
+  STRING_INT_ALIST ("newline", '\n'), STRING_INT_ALIST (nullptr, 0)
 };
 
 /* others not listed here:
@@ -1847,22 +1841,24 @@ re_read_token:
     return parser::symbol_type (character);
 
 tokword:
-  /* Okay, if we got this far, we have to read a word.  Read one,
-     and then check it against the known ones. */
-  parser::symbol_type symbol = read_token_word (character);
-#if defined(ALIAS)
-  if (symbol.kind () == RE_READ_TOKEN)
-    goto re_read_token;
-#endif
-  return symbol;
-}
 
-/*
- * Match a $(...) or other grouping construct.  This has to handle embedded
- * quoted strings ('', ``, "") and nested constructs.  It also must handle
- * reprompting the user, if necessary, after reading a newline, and returning
- * correct error values if it reads EOF.
- */
+#if defined(ALIAS)
+  try
+    {
+#endif
+      /* Okay, if we got this far, we have to read a word.  Read one,
+         and then check it against the known ones. */
+      parser::symbol_type symbol = read_token_word (character);
+      return symbol;
+
+#if defined(ALIAS)
+    }
+  catch (const read_again_exception &)
+    {
+      goto re_read_token;
+    }
+#endif
+}
 
 #define COMSUB_META(ch) ((ch) == ';' || (ch) == '&' || (ch) == '|')
 
@@ -1893,16 +1889,22 @@ tokword:
 // static char matched_pair_error;
 #endif
 
-char *
+/*
+ * Match a $(...) or other grouping construct.  This has to handle embedded
+ * quoted strings ('', ``, "") and nested constructs.  It also must handle
+ * reprompting the user, if necessary, after reading a newline, and returning
+ * correct error values if it reads EOF.
+ */
+std::string
 Shell::parse_matched_pair (
     int qc, /* `"' if this construct is within double quotes */
-    int open, int close, int *lenp, parse_group_flags flags)
+    int open, int close, pgroup_flags flags)
 {
   int count, ch, prevch;
-  int nestlen, ttranslen, start_lineno;
-//   char *ret, *nestret, *ttrans;
-//   int retind, retsize;
-  parse_group_flags rflags;
+  int start_lineno;
+  //   char *ret, *nestret, *ttrans;
+  //   int retind, retsize;
+  pgroup_flags rflags;
   dolbrace_state_t dolbrace_state;
 
   dolbrace_state = (flags & P_DOLBRACE) ? DOLBRACE_PARAM : DOLBRACE_NOFLAGS;
@@ -1930,12 +1932,11 @@ Shell::parse_matched_pair (
 
       if (ch == EOF)
         {
-          free (ret);
           parser_error (start_lineno,
                         _ ("unexpected EOF while looking for matching `%c'"),
                         close);
           EOF_Reached = true; /* XXX */
-          return &matched_pair_error;
+          throw matched_pair_error ();
         }
 
       /* Possible reprompting. */
@@ -1947,8 +1948,7 @@ Shell::parse_matched_pair (
       if (tflags & LEX_INCOMMENT)
         {
           /* Add this character. */
-          RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
-          ret[retind++] = ch;
+          ret.push_back (static_cast<char> (ch));
 
           if (ch == '\n')
             tflags &= ~LEX_INCOMMENT;
@@ -1961,8 +1961,8 @@ Shell::parse_matched_pair (
          extract_delimited_string(). */
       else if MBTEST ((tflags & LEX_CKCOMMENT) && (tflags & LEX_INCOMMENT) == 0
                       && ch == '#'
-                      && (retind == 0 || ret[retind - 1] == '\n'
-                          || shellblank (ret[retind - 1])))
+                      && (ret.empty () || ret[ret.size () - 1] == '\n'
+                          || shellblank (ret[ret.size () - 1])))
         tflags |= LEX_INCOMMENT;
 
       if (tflags & LEX_PASSNEXT) /* last char was backslash */
@@ -1971,15 +1971,16 @@ Shell::parse_matched_pair (
           if (qc != '\''
               && ch == '\n') /* double-quoted \<newline> disappears. */
             {
-              if (retind > 0)
-                retind--; /* swallow previously-added backslash */
+              // swallow previously-added backslash
+              if (!ret.empty ())
+                ret.erase (ret.size () - 1, 1);
               continue;
             }
 
-          RESIZE_MALLOCED_BUFFER (ret, retind, 2, retsize, 64);
           if MBTEST (ch == CTLESC)
-            ret[retind++] = CTLESC;
-          ret[retind++] = ch;
+            ret.push_back (CTLESC);
+
+          ret.push_back (static_cast<char> (ch));
           continue;
         }
       /* If we're reparsing the input (e.g., from parse_string_to_word_list),
@@ -1989,15 +1990,13 @@ Shell::parse_matched_pair (
       else if MBTEST ((parser_state & PST_REPARSE) && open == '\''
                       && (ch == CTLESC || ch == CTLNUL))
         {
-          RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
-          ret[retind++] = ch;
+          ret.push_back (static_cast<char> (ch));
           continue;
         }
       else if MBTEST (ch == CTLESC || ch == CTLNUL) /* special shell escapes */
         {
-          RESIZE_MALLOCED_BUFFER (ret, retind, 2, retsize, 64);
-          ret[retind++] = CTLESC;
-          ret[retind++] = ch;
+          ret.push_back (CTLESC);
+          ret.push_back (static_cast<char> (ch));
           continue;
         }
       else if MBTEST (ch == close) /* ending delimiter */
@@ -2011,8 +2010,7 @@ Shell::parse_matched_pair (
         count++;
 
       /* Add this character. */
-      RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
-      ret[retind++] = ch;
+      ret.push_back (static_cast<char> (ch));
 
       /* If we just read the ending character, don't bother continuing. */
       if (count == 0)
@@ -2039,29 +2037,29 @@ Shell::parse_matched_pair (
         {
           /* ${param%[%]word} */
           if MBTEST (dolbrace_state == DOLBRACE_PARAM && ch == '%'
-                     && retind > 1)
+                     && ret.size () > 1)
             dolbrace_state = DOLBRACE_QUOTE;
           /* ${param#[#]word} */
           else if MBTEST (dolbrace_state == DOLBRACE_PARAM && ch == '#'
-                          && retind > 1)
+                          && ret.size () > 1)
             dolbrace_state = DOLBRACE_QUOTE;
           /* ${param/[/]pat/rep} */
           else if MBTEST (dolbrace_state == DOLBRACE_PARAM && ch == '/'
-                          && retind > 1)
+                          && ret.size () > 1)
             dolbrace_state = DOLBRACE_QUOTE2; /* XXX */
                                               /* ${param^[^]pat} */
           else if MBTEST (dolbrace_state == DOLBRACE_PARAM && ch == '^'
-                          && retind > 1)
+                          && ret.size () > 1)
             dolbrace_state = DOLBRACE_QUOTE;
           /* ${param,[,]pat} */
           else if MBTEST (dolbrace_state == DOLBRACE_PARAM && ch == ','
-                          && retind > 1)
+                          && ret.size () > 1)
             dolbrace_state = DOLBRACE_QUOTE;
           else if MBTEST (dolbrace_state == DOLBRACE_PARAM
-                          && strchr ("#%^,~:-=?+/", ch) != 0)
+                          && std::strchr ("#%^,~:-=?+/", ch) != nullptr)
             dolbrace_state = DOLBRACE_OP;
           else if MBTEST (dolbrace_state == DOLBRACE_OP
-                          && strchr ("#%^,~:-=?+/", ch) == 0)
+                          && std::strchr ("#%^,~:-=?+/", ch) == nullptr)
             dolbrace_state = DOLBRACE_WORD;
         }
 
@@ -2082,15 +2080,18 @@ Shell::parse_matched_pair (
         {
           if MBTEST (shellquote (ch))
             {
+              std::string nestret;
+
               /* '', ``, or "" inside $(...) or other grouping construct. */
-              push_delimiter (dstack, ch);
+              dstack.push_back (ch);
               if MBTEST ((tflags & LEX_WASDOL)
                          && ch == '\'') /* $'...' inside group */
-                nestret = parse_matched_pair (ch, ch, ch, &nestlen,
-                                              (P_ALLOWESC | rflags));
+                nestret
+                    = parse_matched_pair (ch, ch, ch, (P_ALLOWESC | rflags));
               else
-                nestret = parse_matched_pair (ch, ch, ch, &nestlen, rflags);
-              pop_delimiter (dstack);
+                nestret = parse_matched_pair (ch, ch, ch, rflags);
+              dstack.pop_back ();
+
               CHECK_NESTRET_ERROR ();
 
               if MBTEST ((tflags & LEX_WASDOL) && ch == '\''
@@ -2200,16 +2201,14 @@ Shell::parse_matched_pair (
         tflags &= ~LEX_WASDOL;
     }
 
-  ret[retind] = '\0';
-  if (lenp)
-    *lenp = retind;
-  /*itrace("parse_matched_pair[%d]: returning %s", line_number, ret);*/
+  /*itrace("parse_matched_pair[%d]: returning %s", line_number, ret.c_str
+   * ());*/
   return ret;
 }
 
 #if defined(DEBUG)
 static void
-dump_tflags (int flags)
+dump_tflags (lexical_state_flags flags)
 {
   int f;
 
@@ -2283,13 +2282,14 @@ dump_tflags (int flags)
 
 /* Parse a $(...) command substitution.  This is messier than I'd like, and
    reproduces a lot more of the token-reading code than I'd like. */
-static char *
-parse_comsub (int qc, int open, int close, int *lenp, int flags)
+std::string
+Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
 {
-  int count, ch, peekc, tflags, lex_rwlen, lex_wlen, lex_firstind;
+  int count, ch, peekc, lex_rwlen, lex_wlen, lex_firstind;
   int nestlen, ttranslen, start_lineno, orig_histexp;
   char *ret, *nestret, *ttrans, *heredelim;
   int retind, retsize, rflags, hdlen;
+  lexical_state_flags tflags;
 
   /* Posix interp 217 says arithmetic expressions have precedence, so
      assume $(( introduces arithmetic expansion and parse accordingly. */
@@ -2434,7 +2434,6 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
       if (tflags & (LEX_INCOMMENT | LEX_INHEREDOC))
         {
           /* Add this character. */
-          RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
           ret[retind++] = ch;
 
           if ((tflags & LEX_INCOMMENT) && ch == '\n')
@@ -2446,21 +2445,6 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
 
           continue;
         }
-#if 0
-      /* If we're going to recursively parse a command substitution inside a
-	 here-document, make sure we call parse_comsub recursively below.  See
-	 above for additional caveats. */
-      if ((tflags & LEX_INHEREDOC) && ((tflags & LEX_WASDOL) == 0 || ch != '(')) /*)*/
-	{
-	  /* Add this character. */
-	  RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
-	  ret[retind++] = ch;
-	  if MBTEST(ch == '$')
-	    tflags |= LEX_WASDOL;
-	  else
-	    tflags &= ~LEX_WASDOL;
-	}
-#endif
 
       if (tflags & LEX_PASSNEXT) /* last char was backslash */
         {
@@ -2475,7 +2459,6 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
               continue;
             }
 
-          RESIZE_MALLOCED_BUFFER (ret, retind, 2, retsize, 64);
           if MBTEST (ch == CTLESC)
             ret[retind++] = CTLESC;
           ret[retind++] = ch;
@@ -2514,7 +2497,6 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
                  && lex_rwlen == 0)
         {
           /* Add this character. */
-          RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
           ret[retind++] = ch;
           continue;
         }
@@ -2530,17 +2512,6 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
         {
           if (lex_firstind == -1 && shellbreak (ch) == 0)
             lex_firstind = retind;
-#if 0
-	  else if (heredelim && (tflags & LEX_PASSNEXT) == 0 && ch == '\n')
-	    {
-	      tflags |= LEX_INHEREDOC;
-	      tflags &= ~LEX_HEREDELIM;
-	      lex_firstind = retind + 1;
-#if defined(BANG_HISTORY)
-	      history_expansion_inhibited = 1;
-#endif
-	    }
-#endif
           else if (lex_firstind >= 0 && (tflags & LEX_PASSNEXT) == 0
                    && shellbreak (ch))
             {
@@ -2576,14 +2547,12 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
                  && (shellmeta (ch) || ch == '\n'))
         {
           /* Add this character. */
-          RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
           ret[retind++] = ch;
           peekc = shell_getc (1);
           if (ch == peekc
               && (ch == '&' || ch == '|'
                   || ch == ';')) /* two-character tokens */
             {
-              RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
               ret[retind++] = peekc;
               /*itrace("parse_comsub:%d: set lex_reswordok = 1, ch = `%c'",
                * line_number, ch);*/
@@ -2616,7 +2585,6 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
           if MBTEST (islower ((unsigned char)ch))
             {
               /* Add this character. */
-              RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
               ret[retind++] = ch;
               lex_rwlen++;
               continue;
@@ -2711,21 +2679,18 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
                  && ch == '<')
         {
           /* Add this character. */
-          RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
           ret[retind++] = ch;
           peekc = shell_getc (1);
           if (peekc == EOF)
             goto eof_error;
           if (peekc == ch)
             {
-              RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
               ret[retind++] = peekc;
               peekc = shell_getc (1);
               if (peekc == EOF)
                 goto eof_error;
               if (peekc == '-')
                 {
-                  RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
                   ret[retind++] = peekc;
                   tflags |= LEX_STRIPDOC;
                 }
@@ -2756,15 +2721,10 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
 
       if MBTEST (ch == CTLESC || ch == CTLNUL) /* special shell escapes */
         {
-          RESIZE_MALLOCED_BUFFER (ret, retind, 2, retsize, 64);
           ret[retind++] = CTLESC;
           ret[retind++] = ch;
           continue;
         }
-#if 0
-      else if MBTEST((tflags & LEX_INCASE) && ch == close && close == ')')
-        tflags &= ~LEX_INCASE;		/* XXX */
-#endif
       else if MBTEST (ch == close
                       && (tflags & LEX_INCASE) == 0) /* ending delimiter */
         {
@@ -2782,7 +2742,6 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
         }
 
       /* Add this character. */
-      RESIZE_MALLOCED_BUFFER (ret, retind, 1, retsize, 64);
       ret[retind++] = ch;
 
       /* If we just read the ending character, don't bother continuing. */
@@ -2881,13 +2840,13 @@ parse_comsub (int qc, int open, int close, int *lenp, int flags)
 }
 
 /* Recursively call the parser to parse a $(...) command substitution. */
-char *
-Shell::xparse_dolparen (const char *base, char *string, int *indp, int flags)
+std::string
+Shell::xparse_dolparen (const std::string &base, size_t indp, sx_flags flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
-  int orig_ind, nc, sflags, orig_eof_token, start_lineno;
-  char *ret, *ep, *ostring;
+  int orig_ind, nc, orig_eof_token, start_lineno;
+//   char *ret, *ep, *ostring;
 #if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
   STRING_SAVER *saved_pushed_strings;
 #endif
@@ -2909,9 +2868,9 @@ Shell::xparse_dolparen (const char *base, char *string, int *indp, int flags)
 
   /*itrace("xparse_dolparen: size = %d shell_input_line = `%s' string=`%s'",
    * shell_input_line_size, shell_input_line, string);*/
-  sflags = SEVAL_NONINT | SEVAL_NOHIST | SEVAL_NOFREE;
-  if (flags & SX_NOLONGJMP)
-    sflags |= SEVAL_NOLONGJMP;
+  parse_flags sflags = SEVAL_NONINT | SEVAL_NOHIST | SEVAL_NOFREE;
+  if (flags & SX_NOTHROW)
+    sflags |= SEVAL_NOTHROW;
   save_parser_state (&ps);
   save_input_line_state (&ls);
   orig_eof_token = shell_eof_token;
@@ -3074,8 +3033,8 @@ Shell::parse_dparen (int c)
    return 0.  In any case, put the characters we've consumed into a locally-
    allocated buffer and make *ep point to that buffer.  Return -1 on an
    error, for example EOF. */
-static int
-parse_arith_cmd (char **ep, int adddq)
+int
+Shell::parse_arith_cmd (char **ep, int adddq)
 {
   int exp_lineno, rval, c;
   char *ttok, *tokstr;
@@ -3362,8 +3321,8 @@ Shell::cond_term ()
    in case assignment() ends up doing something like parsing a command
    substitution that will reallocate atoken.  We don't want to write beyond
    the end of an allocated buffer. */
-static int
-token_is_assignment (char *t, int i)
+int
+Shell::token_is_assignment (char *t, int i)
 {
   int r;
   char *atoken;
@@ -3383,8 +3342,8 @@ token_is_assignment (char *t, int i)
 }
 
 /* XXX - possible changes here for `+=' */
-static int
-token_is_ident (char *t, int i)
+int
+Shell::token_is_ident (char *t, int i)
 {
   unsigned char c;
   int r;
@@ -3488,8 +3447,6 @@ Shell::read_token_word (int character)
           pop_delimiter (dstack);
           if (ttok == &matched_pair_error)
             return -1; /* Bail immediately. */
-          RESIZE_MALLOCED_BUFFER (token, token_index, ttoklen + 2,
-                                  token_buffer_size, TOKEN_DEFAULT_GROW_SIZE);
           token[token_index++] = character;
           strcpy (token + token_index, ttok);
           token_index += ttoklen;
@@ -3516,8 +3473,6 @@ Shell::read_token_word (int character)
           pop_delimiter (dstack);
           if (ttok == &matched_pair_error)
             return -1; /* Bail immediately. */
-          RESIZE_MALLOCED_BUFFER (token, token_index, ttoklen + 2,
-                                  token_buffer_size, TOKEN_DEFAULT_GROW_SIZE);
           token[token_index++] = character;
           strcpy (token + token_index, ttok);
           token_index += ttoklen;
@@ -3539,9 +3494,6 @@ Shell::read_token_word (int character)
               pop_delimiter (dstack);
               if (ttok == &matched_pair_error)
                 return -1; /* Bail immediately. */
-              RESIZE_MALLOCED_BUFFER (token, token_index, ttoklen + 3,
-                                      token_buffer_size,
-                                      TOKEN_DEFAULT_GROW_SIZE);
               token[token_index++] = character;
               token[token_index++] = peek_char;
               strcpy (token + token_index, ttok);
@@ -3583,9 +3535,6 @@ Shell::read_token_word (int character)
                 ttok = parse_matched_pair (cd, '[', ']', &ttoklen, 0);
               if (ttok == &matched_pair_error)
                 return -1; /* Bail immediately. */
-              RESIZE_MALLOCED_BUFFER (token, token_index, ttoklen + 3,
-                                      token_buffer_size,
-                                      TOKEN_DEFAULT_GROW_SIZE);
               token[token_index++] = character;
               token[token_index++] = peek_char;
               strcpy (token + token_index, ttok);
@@ -3636,9 +3585,6 @@ Shell::read_token_word (int character)
                   ttrans = ttok;
                 }
 
-              RESIZE_MALLOCED_BUFFER (token, token_index, ttranslen + 1,
-                                      token_buffer_size,
-                                      TOKEN_DEFAULT_GROW_SIZE);
               strcpy (token + token_index, ttrans);
               token_index += ttranslen;
               FREE (ttrans);
@@ -3650,8 +3596,6 @@ Shell::read_token_word (int character)
              shell's single-character parameter expansions, and set flags.*/
           else if MBTEST (character == '$' && peek_char == '$')
             {
-              RESIZE_MALLOCED_BUFFER (token, token_index, 3, token_buffer_size,
-                                      TOKEN_DEFAULT_GROW_SIZE);
               token[token_index++] = '$';
               token[token_index++] = peek_char;
               dollar_present = 1;
@@ -3676,8 +3620,6 @@ Shell::read_token_word (int character)
           ttok = parse_matched_pair (cd, '[', ']', &ttoklen, P_ARRAYSUB);
           if (ttok == &matched_pair_error)
             return -1; /* Bail immediately. */
-          RESIZE_MALLOCED_BUFFER (token, token_index, ttoklen + 2,
-                                  token_buffer_size, TOKEN_DEFAULT_GROW_SIZE);
           token[token_index++] = character;
           strcpy (token + token_index, ttok);
           token_index += ttoklen;
@@ -3695,10 +3637,6 @@ Shell::read_token_word (int character)
           if MBTEST (peek_char == '(') /* ) */
             {
               ttok = parse_compound_assignment (&ttoklen);
-
-              RESIZE_MALLOCED_BUFFER (token, token_index, ttoklen + 4,
-                                      token_buffer_size,
-                                      TOKEN_DEFAULT_GROW_SIZE);
 
               token[token_index++] = '=';
               token[token_index++] = '(';
@@ -3733,15 +3671,10 @@ Shell::read_token_word (int character)
     got_character:
       if (character == CTLESC || character == CTLNUL)
         {
-          RESIZE_MALLOCED_BUFFER (token, token_index, 2, token_buffer_size,
-                                  TOKEN_DEFAULT_GROW_SIZE);
           token[token_index++] = CTLESC;
         }
-      else
-      got_escaped_character:
-        RESIZE_MALLOCED_BUFFER (token, token_index, 1, token_buffer_size,
-                                TOKEN_DEFAULT_GROW_SIZE);
 
+    got_escaped_character:
       token[token_index++] = character;
 
       all_digit_token &= DIGIT (character);
@@ -3800,6 +3733,7 @@ got_token:
         return RE_READ_TOKEN;
       else if (result == NO_EXPANSION)
         parser_state &= ~PST_ALEXPNEXT;
+      // XXX - will there be any other return values?
     }
 
   /* If not in Posix.2 mode, check for reserved words after alias
@@ -3895,58 +3829,6 @@ got_token:
   return result;
 }
 
-/* Return true if TOKSYM is a token that after being read would allow
-   a reserved word to be seen, else false. */
-static inline bool
-reserved_word_acceptable (int toksym)
-{
-  switch (toksym)
-    {
-    case '\n':
-    case ';':
-    case '(':
-    case ')':
-    case '|':
-    case '&':
-    case '{':
-    case '}': /* XXX */
-    case parser::token::AND_AND:
-    case parser::token::BANG:
-    case parser::token::BAR_AND:
-    case parser::token::DO:
-    case parser::token::DONE:
-    case parser::token::ELIF:
-    case parser::token::ELSE:
-    case parser::token::ESAC:
-    case parser::token::FI:
-    case parser::token::IF:
-    case parser::token::OR_OR:
-    case parser::token::SEMI_SEMI:
-    case parser::token::SEMI_AND:
-    case parser::token::SEMI_SEMI_AND:
-    case parser::token::THEN:
-    case parser::token::TIME:
-    case parser::token::TIMEOPT:
-    case parser::token::TIMEIGN:
-    case parser::token::COPROC:
-    case parser::token::UNTIL:
-    case parser::token::WHILE:
-    case 0:
-      return true;
-    default:
-#if defined(COPROCESS_SUPPORT)
-      if (last_read_token == parser::token::WORD
-          && token_before_that == parser::token::COPROC)
-        return true;
-#endif
-      if (last_read_token == parser::token::WORD
-          && token_before_that == parser::token::FUNCTION)
-        return true;
-
-      return false;
-    }
-}
-
 /* Return the index of TOKEN in the alist of reserved words, or -1 if
    TOKEN is not a shell reserved word. */
 int
@@ -3966,35 +3848,6 @@ parser_in_command_position ()
 {
   return command_token_position (last_read_token);
 }
-
-#if 0
-#if defined(READLINE)
-/* Called after each time readline is called.  This insures that whatever
-   the new prompt string is gets propagated to readline's local prompt
-   variable. */
-static void
-reset_readline_prompt ()
-{
-  char *temp_prompt;
-
-  if (prompt_string_pointer)
-    {
-      temp_prompt = (*prompt_string_pointer)
-			? decode_prompt_string (*prompt_string_pointer)
-			: nullptr;
-
-      if (temp_prompt == 0)
-	{
-	  temp_prompt = (char *)xmalloc (1);
-	  temp_prompt[0] = '\0';
-	}
-
-      FREE (current_readline_prompt);
-      current_readline_prompt = temp_prompt;
-    }
-}
-#endif /* READLINE */
-#endif /* 0 */
 
 #if defined(HISTORY)
 
@@ -4029,7 +3882,7 @@ static const int no_semi_successors[] = { '\n',
    history entry.  LINE is the line we're about to add; it helps
    make some more intelligent decisions in certain cases. */
 const char *
-history_delimiting_chars (const char *line)
+Shell::history_delimiting_chars (const char *line)
 {
   static int last_was_heredoc
       = 0; /* was the last entry the start of a here document? */
@@ -4165,34 +4018,12 @@ Shell::prompt_again ()
     }
 }
 
-int
-get_current_prompt_level ()
-{
-  return (current_prompt_string && current_prompt_string == ps2_prompt) ? 2
-                                                                        : 1;
-}
-
-int
-set_current_prompt_level (int x)
-{
-  prompt_string_pointer = (x == 2) ? &ps2_prompt : &ps1_prompt;
-  current_prompt_string = *prompt_string_pointer;
-  return 0;
-}
-
-static void
-print_prompt ()
-{
-  std::fprintf (stderr, "%s", current_decoded_prompt);
-  std::fflush (stderr);
-}
-
 #if defined(HISTORY)
 /* The history library increments the history offset as soon as it stores
    the first line of a potentially multi-line command, so we compensate
    here by returning one fewer when appropriate. */
-static int
-prompt_history_number (const char *pmt)
+int
+Shell::prompt_history_number (const char *pmt)
 {
   int ret;
 
@@ -4243,9 +4074,8 @@ prompt_history_number (const char *pmt)
         \[	begin a sequence of non-printing chars
         \]	end a sequence of non-printing chars
 */
-#define PROMPT_GROWTH 48
 char *
-decode_prompt_string (const char *string)
+Shell::decode_prompt_string (const char *string)
 {
   WORD_LIST *list;
   char *result, *t;
@@ -4608,8 +4438,6 @@ decode_prompt_string (const char *string)
         }
       else
         {
-          RESIZE_MALLOCED_BUFFER (result, result_index, 3, result_size,
-                                  PROMPT_GROWTH);
           /* dequote_string should take care of removing this if we are not
              performing the rest of the word expansions. */
           if (c == CTLESC || c == CTLNUL)
@@ -4796,14 +4624,14 @@ Shell::report_syntax_error (const char *message)
       if (ansic_shouldquote (msg))
         {
           p = ansic_quote (msg);
-          free (msg);
+          delete[] msg;
           msg = p;
         }
       parser_error (line_number, _ ("syntax error near unexpected token `%s'"),
                     msg);
-      free (msg);
+      delete[] msg;
 
-      if (interactive == 0)
+      if (!interactive)
         print_offending_line ();
 
       last_command_exit_value = (executing_builtin && parse_and_execute_level)
@@ -4816,13 +4644,13 @@ Shell::report_syntax_error (const char *message)
   /* If looking at the current token doesn't prove fruitful, try to find the
      offending token by analyzing the text of the input line near the current
      input line index and report what we find. */
-  if (shell_input_line && *shell_input_line)
+  if (!shell_input_line.empty ())
     {
       msg = error_token_from_text ();
       if (msg)
         {
           parser_error (line_number, _ ("syntax error near `%s'"), msg);
-          free (msg);
+          delete[] msg;
         }
 
       /* If not interactive, print the line containing the error. */
@@ -4831,9 +4659,10 @@ Shell::report_syntax_error (const char *message)
     }
   else
     {
-      msg = (char *)(EOF_Reached ? _ ("syntax error: unexpected end of file")
-                                 : _ ("syntax error"));
-      parser_error (line_number, "%s", msg);
+      const char *cmsg = EOF_Reached
+                             ? _ ("syntax error: unexpected end of file")
+                             : _ ("syntax error");
+      parser_error (line_number, "%s", cmsg);
       /* When the shell is interactive, this file uses EOF_Reached
          only for error reporting.  Other mechanisms are used to
          decide whether or not to exit. */
@@ -4917,12 +4746,12 @@ Shell::handle_eof_input_unit ()
 /* It's very important that these two functions treat the characters
    between ( and ) identically. */
 
-static WORD_LIST parse_string_error;
+// static WORD_LIST parse_string_error;
 
 /* Take a string and run it through the shell parser, returning the
    resultant word list.  Used by compound array assignment. */
 WORD_LIST *
-parse_string_to_word_list (char *s, int flags, const char *whom)
+Shell::parse_string_to_word_list (char *s, int flags, const char *whom)
 {
   WORD_LIST *wl;
   int tok, orig_current_token, orig_line_number, orig_input_terminator;
@@ -5014,8 +4843,8 @@ parse_string_to_word_list (char *s, int flags, const char *whom)
   return REVERSE_LIST (wl, WORD_LIST *);
 }
 
-static char *
-parse_compound_assignment (int *retlenp)
+char *
+Shell::parse_compound_assignment (size_t *retlenp)
 {
   WORD_LIST *wl, *rl;
   int tok, orig_line_number, orig_token_size, orig_last_token, assignok;

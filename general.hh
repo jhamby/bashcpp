@@ -104,6 +104,18 @@ class subst_expand_fatal : public subst_expand_error
   virtual const char *what () const noexcept override;
 };
 
+class matched_pair_error : public std::exception
+{
+  virtual const char *what () const noexcept override;
+};
+
+#if defined(ALIAS)
+class read_again_exception : public std::exception
+{
+  virtual const char *what () const noexcept override;
+};
+#endif
+
 /* Global inline functions, previously C preprocessor macros. */
 
 // Create a new copy of null-terminated string s. Free with delete[].

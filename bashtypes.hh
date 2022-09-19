@@ -37,6 +37,9 @@
 #define override
 #define nullptr NULL
 #define constexpr const
+#define CONSTEXPR
+#else
+#define CONSTEXPR constexpr
 #endif
 
 #endif /* _BASHTYPES_H_ */

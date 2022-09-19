@@ -125,6 +125,22 @@ subst_expand_fatal::what () const noexcept
   return "subst_expand_fatal";
 }
 
+// Return the type of the matched_pair_error exception.
+const char *
+matched_pair_error::what () const noexcept
+{
+  return "matched_pair_error";
+}
+
+#if defined(ALIAS)
+// Return the type of the read_again_exception exception.
+const char *
+read_again_exception::what () const noexcept
+{
+  return "read_again_exception";
+}
+#endif
+
 /* Do whatever is necessary to initialize `Posix mode'.  This currently
    modifies the following variables which are controlled via shopt:
       interactive_comments
