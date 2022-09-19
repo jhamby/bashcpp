@@ -59,9 +59,6 @@
 #include "glob.hh"
 #include "strmatch.hh"
 
-#include "history.hh"
-#include "readline.hh"
-
 namespace bash
 {
 

@@ -58,8 +58,8 @@ operator~(const alias_flags &a)
 
 struct alias_t
 {
-  char *name;
-  char *value;
+  std::string name;
+  std::string value;
   alias_flags flags;
 };
 

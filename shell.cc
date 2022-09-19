@@ -59,14 +59,6 @@
 #include "findcmd.hh"
 #include "input.hh"
 
-#if defined(HISTORY)
-#include "history.hh"
-#endif
-
-#if defined(READLINE)
-#include "readline.hh"
-#endif
-
 #include "strmatch.hh"
 
 #if !defined(HAVE_GETPW_DECLS)
@@ -96,7 +88,7 @@ main (int argc, char **argv, char **env)
   try
     {
       bash::the_shell = new bash::Shell ();
-      bash::the_shell->start (argc, argv, env);
+      bash::the_shell->start_shell (argc, argv, env);
     }
   catch (const std::exception &e)
     {
@@ -224,8 +216,10 @@ Shell::Shell ()
 Shell::~Shell () noexcept { delete[] zread_lbuf; }
 
 // Everything happens when we call this method.
+// Renamed from "start" to avoid accidentally appearing to be
+// a local variable named "start".
 void
-Shell::start (int argc, char **argv, char **env)
+Shell::start_shell (int argc, char **argv, char **env)
 {
   early_init ();
   for (;;)

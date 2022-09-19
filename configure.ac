@@ -263,8 +263,8 @@ fi
 if test $opt_progcomp = yes; then
 AC_DEFINE([PROGRAMMABLE_COMPLETION], [1], [Define for the programmable completion features and the complete builtin.])
 fi
-if test $opt_multibyte = no; then
-AC_DEFINE([NO_MULTIBYTE_SUPPORT], [1], [Define to not compile in support for multibyte characters, even if the OS supports them.])
+if test $opt_multibyte = yes; then
+AC_DEFINE([HANDLE_MULTIBYTE], [1], [Define to compile in support for multibyte characters, or undefine to remove this support.])
 fi
 if test $opt_debugger = yes; then
 AC_DEFINE([DEBUGGER], [1], [Define if you want to compile in some features used only by the bash debugger.])
@@ -329,10 +329,6 @@ AC_SUBST(HELPINSTALL)
 AC_SUBST(HELPFILES_TARGET)
 AC_SUBST(HELPSTRINGS)
 
-echo ""
-echo "Beginning configuration for bash-$BASHVERS-$RELSTATUS for ${host_cpu}-${host_vendor}-${host_os}"
-echo ""
-
 AC_USE_SYSTEM_EXTENSIONS
 
 dnl compilation checks
@@ -348,6 +344,13 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_MKDIR_P
 AC_PROG_YACC
+
+dnl initialize libtool
+LT_INIT
+
+echo ""
+echo "Beginning configuration for bash-$BASHVERS-$RELSTATUS for ${build_cpu}-${build_vendor}-${build_os}"
+echo ""
 
 AC_SYS_LARGEFILE
 
@@ -414,9 +417,6 @@ m4_include([m4/xsize.m4])
 
 dnl Turn on any extensions available in the GNU C library.
 AC_DEFINE([_GNU_SOURCE], [1], [Enable any available GNU C library extensions.])
-
-dnl initialize libtool
-LT_INIT
 
 dnl initialize GNU gettext
 AM_ICONV
@@ -485,7 +485,7 @@ AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf eaccess getaddrinfo \
 		mkfifo mkstemp mmap nl_langinfo pathconf pselect putenv random \
 		readlink regcomp regexec rename select setdtablesize setenv setitimer \
 		setlocale setresgid setresuid setvbuf socket stpcpy strcasecmp \
-		strcasestr strchrnul strerror strncasecmp strnlen \
+		strcasestr strchrnul strerror strncasecmp strnlen strpbrk \
 		strsignal strtoimax strtoumax sysconf tcgetattr \
 		times ttyname tzset ulimit uname vprintf vsnprintf waitpid \
 		wcswidth wcwidth])
@@ -669,14 +669,18 @@ if test "$opt_job_control" = yes; then
 AC_DEFINE([JOB_CONTROL], [1], [Define if your operating system supports BSD-like job control.])
 fi
 
+if test "$opt_job_control" = yes; then
+AC_DEFINE([JOB_CONTROL], [1], [Define if your operating system supports BSD-like job control.])
+fi
+
 # compile either jobs.cc or nojobs.cc, depending on this setting.
 AM_CONDITIONAL([JOB_CONTROL], [test x$opt_job_control = xyes])
 
 AC_DEFINE_UNQUOTED([PROGRAM], ["bash"], [The hardcoded program name.])
-AC_DEFINE_UNQUOTED([CONF_HOSTTYPE], ["$host_cpu"], [The host CPU name.])
-AC_DEFINE_UNQUOTED([CONF_OSTYPE], ["$host_os"], [The host OS name.])
-AC_DEFINE_UNQUOTED([CONF_MACHTYPE], ["$host"], [The host machine triplet.])
-AC_DEFINE_UNQUOTED([CONF_VENDOR], ["$host_vendor"], [The host vendor name.])
+AC_DEFINE_UNQUOTED([CONF_CPUTYPE], ["$build_cpu"], [The build target CPU name.])
+AC_DEFINE_UNQUOTED([CONF_OSTYPE], ["$build_os"], [The build target OS name.])
+AC_DEFINE_UNQUOTED([CONF_MACHTYPE], ["$build"], [The build target machine triplet.])
+AC_DEFINE_UNQUOTED([CONF_VENDOR], ["$build_vendor"], [The build target vendor name.])
 
 # directory where we install dynamically loadable builtins
 if test -z "$loadablesdir"; then
@@ -692,9 +696,9 @@ AC_SUBST(headersdir)
 AC_SUBST(BASHVERS)
 AC_SUBST(RELSTATUS)
 
-AC_SUBST(host_cpu)
-AC_SUBST(host_vendor)
-AC_SUBST(host_os)
+AC_SUBST(build_cpu)
+AC_SUBST(build_vendor)
+AC_SUBST(build_os)
 
 AC_CONFIG_FILES([Makefile intl/Makefile doc/Makefile po/Makefile.in \
 		 pathnames.hh support/bash.pc support/bashbug.sh])

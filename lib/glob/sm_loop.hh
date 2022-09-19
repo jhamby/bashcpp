@@ -764,7 +764,7 @@ STRCOMPARE (const CHAR *p, const CHAR *pe, const CHAR *s, const CHAR *se)
   if (c2 != 0)
     *((CHAR *)se) = '\0';
 
-#if HAVE_MULTIBYTE || defined(HAVE_STRCOLL)
+#if defined(HANDLE_MULTIBYTE) || defined(HAVE_STRCOLL)
   ret = STRCOLL ((XCHAR *)p, (XCHAR *)s);
 #else
   ret = STRCMP ((XCHAR *)p, (XCHAR *)s);

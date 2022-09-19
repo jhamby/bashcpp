@@ -152,24 +152,23 @@ Readline::rl_unbind_function_in_map (rl_command_func_t func, Keymap map)
    now, this is always used to attempt to bind the arrow keys, hence the
    check for rl_vi_movement_mode. */
 int
-Readline::rl_bind_keyseq_if_unbound_in_map (const char *keyseq,
+Readline::rl_bind_keyseq_if_unbound_in_map (const std::string &keyseq,
                                             rl_command_func_t default_func,
                                             Keymap kmap)
 {
-  if (keyseq)
+  if (!keyseq.empty ())
     {
       /* Handle key sequences that require translations and `raw' ones that
          don't. This might be a problem with backslashes. */
-      char *keys = new char[1 + (2 * std::strlen (keyseq))];
-      unsigned int keys_len;
-      if (rl_translate_keyseq (keyseq, keys, &keys_len))
+      std::string keys;
+      keys.reserve (keyseq.size ());
+
+      if (rl_translate_keyseq (keyseq, keys))
         {
-          delete[] keys;
           return -1;
         }
       rl_command_func_t func
-          = rl_function_of_keyseq_len (keys, keys_len, kmap, nullptr);
-      delete[] keys;
+          = rl_function_of_keyseq_len (keys, kmap, nullptr);
 
 #if defined(VI_MODE)
       if (!func || func == &Readline::rl_do_lowercase_version
@@ -189,25 +188,24 @@ Readline::rl_bind_keyseq_if_unbound_in_map (const char *keyseq,
    a KEYMAP_ENTRY ref.  This makes new keymaps as necessary.
    The initial place to do bindings is in MAP. */
 int
-Readline::rl_generic_bind (const char *keyseq, KEYMAP_ENTRY &k, Keymap map)
+Readline::rl_generic_bind (const std::string &keyseq, KEYMAP_ENTRY &k,
+                           Keymap map)
 {
   /* If no keys to bind to, exit right away. */
-  if (keyseq == nullptr || *keyseq == '\0')
+  if (keyseq.empty ())
     {
       if (k.type == ISMACR)
         delete[] k.value.macro;
       return -1;
     }
 
-  char *keys = new char[1 + (2 * std::strlen (keyseq))];
-  unsigned int keys_len;
+  std::string keys;
+  keys.reserve (keyseq.size ());
 
   /* Translate the ASCII representation of KEYSEQ into an array of
-     characters.  Stuff the characters into KEYS, and the length of
-     KEYS into KEYS_LEN. */
-  if (rl_translate_keyseq (keyseq, keys, &keys_len))
+     characters.  Stuff the characters into KEYS. */
+  if (rl_translate_keyseq (keyseq, keys))
     {
-      delete[] keys;
       return -1;
     }
 
@@ -226,7 +224,6 @@ Readline::rl_generic_bind (const char *keyseq, KEYMAP_ENTRY &k, Keymap map)
       ic = uc;
       if (ic < 0 || ic >= KEYMAP_SIZE)
         {
-          delete[] keys;
           return -1;
         }
 
@@ -310,7 +307,6 @@ Readline::rl_generic_bind (const char *keyseq, KEYMAP_ENTRY &k, Keymap map)
       rl_binding_keymap = prevmap;
     }
 
-  delete[] keys;
   return 0;
 }
 
@@ -318,7 +314,7 @@ Readline::rl_generic_bind (const char *keyseq, KEYMAP_ENTRY &k, Keymap map)
    an array of characters.  LEN gets the final length of ARRAY.  Return
    non-zero if there was an error parsing SEQ. */
 int
-Readline::rl_translate_keyseq (const char *seq, char *array, unsigned int *len)
+Readline::rl_translate_keyseq (const std::string &seq, std::string &array)
 {
   int l = 0;
   int c;
@@ -330,28 +326,33 @@ Readline::rl_translate_keyseq (const char *seq, char *array, unsigned int *len)
      without base character at the end of SEQ, they are processed as the
      prefixes for '\0'.
   */
-  for (int i = 0; (c = seq[i]) || has_control || has_meta; i++)
+  std::string::const_iterator it;
+  for (it = seq.begin ();
+       (it != seq.end () && (c = *it)) || has_control || has_meta; ++it)
     {
       /* Only backslashes followed by a non-null character are handled
          specially.  Trailing backslash (backslash followed by '\0') is
          processed as a normal character.
       */
-      if (c == '\\' && seq[i + 1] != '\0')
+      if (c == '\\' && (it + 1) != seq.end ())
         {
-          c = seq[++i];
+          c = *(++it);
 
           /* Handle \C- and \M- prefixes. */
-          if (c == 'C' && seq[i + 1] == '-')
+          if ((it + 1) != seq.end () && *(it + 1) == '-')
             {
-              i++;
-              has_control = true;
-              continue;
-            }
-          else if (c == 'M' && seq[i + 1] == '-')
-            {
-              i++;
-              has_meta = true;
-              continue;
+              if (c == 'C')
+                {
+                  ++it;
+                  has_control = true;
+                  continue;
+                }
+              else if (c == 'M')
+                {
+                  ++it;
+                  has_meta = true;
+                  continue;
+                }
             }
 
           /* Translate other backslash-escaped characters.  These are the
@@ -391,6 +392,7 @@ Readline::rl_translate_keyseq (const char *seq, char *array, unsigned int *len)
             case '\\':
               c = '\\';
               break;
+
             case '0':
             case '1':
             case '2':
@@ -399,14 +401,15 @@ Readline::rl_translate_keyseq (const char *seq, char *array, unsigned int *len)
             case '5':
             case '6':
             case '7':
-              i++;
+              ++it;
               for (temp = 2, c -= '0'; ISOCTAL (seq[i]) && temp--; i++)
                 c = (c * 8) + OCTVALUE (seq[i]);
-              i--; /* auto-increment in for loop */
+              --it; /* auto-increment in for loop */
               c &= largest_char;
               break;
+
             case 'x':
-              i++;
+              ++it;
               for (temp = 2, c = 0; ISXDIGIT (seq[i]) && temp--; i++)
                 c = (c * 16) + HEXVALUE (seq[i]);
               if (temp == 2)
@@ -414,8 +417,8 @@ Readline::rl_translate_keyseq (const char *seq, char *array, unsigned int *len)
               i--; /* auto-increment in for loop */
               c &= largest_char;
               break;
-            default: /* backslashes before non-special chars just add the char
-                      */
+
+            default: // backslashes before non-special chars just add the char
               c &= largest_char;
               break; /* the backslash is stripped */
             }
@@ -449,8 +452,6 @@ Readline::rl_translate_keyseq (const char *seq, char *array, unsigned int *len)
         break;
     }
 
-  *len = static_cast<unsigned int> (l);
-  array[l] = '\0';
   return 0;
 }
 
@@ -609,7 +610,7 @@ Readline::_rl_untranslate_macro_value (const char *seq, bool use_escapes)
 Readline::rl_command_func_t
 Readline::_rl_function_of_keyseq_internal (const char *keyseq,
                                            unsigned int len, Keymap map,
-                                           int *type)
+                                           keymap_entry_type *type)
 {
   if (map == nullptr)
     map = _rl_keymap;

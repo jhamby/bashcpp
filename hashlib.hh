@@ -21,28 +21,156 @@
 #if !defined(_HASHLIB_H_)
 #define _HASHLIB_H_
 
-#include <string>
+#include "config.hh"
+#include "general.hh"
+
+#include <vector>
 
 namespace bash
 {
 
-struct BUCKET_CONTENTS
+/* Default number of buckets in the hash table. */
+#define DEFAULT_HASH_BUCKETS 128 /* must be power of two */
+
+/* tunable constants for rehashing */
+#define HASH_REHASH_MULTIPLIER 4
+#define HASH_REHASH_FACTOR 2
+
+// Key/value container for HASH_TABLE items. The destructor
+// will delete all entries in the list.
+template <class T> class BUCKET_CONTENTS : public GENERIC_LIST
 {
-  BUCKET_CONTENTS *next; /* Link to next hashed key in this bucket. */
-  std::string key;       /* What we look up. */
-  void *data;            /* What we really want. */
-  unsigned int khash;    /* What key hashes to */
-  int times_found;       /* Number of times this item has been found. */
+public:
+  // Constructor to create an empty bucket with the specified key and
+  // optional next element to link with.
+  BUCKET_CONTENTS (const std::string &key_,
+                   BUCKET_CONTENTS *nextbucket_ = nullptr)
+      : GENERIC_LIST (nextbucket_), key (key_)
+  {
+  }
+
+  // Destructor deletes the entire linked list.
+  ~BUCKET_CONTENTS () noexcept { delete next (); }
+
+  BUCKET_CONTENTS *
+  append (BUCKET_CONTENTS *new_item)
+  {
+    append_ (new_item);
+    return this;
+  }
+
+  BUCKET_CONTENTS *
+  next ()
+  {
+    return static_cast<BUCKET_CONTENTS *> (next_);
+  }
+
+  std::string key;    // What we look up.
+  T data;             // What we really want.
+  size_t times_found; // Number of times this item has been found.
+  uint32_t khash;     // What key hashes to
 };
 
-struct HASH_TABLE
+template <class T> class HASH_TABLE
 {
-  BUCKET_CONTENTS **bucket_array; /* Where the data is kept. */
-  int nbuckets;                   /* How many buckets does this table have. */
-  int nentries;                   /* How many entries does this table have. */
-};
+public:
+  // Make a new hash table with 'num_buckets' number of buckets. Initialize
+  // each slot in the table to nullptr.
+  HASH_TABLE (size_t num_buckets = DEFAULT_HASH_BUCKETS)
+      : buckets (num_buckets, nullptr), nentries (0)
+  {
+  }
 
-typedef int hash_wfunc (BUCKET_CONTENTS *);
+  // Destructor deletes all of the objects in the hash table.
+  ~HASH_TABLE () noexcept { flush (); }
+
+  // Empty the hash table, deleting the pointed-to elements.
+  void
+  flush () noexcept
+  {
+    typename std::vector<BUCKET_CONTENTS<T> *>::iterator it;
+    for (it = buckets.begin (); it != buckets.end (); ++it)
+      if (*it)
+        {
+          delete *it;
+          *it = nullptr;
+        }
+  }
+
+  size_t
+  size () noexcept
+  {
+    return nentries;
+  }
+
+  std::vector<BUCKET_CONTENTS<T> *> buckets; // Where the data is kept.
+  size_t nentries; // How many entries this table has.
+
+private:
+  bool
+  hash_shouldgrow ()
+  {
+    return nentries >= (buckets.size () * HASH_REHASH_FACTOR);
+  }
+
+  // an initial approximation
+  bool
+  hash_shouldshrink ()
+  {
+    return (buckets.size () > DEFAULT_HASH_BUCKETS)
+           && (nentries < (buckets.size () / HASH_REHASH_MULTIPLIER));
+  }
+
+  /* This is the best 32-bit string hash function I found. It's one of the
+     Fowler-Noll-Vo family (FNV-1).
+
+     The magic is in the interesting relationship between the special prime
+     16777619 (2^24 + 403) and 2^32 and 2^8. */
+
+#define FNV_OFFSET 2166136261
+#define FNV_PRIME 16777619
+
+  /* If you want to use 64 bits, use
+  FNV_OFFSET	14695981039346656037
+  FNV_PRIME	1099511628211
+  */
+
+  /* The `khash' check below requires that strings that compare equally with
+     strcmp hash to the same value. */
+  uint32_t
+  hash_string (const std::string &key)
+  {
+    uint32_t i;
+
+    std::string::const_iterator it;
+    for (i = FNV_OFFSET, it = key.begin (); it != key.end (); ++it)
+      {
+        /* FNV-1a has the XOR first, traditional FNV-1 has the multiply first
+         */
+
+        /* was i *= FNV_PRIME */
+        i += (i << 1) + (i << 4) + (i << 7) + (i << 8) + (i << 24);
+        i ^= static_cast<uint32_t> (*it);
+      }
+
+    return i;
+  }
+
+  // Rely on properties of unsigned division (unsigned/int -> unsigned) and
+  // don't discard the upper 32 bits of the value, if present.
+  uint32_t
+  hash_bucket (const std::string &key)
+  {
+    return hash_string (key) & (buckets.size () - 1);
+  }
+
+  // flags for search () and insert ().
+  enum hash_flags
+  {
+    HASH_NOSRCH = 0x01,
+    HASH_CREATE = 0x02
+  };
+};
 
 /* Operations on tables as a whole */
 // extern HASH_TABLE *hash_create (int);
@@ -63,20 +191,19 @@ typedef int hash_wfunc (BUCKET_CONTENTS *);
 /* Miscellaneous */
 // extern unsigned int hash_string (const char *);
 
+#if 0
 /* Redefine the function as a macro for speed. */
 // FIXME: make this a member function.
 #define hash_items(bucket, table)                                             \
   ((table && (bucket < table->nbuckets)) ? table->bucket_array[bucket]        \
                                          : nullptr)
 
-/* Default number of buckets in the hash table. */
-#define DEFAULT_HASH_BUCKETS 128 /* must be power of two */
-
 #define HASH_ENTRIES(ht) ((ht) ? (ht)->nentries : 0)
 
 /* flags for hash_search and hash_insert */
 #define HASH_NOSRCH 0x01
 #define HASH_CREATE 0x02
+#endif
 
 } // namespace bash
 

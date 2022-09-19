@@ -67,29 +67,27 @@ ReadlineShell::~ReadlineShell () {}
    as part of bash. */
 
 /* Does shell-like quoting using single quotes. */
-char *
-ReadlineShell::sh_single_quote (const char *string)
+std::string
+ReadlineShell::sh_single_quote (const std::string &string)
 {
-  char *result = new char[3 + (4 * std::strlen (string))];
-  char *r = result;
-  *r++ = '\'';
+  std::string result;
+  result.reserve (2 + string.size ());
+  result.push_back ('\'');
 
-  char c;
-  for (const char *s = string; s && (c = *s); s++)
+  std::string::const_iterator it;
+  for (it = string.begin (); it != string.end (); ++it)
     {
-      *r++ = c;
+      result.push_back (*it);
 
-      if (c == '\'')
+      if (*it == '\'')
         {
-          *r++ = '\\'; /* insert escaped single quote */
-          *r++ = '\'';
-          *r++ = '\''; /* start new quoted string */
+          result.push_back ('\\'); /* insert escaped single quote */
+          result.push_back ('\'');
+          result.push_back ('\''); /* start new quoted string */
         }
     }
 
-  *r++ = '\'';
-  *r = '\0';
-
+  result.push_back ('\'');
   return result;
 }
 
@@ -126,22 +124,21 @@ ReadlineShell::sh_set_lines_and_columns (unsigned int lines, unsigned int cols)
 #endif /* !HAVE_SETENV */
 }
 
-char *
+const char *
 ReadlineShell::sh_get_env_value (const char *varname)
 {
   return std::getenv (varname);
 }
 
-char *
+std::string
 ReadlineShell::sh_get_home_dir ()
 {
-  static char *home_dir = nullptr;
+  static std::string home_dir; // Note: static cache variable!
   struct passwd *entry;
 
-  if (home_dir)
+  if (!home_dir.empty ())
     return home_dir;
 
-  home_dir = nullptr;
 #if defined(HAVE_GETPWUID)
 #if defined(__TANDEM)
   entry = ::getpwnam (getlogin ());
@@ -149,7 +146,7 @@ ReadlineShell::sh_get_home_dir ()
   entry = ::getpwuid (getuid ());
 #endif
   if (entry)
-    home_dir = savestring (entry->pw_dir);
+    home_dir = entry->pw_dir;
 #endif
 
 #if defined(HAVE_GETPWENT)

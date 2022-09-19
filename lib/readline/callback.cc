@@ -49,11 +49,6 @@ namespace readline
    handlers are only installed when the application calls back into
    readline, so readline doesn't `steal' signals from the application.  */
 
-#if 0
-rl_vcpfunc_t *rl_linefunc;		/* user callback function */
-static int in_handler;		/* terminal_prepped and signals set? */
-#endif
-
 /* Make sure the terminal is set up, initialize readline, and prompt. */
 void
 Readline::_rl_callback_newline ()
@@ -79,7 +74,7 @@ Readline::_rl_callback_newline ()
 
 /* Install a readline handler, set up the terminal, and issue the prompt. */
 void
-Readline::rl_callback_handler_install (const char *prompt,
+Readline::rl_callback_handler_install (const std::string &prompt,
                                        rl_vcpfunc_t linefunc)
 {
   rl_set_prompt (prompt);

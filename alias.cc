@@ -31,9 +31,7 @@
 
 #include "alias.hh"
 #include "chartypes.hh"
-#include "command.hh"
-#include "externs.hh"
-#include "general.hh"
+#include "shell.hh"
 
 #if defined(PROGRAMMABLE_COMPLETION)
 #include "pcomplete.hh"
@@ -46,9 +44,9 @@
 namespace bash
 {
 
-#if 0
 #define ALIAS_HASH_BUCKETS 64 /* must be power of two */
 
+#if 0
 typedef int sh_alias_map_func_t (alias_t *);
 
 static void free_alias_data (PTR_T);
@@ -71,9 +69,9 @@ HASH_TABLE *aliases = (HASH_TABLE *)NULL;
 #endif
 
 void
-initialize_aliases ()
+Shell::initialize_aliases ()
 {
-  if (aliases == 0)
+  if (aliases == nullptr)
     aliases = hash_create (ALIAS_HASH_BUCKETS);
 }
 
@@ -539,8 +537,7 @@ alias_expand (const char *string)
          the expansion.  Note that we defer the alias value lookup until we
          are sure we are expanding this token. */
 
-      if ((token[0]) && (expand_this_token || alias_expand_all)
-          && (alias = find_alias (token)))
+      if (token[0] && expand_this_token && (alias = find_alias (token)))
         {
           char *v;
           int vlen, llen;

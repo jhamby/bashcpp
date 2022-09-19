@@ -144,7 +144,7 @@ word_not_found::what () const noexcept
 /* Set up the prompt and expand it.  Called from readline() and
    rl_callback_handler_install (). */
 void
-Readline::rl_set_prompt (const char *prompt)
+Readline::rl_set_prompt (const std::string &prompt)
 {
   delete[] rl_prompt;
   rl_prompt = prompt ? savestring (prompt) : nullptr;

@@ -123,7 +123,7 @@ signames.hh: $(MKSIGNAMES)
 	$(RM) $@
 	./$(MKSIGNAMES) $@
 
-CLEANFILES = builtins.cc builtext.hh pipesize.hh version.hh signames.hh
+CLEANFILES = builtins.cc builtext.hh pipesize.hh psize.aux version.hh signames.hh
 
 # manual dependencies on generated files
 builtins/common.$(OBJEXT): builtext.hh
@@ -150,7 +150,7 @@ subst.$(OBJEXT): builtext.hh
 support/mksignames.$(OBJEXT): config.hh
 support/signames.$(OBJEXT): config.hh
 trap.$(OBJEXT): builtext.hh signames.hh
-variables.$(OBJEXT): builtext.hh
+variables.$(OBJEXT): builtext.hh version.hh
 version.$(OBJEXT): version.hh
 
 Program = bash$(EXEEXT)
@@ -197,7 +197,7 @@ bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
 	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc \
 	$(SHDIR)/strtoimax.cc $(SHDIR)/strtoumax.cc \
-	$(SHDIR)/mktime.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
 	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
 	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
 	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
@@ -205,5 +205,7 @@ bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
 	$(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc $(SHDIR)/wcswidth.cc \
 	$(SHDIR)/wcsnwidth.cc $(SHDIR)/shmbchar.cc \
 	$(SHDIR)/random.cc $(SHDIR)/gettimeofday.cc
+
+# TODO: conditionally add mktime.cc if the system mktime tests fail.
 
 bash_SOURCES += $(TLDIR)/tilde.cc

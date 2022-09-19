@@ -43,12 +43,15 @@ namespace bash
 struct StringIntAlist;
 
 /* Declarations for functions defined in stringlib.c */
+
 int find_string_in_alist (char *, StringIntAlist *, int);
 char *find_token_in_alist (int, StringIntAlist *, int);
 int find_index_in_alist (char *, StringIntAlist *, int);
 
-/* Cons a new string from STRING starting at START and ending at END,
-   not including END. */
+// Cons a new string from STRING starting at START and ending at END,
+// not including END.
+//
+// This should be replaced with std::string's substr (pos, count).
 static inline char *
 substring (const char *string, size_t start, size_t end)
 {
@@ -116,16 +119,20 @@ operator~(const sh_modcase_flags &a)
 }
 
 /* declarations for functions defined in lib/sh/casemod.c */
+
 char *sh_modcase (const char *, const char *, sh_modcase_flags);
 
 /* declarations for functions defined in lib/sh/clktck.c */
+
 long get_clk_tck ();
 
 /* declarations for functions defined in lib/sh/clock.c */
+
 void clock_t_to_secs (clock_t, time_t *, int *);
 void print_clock_t (FILE *, clock_t);
 
 /* from lib/sh/eaccess.c */
+
 int sh_stat (const char *, struct stat *);
 
 /* Enum for functions defined in lib/sh/fmtulong.c */
@@ -141,9 +148,11 @@ enum fmt_flags
 char *fmtulong (unsigned long, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fmtulong.c */
+
 char *fmtullong (unsigned long long, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fmtumax.c */
+
 char *fmtumax (uint64_t, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fnxform.c */
@@ -157,6 +166,7 @@ fnx_fromfs (char *fname, size_t)
 {
   return fname;
 }
+
 static inline char *
 fnx_tofs (char *fname, size_t)
 {
@@ -165,6 +175,7 @@ fnx_tofs (char *fname, size_t)
 #endif
 
 /* Declarations for functions defined in lib/sh/input_avail.c */
+
 int input_avail (int);
 
 /* Inline declarations of functions previously defined in lib/sh/itos.c */
@@ -205,15 +216,19 @@ uitos (uint64_t i)
 }
 
 /* declarations for functions defined in lib/sh/mbscasecmp.c */
+
 char *mbscasecmp (const char *, const char *);
 
 /* declarations for functions defined in lib/sh/mbschr.c */
+
 char *mbschr (const char *, int);
 
 /* declarations for functions defined in lib/sh/netconn.c */
+
 bool isnetconn (int);
 
 /* declarations for functions defined in lib/sh/netopen.c */
+
 int netopen (const char *);
 
 /* Declarations for  functions defined in lib/sh/oslib.c */
@@ -222,6 +237,7 @@ int getmaxgroups ();
 long getmaxchild ();
 
 /* declarations for functions defined in lib/sh/pathcanon.c */
+
 enum path_flags
 {
   PATH_NOFLAGS = 0,
@@ -234,10 +250,12 @@ enum path_flags
 char *sh_canonpath (const char *, path_flags);
 
 /* declarations for functions defined in lib/sh/pathphys.c */
+
 char *sh_physpath (const char *);
 char *sh_realpath (const char *, char *);
 
 /* declarations for functions defined in lib/sh/random.c */
+
 int brand ();
 void sbrand (unsigned long); /* set bash random number generator. */
 void seedrand ();            /* seed generator randomly */
@@ -245,12 +263,15 @@ void seedrand32 ();
 u_bits32_t get_urandom32 ();
 
 /* declarations for functions defined in lib/sh/setlinebuf.c */
+
 int sh_setlinebuf (FILE *);
 
 /* declarations for functions defined in lib/sh/shaccess.c */
+
 int sh_eaccess (const char *, int);
 
 /* declarations for functions defined in lib/sh/shmatch.c */
+
 int sh_regmatch (const char *, const char *, int);
 
 /* defines for flags argument to sh_regmatch. */
@@ -262,20 +283,34 @@ enum sh_match_flags
 };
 
 /* declarations for functions defined in lib/sh/shmbchar.c */
+
 size_t mbstrlen (const char *);
 
 /* declarations for functions defined in lib/sh/shquote.c */
-char *sh_single_quote (const char *);
-char *sh_double_quote (const char *);
-char *sh_mkdoublequoted (const char *, int, int);
-char *sh_un_double_quote (const char *);
-char *sh_backslash_quote (const char *, const char *, int);
-char *sh_backslash_quote_for_double_quotes (const char *);
-char *sh_quote_reusable (const char *, int);
-bool sh_contains_shell_metas (const char *);
-bool sh_contains_quotes (const char *);
+
+std::string sh_single_quote (const std::string &);
+std::string sh_double_quote (const std::string &);
+std::string sh_mkdoublequoted (const std::string &, int, int);
+std::string sh_un_double_quote (const std::string &);
+std::string sh_backslash_quote (const std::string &, const std::string &, int);
+std::string sh_backslash_quote_for_double_quotes (const std::string &);
+std::string sh_quote_reusable (const std::string &, int);
+bool sh_contains_shell_metas (const std::string &);
+
+static inline bool
+sh_contains_quotes (const std::string &string)
+{
+  for (std::string::const_iterator it = string.begin (); it != string.end ();
+       ++it)
+    {
+      if (*it == '\'' || *it == '"' || *it == '\\')
+        return true;
+    }
+  return false;
+}
 
 /* declarations for functions defined in lib/sh/spell.c */
+
 int spname (const char *, char *);
 char *dirspell (const char *);
 
@@ -324,7 +359,6 @@ char **strvec_resize (char **, int);
 char **strvec_mcreate (int);
 char **strvec_mresize (char **, int);
 void strvec_flush (char **);
-void strvec_dispose (char **);
 int strvec_remove (char **, char *);
 size_t strvec_len (char **);
 int strvec_search (char **, char *);
@@ -350,15 +384,18 @@ strvec_dispose (char **array)
 }
 
 /* declarations for functions defined in lib/sh/strtrans.c */
-char *ansic_quote (const char *);
-bool ansic_shouldquote (const char *);
-char *ansiexpand (const char *, unsigned int, unsigned int, unsigned int *);
+
+std::string ansic_quote (const std::string &);
+bool ansic_shouldquote (const std::string &);
+std::string ansiexpand (const std::string &, size_t, size_t);
 
 /* declarations for functions defined in lib/sh/timeval.c */
+
 void timeval_to_secs (struct timeval *tvp, time_t *sp, int *sfp);
 void print_timeval (FILE *fp, struct timeval *tvp);
 
 /* declarations for functions defined in lib/sh/tmpfile.c */
+
 enum mktmp_flags
 {
   MT_NOFLAGS = 0,
@@ -374,31 +411,39 @@ int sh_mktmpfd (const char *, int, char **);
 char *sh_mktmpdir (char *, int);
 
 /* declarations for functions defined in lib/sh/uconvert.c */
+
 int uconvert (char *, long *, long *, char **);
 
 /* declarations for functions defined in lib/sh/ufuncs.c */
+
 unsigned int falarm (unsigned int, unsigned int);
 unsigned int fsleep (unsigned int, unsigned int);
 
 /* declarations for functions defined in lib/sh/unicode.c */
+
 int u32cconv (unsigned long, char *);
 void u32reset ();
 
 /* declarations for functions defined in lib/sh/wcsnwidth.c */
+
 #if defined(HANDLE_MULTIBYTE)
 ssize_t wcsnwidth (const wchar_t *, size_t, size_t);
 #endif
 
 /* declarations for functions defined in lib/sh/winsize.c */
+
 void get_new_window_size (int, int *, int *);
 
 /* declarations for functions defined in lib/sh/zgetline.c */
+
 ssize_t zgetline (int, char **, size_t *, int, bool);
 
 /* declarations for functions defined in lib/sh/zmapfd.c */
+
 int zmapfd (int, char **, const char *);
 
 /* declarations for functions defined in lib/glob/gmisc.c */
+
 bool match_pattern_char (const char *, const char *, int);
 int umatchlen (const char *, size_t);
 
@@ -408,6 +453,7 @@ int wmatchlen (const wchar_t *, size_t);
 #endif
 
 /* Declarations for functions defined in lib/sh/dprintf.c */
+
 #if !defined(HAVE_DPRINTF)
 void dprintf (int, const char *, ...)
     __attribute__ ((__format__ (printf, 2, 3)));
@@ -427,6 +473,7 @@ int fpurge (FILE *stream);
 #endif /* NEED_FPURGE_DECL */
 
 /* Declarations for functions defined in lib/sh/getcwd.c */
+
 #if !defined(HAVE_GETCWD)
 char *getcwd (char *, size_t);
 #endif
@@ -446,47 +493,56 @@ int gethostname (char *, int);
 #endif /* !HAVE_GETHOSTNAME */
 
 /* declarations for functions defined in lib/sh/strcasecmp.c */
+
 #if !defined(HAVE_STRCASECMP)
 int strncasecmp (const char *, const char *, size_t);
 int strcasecmp (const char *, const char *);
 #endif /* HAVE_STRCASECMP */
 
 /* declarations for functions defined in lib/sh/strcasestr.c */
+
 #if !defined(HAVE_STRCASESTR)
 char *strcasestr (const char *, const char *);
 #endif
 
 /* declarations for functions defined in lib/sh/strchrnul.c */
+
 #if !defined(HAVE_STRCHRNUL)
 char *strchrnul (const char *, int);
 #endif
 
 /* declarations for functions defined in lib/sh/strerror.c */
+
 #if !defined(HAVE_STRERROR) && !defined(strerror)
 char *strerror (int);
 #endif
 
 /* declarations for functions defined in lib/sh/strftime.c */
+
 #if !defined(HAVE_STRFTIME) && defined(NEED_STRFTIME_DECL)
 size_t strftime (char *, size_t, const char *, const struct tm *);
 #endif
 
 /* global namespace declarations for functions defined in lib/sh/strnlen.c */
+
 #if !defined(HAVE_STRNLEN)
 size_t strnlen (const char *, size_t);
 #endif
 
 /* declarations for functions defined in lib/sh/strpbrk.c */
+
 #if !defined(HAVE_STRPBRK)
 char *strpbrk (const char *, const char *);
 #endif
 
 /* declarations for functions defined in lib/sh/strimax.c */
+
 #if !defined(HAVE_DECL_STRTOIMAX)
 int64_t strtoimax (const char *, char **, int);
 #endif
 
 /* declarations for functions defined in lib/sh/strumax.c */
+
 #if !defined(HAVE_DECL_STRTOUMAX)
 uint64_t strtoumax (const char *, char **, int);
 #endif
@@ -657,7 +713,21 @@ base_pathname (const char *string)
 
 char *make_absolute (const char *, const char *);
 char *full_pathname (char *);
-char *printable_filename (const char *, int);
+
+/* Return a printable representation of FN without special characters.  The
+   caller is responsible for freeing memory if this returns something other
+   than its argument.  If FLAGS is non-zero, we are printing for portable
+   re-input and should single-quote filenames appropriately. */
+static inline std::string
+printable_filename (const std::string &fn, int flags)
+{
+  if (ansic_shouldquote (fn))
+    return ansic_quote (fn);
+  else if (flags && sh_contains_shell_metas (fn))
+    return sh_single_quote (fn);
+  else
+    return fn;
+}
 
 char *extract_colon_unit (char *, size_t *);
 

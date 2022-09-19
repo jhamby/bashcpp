@@ -39,9 +39,6 @@
 #include "builtext.hh" /* for read_builtin */
 #include "common.hh"
 
-#include "history.hh"
-#include "readline.hh"
-
 #include "glob.hh"
 
 #if defined(ALIAS)

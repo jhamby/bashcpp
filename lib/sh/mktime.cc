@@ -24,12 +24,6 @@
 
 #include "config.hh"
 
-#ifdef _LIBC
-#define HAVE_LIMITS_H 1
-#define HAVE_LOCALTIME_R 1
-#define STDC_HEADERS 1
-#endif
-
 /* Assume that leap seconds are possible, unless told otherwise.
    If the host has a `zic' command with a `-L leapsecondfilename' option,
    then it supports leap seconds; otherwise it probably doesn't.  */
@@ -44,7 +38,7 @@
 #include <climits>
 #endif
 
-#if DEBUG_MKTIME
+#if defined(DEBUG_MKTIME)
 #include <cstdio>
 /* Make it work even if the system's libc has its own mktime routine.  */
 #define mktime my_mktime
@@ -110,7 +104,7 @@ my_localtime_r (const time_t *t, struct tm *tp)
 {
   struct tm *l = localtime (t);
   if (!l)
-    return 0;
+    return nullptr;
   *tp = *l;
   return tp;
 }

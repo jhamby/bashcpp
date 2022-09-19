@@ -42,16 +42,16 @@
    operator in the [[..]] conditional command. */
 #undef COND_REGEXP
 
-/* The host CPU name. */
-#undef CONF_HOSTTYPE
+/* The build target CPU name. */
+#undef CONF_CPUTYPE
 
-/* The host machine triplet. */
+/* The build target machine triplet. */
 #undef CONF_MACHTYPE
 
-/* The host OS name. */
+/* The build target OS name. */
 #undef CONF_OSTYPE
 
-/* The host vendor name. */
+/* The build target vendor name. */
 #undef CONF_VENDOR
 
 /* Define if you want support for ksh-like coprocesses and the `coproc'
@@ -132,6 +132,10 @@
 
 /* Define to 1 if `TIOCGWINSZ' requires <sys/ioctl.h>. */
 #undef GWINSZ_IN_SYS_IOCTL
+
+/* Define to compile in support for multibyte characters, or undefine to
+   remove this support. */
+#undef HANDLE_MULTIBYTE
 
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
@@ -643,6 +647,9 @@
 /* Define to 1 if you have the `strnlen' function. */
 #undef HAVE_STRNLEN
 
+/* Define to 1 if you have the `strpbrk' function. */
+#undef HAVE_STRPBRK
+
 /* Define if you have the `strsignal' function. */
 #undef HAVE_STRSIGNAL
 
@@ -919,10 +926,6 @@
 /* Define if you want /dev/(tcp|udp)/host/port to open socket connections when
    used in redirections. */
 #undef NETWORK_REDIRECTIONS
-
-/* Define to not compile in support for multibyte characters, even if the OS
-   supports them. */
-#undef NO_MULTIBYTE_SUPPORT
 
 /* Define if opendir() opens non-directories. */
 #undef OPENDIR_NOT_ROBUST

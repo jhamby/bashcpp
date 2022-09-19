@@ -21,8 +21,10 @@
 /* Specification.  */
 #include <cstring>
 
+#if !defined(HAVE_STRCHRNUL)
+
 /* Find the first occurrence of C in S or the final NUL byte.  */
-extern "C++" const char *
+const char *
 strchrnul (const char *s, int c_in) noexcept
 {
   char c;
@@ -32,3 +34,5 @@ strchrnul (const char *s, int c_in) noexcept
     ;
   return s1;
 }
+
+#endif // HAVE_STRCHRNUL

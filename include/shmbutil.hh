@@ -111,6 +111,41 @@ MB_INVALIDCH (size_t size)
 #define INITIALIZE_MBSTATE
 #endif /* !HANDLE_MULTIBYTE */
 
+// Advance the iterator by one (possibly multibyte) character.
+// The necessary state variables are passed by the caller.
+static inline void
+advance_char (std::string::const_iterator &it,
+              const std::string::const_iterator end, int locale_mb_cur_max,
+              bool locale_utf8locale, std::mbstate_t &state)
+{
+  if (locale_mb_cur_max > 1)
+    {
+      std::mbstate_t state_bak;
+      size_t mblength;
+      if (is_basic (static_cast<unsigned char> (*it)))
+        mblength = 1;
+      else if (locale_utf8locale && ((*it) & 0x80) == 0)
+        mblength = (it != end);
+      else
+        {
+          state_bak = state;
+          mblength
+              = std::mbrlen (&(*it), static_cast<size_t> (end - it), &state);
+        }
+
+      if (mblength == static_cast<size_t> (-2)
+          || mblength == static_cast<size_t> (-1))
+        {
+          state = state_bak;
+          it++;
+        }
+      else
+        it += (mblength < 1) ? 1 : static_cast<ssize_t> (mblength);
+    }
+  else
+    it++;
+}
+
 /* Advance one (possibly multi-byte) character in string _STR of length
    _STRSIZE, starting at index _I.  STATE must have already been declared. */
 #if defined(HANDLE_MULTIBYTE)
@@ -158,6 +193,45 @@ MB_INVALIDCH (size_t size)
    _STRSIZE. FIXME: has reference to locale_utf8locale!
    SPECIAL:  assume that _STR will be incremented by 1 after this call. */
 #if defined(HANDLE_MULTIBYTE)
+
+// Advance the iterator by one (possibly multibyte) character.
+// The necessary state variables are passed by the caller.
+//
+// SPECIAL:  assume the iterator will be incremented by 1 after this call.
+static inline void
+advance_char_minus_one (std::string::const_iterator &it,
+                        const std::string::const_iterator end,
+                        int locale_mb_cur_max, bool locale_utf8locale,
+                        std::mbstate_t &state)
+{
+  if (locale_mb_cur_max > 1)
+    {
+      std::mbstate_t state_bak;
+      size_t mblength;
+      if (is_basic (static_cast<unsigned char> (*it)))
+        mblength = 1;
+      else if (locale_utf8locale && ((*it) & 0x80) == 0)
+        mblength = (it != end);
+      else
+        {
+          state_bak = state;
+          mblength
+              = std::mbrlen (&(*it), static_cast<size_t> (end - it), &state);
+        }
+
+      if (mblength == static_cast<size_t> (-2)
+          || mblength == static_cast<size_t> (-1))
+        {
+          state = state_bak;
+        }
+      else
+        it += (mblength < 1) ? 0 : static_cast<ssize_t> (mblength - 1);
+    }
+}
+
+/* Advance one (possibly multibyte) character in the string _STR of length
+   _STRSIZE. FIXME: has reference to locale_utf8locale!
+   SPECIAL:  assume that _STR will be incremented by 1 after this call. */
 #define ADVANCE_CHAR_P(_str, _strsize)                                        \
   do                                                                          \
     {                                                                         \
@@ -281,9 +355,48 @@ MB_INVALIDCH (size_t size)
 #define BACKUP_CHAR_P(_base, _strsize, _str) (_str)--
 #endif /* !HANDLE_MULTIBYTE */
 
+#if defined(HANDLE_MULTIBYTE)
+
+// Copy a single character from the iterator to the destination.
+// The necessary state variables are passed by the caller.
+// The iterator is incremented past the bytes that were copied.
+static inline void
+append_char (std::string &dst, std::string::const_iterator &it,
+             const std::string::const_iterator end, int locale_mb_cur_max,
+             bool locale_utf8locale, std::mbstate_t &state)
+{
+  if (locale_mb_cur_max > 1)
+    {
+      std::mbstate_t state_bak;
+      size_t mblength;
+      if (is_basic (static_cast<unsigned char> (*it)))
+        mblength = 1;
+      else if (locale_utf8locale && ((*it) & 0x80) == 0)
+        mblength = (it != end);
+      else
+        {
+          state_bak = state;
+          mblength
+              = std::mbrlen (&(*it), static_cast<size_t> (end - it), &state);
+        }
+      if (mblength == static_cast<size_t> (-2)
+          || mblength == static_cast<size_t> (-1))
+        {
+          state = state_bak;
+          mblength = 1;
+        }
+      else
+        mblength = (mblength < 1) ? 1 : mblength;
+
+      for (size_t k = 0; k < mblength && it != end; ++k)
+        dst.push_back (*(it++));
+    }
+  else
+    dst.push_back (*(it++));
+}
+
 /* Copy a single character from the string _SRC to the string _DST.
    _SRCEND is a pointer to the end of _SRC. */
-#if defined(HANDLE_MULTIBYTE)
 #define COPY_CHAR_P(_dst, _src, _srcend)                                      \
   do                                                                          \
     {                                                                         \

@@ -32,24 +32,19 @@ namespace bash
 
 #if defined(IS_BASIC_ASCII)
 
-/* Bit table of characters in the ISO C "basic character set".  */
+// Bit table of characters in the ISO C "basic character set".
 constexpr unsigned int is_basic_table[UCHAR_MAX / 32 + 1] = {
-  0x00001a00, /* '\t' '\v' '\f' */
-  0xffffffef, /* ' '...'#' '%'...'?' */
-  0xfffffffe, /* 'A'...'Z' '[' '\\' ']' '^' '_' */
-  0x7ffffffe  /* 'a'...'z' '{' '|' '}' '~' */
-  /* The remaining bits are 0.  */
+  0x00001a00, // '\t' '\v' '\f'
+  0xffffffef, // ' '...'#' '%'...'?'
+  0xfffffffe, // 'A'...'Z' '[' '\\' ']' '^' '_'
+  0x7ffffffe  // 'a'...'z' '{' '|' '}' '~'
+  // The remaining bits are 0.
 };
 
 #endif /* IS_BASIC_ASCII */
 
-// extern int locale_utf8locale;
-
-// extern char *utf8_mbsmbchar (const char *);
-// extern int utf8_mblen (const char *, size_t);
-
-/* Count the number of characters in S, counting multi-byte characters as a
-   single character. */
+// Count the number of characters in S, counting multi-byte characters as a
+// single character.
 size_t
 mbstrlen (const char *s)
 {
@@ -62,10 +57,11 @@ mbstrlen (const char *s)
 
   size_t nc = 0;
   size_t mb_cur_max = MB_CUR_MAX;
-  while (
-      *s
-      && (clen = (f = is_basic (*s)) ? 1 : std::mbrlen (s, mb_cur_max, &mbs))
-             != 0)
+  while (*s
+         && (clen = (f = is_basic (static_cast<unsigned char> (*s)))
+                        ? 1
+                        : std::mbrlen (s, mb_cur_max, &mbs))
+                != 0)
     {
       if (MB_INVALIDCH (clen))
         {
@@ -82,7 +78,7 @@ mbstrlen (const char *s)
   return nc;
 }
 
-/* Return pointer to first multibyte char in S, or NULL if none. */
+/* Return pointer to first multibyte char in S, or nullptr if none. */
 /* XXX - if we know that the locale is UTF-8, we can just check whether or
    not any byte has the eighth bit turned on */
 const char *
@@ -100,7 +96,7 @@ Shell::mbsmbchar (const char *s)
   size_t mb_cur_max = MB_CUR_MAX;
   for (t = s; *t; t++)
     {
-      if (is_basic (*t))
+      if (is_basic (static_cast<unsigned char> (*t)))
         continue;
 
       if (locale_utf8locale) /* not used if above code active */
@@ -118,24 +114,6 @@ Shell::mbsmbchar (const char *s)
         return t;
     }
   return nullptr;
-}
-
-size_t
-Shell::sh_mbsnlen (const char *src, size_t srclen, size_t maxlen)
-{
-  size_t count;
-  size_t sind;
-  DECLARE_MBSTATE;
-
-  for (sind = count = 0; src[sind];)
-    {
-      count++; /* number of multibyte characters */
-      ADVANCE_CHAR (src, srclen, sind);
-      if (sind > maxlen)
-        break;
-    }
-
-  return count;
 }
 
 } // namespace bash

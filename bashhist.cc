@@ -30,7 +30,6 @@
 #include "shell.hh"
 
 #include "glob.hh"
-#include "history.hh"
 #include "strmatch.hh"
 
 #if defined(SYSLOG_HISTORY)

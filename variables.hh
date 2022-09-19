@@ -45,17 +45,20 @@ enum vc_flags
   VC_TEMPFLAGS = (VC_FUNCENV | VC_BLTNENV | VC_TEMPENV)
 };
 
+class SHELL_VAR;
+
 /* A variable context. */
 struct VAR_CONTEXT
 {
-  char *name; /* empty or NULL means global context */
-  int scope;  /* 0 means global context */
+  std::string name; // empty string means global context
+  int scope;        // 0 means global context
   vc_flags flags;
-  VAR_CONTEXT *up;   /* previous function calls */
-  VAR_CONTEXT *down; /* down towards global context */
-  HASH_TABLE *table; /* variables at this scope */
+  VAR_CONTEXT *up;               // previous function calls
+  VAR_CONTEXT *down;             // down towards global context
+  HASH_TABLE<SHELL_VAR *> table; // variables at this scope
 
   /* Inline access methods. */
+
   bool
   func_env ()
   {
@@ -133,10 +136,10 @@ enum var_att_flags
 /* Union of supported types for a shell variable. */
 union Value
 {
-  char *s;       /* string value */
-  COMMAND *cmd;  /* function */
-  ARRAY *a;      /* array */
-  HASH_TABLE *h; /* associative array */
+  char *s;                    /* string value */
+  COMMAND *cmd;               /* function */
+  ARRAY *a;                   /* array */
+  HASH_TABLE<std::string> *h; /* associative array */
 };
 
 /* Forward declaration of shell class for callback functions. */
@@ -149,16 +152,19 @@ public:
   SHELL_VAR ();
 
   typedef SHELL_VAR *(Shell::*sh_var_value_func_t) (SHELL_VAR *);
-  typedef SHELL_VAR *(Shell::*sh_var_assign_func_t) (SHELL_VAR *, const char *,
-                                                     arrayind_t, const char *);
+  typedef SHELL_VAR *(Shell::*sh_var_assign_func_t) (SHELL_VAR *,
+                                                     const std::string &,
+                                                     arrayind_t,
+                                                     const std::string &);
 
-  char *
+  std::string
   name ()
   {
     return name_;
   }
+
   void
-  set_name (char *new_name)
+  set_name (const std::string &new_name)
   {
     name_ = new_name;
   }
@@ -181,19 +187,20 @@ public:
     return value_.a;
   }
 
-  HASH_TABLE *
+  HASH_TABLE<std::string> *
   hash_value ()
   {
     return value_.h;
   }
 
-  char *
+  std::string
   name_ref ()
   {
     return value_.s;
   } /* so it can change later */
 
   /* Inline access methods. */
+
   bool
   exported ()
   {
@@ -319,9 +326,9 @@ public:
   }
 
 private:
-  char *name_;                       // Symbol that the user types.
+  std::string name_;                 // Symbol that the user types.
   Value value_;                      // Value that is returned.
-  char *exportstr;                   // String for the environment.
+  std::string exportstr;             // String for the environment.
   sh_var_value_func_t dynamic_value; // Function called to return a `dynamic'
                                      // value for a variable, like $SECONDS
                                      // or $RANDOM.

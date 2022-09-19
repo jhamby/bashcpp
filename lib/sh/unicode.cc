@@ -89,20 +89,23 @@ Shell::u32reset ()
 }
 
 static inline int
-u32tocesc (u_bits32_t wc, char *s)
+u32tocesc (uint32_t wc, std::string &s)
 {
   int l;
 
+  s.resize (s.size () + 11); // max length + null terminator
   if (wc < 0x10000)
-    l = std::sprintf (s, "\\u%04X", wc);
+    l = std::sprintf (&(*(s.end () - 10)), "\\u%04X", wc);
   else
-    l = std::sprintf (s, "\\u%08X", wc);
+    l = std::sprintf (&(*(s.end () - 10)), "\\u%08X", wc);
+
+  s.resize (std::strlen (&(*(s.begin ())))); // shrink to actual size
   return l;
 }
 
-/* Convert unsigned 32-bit int to utf-8 character string */
+// Convert unsigned 32-bit int and append to utf-8 character string.
 static inline int
-u32toutf8 (u_bits32_t wc, char *s)
+u32toutf8 (uint32_t wc, std::string &s)
 {
   int l;
 
@@ -156,10 +159,10 @@ u32toutf8 (u_bits32_t wc, char *s)
   else
     l = 0;
 
-  s[l] = '\0';
   return l;
 }
 
+#if SIZEOF_WCHAR_T == 2
 /* Convert a 32-bit unsigned int (unicode) to a UTF-16 string.  Rarely used,
    only if sizeof(wchar_t) == 2. */
 static inline int
@@ -183,12 +186,12 @@ u32toutf16 (u_bits32_t c, wchar_t *s)
   s[l] = 0;
   return l;
 }
+#endif
 
-/* convert a single unicode-32 character into a multibyte string and put the
-   result in S, which must be large enough (at least max(10,MB_LEN_MAX) bytes)
- */
-int
-Shell::u32cconv (u_bits32_t c, char *s)
+// Convert a single unicode-32 character into a multibyte string and append
+// it to the C++ string passed by reference.
+void
+Shell::u32cconv (uint32_t c, std::string &s)
 {
   wchar_t wc;
   wchar_t ws[3];
@@ -204,9 +207,11 @@ Shell::u32cconv (u_bits32_t c, char *s)
 #if defined(__STDC_ISO_10646__)
   wc = static_cast<wchar_t> (c);
   if (sizeof (wchar_t) == 4 && c <= 0x7fffffff)
-    n = std::wctomb (s, wc);
+    n = std::wctomb (s.c_str (), wc);
+#if SIZEOF_WCHAR_T == 2
   else if (sizeof (wchar_t) == 2 && c <= 0x10ffff && u32toutf16 (c, ws))
     n = std::wcstombs (s, ws, MB_LEN_MAX);
+#endif
   else
     n = -1;
   if (n != -1)

@@ -41,7 +41,7 @@
 namespace bash
 {
 
-static WordList *assoc_to_word_list_internal (HashTable *, int);
+// static WordList *assoc_to_word_list_internal (HashTable *, int);
 
 /* assoc_create == hash_create */
 

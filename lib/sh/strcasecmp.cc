@@ -27,7 +27,7 @@
 
 /* Compare at most COUNT characters from string1 to string2.  Case
    doesn't matter. */
-int
+extern "C" int
 strncasecmp (const char *string1, const char *string2, size_t count)
 {
   const char *s1;
@@ -54,7 +54,7 @@ strncasecmp (const char *string1, const char *string2, size_t count)
 }
 
 /* strcmp (), but caseless. */
-int
+extern "C" int
 strcasecmp (const char *string1, const char *string2)
 {
   const char *s1;

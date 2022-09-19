@@ -2081,25 +2081,32 @@ Shell::parse_matched_pair (
           if MBTEST (shellquote (ch))
             {
               std::string nestret;
+              dstack.push_back (static_cast<char> (ch));
 
               /* '', ``, or "" inside $(...) or other grouping construct. */
-              dstack.push_back (ch);
-              if MBTEST ((tflags & LEX_WASDOL)
-                         && ch == '\'') /* $'...' inside group */
-                nestret
-                    = parse_matched_pair (ch, ch, ch, (P_ALLOWESC | rflags));
-              else
-                nestret = parse_matched_pair (ch, ch, ch, rflags);
-              dstack.pop_back ();
+              try
+                {
+                  if MBTEST ((tflags & LEX_WASDOL)
+                             && ch == '\'') /* $'...' inside group */
+                    nestret = parse_matched_pair (ch, ch, ch,
+                                                  (P_ALLOWESC | rflags));
+                  else
+                    nestret = parse_matched_pair (ch, ch, ch, rflags);
+                }
+              catch (const matched_pair_error &)
+                {
+                  dstack.pop_back ();
+                  throw;
+                }
 
-              CHECK_NESTRET_ERROR ();
+              dstack.pop_back ();
 
               if MBTEST ((tflags & LEX_WASDOL) && ch == '\''
                          && (extended_quote || (rflags & P_DQUOTE) == 0))
                 {
                   /* Translate $'...' here. */
-                  ttrans = ansiexpand (nestret, 0, nestlen - 1, &ttranslen);
-                  free (nestret);
+                  std::string ttrans = ansiexpand (nestret.begin (), nestret.end ());
+                  nestret.clear ();
 
                   /* If we're parsing a double-quoted brace expansion and we
                      are not in a place where single quotes are treated
@@ -2180,7 +2187,7 @@ Shell::parse_matched_pair (
                                     (rflags | P_COMMAND) & ~P_DQUOTE);
           else if (ch == '{') /* } */
             nestret = parse_matched_pair (
-                0, '{', '}', &nestlen, (P_FIRSTCLOSE | P_DOLBRACE | rflags));
+                0, '{', '}', (P_FIRSTCLOSE | P_DOLBRACE | rflags));
           else if (ch == '[') /* ] */
             nestret = parse_matched_pair (0, '[', ']', &nestlen, rflags);
 

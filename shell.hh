@@ -88,8 +88,14 @@
 #pragma clang diagnostic pop
 #endif
 
+#if defined(HISTORY)
+#include "history.hh"
+#endif
+
 #if defined(READLINE)
 #include "readline.hh"
+#else
+#include "tilde.hh"
 #endif
 
 #if defined(HAVE_ICONV)
@@ -451,6 +457,13 @@ operator& (const pgroup_flags &a, const pgroup_flags &b)
 {
   return static_cast<pgroup_flags> (static_cast<uint32_t> (a)
                                     & static_cast<uint32_t> (b));
+}
+
+static inline pgroup_flags
+operator| (const pgroup_flags &a, const pgroup_flags &b)
+{
+  return static_cast<pgroup_flags> (static_cast<uint32_t> (a)
+                                    | static_cast<uint32_t> (b));
 }
 
 /* Lexical state while parsing a grouping construct or $(...). */
@@ -1318,7 +1331,7 @@ public:
   virtual ~Shell () noexcept override;
 
   // This start method replaces main() from the C version.
-  void start (int argc, char **argv, char **env)
+  void start_shell (int argc, char **argv, char **env)
       __attribute__ ((__noreturn__));
 
   // Early initialization before the subshell loop.
@@ -1681,15 +1694,14 @@ public:
   /* Functions from make_cmd.cc */
 
   WORD_DESC *
-  make_word_flags (WORD_DESC *w, const char *string)
+  make_word_flags (WORD_DESC *w, const std::string &string)
   {
     DECLARE_MBSTATE;
 
-    size_t i = 0;
-    size_t slen = std::strlen (string);
-    while (i < slen)
+    std::string::const_iterator it = string.begin ();
+    while (it != string.end ())
       {
-        switch (string[i])
+        switch (*it)
           {
           case '$':
             w->flags |= W_HASDOLLAR;
@@ -1703,14 +1715,15 @@ public:
             break;
           }
 
-        ADVANCE_CHAR (string, slen, i);
+        advance_char (it, string.end (), locale_mb_cur_max, locale_utf8locale,
+                      state);
       }
 
     return w;
   }
 
   WORD_DESC *
-  make_word (const char *string)
+  make_word (const std::string &string)
   {
     WORD_DESC *temp = new WORD_DESC (string);
     return make_word_flags (temp, string);
@@ -1728,9 +1741,9 @@ public:
   }
 
   WORD_LIST *
-  make_arith_for_expr (const char *s)
+  make_arith_for_expr (const std::string &s)
   {
-    if (s == nullptr || *s == '\0')
+    if (s.empty ())
       return nullptr;
 
     WORD_DESC *wd = make_word (s);
@@ -2598,15 +2611,19 @@ protected:
   void bgp_resize (); /* XXX */
 
   /* from lib/sh/casemod.cc */
-  char *sh_modcase (const char *, const char *, sh_modcase_flags);
+
+  std::string sh_modcase (const std::string &, const char *, sh_modcase_flags);
 
   /* from lib/sh/eaccess.cc */
+
   int sh_stataccess (const char *, int);
 
   /* from lib/sh/makepath.cc */
+
   char *sh_makepath (const char *, const char *, mp_flags);
 
   /* from lib/sh/mbschr.cc */
+
   const char *mbschr (const char *, int);
 
   /* from lib/sh/netopen.cc */
@@ -2679,23 +2696,25 @@ protected:
   }
 
   /* from lib/sh/shmatch.c */
+
   int sh_regmatch (const char *, const char *, int);
   int sh_eaccess (const char *, int);
   int sh_euidaccess (const char *, int);
 
   /* from lib/sh/shmbchar.c */
+
   const char *mbsmbchar (const char *);
-  size_t sh_mbsnlen (const char *, size_t, size_t);
 
   /* from lib/sh/shquote.c */
-  char *sh_double_quote (const char *);
-  char *sh_mkdoublequoted (const char *, int, int);
-  char *sh_un_double_quote (const char *);
-  char *sh_backslash_quote (const char *, const char *, int);
-  char *sh_backslash_quote_for_double_quotes (const char *);
+
+  std::string sh_double_quote (const std::string &);
+  std::string sh_mkdoublequoted (const std::string &, int);
+  std::string sh_un_double_quote (const std::string &);
+  std::string sh_backslash_quote (const std::string &, const char *, int);
+  std::string sh_backslash_quote_for_double_quotes (const std::string &);
 
   /* include all functions from lib/sh/shtty.c here: they're very small. */
-  /* shtty.c -- abstract interface to the terminal, focusing on capabilities.
+  /* shtty.cc -- abstract interface to the terminal, focusing on capabilities.
    */
 
   static int
@@ -2962,21 +2981,29 @@ protected:
   }
 
   /* from lib/sh/strtrans.c */
-  char *ansicstr (const char *, unsigned int, int, bool *, unsigned int *);
-  char *ansiexpand (const char *, unsigned int, unsigned int, unsigned int *);
+
+  std::string ansicstr (const std::string &, int, bool *);
+
+  std::string ansiexpand (std::string::const_iterator,
+                          std::string::const_iterator);
 
   /* from lib/sh/tmpfile.c */
+
   const char *get_tmpdir (int);
 
   /* from lib/sh/unicode.c */
+
   char *stub_charset ();
   void u32reset ();
-  int u32cconv (u_bits32_t, char *);
+
+  void u32cconv (uint32_t, std::string &);
 
   /* from lib/sh/winsize.c */
+
   void get_new_window_size (int, int *, int *);
 
   /* from lib/sh/zcatfd.c */
+
   ssize_t zcatfd (int, int, const char *);
 
   /* from lib/sh/zread.c */
@@ -4054,7 +4081,7 @@ protected:
 
   void initialize_shell_variables (char **, bool);
 
-  void delete_all_variables (HASH_TABLE *);
+  void delete_all_variables (HASH_TABLE<SHELL_VAR *> *);
 
   void reinit_special_variables ();
 
@@ -4101,7 +4128,6 @@ protected:
 #endif
   char **all_matching_prefix (const char *);
 
-  char **make_var_array (HASH_TABLE *);
   char **add_or_supercede_exported_var (const char *, int);
 
   char *get_variable_value (SHELL_VAR *);
@@ -4109,9 +4135,10 @@ protected:
   char *make_variable_value (SHELL_VAR *, const char *, int);
 
   /* These four are virtual callbacks when Readline is used. */
+
   char *sh_get_env_value (const char *) override;
-  char *sh_single_quote (const char *) override;
-  char *sh_get_home_dir () override;
+  std::string sh_single_quote (const std::string &) override;
+  std::string sh_get_home_dir () override;
   int sh_unset_nodelay_mode (int) override;
 
   SHELL_VAR *bind_variable_value (SHELL_VAR *, const char *, int);
@@ -4129,19 +4156,19 @@ protected:
   int delete_var (const char *, VAR_CONTEXT *);
   int makunbound (const char *, VAR_CONTEXT *);
   int kill_local_var (const char *);
-  void delete_all_vars (HASH_TABLE *);
+  // void delete_all_vars (HASH_TABLE *);
   void delete_all_contexts (VAR_CONTEXT *);
 
   VAR_CONTEXT *new_var_context (const char *, int);
   void dispose_var_context (VAR_CONTEXT *);
-  VAR_CONTEXT *push_var_context (const char *, int, HASH_TABLE *);
+  // VAR_CONTEXT *push_var_context (const char *, int, HASH_TABLE *);
   void pop_var_context ();
-  VAR_CONTEXT *push_scope (int, HASH_TABLE *);
+  // VAR_CONTEXT *push_scope (int, HASH_TABLE *);
   int pop_scope (int);
 
   void clear_dollar_vars ();
 
-  void push_context (const char *, bool, HASH_TABLE *);
+  // void push_context (const char *, bool, HASH_TABLE *);
   void pop_context ();
   void push_dollar_vars ();
   void pop_dollar_vars ();
@@ -4583,6 +4610,10 @@ protected:
 
   char *parse_compound_assignment (size_t *);
 
+  // methods from alias.cc
+
+  void initialize_aliases ();
+
   /* ************************************************************** */
   /*		Private Shell Variables (ptr types)		    */
   /* ************************************************************** */
@@ -4693,17 +4724,17 @@ protected:
 
   /* The list of shell functions that the user has created, or that came from
      the environment. */
-  HASH_TABLE *shell_functions;
+  HASH_TABLE<SHELL_VAR *> *shell_functions;
 
 #if defined(DEBUGGER)
   /* The table of shell function definitions that the user defined or that
      came from the environment. */
-  HASH_TABLE *shell_function_defs;
+  HASH_TABLE<FUNCTION_DEF *> *shell_function_defs;
 #endif
 
   /* The set of shell assignments which are made only in the environment
      for a single command. */
-  HASH_TABLE *temporary_env;
+  HASH_TABLE<SHELL_VAR *> *temporary_env;
 
   /* Some funky variables which are known about specially.  Here is where
      "$*", "$1", and all the cruft is kept. */
@@ -4716,14 +4747,14 @@ protected:
      shell variables that are marked for export. */
   char **export_env;
 
-  HASH_TABLE *last_table_searched; /* hash_lookup sets this */
+  HASH_TABLE<SHELL_VAR *> *last_table_searched; /* hash_lookup sets this */
   VAR_CONTEXT *last_context_searched;
 
   /* variables from common.c */
   sh_builtin_func_t this_shell_builtin;
   sh_builtin_func_t last_shell_builtin;
 
-  char *the_current_working_directory;
+  std::string the_current_working_directory;
 
   // The buffer used by print_cmd.cc. */
   std::string the_printed_command;
@@ -4986,15 +5017,18 @@ protected:
 
   /* These are used by read_token_word, in parser.cc. */
 
-  /* The primary delimiter stack. */
+  // The primary delimiter stack.
   std::vector<char> dstack;
 
   /* A temporary delimiter stack to be used when decoding prompt strings.
-     This is needed because command substitutions in prompt strings (e.g., PS2)
+     This is needed because command substitutions in prompt strings (e.g. PS2)
      can screw up the parser's quoting state. */
   std::vector<char> temp_dstack;
 
   std::string shell_input_line_property;
+
+  // The list of aliases that we have.
+  HASH_TABLE<alias_t> aliases;
 
   // Buffer for buffered input.
   char localbuf[1024];

@@ -42,61 +42,51 @@ namespace bash
 /* Convert STRING by expanding the escape sequences specified by the
    ANSI C standard.  If SAWC is non-null, recognize `\c' and use that
    as a string terminator.  If we see \c, set *SAWC to 1 before
-   returning.  LEN is the length of STRING.  If (FLAGS&1) is non-zero,
+   returning.  LEN is the length of STRING.  If (FLAGS & 1) is non-zero,
    that we're translating a string for `echo -e', and therefore should not
    treat a single quote as a character that may be escaped with a backslash.
-   If (FLAGS&2) is non-zero, we're expanding for the parser and want to
-   quote CTLESC and CTLNUL with CTLESC.  If (flags&4) is non-zero, we want
+   If (FLAGS & 2) is non-zero, we're expanding for the parser and want to
+   quote CTLESC and CTLNUL with CTLESC.  If (flags & 4) is non-zero, we want
    to remove the backslash before any unrecognized escape sequence. */
-char *
-Shell::ansicstr (const char *string, unsigned int len, int flags, bool *sawc,
-                 unsigned int *rlen)
+std::string
+Shell::ansicstr (const std::string &string, int flags, bool *sawc)
 {
-  int c, temp;
-  char *ret, *r;
-  const char *s;
-  unsigned long v;
-  size_t clen;
-  int b, mb_cur_max;
+  int temp;
+  uint32_t v;
 #if defined(HANDLE_MULTIBYTE)
   wchar_t wc;
 #endif
 
-  if (string == nullptr || *string == '\0')
-    return nullptr;
+  if (string.empty ())
+    return std::string ();
 
-  mb_cur_max = MB_CUR_MAX;
-#if defined(HANDLE_MULTIBYTE)
-  temp = 4 * len + 4;
-  if (temp < 12)
-    temp = 12; /* ensure enough for eventual u32cesc */
-  ret = new char[temp];
-#else
-  ret = new char[2 * len + 1]; /* 2 * len for possible CTLESC */
-#endif
-  for (r = ret, s = string; s && *s;)
+  size_t mb_cur_max = MB_CUR_MAX;
+  std::string ret;
+
+  std::string::const_iterator s;
+  for (s = string.begin (); s != string.end ();)
     {
-      c = *s++;
-      if (c != '\\' || *s == '\0')
+      unsigned char c = static_cast<unsigned char> (*s++);
+      if (c != '\\' || s == string.end ())
         {
-          clen = 1;
+          size_t clen = 1;
 #if defined(HANDLE_MULTIBYTE)
           if ((locale_utf8locale && (c & 0x80))
               || (locale_utf8locale == 0 && mb_cur_max > 0
                   && is_basic (c) == 0))
             {
-              clen = std::mbrtowc (&wc, s - 1, mb_cur_max, 0);
+              clen = std::mbrtowc (&wc, &(*(s - 1)), mb_cur_max, 0);
               if (MB_INVALIDCH (clen))
                 clen = 1;
             }
 #endif
-          *r++ = c;
+          ret.push_back (static_cast<char> (c));
           for (--clen; clen > 0; clen--)
-            *r++ = *s++;
+            ret.push_back (*s++);
         }
       else
         {
-          switch (c = *s++)
+          switch (c = static_cast<unsigned char> (*s++))
             {
             case 'a':
               c = '\a';
@@ -133,10 +123,11 @@ Shell::ansicstr (const char *string, unsigned int len, int flags, bool *sawc,
 #if 1
               if (flags & 1)
                 {
-                  *r++ = '\\';
+                  ret.push_back ('\\');
                   break;
                 }
-                /*FALLTHROUGH*/
+              __attribute__ ((fallthrough));
+              /*FALLTHROUGH*/
 #endif
             case '0':
               /* If (FLAGS & 1), we're translating a string for echo -e (or
@@ -146,7 +137,6 @@ Shell::ansicstr (const char *string, unsigned int len, int flags, bool *sawc,
               temp = 2 + ((flags & 1) && (c == '0'));
               for (c -= '0'; isoctal (*s) && temp--; s++)
                 c = (c * 8) + octvalue (*s);
-              c &= 0xFF;
               break;
             case 'x': /* Hex digit -- non-ANSI */
               if ((flags & 2) && *s == '{')
@@ -172,20 +162,21 @@ Shell::ansicstr (const char *string, unsigned int len, int flags, bool *sawc,
               /* \x followed by non-hex digits is passed through unchanged */
               else if (temp == 2)
                 {
-                  *r++ = '\\';
+                  ret.push_back ('\\');
                   c = 'x';
                 }
-              c &= 0xFF;
               break;
 #if defined(HANDLE_MULTIBYTE)
             case 'u':
             case 'U':
               temp = (c == 'u') ? 4 : 8; /* \uNNNN \UNNNNNNNN */
-              for (v = 0; std::isxdigit ((unsigned char)*s) && temp--; s++)
+              for (v = 0;
+                   std::isxdigit (static_cast<unsigned char> (*s)) && temp--;
+                   s++)
                 v = (v * 16) + hexvalue (*s);
               if (temp == ((c == 'u') ? 4 : 8))
                 {
-                  *r++ = '\\'; /* c remains unchanged */
+                  ret.push_back ('\\'); /* c remains unchanged */
                   break;
                 }
               else if (v <= 0x7f) /* <= 0x7f translates directly */
@@ -195,8 +186,7 @@ Shell::ansicstr (const char *string, unsigned int len, int flags, bool *sawc,
                 }
               else
                 {
-                  temp = u32cconv (v, r);
-                  r += temp;
+                  u32cconv (v, ret);
                   continue;
                 }
 #endif
@@ -206,16 +196,13 @@ Shell::ansicstr (const char *string, unsigned int len, int flags, bool *sawc,
             case '"':
             case '?':
               if (flags & 1)
-                *r++ = '\\';
+                ret.push_back ('\\');
               break;
             case 'c':
               if (sawc)
                 {
                   *sawc = true;
-                  *r = '\0';
-                  if (rlen)
-                    *rlen = r - ret;
-                  return ret;
+                  return std::string ();
                 }
               else if ((flags & 1) == 0 && *s == 0)
                 ; /* pass \c through */
@@ -227,30 +214,27 @@ Shell::ansicstr (const char *string, unsigned int len, int flags, bool *sawc,
                   c = toctrl (c);
                   break;
                 }
+              __attribute__ ((fallthrough));
               /*FALLTHROUGH*/
             default:
               if ((flags & 4) == 0)
-                *r++ = '\\';
+                ret.push_back ('\\');
               break;
             }
           if ((flags & 2) && (c == CTLESC || c == CTLNUL))
-            *r++ = CTLESC;
-          *r++ = c;
+            ret.push_back (CTLESC);
+          ret.push_back (static_cast<char> (c));
         }
     }
-  *r = '\0';
-  if (rlen)
-    *rlen = r - ret;
+
   return ret;
 }
 
 /* Take a string STR, possibly containing non-printing characters, and turn it
    into a $'...' ANSI-C style quoted string.  Returns a new string. */
-char *
-ansic_quote (const char *str)
+std::string
+ansic_quote (const std::string &str)
 {
-  char *r, *ret;
-  unsigned int l, rsize;
   unsigned char c;
   size_t clen;
   int b;
@@ -258,12 +242,11 @@ ansic_quote (const char *str)
   wchar_t wc;
 #endif
 
-  if (str == 0 || *str == 0)
+  if (str.empty ())
     return nullptr;
 
-  l = std::strlen (str);
-  rsize = 4 * l + 4;
-  r = ret = new char[rsize];
+  std::string ret;
+  ret.reserve (str.size () + 3);
 
   *r++ = '$';
   *r++ = '\'';
@@ -347,7 +330,7 @@ ansic_quote (const char *str)
 }
 
 #if defined(HANDLE_MULTIBYTE)
-bool
+static inline bool
 ansic_wshouldquote (const char *string)
 {
   const wchar_t *wcs;
@@ -377,19 +360,15 @@ ansic_wshouldquote (const char *string)
 
 /* return 1 if we need to quote with $'...' because of non-printing chars. */
 bool
-ansic_shouldquote (const char *string)
+ansic_shouldquote (const std::string &string)
 {
-  const char *s;
-  char c;
-
-  if (string == nullptr)
-    return false;
-
-  for (s = string; (c = *s); s++)
+  std::string::const_iterator s;
+  for (s = string.begin (); s != string.end (); ++s)
     {
+      unsigned char c = static_cast<unsigned char> (*s);
 #if defined(HANDLE_MULTIBYTE)
-      if (is_basic (c) == 0)
-        return ansic_wshouldquote (s);
+      if (!is_basic (c))
+        return ansic_wshouldquote (string.c_str () + (s - string.begin ()));
 #endif
       if (std::isprint (c) == 0)
         return true;
@@ -398,11 +377,11 @@ ansic_shouldquote (const char *string)
   return false;
 }
 
-/* $'...' ANSI-C expand the portion of STRING between START and END and
-   return the result.  The result cannot be longer than the input string. */
-char *
-Shell::ansiexpand (const char *string, unsigned int start, unsigned int end,
-                   unsigned int *lenp)
+// $'...' ANSI-C expand the portion of string between begin and end and return
+// the result as a new string.
+std::string
+Shell::ansiexpand (std::string::const_iterator begin,
+                   std::string::const_iterator end)
 {
   char *temp, *t;
   unsigned int len, tlen;

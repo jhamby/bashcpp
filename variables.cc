@@ -61,16 +61,6 @@
 #include "builtins/common.hh"
 #include "builtins/getopt.hh"
 
-#if defined(READLINE)
-#include "readline.hh"
-#else
-#include "tilde.hh"
-#endif
-
-#if defined(HISTORY)
-#include "history.hh"
-#endif /* HISTORY */
-
 #if defined(PROGRAMMABLE_COMPLETION)
 #include "pcomplete.hh"
 #endif

@@ -31,51 +31,12 @@
 namespace bash
 {
 
-/* tunable constants for rehashing */
-#define HASH_REHASH_MULTIPLIER 4
-#define HASH_REHASH_FACTOR 2
-
-#define HASH_SHOULDGROW(table)                                                \
-  ((table)->nentries >= (table)->nbuckets * HASH_REHASH_FACTOR)
-
-/* an initial approximation */
-#define HASH_SHOULDSHRINK(table)                                              \
-  (((table)->nbuckets > DEFAULT_HASH_BUCKETS)                                 \
-   && ((table)->nentries < (table)->nbuckets / HASH_REHASH_MULTIPLIER))
-
-/* Rely on properties of unsigned division (unsigned/int -> unsigned) and
-   don't discard the upper 32 bits of the value, if present. */
-#define HASH_BUCKET(s, t, h) (((h) = hash_string (s)) & ((t)->nbuckets - 1))
-
 static BUCKET_CONTENTS *copy_bucket_array (BUCKET_CONTENTS *,
                                            sh_string_func_t *);
 
 static void hash_rehash (HASH_TABLE *, int);
 static void hash_grow (HASH_TABLE *);
 static void hash_shrink (HASH_TABLE *);
-
-/* Make a new hash table with BUCKETS number of buckets.  Initialize
-   each slot in the table to NULL. */
-HASH_TABLE *
-hash_create (int buckets)
-{
-  HASH_TABLE *new_table;
-  int i;
-
-  new_table = (HASH_TABLE *)xmalloc (sizeof (HASH_TABLE));
-  if (buckets == 0)
-    buckets = DEFAULT_HASH_BUCKETS;
-
-  new_table->bucket_array
-      = (BUCKET_CONTENTS **)xmalloc (buckets * sizeof (BUCKET_CONTENTS *));
-  new_table->nbuckets = buckets;
-  new_table->nentries = 0;
-
-  for (i = 0; i < buckets; i++)
-    new_table->bucket_array[i] = (BUCKET_CONTENTS *)NULL;
-
-  return new_table;
-}
 
 int
 hash_size (HASH_TABLE *table)
@@ -185,39 +146,6 @@ hash_copy (HASH_TABLE *table, sh_string_func_t *cpdata)
 
   new_table->nentries = table->nentries;
   return new_table;
-}
-
-/* This is the best 32-bit string hash function I found. It's one of the
-   Fowler-Noll-Vo family (FNV-1).
-
-   The magic is in the interesting relationship between the special prime
-   16777619 (2^24 + 403) and 2^32 and 2^8. */
-
-#define FNV_OFFSET 2166136261
-#define FNV_PRIME 16777619
-
-/* If you want to use 64 bits, use
-FNV_OFFSET	14695981039346656037
-FNV_PRIME	1099511628211
-*/
-
-/* The `khash' check below requires that strings that compare equally with
-   strcmp hash to the same value. */
-unsigned int
-hash_string (const char *s)
-{
-  unsigned int i;
-
-  for (i = FNV_OFFSET; *s; s++)
-    {
-      /* FNV-1a has the XOR first, traditional FNV-1 has the multiply first */
-
-      /* was i *= FNV_PRIME */
-      i += (i << 1) + (i << 4) + (i << 7) + (i << 8) + (i << 24);
-      i ^= *s;
-    }
-
-  return i;
 }
 
 /* Return the location of the bucket which should contain the data

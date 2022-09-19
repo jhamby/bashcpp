@@ -24,6 +24,7 @@
 
 #include <fcntl.h>
 #include <sys/types.h>
+
 #if defined(HAVE_SYS_FILE_H)
 #include <sys/file.h>
 #endif
@@ -1830,7 +1831,7 @@ Readline::rl_complete_internal (int what_to_do)
    ENTRY_FUNCTION is a function of two args, and returns a (char *).
      The first argument is TEXT.
      The second is a state argument; it should be zero on the first call, and
-     non-zero on subsequent calls.  It returns a NULL pointer to the caller
+     non-zero on subsequent calls.  It returns nullptr to the caller
      when there are no more matches.
  */
 char **

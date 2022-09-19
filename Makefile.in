@@ -228,14 +228,13 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(SHDIR)/mailstat.cc $(SHDIR)/fmtulong.cc \
 	$(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc $(SHDIR)/shmatch.cc \
 	$(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
-	$(SHDIR)/strtoumax.cc $(SHDIR)/mktime.cc $(SHDIR)/mbschr.cc \
-	$(SHDIR)/zcatfd.cc $(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc \
-	$(SHDIR)/eaccess.cc $(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc \
-	$(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc \
-	$(SHDIR)/dprintf.cc $(SHDIR)/input_avail.cc \
-	$(SHDIR)/fnxform.cc $(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc \
-	$(SHDIR)/wcswidth.cc $(SHDIR)/wcsnwidth.cc \
-	$(SHDIR)/shmbchar.cc $(SHDIR)/random.cc \
+	$(SHDIR)/strtoumax.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
+	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
+	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
+	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
+	$(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc $(SHDIR)/wcswidth.cc \
+	$(SHDIR)/wcsnwidth.cc $(SHDIR)/shmbchar.cc $(SHDIR)/random.cc \
 	$(SHDIR)/gettimeofday.cc $(TLDIR)/tilde.cc
 @JOB_CONTROL_TRUE@am__objects_1 = jobs.$(OBJEXT)
 @JOB_CONTROL_FALSE@am__objects_2 = nojobs.$(OBJEXT)
@@ -315,17 +314,17 @@ am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	$(SHDIR)/fmtullong.$(OBJEXT) $(SHDIR)/fmtumax.$(OBJEXT) \
 	$(SHDIR)/shmatch.$(OBJEXT) $(SHDIR)/strnlen.$(OBJEXT) \
 	$(SHDIR)/strtoimax.$(OBJEXT) $(SHDIR)/strtoumax.$(OBJEXT) \
-	$(SHDIR)/mktime.$(OBJEXT) $(SHDIR)/mbschr.$(OBJEXT) \
-	$(SHDIR)/zcatfd.$(OBJEXT) $(SHDIR)/zmapfd.$(OBJEXT) \
-	$(SHDIR)/winsize.$(OBJEXT) $(SHDIR)/eaccess.$(OBJEXT) \
-	$(SHDIR)/fpurge.$(OBJEXT) $(SHDIR)/zgetline.$(OBJEXT) \
-	$(SHDIR)/uconvert.$(OBJEXT) $(SHDIR)/ufuncs.$(OBJEXT) \
-	$(SHDIR)/casemod.$(OBJEXT) $(SHDIR)/dprintf.$(OBJEXT) \
-	$(SHDIR)/input_avail.$(OBJEXT) $(SHDIR)/fnxform.$(OBJEXT) \
-	$(SHDIR)/strchrnul.$(OBJEXT) $(SHDIR)/unicode.$(OBJEXT) \
-	$(SHDIR)/wcswidth.$(OBJEXT) $(SHDIR)/wcsnwidth.$(OBJEXT) \
-	$(SHDIR)/shmbchar.$(OBJEXT) $(SHDIR)/random.$(OBJEXT) \
-	$(SHDIR)/gettimeofday.$(OBJEXT) $(TLDIR)/tilde.$(OBJEXT)
+	$(SHDIR)/mbschr.$(OBJEXT) $(SHDIR)/zcatfd.$(OBJEXT) \
+	$(SHDIR)/zmapfd.$(OBJEXT) $(SHDIR)/winsize.$(OBJEXT) \
+	$(SHDIR)/eaccess.$(OBJEXT) $(SHDIR)/fpurge.$(OBJEXT) \
+	$(SHDIR)/zgetline.$(OBJEXT) $(SHDIR)/uconvert.$(OBJEXT) \
+	$(SHDIR)/ufuncs.$(OBJEXT) $(SHDIR)/casemod.$(OBJEXT) \
+	$(SHDIR)/dprintf.$(OBJEXT) $(SHDIR)/input_avail.$(OBJEXT) \
+	$(SHDIR)/fnxform.$(OBJEXT) $(SHDIR)/strchrnul.$(OBJEXT) \
+	$(SHDIR)/unicode.$(OBJEXT) $(SHDIR)/wcswidth.$(OBJEXT) \
+	$(SHDIR)/wcsnwidth.$(OBJEXT) $(SHDIR)/shmbchar.$(OBJEXT) \
+	$(SHDIR)/random.$(OBJEXT) $(SHDIR)/gettimeofday.$(OBJEXT) \
+	$(TLDIR)/tilde.$(OBJEXT)
 bash_OBJECTS = $(am_bash_OBJECTS)
 bash_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -431,14 +430,14 @@ am__depfiles_remade = $(BLTDIR)/$(DEPDIR)/alias_def.Po \
 	$(SHDIR)/$(DEPDIR)/inet_aton.Po \
 	$(SHDIR)/$(DEPDIR)/input_avail.Po \
 	$(SHDIR)/$(DEPDIR)/mailstat.Po $(SHDIR)/$(DEPDIR)/makepath.Po \
-	$(SHDIR)/$(DEPDIR)/mbschr.Po $(SHDIR)/$(DEPDIR)/mktime.Po \
-	$(SHDIR)/$(DEPDIR)/netconn.Po $(SHDIR)/$(DEPDIR)/netopen.Po \
-	$(SHDIR)/$(DEPDIR)/oslib.Po $(SHDIR)/$(DEPDIR)/pathcanon.Po \
-	$(SHDIR)/$(DEPDIR)/pathphys.Po $(SHDIR)/$(DEPDIR)/random.Po \
-	$(SHDIR)/$(DEPDIR)/rename.Po $(SHDIR)/$(DEPDIR)/setlinebuf.Po \
-	$(SHDIR)/$(DEPDIR)/shmatch.Po $(SHDIR)/$(DEPDIR)/shmbchar.Po \
-	$(SHDIR)/$(DEPDIR)/shquote.Po $(SHDIR)/$(DEPDIR)/snprintf.Po \
-	$(SHDIR)/$(DEPDIR)/spell.Po $(SHDIR)/$(DEPDIR)/strcasecmp.Po \
+	$(SHDIR)/$(DEPDIR)/mbschr.Po $(SHDIR)/$(DEPDIR)/netconn.Po \
+	$(SHDIR)/$(DEPDIR)/netopen.Po $(SHDIR)/$(DEPDIR)/oslib.Po \
+	$(SHDIR)/$(DEPDIR)/pathcanon.Po $(SHDIR)/$(DEPDIR)/pathphys.Po \
+	$(SHDIR)/$(DEPDIR)/random.Po $(SHDIR)/$(DEPDIR)/rename.Po \
+	$(SHDIR)/$(DEPDIR)/setlinebuf.Po $(SHDIR)/$(DEPDIR)/shmatch.Po \
+	$(SHDIR)/$(DEPDIR)/shmbchar.Po $(SHDIR)/$(DEPDIR)/shquote.Po \
+	$(SHDIR)/$(DEPDIR)/snprintf.Po $(SHDIR)/$(DEPDIR)/spell.Po \
+	$(SHDIR)/$(DEPDIR)/strcasecmp.Po \
 	$(SHDIR)/$(DEPDIR)/strcasestr.Po \
 	$(SHDIR)/$(DEPDIR)/strchrnul.Po $(SHDIR)/$(DEPDIR)/strerror.Po \
 	$(SHDIR)/$(DEPDIR)/strnlen.Po $(SHDIR)/$(DEPDIR)/strpbrk.Po \
@@ -834,6 +833,8 @@ BLTDIR = builtins
 SUBDIRS = po
 
 # TODO: include these source files conditionally based on READLINE and HISTORY
+
+# TODO: conditionally add mktime.cc if the system mktime tests fail.
 bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc expr.cc \
 	copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc \
@@ -891,14 +892,13 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(SHDIR)/mailstat.cc $(SHDIR)/fmtulong.cc \
 	$(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc $(SHDIR)/shmatch.cc \
 	$(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
-	$(SHDIR)/strtoumax.cc $(SHDIR)/mktime.cc $(SHDIR)/mbschr.cc \
-	$(SHDIR)/zcatfd.cc $(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc \
-	$(SHDIR)/eaccess.cc $(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc \
-	$(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc \
-	$(SHDIR)/dprintf.cc $(SHDIR)/input_avail.cc \
-	$(SHDIR)/fnxform.cc $(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc \
-	$(SHDIR)/wcswidth.cc $(SHDIR)/wcsnwidth.cc \
-	$(SHDIR)/shmbchar.cc $(SHDIR)/random.cc \
+	$(SHDIR)/strtoumax.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
+	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
+	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
+	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
+	$(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc $(SHDIR)/wcswidth.cc \
+	$(SHDIR)/wcsnwidth.cc $(SHDIR)/shmbchar.cc $(SHDIR)/random.cc \
 	$(SHDIR)/gettimeofday.cc $(TLDIR)/tilde.cc
 AM_YFLAGS = -d
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
@@ -927,7 +927,7 @@ PSIZE = psize$(EXEEXT)
 MKBUILTINS = mkbuiltins$(EXEEXT)
 MKSIGNAMES = mksignames$(EXEEXT)
 DIRECTDEFINE = -D $(srcdir)
-CLEANFILES = builtins.cc builtext.hh pipesize.hh version.hh signames.hh
+CLEANFILES = builtins.cc builtext.hh pipesize.hh psize.aux version.hh signames.hh
 Program = bash$(EXEEXT)
 Version = @BASHVERS@
 all: config.hh
@@ -1312,8 +1312,6 @@ $(SHDIR)/strtoimax.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/strtoumax.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
-$(SHDIR)/mktime.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
-	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/mbschr.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/zcatfd.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
@@ -1509,7 +1507,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/mailstat.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/makepath.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/mbschr.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/mktime.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/netconn.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/netopen.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/oslib.Po@am__quote@ # am--include-marker
@@ -2098,7 +2095,6 @@ distclean: distclean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/mailstat.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/makepath.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/mbschr.Po
-	-rm -f $(SHDIR)/$(DEPDIR)/mktime.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/netconn.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/netopen.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/oslib.Po
@@ -2329,7 +2325,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/mailstat.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/makepath.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/mbschr.Po
-	-rm -f $(SHDIR)/$(DEPDIR)/mktime.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/netconn.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/netopen.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/oslib.Po
@@ -2503,7 +2498,7 @@ subst.$(OBJEXT): builtext.hh
 support/mksignames.$(OBJEXT): config.hh
 support/signames.$(OBJEXT): config.hh
 trap.$(OBJEXT): builtext.hh signames.hh
-variables.$(OBJEXT): builtext.hh
+variables.$(OBJEXT): builtext.hh version.hh
 version.$(OBJEXT): version.hh
 
 version.hh: $(CONFIG_HEADER) patchlevel.hh

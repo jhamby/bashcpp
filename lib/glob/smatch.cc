@@ -540,7 +540,7 @@ posix_cclass_only (const char *pattern)
 #define IS_CCLASS(C, S) is_wcclass ((C), (S))
 #include "sm_loop.hh"
 
-#endif /* HAVE_MULTIBYTE */
+#endif /* HANDLE_MULTIBYTE */
 
 int
 xstrmatch (const char *pattern, const char *string, int flags)

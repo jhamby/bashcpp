@@ -33,14 +33,14 @@ int
 dprintf (int fd, const char *format, ...)
 {
   FILE *fp;
-  int fd2, rc, r2;
+  int fd2, rc;
   va_list args;
 
   if ((fd2 = ::dup (fd)) < 0)
     return -1;
 
   fp = ::fdopen (fd2, "w");
-  if (fp == 0)
+  if (fp == nullptr)
     {
       ::close (fd2);
       return -1;
@@ -51,7 +51,7 @@ dprintf (int fd, const char *format, ...)
   std::fflush (fp);
   va_end (args);
 
-  r2 = std::fclose (fp); /* check here */
+  (void)std::fclose (fp); /* check here */
 
   return rc;
 }

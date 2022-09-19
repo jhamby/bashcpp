@@ -26,7 +26,7 @@
 #if !defined(HAVE_STRPBRK)
 
 /* Find the first occurrence in S of any character in ACCEPT.  */
-char *
+extern "C" char *
 strpbrk (const char *s, const char *accept)
 {
   while (*s != '\0')

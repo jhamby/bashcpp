@@ -62,10 +62,10 @@ class ReadlineShell
 public:
   virtual ~ReadlineShell ();
 
-  virtual char *sh_single_quote (const char *);
+  virtual std::string sh_single_quote (const std::string &);
   virtual void sh_set_lines_and_columns (unsigned int, unsigned int);
-  virtual char *sh_get_env_value (const char *);
-  virtual char *sh_get_home_dir ();
+  virtual const char *sh_get_env_value (const char *);
+  virtual std::string sh_get_home_dir ();
   virtual int sh_unset_nodelay_mode (int);
 };
 

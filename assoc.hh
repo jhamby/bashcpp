@@ -29,6 +29,7 @@ namespace bash
 
 const int ASSOC_HASH_BUCKETS = 1024;
 
+#if 0
 void assoc_dispose (HASH_TABLE *);
 void assoc_flush (HASH_TABLE *);
 
@@ -55,6 +56,7 @@ WORD_LIST *assoc_to_word_list (HASH_TABLE *);
 WORD_LIST *assoc_keys_to_word_list (HASH_TABLE *);
 
 char *assoc_to_string (HASH_TABLE *, const char *, int);
+#endif
 
 } // namespace bash
 

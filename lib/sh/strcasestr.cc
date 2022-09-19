@@ -27,7 +27,7 @@
 /* Determine if s2 occurs in s1.  If so, return a pointer to the
    match in s1.  The compare is case insensitive.  This is a
    case-insensitive strstr(3). */
-extern "C++" const char *
+extern "C" const char *
 strcasestr (const char *s1, const char *s2)
 {
   int c = TOLOWER ((unsigned char)s2[0]);

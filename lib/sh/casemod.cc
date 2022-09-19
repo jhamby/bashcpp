@@ -79,57 +79,53 @@ TOGGLE (wchar_t x)
 
 #if defined(HANDLE_MULTIBYTE)
 static inline wchar_t
-cval (const char *s, size_t i)
+cval (const std::string::const_iterator it,
+      const std::string::const_iterator end)
 {
   size_t tmp;
   wchar_t wc;
   size_t l;
   mbstate_t mps;
 
-  if (MB_CUR_MAX == 1 || is_basic (s[i]))
-    return static_cast<wchar_t> (s[i]);
-
-  l = std::strlen (s);
-  if (i >= (l - 1))
-    return static_cast<wchar_t> (s[i]);
+  if (MB_CUR_MAX == 1 || is_basic (static_cast<unsigned char> (*it)))
+    return static_cast<wchar_t> (*it);
 
   std::memset (&mps, 0, sizeof (mbstate_t));
-  tmp = std::mbrtowc (&wc, s + i, l - i, &mps);
+  tmp = std::mbrtowc (&wc, &(*it), static_cast<size_t> (end - it), &mps);
 
   if (MB_INVALIDCH (tmp) || MB_NULLWCH (tmp))
-    return static_cast<wchar_t> (s[i]);
+    return static_cast<wchar_t> (*it);
 
   return wc;
 }
 #endif
 
-/* Modify the case of characters in STRING matching PAT based on the value of
-   FLAGS.  If PAT is null, modify the case of each character */
-char *
-Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
+// Modify the case of characters in STRING matching PAT based on the value of
+// FLAGS. If PAT is null, modify the case of each character.
+std::string
+Shell::sh_modcase (const std::string &string, const char *pat,
+                   sh_modcase_flags flags)
 {
 #if defined(HANDLE_MULTIBYTE)
   char mb[MB_LEN_MAX + 1];
   mbstate_t state;
 #endif
 
-  if (string == nullptr || *string == 0)
+  if (string.empty ())
     {
-      char *ret = new char[1];
-      ret[0] = '\0';
-      return ret;
+      return std::string ();
     }
 
 #if defined(HANDLE_MULTIBYTE)
   std::memset (&state, 0, sizeof (mbstate_t));
 #endif
 
-  size_t start = 0;
-  size_t end = std::strlen (string);
+  std::string::const_iterator it = string.begin ();
+  std::string::const_iterator end = string.end ();
   size_t mb_cur_max = MB_CUR_MAX;
 
-  char *ret = new char[2 * end + 1];
-  int retind = 0;
+  std::string ret;
+  ret.reserve (string.size ());
 
   /* See if we are supposed to split on alphanumerics and operate on each word
    */
@@ -137,9 +133,9 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
   flags &= ~CASE_USEWORDS;
 
   bool inword = false;
-  while (start < end)
+  while (it != end)
     {
-      wchar_t wc = cval (string, start);
+      wchar_t wc = cval (it, end);
 
       if (std::iswalnum (static_cast<wint_t> (wc)) == 0)
         inword = false;
@@ -148,9 +144,11 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
         {
           size_t next = start;
           ADVANCE_CHAR (string, end, next);
+
           char *s = substring (string, start, next);
           bool match = (strmatch (pat, s, FNM_EXTMATCH) != FNM_NOMATCH);
           delete[] s;
+
           if (!match)
             {
               /* copy unmatched portion */
@@ -172,7 +170,7 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
           if (usewords)
             nop = inword ? CASE_LOWER : CASE_UPPER;
           else
-            nop = (start > 0) ? CASE_LOWER : CASE_UPPER;
+            nop = (it != string.begin ()) ? CASE_LOWER : CASE_UPPER;
           inword = true;
         }
       else if (flags == CASE_UNCAP)
@@ -180,7 +178,7 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
           if (usewords)
             nop = inword ? CASE_UPPER : CASE_LOWER;
           else
-            nop = (start > 0) ? CASE_UPPER : CASE_LOWER;
+            nop = (it != string.begin ()) ? CASE_UPPER : CASE_LOWER;
           inword = true;
         }
       else if (flags == CASE_UPFIRST)
@@ -188,7 +186,7 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
           if (usewords)
             nop = inword ? CASE_NOOP : CASE_UPPER;
           else
-            nop = (start > 0) ? CASE_NOOP : CASE_UPPER;
+            nop = (it != string.begin ()) ? CASE_NOOP : CASE_UPPER;
           inword = true;
         }
       else if (flags == CASE_LOWFIRST)
@@ -196,7 +194,7 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
           if (usewords)
             nop = inword ? CASE_NOOP : CASE_LOWER;
           else
-            nop = (start > 0) ? CASE_NOOP : CASE_LOWER;
+            nop = (it != string.begin ()) ? CASE_NOOP : CASE_LOWER;
           inword = true;
         }
       else if (flags == CASE_TOGGLE)
@@ -230,7 +228,7 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
               nc = TOGGLE (wc);
               break;
             }
-          ret[retind++] = static_cast<char> (nc);
+          ret.push_back (static_cast<char> (nc));
         }
 #if defined(HANDLE_MULTIBYTE)
       else
@@ -270,7 +268,7 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
              unsigned char range back to single-byte `multibyte' characters. */
           if (static_cast<int> (nwc) <= UCHAR_MAX
               && is_basic (static_cast<char> (nwc)))
-            ret[retind++] = static_cast<char> (nwc);
+            ret.push_back (static_cast<char> (nwc));
           else
             {
               size_t mlen = std::wcrtomb (mb, nwc, &state);
@@ -286,7 +284,6 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
       ADVANCE_CHAR (string, end, start);
     }
 
-  ret[retind] = '\0';
   return ret;
 }
 

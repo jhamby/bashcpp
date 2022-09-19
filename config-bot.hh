@@ -147,7 +147,6 @@
    support user defined character classes.  */
 #include <cwchar>
 #include <cwctype>
-#define HANDLE_MULTIBYTE 1
 
 /* If we don't want multibyte chars even on a system that supports them, let
    the configuring user turn multibyte support off. */
