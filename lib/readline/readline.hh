@@ -24,6 +24,7 @@
 #define _READLINE_H_
 
 #include "rldefs.hh"
+#include "rlprivate.hh"
 
 #include "history.hh"
 #include "rlshell.hh"
@@ -45,8 +46,9 @@
 
 #include <csignal>
 
+// Remove __attribute__ if we're not using GCC or Clang.
 #ifndef __attribute__
-#if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 8)
+#if !defined(__clang__) && !defined(__GNUC__)
 #define __attribute__(x)
 #endif
 #endif
@@ -96,21 +98,21 @@ enum undo_code
 class UNDO_ENTRY
 {
 public:
-  UNDO_ENTRY (undo_code what_, uint32_t start_, uint32_t end_, char *text_)
+  UNDO_ENTRY (undo_code what_, size_t start_, size_t end_, char *text_)
       : text (text_), start (start_), end (end_), what (what_)
   {
     delete[] text_; // we've made a copy of the original
   }
 
-  UNDO_ENTRY (undo_code what_, uint32_t start_, uint32_t end_,
+  UNDO_ENTRY (undo_code what_, size_t start_, size_t end_,
               const std::string &text_)
       : text (text_), start (start_), end (end_), what (what_)
   {
   }
 
-  std::string text;    /* The text to insert, if undoing a delete. */
-  uint32_t start, end; /* Where the change took place. */
-  undo_code what;      /* Delete, Insert, Begin, End. */
+  std::string text;  /* The text to insert, if undoing a delete. */
+  size_t start, end; /* Where the change took place. */
+  undo_code what;    /* Delete, Insert, Begin, End. */
 };
 
 /* Wrapper for a vector of UNDO_ENTRY that history can delete. */
@@ -143,9 +145,6 @@ public:
 
 /* A global function for the use of tputs () */
 extern "C" int _rl_output_character_function (int c);
-
-/* A global string sorting function, used with qsort(). */
-extern "C" int _rl_qsort_string_compare (const void *, const void *);
 
 // The output stream that the global tputs() function uses.
 extern "C" FILE *_rl_out_stream;
@@ -328,22 +327,25 @@ public:
 
   /* Typedefs for the completion system */
 
-  typedef std::string (Readline::*rl_compentry_func_t) (const std::string &,
-                                                        int);
+  // Returns a newly-allocated string, or nullptr.
+  typedef std::string *(Readline::*rl_compentry_func_t) (const std::string &,
+                                                         int);
 
-  typedef std::string *(Readline::*rl_completion_func_t) (const std::string &,
-                                                          uint32_t, uint32_t);
+  // Completion function that takes an input string and start/end positions,
+  // and returns a newly-allocated vector of strings, or nullptr.
+  typedef std::vector<std::string *> *(Readline::*rl_completion_func_t) (
+      const std::string &, size_t, size_t);
 
   typedef std::string (Readline::*rl_quote_func_t) (const std::string &,
-                                                    replace_type,
-                                                    const char *);
+                                                    replace_type, char *);
 
-  typedef std::string (Readline::*rl_dequote_func_t) (const std::string &);
+  typedef std::string (Readline::*rl_dequote_func_t) (const std::string &,
+                                                      int);
 
-  typedef int (Readline::*rl_compignore_func_t) (std::vector<std::string> &);
+  typedef int (Readline::*rl_compignore_func_t) (std::vector<std::string *> &);
 
-  typedef void (Readline::*rl_compdisp_func_t) (std::vector<std::string> &,
-                                                uint32_t);
+  typedef void (Readline::*rl_compdisp_func_t) (std::vector<std::string *> &,
+                                                size_t);
 
   /* Type for input and pre-read hook functions like rl_event_hook */
   typedef int (Readline::*rl_hook_func_t) ();
@@ -363,10 +365,10 @@ public:
   typedef char *(Readline::*rl_cpifunc_t) (int);
   typedef char *(Readline::*rl_cpcpfunc_t) (std::string &);
 
-  typedef int (Readline::*_rl_sv_func_t) (const std::string &);
+  typedef int (Readline::*_rl_sv_func_t) (const char *);
 
   /* typedef from bind.cc */
-  typedef int (Readline::*_rl_parser_func_t) (std::string &);
+  typedef int (Readline::*_rl_parser_func_t) (char *);
 
   /* fill in more as needed */
   /* `Generic' callback data and functions */
@@ -385,7 +387,7 @@ public:
   /* The data structure for mapping textual names to code addresses. */
   struct FUNMAP
   {
-    std::string name;
+    const char *name;
     rl_command_func_t function;
   };
 
@@ -415,34 +417,30 @@ public:
   struct KEYMAP_ENTRY;
   typedef KEYMAP_ENTRY *Keymap;
 
-  /* A keymap contains one entry for each key in the ASCII set.
-     Each entry consists of a type and a pointer.
-     FUNCTION is the address of a function to run, or the
-     address of a keymap to indirect through.
-     TYPE says which kind of thing FUNCTION is. */
+  // A keymap contains one entry for each key in the ASCII set. Each entry
+  // consists of a type and a pointer. FUNCTION is the address of a function to
+  // run, or the address of a keymap to indirect through. TYPE says which kind
+  // of thing FUNCTION is.
   struct KEYMAP_ENTRY
   {
     KEYMAP_ENTRY () : type (ISFUNC) {}
 
     KEYMAP_ENTRY (keymap_entry_type t, rl_command_func_t f)
-        : type (t), value (f)
+        : value (f), type (t)
     {
     }
 
-    KEYMAP_ENTRY (keymap_entry_type t, Keymap m) : type (t), value (m) {}
+    KEYMAP_ENTRY (keymap_entry_type t, Keymap m) : value (m), type (t) {}
 
-    KEYMAP_ENTRY (keymap_entry_type t, char *macro) : type (t), value (macro)
+    // Callers should delete the string on struct deletion. If we add a
+    // destructor to do that, then we also need a copy constructor that avoids
+    // double deletion after initializing the keymap array. It's easier to keep
+    // the memory allocation behavior of the original C version.
+    KEYMAP_ENTRY (keymap_entry_type t, char *macro) : value (macro), type (t)
     {
     }
 
-    // Destructor to delete the string, if this is a macro.
-    ~KEYMAP_ENTRY ()
-    {
-      if (type == ISMACR)
-        delete[] value.macro;
-    }
-
-    keymap_entry_type type;
+    // This union should be the size of one pointer.
     union _keymap_value_type
     {
       _keymap_value_type () : function (nullptr) {}
@@ -454,6 +452,9 @@ public:
       Keymap map;
       char *macro;
     } value;
+
+    // Keymap type enum (32-bit).
+    keymap_entry_type type;
   };
 
   typedef KEYMAP_ENTRY KME; // convenience typedef
@@ -840,7 +841,7 @@ public:
 
   void rl_set_prompt (const std::string &);
 
-  uint32_t rl_expand_prompt (const std::string &);
+  size_t rl_expand_prompt (char *); // this temporarily modifies the input
 
   int rl_initialize ();
 
@@ -865,7 +866,7 @@ public:
   rl_bind_key_if_unbound_in_map (int key, rl_command_func_t default_func,
                                  Keymap kmap)
   {
-    char *keyseq = rl_untranslate_keyseq (key);
+    std::string keyseq = rl_untranslate_keyseq (key);
     return rl_bind_keyseq_if_unbound_in_map (keyseq, default_func, kmap);
   }
 
@@ -908,7 +909,7 @@ public:
   inline int
   rl_bind_keyseq (const std::string &keyseq, rl_command_func_t function)
   {
-    KEYMAP_ENTRY *entry = new KEYMAP_ENTRY (ISFUNC, function);
+    KEYMAP_ENTRY entry (ISFUNC, function);
     return rl_generic_bind (keyseq, entry, _rl_keymap);
   }
 
@@ -919,7 +920,7 @@ public:
   rl_bind_keyseq_in_map (const std::string &keyseq, rl_command_func_t function,
                          Keymap map)
   {
-    KEYMAP_ENTRY *entry = new KEYMAP_ENTRY (ISFUNC, function);
+    KEYMAP_ENTRY entry (ISFUNC, function);
     return rl_generic_bind (keyseq, entry, map);
   }
 
@@ -939,10 +940,10 @@ public:
   {
     std::string macro_keys;
 
-    if (rl_translate_keyseq (macro, macro_keys, nullptr))
+    if (rl_translate_keyseq (macro, macro_keys))
       return -1;
 
-    KEYMAP_ENTRY *entry = new KEYMAP_ENTRY (ISMACR, savestring (macro_keys));
+    KEYMAP_ENTRY entry (ISMACR, savestring (macro_keys));
     rl_generic_bind (keyseq, entry, map);
     return 0;
   }
@@ -950,11 +951,11 @@ public:
   int rl_bind_keyseq_if_unbound_in_map (const std::string &, rl_command_func_t,
                                         Keymap);
 
-  int rl_generic_bind (const std::string &keyseq, KEYMAP_ENTRY *k, Keymap map);
+  int rl_generic_bind (const std::string &keyseq, KEYMAP_ENTRY &k, Keymap map);
 
-  std::string rl_variable_value (const std::string &);
+  const char *rl_variable_value (const char *);
 
-  int rl_variable_bind (const std::string &, const std::string &);
+  int rl_variable_bind (const char *, const char *);
 
   /* Return a pointer to the function that STRING represents.
      If STRING doesn't have a matching function, then nullptr
@@ -965,7 +966,7 @@ public:
     rl_initialize_funmap ();
 
     for (size_t i = 0; funmap[i]; i++)
-      if (_rl_stricmp (funmap[i]->name.c_str (), string.c_str ()) == 0)
+      if (_rl_stricmp (funmap[i]->name, string.c_str ()) == 0)
         return funmap[i]->function;
 
     return nullptr;
@@ -987,12 +988,12 @@ public:
 
   void rl_list_funmap_names ();
 
-  std::vector<std::string> *rl_invoking_keyseqs_in_map (rl_command_func_t,
-                                                        Keymap);
+  std::vector<std::string> rl_invoking_keyseqs_in_map (rl_command_func_t,
+                                                       Keymap);
 
   // Return a vector of strings which represent the key sequences that can be
   // used to invoke FUNCTION using the current keymap.
-  inline std::vector<std::string> *
+  std::vector<std::string>
   rl_invoking_keyseqs (rl_command_func_t function)
   {
     return rl_invoking_keyseqs_in_map (function, _rl_keymap);
@@ -1010,7 +1011,7 @@ public:
 
   int rl_read_init_file (const char *);
 
-  int rl_parse_and_bind (const std::string &);
+  int rl_parse_and_bind (char *);
 
   /* Functions for manipulating keymaps. */
 
@@ -1025,14 +1026,11 @@ public:
      the Meta digits bound to produce numeric arguments. */
   Keymap rl_make_keymap ();
 
-  /* Free the storage associated with a keymap. */
-  void rl_discard_keymap (Keymap);
-
   /* These functions actually appear in bind.cc */
 
   /* Return the keymap corresponding to a given name.  Names look like
      `emacs' or `emacs-meta' or `vi-insert'.  */
-  inline Keymap
+  Keymap
   rl_get_keymap_by_name (const std::string &name)
   {
     int i = _rl_get_keymap_by_name (name);
@@ -1040,21 +1038,21 @@ public:
   }
 
   /* Return the current keymap. */
-  inline Keymap
+  Keymap
   rl_get_keymap ()
   {
     return _rl_keymap;
   }
 
   /* Set the current keymap to MAP. */
-  inline void
+  void
   rl_set_keymap (Keymap map)
   {
     if (map)
       _rl_keymap = map;
   }
 
-  /* Set the name of MAP to NAME */
+  // Set the name of MAP to NAME. This function isn't used by bash.
   int rl_set_keymap_name (const std::string &, Keymap);
 
   // Functions for manipulating the funmap, which maps command names to
@@ -1066,7 +1064,7 @@ public:
   rl_add_funmap_entry (const std::string &name, rl_command_func_t function)
   {
     FUNMAP *new_funmap = new FUNMAP ();
-    new_funmap->name = name;
+    new_funmap->name = savestring (name);
     new_funmap->function = function;
     funmap.push_back (new_funmap);
   }
@@ -1078,7 +1076,7 @@ public:
   inline void
   rl_push_macro_input (std::string &macro)
   {
-    _rl_with_macro_input (macro);
+    _rl_with_macro_input (savestring (macro));
   }
 
   /* Functions for undoing, from undo.cc */
@@ -1086,7 +1084,7 @@ public:
   // Remember how to undo something.  Concatenate some undos if that seems
   // right.
   inline void
-  rl_add_undo (enum undo_code what, uint32_t start, uint32_t end,
+  rl_add_undo (enum undo_code what, size_t start, size_t end,
                char *text = nullptr)
   {
     if (rl_undo_list == nullptr)
@@ -1124,7 +1122,7 @@ public:
     _rl_undo_group_level--;
   }
 
-  void rl_modifying (uint32_t, uint32_t);
+  void rl_modifying (size_t, size_t);
 
   /* Functions for redisplay. */
   void rl_redisplay ();
@@ -1197,10 +1195,10 @@ public:
     _rl_fix_point (true);
   }
 
-  uint32_t rl_insert_text (const std::string &);
-  uint32_t rl_delete_text (uint32_t, uint32_t);
-  void rl_kill_text (uint32_t, uint32_t);
-  char *rl_copy_text (uint32_t, uint32_t);
+  size_t rl_insert_text (const std::string &);
+  size_t rl_delete_text (size_t, size_t);
+  void rl_kill_text (size_t, size_t);
+  char *rl_copy_text (size_t, size_t);
 
   /* Terminal and tty mode management. */
 
@@ -1222,13 +1220,13 @@ public:
   }
 
   inline void
-  rl_set_screen_size (uint32_t rows, uint32_t cols)
+  rl_set_screen_size (size_t rows, size_t cols)
   {
     _rl_set_screen_size (rows, cols);
   }
 
   inline void
-  rl_get_screen_size (uint32_t *rows, uint32_t *cols)
+  rl_get_screen_size (size_t *rows, size_t *cols)
   {
     if (rows)
       *rows = _rl_screenheight;
@@ -1368,11 +1366,13 @@ public:
   /* Completion functions. */
 
   int rl_complete_internal (int);
-  void rl_display_match_list (char **, int, int);
+  void rl_display_match_list (std::vector<std::string *> &, size_t);
 
-  char **rl_completion_matches (const char *, rl_compentry_func_t);
-  char *rl_username_completion_function (const char *, int);
-  char *rl_filename_completion_function (const char *, int);
+  std::vector<std::string *> *rl_completion_matches (const std::string &,
+                                                     rl_compentry_func_t);
+
+  std::string *rl_username_completion_function (const std::string &, int);
+  std::string *rl_filename_completion_function (const std::string &, int);
 
   int rl_completion_mode (rl_command_func_t);
 
@@ -1403,7 +1403,7 @@ public:
   /* Possible state value flags for rl_readline_state. */
   enum state_flags
   {
-    RL_STATE_NONE = 0x0000000, /* no state; before first call */
+    RL_STATE_NONE = 0x0000000, // no state; before first call
 
     RL_STATE_INITIALIZING = 0x0000001, // initializing
     RL_STATE_INITIALIZED = 0x0000002,  // initialization done
@@ -1464,8 +1464,8 @@ public:
 
     /* line state */
     std::string buffer;
+    std::string prompt;
     UNDO_LIST *ul;
-    char *prompt;
 
     /* global state */
     Keymap kmap;
@@ -1488,8 +1488,8 @@ public:
     // now, the 32-bit types (including enums)
 
     /* line state */
-    uint32_t point;
-    uint32_t mark;
+    size_t point;
+    size_t mark;
 
     int pendingin;
 
@@ -1517,8 +1517,7 @@ public:
 
   // bind.cc methods whose pointers are accessed from a global static array.
 
-  /* Push _rl_parsing_conditionalized_out, and set parser state based
-     on ARGS. */
+  // Push _rl_parsing_conditionalized_out, and set parser state based on ARGS.
   int parser_if (char *);
 
   int parser_else (char *);
@@ -1533,7 +1532,7 @@ private:
   struct _rl_search_cxt
   {
     _rl_search_cxt (rl_search_type type_, rl_search_flags sflags_,
-                    uint32_t spoint_, uint32_t smark_, uint32_t save_line_,
+                    size_t spoint_, size_t smark_, size_t save_line_,
                     Keymap keymap_)
         : keymap (keymap_), okeymap (keymap_), save_point (spoint_),
           save_mark (smark_), save_line (save_line_),
@@ -1550,8 +1549,8 @@ private:
 
     UNDO_LIST *save_undo_list;
 
-    Keymap keymap;  /* used when dispatching commands in search string */
-    Keymap okeymap; /* original keymap */
+    Keymap keymap;  // used when dispatching commands in search string
+    Keymap okeymap; // original keymap
 
     const char *search_terminators;
 
@@ -1562,14 +1561,16 @@ private:
     char pmb[MB_LEN_MAX];
 #endif
 
-    // 32-bit int values
+    // 32-bit or 64-bit size_t values
 
-    uint32_t save_point;
-    uint32_t save_mark;
-    uint32_t save_line;
-    int sline_index; // may be negative
-    uint32_t last_found_line;
-    uint32_t history_pos;
+    size_t save_point;
+    size_t save_mark;
+    size_t save_line;
+    ssize_t sline_index; // may be negative
+    size_t last_found_line;
+    size_t history_pos;
+
+    // 32-bit int values
 
     int direction;
 
@@ -1584,42 +1585,50 @@ private:
 
   struct _rl_cmd
   {
+    // pointer types first
+
     Keymap map;
+    rl_command_func_t func;
+
+    // 32-bit types next
+
     int count;
     int key;
-    rl_command_func_t func;
   };
 
   struct _rl_keyseq_cxt
   {
-    int flags;
-    int subseq_arg;
-    int subseq_retval; /* XXX */
-    int okey;
+    // pointer types first
 
     Keymap dmap;
     Keymap oldmap;
-
     _rl_keyseq_cxt *ocxt;
+
+    // 32-bit types next
+
+    keyseq_flags flags;
+    keyseq_flags subseq_retval; /* XXX */
+    int subseq_arg;
+    int okey;
     int childval;
   };
 
-  typedef int _rl_arg_cxt;
+  typedef num_arg_flags _rl_arg_cxt;
 
   class _rl_vimotion_cxt
   {
   public:
-    _rl_vimotion_cxt (int op_, uint32_t start_, uint32_t end_, int key_)
+    _rl_vimotion_cxt (vim_flags op_, size_t start_, size_t end_, int key_)
         : op (op_), numeric_arg (-1), start (start_), end (end_), key (key_)
     {
     }
 
     void
-    init (int op_, uint32_t start_, uint32_t end_, int key_)
+    init (vim_flags op_, size_t start_, size_t end_, int key_)
     {
       op = op_;
       state = 0;
-      ncxt = 0;
+      ncxt = NUM_NOFLAGS;
       numeric_arg = -1;
       start = start_;
       end = end_;
@@ -1627,14 +1636,14 @@ private:
       motion = -1;
     }
 
-    int op;
+    vim_flags op;
     int state;
     _rl_arg_cxt ncxt;
     int numeric_arg;
-    uint32_t start; /* rl_point */
-    uint32_t end;   /* rl_end */
-    int key;        /* initial key */
-    int motion;     /* motion command */
+    size_t start; /* rl_point */
+    size_t end;   /* rl_end */
+    int key;      /* initial key */
+    int motion;   /* motion command */
   };
 
   /*************************************************************************
@@ -1645,8 +1654,8 @@ private:
 
   /* Undocumented in the texinfo manual; not really useful to programs. */
 
-  int rl_translate_keyseq (const std::string &, std::string &, uint32_t *);
-  char *rl_untranslate_keyseq (int);
+  int rl_translate_keyseq (const std::string &, std::string &);
+  std::string rl_untranslate_keyseq (int);
 
   /* Undocumented; used internally only. */
 
@@ -1675,7 +1684,7 @@ private:
   }
 
   /* Undocumented in texinfo manual. */
-  inline uint32_t
+  inline size_t
   rl_character_len (int c, size_t pos)
   {
     unsigned char uc = static_cast<unsigned char> (c);
@@ -1686,7 +1695,7 @@ private:
     if (uc == '\t')
       {
 #if defined(DISPLAY_TABS)
-        return static_cast<uint32_t> (((pos | 7) + 1) - pos);
+        return ((pos | 7) + 1) - pos;
 #else
         return 2;
 #endif /* !DISPLAY_TABS */
@@ -1704,7 +1713,7 @@ private:
 
   /* terminal.cc */
 
-  void _rl_set_screen_size (uint32_t, uint32_t);
+  void _rl_set_screen_size (size_t, size_t);
 
   /* tilde.cc */
 
@@ -1749,7 +1758,7 @@ private:
     return false;
   }
 
-  void _rl_macro_dumper_internal (bool, Keymap, const char *);
+  void _rl_macro_dumper_internal (bool, Keymap, const std::string &);
 
   // moved from rlprivate.hh macros
 
@@ -1757,6 +1766,12 @@ private:
   CUSTOM_REDISPLAY_FUNC ()
   {
     return rl_redisplay_function != &Readline::rl_redisplay;
+  }
+
+  bool
+  CUSTOM_INPUT_FUNC ()
+  {
+    return rl_getc_function != &Readline::rl_getc;
   }
 
   /* NOTE: Functions and variables prefixed with `_rl_' are
@@ -1810,7 +1825,7 @@ private:
 
   /* bind.cc */
 
-  char *_rl_untranslate_macro_value (const char *, bool);
+  std::string _rl_untranslate_macro_value (const std::string &, bool);
 
   int handle_parser_directive (char *);
 
@@ -1842,7 +1857,7 @@ private:
   void init_rl_color_indicators ();
 
   inline int
-  colored_stat_start (const char *filename)
+  colored_stat_start (const std::string &filename)
   {
     _rl_set_normal_color ();
     return _rl_print_color_indicator (filename);
@@ -1906,16 +1921,17 @@ private:
 
   /* complete.cc */
 
-  static inline void
-  _rl_free_match_list (char **matches)
+  static void
+  _rl_free_match_list (std::vector<std::string *> *matches)
   {
-    if (matches == nullptr)
+    if (!matches)
       return;
 
-    for (int i = 0; matches[i]; i++)
-      delete[] matches[i];
+    std::vector<std::string *>::iterator it;
+    for (it = matches->begin (); it != matches->end (); ++it)
+      delete *it;
 
-    delete[] matches;
+    delete matches;
   }
 
   /* Reset public readline state on a signal or other event. */
@@ -1933,7 +1949,8 @@ private:
   {
     if (sig == SIGINT) /* XXX - for now */
       {
-        _rl_free_match_list (static_cast<char **> (ptr));
+        _rl_free_match_list (
+            reinterpret_cast<std::vector<std::string *> *> (ptr));
         _rl_complete_display_matches_interrupt = true;
       }
   }
@@ -1941,32 +1958,34 @@ private:
   void set_completion_defaults (int);
   int get_y_or_n (bool); // returns 0, 1, or 2.
   int _rl_internal_pager (int);
+
 #if defined(VISIBLE_STATS)
   int stat_char (const std::string &);
 #endif
-  std::string printable_part (std::string &);
-  int fnwidth (const std::string &string);
-  int fnprint (const std::string &, int, const std::string &);
-  int print_filename (std::string &, const std::string &, int);
-  char **gen_completion_matches (const std::string &, uint32_t, uint32_t,
-                                 rl_compentry_func_t, rl_qf_flags,
-                                 unsigned char);
-  char **remove_duplicate_matches (char **);
-  int compute_lcd_of_matches (char **, int, const std::string &);
-  int postprocess_matches (char ***, bool);
-  uint32_t complete_get_screenwidth ();
-  void display_matches (char **);
-  std::string make_quoted_replacement (std::string &, replace_type,
-                                       std::string &);
-  void insert_match (std::string &, uint32_t, replace_type, std::string &);
-  int append_to_match (std::string &, unsigned char, unsigned char, bool);
-  void insert_all_matches (char **, uint32_t, std::string &);
-  int compare_match (const std::string &, const std::string &);
-  bool complete_fncmp (const std::string &, uint32_t, const std::string &,
-                       uint32_t);
 
-  std::string rl_quote_filename (const std::string &, replace_type,
-                                 const std::string &);
+  std::string printable_part (const std::string &);
+  size_t fnwidth (const std::string &string);
+  size_t fnprint (const std::string &, size_t, size_t);
+  size_t print_filename (const std::string &, size_t, size_t);
+  std::vector<std::string *> *gen_completion_matches (const std::string &,
+                                                      size_t, size_t,
+                                                      rl_compentry_func_t,
+                                                      rl_qf_flags, int);
+  void remove_duplicate_matches (std::vector<std::string *> &);
+  void compute_lcd_of_matches (std::vector<std::string *> &,
+                               const std::string &);
+  int postprocess_matches (std::vector<std::string *> &, bool);
+  size_t complete_get_screenwidth ();
+  void display_matches (const std::vector<std::string *> &);
+  std::string make_quoted_replacement (const std::string &, replace_type,
+                                       char *);
+  void insert_match (const std::string &, size_t, replace_type, char *);
+  int append_to_match (std::string &, unsigned char, unsigned char, bool);
+  void insert_all_matches (const std::vector<std::string *> &, size_t, char *);
+  int compare_match (const std::string &, const std::string &);
+  bool complete_fncmp (const std::string &, const std::string &);
+
+  std::string rl_quote_filename (const std::string &, replace_type, char *);
 
   /* display.cc */
 
@@ -1975,10 +1994,10 @@ private:
   {
     std::string line;
     std::string lface;
-    std::vector<uint32_t> lbreaks;
+    std::vector<size_t> lbreaks;
 #if defined(HANDLE_MULTIBYTE)
-    uint32_t *wrapped_line;
-    uint32_t wbsize;
+    size_t *wrapped_line;
+    size_t wbsize;
 #endif
   };
 
@@ -1993,19 +2012,20 @@ private:
   inline void
   _rl_reset_prompt ()
   {
-    rl_visible_prompt_length = rl_expand_prompt (rl_prompt);
+    rl_visible_prompt_length
+        = rl_expand_prompt (const_cast<char *> (rl_prompt.c_str ()));
   }
 
-  void _rl_move_vert (uint32_t);
+  void _rl_move_vert (size_t);
   void _rl_save_prompt ();
   void _rl_restore_prompt ();
   std::string _rl_make_prompt_for_search (char);
   void _rl_update_final ();
   void _rl_redisplay_after_sigwinch ();
-  void open_some_spaces (uint32_t);
+  void open_some_spaces (size_t);
   void redraw_prompt (const std::string &);
 
-  const std::string &prompt_modestr (uint32_t *);
+  const char *prompt_modestr (size_t *);
 
   enum expand_prompt_flags
   {
@@ -2015,12 +2035,11 @@ private:
 
   /* Expand prompt and return indices into it. Returns an RAII C++ string. */
   std::string expand_prompt (const std::string &, expand_prompt_flags,
-                             uint32_t *, uint32_t *, uint32_t *, uint32_t *);
+                             size_t *, size_t *, size_t *, size_t *);
 
-  void update_line (std::string &old, std::string &old_face,
-                    const std::string &new_, const std::string &new_face,
-                    uint32_t current_line, uint32_t omax, uint32_t nmax,
-                    uint32_t inv_botlin);
+  void update_line (char *old, char *old_face, const char *new_,
+                    const char *new_face, size_t current_line, size_t omax,
+                    size_t nmax, size_t inv_botlin);
 
   /* Do whatever tests are necessary and tell update_line that it can do a
      quick, dumb redisplay on the assumption that there are so many
@@ -2046,7 +2065,7 @@ private:
   }
 
   inline void
-  invis_adds (const std::string &str, uint32_t n, char face)
+  invis_adds (const char *str, size_t n, char face)
   {
     line_state_invisible->line.append (str, n);
     line_state_invisible->lface.append (n, face);
@@ -2060,7 +2079,7 @@ private:
   }
 
   inline void
-  set_active_region (uint32_t *beg, uint32_t *end)
+  set_active_region (size_t *beg, size_t *end)
   {
     if (rl_point <= rl_end () && rl_mark <= rl_end ())
       {
@@ -2097,10 +2116,10 @@ private:
     _rl_move_vert (_rl_vis_botlin);
 
     /* And erase screen lines going up to line 0 (first visible line) */
-    for (int curr_line = static_cast<int> (_rl_last_v_pos); curr_line >= 0;
-         curr_line--)
+    for (ssize_t curr_line = static_cast<ssize_t> (_rl_last_v_pos);
+         curr_line >= 0; curr_line--)
       {
-        _rl_move_vert (static_cast<uint32_t> (curr_line));
+        _rl_move_vert (static_cast<size_t> (curr_line));
         _rl_clear_to_eol (0);
       }
   }
@@ -2151,11 +2170,11 @@ private:
 
   /* Quick redisplay hack when erasing characters at the end of the line. */
   inline void
-  _rl_erase_at_end_of_line (uint32_t l)
+  _rl_erase_at_end_of_line (size_t l)
   {
     _rl_backspace (l);
 
-    for (uint32_t i = 0; i < l; i++)
+    for (size_t i = 0; i < l; i++)
       std::putc (' ', rl_outstream);
 
     _rl_backspace (l);
@@ -2168,7 +2187,7 @@ private:
   // Clear to the end of the line. COUNT is the minimum number of character
   // spaces to clear, but we use a terminal escape sequence if available.
   inline void
-  _rl_clear_to_eol (uint32_t count)
+  _rl_clear_to_eol (size_t count)
   {
     if (_rl_term_clreol)
       ::tputs (_rl_term_clreol, 1, _rl_output_character_function);
@@ -2179,9 +2198,9 @@ private:
   // Clear to the end of the line using spaces. COUNT is the minimum number of
   // character spaces to clear.
   inline void
-  space_to_eol (uint32_t count)
+  space_to_eol (size_t count)
   {
-    for (uint32_t i = 0; i < count; i++)
+    for (size_t i = 0; i < count; i++)
       putc (' ', rl_outstream);
 
     _rl_last_c_pos += count;
@@ -2202,7 +2221,7 @@ private:
 
   /* Insert COUNT characters from STRING to the output stream at column COL. */
   inline void
-  insert_some_chars (std::string &string, uint32_t count, uint32_t col)
+  insert_some_chars (std::string &string, size_t count, size_t col)
   {
     open_some_spaces (col);
     _rl_output_some_chars (string.data (), count);
@@ -2246,10 +2265,10 @@ private:
 
   /* return the `current display line' of the cursor -- the number of lines to
      move up to get to the first screen line of the current readline line. */
-  inline uint32_t
+  inline size_t
   _rl_current_display_line ()
   {
-    uint32_t ret, nleft;
+    size_t ret, nleft;
 
     /* Find out whether or not there might be invisible characters in the
        editing buffer. */
@@ -2276,15 +2295,14 @@ private:
 
   void delete_chars (int);
 
-  void _rl_move_cursor_relative (uint32_t, const std::string &,
-                                 const std::string &);
+  void _rl_move_cursor_relative (size_t, const char *, const char *);
 
   void putc_face (int, char, char *);
 
   inline void
-  puts_face (const std::string &str, const std::string &face, uint32_t n)
+  puts_face (const std::string &str, const std::string &face, size_t n)
   {
-    uint32_t i;
+    size_t i;
     char cur_face;
 
     for (cur_face = FACE_NORMAL, i = 0; i < n; i++)
@@ -2319,13 +2337,13 @@ private:
   /* Return the amount of space available in the buffer for stuffing
      characters. We lose one char because "pop_index == push_index"
      could mean either empty or full otherwise. */
-  inline uint32_t
+  inline size_t
   ibuffer_space ()
   {
     if (_rl_pop_index > _rl_push_index)
       return _rl_pop_index - _rl_push_index - 1;
     else
-      return static_cast<uint32_t> (sizeof (_rl_ibuffer)) - 1
+      return static_cast<size_t> (sizeof (_rl_ibuffer)) - 1
              - (_rl_push_index - _rl_pop_index);
   }
 
@@ -2367,8 +2385,8 @@ private:
   }
 
 #if defined(HANDLE_MULTIBYTE)
-  int _rl_read_mbchar (std::string &, int);
-  int _rl_read_mbstring (int, std::string &, int);
+  int _rl_read_mbchar (char *, int);
+  int _rl_read_mbstring (int, char *, int);
 #endif /* HANDLE_MULTIBYTE */
 
   /* isearch.cc */
@@ -2387,7 +2405,7 @@ private:
   /* kill.cc */
 
   int _rl_read_bracketed_paste_prefix (int);
-  std::string _rl_bracketed_text (uint32_t *);
+  std::string _rl_bracketed_text ();
   int _rl_bracketed_read_key ();
   int _rl_bracketed_read_mbstring (std::string &, int);
   void _rl_copy_to_kill_ring (const std::string &, bool);
@@ -2396,7 +2414,7 @@ private:
 
   /* macro.cc */
 
-  void _rl_with_macro_input (std::string &);
+  void _rl_with_macro_input (char *);
   int _rl_peek_macro_key ();
   int _rl_next_macro_key ();
   int _rl_prev_macro_key ();
@@ -2419,7 +2437,7 @@ private:
   _rl_arg_init ()
   {
     rl_save_prompt ();
-    _rl_argcxt = 0;
+    _rl_argcxt = NUM_NOFLAGS;
     RL_SETSTATE (RL_STATE_NUMERICARG);
   }
 
@@ -2442,7 +2460,7 @@ private:
   {
     rl_numeric_arg = rl_arg_sign = 1;
     rl_explicit_arg = false;
-    _rl_argcxt = 0;
+    _rl_argcxt = NUM_NOFLAGS;
   }
 
   /* Set the history pointer back to the last entry in the history. */
@@ -2484,7 +2502,7 @@ private:
   inline void
   _rl_revert_all_lines ()
   {
-    uint32_t ind = where_history ();
+    size_t ind = where_history ();
     using_history ();
     _rl_revert_previous_lines ();
     history_set_pos (ind);
@@ -2521,7 +2539,7 @@ private:
 
   /* nls.cc */
 
-  std::string _rl_init_locale ();
+  char *_rl_init_locale ();
   void _rl_init_eightbit ();
 
   inline const char *
@@ -2598,7 +2616,8 @@ private:
 
     cxt = new _rl_keyseq_cxt ();
 
-    cxt->flags = cxt->subseq_arg = cxt->subseq_retval = 0;
+    cxt->flags = cxt->subseq_retval = KSEQ_NOFLAGS;
+    cxt->subseq_arg = 0;
 
     cxt->okey = 0;
     cxt->ocxt = _rl_kscxt;
@@ -2684,8 +2703,8 @@ private:
   int _rl_nsearch_callback (_rl_search_cxt *);
   int _rl_nsearch_cleanup (_rl_search_cxt *, int);
   void make_history_line_current (HIST_ENTRY *);
-  uint32_t noninc_search_from_pos (const std::string &, uint32_t, int,
-                                   rl_search_flags, uint32_t *);
+  size_t noninc_search_from_pos (const std::string &, size_t, int,
+                                 rl_search_flags, size_t *);
   bool noninc_dosearch (const std::string &, int, rl_search_flags);
   _rl_search_cxt *_rl_nsearch_init (int, char);
   void _rl_nsearch_abort (_rl_search_cxt *);
@@ -2855,20 +2874,20 @@ private:
 
   /* Write COUNT characters from STRING to the output stream. */
   inline void
-  _rl_output_some_chars (const char *string, uint32_t count)
+  _rl_output_some_chars (const char *string, size_t count)
   {
-    std::fwrite (string, 1, static_cast<size_t> (count), _rl_out_stream);
+    std::fwrite (string, 1, count, _rl_out_stream);
   }
 
   /* Move the cursor back. */
   inline void
-  _rl_backspace (uint32_t count)
+  _rl_backspace (size_t count)
   {
     if (_rl_term_backspace)
-      for (uint32_t i = 0; i < count; i++)
+      for (size_t i = 0; i < count; i++)
         ::tputs (_rl_term_backspace, 1, &_rl_output_character_function);
     else
-      for (uint32_t i = 0; i < count; i++)
+      for (size_t i = 0; i < count; i++)
         std::putc ('\b', _rl_out_stream);
   }
 
@@ -2879,11 +2898,10 @@ private:
   }
 
 #if defined(HANDLE_MULTIBYTE)
-  uint32_t _rl_col_width (const char *str, uint32_t start, uint32_t end,
-                          int flags);
+  size_t _rl_col_width (const char *str, size_t start, size_t end, int flags);
 #else
-  inline uint32_t
-  _rl_col_width (const std::string &, uint32_t start, uint32_t end, int)
+  inline size_t
+  _rl_col_width (const std::string &, size_t start, size_t end, int)
   {
     return (end <= start) ? 0 : (end - start);
   }
@@ -2911,9 +2929,9 @@ private:
       rl_mark = rl_end ();
   }
 
-  uint32_t _rl_replace_text (const std::string &, uint32_t, uint32_t);
-  uint32_t _rl_forward_char_internal (int);
-  uint32_t _rl_backward_char_internal (int);
+  size_t _rl_replace_text (const std::string &, size_t, size_t);
+  size_t _rl_forward_char_internal (int);
+  size_t _rl_backward_char_internal (int);
 
   int _rl_insert_char (int, int);
   int _rl_overwrite_char (int, int);
@@ -2921,14 +2939,14 @@ private:
   int _rl_rubout_char (int, int);
 
 #if defined(HANDLE_MULTIBYTE)
-  int _rl_char_search_internal (int, int, std::string &, uint32_t);
+  int _rl_char_search_internal (int, int, const char *, size_t);
 #else
   int _rl_char_search_internal (int, int, int);
 #endif
 
   /* Set the mark at POSITION. */
   inline int
-  _rl_set_mark_at_pos (uint32_t position)
+  _rl_set_mark_at_pos (size_t position)
   {
     if (position > rl_line_buffer.size ())
       return 1;
@@ -3011,10 +3029,10 @@ private:
     return member (static_cast<char> (c), vi_motion);
   }
 
-  inline uint32_t
+  inline size_t
   _rl_vi_advance_point ()
   {
-    uint32_t point = rl_point;
+    size_t point = rl_point;
 
     if (rl_point < rl_end ())
 #if defined(HANDLE_MULTIBYTE)
@@ -3049,10 +3067,10 @@ private:
 
   /* Move the point back one character, returning the starting value and not
      doing anything at the beginning of the line */
-  inline uint32_t
+  inline size_t
   _rl_vi_backup_point ()
   {
-    uint32_t point = rl_point;
+    size_t point = rl_point;
 
     if (rl_point > 0)
 #if defined(HANDLE_MULTIBYTE)
@@ -3142,7 +3160,7 @@ private:
   // Increment START to the next character in RL_LINE_BUFFER, handling
   // multibyte chars.
   inline void
-  INCREMENT_POS (uint32_t &start)
+  INCREMENT_POS (size_t &start)
   {
 #if defined(HANDLE_MULTIBYTE)
     if (MB_CUR_MAX == 1 || rl_byte_oriented)
@@ -3160,7 +3178,7 @@ private:
   void _rl_vi_stuff_insert (int);
 
   inline void
-  vi_save_insert_buffer (uint32_t start, uint32_t len)
+  vi_save_insert_buffer (size_t start, size_t len)
   {
     vi_insert_buffer = rl_line_buffer.substr (start, len - 1);
   }
@@ -3176,9 +3194,9 @@ private:
         return;
       }
 
-    uint32_t start = up.start;
-    uint32_t end = up.end;
-    uint32_t len = end - start + 1;
+    size_t start = up.start;
+    size_t end = up.end;
+    size_t len = end - start + 1;
 
     vi_save_insert_buffer (start, len);
   }
@@ -3209,7 +3227,7 @@ private:
 
   int vi_yank_dispatch (_rl_vimotion_cxt *);
 
-  int _rl_vi_change_char (int, int, std::string &);
+  int _rl_vi_change_char (int, int, char *);
 
   int rl_vi_overstrike_kill_line (int, int);
   int rl_vi_overstrike_kill_word (int, int);
@@ -3219,10 +3237,10 @@ private:
   int _rl_vi_set_mark ();
   int _rl_vi_goto_mark ();
 
-  inline uint32_t
+  inline size_t
   rl_end ()
   {
-    return static_cast<uint32_t> (rl_line_buffer.size ());
+    return rl_line_buffer.size ();
   }
 
 public:
@@ -3252,7 +3270,7 @@ public:
   rl_command_func_t rl_last_func;
 
   /* The name of the terminal to use. */
-  std::string rl_terminal_name;
+  const char *rl_terminal_name;
 
   FILE *rl_instream;  // The input stream.
   FILE *rl_outstream; // The output stream.
@@ -3295,7 +3313,7 @@ public:
   /* Display variables (bools are moved to the end of the class). */
 
   /* The text of a currently-executing keyboard macro. */
-  std::string rl_executing_macro;
+  char *rl_executing_macro;
 
   /* Completion variables. */
 
@@ -3460,10 +3478,10 @@ private:
   /* bind.cc */
 
   /* The last key bindings file read. */
-  std::string last_readline_init_file;
+  char *last_readline_init_file;
 
   /* The file we're currently reading key bindings from. */
-  const std::string current_readline_init_file;
+  const char *current_readline_init_file;
 
   /* Stack of previous values of parsing_conditionalized_out. */
   std::vector<bool> if_stack;
@@ -3508,10 +3526,10 @@ private:
   std::string _rl_fcmp_users_dirname;
 
   char *_rl_omenu_orig_text;
-  char **_rl_omenu_matches;
+  std::vector<std::string *> *_rl_omenu_matches;
 
   char *_rl_menu_orig_text;
-  char **_rl_menu_matches;
+  std::vector<std::string *> *_rl_menu_matches;
 
   /* isearch.cc */
 
@@ -3546,8 +3564,8 @@ private:
   struct saved_macro
   {
     struct saved_macro *next;
-    std::string string;
-    uint32_t sindex;
+    char *string;
+    size_t sindex;
   };
 
   /* The list of saved macros. */
@@ -3708,7 +3726,7 @@ private:
        screen lines.  It's easier to compute in expand_prompt and use later in
        rl_redisplay instead of having rl_redisplay try to guess about invisible
        characters in the prompt or use heuristics about where they are. */
-    std::vector<uint32_t> newlines;
+    std::vector<size_t> newlines;
 
     /* Variables to keep track of the expanded prompt string, which may
        include invisible characters. */
@@ -3716,21 +3734,21 @@ private:
     /* Number of chars in the buffer that contribute to visible chars on the
        screen. This might be different from the number of physical chars in the
        presence of multibyte characters */
-    uint32_t visible_length;
+    size_t visible_length;
 
     /* The index of the last invisible character in the prompt string. */
-    uint32_t last_invisible;
+    size_t last_invisible;
 
     /* Number of invisible characters on the first physical line of the prompt.
        Only valid when the number of physical characters in the prompt exceeds
        (or is equal to) _rl_screenwidth. */
-    uint32_t invis_chars_first_line;
+    size_t invis_chars_first_line;
 
     /* Number of physical chars in the prompt. */
-    uint32_t physical_chars;
+    size_t physical_chars;
 
     /* Number of visible chars in the prompt prefix. */
-    uint32_t prefix_length;
+    size_t prefix_length;
   };
 
   /* The current local prompt state. */
@@ -3781,6 +3799,124 @@ private:
   /* ************************************************************** */
   /*    Private Readline Variables (32-bit or 64-bit aligned)	    */
   /* ************************************************************** */
+
+  /* Length in characters of a common prefix replaced with an ellipsis (`...')
+     when displaying completion matches.  Matches whose printable portion has
+     more than this number of displaying characters in common will have the
+     common display prefix replaced with an ellipsis. */
+  size_t _rl_completion_prefix_display_length;
+
+  /* complete.cc */
+
+  /* The readline-private number of screen columns to use when displaying
+     matches.  If < 0 or > _rl_screenwidth, it is ignored. */
+  ssize_t _rl_completion_columns;
+
+  size_t _rl_ucmp_first_char_loc;
+
+  size_t _rl_omenu_orig_start;
+  size_t _rl_omenu_orig_end;
+
+  size_t _rl_menu_match_list_index;
+
+  size_t _rl_menu_orig_start;
+  size_t _rl_menu_orig_end;
+
+  /* display.cc */
+
+  /* The current offset in the current input line. */
+  size_t rl_point;
+
+  /* Mark in the current input line. */
+  size_t rl_mark;
+
+  /* The index into the line buffer corresponding to the cursor position */
+  size_t cpos_buffer_position;
+
+  /* Saved target point for when _rl_history_preserve_point is set.  Special
+     value of (size_t)(-1) means that point is at the end of the line. */
+  size_t _rl_history_saved_point;
+
+  /* Saved logical offset, or (size_t)(-1) if not initialized. */
+  size_t saved_history_logical_offset;
+
+  /* Variables that hold the screen dimensions, used by the display code. */
+
+  size_t _rl_screenwidth;
+  size_t _rl_screenheight;
+  size_t _rl_screenchars;
+
+  /* The visible cursor position.  If you print some text, adjust this. */
+  /* NOTE: _rl_last_c_pos is used as a buffer index when not in a locale
+     supporting multibyte characters, and an absolute cursor position when
+     in such a locale.  This is an artifact of the donated multibyte support.
+     Care must be taken when modifying its value. */
+
+  size_t _rl_last_c_pos;
+
+  size_t _rl_last_v_pos;
+
+  /* kill.cc */
+
+  /* Where we are in the kill ring (index of last added entry). */
+  size_t rl_kill_ring_index;
+
+  /* Number of entries in the kill ring. */
+  size_t rl_kill_ring_length;
+
+  /* macro.cc */
+
+  // The offset in `executing_macro` to the next character to be read.
+  size_t executing_macro_index;
+
+  /* Current visible prompt length. */
+  size_t rl_visible_prompt_length;
+
+  size_t noninc_history_pos;
+  size_t rl_history_search_len;
+  size_t rl_history_search_pos;
+
+  /*************************************************************************
+   *									   *
+   * Global variables undocumented in texinfo manual and not in readline.hh *
+   *									   *
+   *************************************************************************/
+
+  /* Number of physical lines consumed by the current line buffer currently
+     on screen minus 1. */
+  size_t _rl_vis_botlin;
+
+  size_t _rl_inv_botlin;
+
+  /* display.cc */
+
+  /* The number of multibyte characters in the prompt, if any */
+  size_t prompt_multibyte_chars;
+
+  /* The last left edge of text that was displayed.  This is used when
+     doing horizontal scrolling.  It shifts in thirds of a screenwidth. */
+  size_t last_lmargin;
+
+  /* The number of invisible characters in the line currently being
+     displayed on the screen. */
+  size_t visible_wrap_offset;
+
+  /* The number of invisible characters in the prompt string. */
+  size_t wrap_offset;
+
+  /* The length (buffer offset) of the first line of the last (possibly
+     multi-line) buffer displayed on the screen. */
+  size_t visible_first_line_len;
+
+  size_t prompt_last_screen_line;
+
+  size_t _rl_omenu_match_list_index; // match list index may be negative.
+  size_t _rl_omenu_match_list_size;
+
+  size_t _rl_pop_index;
+  size_t _rl_push_index;
+
+  // the following definitions may be aligned differently on different systems
 
 #if defined(SIGWINCH)
   sighandler_cxt _rl_old_winch;
@@ -3842,83 +3978,31 @@ private:
      AUDIBLE_BELL, or VISIBLE_BELL. */
   rl_bell_pref _rl_bell_preference;
 
+  /* The character that can generate an EOF.  Really read from
+     the terminal driver... just defaulted here. */
+  int _rl_eof_char;
+
   /* bind.cc */
 
   int current_readline_init_include_level;
   int current_readline_init_lineno;
 
-  /* complete.cc */
-
-  /* Length in characters of a common prefix replaced with an ellipsis (`...')
-     when displaying completion matches.  Matches whose printable portion has
-     more than this number of displaying characters in common will have the
-     common display prefix replaced with an ellipsis. */
-  uint32_t _rl_completion_prefix_display_length;
-
-  /* The readline-private number of screen columns to use when displaying
-     matches.  If < 0 or > _rl_screenwidth, it is ignored. */
-  int _rl_completion_columns;
-
-  int _rl_ucmp_first_char_loc;
-
-  uint32_t _rl_omenu_orig_start;
-  uint32_t _rl_omenu_orig_end;
-
-  int _rl_menu_match_list_index;
-  int _rl_menu_match_list_size;
-
-  uint32_t _rl_menu_orig_start;
-  uint32_t _rl_menu_orig_end;
-
-  /* display.cc */
-
-  /* The current offset in the current input line. */
-  uint32_t rl_point;
-
-  /* Mark in the current input line. */
-  uint32_t rl_mark;
-
-  /* The index into the line buffer corresponding to the cursor position */
-  uint32_t cpos_buffer_position;
-
-  /* Saved target point for when _rl_history_preserve_point is set.  Special
-     value of (uint32_t)(-1) means that point is at the end of the line. */
-  uint32_t _rl_history_saved_point;
-
-  /* Saved logical offset, or (uint32_t)(-1) if not initialized. */
-  uint32_t saved_history_logical_offset;
-
-  /* Variables that hold the screen dimensions, used by the display code. */
-
-  uint32_t _rl_screenwidth;
-  uint32_t _rl_screenheight;
-  uint32_t _rl_screenchars;
-
-  /* The visible cursor position.  If you print some text, adjust this. */
-  /* NOTE: _rl_last_c_pos is used as a buffer index when not in a locale
-     supporting multibyte characters, and an absolute cursor position when
-     in such a locale.  This is an artifact of the donated multibyte support.
-     Care must be taken when modifying its value. */
-
-  uint32_t _rl_last_c_pos;
-
-  uint32_t _rl_last_v_pos;
-
-  /* kill.cc */
-
-  /* Where we are in the kill ring (index of last added entry). */
-  uint32_t rl_kill_ring_index;
-
-  /* Number of entries in the kill ring. */
-  uint32_t rl_kill_ring_length;
-
-  /* macro.cc */
-
-  // The offset in `executing_macro` to the next character to be read.
-  uint32_t executing_macro_index;
-
   // The current macro level.
   int rl_macro_level;
+
+  /* complete.cc */
+
+  /* Character appended to completed words when at the end of the line.  The
+     default is a space.  Nothing is added if this is '\0'. */
+  int rl_completion_append_character;
+
+  /* Set to any quote character readline thinks it finds before any application
+     completion function is called. */
+  int rl_completion_quote_character;
+
+  int _rl_omenu_delimiter;
+
+  int _rl_menu_delimiter;
 
   /* misc.cc */
 
@@ -3931,28 +4015,15 @@ private:
   /* Temporary value used while generating the argument. */
   int rl_arg_sign;
 
-  /* Current visible prompt length. */
-  uint32_t rl_visible_prompt_length;
-
-  int _rl_executing_keyseq_size;
-
   /* Timeout (specified in milliseconds) when reading characters making up an
      ambiguous multiple-key sequence */
   int _rl_keyseq_timeout;
 
-  /* rltty.cc */
-
-  _RL_TTY_CHARS _rl_tty_chars;
-  _RL_TTY_CHARS _rl_last_tty_chars;
-  int terminal_prepped;
+  int terminal_prepped; // XXX bool?
 
   /* search.cc */
 
   hist_search_flags rl_history_search_flags;
-
-  uint32_t noninc_history_pos;
-  uint32_t rl_history_search_len;
-  uint32_t rl_history_search_pos;
 
   /* signals.cc */
 
@@ -3974,7 +4045,7 @@ private:
   int _rl_vi_last_arg_sign;
 
   /* The number of characters inserted in the last replace operation. */
-  uint32_t vi_replace_count;
+  int vi_replace_count;
 
   int _rl_vi_last_motion;
 
@@ -3989,57 +4060,6 @@ private:
   int _rl_cs_dir;
   int _rl_cs_orig_dir;
 
-  /*************************************************************************
-   *									   *
-   * Global variables undocumented in texinfo manual and not in readline.hh *
-   *									   *
-   *************************************************************************/
-
-  /* Variables used to include the editing mode in the prompt. */
-
-  uint32_t _rl_emacs_modestr_len;
-
-  uint32_t _rl_vi_ins_modestr_len;
-
-  uint32_t _rl_vi_cmd_modestr_len;
-
-  /* Number of physical lines consumed by the current line buffer currently
-     on screen minus 1. */
-  uint32_t _rl_vis_botlin;
-
-  /* display.cc */
-
-  /* The number of multibyte characters in the prompt, if any */
-  uint32_t prompt_multibyte_chars;
-
-  uint32_t _rl_inv_botlin;
-
-  /* The last left edge of text that was displayed.  This is used when
-     doing horizontal scrolling.  It shifts in thirds of a screenwidth. */
-  uint32_t last_lmargin;
-
-  /* Default and initial buffer size.  Can grow. */
-  //   int line_size;
-
-  /* The number of invisible characters in the line currently being
-     displayed on the screen. */
-  uint32_t visible_wrap_offset;
-
-  /* The number of invisible characters in the prompt string. */
-  uint32_t wrap_offset;
-
-  /* The length (buffer offset) of the first line of the last (possibly
-     multi-line) buffer displayed on the screen. */
-  uint32_t visible_first_line_len;
-
-  uint32_t prompt_last_screen_line;
-
-  int _rl_omenu_match_list_index; // match list index may be negative.
-  uint32_t _rl_omenu_match_list_size;
-
-  uint32_t _rl_pop_index;
-  uint32_t _rl_push_index;
-
   /* kill.cc */
 
   int _rl_yank_history_skip;
@@ -4048,6 +4068,13 @@ private:
 
   /* Arrays for the saved marks. */
   int vi_mark_chars['z' - 'a' + 1];
+
+  // private char arrays below
+
+  /* rltty.cc */
+
+  _RL_TTY_CHARS _rl_tty_chars;
+  _RL_TTY_CHARS _rl_last_tty_chars;
 
 public:
   /* ************************************************************** */
@@ -4166,14 +4193,6 @@ public:
      By default, signal handlers are only active while readline is active. */
   bool rl_persistent_signal_handlers;
 
-  /* Character appended to completed words when at the end of the line.  The
-     default is a space.  Nothing is added if this is '\0'. */
-  unsigned char rl_completion_append_character;
-
-  /* Set to any quote character readline thinks it finds before any application
-     completion function is called. */
-  unsigned char rl_completion_quote_character;
-
 private:
   /* ************************************************************** */
   /*	    Private Readline Variables (8-bit types)		    */
@@ -4214,10 +4233,6 @@ private:
   /* If true when readline_internal returns, it means we found EOF */
   bool _rl_eof_found;
 
-  /* The character that can generate an EOF.  Really read from
-     the terminal driver... just defaulted here. */
-  unsigned char _rl_eof_char;
-
   /* True means to always use horizontal scrolling in line display. */
   bool _rl_horizontal_scroll_mode;
 
@@ -4231,6 +4246,14 @@ private:
 
   /* bind.cc */
   bool currently_reading_init_file;
+
+  bool _rl_emacs_mode_str_custom;
+
+  bool _rl_vi_ins_mode_str_custom;
+
+  bool _rl_vi_cmd_mode_str_custom;
+
+  bool _rl_isearch_terminators_custom;
 
   /* complete.cc */
 
@@ -4310,11 +4333,8 @@ private:
 
   char _rl_ucmp_first_char;
 
-  unsigned char _rl_omenu_quote_char;
-  unsigned char _rl_omenu_delimiter;
-
-  unsigned char _rl_menu_quote_char;
-  unsigned char _rl_menu_delimiter;
+  char _rl_omenu_quote_char;
+  char _rl_menu_quote_char;
 
   /* display.cc */
   bool line_structures_initialized;

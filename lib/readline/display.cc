@@ -46,7 +46,7 @@ namespace readline
    by backing up or outputting a carriage return and moving forward.  CUR
    and NEW are either both buffer positions or absolute screen positions. */
 static inline bool
-CR_FASTER (unsigned int newcol, unsigned int curcol)
+CR_FASTER (size_t newcol, size_t curcol)
 {
   return (newcol + 1) < (curcol - newcol);
 }
@@ -89,35 +89,37 @@ CR_FASTER (unsigned int newcol, unsigned int curcol)
    RL_DISPLAY_FIXED variable.  This is good for efficiency. */
 
 /* Return a string indicating the editing mode, for use in the prompt. */
-
 const char *
-Readline::prompt_modestr (unsigned int *lenp)
+Readline::prompt_modestr (size_t *lenp)
 {
   if (rl_editing_mode == emacs_mode)
     {
       if (lenp)
-        *lenp = _rl_emacs_mode_str ? _rl_emacs_modestr_len
-                                   : RL_EMACS_MODESTR_DEFLEN;
-      return _rl_emacs_mode_str ? _rl_emacs_mode_str
-                                : RL_EMACS_MODESTR_DEFAULT;
+        *lenp = _rl_emacs_mode_str_custom ? _rl_emacs_mode_str.size ()
+                                          : RL_EMACS_MODESTR_DEFLEN;
+
+      return _rl_emacs_mode_str_custom ? _rl_emacs_mode_str.c_str ()
+                                       : RL_EMACS_MODESTR_DEFAULT;
     }
   else if (_rl_keymap == vi_insertion_keymap ())
     {
       if (lenp)
-        *lenp = _rl_vi_ins_mode_str ? _rl_vi_ins_modestr_len
-                                    : RL_VI_INS_MODESTR_DEFLEN;
-      return _rl_vi_ins_mode_str
-                 ? _rl_vi_ins_mode_str
-                 : RL_VI_INS_MODESTR_DEFAULT; /* vi insert mode */
+        *lenp = _rl_vi_ins_mode_str_custom ? _rl_vi_ins_mode_str.size ()
+                                           : RL_VI_INS_MODESTR_DEFLEN;
+
+      // vi insert mode
+      return _rl_vi_ins_mode_str_custom ? _rl_vi_ins_mode_str.c_str ()
+                                        : RL_VI_INS_MODESTR_DEFAULT;
     }
   else
     {
       if (lenp)
-        *lenp = _rl_vi_cmd_mode_str ? _rl_vi_cmd_modestr_len
-                                    : RL_VI_CMD_MODESTR_DEFLEN;
-      return _rl_vi_cmd_mode_str
-                 ? _rl_vi_cmd_mode_str
-                 : RL_VI_CMD_MODESTR_DEFAULT; /* vi command mode */
+        *lenp = _rl_vi_cmd_mode_str_custom ? _rl_vi_cmd_mode_str.size ()
+                                           : RL_VI_CMD_MODESTR_DEFLEN;
+
+      // vi command mode
+      return _rl_vi_cmd_mode_str_custom ? _rl_vi_cmd_mode_str.c_str ()
+                                        : RL_VI_CMD_MODESTR_DEFAULT;
     }
 }
 
@@ -147,10 +149,9 @@ Readline::prompt_modestr (unsigned int *lenp)
 
 std::string
 Readline::expand_prompt (const std::string &pmt, expand_prompt_flags flags,
-                         unsigned int *lp, unsigned int *lip,
-                         unsigned int *niflp, unsigned int *vlp)
+                         size_t *lp, size_t *lip, size_t *niflp, size_t *vlp)
 {
-  unsigned int mlen = 0;
+  size_t mlen = 0;
   std::string nprompt;
 
   /* We only expand the mode string for the last line of a multiline prompt
@@ -180,7 +181,7 @@ Readline::expand_prompt (const std::string &pmt, expand_prompt_flags flags,
   if ((mb_cur_max <= 1 || rl_byte_oriented)
       && nprompt.find (RL_PROMPT_START_IGNORE) == nprompt.npos)
     {
-      unsigned int l = static_cast<unsigned int> (nprompt.size ());
+      size_t l = nprompt.size ();
       if (l < (_rl_screenwidth > 0 ? _rl_screenwidth : 80))
         {
           if (lp)
@@ -194,29 +195,29 @@ Readline::expand_prompt (const std::string &pmt, expand_prompt_flags flags,
 
           local_prompt.newlines.resize (2);
           local_prompt.newlines[0] = 0;
-          local_prompt.newlines[1] = static_cast<unsigned int> (-1);
+          local_prompt.newlines[1] = static_cast<size_t> (-1);
 
           return nprompt;
         }
     }
 
-  unsigned int l = static_cast<unsigned int> (nprompt.size ());
+  size_t l = nprompt.size ();
   std::string ret;
 
   /* Guess at how many screen lines the prompt will take to size the array that
      keeps track of where the line wraps happen */
-  unsigned int newlines_guess = (_rl_screenwidth > 0)
-                                    ? APPROX_DIV (l, _rl_screenwidth)
-                                    : APPROX_DIV (l, 80);
+  size_t newlines_guess = (_rl_screenwidth > 0)
+                              ? APPROX_DIV (l, _rl_screenwidth)
+                              : APPROX_DIV (l, 80);
 
   local_prompt.newlines.resize (newlines_guess + 1);
-  unsigned int newlines = 0;
+  size_t newlines = 0;
   local_prompt.newlines[0] = 0;
 
-  for (unsigned int i = 1; i <= newlines_guess; i++)
-    local_prompt.newlines[i] = static_cast<unsigned int> (-1);
+  for (size_t i = 1; i <= newlines_guess; i++)
+    local_prompt.newlines[i] = static_cast<size_t> (-1);
 
-  unsigned int rl, last, ninvis, invfl, ind, pind, physchars;
+  size_t rl, last, ninvis, invfl, ind, pind, physchars;
   std::string::iterator p; // source iterator
   std::string::iterator igstart;
   bool ignoring = false, invflset = false;
@@ -240,7 +241,7 @@ Readline::expand_prompt (const std::string &pmt, expand_prompt_flags flags,
         {
           ignoring = false;
           if (p != (igstart + 1))
-            last = static_cast<unsigned int> (ret.size ()) - 1;
+            last = ret.size () - 1;
           continue;
         }
       else
@@ -248,7 +249,7 @@ Readline::expand_prompt (const std::string &pmt, expand_prompt_flags flags,
 #if defined(HANDLE_MULTIBYTE)
           if (mb_cur_max > 1 && !rl_byte_oriented)
             {
-              pind = static_cast<unsigned int> (p - nprompt.begin ());
+              pind = static_cast<size_t> (p - nprompt.begin ());
               ind = _rl_find_next_mbchar (nprompt, pind, 1, MB_FIND_NONZERO);
               l = ind - pind;
               while (l--)
@@ -286,26 +287,25 @@ Readline::expand_prompt (const std::string &pmt, expand_prompt_flags flags,
               invflset = true;
             }
 
-          unsigned int bound;
+          size_t bound;
           if (physchars >= (bound = (newlines + 1) * _rl_screenwidth)
               && local_prompt.newlines[newlines + 1]
-                     == static_cast<unsigned int> (-1))
+                     == static_cast<size_t> (-1))
             {
-              unsigned int new_;
+              size_t new_;
               if (physchars > bound) /* should rarely happen */
                 {
 #if defined(HANDLE_MULTIBYTE)
                   if (mb_cur_max > 1 && !rl_byte_oriented)
                     new_ = _rl_find_prev_mbchar (
-                        ret, static_cast<unsigned int> (ret.size ()),
-                        MB_FIND_ANY);
+                        ret, static_cast<uint32_t> (ret.size ()), MB_FIND_ANY);
                   else
 #endif
-                    new_ = static_cast<unsigned int> (ret.size ())
+                    new_ = static_cast<uint32_t> (ret.size ())
                            - (physchars - bound);
                 }
               else
-                new_ = static_cast<unsigned int> (ret.size ());
+                new_ = static_cast<uint32_t> (ret.size ());
               local_prompt.newlines[++newlines] = new_;
             }
         }
@@ -349,7 +349,7 @@ Readline::expand_prompt (const std::string &pmt, expand_prompt_flags flags,
  * number of physical characters exceeds the screen width and the prompt
  * wraps.
  */
-unsigned int
+size_t
 Readline::rl_expand_prompt (char *prompt)
 {
   /* Clear out any saved values. */
@@ -390,6 +390,7 @@ Readline::rl_expand_prompt (char *prompt)
           p, PMT_MULTILINE, &local_prompt.visible_length,
           &local_prompt.last_invisible, &local_prompt.invis_chars_first_line,
           &local_prompt.physical_chars);
+
       return local_prompt.prefix_length;
     }
 }
@@ -398,20 +399,20 @@ Readline::rl_expand_prompt (char *prompt)
 void
 Readline::rl_redisplay ()
 {
-  unsigned int in, linenum, cursor_linenum;
-  unsigned int out;
-  unsigned int inv_botlin, lb_botlin, lb_linenum;
-  unsigned int o_cpos, lpos;
-  unsigned int newlines;
+  size_t in, linenum, cursor_linenum;
+  size_t out;
+  size_t inv_botlin, lb_botlin, lb_linenum;
+  size_t o_cpos, lpos;
+  size_t newlines;
   char cur_face;
-  unsigned int hl_begin, hl_end;
+  size_t hl_begin, hl_end;
   size_t mb_cur_max = MB_CUR_MAX;
 #if defined(HANDLE_MULTIBYTE)
   wchar_t wc = 0;
   size_t wc_bytes;
-  unsigned int wc_width = 0;
+  size_t wc_width = 0;
   mbstate_t ps;
-  unsigned int _rl_wrapped_multicolumn = 0;
+  size_t _rl_wrapped_multicolumn = 0;
 #endif
 
   if (!_rl_echoing_p)
@@ -425,14 +426,11 @@ Readline::rl_redisplay ()
   cur_face = FACE_NORMAL;
   /* Can turn this into an array for multiple highlighted objects in addition
      to the region */
-  hl_begin = hl_end = static_cast<unsigned int> (-1);
+  hl_begin = hl_end = static_cast<size_t> (-1);
 
   if (rl_mark_active_p ())
     set_active_region (&hl_begin,
                        &hl_end); // XXX: should we check for failure?
-
-  if (!rl_display_prompt)
-    rl_display_prompt = "";
 
   if (!line_structures_initialized)
     {
@@ -454,7 +452,7 @@ Readline::rl_redisplay ()
     _rl_horizontal_scroll_mode = false;
 
   /* Draw the line into the buffer. */
-  cpos_buffer_position = static_cast<unsigned int> (-1);
+  cpos_buffer_position = static_cast<size_t> (-1);
 
   prompt_multibyte_chars
       = local_prompt.visible_length - local_prompt.physical_chars;
@@ -487,40 +485,39 @@ Readline::rl_redisplay ()
   if (rl_display_prompt == rl_prompt || !local_prompt.prompt.empty ())
     {
       if (!local_prompt.prefix.empty () && forced_display)
-        _rl_output_some_chars (
-            local_prompt.prefix.data (),
-            static_cast<unsigned int> (local_prompt.prefix.size ()));
+        _rl_output_some_chars (local_prompt.prefix.data (),
+                               local_prompt.prefix.size ());
 
       if (!local_prompt.prompt.empty ())
         invis_adds (local_prompt.prompt, cur_face);
 
-      wrap_offset = static_cast<unsigned int> (local_prompt.prompt.size ())
-                    - local_prompt.visible_length;
+      wrap_offset = local_prompt.prompt.size () - local_prompt.visible_length;
     }
   else
     {
-      unsigned int pmtlen;
-      const char *prompt_this_line = std::strrchr (rl_display_prompt, '\n');
-      if (!prompt_this_line)
-        prompt_this_line = rl_display_prompt;
+      size_t prompt_this_line = rl_display_prompt.rfind ('\n');
+      if (prompt_this_line == std::string::npos)
+        prompt_this_line = 0;
       else
         {
           prompt_this_line++;
-          pmtlen = static_cast<unsigned int> (
-              prompt_this_line - rl_display_prompt); /* temp var */
           if (forced_display)
             {
-              _rl_output_some_chars (rl_display_prompt, pmtlen);
+              _rl_output_some_chars (rl_display_prompt.data (),
+                                     prompt_this_line);
               /* Make sure we are at column zero even after a newline,
                  regardless of the state of terminal output processing. */
-              if (pmtlen < 2 || prompt_this_line[-2] != '\r')
+              if (prompt_this_line < 2
+                  || rl_display_prompt[prompt_this_line - 2] != '\r')
                 cr ();
             }
         }
 
-      local_prompt.physical_chars = pmtlen
-          = static_cast<unsigned int> (std::strlen (prompt_this_line));
-      invis_adds (prompt_this_line, pmtlen, cur_face);
+      local_prompt.physical_chars
+          = rl_display_prompt.size () - prompt_this_line;
+
+      invis_adds (&rl_display_prompt[prompt_this_line],
+                  local_prompt.physical_chars, cur_face);
       wrap_offset = local_prompt.invis_chars_first_line = 0;
     }
 
@@ -548,11 +545,10 @@ Readline::rl_redisplay ()
      contents of the command line? */
   if (lpos >= _rl_screenwidth)
     {
-      unsigned int temp = 0;
+      size_t temp = 0;
 
       /* first copy the linebreaks array we computed in expand_prompt */
-      while (local_prompt.newlines[newlines + 1]
-             != static_cast<unsigned int> (-1))
+      while (local_prompt.newlines[newlines + 1] != static_cast<size_t> (-1))
         {
           temp = local_prompt.newlines[newlines + 1];
           inv_lbreaks[++newlines] = temp;
@@ -560,9 +556,8 @@ Readline::rl_redisplay ()
 
       /* Now set lpos from the last newline */
       if (mb_cur_max > 1 && !rl_byte_oriented && prompt_multibyte_chars > 0)
-        lpos = _rl_col_width (
-                   local_prompt.prompt.data (), temp,
-                   static_cast<unsigned int> (local_prompt.prompt.size ()), 1)
+        lpos = _rl_col_width (local_prompt.prompt.data (), temp,
+                              local_prompt.prompt.size (), 1)
                - (wrap_offset - local_prompt.invis_chars_first_line);
       else
         lpos -= (_rl_screenwidth * newlines);
@@ -622,7 +617,7 @@ Readline::rl_redisplay ()
           else
             {
               int temp = WCWIDTH (wc);
-              wc_width = (temp >= 0) ? static_cast<unsigned int> (temp) : 1;
+              wc_width = (temp >= 0) ? static_cast<size_t> (temp) : 1;
             }
         }
 #endif
@@ -642,14 +637,13 @@ Readline::rl_redisplay ()
           if (_rl_output_meta_chars == 0)
             {
               char obuf[5];
-              unsigned int olen;
+              size_t olen;
 
-              olen
-                  = static_cast<unsigned int> (std::sprintf (obuf, "\\%o", c));
+              olen = static_cast<size_t> (std::sprintf (obuf, "\\%o", c));
 
               if (lpos + olen >= _rl_screenwidth)
                 {
-                  unsigned int temp = _rl_screenwidth - lpos;
+                  size_t temp = _rl_screenwidth - lpos;
                   inv_lbreaks[++newlines] = out + temp;
 #if defined(HANDLE_MULTIBYTE)
                   line_state_invisible->wrapped_line[newlines]
@@ -660,7 +654,7 @@ Readline::rl_redisplay ()
               else
                 lpos += olen;
 
-              for (unsigned int temp = 0; temp < olen; temp++)
+              for (size_t temp = 0; temp < olen; temp++)
                 {
                   invis_addc (obuf[temp], cur_face);
                 }
@@ -673,11 +667,11 @@ Readline::rl_redisplay ()
 #if defined(DISPLAY_TABS)
       else if (c == '\t')
         {
-          unsigned int newout = out + 8 - lpos % 8;
-          unsigned int temp = newout - out;
+          size_t newout = out + 8 - lpos % 8;
+          size_t temp = newout - out;
           if (lpos + temp >= _rl_screenwidth)
             {
-              unsigned int temp2 = _rl_screenwidth - lpos;
+              size_t temp2 = _rl_screenwidth - lpos;
               inv_lbreaks[++newlines] = out + temp2;
 #if defined(HANDLE_MULTIBYTE)
               line_state_invisible->wrapped_line[newlines]
@@ -719,7 +713,7 @@ Readline::rl_redisplay ()
               _rl_wrapped_multicolumn = 0;
 
               if (_rl_screenwidth < lpos + wc_width)
-                for (unsigned int i = lpos; i < _rl_screenwidth; i++)
+                for (size_t i = lpos; i < _rl_screenwidth; i++)
                   {
                     /* The space will be removed in update_line() */
                     invis_addc (' ', cur_face);
@@ -730,8 +724,7 @@ Readline::rl_redisplay ()
                   cpos_buffer_position = out;
                   lb_linenum = newlines;
                 }
-              for (unsigned int i = in;
-                   i < in + static_cast<unsigned int> (wc_bytes); i++)
+              for (size_t i = in; i < in + wc_bytes; i++)
                 invis_addc (rl_line_buffer[i], cur_face);
             }
           else
@@ -762,7 +755,7 @@ Readline::rl_redisplay ()
 #endif
     }
 
-  if (cpos_buffer_position == static_cast<unsigned int> (-1))
+  if (cpos_buffer_position == static_cast<size_t> (-1))
     {
       cpos_buffer_position = out;
       lb_linenum = newlines;
@@ -798,7 +791,7 @@ Readline::rl_redisplay ()
   displaying_prompt_first_line = true;
   if (!_rl_horizontal_scroll_mode && _rl_term_up && *_rl_term_up)
     {
-      unsigned int nleft, pos, changed_screen_line, tx;
+      size_t nleft, pos, changed_screen_line, tx;
 
       if (!rl_display_fixed || forced_display)
         {
@@ -833,24 +826,14 @@ Readline::rl_redisplay ()
                       : 0))
 #define W_OFFSET(line, offset) ((line) == 0 ? offset : 0)
 #define VIS_LLEN(l)                                                           \
-  ((l) > _rl_vis_botlin ? 0                                                   \
-                        : (vis_lbreaks[static_cast<size_t> (l + 1)]           \
-                           - vis_lbreaks[static_cast<size_t> (l)]))
-#define INV_LLEN(l)                                                           \
-  (inv_lbreaks[static_cast<size_t> (l + 1)]                                   \
-   - inv_lbreaks[static_cast<size_t> (l)])
-#define VIS_CHARS(line)                                                       \
-  (&visible_line[static_cast<size_t> (                                        \
-      vis_lbreaks[static_cast<size_t> (line)])])
-#define VIS_FACE(line)                                                        \
-  (&vis_face[static_cast<size_t> (vis_lbreaks[static_cast<size_t> (line)])])
+  ((l) > _rl_vis_botlin ? 0 : (vis_lbreaks[l + 1] - vis_lbreaks[l]))
+#define INV_LLEN(l) (inv_lbreaks[l + 1] - inv_lbreaks[l])
+#define VIS_CHARS(line) (&visible_line[vis_lbreaks[line]])
+#define VIS_FACE(line) (&vis_face[vis_lbreaks[line]])
 #define VIS_LINE(line) ((line) > _rl_vis_botlin) ? "" : VIS_CHARS (line)
 #define VIS_LINE_FACE(line) ((line) > _rl_vis_botlin) ? "" : VIS_FACE (line)
-#define INV_LINE(line)                                                        \
-  (&invisible_line[static_cast<size_t> (                                      \
-      inv_lbreaks[static_cast<size_t> (line)])])
-#define INV_LINE_FACE(line)                                                   \
-  (&inv_face[static_cast<size_t> (inv_lbreaks[static_cast<size_t> (line)])])
+#define INV_LINE(line) (&invisible_line[inv_lbreaks[line]])
+#define INV_LINE_FACE(line) (&inv_face[inv_lbreaks[line]])
 
 #define OLD_CPOS_IN_PROMPT()                                                  \
   (!cpos_adjusted && _rl_last_c_pos != o_cpos && _rl_last_c_pos > wrap_offset \
@@ -863,7 +846,7 @@ Readline::rl_redisplay ()
             It's imperfect, but better than display corruption. */
           if (rl_mark_active_p () && inv_botlin > _rl_screenheight)
             {
-              unsigned int extra = inv_botlin - _rl_screenheight;
+              size_t extra = inv_botlin - _rl_screenheight;
               for (linenum = 0; linenum <= extra; linenum++)
                 std::memset (INV_LINE_FACE (linenum), FACE_NORMAL,
                              INV_LLEN (linenum));
@@ -953,10 +936,9 @@ Readline::rl_redisplay ()
                   tt = VIS_CHARS (linenum);
                   _rl_move_vert (linenum);
                   _rl_move_cursor_relative (0, tt, VIS_FACE (linenum));
-                  _rl_clear_to_eol (
-                      (linenum == _rl_vis_botlin)
-                          ? static_cast<unsigned int> (std::strlen (tt))
-                          : _rl_screenwidth);
+                  _rl_clear_to_eol ((linenum == _rl_vis_botlin)
+                                        ? std::strlen (tt)
+                                        : _rl_screenwidth);
                 }
             }
           _rl_vis_botlin = inv_botlin;
@@ -1049,7 +1031,7 @@ Readline::rl_redisplay ()
   else /* Do horizontal scrolling. Much simpler */
     {
 #define M_OFFSET(margin, offset) ((margin) == 0 ? offset : 0)
-      unsigned int lmargin, ndisp, nleft, phys_c_pos, t;
+      size_t lmargin, ndisp, nleft, phys_c_pos, t;
 
       /* Always at top line. */
       _rl_last_v_pos = 0;
@@ -1089,8 +1071,7 @@ Readline::rl_redisplay ()
         {
           /* If we are moving back towards the beginning of the line and
              the last margin is no longer correct, compute a new one. */
-          lmargin = static_cast<unsigned int> (((cpos_buffer_position - 1) / t)
-                                               * t); /* XXX */
+          lmargin = (((cpos_buffer_position - 1) / t) * t); /* XXX */
           if (wrap_offset && lmargin > 0 && lmargin < nleft)
             lmargin = nleft;
         }
@@ -1205,39 +1186,39 @@ Readline::putc_face (int c, char face, char *cur_face)
     }                                                                         \
   while (0)
 
-/* PWP: update_line() is based on finding the middle difference of each
-   line on the screen; vis:
-
-                             /old first difference
-        /beginning of line   |              /old last same       /old EOL
-        v 		     v              v                    v
-old:	eddie> Oh, my little gruntle-buggy is to me, as lurgid as
-new:	eddie> Oh, my little buggy says to me, as lurgid as
-        ^		     ^        ^			   ^
-        \beginning of line   |	      \new last same	   \new end of line
-                             \new first difference
-
-   All are character pointers for the sake of speed.  Special cases for
-   no differences, as well as for end of line additions must be handled.
-
-   Could be made even smarter, but this works well enough */
+// PWP: update_line() is based on finding the middle difference of each
+// line on the screen; vis:
+//
+//                              /old first difference
+//         /beginning of line   |              /old last same       /old EOL
+//         v 		        v              v                    v
+// old:    eddie> Oh, my little gruntle-buggy is to me, as lurgid as
+// new:    eddie> Oh, my little buggy says to me, as lurgid as
+//         ^		        ^        ^                    ^
+//         \beginning of line   |	 \new last same	      \new end of line
+//                              \new first difference
+//
+// All are character pointers for the sake of speed.  Special cases for no
+// differences, as well as for end of line additions must be handled.
+//
+// Could be made even smarter, but this works well enough.
 void
 Readline::update_line (char *old, char *old_face, const char *new_,
-                       const char *new_face, unsigned int current_line,
-                       unsigned int omax, unsigned int nmax,
-                       unsigned int inv_botlin)
+                       const char *new_face, size_t current_line, size_t omax,
+                       size_t nmax, size_t inv_botlin)
 {
   const char *ofd, *ols, *oe, *nfd, *nls, *ne;
   const char *ofdf, *nfdf, *olsf, *nlsf;
-  unsigned int temp, wsatend, od, nd, o_cpos;
-  unsigned int current_invis_chars;
-  int lendiff, col_lendiff;
-  unsigned int col_temp, bytes_to_insert;
+  size_t current_invis_chars;
+  ssize_t lendiff, col_lendiff;
+  size_t bytes_to_insert;
+  size_t temp, col_temp, od, nd, o_cpos;
   size_t mb_cur_max = MB_CUR_MAX;
 #if defined(HANDLE_MULTIBYTE)
   mbstate_t ps_new, ps_old;
-  unsigned int new_offset, old_offset;
+  size_t new_offset, old_offset;
 #endif
+  bool wsatend;
 
   /* If we're at the right edge of a terminal that supports xn, we're
      ready to wrap around, so do so.  This fixes problems with knowing
@@ -1263,7 +1244,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
           wchar_t wc;
           mbstate_t ps;
           int oldwidth, newwidth;
-          unsigned int oldbytes, newbytes;
+          size_t oldbytes, newbytes;
           size_t ret;
 
           /* This fixes only double-column characters, but if the wrapped
@@ -1282,7 +1263,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
           /* 1. how many screen positions does first char in old consume? */
           std::memset (&ps, 0, sizeof (mbstate_t));
           ret = std::mbrtowc (&wc, old, mb_cur_max, &ps);
-          oldbytes = static_cast<unsigned int> (ret);
+          oldbytes = ret;
           if (MB_INVALIDCH (ret))
             {
               oldwidth = 1;
@@ -1299,7 +1280,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
            */
           std::memset (&ps, 0, sizeof (mbstate_t));
           ret = std::mbrtowc (&wc, new_, mb_cur_max, &ps);
-          newbytes = static_cast<unsigned int> (ret);
+          newbytes = ret;
           if (MB_INVALIDCH (ret))
             {
               newwidth = 1;
@@ -1330,7 +1311,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
               else
                 {
                   t = WCWIDTH (wc);
-                  newwidth += static_cast<unsigned int> ((t >= 0) ? t : 1);
+                  newwidth += static_cast<size_t> ((t >= 0) ? t : 1);
                   newbytes += ret;
                 }
             }
@@ -1353,7 +1334,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
               else
                 {
                   t = WCWIDTH (wc);
-                  oldwidth += (t >= 0) ? t : 1;
+                  oldwidth += static_cast<size_t> ((t >= 0) ? t : 1);
                   oldbytes += ret;
                 }
             }
@@ -1364,10 +1345,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
              _rl_output_some_chars below. */
           if (newwidth > 0)
             {
-              unsigned int i, j;
-
               puts_face (new_, new_face, newbytes);
-              _rl_last_c_pos = static_cast<unsigned int> (newwidth);
+              _rl_last_c_pos = static_cast<size_t> (newwidth);
               _rl_last_v_pos++;
 
               /* 5a. If the number of screen positions doesn't match, punt
@@ -1404,13 +1383,16 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                     }
                   std::memcpy (old, new_, newbytes);
                   std::memcpy (old_face, new_face, newbytes);
-                  j = static_cast<unsigned int> (newbytes - oldbytes);
-                  omax += j;
+                  ssize_t j = static_cast<ssize_t> (newbytes)
+                              - static_cast<ssize_t> (oldbytes);
+                  omax = static_cast<size_t> (static_cast<ssize_t> (omax) + j);
+                  size_t i;
                   /* Fix up indices if we copy data from one line to another */
                   for (i = current_line + 1; j != 0 && i <= inv_botlin + 1
                                              && i <= _rl_vis_botlin + 1;
                        i++)
-                    vis_lbreaks[i] += j;
+                    vis_lbreaks[i] = static_cast<size_t> (
+                        static_cast<ssize_t> (vis_lbreaks[i]) + j);
                 }
             }
           else
@@ -1456,9 +1438,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
       nd = 0;
       _rl_move_cursor_relative (0, old, old_face);
 
-      bytes_to_insert = static_cast<unsigned int> (ne - nfd);
-      unsigned int local_prompt_len
-          = static_cast<unsigned int> (local_prompt.prompt.size ());
+      bytes_to_insert = static_cast<size_t> (ne - nfd);
+      size_t local_prompt_len = local_prompt.prompt.size ();
       if (bytes_to_insert < local_prompt_len) /* ??? */
         goto dumb_update;
 
@@ -1475,9 +1456,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
           puts_face (new_ + local_prompt_len, nfdf + local_prompt_len,
                      bytes_to_insert);
           if (mb_cur_max > 1 && rl_byte_oriented)
-            _rl_last_c_pos
-                += _rl_col_width (new_, local_prompt_len,
-                                  static_cast<unsigned int> (ne - new_), 1);
+            _rl_last_c_pos += _rl_col_width (
+                new_, local_prompt_len, static_cast<size_t> (ne - new_), 1);
           else
             _rl_last_c_pos += bytes_to_insert;
         }
@@ -1526,7 +1506,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                  byte) character boundaries. */
               new_offset = old_offset = 0;
               for (ofd = old, ofdf = old_face, nfd = new_, nfdf = new_face;
-                   (ofd - old < omax) && *ofd
+                   ((ofd - old) < static_cast<ssize_t> (omax)) && *ofd
                    && _rl_compare_chars (old, old_offset, &ps_old, new_,
                                          new_offset, &ps_new)
                    && *ofdf == *nfdf;)
@@ -1547,17 +1527,18 @@ Readline::update_line (char *old, char *old_face, const char *new_,
   else
 #endif
     for (ofd = old, ofdf = old_face, nfd = new_, nfdf = new_face;
-         (ofd - old < omax) && *ofd && (*ofd == *nfd) && (*ofdf == *nfdf);
+         ((ofd - old) < static_cast<ssize_t> (omax)) && *ofd && (*ofd == *nfd)
+         && (*ofdf == *nfdf);
          ofd++, nfd++, ofdf++, nfdf++)
       ;
 
   /* Move to the end of the screen line.  ND and OD are used to keep track
      of the distance between ne and new and oe and old, respectively, to
      move a subtraction out of each loop. */
-  for (od = static_cast<unsigned int> (ofd - old), oe = ofd; od < omax && *oe;
+  for (od = static_cast<size_t> (ofd - old), oe = ofd; od < omax && *oe;
        oe++, od++)
     ;
-  for (nd = static_cast<unsigned int> (nfd - new_), ne = nfd; nd < nmax && *ne;
+  for (nd = static_cast<size_t> (nfd - new_), ne = nfd; nd < nmax && *ne;
        ne++, nd++)
     ;
 
@@ -1580,9 +1561,9 @@ Readline::update_line (char *old, char *old_face, const char *new_,
           && WCWIDTH (wc) == 0)
         {
           old_offset = _rl_find_prev_mbchar (
-              old, static_cast<unsigned int> (ofd - old), MB_FIND_ANY);
+              old, static_cast<size_t> (ofd - old), MB_FIND_ANY);
           new_offset = _rl_find_prev_mbchar (
-              new_, static_cast<unsigned int> (nfd - new_), MB_FIND_ANY);
+              new_, static_cast<size_t> (nfd - new_), MB_FIND_ANY);
           ofd = old + old_offset; /* equal by definition */
           nfd = new_ + new_offset;
           nfdf = new_face + new_offset;
@@ -1590,7 +1571,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
     }
 #endif
 
-  wsatend = 1; /* flag for trailing whitespace */
+  wsatend = true; // flag for trailing whitespace
 
 #if defined(HANDLE_MULTIBYTE)
   /* Find the last character that is the same between the two lines.  This
@@ -1598,12 +1579,12 @@ Readline::update_line (char *old, char *old_face, const char *new_,
   if (mb_cur_max > 1 && !rl_byte_oriented)
     {
       ols = old
-            + _rl_find_prev_mbchar (old, static_cast<unsigned int> (oe - old),
+            + _rl_find_prev_mbchar (old, static_cast<size_t> (oe - old),
                                     MB_FIND_ANY);
       olsf = old_face + (ols - old);
       nls = new_
-            + _rl_find_prev_mbchar (
-                new_, static_cast<unsigned int> (ne - new_), MB_FIND_ANY);
+            + _rl_find_prev_mbchar (new_, static_cast<size_t> (ne - new_),
+                                    MB_FIND_ANY);
       nlsf = new_face + (nls - new_);
 
       while ((ols > ofd) && (nls > nfd))
@@ -1611,23 +1592,23 @@ Readline::update_line (char *old, char *old_face, const char *new_,
           std::memset (&ps_old, 0, sizeof (mbstate_t));
           std::memset (&ps_new, 0, sizeof (mbstate_t));
 
-          if (_rl_compare_chars (
-                  old, static_cast<unsigned int> (ols - old), &ps_old, new_,
-                  static_cast<unsigned int> (nls - new_), &ps_new)
+          if (_rl_compare_chars (old, static_cast<size_t> (ols - old), &ps_old,
+                                 new_, static_cast<size_t> (nls - new_),
+                                 &ps_new)
                   == 0
               || *olsf != *nlsf)
             break;
 
           if (*ols == ' ')
-            wsatend = 0;
+            wsatend = false;
 
           ols = old
-                + _rl_find_prev_mbchar (
-                    old, static_cast<unsigned int> (ols - old), MB_FIND_ANY);
+                + _rl_find_prev_mbchar (old, static_cast<size_t> (ols - old),
+                                        MB_FIND_ANY);
           olsf = old_face + (ols - old);
           nls = new_
-                + _rl_find_prev_mbchar (
-                    new_, static_cast<unsigned int> (nls - new_), MB_FIND_ANY);
+                + _rl_find_prev_mbchar (new_, static_cast<size_t> (nls - new_),
+                                        MB_FIND_ANY);
           nlsf = new_face + (nls - new_);
         }
     }
@@ -1641,7 +1622,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
       while ((ols > ofd) && (nls > nfd) && (*ols == *nls) && (*olsf == *nlsf))
         {
           if (*ols != ' ')
-            wsatend = 0;
+            wsatend = false;
           ols--;
           olsf--;
           nls--;
@@ -1670,9 +1651,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
         {
           if (mb_cur_max > 1 && !rl_byte_oriented)
             ols = old
-                  + _rl_find_next_mbchar (
-                      old, static_cast<unsigned int> (ols - old), 1,
-                      MB_FIND_ANY);
+                  + _rl_find_next_mbchar (old, static_cast<size_t> (ols - old),
+                                          1, MB_FIND_ANY);
           else
             ols++;
         }
@@ -1681,8 +1661,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
           if (mb_cur_max > 1 && !rl_byte_oriented)
             nls = new_
                   + _rl_find_next_mbchar (
-                      new_, static_cast<unsigned int> (nls - new_), 1,
-                      MB_FIND_ANY);
+                      new_, static_cast<size_t> (nls - new_), 1, MB_FIND_ANY);
           else
             nls++;
         }
@@ -1727,44 +1706,43 @@ Readline::update_line (char *old, char *old_face, const char *new_,
      sequences (like drawing the `unbold' sequence without a corresponding
      `bold') that manifests itself on certain terminals. */
 
-  lendiff = static_cast<int> (local_prompt.prompt.size ());
-  if (lendiff > static_cast<int> (nmax))
-    lendiff = static_cast<int> (nmax);
-  od = static_cast<unsigned int> (
-      ofd - old); /* index of first difference in visible line */
-  nd = static_cast<unsigned int> (nfd - new_); /* nd, od are buffer indexes */
+  lendiff = static_cast<ssize_t> (local_prompt.prompt.size ());
+  if (lendiff > static_cast<ssize_t> (nmax))
+    lendiff = static_cast<ssize_t> (nmax);
+  od = static_cast<size_t> (
+      ofd - old); // index of first difference in visible line
+  nd = static_cast<size_t> (nfd - new_); // nd, od are buffer indexes
   if (current_line == 0 && !_rl_horizontal_scroll_mode && _rl_term_cr
-      && lendiff > static_cast<int> (local_prompt.visible_length)
+      && lendiff > static_cast<ssize_t> (local_prompt.visible_length)
       && _rl_last_c_pos > 0
       && (((od > 0 || nd > 0)
            && (od <= local_prompt.last_invisible
                || nd <= local_prompt.last_invisible))
-          || ((static_cast<int> (od) >= lendiff)
+          || ((static_cast<ssize_t> (od) >= lendiff)
               && _rl_last_c_pos < PROMPT_ENDING_INDEX)))
     {
       _rl_cr ();
       if (modmark)
         _rl_output_some_chars ("*", 1);
       _rl_output_some_chars (local_prompt.prompt.data (),
-                             static_cast<unsigned int> (lendiff));
+                             static_cast<size_t> (lendiff));
       if (mb_cur_max > 1 && !rl_byte_oriented)
         {
           /* If we just output the entire prompt string we can take advantage
              of knowing the number of physical characters in the prompt. If
              the prompt wraps lines (lendiff clamped at nmax), we can't. */
-          if (lendiff == static_cast<int> (local_prompt.prompt.size ()))
+          if (lendiff == static_cast<ssize_t> (local_prompt.prompt.size ()))
             _rl_last_c_pos = local_prompt.physical_chars + modmark;
           else
             /* We take wrap_offset into account here so we can pass correct
                information to _rl_move_cursor_relative. */
-            _rl_last_c_pos
-                = _rl_col_width (local_prompt.prompt.data (), 0,
-                                 static_cast<unsigned int> (lendiff), 1)
-                  - wrap_offset + modmark;
+            _rl_last_c_pos = _rl_col_width (local_prompt.prompt.data (), 0,
+                                            static_cast<size_t> (lendiff), 1)
+                             - wrap_offset + modmark;
           cpos_adjusted = true;
         }
       else
-        _rl_last_c_pos = static_cast<unsigned int> (lendiff + modmark);
+        _rl_last_c_pos = static_cast<size_t> (lendiff + modmark);
 
       /* Now if we have printed the prompt string because the first difference
          was within the prompt, see if we need to recompute where the lines
@@ -1788,18 +1766,18 @@ Readline::update_line (char *old, char *old_face, const char *new_,
         {
           nfd = new_ + lendiff; /* number of characters we output above */
           nfdf = new_face + lendiff;
-          nd = static_cast<unsigned int> (lendiff);
+          nd = static_cast<size_t> (lendiff);
 
           /* Do a dumb update and return */
         dumb_update:
-          temp = static_cast<unsigned int> (ne - nfd);
-          if (static_cast<int> (temp) > 0)
+          if (ne > nfd)
             {
+              temp = static_cast<size_t> (ne - nfd);
               puts_face (nfd, nfdf, temp);
               if (mb_cur_max > 1 && !rl_byte_oriented)
                 {
                   _rl_last_c_pos += _rl_col_width (
-                      new_, nd, static_cast<unsigned int> (ne - new_), 1);
+                      new_, nd, static_cast<size_t> (ne - new_), 1);
                   /* Need to adjust here based on wrap_offset. Guess that if
                      this is the line containing the last line of the prompt
                      we need to adjust by
@@ -1820,9 +1798,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                      a goto dumb_update; */
                   else if (current_line == 0 && nfd == new_
                            && local_prompt.invis_chars_first_line
-                           && static_cast<unsigned int> (
-                                  local_prompt.prompt.size ())
-                                  <= temp
+                           && local_prompt.prompt.size () <= temp
                            && wrap_offset
                                   >= local_prompt.invis_chars_first_line
                            && _rl_horizontal_scroll_mode == 0)
@@ -1868,11 +1844,11 @@ Readline::update_line (char *old, char *old_face, const char *new_,
      lendiff == difference in buffer (bytes)
      col_lendiff == difference on screen (columns)
      When not using multibyte characters, these are equal */
-  lendiff = static_cast<int> ((nls - nfd) - (ols - ofd));
+  lendiff = (nls - nfd) - (ols - ofd);
   if (mb_cur_max > 1 && !rl_byte_oriented)
     {
-      unsigned int newchars, newwidth;
-      unsigned int oldchars, oldwidth;
+      size_t newchars, newwidth;
+      size_t oldchars, oldwidth;
 
       newchars = static_cast<unsigned char> (nls - new_);
       oldchars = static_cast<unsigned char> (ols - old);
@@ -1886,8 +1862,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
          We don't have to compare, since we know the characters are the same.
          The check of differing numbers of invisible chars may be extraneous.
          XXX - experimental */
-      unsigned int local_prompt_len
-          = static_cast<unsigned int> (local_prompt.prompt.size ());
+      size_t local_prompt_len = local_prompt.prompt.size ();
       if (current_line == 0 && nfd == new_
           && newchars > local_prompt.last_invisible
           && newchars <= local_prompt_len && local_prompt_len <= nmax
@@ -1905,8 +1880,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
               nls += newind - newchars;
               ols += oldind - oldchars;
 
-              newchars = static_cast<unsigned int> (newind);
-              oldchars = static_cast<unsigned int> (oldind);
+              newchars = newind;
+              oldchars = oldind;
 #else
               nls++;
               ols++;
@@ -1914,20 +1889,19 @@ Readline::update_line (char *old, char *old_face, const char *new_,
               oldchars++;
 #endif
             }
-          newwidth
-              = (newchars == local_prompt_len)
-                    ? local_prompt.physical_chars + wrap_offset
-                    : _rl_col_width (
-                        new_, 0, static_cast<unsigned int> (nls - new_), 1);
+          newwidth = (newchars == local_prompt_len)
+                         ? local_prompt.physical_chars + wrap_offset
+                         : _rl_col_width (new_, 0,
+                                          static_cast<size_t> (nls - new_), 1);
           /* if we changed nls and ols, we need to recompute lendiff */
           lendiff = static_cast<int> ((nls - nfd) - (ols - ofd));
         }
       else
-        newwidth = _rl_col_width (new_, static_cast<unsigned int> (nfd - new_),
-                                  static_cast<unsigned int> (nls - new_), 1);
+        newwidth = _rl_col_width (new_, static_cast<size_t> (nfd - new_),
+                                  static_cast<size_t> (nls - new_), 1);
 
-      oldwidth = _rl_col_width (old, static_cast<unsigned int> (ofd - old),
-                                static_cast<unsigned int> (ols - old), 1);
+      oldwidth = _rl_col_width (old, static_cast<size_t> (ofd - old),
+                                static_cast<size_t> (ols - old), 1);
 
       col_lendiff = static_cast<int> (newwidth) - static_cast<int> (oldwidth);
     }
@@ -1967,15 +1941,15 @@ Readline::update_line (char *old, char *old_face, const char *new_,
      screen columns.  A `dumb' update moves to the spot of first difference
      and writes TEMP bytes. */
   /* Insert (diff (len (old), len (new_)) ch. */
-  temp = static_cast<unsigned int> (ne - nfd);
+  temp = static_cast<size_t> (ne - nfd);
   if (mb_cur_max > 1 && !rl_byte_oriented)
-    col_temp = _rl_col_width (new_, static_cast<unsigned int> (nfd - new_),
-                              static_cast<unsigned int> (ne - new_), 1);
+    col_temp = _rl_col_width (new_, static_cast<size_t> (nfd - new_),
+                              static_cast<size_t> (ne - new_), 1);
   else
     col_temp = temp;
 
   /* how many bytes from the new line buffer to write to the display */
-  bytes_to_insert = static_cast<unsigned int> (nls - nfd);
+  bytes_to_insert = static_cast<size_t> (nls - nfd);
 
   /* col_lendiff > 0 if we are adding characters to the line */
   if (col_lendiff > 0) /* XXX - was lendiff */
@@ -1997,7 +1971,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
              adjust _rl_last_c_pos to account for wrap_offset and set
              cpos_adjusted to let the caller know. */
           if (current_line == 0 && displaying_prompt_first_line && wrap_offset
-              && ((nfd - new_) <= local_prompt.last_invisible))
+              && (static_cast<size_t> (nfd - new_)
+                  <= local_prompt.last_invisible))
             ADJUST_CPOS (
                 wrap_offset); /* XXX - prompt_invis_chars_first_line? */
           return;
@@ -2020,19 +1995,19 @@ Readline::update_line (char *old, char *old_face, const char *new_,
              number of invisible characters in the line and we're not drawing
              the entire prompt string. */
           if (*ols
-              && ((_rl_horizontal_scroll_mode && _rl_last_c_pos == 0
-                   && lendiff > static_cast<int> (local_prompt.visible_length)
+              && !(_rl_horizontal_scroll_mode && _rl_last_c_pos == 0
+                   && lendiff
+                          > static_cast<ssize_t> (local_prompt.visible_length)
                    && current_invis_chars > 0)
-                  == 0)
-              && (((mb_cur_max > 1 && !rl_byte_oriented) && current_line == 0
+              && !((mb_cur_max > 1 && !rl_byte_oriented) && current_line == 0
                    && wrap_offset
-                   && ((nfd - new_) <= local_prompt.last_invisible)
+                   && ((nfd - new_)
+                       <= static_cast<ssize_t> (local_prompt.last_invisible))
                    && (col_lendiff
-                       < static_cast<int> (local_prompt.visible_length)))
-                  == 0)
-              && (visible_wrap_offset >= current_invis_chars))
+                       < static_cast<ssize_t> (local_prompt.visible_length)))
+              && visible_wrap_offset >= current_invis_chars)
             {
-              open_some_spaces (static_cast<unsigned int> (col_lendiff));
+              open_some_spaces (static_cast<size_t> (col_lendiff));
               puts_face (nfd, nfdf, bytes_to_insert);
               if (mb_cur_max > 1 && !rl_byte_oriented)
                 _rl_last_c_pos += _rl_col_width (nfd, 0, bytes_to_insert, 1);
@@ -2057,7 +2032,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                  and set cpos_adjusted to let the caller know. */
               if ((mb_cur_max > 1 && !rl_byte_oriented) && current_line == 0
                   && displaying_prompt_first_line && wrap_offset
-                  && ((nfd - new_) <= local_prompt.last_invisible))
+                  && (static_cast<size_t> (nfd - new_)
+                      <= local_prompt.last_invisible))
                 ADJUST_CPOS (
                     wrap_offset); /* XXX - prompt_invis_chars_first_line? */
               return;
@@ -2070,7 +2046,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                  and set cpos_adjusted to let the caller know. */
               if ((mb_cur_max > 1 && !rl_byte_oriented) && current_line == 0
                   && displaying_prompt_first_line && wrap_offset
-                  && ((nfd - new_) <= local_prompt.last_invisible))
+                  && (static_cast<size_t> (nfd - new_)
+                      <= local_prompt.last_invisible))
                 ADJUST_CPOS (
                     wrap_offset); /* XXX - prompt_invis_chars_first_line? */
             }
@@ -2092,9 +2069,10 @@ Readline::update_line (char *old, char *old_face, const char *new_,
               && current_line == prompt_last_screen_line && wrap_offset
               && displaying_prompt_first_line
               && wrap_offset != local_prompt.invis_chars_first_line
-              && ((nfd - new_) < (local_prompt.last_invisible
-                                  - (current_line * _rl_screenwidth
-                                     + local_prompt.invis_chars_first_line))))
+              && (static_cast<size_t> (nfd - new_)
+                  < (local_prompt.last_invisible
+                     - (current_line * _rl_screenwidth
+                        + local_prompt.invis_chars_first_line))))
             ADJUST_CPOS (wrap_offset - local_prompt.invis_chars_first_line);
 
           /* XXX - what happens if wrap_offset == prompt_invis_chars_first_line
@@ -2105,15 +2083,14 @@ Readline::update_line (char *old, char *old_face, const char *new_,
   else /* Delete characters from line. */
     {
       /* If possible and inexpensive to use terminal deletion, then do so. */
-      if (_rl_term_dc
-          && (2 * col_temp) >= static_cast<unsigned int> (-col_lendiff))
+      if (_rl_term_dc && (2 * col_temp) >= static_cast<size_t> (-col_lendiff))
         {
           /* If all we're doing is erasing the invisible characters in the
              prompt string, don't bother.  It screws up the assumptions
              about what's on the screen. */
           if (_rl_horizontal_scroll_mode && _rl_last_c_pos == 0
               && displaying_prompt_first_line
-              && static_cast<unsigned int> (-lendiff) == visible_wrap_offset)
+              && static_cast<size_t> (-lendiff) == visible_wrap_offset)
             col_lendiff = 0;
 
           /* If we have moved lmargin and we're shrinking the line, we've
@@ -2122,11 +2099,12 @@ Readline::update_line (char *old, char *old_face, const char *new_,
              position calculation */
           if (_rl_horizontal_scroll_mode && displaying_prompt_first_line == 0
               && col_lendiff
-              && _rl_last_c_pos < static_cast<unsigned int> (-col_lendiff))
+              && _rl_last_c_pos < static_cast<size_t> (-col_lendiff))
             col_lendiff = 0;
 
           if (col_lendiff)
-            delete_chars (-col_lendiff); /* delete (diff) characters */
+            delete_chars (static_cast<int> (
+                -col_lendiff)); /* delete (diff) characters */
 
           /* Copy (new) chars to screen from first diff to last match,
              overwriting what is there. */
@@ -2146,7 +2124,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                       && displaying_prompt_first_line
                       && local_prompt.invis_chars_first_line
                       && _rl_last_c_pos >= local_prompt.invis_chars_first_line
-                      && ((nfd - new_) <= local_prompt.last_invisible))
+                      && (static_cast<size_t> (nfd - new_)
+                          <= local_prompt.last_invisible))
                     ADJUST_CPOS (local_prompt.invis_chars_first_line);
 
 #if 1
@@ -2170,8 +2149,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                  so we move there with _rl_move_cursor_relative */
               if (_rl_horizontal_scroll_mode && ((oe - old) > (ne - new_)))
                 {
-                  _rl_move_cursor_relative (
-                      static_cast<unsigned int> (ne - new_), new_, new_face);
+                  _rl_move_cursor_relative (static_cast<size_t> (ne - new_),
+                                            new_, new_face);
                   goto clear_rest_of_line;
                 }
             }
@@ -2192,20 +2171,19 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                   if (current_line == 0 && wrap_offset
                       && displaying_prompt_first_line
                       && _rl_last_c_pos > wrap_offset
-                      && ((nfd - new_) <= local_prompt.last_invisible))
+                      && (static_cast<size_t> (nfd - new_)
+                          <= local_prompt.last_invisible))
                     ADJUST_CPOS (
-                        wrap_offset); /* XXX - prompt_invis_chars_first_line?
-                                       */
+                        wrap_offset); // XXX - prompt_invis_chars_first_line?
                 }
             }
         clear_rest_of_line:
           lendiff = static_cast<int> ((oe - old) - (ne - new_));
           if (mb_cur_max > 1 && !rl_byte_oriented)
-            col_lendiff
-                = static_cast<int> (_rl_col_width (
-                      old, 0, static_cast<unsigned int> (oe - old), 1))
-                  - static_cast<int> (_rl_col_width (
-                      new_, 0, static_cast<unsigned int> (ne - new_), 1));
+            col_lendiff = static_cast<int> (_rl_col_width (
+                              old, 0, static_cast<size_t> (oe - old), 1))
+                          - static_cast<int> (_rl_col_width (
+                              new_, 0, static_cast<size_t> (ne - new_), 1));
           else
             col_lendiff = lendiff;
 
@@ -2219,9 +2197,9 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                   || (_rl_last_c_pos < _rl_screenwidth)))
             {
               if (_rl_term_autowrap && current_line < inv_botlin)
-                space_to_eol (static_cast<unsigned int> (col_lendiff));
+                space_to_eol (static_cast<size_t> (col_lendiff));
               else
-                _rl_clear_to_eol (static_cast<unsigned int> (col_lendiff));
+                _rl_clear_to_eol (static_cast<size_t> (col_lendiff));
             }
         }
     }
@@ -2239,16 +2217,16 @@ Readline::rl_on_new_line_with_prompt ()
      redisplay. */
   const char *lprompt = !local_prompt.prompt.empty ()
                             ? local_prompt.prompt.c_str ()
-                            : rl_prompt;
+                            : rl_prompt.c_str ();
   visible_line = lprompt;
   invisible_line = lprompt;
 
   /* If the prompt contains newlines, take the last tail. */
-  char *prompt_last_line = std::strrchr (rl_prompt, '\n');
+  const char *prompt_last_line = std::strrchr (rl_prompt.c_str (), '\n');
   if (!prompt_last_line)
-    prompt_last_line = rl_prompt;
+    prompt_last_line = rl_prompt.c_str ();
 
-  unsigned int l = static_cast<unsigned int> (std::strlen (prompt_last_line));
+  size_t l = std::strlen (prompt_last_line);
   if (MB_CUR_MAX > 1 && !rl_byte_oriented)
     _rl_last_c_pos = _rl_col_width (prompt_last_line, 0, l, 1); /* XXX */
   else
@@ -2257,8 +2235,7 @@ Readline::rl_on_new_line_with_prompt ()
   /* Dissect prompt_last_line into screen lines. Note that here we have
      to use the real screenwidth. Readline's notion of screenwidth might be
      one less, see terminal.c. */
-  unsigned int real_screenwidth
-      = _rl_screenwidth + (_rl_term_autowrap ? 0 : 1);
+  size_t real_screenwidth = _rl_screenwidth + (_rl_term_autowrap ? 0 : 1);
   _rl_last_v_pos = l / real_screenwidth;
 
   /* If the prompt length is a multiple of real_screenwidth, we don't know
@@ -2266,9 +2243,10 @@ Readline::rl_on_new_line_with_prompt ()
      beginning of the next line. Output a newline just to be safe. */
   if (l > 0 && (l % real_screenwidth) == 0)
     _rl_output_some_chars ("\n", 1);
+
   last_lmargin = 0;
 
-  unsigned int newlines = 0, i = 0;
+  size_t newlines = 0, i = 0;
   while (i <= l)
     {
       _rl_vis_botlin = newlines;
@@ -2290,11 +2268,11 @@ Readline::rl_on_new_line_with_prompt ()
    the movement is being done.
    DATA is always the visible line or the invisible line */
 void
-Readline::_rl_move_cursor_relative (unsigned int newcpos, const char *data,
+Readline::_rl_move_cursor_relative (size_t newcpos, const char *data,
                                     const char *dataf)
 {
-  unsigned int woff;       /* number of invisible chars on current line */
-  unsigned int cpos, dpos; /* current and desired cursor positions */
+  size_t woff;       /* number of invisible chars on current line */
+  size_t cpos, dpos; /* current and desired cursor positions */
   int adjust;
   size_t mb_cur_max = MB_CUR_MAX;
 
@@ -2329,8 +2307,7 @@ Readline::_rl_move_cursor_relative (unsigned int newcpos, const char *data,
         {
           dpos = local_prompt.physical_chars
                  + _rl_col_width (
-                     data,
-                     static_cast<unsigned int> (local_prompt.prompt.size ()),
+                     data, static_cast<size_t> (local_prompt.prompt.size ()),
                      newcpos, 1);
           cpos_adjusted = true;
           adjust = 0;
@@ -2346,11 +2323,11 @@ Readline::_rl_move_cursor_relative (unsigned int newcpos, const char *data,
          exceeds the screen width with the last invisible character
          (prompt_last_invisible) in the last line.  IN_INVISLINE is the
          offset of DATA in invisible_line */
-      unsigned int in_invisline = 0;
+      size_t in_invisline = 0;
       if (data > invisible_line
           && data < &invisible_line[static_cast<size_t> (
-                 inv_lbreaks[static_cast<size_t> (_rl_inv_botlin + 1)])])
-        in_invisline = static_cast<unsigned int> (data - &invisible_line[0]);
+                 inv_lbreaks[_rl_inv_botlin + 1])])
+        in_invisline = static_cast<size_t> (data - &invisible_line[0]);
 
       /* Use NEW when comparing against the last invisible character in the
          prompt string, since they're both buffer indices and DPOS is a
@@ -2368,10 +2345,8 @@ Readline::_rl_move_cursor_relative (unsigned int newcpos, const char *data,
                && /* visible line */
                _rl_last_v_pos == prompt_last_screen_line && wrap_offset >= woff
                && dpos >= woff
-               && newcpos
-                      > (local_prompt.last_invisible
-                         - (vis_lbreaks[static_cast<size_t> (_rl_last_v_pos)])
-                         - wrap_offset))))
+               && newcpos > (local_prompt.last_invisible
+                             - (vis_lbreaks[_rl_last_v_pos]) - wrap_offset))))
         /* XXX last comparison might need to be >= */
         {
           dpos -= woff;
@@ -2392,7 +2367,7 @@ Readline::_rl_move_cursor_relative (unsigned int newcpos, const char *data,
   /* It may be faster to output a CR, and then move forwards instead
      of moving backwards. */
   /* i == current physical cursor position. */
-  unsigned int i;
+  size_t i;
 #if defined(HANDLE_MULTIBYTE)
   if (mb_cur_max > 1 && !rl_byte_oriented)
     i = _rl_last_c_pos;
@@ -2457,7 +2432,7 @@ Readline::_rl_move_cursor_relative (unsigned int newcpos, const char *data,
 
 /* PWP: move the cursor up or down. */
 void
-Readline::_rl_move_vert (unsigned int to)
+Readline::_rl_move_vert (size_t to)
 {
   if (_rl_last_v_pos == to || to > _rl_screenheight)
     return;
@@ -2592,35 +2567,29 @@ Readline::rl_restore_prompt ()
       = 0;
 }
 
-char *
+std::string
 Readline::_rl_make_prompt_for_search (char pchar)
 {
-  char *pmt, *p;
+  const char *p;
+  std::string pmt;
 
   rl_save_prompt ();
 
   /* We've saved the prompt, and can do anything with the various prompt
      strings we need before they're restored.  We want the unexpanded
      portion of the prompt string after any final newline. */
-  p = rl_prompt ? std::strrchr (rl_prompt, '\n') : nullptr;
+  p = (!rl_prompt.empty ()) ? std::strrchr (rl_prompt.c_str (), '\n')
+                            : nullptr;
   if (p == nullptr)
     {
-      size_t len = (rl_prompt && *rl_prompt) ? std::strlen (rl_prompt) : 0;
-      pmt = new char[len + 2];
-      if (len)
-        std::strcpy (pmt, rl_prompt);
-      pmt[len] = pchar;
-      pmt[len + 1] = '\0';
+      pmt = rl_prompt;
+      pmt.push_back (pchar);
     }
   else
     {
       p++;
-      size_t len = std::strlen (p);
-      pmt = new char[len + 2];
-      if (len)
-        std::strcpy (pmt, p);
-      pmt[len] = pchar;
-      pmt[len + 1] = '\0';
+      pmt = p;
+      pmt.push_back (pchar);
     }
 
   /* will be overwritten by expand_prompt, called from rl_message */
@@ -2632,7 +2601,7 @@ Readline::_rl_make_prompt_for_search (char pchar)
    ncurses documentation and use either im/ei with explicit spaces, or IC/ic
    by itself.  We assume there will either be ei or we don't need to use it. */
 void
-Readline::open_some_spaces (unsigned int col)
+Readline::open_some_spaces (size_t col)
 {
 #if !defined(__MSDOS__) && (!defined(__MINGW32__) || defined(NCURSES_VERSION))
   char *buffer;
@@ -2647,7 +2616,7 @@ Readline::open_some_spaces (unsigned int col)
     {
       ::tputs (_rl_term_im, 1, &_rl_output_character_function);
       /* just output the desired number of spaces */
-      for (unsigned int i = col; i--;)
+      for (size_t i = col; i--;)
         _rl_output_character_function (' ');
       /* If there is a string to turn off insert mode, use it now. */
       if (_rl_term_ei && *_rl_term_ei)
@@ -2659,7 +2628,7 @@ Readline::open_some_spaces (unsigned int col)
     {
       /* If there is a special command for inserting characters, then
          use that first to open up the space. */
-      for (unsigned int i = col; i--;)
+      for (size_t i = col; i--;)
         ::tputs (_rl_term_ic, 1, &_rl_output_character_function);
     }
 #endif /* !__MSDOS__ && (!__MINGW32__ || NCURSES_VERSION)*/
@@ -2698,17 +2667,15 @@ Readline::_rl_update_final ()
   /* If the cursor is the only thing on an otherwise-blank last line,
      compensate so we don't print an extra CRLF. */
   if (_rl_vis_botlin && _rl_last_c_pos == 0
-      && visible_line[static_cast<size_t> (
-             vis_lbreaks[static_cast<size_t> (_rl_vis_botlin)])]
-             == 0)
+      && visible_line[vis_lbreaks[_rl_vis_botlin]] == 0)
     {
       _rl_vis_botlin--;
       full_lines = true;
     }
   _rl_move_vert (_rl_vis_botlin);
-  unsigned int woff = W_OFFSET (_rl_vis_botlin, wrap_offset);
-  unsigned int botline_length
-      = static_cast<unsigned int> (VIS_LLEN (_rl_vis_botlin)) - woff;
+  size_t woff = W_OFFSET (_rl_vis_botlin, wrap_offset);
+  size_t botline_length
+      = static_cast<size_t> (VIS_LLEN (_rl_vis_botlin)) - woff;
   /* If we've wrapped lines, remove the final xterm line-wrap flag. */
   if (full_lines && _rl_term_autowrap && botline_length == _rl_screenwidth)
     {
@@ -2719,12 +2686,12 @@ Readline::_rl_update_final ()
          This needs to be done for both calls to _rl_move_cursor_relative,
          which takes a buffer position as the first argument, and any direct
          subscripts of LAST_LINE. */
-      size_t vis_botlin = static_cast<size_t> (_rl_vis_botlin);
-      size_t line_index = static_cast<size_t> (vis_lbreaks[vis_botlin]);
+      size_t vis_botlin = _rl_vis_botlin;
+      size_t line_index = vis_lbreaks[vis_botlin];
       last_line = &visible_line[line_index]; /* = VIS_CHARS(_rl_vis_botlin); */
       last_face = &vis_face[line_index];     /* = VIS_CHARS(_rl_vis_botlin); */
-      cpos_buffer_position = static_cast<unsigned int> (
-          -1); /* don't know where we are in buffer */
+      cpos_buffer_position
+          = static_cast<size_t> (-1); /* don't know where we are in buffer */
       _rl_move_cursor_relative (_rl_screenwidth - 1 + woff, last_line,
                                 last_face);
       _rl_clear_to_eol (0);
@@ -2742,9 +2709,9 @@ Readline::_rl_update_final ()
    terminal escape sequences.  Called with the cursor at column 0 of the
    line to draw the prompt on. */
 void
-Readline::redraw_prompt (const char *t)
+Readline::redraw_prompt (const std::string &t)
 {
-  const char *oldp;
+  std::string oldp;
 
   oldp = rl_display_prompt;
   rl_save_prompt ();
@@ -2778,11 +2745,9 @@ Readline::_rl_redisplay_after_sigwinch ()
       _rl_cr ();
       _rl_last_c_pos = 0;
 
-#if !defined(__MSDOS__)
       if (_rl_term_clreol)
         ::tputs (_rl_term_clreol, 1, &_rl_output_character_function);
       else
-#endif
         {
           space_to_eol (_rl_screenwidth);
           _rl_cr ();
@@ -2795,9 +2760,9 @@ Readline::_rl_redisplay_after_sigwinch ()
     rl_crlf ();
 
   /* Redraw only the last line of a multi-line prompt. */
-  const char *t = std::strrchr (rl_display_prompt, '\n');
-  if (t)
-    redraw_prompt (++t);
+  size_t pos = rl_display_prompt.rfind ('\n');
+  if (pos != std::string::npos)
+    redraw_prompt (rl_display_prompt.substr (pos + 1));
   else
     rl_forced_update_display ();
 }
@@ -2806,9 +2771,8 @@ Readline::_rl_redisplay_after_sigwinch ()
 /* Calculate the number of screen columns occupied by STR from START to END.
    In the case of multibyte characters with stateful encoding, we have to
    scan from the beginning of the string to take the state into account. */
-unsigned int
-Readline::_rl_col_width (const char *str, unsigned int start, unsigned int end,
-                         int flags)
+size_t
+Readline::_rl_col_width (const char *str, size_t start, size_t end, int flags)
 {
   wchar_t wc;
   mbstate_t ps;
@@ -2822,8 +2786,8 @@ Readline::_rl_col_width (const char *str, unsigned int start, unsigned int end,
 
   std::memset (&ps, 0, sizeof (mbstate_t));
 
-  unsigned int point = 0;
-  unsigned int max = end;
+  size_t point = 0;
+  size_t max = end;
 
   /* Try to short-circuit common cases.  The adjustment to remove wrap_offset
      is done by the caller. */
@@ -2836,11 +2800,10 @@ Readline::_rl_col_width (const char *str, unsigned int start, unsigned int end,
   else if (flags && start == 0 && !local_prompt.prompt.empty ()
            && end > local_prompt.prompt.size () && local_prompt.prompt == str)
     {
-      unsigned int tmp = local_prompt.physical_chars + wrap_offset;
+      size_t tmp = local_prompt.physical_chars + wrap_offset;
       /* XXX - try to call ourselves recursively with non-prompt portion */
       tmp += _rl_col_width (
-          str, static_cast<unsigned int> (local_prompt.prompt.size ()), end,
-          flags);
+          str, static_cast<size_t> (local_prompt.prompt.size ()), end, flags);
       return tmp;
     }
 
@@ -2878,7 +2841,7 @@ Readline::_rl_col_width (const char *str, unsigned int start, unsigned int end,
   /* If START is not a byte that starts a character, then POINT will be
      greater than START.  In this case, assume that (POINT - START) gives
      a byte count that is the number of columns of difference. */
-  unsigned int width = point - start;
+  size_t width = point - start;
 
   while (point < end)
     {
@@ -2911,7 +2874,7 @@ Readline::_rl_col_width (const char *str, unsigned int start, unsigned int end,
         {
           point += tmp;
           max -= tmp;
-          width += static_cast<unsigned int> (WCWIDTH (wc));
+          width += static_cast<size_t> (WCWIDTH (wc));
         }
     }
 

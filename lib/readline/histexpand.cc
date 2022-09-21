@@ -40,10 +40,10 @@ enum hist_error_type
   NO_PREV_SUBST
 };
 
-static char *history_substring (const char *, unsigned int, unsigned int);
-static void freewords (char **, unsigned int);
+static char *history_substring (const char *, size_t, size_t);
+static void freewords (char **, size_t);
 static char *quote_breaks (const char *);
-static char *hist_error (const char *, unsigned int, unsigned int,
+static char *hist_error (const char *, size_t, size_t,
                          hist_error_type);
 
 /* **************************************************************** */
@@ -66,7 +66,7 @@ static char *hist_error (const char *, unsigned int, unsigned int,
    So you might call this function like:
    line = get_history_event ("!echo:p", &index, 0);  */
 const char *
-History::get_history_event (const char *string, unsigned int *caller_index,
+History::get_history_event (const char *string, size_t *caller_index,
                             char delimiting_quote)
 {
   /* The event can be specified in a number of ways.
@@ -80,7 +80,7 @@ History::get_history_event (const char *string, unsigned int *caller_index,
 
      All values N are determined via HISTORY_BASE. */
 
-  unsigned int i = *caller_index;
+  size_t i = *caller_index;
 
   if (string[i] != history_expansion_char)
     return nullptr;
@@ -99,7 +99,7 @@ History::get_history_event (const char *string, unsigned int *caller_index,
   if (string[i] == history_expansion_char)
     {
       i++;
-      unsigned int which = history_base + (history_length () - 1);
+      size_t which = history_base + (history_length () - 1);
       *caller_index = i;
       RETURN_ENTRY (entry, which);
     }
@@ -114,10 +114,10 @@ History::get_history_event (const char *string, unsigned int *caller_index,
   if (_rl_digit_p (string[i]))
     {
       /* Get the extent of the digits and compute the value. */
-      unsigned int which;
+      size_t which;
       for (which = 0; _rl_digit_p (string[i]); i++)
         which = (which * 10)
-                + static_cast<unsigned int> (_rl_digit_value (string[i]));
+                + static_cast<size_t> (_rl_digit_value (string[i]));
 
       *caller_index = i;
 
@@ -137,14 +137,14 @@ History::get_history_event (const char *string, unsigned int *caller_index,
     }
 
   /* Only a closing `?' or a newline delimit a substring search string. */
-  unsigned int local_index;
+  size_t local_index;
   char c;
   for (local_index = i; (c = string[i]); i++)
     {
 #if defined(HANDLE_MULTIBYTE)
       if (MB_CUR_MAX > 1 && !rl_byte_oriented)
         {
-          int v;
+          ssize_t v;
           mbstate_t ps;
 
           std::memset (&ps, 0, sizeof (mbstate_t));
@@ -153,7 +153,7 @@ History::get_history_event (const char *string, unsigned int *caller_index,
           _rl_adjust_point (string, i, &ps);
           if ((v = _rl_get_char_len (string + i, &ps)) > 1)
             {
-              i += static_cast<unsigned int> (v - 1);
+              i += static_cast<size_t> (v - 1);
               continue;
             }
         }
@@ -172,7 +172,7 @@ History::get_history_event (const char *string, unsigned int *caller_index,
         break;
     }
 
-  unsigned int which = i - local_index;
+  size_t which = i - local_index;
   char *temp = new char[1 + which];
   std::strncpy (temp, string + local_index, which);
   temp[which] = '\0';
@@ -230,8 +230,7 @@ History::get_history_event (const char *string, unsigned int *caller_index,
 
               delete[] history_search_match;
               history_search_match = history_find_word (
-                  entry->line.c_str (),
-                  static_cast<unsigned int> (local_index));
+                  entry->line.c_str (), local_index);
             }
           else
             delete[] temp;
@@ -257,10 +256,10 @@ History::get_history_event (const char *string, unsigned int *caller_index,
    to the closing single quote.  FLAGS currently used to allow backslash
    to escape a single quote (e.g., for bash $'...'). */
 static inline void
-hist_string_extract_single_quoted (const char *string, unsigned int *sindex,
+hist_string_extract_single_quoted (const char *string, size_t *sindex,
                                    int flags)
 {
-  unsigned int i;
+  size_t i;
   for (i = *sindex; string[i] && string[i] != '\''; i++)
     {
       if ((flags & 1) && string[i] == '\\' && string[i + 1])
@@ -274,7 +273,7 @@ static char *
 quote_breaks (const char *s)
 {
   const char *p;
-  unsigned int len = 3;
+  size_t len = 3;
 
   for (p = s; p && *p; p++, len++)
     {
@@ -312,12 +311,12 @@ quote_breaks (const char *s)
 }
 
 static char *
-hist_error (const char *s, unsigned int start, unsigned int current,
+hist_error (const char *s, size_t start, size_t current,
             hist_error_type errtype)
 {
   char *temp;
   const char *emsg;
-  unsigned int ll, elen;
+  size_t ll, elen;
 
   ll = current - start;
 
@@ -376,11 +375,11 @@ hist_error (const char *s, unsigned int start, unsigned int current,
    subst_rhs is allowed to be set to the empty string. */
 
 char *
-History::get_subst_pattern (const char *str, unsigned int *iptr,
-                            char delimiter, bool is_rhs, unsigned int *lenptr)
+History::get_subst_pattern (const char *str, size_t *iptr,
+                            char delimiter, bool is_rhs, size_t *lenptr)
 {
   char *s = nullptr;
-  unsigned int i = *iptr;
+  size_t i = *iptr;
 
 #if defined(HANDLE_MULTIBYTE)
   mbstate_t ps;
@@ -388,14 +387,14 @@ History::get_subst_pattern (const char *str, unsigned int *iptr,
   _rl_adjust_point (str, i, &ps);
 #endif
 
-  unsigned int si;
+  size_t si;
   for (si = i; str[si] && str[si] != delimiter; si++)
 #if defined(HANDLE_MULTIBYTE)
     if (MB_CUR_MAX > 1 && !rl_byte_oriented)
       {
-        int v;
+        ssize_t v;
         if ((v = _rl_get_char_len (str + si, &ps)) > 1)
-          si += static_cast<unsigned int> (v - 1);
+          si += static_cast<size_t> (v - 1);
         else if (str[si] == '\\' && str[si + 1] == delimiter)
           si++;
       }
@@ -407,7 +406,7 @@ History::get_subst_pattern (const char *str, unsigned int *iptr,
   if (si > i || is_rhs)
     {
       s = new char[si - i + 1];
-      unsigned int j, k;
+      size_t j, k;
       for (j = 0, k = i; k < si; j++, k++)
         {
           /* Remove a backslash quoting the search string delimiter. */
@@ -433,7 +432,7 @@ History::postproc_subst_rhs ()
 {
   std::string new_str;
 
-  for (unsigned int i = 0; i < history_subst_rhs_len; i++)
+  for (size_t i = 0; i < history_subst_rhs_len; i++)
     {
       if (history_subst_rhs[i] == '&')
         {
@@ -451,7 +450,7 @@ History::postproc_subst_rhs ()
 
   delete[] history_subst_rhs;
   history_subst_rhs = savestring (new_str);
-  history_subst_rhs_len = static_cast<unsigned int> (new_str.size ());
+  history_subst_rhs_len = new_str.size ();
 }
 
 /* Expand the bulk of a history specifier starting at STRING[START].
@@ -461,8 +460,8 @@ History::postproc_subst_rhs ()
    *END_INDEX_PTR, and the expanded specifier in *RET_STRING. */
 /* need current line for !# */
 int
-History::history_expand_internal (const char *string, unsigned int start,
-                                  char qc, unsigned int *end_index_ptr,
+History::history_expand_internal (const char *string, size_t start,
+                                  char qc, size_t *end_index_ptr,
                                   char **ret_string, const char *current_line)
 {
 #if defined(HANDLE_MULTIBYTE)
@@ -471,7 +470,7 @@ History::history_expand_internal (const char *string, unsigned int start,
   std::memset (&ps, 0, sizeof (mbstate_t));
 #endif
 
-  unsigned int i = start;
+  size_t i = start;
   const char *event;
 
   /* If it is followed by something that starts a word specifier,
@@ -480,7 +479,7 @@ History::history_expand_internal (const char *string, unsigned int start,
   if (member (string[i + 1], ":$*%^"))
     {
       char fake_s[3];
-      unsigned int fake_i = 0;
+      size_t fake_i = 0;
       i++;
       fake_s[0] = fake_s[1] = history_expansion_char;
       fake_s[2] = '\0';
@@ -501,7 +500,7 @@ History::history_expand_internal (const char *string, unsigned int start,
     }
 
   /* If a word specifier is found, then do what that requires. */
-  unsigned int starting_index = i;
+  size_t starting_index = i;
   char *tstr = nullptr, *word_spec = nullptr;
 
   try
@@ -616,11 +615,11 @@ History::history_expand_internal (const char *string, unsigned int start,
             char *new_event;
             char delimiter;
             bool failed;
-            unsigned int si, we;
+            size_t si, we;
 
             if (c == 's')
               {
-                if (i + 2 < static_cast<unsigned int> (std::strlen (string)))
+                if (i + 2 < std::strlen (string))
                   {
 #if defined(HANDLE_MULTIBYTE)
                     if (MB_CUR_MAX > 1 && !rl_byte_oriented)
@@ -654,8 +653,7 @@ History::history_expand_internal (const char *string, unsigned int start,
                     if (history_search_string && *history_search_string)
                       {
                         history_subst_lhs = savestring (history_search_string);
-                        history_subst_lhs_len = static_cast<unsigned int> (
-                            std::strlen (history_subst_lhs));
+                        history_subst_lhs_len = std::strlen (history_subst_lhs);
                       }
                     else
                       {
@@ -685,8 +683,8 @@ History::history_expand_internal (const char *string, unsigned int start,
                 return -1;
               }
 
-            unsigned int l_temp
-                = static_cast<unsigned int> (std::strlen (temp));
+            size_t l_temp = std::strlen (temp);
+
             /* Ignore impossible cases. */
             if (history_subst_lhs_len > l_temp)
               {
@@ -725,7 +723,7 @@ History::history_expand_internal (const char *string, unsigned int start,
                 if (STREQN (temp + si, history_subst_lhs,
                             history_subst_lhs_len))
                   {
-                    unsigned int len = history_subst_rhs_len
+                    size_t len = history_subst_rhs_len
                                        - history_subst_lhs_len + l_temp;
                     new_event = new char[1 + len];
                     std::strncpy (new_event, temp, si);
@@ -746,16 +744,14 @@ History::history_expand_internal (const char *string, unsigned int start,
                            other match when matching a single character.  Was
                            si += subst_rhs_len previously. */
                         si += history_subst_rhs_len - 1;
-                        l_temp
-                            = static_cast<unsigned int> (std::strlen (temp));
+                        l_temp = std::strlen (temp);
                         substitute_globally++;
                         continue;
                       }
                     else if (subst_bywords)
                       {
                         si = we;
-                        l_temp
-                            = static_cast<unsigned int> (std::strlen (temp));
+                        l_temp = std::strlen (temp);
                         continue;
                       }
                     else
@@ -788,7 +784,7 @@ History::history_expand_internal (const char *string, unsigned int start,
       char *x;
 
       if (want_quotes == 'q')
-        x = sh_single_quote (temp);
+        x = savestring (sh_single_quote (temp));
       else if (want_quotes == 'x')
         x = quote_breaks (temp);
       else
@@ -825,7 +821,7 @@ History::history_expand (const char *hstring, char **output)
   /* Prepare the buffer for printing error messages. */
   std::string result;
 
-  unsigned int l = static_cast<unsigned int> (std::strlen (hstring));
+  size_t l = std::strlen (hstring);
   char *string;
 
   /* Grovel the string.  Only backslash and single quotes can quote the
@@ -864,7 +860,7 @@ History::history_expand (const char *hstring, char **output)
       /* If the calling application tells us we are already reading a
          single-quoted string, consume the rest of the string right now
          and then go on. */
-      unsigned int i = 0;
+      size_t i = 0;
       if (squote && history_quotes_inhibit_expansion)
         {
           hist_string_extract_single_quoted (string, &i, 0);
@@ -878,11 +874,10 @@ History::history_expand (const char *hstring, char **output)
 #if defined(HANDLE_MULTIBYTE)
           if (MB_CUR_MAX > 1 && !rl_byte_oriented)
             {
-              int v;
-              v = _rl_get_char_len (string + i, &ps);
+              ssize_t v = _rl_get_char_len (string + i, &ps);
               if (v > 1)
                 {
-                  i += static_cast<unsigned int> (v - 1);
+                  i += static_cast<size_t> (v - 1);
                   continue;
                 }
             }
@@ -969,11 +964,11 @@ History::history_expand (const char *hstring, char **output)
      and then go on. */
   if (squote && history_quotes_inhibit_expansion)
     {
-      unsigned int i;
+      size_t i;
 
       hist_string_extract_single_quoted (string, &i, 0);
       squote = 0;
-      for (unsigned int c = 0; c < i; c++)
+      for (size_t c = 0; c < i; c++)
         result += string[c];
       if (string[i])
         {
@@ -983,7 +978,7 @@ History::history_expand (const char *hstring, char **output)
     }
 
   bool passc = false, modified = false, only_printing = false;
-  for (unsigned int i = 0; i < l; i++)
+  for (size_t i = 0; i < l; i++)
     {
       char qc, tchar = string[i];
 
@@ -1051,7 +1046,7 @@ History::history_expand (const char *hstring, char **output)
               }
             else if (!dquote && history_quotes_inhibit_expansion)
               {
-                unsigned int quote;
+                size_t quote;
 
                 int flag = (i > 0 && string[i - 1] == '$');
                 quote = i++;
@@ -1112,7 +1107,7 @@ History::history_expand (const char *hstring, char **output)
             }
 #endif
           qc = squote ? '\'' : (dquote ? '"' : 0);
-          unsigned int eindex;
+          size_t eindex;
           char *temp;
           int r = history_expand_internal (string, i, qc, &eindex, &temp,
                                            result.c_str ());
@@ -1158,9 +1153,9 @@ History::history_expand (const char *hstring, char **output)
    to point to just after the last character parsed. */
 char *
 History::get_history_word_specifier (const char *spec, const char *from,
-                                     unsigned int *caller_index)
+                                     size_t *caller_index)
 {
-  unsigned int i = *caller_index;
+  size_t i = *caller_index;
   int first, last;
   int expecting_word_spec = 0;
   char *result;
@@ -1306,7 +1301,7 @@ History::history_arg_extract (int first, int last, const char *string)
     result = (nullptr);
   else
     {
-      unsigned int size = 0;
+      size_t size = 0;
       for (int i = first; i < last; i++)
         size += std::strlen (list[i]) + 1;
       result = new char[size + 1];
@@ -1332,12 +1327,12 @@ History::history_arg_extract (int first, int last, const char *string)
   return result;
 }
 
-unsigned int
-History::history_tokenize_word (const char *string, unsigned int ind)
+size_t
+History::history_tokenize_word (const char *string, size_t ind)
 {
   int delimiter, nestdelim, delimopen;
 
-  unsigned int i = ind;
+  size_t i = ind;
   delimiter = nestdelim = delimopen = 0;
 
   if (member (string[i],
@@ -1349,7 +1344,7 @@ History::history_tokenize_word (const char *string, unsigned int ind)
 
   if (std::isdigit (string[i]))
     {
-      unsigned int j = i;
+      size_t j = i;
       while (string[j] && std::isdigit (string[j]))
         j++;
       if (string[j] == 0)
@@ -1378,7 +1373,7 @@ History::history_tokenize_word (const char *string, unsigned int ind)
         }
       else if (peek == '&' && (string[i] == '>' || string[i] == '<'))
         {
-          unsigned int j = i + 2;
+          size_t j = i + 2;
           while (string[j] && std::isdigit (string[j])) /* file descriptor */
             j++;
           if (string[j] == '-') /* <&[digits]-, >&[digits]- */
@@ -1469,9 +1464,9 @@ get_word:
 }
 
 static inline char *
-history_substring (const char *string, unsigned int start, unsigned int end)
+history_substring (const char *string, size_t start, size_t end)
 {
-  unsigned int len = end - start;
+  size_t len = end - start;
   char *result = new char[len + 1];
   std::strncpy (result, string + start, len);
   result[len] = '\0';
@@ -1483,19 +1478,19 @@ history_substring (const char *string, unsigned int start, unsigned int end)
    WIND.  The position in the returned array of strings is returned in
    *INDP. */
 char **
-History::history_tokenize_internal (const char *string, unsigned int wind,
-                                    unsigned int *indp)
+History::history_tokenize_internal (const char *string, size_t wind,
+                                    size_t *indp)
 {
   std::vector<char *> result;
 
   /* If we're searching for a string that's not part of a word (e.g., " "),
      make sure we set *INDP to a reasonable value. */
-  if (indp && wind != static_cast<unsigned int> (-1))
-    *indp = static_cast<unsigned int> (-1);
+  if (indp && wind != static_cast<size_t> (-1))
+    *indp = static_cast<size_t> (-1);
 
   /* Get a token, and stuff it into RESULT.  The tokens are split
      exactly where the shell would split them. */
-  for (unsigned int i = 0; string[i];)
+  for (size_t i = 0; string[i];)
     {
       /* Skip leading whitespace. */
       for (; string[i] && fielddelim (string[i]); i++)
@@ -1503,7 +1498,7 @@ History::history_tokenize_internal (const char *string, unsigned int wind,
       if (string[i] == 0 || string[i] == history_comment_char)
         goto return_result;
 
-      unsigned int start = i;
+      size_t start = i;
 
       i = history_tokenize_word (string, start);
 
@@ -1520,10 +1515,8 @@ History::history_tokenize_internal (const char *string, unsigned int wind,
 
       /* If we are looking for the word in which the character at a
          particular index falls, remember it. */
-      if (indp && wind != static_cast<unsigned int> (-1) && wind >= start
-          && wind < i)
-        *indp = static_cast<unsigned int> (
-            result.size ()); // this will be the index of the new entry
+      if (indp && wind != static_cast<size_t> (-1) && wind >= start && wind < i)
+        *indp = result.size (); // this will be the index of the new entry
 
       // add to the end of the vector
       result.push_back (history_substring (string, start, i));
@@ -1540,9 +1533,9 @@ return_result:
 
 /* Free members of WORDS from START to an empty string */
 static inline void
-freewords (char **words, unsigned int start)
+freewords (char **words, size_t start)
 {
-  for (unsigned int i = start; words[i]; i++)
+  for (size_t i = start; words[i]; i++)
     delete[] words[i];
 }
 
@@ -1550,13 +1543,13 @@ freewords (char **words, unsigned int start)
    in the history line LINE.  Used to save the word matched by the
    last history !?string? search. */
 char *
-History::history_find_word (const char *line, unsigned int ind)
+History::history_find_word (const char *line, size_t ind)
 {
   char **words, *s;
-  unsigned int wind;
+  size_t wind;
 
   words = history_tokenize_internal (line, ind, &wind);
-  if (wind == static_cast<unsigned int> (-1) || words == nullptr)
+  if (wind == static_cast<size_t> (-1) || words == nullptr)
     {
       if (words)
         freewords (words, 0);
@@ -1566,7 +1559,7 @@ History::history_find_word (const char *line, unsigned int ind)
     }
   s = words[wind];
 
-  for (unsigned int i = 0; i < wind; i++)
+  for (size_t i = 0; i < wind; i++)
     delete[] words[i];
 
   freewords (words, wind + 1);

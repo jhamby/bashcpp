@@ -2105,7 +2105,8 @@ Shell::parse_matched_pair (
                          && (extended_quote || (rflags & P_DQUOTE) == 0))
                 {
                   /* Translate $'...' here. */
-                  std::string ttrans = ansiexpand (nestret.begin (), nestret.end ());
+                  std::string ttrans
+                      = ansiexpand (nestret.begin (), nestret.end ());
                   nestret.clear ();
 
                   /* If we're parsing a double-quoted brace expansion and we
@@ -4939,12 +4940,10 @@ Shell::parse_compound_assignment (size_t *retlenp)
  ************************************************/
 
 sh_parser_state_t *
-save_parser_state (sh_parser_state_t *ps)
+Shell::save_parser_state (sh_parser_state_t *ps)
 {
-  if (ps == 0)
-    ps = (sh_parser_state_t *)xmalloc (sizeof (sh_parser_state_t));
-  if (ps == 0)
-    return nullptr;
+  if (ps == nullptr)
+    ps = new sh_parser_state_t ();
 
   ps->parser_state = parser_state;
   ps->token_state = save_token_state ();

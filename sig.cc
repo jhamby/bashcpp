@@ -700,8 +700,8 @@ sigprocmask (int operation, int *newset, int *oldset)
 #define SA_RESTART 0
 #endif
 
-sighandler_t
-set_signal_handler (int sig, sighandler_t handler)
+SigHandler
+set_signal_handler (int sig, SigHandler handler)
 {
   struct sigaction act, oact;
 

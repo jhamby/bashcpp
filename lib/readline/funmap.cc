@@ -24,7 +24,7 @@
 namespace readline
 {
 
-static const Readline::FUNMAP default_funmap[] = {
+static constexpr Readline::FUNMAP default_funmap[] = {
   { "abort", &Readline::rl_abort },
   { "accept-line", &Readline::rl_newline },
   { "arrow-key-prefix", &Readline::rl_arrow_keys },

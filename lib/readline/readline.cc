@@ -72,16 +72,16 @@ Readline::Readline (const char *search_delimiter_chars,
       rl_redisplay_function (&Readline::rl_redisplay),
       _rl_keymap (emacs_standard_keymap ()),
       line_state_visible (&line_state_array[0]),
-      line_state_invisible (&line_state_array[1]),
-      rl_readline_version (RL_READLINE_VERSION), rl_numeric_arg (1),
-      rl_completion_query_items (100), rl_readline_state (RL_STATE_NONE),
-      rl_editing_mode (emacs_mode), _rl_bell_preference (AUDIBLE_BELL),
-      _rl_completion_columns (-1),
+      line_state_invisible (&line_state_array[1]), _rl_completion_columns (-1),
       cpos_buffer_position (static_cast<unsigned int> (-1)),
       _rl_history_saved_point (static_cast<unsigned int> (-1)),
       saved_history_logical_offset (static_cast<unsigned int> (-1)),
-      rl_kill_ring_index (DEFAULT_MAX_KILLS - 1), _paren_blink_usec (500000),
-      rl_arg_sign (1), _rl_keyseq_timeout (500),
+      rl_kill_ring_index (DEFAULT_MAX_KILLS - 1),
+      rl_readline_version (RL_READLINE_VERSION), rl_numeric_arg (1),
+      rl_completion_query_items (100), rl_readline_state (RL_STATE_NONE),
+      rl_editing_mode (emacs_mode), _rl_bell_preference (AUDIBLE_BELL),
+      _rl_eof_char (CTRL ('D')), rl_completion_append_character (' '),
+      _paren_blink_usec (500000), rl_arg_sign (1), _rl_keyseq_timeout (500),
       _keyboard_input_timeout (100000), _rl_vi_last_command ('i'),
       _rl_vi_last_repeat (1), _rl_vi_last_arg_sign (1),
       _rl_yank_count_passed (1), _rl_yank_direction (1),
@@ -91,9 +91,8 @@ Readline::Readline (const char *search_delimiter_chars,
       rl_catch_sigwinch (true),
 #endif
       rl_change_environment (true), rl_sort_completion_matches (true),
-      rl_completion_append_character (' '), _rl_term_autowrap (-1),
-      _rl_prefer_visible_bell (true), _rl_enable_meta (true),
-      _rl_eof_char (CTRL ('D')), _rl_complete_mark_directories (true),
+      _rl_term_autowrap (-1), _rl_prefer_visible_bell (true),
+      _rl_enable_meta (true), _rl_complete_mark_directories (true),
 #if (defined(__MSDOS__) && !defined(__DJGPP__))                               \
     || (defined(_WIN32) && !defined(__CYGWIN__))
       _rl_completion_case_fold (true),
@@ -146,17 +145,17 @@ word_not_found::what () const noexcept
 void
 Readline::rl_set_prompt (const std::string &prompt)
 {
-  delete[] rl_prompt;
-  rl_prompt = prompt ? savestring (prompt) : nullptr;
-  rl_display_prompt = rl_prompt ? rl_prompt : "";
+  rl_prompt = prompt;
+  rl_display_prompt = rl_prompt;
 
-  rl_visible_prompt_length = rl_expand_prompt (rl_prompt);
+  rl_visible_prompt_length
+      = rl_expand_prompt (const_cast<char *> (rl_prompt.c_str ()));
 }
 
 /* Read a line of input.  Prompt with PROMPT.  An empty PROMPT means
    none.  A return value of nullptr means that EOF was encountered. */
 std::string
-Readline::readline (const char *prompt)
+Readline::readline (const std::string &prompt)
 {
 #if 0
   int in_callback;
@@ -232,7 +231,7 @@ Readline::readline_internal_setup ()
      custom redisplay function, though, let that function handle it. */
   if (!_rl_echoing_p && rl_redisplay_function == &Readline::rl_redisplay)
     {
-      if (rl_prompt && rl_already_prompted == 0)
+      if (!rl_prompt.empty () && !rl_already_prompted)
         {
           std::string nprompt = _rl_strip_prompt (rl_prompt);
           std::fprintf (_rl_out_stream, "%s", nprompt.c_str ());
@@ -241,7 +240,7 @@ Readline::readline_internal_setup ()
     }
   else
     {
-      if (rl_prompt && rl_already_prompted)
+      if (!rl_prompt.empty () && rl_already_prompted)
         rl_on_new_line_with_prompt ();
       else
         rl_on_new_line ();

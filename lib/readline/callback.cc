@@ -300,7 +300,7 @@ Readline::rl_callback_sigcleanup ()
     RL_UNSETSTATE (RL_STATE_VIMOTION);
   else if (RL_ISSTATE (RL_STATE_NUMERICARG))
     {
-      _rl_argcxt = 0;
+      _rl_argcxt = NUM_NOFLAGS;
       RL_UNSETSTATE (RL_STATE_NUMERICARG);
     }
   else if (RL_ISSTATE (RL_STATE_MULTIKEY))

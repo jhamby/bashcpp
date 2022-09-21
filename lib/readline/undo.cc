@@ -44,12 +44,12 @@ int
 Readline::rl_do_undo ()
 {
   int waiting_for_begin;
-  unsigned int start, end;
+  size_t start, end;
 
 #define TRANS(i)                                                              \
-  ((i) == static_cast<unsigned int> (-1)                                      \
+  ((i) == static_cast<size_t> (-1)                                            \
        ? rl_point                                                             \
-       : ((i) == static_cast<unsigned int> (-2) ? rl_end () : (i)))
+       : ((i) == static_cast<size_t> (-2) ? rl_end () : (i)))
 
   start = end = waiting_for_begin = 0;
   do
@@ -114,7 +114,7 @@ Readline::rl_do_undo ()
 
 /* Save an undo entry for the text from START to END. */
 void
-Readline::rl_modifying (unsigned int start, unsigned int end)
+Readline::rl_modifying (size_t start, size_t end)
 {
   if (start > end)
     {

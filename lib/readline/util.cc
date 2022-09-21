@@ -91,13 +91,13 @@ Readline::rl_tty_status (int, int)
 /* Return a copy of the string between FROM and TO.
    FROM is inclusive, TO is not. Free with delete[]. */
 char *
-Readline::rl_copy_text (unsigned int from, unsigned int to)
+Readline::rl_copy_text (size_t from, size_t to)
 {
   /* Fix it if the caller is confused. */
   if (from > to)
     std::swap (from, to);
 
-  unsigned int length = to - from;
+  size_t length = to - from;
   char *copy = new char[1 + length];
   std::strncpy (copy, &rl_line_buffer[from], length);
   copy[length] = '\0';
@@ -108,8 +108,8 @@ Readline::rl_copy_text (unsigned int from, unsigned int to)
 int
 Readline::rl_tilde_expand (int, int)
 {
-  unsigned int end = rl_point;
-  unsigned int start = end ? (end - 1) : 0;
+  size_t end = rl_point;
+  size_t start = end ? (end - 1) : 0;
 
   if (rl_point == rl_line_buffer.size () && rl_line_buffer[rl_point] == '~')
     {
@@ -182,6 +182,26 @@ Readline::_rl_errmsg (const char *format, ...)
   std::fflush (stderr);
 
   va_end (args);
+}
+
+/* Stupid comparison routine for qsort () ing strings. */
+int
+_rl_qsort_string_compare (const void *v1, const void *v2)
+{
+  const char *const *s1 = reinterpret_cast<const char *const *> (v1);
+  const char *const *s2 = reinterpret_cast<const char *const *> (v2);
+
+#if defined (HAVE_STRCOLL)
+  return (strcoll (*s1, *s2));
+#else
+  int result;
+
+  result = **s1 - **s2;
+  if (result == 0)
+    result = strcmp (*s1, *s2);
+
+  return result;
+#endif
 }
 
 } // namespace readline

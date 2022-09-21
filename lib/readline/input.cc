@@ -529,7 +529,7 @@ Readline::_rl_read_mbchar (char *mbchar, int size)
 int
 Readline::_rl_read_mbstring (int first, char *mb, int mlen)
 {
-  int i, c, n;
+  int i, c;
   mbstate_t ps;
 
   c = first;
@@ -538,7 +538,7 @@ Readline::_rl_read_mbstring (int first, char *mb, int mlen)
     {
       mb[i] = static_cast<char> (c);
       std::memset (&ps, 0, sizeof (mbstate_t));
-      n = _rl_get_char_len (mb, &ps);
+      ssize_t n = _rl_get_char_len (mb, &ps);
       if (n == -2)
         {
           /* Read more for multibyte character */

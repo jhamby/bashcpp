@@ -40,7 +40,7 @@ namespace readline
 void
 Readline::_rl_copy_to_kill_ring (const std::string &text, bool append)
 {
-  unsigned int slot;
+  size_t slot;
 
   /* First, find the slot to work with. */
   if (!_rl_last_command_was_kill || rl_kill_ring_length == 0)
@@ -82,7 +82,7 @@ Readline::_rl_copy_to_kill_ring (const std::string &text, bool append)
    last command was not a kill command, then a new slot is made for
    this kill. */
 void
-Readline::rl_kill_text (unsigned int from, unsigned int to)
+Readline::rl_kill_text (size_t from, size_t to)
 {
   char *text;
 
@@ -123,7 +123,7 @@ Readline::rl_kill_word (int count, int key)
     return rl_backward_kill_word (-count, key);
   else
     {
-      unsigned int orig_point = rl_point;
+      size_t orig_point = rl_point;
       rl_forward_word (count, key);
 
       if (rl_point != orig_point)
@@ -144,7 +144,7 @@ Readline::rl_backward_kill_word (int count, int key)
     return rl_kill_word (-count, key);
   else
     {
-      unsigned int orig_point = rl_point;
+      size_t orig_point = rl_point;
       rl_backward_word (count, key);
 
       if (rl_point != orig_point)
@@ -165,7 +165,7 @@ Readline::rl_kill_line (int direction, int key)
     return rl_backward_kill_line (1, key);
   else
     {
-      unsigned int orig_point = rl_point;
+      size_t orig_point = rl_point;
       rl_end_of_line (1, key);
       if (orig_point != rl_point)
         rl_kill_text (orig_point, rl_point);
@@ -189,7 +189,7 @@ Readline::rl_backward_kill_line (int direction, int key)
         rl_ding ();
       else
         {
-          unsigned int orig_point = rl_point;
+          size_t orig_point = rl_point;
           rl_beg_of_line (1, key);
           if (rl_point != orig_point)
             rl_kill_text (orig_point, rl_point);
@@ -225,7 +225,7 @@ Readline::rl_unix_word_rubout (int count, int)
     rl_ding ();
   else
     {
-      unsigned int orig_point = rl_point;
+      size_t orig_point = rl_point;
       if (count <= 0)
         count = 1;
 
@@ -255,7 +255,7 @@ Readline::rl_unix_filename_rubout (int count, int)
     rl_ding ();
   else
     {
-      unsigned int orig_point = rl_point;
+      size_t orig_point = rl_point;
       if (count <= 0)
         count = 1;
 
@@ -338,7 +338,7 @@ Readline::rl_copy_region_to_kill (int, int)
 int
 Readline::rl_kill_region (int, int)
 {
-  unsigned int npoint;
+  size_t npoint;
 
   npoint = (rl_point < rl_mark) ? rl_point : rl_mark;
   region_kill_internal (true);
@@ -353,8 +353,8 @@ Readline::rl_kill_region (int, int)
 int
 Readline::_rl_copy_word_as_kill (int count, int dir)
 {
-  unsigned int om = rl_mark;
-  unsigned int op = rl_point;
+  size_t om = rl_mark;
+  size_t op = rl_point;
 
   if (dir > 0)
     rl_forward_word (count, 0);
@@ -418,9 +418,9 @@ Readline::rl_yank_pop (int, int)
       return 1;
     }
 
-  unsigned int l
-      = static_cast<unsigned int> (rl_kill_ring[rl_kill_ring_index].size ());
-  unsigned int n = rl_point - l;
+  size_t l
+      = static_cast<size_t> (rl_kill_ring[rl_kill_ring_index].size ());
+  size_t n = rl_point - l;
 
   if (rl_point >= l
       && STREQN (&rl_line_buffer[n], rl_kill_ring[rl_kill_ring_index].data (),
@@ -456,9 +456,9 @@ Readline::rl_vi_yank_pop (int, int)
       return 1;
     }
 
-  unsigned int l
-      = static_cast<unsigned int> (rl_kill_ring[rl_kill_ring_index].size ());
-  unsigned int n = rl_point - l;
+  size_t l
+      = static_cast<size_t> (rl_kill_ring[rl_kill_ring_index].size ());
+  size_t n = rl_point - l;
   if (rl_point >= l
       && STREQN (&rl_line_buffer[n], rl_kill_ring[rl_kill_ring_index].data (),
                  l))
@@ -486,7 +486,7 @@ Readline::rl_vi_yank_pop (int, int)
 int
 Readline::rl_yank_nth_arg_internal (int count, int key, int history_skip)
 {
-  unsigned int pos = where_history ();
+  size_t pos = where_history ();
 
   if (history_skip)
     {
@@ -580,8 +580,8 @@ Readline::rl_yank_last_arg (int count, int key)
 /* Having read the special escape sequence denoting the beginning of a
    `bracketed paste' sequence, read the rest of the pasted input until the
    closing sequence and return the pasted text. */
-char *
-Readline::_rl_bracketed_text (unsigned int *lenp)
+std::string
+Readline::_rl_bracketed_text ()
 {
   int c;
 
@@ -609,10 +609,7 @@ Readline::_rl_bracketed_text (unsigned int *lenp)
     }
   RL_UNSETSTATE (RL_STATE_MOREINPUT);
 
-  if (lenp)
-    *lenp = static_cast<unsigned int> (buf.size ());
-
-  return savestring (buf);
+  return buf;
 }
 
 /* Having read the special escape sequence denoting the beginning of a
@@ -622,16 +619,13 @@ Readline::_rl_bracketed_text (unsigned int *lenp)
 int
 Readline::rl_bracketed_paste_begin (int, int)
 {
-  unsigned int len;
-
-  char *buf = _rl_bracketed_text (&len);
+  std::string buf = _rl_bracketed_text ();
   rl_mark = rl_point;
 
-  int retval = rl_insert_text (buf) == len ? 0 : 1;
+  int retval = (rl_insert_text (buf) == buf.size ()) ? 0 : 1;
   if (_rl_enable_active_region)
     rl_activate_mark ();
 
-  delete[] buf;
   return retval;
 }
 
@@ -675,7 +669,7 @@ Readline::_rl_bracketed_read_key ()
 {
   int c, r;
   char *pbuf;
-  unsigned int pblen;
+  size_t pblen;
 
   RL_SETSTATE (RL_STATE_MOREINPUT);
   c = rl_read_key ();

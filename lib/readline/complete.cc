@@ -137,17 +137,17 @@ void
 Readline::set_completion_defaults (int what_to_do)
 {
   /* Only the completion entry function can change these. */
-  rl_filename_completion_desired = 0;
-  rl_filename_quoting_desired = 1;
+  rl_filename_completion_desired = false;
+  rl_filename_quoting_desired = true;
   rl_completion_type = what_to_do;
-  rl_completion_suppress_append = rl_completion_suppress_quote = 0;
+  rl_completion_suppress_append = rl_completion_suppress_quote = false;
   rl_completion_append_character = ' ';
 
   /* The completion entry function may optionally change this. */
   rl_completion_mark_symlink_dirs = _rl_complete_mark_symlink_dirs;
 
   /* Reset private state. */
-  _rl_complete_display_matches_interrupt = 0;
+  _rl_complete_display_matches_interrupt = false;
 }
 
 /* The user must press "y" or "n". Non-zero return means "y" pressed. */
@@ -190,7 +190,7 @@ Readline::_rl_internal_pager (int lines)
   std::fprintf (rl_outstream, "--More--");
   std::fflush (rl_outstream);
 
-  int i = get_y_or_n (1);
+  int i = get_y_or_n (true);
   _rl_erase_entire_line ();
   if (i == 0)
     return -1;
@@ -218,42 +218,32 @@ path_isdir (const char *filename)
      `%' for character special devices
      `#' for block special devices */
 int
-Readline::stat_char (const char *filename)
+Readline::stat_char (const std::string &filename)
 {
   struct stat finfo;
   int character, r;
-  const char *fn;
 
   /* Short-circuit a //server on cygwin, since that will always behave as
      a directory. */
 #if defined(__CYGWIN__)
   if (filename[0] == '/' && filename[1] == '/'
-      && std::strchr (filename + 2, '/') == 0)
+      && std::strchr (&(filename[2]), '/') == 0)
     return '/';
 #endif
 
-  char *f = nullptr;
+  std::string fn = filename;
+
   if (rl_filename_stat_hook)
-    {
-      std::string tmp (filename);
-      ((*this).*rl_filename_stat_hook) (tmp);
-      f = savestring (tmp);
-      fn = f;
-    }
-  else
-    fn = filename;
+    ((*this).*rl_filename_stat_hook) (fn);
 
 #if defined(HAVE_LSTAT) && defined(S_ISLNK)
-  r = ::lstat (fn, &finfo);
+  r = ::lstat (fn.c_str (), &finfo);
 #else
-  r = ::stat (fn, &finfo);
+  r = ::stat (fn.c_str (), &finfo);
 #endif
 
   if (r == -1)
-    {
-      delete[] f;
-      return 0;
-    }
+    return 0;
 
   character = 0;
   if (S_ISDIR (finfo.st_mode))
@@ -291,12 +281,11 @@ Readline::stat_char (const char *filename)
               || _rl_stricmp (ext, ".com") == 0))
         character = '*';
 #else
-      if (::access (filename, X_OK) == 0)
+      if (::access (fn.c_str (), X_OK) == 0)
         character = '*';
 #endif
     }
 
-  delete[] f;
   return character;
 }
 #endif /* VISIBLE_STATS */
@@ -309,85 +298,86 @@ Readline::stat_char (const char *filename)
    filename completion, and the basename is the empty string, we look
    for the previous slash and return the portion following that.  If
    there's no previous slash, we just return what we were passed. */
-char *
-Readline::printable_part (char *pathname)
+std::string
+Readline::printable_part (const std::string &pathname)
 {
-  char *temp, *x;
-
-  if (rl_filename_completion_desired == 0) /* don't need to do anything */
+  if (!rl_filename_completion_desired) /* don't need to do anything */
     return pathname;
 
-  temp = std::strrchr (pathname, '/');
+  // Simplify handling below by returning 2-character names here.
+  if (pathname.size () < 3)
+    return pathname;
+
+  size_t temp = pathname.rfind ('/');
+
 #if defined(__MSDOS__) || defined(_WIN32)
-  if (temp == 0 && std::isalpha (static_cast<unsigned char> (pathname[0]))
+  if (temp == npos && std::isalpha (static_cast<unsigned char> (pathname[0]))
       && pathname[1] == ':')
-    temp = pathname + 1;
+    temp = 1;
 #endif
 
-  if (temp == nullptr || *temp == '\0')
+  if (temp == std::string::npos)
     return pathname;
-  else if (temp[1] == 0 && temp == pathname)
-    return pathname;
-  /* If the basename is NULL, we might have a pathname like '/usr/src/'.
+  /* If the basename is "", we might have a pathname like '/usr/src/'.
      Look for a previous slash and, if one is found, return the portion
      following that slash.  If there's no previous slash, just return the
      pathname we were passed. */
-  else if (temp[1] == '\0')
+  else if (temp + 1 == pathname.size ())
     {
-      for (x = temp - 1; x > pathname; x--)
-        if (*x == '/')
+      size_t x;
+      for (x = temp - 1; x > 0; x--)
+        if (pathname[x] == '/')
           break;
-      return (*x == '/') ? x + 1 : pathname;
+      return (pathname[x] == '/') ? pathname.substr (x + 1) : pathname;
     }
   else
-    return ++temp;
+    return pathname.substr (temp + 1);
 }
 
 /* Compute width of STRING when displayed on screen by print_filename */
-int
-Readline::fnwidth (const char *string)
+size_t
+Readline::fnwidth (const std::string &string)
 {
-  int width, pos;
+  size_t width;
 #if defined(HANDLE_MULTIBYTE)
   mbstate_t ps;
-  size_t left;
   size_t clen;
   wchar_t wc;
 
-  left = std::strlen (string) + 1;
   std::memset (&ps, 0, sizeof (mbstate_t));
 #endif
 
-  width = pos = 0;
-  while (string[pos])
+  width = 0;
+  std::string::const_iterator it;
+  for (it = string.begin (); it < string.end ();)
     {
-      if (CTRL_CHAR (string[pos]) || string[pos] == RUBOUT)
+      if (CTRL_CHAR (*it) || *it == RUBOUT)
         {
           width += 2;
-          pos++;
+          it += 2;
         }
       else
         {
 #if defined(HANDLE_MULTIBYTE)
-          clen = std::mbrtowc (&wc, string + pos,
-                               left - static_cast<size_t> (pos), &ps);
+          clen = std::mbrtowc (&wc, &(*it),
+                               static_cast<size_t> (string.end () - it), &ps);
           if (MB_INVALIDCH (clen))
             {
-              width++;
-              pos++;
+              ++width;
+              ++it;
               std::memset (&ps, 0, sizeof (mbstate_t));
             }
           else if (MB_NULLWCH (clen))
             break;
           else
             {
-              pos += clen;
+              it += static_cast<ssize_t> (clen);
               int w = WCWIDTH (wc);
-              width += (w >= 0) ? w : 1;
+              width += (w >= 0) ? static_cast<size_t> (w) : 1;
             }
 #else
-          width++;
-          pos++;
+          ++width;
+          ++it;
 #endif
         }
     }
@@ -397,27 +387,21 @@ Readline::fnwidth (const char *string)
 
 #define ELLIPSIS_LEN 3
 
-int
-Readline::fnprint (const char *to_print, int prefix_bytes,
-                   const char *real_pathname)
+size_t
+Readline::fnprint (const std::string &pathname, size_t index_to_print,
+                   size_t prefix_bytes)
 {
-  int printed_len, w;
-  const char *s;
-  int common_prefix_len, print_len;
+  size_t print_len = pathname.size () - index_to_print;
+
 #if defined(HANDLE_MULTIBYTE)
   mbstate_t ps;
-  const char *end;
-  int width;
+  size_t width;
   wchar_t wc;
 
-  print_len = static_cast<int> (std::strlen (to_print));
-  end = to_print + print_len + 1;
   std::memset (&ps, 0, sizeof (mbstate_t));
-#else
-  print_len = std::strlen (to_print);
 #endif
 
-  printed_len = common_prefix_len = 0;
+  size_t printed_len = 0, common_prefix_len = 0;
 
   /* Don't print only the ellipsis if the common prefix is one of the
      possible completions.  Only cut off prefix_bytes if we're going to be
@@ -429,7 +413,7 @@ Readline::fnprint (const char *to_print, int prefix_bytes,
 #if defined(COLOR_SUPPORT)
   if (_rl_colored_stats
       && (prefix_bytes == 0 || _rl_colored_completion_prefix <= 0))
-    colored_stat_start (real_pathname);
+    colored_stat_start (pathname);
 #endif
 
   if (prefix_bytes && _rl_completion_prefix_display_length > 0)
@@ -437,7 +421,7 @@ Readline::fnprint (const char *to_print, int prefix_bytes,
       char ellipsis;
 
       ellipsis = (to_print[prefix_bytes] == '.') ? '_' : '.';
-      for (w = 0; w < ELLIPSIS_LEN; w++)
+      for (int w = 0; w < ELLIPSIS_LEN; w++)
         std::putc (ellipsis, rl_outstream);
       printed_len = ELLIPSIS_LEN;
     }
@@ -451,15 +435,16 @@ Readline::fnprint (const char *to_print, int prefix_bytes,
     }
 #endif
 
-  s = to_print + prefix_bytes;
-  while (*s)
+  std::string::const_iterator s
+      = to_print.begin () + static_cast<ssize_t> (prefix_bytes);
+  while (s < to_print.end ())
     {
       if (CTRL_CHAR (*s))
         {
           std::putc ('^', rl_outstream);
           std::putc (UNCTRL (*s), rl_outstream);
           printed_len += 2;
-          s++;
+          ++s;
 #if defined(HANDLE_MULTIBYTE)
           std::memset (&ps, 0, sizeof (mbstate_t));
 #endif
@@ -469,7 +454,7 @@ Readline::fnprint (const char *to_print, int prefix_bytes,
           std::putc ('^', rl_outstream);
           std::putc ('?', rl_outstream);
           printed_len += 2;
-          s++;
+          ++s;
 #if defined(HANDLE_MULTIBYTE)
           std::memset (&ps, 0, sizeof (mbstate_t));
 #endif
@@ -477,8 +462,8 @@ Readline::fnprint (const char *to_print, int prefix_bytes,
       else
         {
 #if defined(HANDLE_MULTIBYTE)
-          size_t tlen
-              = std::mbrtowc (&wc, s, static_cast<size_t> (end - s), &ps);
+          size_t tlen = std::mbrtowc (
+              &wc, &(*s), static_cast<size_t> (to_print.end () - s), &ps);
           if (MB_INVALIDCH (tlen))
             {
               tlen = 1;
@@ -489,26 +474,27 @@ Readline::fnprint (const char *to_print, int prefix_bytes,
             break;
           else
             {
-              w = WCWIDTH (wc);
-              width = (w >= 0) ? w : 1;
+              int w = WCWIDTH (wc);
+              width = (w >= 0) ? static_cast<size_t> (w) : 1;
             }
-          std::fwrite (s, 1, tlen, rl_outstream);
-          s += tlen;
+          std::fwrite (&(*s), 1, tlen, rl_outstream);
+          s += static_cast<ssize_t> (tlen);
           printed_len += width;
 #else
           std::putc (*s, rl_outstream);
-          s++;
+          ++s;
           printed_len++;
 #endif
         }
-      if (common_prefix_len > 0 && (s - to_print) >= common_prefix_len)
+      if (common_prefix_len > 0
+          && static_cast<size_t> (s - to_print.begin ()) >= common_prefix_len)
         {
 #if defined(COLOR_SUPPORT)
           /* printed bytes = s - to_print */
           /* printed bytes should never be > but check for paranoia's sake */
           colored_prefix_end ();
           if (_rl_colored_stats)
-            colored_stat_start (real_pathname); /* XXX - experiment */
+            colored_stat_start (pathname); /* XXX - experiment */
 #endif
           common_prefix_len = 0;
         }
@@ -523,22 +509,21 @@ Readline::fnprint (const char *to_print, int prefix_bytes,
   return printed_len;
 }
 
-/* Output TO_PRINT to rl_outstream.  If VISIBLE_STATS is defined and we
-   are using it, check for and output a single character for `special'
-   filenames.  Return the number of characters we output. */
-
-int
-Readline::print_filename (char *to_print, const char *full_pathname,
-                          int prefix_bytes)
+// Output PATHNAME from INDEX_TO_PRINT to rl_outstream.  If VISIBLE_STATS is
+// defined and we are using it, check for and output a single character for
+// `special' filenames.  Return the number of characters we output.
+size_t
+Readline::print_filename (const std::string &pathname, size_t index_to_print,
+                          size_t prefix_bytes)
 {
   int extension_char = 0;
-  int printed_len = 0;
+  size_t printed_len = 0;
 
 #if defined(COLOR_SUPPORT)
   /* Defer printing if we want to prefix with a color indicator */
-  if (_rl_colored_stats == 0 || rl_filename_completion_desired == 0)
+  if (!_rl_colored_stats || !rl_filename_completion_desired)
 #endif
-    printed_len = fnprint (to_print, prefix_bytes, to_print);
+    printed_len = fnprint (pathname, index_to_print, prefix_bytes);
 
   if (rl_filename_completion_desired
       && (
@@ -648,16 +633,19 @@ Readline::print_filename (char *to_print, const char *full_pathname,
   return printed_len;
 }
 
-char *
-Readline::rl_quote_filename (const char *s, replace_type, unsigned char *qcp)
+std::string
+Readline::rl_quote_filename (const std::string &s, replace_type, char *qcp)
 {
-  char *r = new char[std::strlen (s) + 2];
-  *r = *rl_completer_quote_characters;
-  std::strcpy (r + 1, s);
+  std::string ret;
+  ret.reserve (s.size () + 1);
+
+  ret.push_back (*rl_completer_quote_characters);
+  ret.append (s);
 
   if (qcp)
-    *qcp = static_cast<unsigned char> (*rl_completer_quote_characters);
-  return r;
+    *qcp = *rl_completer_quote_characters;
+
+  return ret;
 }
 
 /* Find the bounds of the current word for completion purposes, and leave
@@ -678,11 +666,8 @@ Readline::rl_quote_filename (const char *s, replace_type, unsigned char *qcp)
 unsigned char
 Readline::_rl_find_completion_word (rl_qf_flags *fp, unsigned char *dp)
 {
-  //   int scan, end, found_quote, delimiter, pass_next, isbrk;
-  //   char quote_char, *brkchars;
-
-  unsigned int scan;
-  unsigned int end = rl_point;
+  size_t scan;
+  size_t end = rl_point;
   rl_qf_flags found_quote = RL_QF_NONE;
   unsigned char delimiter = '\0';
   unsigned char quote_char = '\0';
@@ -817,14 +802,12 @@ Readline::_rl_find_completion_word (rl_qf_flags *fp, unsigned char *dp)
   return quote_char;
 }
 
-char **
-Readline::gen_completion_matches (const char *text, unsigned int start,
-                                  unsigned int end,
-                                  rl_compentry_func_t our_func,
-                                  rl_qf_flags found_quote,
-                                  unsigned char quote_char)
+std::vector<std::string *> *
+Readline::gen_completion_matches (const std::string &text, size_t start,
+                                  size_t end, rl_compentry_func_t our_func,
+                                  rl_qf_flags found_quote, int quote_char)
 {
-  char **matches;
+  std::vector<std::string *> *matches;
 
   rl_completion_found_quote = found_quote;
   rl_completion_quote_character = quote_char;
@@ -844,7 +827,7 @@ Readline::gen_completion_matches (const char *text, unsigned int start,
 
       if (matches || rl_attempted_completion_over)
         {
-          rl_attempted_completion_over = 0;
+          rl_attempted_completion_over = false;
           return matches;
         }
     }
@@ -865,73 +848,38 @@ Readline::gen_completion_matches (const char *text, unsigned int start,
 
 /* Filter out duplicates in MATCHES.  This frees up the strings in
    MATCHES. */
-char **
-Readline::remove_duplicate_matches (char **matches)
+void
+Readline::remove_duplicate_matches (std::vector<std::string *> &matches)
 {
-  char *lowest_common;
-  unsigned int i, j, newlen;
-  char dead_slot;
-  char **temp_array;
-
-  /* Sort the items. */
-  for (i = 0; matches[i]; i++)
-    ;
+  if (matches.size () < 2)
+    return;
 
   /* Sort the array without matches[0], since we need it to
      stay in place no matter what. */
-  if (i && rl_sort_completion_matches)
-    std::qsort (matches + 1, i - 1, sizeof (char *),
-                &_rl_qsort_string_compare);
-
-  /* Remember the lowest common denominator for it may be unique. */
-  lowest_common = savestring (matches[0]);
-
-  for (i = newlen = 0; matches[i + 1]; i++)
+  if (rl_sort_completion_matches)
     {
-      if (std::strcmp (matches[i], matches[i + 1]) == 0)
+      string_ptr_comp string_ptr_compare;
+      std::sort (matches.begin () + 1, matches.end (), string_ptr_compare);
+    }
+
+  // Iterate over remaining entries, erasing any that match the previous one.
+  std::vector<std::string *>::iterator it;
+  for (it = matches.begin () + 1; it < matches.end (); ++it)
+    {
+      if (std::strcmp ((*(it - 1))->c_str (), (*it)->c_str ()) == 0)
         {
-          delete[] matches[i];
-          matches[i] = &dead_slot;
+          delete[] * it;
+          it = matches.erase (it);
         }
-      else
-        newlen++;
     }
-
-  /* We have marked all the dead slots with (char *)&dead_slot.
-     Copy all the non-dead entries into a new array. */
-  temp_array = new char *[3 + newlen];
-  for (i = j = 1; matches[i]; i++)
-    {
-      if (matches[i] != &dead_slot)
-        temp_array[j++] = matches[i];
-    }
-  temp_array[j] = nullptr;
-
-  if (matches[0] != &dead_slot)
-    delete[] matches[0];
-
-  /* Place the lowest common denominator back in [0]. */
-  temp_array[0] = lowest_common;
-
-  /* If there is one string left, and it is identical to the
-     lowest common denominator, then the LCD is the string to
-     insert. */
-  if (j == 2 && std::strcmp (temp_array[0], temp_array[1]) == 0)
-    {
-      delete[] temp_array[1];
-      temp_array[1] = nullptr;
-    }
-  return temp_array;
 }
 
-/* Find the common prefix of the list of matches, and put it into
-   matches[0]. */
-int
-Readline::compute_lcd_of_matches (char **match_list, int matches,
-                                  const char *text)
+// Find the common prefix of the list of matches, and put it into matches[0].
+void
+Readline::compute_lcd_of_matches (std::vector<std::string *> &match_list,
+                                  const std::string &text)
 {
   size_t low = 100000; /* Count of max-matched characters. */
-  char *dtext;         /* dequoted TEXT, if needed */
 #if defined(HANDLE_MULTIBYTE)
   size_t v1, v2;
   mbstate_t ps1, ps2;
@@ -941,16 +889,14 @@ Readline::compute_lcd_of_matches (char **match_list, int matches,
   /* If only one match, just use that.  Otherwise, compare each
      member of the list with the next, finding out where they
      stop matching. */
-  if (matches == 1)
-    {
-      match_list[0] = match_list[1];
-      match_list[1] = nullptr;
-      return 1;
-    }
+  if (match_list.size () == 1)
+    return;
 
   size_t si;
   char c1, c2;
-  for (int i = 1; i < matches; i++)
+  string_ptr_comp string_ptr_compare;
+  std::vector<std::string *>::iterator it;
+  for (it = match_list.begin () + 1; it < match_list.end (); ++it)
     {
 #if defined(HANDLE_MULTIBYTE)
       if (MB_CUR_MAX > 1 && !rl_byte_oriented)
@@ -959,8 +905,9 @@ Readline::compute_lcd_of_matches (char **match_list, int matches,
           std::memset (&ps2, 0, sizeof (mbstate_t));
         }
 #endif
-      for (si = 0; (c1 = match_list[i][si]) && (c2 = match_list[i + 1][si]);
-           si++)
+      const char *s1 = (*it)->c_str ();
+      const char *s2 = (*(it + 1))->c_str ();
+      for (si = 0; (c1 = s1[si]) && (c2 = s2[si]); si++)
         {
           if (_rl_completion_case_fold)
             {
@@ -970,10 +917,8 @@ Readline::compute_lcd_of_matches (char **match_list, int matches,
 #if defined(HANDLE_MULTIBYTE)
           if (MB_CUR_MAX > 1 && !rl_byte_oriented)
             {
-              v1 = std::mbrtowc (&wc1, match_list[i] + si,
-                                 std::strlen (match_list[i] + si), &ps1);
-              v2 = std::mbrtowc (&wc2, match_list[i + 1] + si,
-                                 std::strlen (match_list[i + 1] + si), &ps2);
+              v1 = std::mbrtowc (&wc1, s1 + si, std::strlen (s1 + si), &ps1);
+              v2 = std::mbrtowc (&wc2, s2 + si, std::strlen (s2 + si), &ps2);
               if (MB_INVALIDCH (v1) || MB_INVALIDCH (v2))
                 {
                   if (c1 != c2) /* do byte comparison */
@@ -1005,14 +950,15 @@ Readline::compute_lcd_of_matches (char **match_list, int matches,
   /* If there were multiple matches, but none matched up to even the
      first character, and the user typed something, use that as the
      value of matches[0]. */
-  if (low == 0 && text && *text)
+  if (low == 0 && !text.empty ())
     {
-      match_list[0] = new char[std::strlen (text) + 1];
-      std::strcpy (match_list[0], text);
+      match_list[0] = new std::string (text);
     }
   else
     {
-      match_list[0] = new char[low + 1];
+      std::string *newstr = new std::string ();
+      newstr->reserve (low);
+      match_list[0] = newstr;
 
       /* XXX - this might need changes in the presence of multibyte chars */
 
@@ -1027,70 +973,59 @@ Readline::compute_lcd_of_matches (char **match_list, int matches,
              filename quoting THEN we assume that TEXT was dequoted before
              checking against the file system and needs to be dequoted here
              before we check against the list of matches FI */
-          dtext = nullptr;
+          std::string dtext;
           if (rl_filename_completion_desired && rl_filename_dequoting_function
               && rl_completion_found_quote && rl_filename_quoting_desired)
             {
               dtext = ((*this).*rl_filename_dequoting_function) (
-                  const_cast<char *> (text), rl_completion_quote_character);
-              text = dtext;
+                  text, rl_completion_quote_character);
             }
+          else
+            dtext = text;
 
           /* sort the list to get consistent answers. */
           if (rl_sort_completion_matches)
-            std::qsort (match_list + 1, static_cast<size_t> (matches),
-                        sizeof (char *), &_rl_qsort_string_compare);
+            std::sort (match_list.begin () + 1, match_list.end (),
+                       string_ptr_compare);
 
-          si = std::strlen (text);
-          size_t lx
-              = (si <= low) ? si : low; /* check shorter of text and matches */
-          /* Try to preserve the case of what the user typed in the presence of
-             multiple matches: check each match for something that matches
-             what the user typed taking case into account; use it up to common
-             length of matches if one is found.  If not, just use first match.
-           */
-          int i;
-          for (i = 1; i <= matches; i++)
-            if (std::strncmp (match_list[i], text, lx) == 0)
+          si = text.size ();
+          size_t lx = std::min (si, low); // check shorter of text and matches
+
+          // Try to preserve the case of what the user typed in the presence of
+          // multiple matches: check each match for something that matches
+          // what the user typed taking case into account; use it up to common
+          // length of matches if one is found.  If not, just use first match.
+          for (it = match_list.begin () + 1; it < match_list.end (); ++it)
+            if (std::strncmp ((*it)->c_str (), text.c_str (), lx) == 0)
               {
-                std::strncpy (match_list[0], match_list[i], low);
+                match_list[0]->assign (**it, 0, low);
                 break;
               }
-          /* no casematch, use first entry */
-          if (i > matches)
-            std::strncpy (match_list[0], match_list[1], low);
 
-          delete[] dtext;
+          /* no casematch, use first entry */
+          if (it == match_list.end ())
+            match_list[0]->assign (*match_list[1], 0, low);
         }
       else
-        std::strncpy (match_list[0], match_list[1], low);
-
-      match_list[0][low] = '\0';
+        match_list[0]->assign (*match_list[1], 0, low);
     }
-
-  return matches;
 }
 
 int
-Readline::postprocess_matches (char ***matchesp, bool matching_filenames)
+Readline::postprocess_matches (std::vector<std::string *> &matches,
+                               bool matching_filenames)
 {
-  char *t, **matches, **temp_matches;
-  int nmatch, i;
+  //   char *t, **matches, **temp_matches;
+  //   int nmatch, i;
 
-  matches = *matchesp;
-
-  if (matches == nullptr)
+  if (matches.empty ())
     return 0;
 
   /* It seems to me that in all the cases we handle we would like
      to ignore duplicate possibilities.  Scan for the text to
      insert being identical to the other completions. */
   if (rl_ignore_completion_duplicates)
-    {
-      temp_matches = remove_duplicate_matches (matches);
-      delete[] matches;
-      matches = temp_matches;
-    }
+    remove_duplicate_matches (matches);
 
   /* If we are matching filenames, then here is our chance to
      do clever processing by re-examining the list.  Call the
@@ -1125,20 +1060,21 @@ Readline::postprocess_matches (char ***matchesp, bool matching_filenames)
   return 1;
 }
 
-unsigned int
+size_t
 Readline::complete_get_screenwidth ()
 {
-  int cols;
   char *envcols;
 
-  cols = _rl_completion_columns;
-  if (cols >= 0 && cols <= static_cast<int> (_rl_screenwidth))
-    return static_cast<unsigned int> (cols);
+  ssize_t cols = _rl_completion_columns;
+  if (cols >= 0 && cols <= static_cast<ssize_t> (_rl_screenwidth))
+    return static_cast<size_t> (cols);
+
   envcols = std::getenv ("COLUMNS");
   if (envcols && *envcols)
     cols = std::atoi (envcols);
-  if (cols >= 0 && cols <= static_cast<int> (_rl_screenwidth))
-    return static_cast<unsigned int> (cols);
+  if (cols >= 0 && cols <= static_cast<ssize_t> (_rl_screenwidth))
+    return static_cast<size_t> (cols);
+
   return _rl_screenwidth;
 }
 
@@ -1147,11 +1083,11 @@ Readline::complete_get_screenwidth ()
    of strings, in argv format, LEN is the number of strings in MATCHES,
    and MAX is the length of the longest string in MATCHES. */
 void
-Readline::rl_display_match_list (char **matches, int len, int max)
+Readline::rl_display_match_list (std::vector<std::string *> &matches,
+                                 size_t max)
 {
   int count, limit, printed_len;
   int common_length, sind;
-  char *temp, *t;
 
   /* Find the length of the prefix common to all items: length as displayed
      characters (common_length) and as a byte index into the matches (sind) */
@@ -1176,7 +1112,7 @@ Readline::rl_display_match_list (char **matches, int len, int max)
 #if defined(COLOR_SUPPORT)
   else if (_rl_colored_completion_prefix > 0)
     {
-      t = printable_part (matches[0]);
+      std::string t = printable_part (*matches[0]);
       temp = rl_filename_completion_desired ? std::strrchr (t, '/') : nullptr;
       common_length = temp ? fnwidth (temp) : fnwidth (t);
       /* want portion after final slash */
@@ -1188,9 +1124,9 @@ Readline::rl_display_match_list (char **matches, int len, int max)
 #endif
 
   /* How many items of MAX length can we fit in the screen window? */
-  unsigned int cols = complete_get_screenwidth ();
+  size_t cols = complete_get_screenwidth ();
   max += 2;
-  limit = static_cast<int> (cols) / max;
+  limit = static_cast<int> (cols / max);
   if (limit != 1 && (limit * max == static_cast<int> (cols)))
     limit--;
 
@@ -1212,12 +1148,11 @@ Readline::rl_display_match_list (char **matches, int len, int max)
 
   /* Sort the items if they are not already sorted. */
   if (!rl_ignore_completion_duplicates && rl_sort_completion_matches)
-    std::qsort (matches + 1, static_cast<size_t> (len), sizeof (char *),
-                &_rl_qsort_string_compare);
+    std::qsort (matches + 1, len, sizeof (char *), &_rl_qsort_string_compare);
 
   rl_crlf ();
 
-  int lines = 0;
+  size_t lines = 0;
   if (_rl_print_completions_horizontally == 0)
     {
       /* Print the sorted items, up-and-down alphabetically, like ls. */
@@ -1251,8 +1186,7 @@ Readline::rl_display_match_list (char **matches, int len, int max)
 #endif
             return;
           lines++;
-          if (_rl_page_completions
-              && static_cast<unsigned int> (lines) >= (_rl_screenheight - 1)
+          if (_rl_page_completions && lines >= (_rl_screenheight - 1)
               && i < count)
             {
               lines = _rl_internal_pager (lines);
@@ -1267,8 +1201,7 @@ Readline::rl_display_match_list (char **matches, int len, int max)
       for (int i = 1; matches[i]; i++)
         {
           temp = printable_part (matches[i]);
-          printed_len
-              = print_filename (temp, matches[i], static_cast<int> (sind));
+          printed_len = print_filename (temp, matches[i], sind);
           /* Have we reached the end of this line? */
 #if defined(SIGWINCH)
           if (RL_SIG_RECEIVED () && RL_SIGWINCH_RECEIVED () == 0)
@@ -1282,9 +1215,7 @@ Readline::rl_display_match_list (char **matches, int len, int max)
                 {
                   rl_crlf ();
                   lines++;
-                  if (_rl_page_completions
-                      && static_cast<unsigned int> (lines)
-                             >= _rl_screenheight - 1)
+                  if (_rl_page_completions && lines >= _rl_screenheight - 1)
                     {
                       lines = _rl_internal_pager (lines);
                       if (lines < 0)
@@ -1314,10 +1245,9 @@ Readline::rl_display_match_list (char **matches, int len, int max)
    and ask the user if he wants to see the list if there are more matches
    than RL_COMPLETION_QUERY_ITEMS. */
 void
-Readline::display_matches (char **matches)
+Readline::display_matches (const std::vector<std::string *> &matches)
 {
   int len, max, i;
-  char *temp;
 
   /* Move to the last visible line of a possibly-multiple-line command. */
   _rl_move_vert (_rl_vis_botlin);
@@ -1325,9 +1255,9 @@ Readline::display_matches (char **matches)
   /* Handle simple case first.  What if there is only one answer? */
   if (matches[1] == nullptr)
     {
-      temp = printable_part (matches[0]);
+      std::string temp = printable_part (*matches[0]);
       rl_crlf ();
-      print_filename (temp, matches[0], 0);
+      print_filename (temp, *matches[0], 0);
       rl_crlf ();
 
       rl_forced_update_display ();
@@ -1352,7 +1282,7 @@ Readline::display_matches (char **matches)
   /* If the caller has defined a display hook, then call that now. */
   if (rl_completion_display_matches_hook)
     {
-      ((*this).*rl_completion_display_matches_hook) (matches, len, max);
+      ((*this).*rl_completion_display_matches_hook) (matches, max);
       return;
     }
 
@@ -1382,9 +1312,9 @@ Readline::display_matches (char **matches)
 }
 
 /* qc == pointer to quoting character, if any */
-char *
-Readline::make_quoted_replacement (char *match, replace_type mtype,
-                                   unsigned char *qc)
+std::string
+Readline::make_quoted_replacement (const std::string &match,
+                                   replace_type mtype, char *qc)
 {
   bool should_quote;
   char *replacement;
@@ -1431,12 +1361,12 @@ Readline::make_quoted_replacement (char *match, replace_type mtype,
 }
 
 void
-Readline::insert_match (char *match, unsigned int start, replace_type mtype,
-                        unsigned char *qc)
+Readline::insert_match (const std::string &match, size_t start,
+                        replace_type mtype, char *qc)
 {
   char *replacement, *r;
   unsigned char oqc;
-  unsigned int end, rlen;
+  size_t end, rlen;
 
   oqc = qc ? *qc : '\0';
   replacement = make_quoted_replacement (match, mtype, qc);
@@ -1444,7 +1374,7 @@ Readline::insert_match (char *match, unsigned int start, replace_type mtype,
   /* Now insert the match. */
   if (replacement)
     {
-      rlen = static_cast<unsigned int> (std::strlen (replacement));
+      rlen = std::strlen (replacement);
       /* Don't double an opening quote character. */
       if (qc && *qc && start && rl_line_buffer[start - 1] == *qc
           && replacement[0] == *qc)
@@ -1469,7 +1399,7 @@ Readline::insert_match (char *match, unsigned int start, replace_type mtype,
             }
           if (start <= end || *r)
             _rl_replace_text (r, start, end);
-          rl_point = start + static_cast<unsigned int> (std::strlen (r));
+          rl_point = start + std::strlen (r);
         }
       else
         _rl_replace_text (replacement, start, end);
@@ -1561,8 +1491,8 @@ Readline::append_to_match (char *text, unsigned char delimiter,
 }
 
 void
-Readline::insert_all_matches (char **matches, unsigned int point,
-                              unsigned char *qc)
+Readline::insert_all_matches (const std::vector<std::string *> &matches,
+                              size_t point, char *qc)
 {
   int i;
   char *rp;
@@ -1627,7 +1557,7 @@ Readline::compare_match (const char *text, const char *match)
 int
 Readline::rl_complete_internal (int what_to_do)
 {
-  unsigned int start, end;
+  size_t start, end;
   unsigned char delimiter;
   rl_qf_flags found_quote;
   unsigned char quote_char;
@@ -1661,8 +1591,8 @@ Readline::rl_complete_internal (int what_to_do)
   rl_point = end;
 
   char *text = rl_copy_text (start, end);
-  char **matches = gen_completion_matches (text, start, end, our_func,
-                                           found_quote, quote_char);
+  std::vector<std::string *> *matches = gen_completion_matches (
+      text, start, end, our_func, found_quote, quote_char);
   /* nontrivial_lcd is set if the common prefix adds something to the word
      being completed. */
   bool nontrivial_lcd = matches && compare_match (text, matches[0]) != 0;
@@ -1822,33 +1752,32 @@ Readline::rl_complete_internal (int what_to_do)
 /*							       */
 /***************************************************************/
 
-/* Return an array of (char *) which is a list of completions for TEXT.
-   If there are no completions, return a NULL pointer.
+/* Return a vector of string which is a list of completions for TEXT.
+   If there are no completions, return nullptr.
    The first entry in the returned array is the substitution for TEXT.
    The remaining entries are the possible completions.
-   The array is terminated with a NULL pointer.
 
-   ENTRY_FUNCTION is a function of two args, and returns a (char *).
+   ENTRY_FUNCTION is a function of two args, and returns a string *.
      The first argument is TEXT.
      The second is a state argument; it should be zero on the first call, and
      non-zero on subsequent calls.  It returns nullptr to the caller
      when there are no more matches.
  */
-char **
-Readline::rl_completion_matches (const char *text,
+std::vector<std::string *> *
+Readline::rl_completion_matches (const std::string &text,
                                  rl_compentry_func_t entry_function)
 {
   /* The list of matches. */
-  std::vector<char *> match_list;
+  std::vector<std::string *> *match_list = new std::vector<std::string *> ();
 
   /* Number of matches actually found. */
   int matches;
 
   /* Temporary string binder. */
-  char *string;
+  std::string *string;
 
   matches = 0;
-  match_list.push_back (nullptr); // empty first entry
+  match_list->push_back (nullptr); // empty first entry
 
   while ((string = ((*this).*entry_function) (text, matches)))
     {
@@ -1860,39 +1789,37 @@ Readline::rl_completion_matches (const char *text,
              free the strings it returns. */
           if (entry_function == &Readline::rl_filename_completion_function)
             {
-              for (size_t i = 1; match_list[i]; i++)
-                delete[] match_list[i];
+              std::vector<std::string *>::iterator it;
+              for (it = match_list->begin () + 1; it < match_list->end ();
+                   ++it)
+                delete *it;
             }
-          match_list.clear ();
+          match_list->clear ();
           matches = 0;
-          match_list.push_back (nullptr); // empty first entry
+          match_list->push_back (nullptr); // empty first entry
           RL_CHECK_SIGNALS ();
         }
 
-      match_list.push_back (string);
+      match_list->push_back (string);
+      ++matches;
     }
 
   /* If there were any matches, then look through them finding out the
      lowest common denominator.  That then becomes match_list[0]. */
   if (matches)
     {
-      char **match_array = new char *[match_list.size ()];
-      std::memcpy (match_array, match_list.data (),
-                   match_list.size () * sizeof (char *));
-      compute_lcd_of_matches (match_array, matches, text);
-      return match_array;
+      compute_lcd_of_matches (match_list, text);
+      return match_list;
     }
-  else /* There were no matches. */
-    {
-      return nullptr;
-    }
+  else
+    return nullptr; // There were no matches.
 }
 
 /* A completion function for usernames.
    TEXT contains a partial username preceded by a random
    character (usually `~').  */
-char *
-Readline::rl_username_completion_function (const char *text, int state)
+std::string *
+Readline::rl_username_completion_function (const std::string &text, int state)
 {
 #if defined(__WIN32__) || defined(__OPENNT)
   return nullptr;
@@ -1941,14 +1868,14 @@ Readline::rl_username_completion_function (const char *text, int state)
 #endif /* !__WIN32__ && !__OPENNT */
 }
 
-/* Return non-zero if CONVFN matches FILENAME up to the length of FILENAME
-   (FILENAME_LEN).  If _rl_completion_case_fold is set, compare without
-   regard to the alphabetic case of characters.  If
-   _rl_completion_case_map is set, make `-' and `_' equivalent.  CONVFN is
-   the possibly-converted directory entry; FILENAME is what the user typed. */
+// Return non-zero if CONVFN matches FILENAME up to the length of FILENAME
+// (FILENAME_LEN).  If _rl_completion_case_fold is set, compare without
+// regard to the alphabetic case of characters.  If _rl_completion_case_map is
+// set, make `-' and `_' equivalent.  CONVFN is the possibly-converted
+// directory entry; FILENAME is what the user typed.
 bool
-Readline::complete_fncmp (const char *convfn, unsigned int convlen,
-                          const char *filename, unsigned int filename_len)
+Readline::complete_fncmp (const std::string &convfn,
+                          const std::string &filename)
 {
 #if defined(HANDLE_MULTIBYTE)
   size_t v1, v2;
@@ -2082,10 +2009,10 @@ Readline::complete_fncmp (const char *convfn, unsigned int convlen,
    general case.  Note that completion in the shell is a little different
    because of all the pathnames that must be followed when looking up the
    completion for a command. */
-char *
-Readline::rl_filename_completion_function (const char *text, int state)
+std::string *
+Readline::rl_filename_completion_function (const std::string &text, int state)
 {
-  unsigned int dirlen, dentlen, convlen;
+  size_t dirlen, dentlen, convlen;
   struct dirent *entry;
 
   /* If we don't have any state, then do some initialization. */
@@ -2177,8 +2104,8 @@ Readline::rl_filename_completion_function (const char *text, int state)
 
       _rl_fcmp_directory = ::opendir (_rl_fcmp_dirname.c_str ());
 
-      /* Now dequote a non-null filename.  FILENAME will not be NULL, but may
-         be empty. */
+      /* Now dequote a non-null filename.  FILENAME will not be nullptr, but
+         may be empty. */
       if (!_rl_fcmp_filename.empty () && rl_completion_found_quote
           && rl_filename_dequoting_function)
         {
@@ -2210,9 +2137,7 @@ Readline::rl_filename_completion_function (const char *text, int state)
       if (rl_filename_rewrite_hook)
         {
           convfn = ((*this).*rl_filename_rewrite_hook) (dentry, dentlen);
-          convlen = (convfn == dentry)
-                        ? dentlen
-                        : static_cast<unsigned int> (std::strlen (convfn));
+          convlen = (convfn == dentry) ? dentlen : std::strlen (convfn);
         }
 
       /* Special case for no filename.  If the user has disabled the
@@ -2229,9 +2154,8 @@ Readline::rl_filename_completion_function (const char *text, int state)
         }
       else
         {
-          if (complete_fncmp (
-                  convfn, convlen, _rl_fcmp_filename.c_str (),
-                  static_cast<unsigned int> (_rl_fcmp_filename.size ())))
+          if (complete_fncmp (convfn, convlen, _rl_fcmp_filename.c_str (),
+                              _rl_fcmp_filename.size ()))
             break;
         }
     }
@@ -2259,7 +2183,7 @@ Readline::rl_filename_completion_function (const char *text, int state)
           if (rl_complete_with_tilde_expansion
               && _rl_fcmp_users_dirname[0] == '~')
             {
-              dirlen = static_cast<unsigned int> (_rl_fcmp_dirname.size ());
+              dirlen = _rl_fcmp_dirname.size ();
               temp = new char[2 + dirlen + D_NAMLEN (entry)];
               std::strcpy (temp, _rl_fcmp_dirname.data ());
               /* Canonicalization cuts off any final slash present.  We
@@ -2272,8 +2196,7 @@ Readline::rl_filename_completion_function (const char *text, int state)
             }
           else
             {
-              dirlen
-                  = static_cast<unsigned int> (_rl_fcmp_users_dirname.size ());
+              dirlen = _rl_fcmp_users_dirname.size ();
               temp = new char[2 + dirlen + D_NAMLEN (entry)];
               std::strcpy (temp, _rl_fcmp_users_dirname.data ());
               /* Make sure that temp has a trailing slash here. */
@@ -2333,7 +2256,7 @@ Readline::rl_old_menu_complete (int count, int invoking_key)
                        : &Readline::rl_filename_completion_function;
 
       /* We now look backwards for the start of a filename/variable word. */
-      _rl_omenu_orig_end = static_cast<unsigned int> (rl_point);
+      _rl_omenu_orig_end = rl_point;
 
       rl_qf_flags found_quote = RL_QF_NONE;
       _rl_omenu_delimiter = '\0';
@@ -2345,7 +2268,7 @@ Readline::rl_old_menu_complete (int count, int invoking_key)
         _rl_omenu_quote_char
             = _rl_find_completion_word (&found_quote, &_rl_omenu_delimiter);
 
-      _rl_omenu_orig_start = static_cast<unsigned int> (rl_point);
+      _rl_omenu_orig_start = rl_point;
       rl_point = _rl_omenu_orig_end;
 
       _rl_omenu_orig_text
@@ -2431,16 +2354,14 @@ Readline::rl_old_menu_complete (int count, int invoking_key)
   return 0;
 }
 
-/* The current version of menu completion.
-   The differences between this function and the original are:
-
-1. It honors the maximum number of completions variable
-(completion-query-items)
-2. It appends to the word as usual if there is only one match
-3. It displays the common prefix if there is one, and makes it the first menu
-   choice if the menu-complete-display-prefix option is enabled
-*/
-
+// The current version of menu completion.
+// The differences between this function and the original are:
+//
+// 1. It honors the maximum number of completions variable
+// (completion-query-items)
+// 2. It appends to the word as usual if there is only one match
+// 3. It displays the common prefix if there is one, and makes it the first
+// menu choice if the menu-complete-display-prefix option is enabled
 int
 Readline::rl_menu_complete (int count, int)
 {
@@ -2455,7 +2376,7 @@ Readline::rl_menu_complete (int count, int)
       if (_rl_menu_matches)
         _rl_free_match_list (_rl_menu_matches);
 
-      _rl_menu_match_list_index = _rl_menu_match_list_size = 0;
+      _rl_menu_match_list_index = 0;
       _rl_menu_matches = nullptr;
 
       _rl_menu_full_completion = false;
@@ -2472,7 +2393,7 @@ Readline::rl_menu_complete (int count, int)
                        : &Readline::rl_filename_completion_function;
 
       /* We now look backwards for the start of a filename/variable word. */
-      _rl_menu_orig_end = static_cast<unsigned int> (rl_point);
+      _rl_menu_orig_end = rl_point;
 
       rl_qf_flags found_quote = RL_QF_NONE;
       _rl_menu_delimiter = '\0';
@@ -2484,7 +2405,7 @@ Readline::rl_menu_complete (int count, int)
         _rl_menu_quote_char
             = _rl_find_completion_word (&found_quote, &_rl_menu_delimiter);
 
-      _rl_menu_orig_start = static_cast<unsigned int> (rl_point);
+      _rl_menu_orig_start = rl_point;
       rl_point = _rl_menu_orig_end;
 
       _rl_menu_orig_text
@@ -2495,7 +2416,7 @@ Readline::rl_menu_complete (int count, int)
 
       _rl_menu_nontrivial_lcd
           = _rl_menu_matches
-            && compare_match (_rl_menu_orig_text, _rl_menu_matches[0]) != 0;
+            && compare_match (_rl_menu_orig_text, *(*_rl_menu_matches)[0]) != 0;
 
       /* If we are matching filenames, the attempted completion function will
          have set rl_filename_completion_desired to a non-zero value.  The
@@ -2503,10 +2424,10 @@ Readline::rl_menu_complete (int count, int)
       bool matching_filenames = rl_filename_completion_desired;
 
       if (_rl_menu_matches == nullptr
-          || postprocess_matches (&_rl_menu_matches, matching_filenames) == 0)
+          || postprocess_matches (*_rl_menu_matches, matching_filenames) == 0)
         {
           rl_ding ();
-          delete[] _rl_menu_matches;
+          _rl_free_match_list (_rl_menu_matches);
           _rl_menu_matches = nullptr;
 
           delete[] _rl_menu_orig_text;
@@ -2519,15 +2440,10 @@ Readline::rl_menu_complete (int count, int)
 
       RL_UNSETSTATE (RL_STATE_COMPLETING);
 
-      for (_rl_menu_match_list_size = 0;
-           _rl_menu_matches[_rl_menu_match_list_size];
-           _rl_menu_match_list_size++)
-        ;
-
-      if (_rl_menu_match_list_size == 0)
+      if (_rl_menu_matches->empty ())
         {
           rl_ding ();
-          delete[] _rl_menu_matches;
+          _rl_free_match_list (_rl_menu_matches);
           _rl_menu_matches = nullptr;
           _rl_menu_match_list_index = 0;
           _rl_cmpl_changed_buffer = false;
@@ -2536,21 +2452,20 @@ Readline::rl_menu_complete (int count, int)
 
       /* matches[0] is lcd if match_list_size > 1, but the circular buffer
          code below should take care of it. */
-      if (*_rl_menu_matches[0])
+      if ((*_rl_menu_matches)[0])
         {
           insert_match (_rl_menu_matches[0], _rl_menu_orig_start,
                         _rl_menu_matches[1] ? MULT_MATCH : SINGLE_MATCH,
                         &_rl_menu_quote_char);
-          _rl_menu_orig_end = _rl_menu_orig_start
-                              + static_cast<unsigned int> (
-                                  std::strlen (_rl_menu_matches[0]));
+          _rl_menu_orig_end
+              = _rl_menu_orig_start + std::strlen (_rl_menu_matches[0]);
           _rl_cmpl_changed_buffer
               = !STREQ (_rl_menu_orig_text, _rl_menu_matches[0]);
         }
 
       if (_rl_menu_match_list_size > 1 && _rl_complete_show_all)
         {
-          display_matches (_rl_menu_matches);
+          display_matches (*_rl_menu_matches);
           /* If there are so many matches that the user has to be asked
              whether or not he wants to see the matches, menu completion
              is unwieldy. */
@@ -2558,7 +2473,7 @@ Readline::rl_menu_complete (int count, int)
               && _rl_menu_match_list_size >= rl_completion_query_items)
             {
               rl_ding ();
-              delete[] _rl_menu_matches;
+              _rl_free_match_list (_rl_menu_matches);
               _rl_menu_matches = nullptr;
 
               _rl_menu_full_completion = true;
@@ -2572,7 +2487,7 @@ Readline::rl_menu_complete (int count, int)
         }
       else if (_rl_menu_match_list_size <= 1)
         {
-          append_to_match (_rl_menu_matches[0], _rl_menu_delimiter,
+          append_to_match (*(*_rl_menu_matches)[0], _rl_menu_delimiter,
                            _rl_menu_quote_char, _rl_menu_nontrivial_lcd);
           _rl_menu_full_completion = true;
           return 0;
@@ -2591,7 +2506,7 @@ Readline::rl_menu_complete (int count, int)
   if (_rl_menu_matches == nullptr || _rl_menu_match_list_size == 0)
     {
       rl_ding ();
-      delete[] _rl_menu_matches;
+      _rl_free_match_list (_rl_menu_matches);
       _rl_menu_matches = nullptr;
 
       _rl_cmpl_changed_buffer = false;
@@ -2610,19 +2525,19 @@ Readline::rl_menu_complete (int count, int)
   if (_rl_menu_match_list_index == 0 && _rl_menu_match_list_size > 1)
     {
       rl_ding ();
-      insert_match (_rl_menu_matches[0], _rl_menu_orig_start, MULT_MATCH,
+      insert_match (*(*_rl_menu_matches)[0], _rl_menu_orig_start, MULT_MATCH,
                     &_rl_menu_quote_char);
     }
   else
     {
-      insert_match (_rl_menu_matches[_rl_menu_match_list_index],
+      insert_match (*(*_rl_menu_matches)[_rl_menu_match_list_index],
                     _rl_menu_orig_start, SINGLE_MATCH, &_rl_menu_quote_char);
 
       append_to_match (
-          _rl_menu_matches[_rl_menu_match_list_index], _rl_menu_delimiter,
+          *(*_rl_menu_matches)[_rl_menu_match_list_index], _rl_menu_delimiter,
           _rl_menu_quote_char,
           compare_match (_rl_menu_orig_text,
-                         _rl_menu_matches[_rl_menu_match_list_index]));
+                         *(*_rl_menu_matches)[_rl_menu_match_list_index]));
     }
 
   _rl_cmpl_changed_buffer = true;

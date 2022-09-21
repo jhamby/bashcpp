@@ -1823,22 +1823,13 @@ Readline::rl_vi_overstrike_yank (int count, int key)
 int
 Readline::rl_vi_overstrike_bracketed_paste (int, int key)
 {
-  int r;
-  char *pbuf;
-  unsigned int pblen;
+  std::string pbuf = _rl_bracketed_text ();
+  if (pbuf.empty ())
+    return 0;
 
-  pbuf = _rl_bracketed_text (&pblen);
-  if (pblen == 0)
-    {
-      delete[] pbuf;
-      return 0;
-    }
-
-  r = static_cast<int> (pblen);
+  int r = static_cast<int> (pbuf.size ());
   while (--r >= 0)
     _rl_unget_char (static_cast<unsigned char> (pbuf[r]));
-
-  delete[] pbuf;
 
   while (_rl_pushed_input_available ())
     {

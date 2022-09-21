@@ -37,7 +37,7 @@ Readline::_rl_arg_overflow ()
 {
   if (rl_numeric_arg > 1000000)
     {
-      _rl_argcxt = 0;
+      _rl_argcxt = NUM_NOFLAGS;
       rl_explicit_arg = rl_numeric_arg = 0;
       rl_ding ();
       rl_restore_prompt ();
@@ -235,7 +235,7 @@ void
 Readline::_rl_history_set_point ()
 {
   rl_point = (_rl_history_preserve_point
-              && _rl_history_saved_point != static_cast<unsigned int> (-1))
+              && _rl_history_saved_point != static_cast<size_t> (-1))
                  ? _rl_history_saved_point
                  : rl_end ();
   if (rl_point > rl_end ())
@@ -260,9 +260,9 @@ Readline::_rl_revert_previous_lines ()
 {
   std::string lbuf (rl_line_buffer);
   UNDO_LIST *saved_undo_list = rl_undo_list;
-  unsigned int hpos = where_history ();
+  size_t hpos = where_history ();
 
-  HIST_ENTRY *entry = (hpos == static_cast<unsigned int> (the_history.size ()))
+  HIST_ENTRY *entry = (hpos == static_cast<size_t> (the_history.size ()))
                           ? previous_history ()
                           : current_history ();
   while (entry)
@@ -360,10 +360,10 @@ Readline::rl_get_next_history (int count, int key)
 
   /* either not saved by rl_newline or at end of line, so set appropriately. */
   size_t rl_end = rl_line_buffer.size ();
-  if (_rl_history_saved_point == static_cast<unsigned int> (-1)
+  if (_rl_history_saved_point == static_cast<size_t> (-1)
       && (rl_point || rl_end))
     _rl_history_saved_point
-        = (rl_point == rl_end) ? static_cast<unsigned int> (-1) : rl_point;
+        = (rl_point == rl_end) ? static_cast<size_t> (-1) : rl_point;
 
   HIST_ENTRY *temp = nullptr;
   while (count)
@@ -399,10 +399,10 @@ Readline::rl_get_previous_history (int count, int key)
 
   /* either not saved by rl_newline or at end of line, so set appropriately. */
   size_t rl_end = rl_line_buffer.size ();
-  if (_rl_history_saved_point == static_cast<unsigned int> (-1)
+  if (_rl_history_saved_point == static_cast<size_t> (-1)
       && (rl_point || rl_end))
     _rl_history_saved_point
-        = (rl_point == rl_end) ? static_cast<unsigned int> (-1) : rl_point;
+        = (rl_point == rl_end) ? static_cast<size_t> (-1) : rl_point;
 
   /* If we don't have a line saved, then save this one. */
   bool had_saved_line = (_rl_saved_line_for_history != nullptr);
@@ -448,13 +448,13 @@ Readline::rl_get_previous_history (int count, int key)
 int
 Readline::set_saved_history ()
 {
-  if (saved_history_logical_offset != static_cast<unsigned int> (-1))
+  if (saved_history_logical_offset != static_cast<size_t> (-1))
     {
       int count = static_cast<int> (where_history ())
                   - static_cast<int> (saved_history_logical_offset);
       rl_get_previous_history (count, 0);
     }
-  saved_history_logical_offset = static_cast<unsigned int> (-1);
+  saved_history_logical_offset = static_cast<size_t> (-1);
   _rl_internal_startup_hook = _rl_saved_internal_startup_hook;
 
   return 0;
@@ -467,7 +467,7 @@ Readline::rl_operate_and_get_next (int count, int c)
   rl_newline (1, c);
 
   saved_history_logical_offset = rl_explicit_arg
-                                     ? static_cast<unsigned int> (count)
+                                     ? static_cast<size_t> (count)
                                      : (where_history () + 1);
 
   _rl_saved_internal_startup_hook = _rl_internal_startup_hook;

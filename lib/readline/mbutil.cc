@@ -40,13 +40,13 @@ namespace readline
 
 #if defined(HANDLE_MULTIBYTE)
 
-unsigned int
-History::_rl_find_next_mbchar_internal (const std::string &string,
-                                        unsigned int seed, int count,
+size_t
+History::_rl_find_next_mbchar_internal (const std::string &string, size_t seed,
+                                        int count,
                                         find_mbchar_flags find_non_zero)
 {
   mbstate_t ps;
-  unsigned int point;
+  size_t point;
   wchar_t wc;
 
   size_t tmp = 0;
@@ -123,20 +123,20 @@ History::_rl_find_next_mbchar_internal (const std::string &string,
 }
 
 /* experimental -- needs to handle zero-width characters better */
-unsigned int
-History::_rl_find_prev_utf8char (const std::string &string, unsigned int seed,
+size_t
+History::_rl_find_prev_utf8char (const std::string &string, size_t seed,
                                  find_mbchar_flags find_non_zero)
 {
   unsigned char b;
   int save, prev;
-  unsigned int len = static_cast<unsigned int> (string.size ());
+  size_t len = string.size ();
 
   prev = static_cast<int> (seed - 1);
   while (prev >= 0)
     {
       b = static_cast<unsigned char> (string[static_cast<size_t> (prev)]);
       if (UTF8_SINGLEBYTE (b))
-        return static_cast<unsigned int> (prev);
+        return static_cast<size_t> (prev);
 
       save = prev;
 
@@ -155,29 +155,27 @@ History::_rl_find_prev_utf8char (const std::string &string, unsigned int seed,
           if (find_non_zero)
             {
               if (_rl_test_nonzero (string.c_str (),
-                                    static_cast<unsigned int> (prev), len))
-                return static_cast<unsigned int> (prev);
+                                    static_cast<size_t> (prev), len))
+                return static_cast<size_t> (prev);
               else /* valid but WCWIDTH (wc) == 0 */
                 --prev;
             }
           else
-            return static_cast<unsigned int> (prev);
+            return static_cast<size_t> (prev);
         }
       else
-        return static_cast<unsigned int> (
-            save); /* invalid utf-8 multibyte sequence */
+        return static_cast<size_t> (save); // invalid utf-8 multibyte sequence
     }
 
-  return (prev < 0) ? 0 : static_cast<unsigned int> (prev);
+  return (prev < 0) ? 0 : static_cast<size_t> (prev);
 }
 
-unsigned int
-History::_rl_find_prev_mbchar_internal (const std::string &string,
-                                        unsigned int seed,
+size_t
+History::_rl_find_prev_mbchar_internal (const std::string &string, size_t seed,
                                         find_mbchar_flags find_non_zero)
 {
   mbstate_t ps;
-  unsigned int prev, non_zero_prev, point;
+  size_t prev, non_zero_prev, point;
   size_t tmp;
   wchar_t wc;
 
@@ -185,7 +183,7 @@ History::_rl_find_prev_mbchar_internal (const std::string &string,
     return _rl_find_prev_utf8char (string, seed, find_non_zero);
 
   std::memset (&ps, 0, sizeof (mbstate_t));
-  unsigned int length = static_cast<unsigned int> (string.size ());
+  size_t length = string.size ();
 
   if (length < seed)
     return length;
@@ -239,7 +237,7 @@ History::_rl_find_prev_mbchar_internal (const std::string &string,
    if a L'\0' wide character was recognized. It returns -1 if an invalid
    multibyte sequence was encountered. It returns -2 if it couldn't parse
    a complete multibyte character. */
-int
+ssize_t
 History::_rl_get_char_len (const std::string &src, mbstate_t *ps)
 {
   /* Look at no more than MB_CUR_MAX characters */
@@ -280,16 +278,16 @@ History::_rl_get_char_len (const std::string &src, mbstate_t *ps)
    differences of the byte(adjusted_point - point).
    if point is invalid (greater than string length),
    it returns (size_t)(-1). */
-unsigned int
-History::_rl_adjust_point (const std::string &string, unsigned int point,
+size_t
+History::_rl_adjust_point (const std::string &string, size_t point,
                            mbstate_t *ps)
 {
   size_t length = string.size ();
 
   if (point > length)
-    return static_cast<unsigned int> (-1);
+    return static_cast<size_t> (-1);
 
-  unsigned int pos = 0;
+  size_t pos = 0;
   while (pos < point)
     {
       size_t tmp;
@@ -319,7 +317,7 @@ History::_rl_adjust_point (const std::string &string, unsigned int point,
 }
 
 wchar_t
-History::_rl_char_value (const std::string &buf, unsigned int ind)
+History::_rl_char_value (const std::string &buf, size_t ind)
 {
   if (MB_LEN_MAX == 1 || rl_byte_oriented)
     return static_cast<wchar_t> (buf[ind]);

@@ -4136,7 +4136,7 @@ protected:
 
   /* These four are virtual callbacks when Readline is used. */
 
-  char *sh_get_env_value (const char *) override;
+  const char *sh_get_env_value (const char *) override;
   std::string sh_single_quote (const std::string &) override;
   std::string sh_get_home_dir () override;
   int sh_unset_nodelay_mode (int) override;
@@ -4795,7 +4795,7 @@ protected:
   lvalue lastlval;
 
   /* The list of things to do originally, before we started trapping. */
-  sighandler_t original_signals[NSIG];
+  SigHandler original_signals[NSIG];
 
   /* For each signal, a slot for a string, which is a command to be
      executed when that signal is received.  The slot can also contain
@@ -5051,34 +5051,19 @@ struct sh_input_line_state_t
 #endif
 };
 
-/* Structure in which to save partial parsing state when doing things like
-   PROMPT_COMMAND and bash_execute_unix_command execution. */
+// Structure in which to save partial parsing state when doing things like
+// PROMPT_COMMAND and bash_execute_unix_command execution.
 struct sh_parser_state_t
 {
+  // pointer types first
 
-  /* parsing state */
-  int parser_state;
-  int *token_state;
-
+  int *token_state;     // array of 4 ints; free with delete[]
   char *token;
-  int token_buffer_size;
-
-  /* input line state -- line number saved elsewhere */
-  int input_line_terminator;
-  int eof_encountered;
-
-#if defined(HANDLE_MULTIBYTE)
-  /* Nothing right now for multibyte state, but might want something later. */
-#endif
 
   const char **prompt_string_pointer;
 
-  /* history state affecting or modified by the parser */
-  int current_command_line_count;
-#if defined(HISTORY)
-  int remember_on_history;
-  int history_expansion_inhibited;
-#endif
+  /* parsing state */
+  pstate_flags parser_state;
 
 #if defined(ARRAY_VARS)
   ARRAY *pipestatus;
@@ -5089,6 +5074,22 @@ struct sh_parser_state_t
 
   /* structures affecting the parser */
   REDIRECT *redir_stack[HEREDOC_MAX];
+
+  // 32-bit int types next
+
+  int token_buffer_size;  // ???
+
+  /* input line state -- line number saved elsewhere */
+  int input_line_terminator;
+  int eof_encountered;
+
+  /* history state affecting or modified by the parser */
+  int current_command_line_count;
+#if defined(HISTORY)
+  int remember_on_history;
+  int history_expansion_inhibited;
+#endif
+
 };
 
 } // namespace bash

@@ -88,10 +88,9 @@ public:
 
   /* Generic function that takes a character buffer (which could be the
      readline line buffer) and an index into it (which could be rl_point) and
-     returns unsigned int (or -1). Also used for the inhibit history expansion
+     returns size_t (or -1). Also used for the inhibit history expansion
      callback. */
-  typedef unsigned int (History::*rl_linebuf_func_t) (const std::string &,
-                                                      int);
+  typedef size_t (History::*rl_linebuf_func_t) (const std::string &, int);
 
   /* Initialization and state management. */
 
@@ -137,16 +136,15 @@ public:
 
   /* Remove an entry from the history list.  WHICH is the magic number that
      tells us which element to delete.  The elements are numbered from 0. */
-  HIST_ENTRY *remove_history (unsigned int);
+  HIST_ENTRY *remove_history (size_t);
 
   /* Remove a set of entries from the history list: FIRST to LAST, inclusive */
-  HIST_ENTRY **remove_history_range (unsigned int, unsigned int);
+  HIST_ENTRY **remove_history_range (size_t, size_t);
 
   /* Make the history entry at WHICH have LINE and DATA.  This returns
      the old entry so you can dispose of the data.  In the case of an
      invalid WHICH, nullptr is returned. */
-  HIST_ENTRY *replace_history_entry (unsigned int, const std::string &,
-                                     histdata_t);
+  HIST_ENTRY *replace_history_entry (size_t, const std::string &, histdata_t);
 
   /* Clear the history list and start over. */
   inline void
@@ -158,7 +156,7 @@ public:
   }
 
   /* Stifle the history list, remembering only MAX number of entries. */
-  void stifle_history (unsigned int);
+  void stifle_history (size_t);
 
   /* Stop stifling the history. */
   inline void
@@ -188,11 +186,11 @@ public:
 
   /* Returns the magic number which says what history element we are
      looking at, as the index relative to the oldest entry. */
-  inline unsigned int
+  inline size_t
   where_history () const
   {
-    unsigned int tmp = history_offset;
-    unsigned int size = history_length ();
+    size_t tmp = history_offset;
+    size_t size = history_length ();
     if (history_index_end != size)
       {
         if (tmp < size)
@@ -205,9 +203,9 @@ public:
   /* Return the history entry at the specified index, relative to the
      oldest entry. This handles wrapping around in ring buffer mode. */
   inline HIST_ENTRY *
-  get_history (unsigned int pos) const
+  get_history (size_t pos) const
   {
-    unsigned int size = history_length ();
+    size_t size = history_length ();
     if (history_index_end != size)
       {
         pos += history_index_end;
@@ -227,18 +225,18 @@ public:
                : the_history[history_offset];
   }
 
-  inline unsigned int
+  inline size_t
   history_length () const
   {
-    return static_cast<unsigned int> (the_history.size ());
+    return static_cast<size_t> (the_history.size ());
   }
 
   /* Helper to calculate the index of the `count`'th previous entry,
      wrapping around when we're in ring buffer mode. */
-  inline unsigned int
-  where_previous_history (unsigned int count)
+  inline size_t
+  where_previous_history (size_t count)
   {
-    unsigned int ret = history_index_end;
+    size_t ret = history_index_end;
     while (ret < count)
       ret += history_length ();
 
@@ -246,7 +244,7 @@ public:
   }
 
   /* Helper to find the index of the oldest entry in the list. */
-  inline unsigned int
+  inline size_t
   where_oldest_history ()
   {
     if (history_stifled)
@@ -264,7 +262,7 @@ public:
   /* Make the current history item be the one at POS, a logical index.
      Returns false if POS is out of range, else true. */
   inline bool
-  history_set_pos (unsigned int pos)
+  history_set_pos (size_t pos)
   {
     if (pos > the_history.size ())
       return false;
@@ -282,7 +280,7 @@ public:
     if (history_offset == where_oldest_history ())
       return nullptr;
 
-    unsigned int tmp;
+    size_t tmp;
     if (history_offset == 0)
       tmp = history_length () - 1;
     else
@@ -301,7 +299,7 @@ public:
     if (history_offset == history_index_end)
       return nullptr;
 
-    unsigned int tmp;
+    size_t tmp;
     if (history_offset == history_length () - 1)
       tmp = 0;
     else
@@ -319,20 +317,20 @@ public:
      current_history () is the history entry, and the value of this function
      is the offset in the line of that history entry that the string was
      found in.  Otherwise, nothing is changed, and a -1 is returned. */
-  unsigned int
+  size_t
   history_search (const std::string &str, int direction)
   {
-    return static_cast<unsigned int> (
+    return static_cast<size_t> (
         history_search_internal (str, direction, NON_ANCHORED_SEARCH));
   }
 
   /* Search the history for STRING, starting at history_offset.
      The search is anchored: matching lines must begin with string.
      DIRECTION is as in history_search(). */
-  unsigned int
+  size_t
   history_search_prefix (const std::string &str, int direction)
   {
-    return static_cast<unsigned int> (
+    return static_cast<size_t> (
         history_search_internal (str, direction, ANCHORED_SEARCH));
   }
 
@@ -341,7 +339,7 @@ public:
      backwards from POS, else forwards.
      Returns the absolute index of the history element where STRING
      was found, or -1 otherwise. */
-  unsigned int history_search_pos (const std::string &, int, unsigned int);
+  size_t history_search_pos (const std::string &, int, size_t);
 
   /* Managing the history file. */
 
@@ -351,15 +349,15 @@ public:
   int
   read_history (const char *filename)
   {
-    return read_history_range (filename, 0, static_cast<unsigned int> (-1));
+    return read_history_range (filename, 0, static_cast<size_t> (-1));
   }
 
   /* Read a range of lines from FILENAME, adding them to the history list.
      Start reading at the FROM'th line and end at the TO'th.  If FROM
-     is zero, start at the beginning.  If TO is (unsigned int)(-1)), read
+     is zero, start at the beginning.  If TO is (size_t)(-1)), read
      until the end of the file.  If FILENAME is nullptr, then read from
      ~/.history.  Returns 0 if successful, or errno if not. */
-  int read_history_range (const char *, unsigned int, unsigned int);
+  int read_history_range (const char *, size_t, size_t);
 
   /* Overwrite FILENAME with the current history.  If FILENAME is nullptr,
      then write the history list to ~/.history.  Values returned
@@ -373,13 +371,13 @@ public:
   /* Append NELEMENT entries to FILENAME.  The entries appended are from
      the end of the list minus NELEMENTs up to the end of the list. */
   int
-  append_history (unsigned int nelements, const char *filename)
+  append_history (size_t nelements, const char *filename)
   {
     return history_do_write (filename, nelements, false);
   }
 
   /* Truncate the history file, leaving only the last NLINES lines. */
-  int history_truncate_file (const char *, unsigned int);
+  int history_truncate_file (const char *, size_t);
 
   /* History expansion. */
 
@@ -408,15 +406,14 @@ public:
      DELIMITING_QUOTE is a character that is allowed to end the string
      specification for what to search for in addition to the normal
      characters `:', ` ', `\t', `\n', and sometimes `?'. */
-  const char *get_history_event (const char *, unsigned int *, char);
+  const char *get_history_event (const char *, size_t *, char);
 
   /* Return an array of tokens, much as the shell might.  The tokens are
      parsed out of STRING. */
   inline char **
   history_tokenize (const char *str)
   {
-    return history_tokenize_internal (str, static_cast<unsigned int> (-1),
-                                      nullptr);
+    return history_tokenize_internal (str, static_cast<size_t> (-1), nullptr);
   }
 
   // functions used by history and readline
@@ -424,39 +421,39 @@ public:
   /* compare the specified two characters. If the characters matched,
      return true. Otherwise return false. */
   bool
-  _rl_compare_chars (const char *buf1, unsigned int pos1, mbstate_t *ps1,
-                     const char *buf2, unsigned int pos2, mbstate_t *ps2)
+  _rl_compare_chars (const char *buf1, size_t pos1, mbstate_t *ps1,
+                     const char *buf2, size_t pos2, mbstate_t *ps2)
   {
-    int w1, w2;
+    ssize_t w1, w2;
 
     if ((w1 = _rl_get_char_len (&buf1[pos1], ps1)) <= 0
         || (w2 = _rl_get_char_len (&buf2[pos2], ps2)) <= 0 || (w1 != w2)
         || (buf1[pos1] != buf2[pos2]))
       return false;
 
-    for (unsigned int i = 1; i < static_cast<unsigned int> (w1); i++)
+    for (size_t i = 1; i < static_cast<size_t> (w1); i++)
       if (buf1[pos1 + i] != buf2[pos2 + i])
         return false;
 
     return true;
   }
 
-  unsigned int _rl_adjust_point (const std::string &string, unsigned int point,
-                                 mbstate_t *ps);
+  size_t _rl_adjust_point (const std::string &string, size_t point,
+                           mbstate_t *ps);
 
-  unsigned int _hs_history_patsearch (const char *string, int direction,
-                                      hist_search_flags flags);
+  size_t _hs_history_patsearch (const char *string, int direction,
+                                hist_search_flags flags);
 
-  wchar_t _rl_char_value (const std::string &buf, unsigned int ind);
+  wchar_t _rl_char_value (const std::string &buf, size_t ind);
 
   /* mbutil.c */
 
   /* Find next `count' characters started byte point of the specified seed.
      If `find_non_zero` is true, we look for non-zero-width multibyte
      characters. */
-  inline unsigned int
-  _rl_find_next_mbchar (const std::string &string, unsigned int seed,
-                        int count, find_mbchar_flags find_non_zero)
+  inline size_t
+  _rl_find_next_mbchar (const std::string &string, size_t seed, int count,
+                        find_mbchar_flags find_non_zero)
   {
 #if defined(HANDLE_MULTIBYTE)
     return _rl_find_next_mbchar_internal (string, seed, count, find_non_zero);
@@ -468,8 +465,8 @@ public:
   /* Find previous character started byte point of the specified seed.
      Returned point will be point <= seed.  If `find_non_zero` is true,
      we look for non-zero-width multibyte characters. */
-  inline unsigned int
-  _rl_find_prev_mbchar (const std::string &string, unsigned int seed,
+  inline size_t
+  _rl_find_prev_mbchar (const std::string &string, size_t seed,
                         find_mbchar_flags find_non_zero)
   {
 #if defined(HANDLE_MULTIBYTE)
@@ -479,10 +476,10 @@ public:
 #endif
   }
 
-  void _hs_replace_history_data (unsigned int which, histdata_t old,
+  void _hs_replace_history_data (size_t which, histdata_t old,
                                  histdata_t new_);
 
-  int _rl_get_char_len (const std::string &src, mbstate_t *ps);
+  ssize_t _rl_get_char_len (const std::string &src, mbstate_t *ps);
 
 private:
   // Private member functions
@@ -497,28 +494,27 @@ private:
   }
 
   // histexpand.c
-  int history_expand_internal (const char *string, unsigned int start, char qc,
-                               unsigned int *end_index_ptr, char **ret_string,
+  int history_expand_internal (const char *string, size_t start, char qc,
+                               size_t *end_index_ptr, char **ret_string,
                                const char *current_line);
 
   void postproc_subst_rhs ();
 
   char *get_history_word_specifier (const char *spec, const char *from,
-                                    unsigned int *caller_index);
+                                    size_t *caller_index);
 
-  char **history_tokenize_internal (const char *string, unsigned int wind,
-                                    unsigned int *indp);
+  char **history_tokenize_internal (const char *string, size_t wind,
+                                    size_t *indp);
 
-  char *get_subst_pattern (const char *, unsigned int *, char, bool,
-                           unsigned int *);
+  char *get_subst_pattern (const char *, size_t *, char, bool, size_t *);
 
-  unsigned int history_tokenize_word (const char *, unsigned int);
+  size_t history_tokenize_word (const char *, size_t);
 
-  char *history_find_word (const char *, unsigned int);
+  char *history_find_word (const char *, size_t);
 
   // histfile.c
   char *history_filename (const char *filename);
-  int history_do_write (const char *filename, unsigned int nelements,
+  int history_do_write (const char *filename, size_t nelements,
                         bool overwrite);
 
   // history.c
@@ -526,36 +522,33 @@ private:
   /* Append LINE to the history line at offset WHICH, adding a newline to the
      end of the current line first.  This can be used to construct multi-line
      history entries while reading lines from the history file. */
-  void _hs_append_history_line (unsigned int which, const char *line);
+  void _hs_append_history_line (size_t which, const char *line);
 
   char *hist_inittime ();
 
   // histsearch.c
 
-  unsigned int history_search_internal (const std::string &string,
-                                        int direction,
-                                        hist_search_flags flags);
+  size_t history_search_internal (const std::string &string, int direction,
+                                  hist_search_flags flags);
 
   // mbutil.c
 
   // Find next multi-byte char in std::string.
-  unsigned int _rl_find_next_mbchar_internal (const std::string &string,
-                                              unsigned int seed, int count,
-                                              find_mbchar_flags find_non_zero);
+  size_t _rl_find_next_mbchar_internal (const std::string &string, size_t seed,
+                                        int count,
+                                        find_mbchar_flags find_non_zero);
 
   // Find next multi-byte char in std::string.
-  unsigned int _rl_find_prev_mbchar_internal (const std::string &string,
-                                              unsigned int seed,
-                                              find_mbchar_flags find_non_zero);
+  size_t _rl_find_prev_mbchar_internal (const std::string &string, size_t seed,
+                                        find_mbchar_flags find_non_zero);
 
   // helper function
-  unsigned int _rl_find_prev_utf8char (const std::string &string,
-                                       unsigned int seed,
-                                       find_mbchar_flags find_non_zero);
+  size_t _rl_find_prev_utf8char (const std::string &string, size_t seed,
+                                 find_mbchar_flags find_non_zero);
 
   // helper function
   inline bool
-  _rl_test_nonzero (const char *string, unsigned int ind, unsigned int len)
+  _rl_test_nonzero (const char *string, size_t ind, size_t len)
   {
     wchar_t wc;
     mbstate_t ps;
@@ -615,17 +608,17 @@ public:
   /* ************************************************************** */
 
   /* Max number of history entries, or zero for unlimited. */
-  unsigned int history_max_entries;
+  size_t history_max_entries;
 
   /* Immediately after a call to read_history() or read_history_range(), this
      will return the number of lines just read from the history file in that
      call. */
-  unsigned int history_lines_read_from_file;
+  size_t history_lines_read_from_file;
 
   /* Immediately after a call to write_history() or history_do_write(), this
      will return the number of lines just written to the history file in that
      call.  This also works with history_truncate_file. */
-  unsigned int history_lines_written_to_file;
+  size_t history_lines_written_to_file;
 
 protected:
   /* ************************************************************** */
@@ -633,7 +626,7 @@ protected:
   /* ************************************************************** */
 
   /* The logical `base' of the history array.  It defaults to 1. */
-  unsigned int history_base;
+  size_t history_base;
 
 private:
   /* ************************************************************** */
@@ -641,13 +634,13 @@ private:
   /* ************************************************************** */
 
   /* The location where the next history entry will be inserted. */
-  unsigned int history_offset;
+  size_t history_offset;
 
   /* The location after the most recent entry in the list. */
-  unsigned int history_index_end;
+  size_t history_index_end;
 
-  unsigned int history_subst_lhs_len;
-  unsigned int history_subst_rhs_len;
+  size_t history_subst_lhs_len;
+  size_t history_subst_rhs_len;
 
 public:
   /* ************************************************************** */

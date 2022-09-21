@@ -1,4 +1,4 @@
-/* bind.c -- key binding and startup file support for the readline library. */
+/* bind.cc -- key binding and startup file support for the readline library. */
 
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
@@ -36,12 +36,16 @@
 namespace readline
 {
 
-#define OP_EQ 1
-#define OP_NE 2
-#define OP_GT 3
-#define OP_GE 4
-#define OP_LT 5
-#define OP_LE 6
+enum op_type_t
+{
+  OP_INVALID = -1,
+  OP_EQ = 1,
+  OP_NE = 2,
+  OP_GT = 3,
+  OP_GE = 4,
+  OP_LT = 5,
+  OP_LE = 6
+};
 
 #define OPSTART(c) ((c) == '=' || (c) == '!' || (c) == '<' || (c) == '>')
 #define CMPSTART(c) ((c) == '=' || (c) == '!')
@@ -167,8 +171,7 @@ Readline::rl_bind_keyseq_if_unbound_in_map (const std::string &keyseq,
         {
           return -1;
         }
-      rl_command_func_t func
-          = rl_function_of_keyseq_len (keys, kmap, nullptr);
+      rl_command_func_t func = rl_function_of_keyseq_len (keys, kmap, nullptr);
 
 #if defined(VI_MODE)
       if (!func || func == &Readline::rl_do_lowercase_version
@@ -214,11 +217,12 @@ Readline::rl_generic_bind (const std::string &keyseq, KEYMAP_ENTRY &k,
   int ic = 0; // must be able to hold 256 == ANYOTHERKEY
 
   /* Bind keys, making new keymaps as necessary. */
-  for (unsigned int i = 0; i < keys_len; i++)
+  std::string::const_iterator it;
+  for (it = keys.begin (); it != keys.end (); ++it)
     {
-      unsigned char uc = static_cast<unsigned char> (keys[i]);
+      unsigned char uc = static_cast<unsigned char> (*it);
 
-      if (i > 0)
+      if (it != keys.begin ())
         prevkey = ic;
 
       ic = uc;
@@ -227,7 +231,7 @@ Readline::rl_generic_bind (const std::string &keyseq, KEYMAP_ENTRY &k,
           return -1;
         }
 
-      if ((i + 1) < keys_len)
+      if ((it + 1) < keys.end ())
         {
           if (map[ic].type != ISKMAP)
             {
@@ -310,14 +314,12 @@ Readline::rl_generic_bind (const std::string &keyseq, KEYMAP_ENTRY &k,
   return 0;
 }
 
-/* Translate the ASCII representation of SEQ, stuffing the values into ARRAY,
-   an array of characters.  LEN gets the final length of ARRAY.  Return
-   non-zero if there was an error parsing SEQ. */
+// Translate the ASCII representation of SEQ, stuffing the values into STRING.
+// Return non-zero if there was an error parsing SEQ.
 int
 Readline::rl_translate_keyseq (const std::string &seq, std::string &array)
 {
-  int l = 0;
-  int c;
+  int c = 0;
 
   bool has_control = false;
   bool has_meta = false;
@@ -402,19 +404,24 @@ Readline::rl_translate_keyseq (const std::string &seq, std::string &array)
             case '6':
             case '7':
               ++it;
-              for (temp = 2, c -= '0'; ISOCTAL (seq[i]) && temp--; i++)
-                c = (c * 8) + OCTVALUE (seq[i]);
+              for (temp = 2, c -= '0';
+                   it != seq.end () && ISOCTAL (*it) && temp--; ++it)
+                c = (c * 8) + OCTVALUE (*it);
+
               --it; /* auto-increment in for loop */
               c &= largest_char;
               break;
 
             case 'x':
               ++it;
-              for (temp = 2, c = 0; ISXDIGIT (seq[i]) && temp--; i++)
-                c = (c * 16) + HEXVALUE (seq[i]);
+              for (temp = 2, c = 0;
+                   it != seq.end () && ISXDIGIT (*it) && temp--; ++it)
+                c = (c * 16) + HEXVALUE (*it);
+
               if (temp == 2)
                 c = 'x';
-              i--; /* auto-increment in for loop */
+
+              --it; /* auto-increment in for loop */
               c &= largest_char;
               break;
 
@@ -440,15 +447,15 @@ Readline::rl_translate_keyseq (const std::string &seq, std::string &array)
       /* If convert-meta is turned on, convert a meta char to a key sequence */
       if (META_CHAR (c) && _rl_convert_meta_chars_to_ascii)
         {
-          array[l++] = ESC; /* ESC is meta-prefix */
-          array[l++] = static_cast<char> (UNMETA (c));
+          array.push_back (ESC); /* ESC is meta-prefix */
+          array.push_back (static_cast<char> (UNMETA (c)));
         }
       else
-        array[l++] = static_cast<char> (c);
+        array.push_back (static_cast<char> (c));
 
       /* Null characters may be processed for incomplete prefixes at the end of
          sequence */
-      if (seq[i] == '\0')
+      if (*it == '\0')
         break;
     }
 
@@ -497,108 +504,106 @@ _rl_escchar (int c)
     }
 }
 
-char *
+std::string
 Readline::rl_untranslate_keyseq (int seq)
 {
-  static char kseq[16];
-  int i, c;
+  std::string kseq;
 
-  i = 0;
-  c = seq;
+  int c = seq;
   if (META_CHAR (c))
     {
-      kseq[i++] = '\\';
-      kseq[i++] = 'M';
-      kseq[i++] = '-';
+      kseq.push_back ('\\');
+      kseq.push_back ('M');
+      kseq.push_back ('-');
       c = UNMETA (c);
     }
   else if (c == ESC)
     {
-      kseq[i++] = '\\';
+      kseq.push_back ('\\');
       c = 'e';
     }
   else if (CTRL_CHAR (c))
     {
-      kseq[i++] = '\\';
-      kseq[i++] = 'C';
-      kseq[i++] = '-';
+      kseq.push_back ('\\');
+      kseq.push_back ('C');
+      kseq.push_back ('-');
       c = _rl_to_lower (UNCTRL (c));
     }
   else if (c == RUBOUT)
     {
-      kseq[i++] = '\\';
-      kseq[i++] = 'C';
-      kseq[i++] = '-';
+      kseq.push_back ('\\');
+      kseq.push_back ('C');
+      kseq.push_back ('-');
       c = '?';
     }
 
   if (c == ESC)
     {
-      kseq[i++] = '\\';
+      kseq.push_back ('\\');
       c = 'e';
     }
   else if (c == '\\' || c == '"')
     {
-      kseq[i++] = '\\';
+      kseq.push_back ('\\');
     }
 
-  kseq[i++] = static_cast<char> (c);
-  kseq[i] = '\0';
+  kseq.push_back (static_cast<char> (c));
   return kseq;
 }
 
-char *
-Readline::_rl_untranslate_macro_value (const char *seq, bool use_escapes)
+std::string
+Readline::_rl_untranslate_macro_value (const std::string &seq,
+                                       bool use_escapes)
 {
-  char *ret, *r;
+  std::string ret;
+  ret.reserve (seq.size ());
 
-  r = ret = new char[7 * std::strlen (seq) + 1];
-  for (const char *s = seq; *s; s++)
+  std::string::const_iterator s;
+  for (s = seq.begin (); s != seq.end (); ++s)
     {
       int c = *s;
       if (META_CHAR (c))
         {
-          *r++ = '\\';
-          *r++ = 'M';
-          *r++ = '-';
+          ret.push_back ('\\');
+          ret.push_back ('M');
+          ret.push_back ('-');
           c = UNMETA (c);
         }
       else if (c == ESC)
         {
-          *r++ = '\\';
+          ret.push_back ('\\');
           c = 'e';
         }
       else if (CTRL_CHAR (c))
         {
-          *r++ = '\\';
+          ret.push_back ('\\');
           if (use_escapes && _rl_isescape (c))
             c = _rl_escchar (c);
           else
             {
-              *r++ = 'C';
-              *r++ = '-';
+              ret.push_back ('C');
+              ret.push_back ('-');
               c = _rl_to_lower (UNCTRL (c));
             }
         }
       else if (c == RUBOUT)
         {
-          *r++ = '\\';
-          *r++ = 'C';
-          *r++ = '-';
+          ret.push_back ('\\');
+          ret.push_back ('C');
+          ret.push_back ('-');
           c = '?';
         }
 
       if (c == ESC)
         {
-          *r++ = '\\';
+          ret.push_back ('\\');
           c = 'e';
         }
       else if (c == '\\' || c == '"')
-        *r++ = '\\';
+        ret.push_back ('\\');
 
-      *r++ = static_cast<char> (c);
+      ret.push_back (static_cast<char> (c));
     }
-  *r = '\0';
   return ret;
 }
 
@@ -608,16 +613,16 @@ Readline::_rl_untranslate_macro_value (const char *seq, bool use_escapes)
    type of the object pointed to.  One of ISFUNC (function), ISKMAP (keymap),
    or ISMACR (macro). */
 Readline::rl_command_func_t
-Readline::_rl_function_of_keyseq_internal (const char *keyseq,
-                                           unsigned int len, Keymap map,
-                                           keymap_entry_type *type)
+Readline::_rl_function_of_keyseq_internal (const std::string &keyseq,
+                                           Keymap map, keymap_entry_type *type)
 {
   if (map == nullptr)
     map = _rl_keymap;
 
-  for (unsigned int i = 0; keyseq && i < len; i++)
+  std::string::const_iterator it;
+  for (it = keyseq.begin (); it != keyseq.end (); ++it)
     {
-      int ic = static_cast<unsigned char> (keyseq[i]);
+      int ic = static_cast<unsigned char> (*it);
 
       if (META_CHAR (ic) && _rl_convert_meta_chars_to_ascii)
         {
@@ -641,7 +646,7 @@ Readline::_rl_function_of_keyseq_internal (const char *keyseq,
         {
           /* If this is the last key in the key sequence, return the
              map. */
-          if (i + 1 == len)
+          if ((it + 1) == keyseq.end ())
             {
               if (type)
                 *type = ISKMAP;
@@ -654,9 +659,9 @@ Readline::_rl_function_of_keyseq_internal (const char *keyseq,
       /* If we're not at the end of the key sequence, and the current key
          is bound to something other than a keymap, then the entire key
          sequence is not bound. */
-      else if (map[ic].type != ISKMAP && i + 1 < len)
+      else if (map[ic].type != ISKMAP && (it + 1) < keyseq.end ())
         return nullptr;
-      else /* map[ic].type != ISKMAP && i + 1 == len */
+      else
         {
           if (type)
             *type = map[ic].type;
@@ -753,11 +758,6 @@ Readline::rl_read_init_file (const char *filename)
       filename = SYS_INPUTRC;
     }
 
-#if defined(__MSDOS__)
-  if (_rl_read_init_file (filename, 0) == 0)
-    return 0;
-  filename = "~/_inputrc";
-#endif
   return _rl_read_init_file (filename, 0);
 }
 
@@ -852,18 +852,19 @@ Readline::_rl_init_file_error (const char *format, ...)
 /*								    */
 /* **************************************************************** */
 
-static inline int
+static inline op_type_t
 parse_comparison_op (const char *s, size_t *indp)
 {
   size_t i;
-  int op;
+  op_type_t op;
   char peekc;
 
   if (OPSTART (s[*indp]) == 0)
-    return -1;
+    return OP_INVALID;
+
   i = *indp;
   peekc = s[i] ? s[i + 1] : 0;
-  op = -1;
+  op = OP_INVALID;
 
   if (s[i] == '=')
     {
@@ -1001,7 +1002,7 @@ Readline::parser_if (char *args)
         }
 
       size_t previ = i;
-      int op = parse_comparison_op (args, &i);
+      op_type_t op = parse_comparison_op (args, &i);
       if (op <= 0)
         {
           _rl_init_file_error ("comparison operator expected, found `%s'",
@@ -1068,6 +1069,7 @@ Readline::parser_if (char *args)
         case OP_LE:
           opresult = rlversion <= versionarg;
           break;
+        case OP_INVALID:
         default:
           opresult = false;
           break;
@@ -1081,7 +1083,7 @@ Readline::parser_if (char *args)
   else if ((boolvar = find_boolean_var (args)) >= 0
            || (strvar = find_string_var (args)) >= 0)
     {
-      int op;
+      op_type_t op;
       size_t previ;
       size_t vlen;
       const char *vname;
@@ -1833,8 +1835,7 @@ Readline::sv_combegin (const char *value)
 {
   if (value && *value)
     {
-      delete[] _rl_comment_begin;
-      _rl_comment_begin = savestring (value);
+      _rl_comment_begin = value;
       return 0;
     }
   return 1;
@@ -1851,7 +1852,7 @@ Readline::sv_dispprefix (const char *value)
       if (nval < 0)
         nval = 0;
     }
-  _rl_completion_prefix_display_length = static_cast<unsigned int> (nval);
+  _rl_completion_prefix_display_length = static_cast<size_t> (nval);
   return 0;
 }
 
@@ -1897,7 +1898,7 @@ Readline::sv_histsize (const char *value)
           return 0;
         }
     }
-  stifle_history (static_cast<unsigned int> (nval));
+  stifle_history (static_cast<size_t> (nval));
   return 0;
 }
 
@@ -1934,7 +1935,7 @@ Readline::sv_seqtimeout (const char *value)
 int
 Readline::sv_bell_style (const char *value)
 {
-  if (value == nullptr || *value == '\0')
+  if (!value || *value == '\0')
     _rl_bell_preference = AUDIBLE_BELL;
   else if (_rl_stricmp (value, "none") == 0 || _rl_stricmp (value, "off") == 0)
     _rl_bell_preference = NO_BELL;
@@ -1945,134 +1946,92 @@ Readline::sv_bell_style (const char *value)
     _rl_bell_preference = VISIBLE_BELL;
   else
     return 1;
+
   return 0;
 }
 
 int
 Readline::sv_isrchterm (const char *value)
 {
-  unsigned int beg, end;
-  char *v;
+  size_t begin, end;
 
-  if (value == nullptr)
+  if (!value)
     return 1;
 
+  _rl_isearch_terminators.clear ();
+  _rl_isearch_terminators_custom = true;
+
   /* Isolate the value and translate it into a character string. */
-  v = savestring (value);
-  delete[] _rl_isearch_terminators;
-  if (v[0] == '"' || v[0] == '\'')
+  if (value[0] == '"' || value[0] == '\'')
     {
-      char delim = v[0];
-      for (beg = end = 1; v[end] && v[end] != delim; end++)
+      char delim = value[0];
+      for (begin = end = 1; value[end] && value[end] != delim; end++)
         ;
     }
   else
     {
-      for (beg = end = 0; v[end] && whitespace (v[end]) == 0; end++)
+      for (begin = end = 0; value[end] && whitespace (value[end]) == 0; end++)
         ;
     }
 
-  v[end] = '\0';
+  std::string tmp = std::string (value + begin, end - begin);
 
-  /* The value starts at v + beg.  Translate it into a character string. */
-  _rl_isearch_terminators = new char[2 * std::strlen (v) + 1];
-  rl_translate_keyseq (v + beg, _rl_isearch_terminators, &end);
-  _rl_isearch_terminators[end] = '\0';
+  /* Translate the value into a character string. */
+  rl_translate_keyseq (tmp, _rl_isearch_terminators);
 
-  delete[] v;
   return 0;
 }
 
 int
 Readline::sv_emacs_modestr (const char *value)
 {
+  _rl_emacs_mode_str.clear ();
   if (value && *value)
     {
-      delete[] _rl_emacs_mode_str;
-      _rl_emacs_mode_str = new char[2 * std::strlen (value) + 1];
-      rl_translate_keyseq (value, _rl_emacs_mode_str, &_rl_emacs_modestr_len);
-      _rl_emacs_mode_str[_rl_emacs_modestr_len] = '\0';
-      return 0;
+      _rl_emacs_mode_str_custom = true;
+      rl_translate_keyseq (value, _rl_emacs_mode_str);
     }
   else if (value)
-    {
-      delete[] _rl_emacs_mode_str;
-      _rl_emacs_mode_str = new char[1];
-      _rl_emacs_mode_str[_rl_emacs_modestr_len = 0] = '\0';
-      return 0;
-    }
-  else if (value == nullptr)
-    {
-      delete[] _rl_emacs_mode_str;
-      _rl_emacs_mode_str = nullptr; /* prompt_modestr does the right thing */
-      _rl_emacs_modestr_len = 0;
-      return 0;
-    }
-  return 1;
+    _rl_emacs_mode_str_custom = true; // empty prompt
+  else
+    _rl_emacs_mode_str_custom = false; // default prompt
+
+  return 0;
 }
 
 int
 Readline::sv_viins_modestr (const char *value)
 {
+  _rl_vi_ins_mode_str.clear ();
   if (value && *value)
     {
-      delete[] _rl_vi_ins_mode_str;
-      _rl_vi_ins_mode_str = new char[2 * std::strlen (value) + 1];
-      rl_translate_keyseq (value, _rl_vi_ins_mode_str,
-                           &_rl_vi_ins_modestr_len);
-      _rl_vi_ins_mode_str[_rl_vi_ins_modestr_len] = '\0';
-      return 0;
+      _rl_vi_ins_mode_str_custom = true;
+      rl_translate_keyseq (value, _rl_vi_ins_mode_str);
     }
   else if (value)
-    {
-      delete[] _rl_vi_ins_mode_str;
-      _rl_vi_ins_mode_str = new char[1];
-      _rl_vi_ins_mode_str[_rl_vi_ins_modestr_len = 0] = '\0';
-      return 0;
-    }
-  else if (value == nullptr)
-    {
-      delete[] _rl_vi_ins_mode_str;
-      _rl_vi_ins_mode_str = nullptr; /* prompt_modestr does the right thing */
-      _rl_vi_ins_modestr_len = 0;
-      return 0;
-    }
-  return 1;
+    _rl_vi_ins_mode_str_custom = true; // empty prompt
+  else
+    _rl_vi_ins_mode_str_custom = false; // default prompt
+
+  return 0;
 }
 
 int
 Readline::sv_vicmd_modestr (const char *value)
 {
+  _rl_vi_cmd_mode_str.clear ();
   if (value && *value)
     {
-      delete[] _rl_vi_cmd_mode_str;
-      _rl_vi_cmd_mode_str = new char[2 * std::strlen (value) + 1];
-      rl_translate_keyseq (value, _rl_vi_cmd_mode_str,
-                           &_rl_vi_cmd_modestr_len);
-      _rl_vi_cmd_mode_str[_rl_vi_cmd_modestr_len] = '\0';
-      return 0;
+      _rl_vi_cmd_mode_str_custom = true;
+      rl_translate_keyseq (value, _rl_vi_cmd_mode_str);
     }
   else if (value)
-    {
-      delete[] _rl_vi_cmd_mode_str;
-      _rl_vi_cmd_mode_str = new char[1];
-      _rl_vi_cmd_mode_str[_rl_vi_cmd_modestr_len = 0] = '\0';
-      return 0;
-    }
-  else if (value == nullptr)
-    {
-      delete[] _rl_vi_cmd_mode_str;
-      _rl_vi_cmd_mode_str = nullptr; /* prompt_modestr does the right thing */
-      _rl_vi_cmd_modestr_len = 0;
-      return 0;
-    }
-  return 1;
-}
+    _rl_vi_cmd_mode_str_custom = true; // empty prompt
+  else
+    _rl_vi_cmd_mode_str_custom = false; // default prompt
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpadded"
-#endif
+  return 0;
+}
 
 /* Return the character which matches NAME.
    For example, `Space' returns ' '. */
@@ -2082,10 +2041,6 @@ struct assoc_list
   const char *name;
   int value;
 };
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
 
 // Keep this list sorted in case-insensitive order for binary search.
 static const assoc_list name_key_alist[] = {
@@ -2156,7 +2111,7 @@ Readline::init_keymap_names ()
 #endif
 
 int
-Readline::rl_set_keymap_name (const char *name, Keymap map)
+Readline::rl_set_keymap_name (const std::string &name, Keymap map)
 {
   int ni, mi;
 
@@ -2218,14 +2173,12 @@ Readline::rl_list_funmap_names ()
   delete[] funmap_names;
 }
 
-static char *
+static std::string
 _rl_get_keyname (int key)
 {
-  int i, c;
+  std::string keyname;
 
-  char *keyname = new char[8];
-
-  c = key;
+  int c = key;
   /* Since this is going to be used to write out keysequence-function
      pairs for possible inclusion in an inputrc file, we don't want to
      do any special meta processing on KEY. */
@@ -2238,9 +2191,8 @@ _rl_get_keyname (int key)
      Just add the special ESC key sequence and return. */
   if (c == ESC)
     {
-      keyname[0] = '\\';
-      keyname[1] = 'e';
-      keyname[2] = '\0';
+      keyname.push_back ('\\');
+      keyname.push_back ('e');
       return keyname;
     }
 #endif
@@ -2248,22 +2200,20 @@ _rl_get_keyname (int key)
   /* RUBOUT is translated directly into \C-? */
   if (key == RUBOUT)
     {
-      keyname[0] = '\\';
-      keyname[1] = 'C';
-      keyname[2] = '-';
-      keyname[3] = '?';
-      keyname[4] = '\0';
+      keyname.push_back ('\\');
+      keyname.push_back ('C');
+      keyname.push_back ('-');
+      keyname.push_back ('?');
       return keyname;
     }
 
-  i = 0;
   /* Now add special prefixes needed for control characters.  This can
      potentially change C. */
   if (CTRL_CHAR (c))
     {
-      keyname[i++] = '\\';
-      keyname[i++] = 'C';
-      keyname[i++] = '-';
+      keyname.push_back ('\\');
+      keyname.push_back ('C');
+      keyname.push_back ('-');
       c = _rl_to_lower (UNCTRL (c));
     }
 
@@ -2272,30 +2222,28 @@ _rl_get_keyname (int key)
      This changes C. */
   if (c >= 128 && c <= 159)
     {
-      keyname[i++] = '\\';
-      keyname[i++] = '2';
+      keyname.push_back ('\\');
+      keyname.push_back ('2');
       c -= 128;
-      keyname[i++] = static_cast<char> (c / 8) + '0';
+      keyname.push_back (static_cast<char> (c / 8) + '0');
       c = (c % 8) + '0';
     }
 
   /* Now, if the character needs to be quoted with a backslash, do that. */
   if (c == '\\' || c == '"')
-    keyname[i++] = '\\';
+    keyname.push_back ('\\');
 
-  /* Now add the key, terminate the string, and return it. */
-  keyname[i++] = static_cast<char> (c);
-  keyname[i] = '\0';
-
+  /* Now add the key, and return it. */
+  keyname.push_back (static_cast<char> (c));
   return keyname;
 }
 
-/* Return a NULL terminated array of strings which represent the key
-   sequences that are used to invoke FUNCTION in MAP. */
-char **
+// Return a vector of strings which represent the key sequences that are used
+// to invoke FUNCTION in MAP.
+std::vector<std::string>
 Readline::rl_invoking_keyseqs_in_map (rl_command_func_t function, Keymap map)
 {
-  std::vector<char *> result;
+  std::vector<std::string> result;
 
   for (int key = 0; key < KEYMAP_SIZE; key++)
     {
@@ -2309,14 +2257,14 @@ Readline::rl_invoking_keyseqs_in_map (rl_command_func_t function, Keymap map)
              then add the current KEY to the list of invoking keys. */
           if (map[key].value.function == function)
             {
-              char *keyname = _rl_get_keyname (key);
+              std::string keyname = _rl_get_keyname (key);
               result.push_back (keyname);
             }
           break;
 
         case ISKMAP:
           {
-            char **seqs;
+            std::vector<std::string> seqs;
 
             /* Find the list of keyseqs in this map which have FUNCTION as
                their target.  Add the key sequences found to RESULT. */
@@ -2325,12 +2273,10 @@ Readline::rl_invoking_keyseqs_in_map (rl_command_func_t function, Keymap map)
             else
               break;
 
-            if (seqs == nullptr)
-              break;
-
-            for (int i = 0; seqs[i]; i++)
+            std::vector<std::string>::const_iterator it;
+            for (it = seqs.begin (); it != seqs.end (); ++it)
               {
-                char *keyname = new char[6 + std::strlen (seqs[i])];
+                std::string keyname;
 
                 if (key == ESC)
                   {
@@ -2340,49 +2286,37 @@ Readline::rl_invoking_keyseqs_in_map (rl_command_func_t function, Keymap map)
                        for ESC. */
                     if (_rl_convert_meta_chars_to_ascii
                         && map[ESC].type == ISKMAP)
-                      std::sprintf (keyname, "\\M-");
+                      keyname = "\\M-";
                     else
-                      std::sprintf (keyname, "\\e");
+                      keyname = "\\e";
                   }
                 else
                   {
-                    int c = key, l = 0;
+                    int c = key;
                     if (CTRL_CHAR (c) || c == RUBOUT)
                       {
-                        keyname[l++] = '\\';
-                        keyname[l++] = 'C';
-                        keyname[l++] = '-';
+                        keyname.push_back ('\\');
+                        keyname.push_back ('C');
+                        keyname.push_back ('-');
                         c = (c == RUBOUT) ? '?' : _rl_to_lower (UNCTRL (c));
                       }
 
                     if (c == '\\' || c == '"')
-                      keyname[l++] = '\\';
+                      keyname.push_back ('\\');
 
-                    keyname[l++] = static_cast<char> (c);
-                    keyname[l] = '\0';
+                    keyname.push_back (static_cast<char> (c));
                   }
 
-                std::strcat (keyname, seqs[i]);
-                delete[] seqs[i];
+                keyname += *it;
 
                 result.push_back (keyname);
               }
-
-            delete[] seqs;
           }
           break;
         }
     }
 
-  if (result.empty ())
-    return nullptr;
-
-  size_t size = result.size ();
-  char **result_array = new char *[size + 1];
-  std::memcpy (result_array, &result[0], size * sizeof (char *));
-  result_array[size] = nullptr;
-
-  return result_array;
+  return result;
 }
 
 /* Print all of the functions and their bindings to rl_outstream.  If
@@ -2401,46 +2335,41 @@ Readline::rl_function_dumper (bool print_readably)
   for (int i = 0; (name = names[i]); i++)
     {
       rl_command_func_t function = rl_named_function (name);
-      char **invokers = rl_invoking_keyseqs_in_map (function, _rl_keymap);
+      std::vector<std::string> invokers
+          = rl_invoking_keyseqs_in_map (function, _rl_keymap);
 
       if (print_readably)
         {
-          if (!invokers)
+          if (invokers.empty ())
             std::fprintf (rl_outstream, "# %s (not bound)\n", name);
           else
             {
-              for (int j = 0; invokers[j]; j++)
+              std::vector<std::string>::iterator j;
+              for (j = invokers.begin (); j != invokers.end (); ++j)
                 {
-                  std::fprintf (rl_outstream, "\"%s\": %s\n", invokers[j],
+                  std::fprintf (rl_outstream, "\"%s\": %s\n", (*j).c_str (),
                                 name);
-                  delete[] invokers[j];
                 }
-
-              delete[] invokers;
             }
         }
       else
         {
-          if (!invokers)
+          if (invokers.empty ())
             std::fprintf (rl_outstream, "%s is not bound to any keys\n", name);
           else
             {
               std::fprintf (rl_outstream, "%s can be found on ", name);
 
-              int j;
-              for (j = 0; invokers[j] && j < 5; j++)
+              std::vector<std::string>::iterator j;
+              for (j = invokers.begin ();
+                   j != invokers.end () && (j - invokers.begin ()) < 5; ++j)
                 {
-                  std::fprintf (rl_outstream, "\"%s\"%s", invokers[j],
-                                invokers[j + 1] ? ", " : ".\n");
+                  std::fprintf (rl_outstream, "\"%s\"%s", (*j).c_str (),
+                                (j + 1 != invokers.end ()) ? ", " : ".\n");
                 }
 
-              if (j == 5 && invokers[j])
+              if ((j - invokers.begin ()) == 5 && j != invokers.end ())
                 std::fprintf (rl_outstream, "...\n");
-
-              for (j = 0; invokers[j]; j++)
-                delete[] invokers[j];
-
-              delete[] invokers;
             }
         }
     }
@@ -2464,9 +2393,10 @@ Readline::rl_dump_functions (int, int)
 
 void
 Readline::_rl_macro_dumper_internal (bool print_readably, Keymap map,
-                                     const char *prefix)
+                                     const std::string &prefix)
 {
-  char *keyname, *out;
+  std::string keyname;
+  std::string out;
 
   for (int key = 0; key < KEYMAP_SIZE; key++)
     {
@@ -2477,45 +2407,33 @@ Readline::_rl_macro_dumper_internal (bool print_readably, Keymap map,
           out = _rl_untranslate_macro_value (map[key].value.macro, false);
 
           if (print_readably)
-            std::fprintf (rl_outstream, "\"%s%s\": \"%s\"\n",
-                          prefix ? prefix : "", keyname, out ? out : "");
+            std::fprintf (rl_outstream, "\"%s%s\": \"%s\"\n", prefix.c_str (),
+                          keyname.c_str (), out.c_str ());
           else
-            std::fprintf (rl_outstream, "%s%s outputs %s\n",
-                          prefix ? prefix : "", keyname, out ? out : "");
-          delete[] keyname;
-          delete[] out;
+            std::fprintf (rl_outstream, "%s%s outputs %s\n", prefix.c_str (),
+                          keyname.c_str (), out.c_str ());
+          keyname.clear ();
           break;
 
         case ISFUNC:
           break;
 
         case ISKMAP:
-          size_t prefix_len = prefix ? std::strlen (prefix) : 0;
           if (key == ESC)
             {
-              keyname = new char[3 + prefix_len];
-              if (prefix)
-                std::strcpy (keyname, prefix);
-              keyname[prefix_len] = '\\';
-              keyname[prefix_len + 1] = 'e';
-              keyname[prefix_len + 2] = '\0';
+              keyname = prefix;
+              keyname.push_back ('\\');
+              keyname.push_back ('e');
             }
           else
             {
-              keyname = _rl_get_keyname (key);
-              if (prefix)
-                {
-                  out = new char[std::strlen (keyname) + prefix_len + 1];
-                  std::strcpy (out, prefix);
-                  std::strcpy (out + prefix_len, keyname);
-                  delete[] keyname;
-                  keyname = out;
-                }
+              keyname = prefix;
+              keyname += _rl_get_keyname (key);
             }
 
           _rl_macro_dumper_internal (print_readably, map[key].value.map,
                                      keyname);
-          delete[] keyname;
+          keyname.clear ();
           break;
         }
     }
@@ -2548,16 +2466,17 @@ Readline::_rl_get_string_variable_value (const char *name)
         }
     }
   else if (_rl_stricmp (name, "comment-begin") == 0)
-    return _rl_comment_begin ? _rl_comment_begin : RL_COMMENT_BEGIN_DEFAULT;
+    return !_rl_comment_begin.empty () ? _rl_comment_begin.c_str ()
+                                       : RL_COMMENT_BEGIN_DEFAULT;
   else if (_rl_stricmp (name, "completion-display-width") == 0)
     {
-      std::snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%d",
+      std::snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%zd",
                      _rl_completion_columns);
       return _rl_numbuf;
     }
   else if (_rl_stricmp (name, "completion-prefix-display-length") == 0)
     {
-      std::snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%d",
+      std::snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%zu",
                      _rl_completion_prefix_display_length);
       return _rl_numbuf;
     }
@@ -2571,20 +2490,19 @@ Readline::_rl_get_string_variable_value (const char *name)
     return rl_get_keymap_name_from_edit_mode ();
   else if (_rl_stricmp (name, "history-size") == 0)
     {
-      std::snprintf (
-          _rl_numbuf, sizeof (_rl_numbuf), "%d",
-          history_is_stifled () ? static_cast<int> (history_max_entries) : 0);
+      std::snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%zu",
+                     history_is_stifled () ? history_max_entries : 0);
       return _rl_numbuf;
     }
   else if (_rl_stricmp (name, "isearch-terminators") == 0)
     {
-      if (_rl_isearch_terminators == nullptr)
+      if (!_rl_isearch_terminators_custom)
         return nullptr;
-      char *ret = _rl_untranslate_macro_value (_rl_isearch_terminators, 0);
-      if (ret)
+      std::string ret
+          = _rl_untranslate_macro_value (_rl_isearch_terminators, false);
+      if (!ret.empty ())
         {
-          std::strncpy (_rl_numbuf, ret, sizeof (_rl_numbuf) - 1);
-          delete[] ret;
+          std::strncpy (_rl_numbuf, ret.c_str (), sizeof (_rl_numbuf) - 1);
           _rl_numbuf[sizeof (_rl_numbuf) - 1] = '\0';
         }
       else
@@ -2605,13 +2523,14 @@ Readline::_rl_get_string_variable_value (const char *name)
       return _rl_numbuf;
     }
   else if (_rl_stricmp (name, "emacs-mode-string") == 0)
-    return _rl_emacs_mode_str ? _rl_emacs_mode_str : RL_EMACS_MODESTR_DEFAULT;
+    return _rl_emacs_mode_str_custom ? _rl_emacs_mode_str.c_str ()
+                                     : RL_EMACS_MODESTR_DEFAULT;
   else if (_rl_stricmp (name, "vi-cmd-mode-string") == 0)
-    return _rl_vi_cmd_mode_str ? _rl_vi_cmd_mode_str
-                               : RL_VI_CMD_MODESTR_DEFAULT;
+    return _rl_vi_cmd_mode_str_custom ? _rl_vi_cmd_mode_str.c_str ()
+                                      : RL_VI_CMD_MODESTR_DEFAULT;
   else if (_rl_stricmp (name, "vi-ins-mode-string") == 0)
-    return _rl_vi_ins_mode_str ? _rl_vi_ins_mode_str
-                               : RL_VI_INS_MODESTR_DEFAULT;
+    return _rl_vi_ins_mode_str_custom ? _rl_vi_ins_mode_str.c_str ()
+                                      : RL_VI_INS_MODESTR_DEFAULT;
   else
     return nullptr;
 }

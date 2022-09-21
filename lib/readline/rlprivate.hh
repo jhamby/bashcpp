@@ -50,29 +50,70 @@ namespace readline
 #define RL_SIGINT_RECEIVED() (_rl_caught_signal == SIGINT)
 #define RL_SIGWINCH_RECEIVED() (_rl_caught_signal == SIGWINCH)
 
-#define CUSTOM_REDISPLAY_FUNC() (rl_redisplay_function != rl_redisplay)
-#define CUSTOM_INPUT_FUNC() (rl_getc_function != rl_getc)
+// Callback data for reading numeric arguments.
+enum num_arg_flags
+{
+  NUM_NOFLAGS = 0,
+  NUM_SAWMINUS = 0x01,
+  NUM_SAWDIGITS = 0x02,
+  NUM_READONE = 0x04
+};
 
-/* Callback data for reading numeric arguments */
-#define NUM_SAWMINUS 0x01
-#define NUM_SAWDIGITS 0x02
-#define NUM_READONE 0x04
+static inline num_arg_flags &
+operator|= (num_arg_flags &a, const num_arg_flags &b)
+{
+  a = static_cast<num_arg_flags> (static_cast<uint32_t> (a)
+                                  | static_cast<uint32_t> (b));
+  return a;
+}
 
-/* A context for reading key sequences longer than a single character when
-   using the callback interface. */
-#define KSEQ_DISPATCHED 0x01
-#define KSEQ_SUBSEQ 0x02
-#define KSEQ_RECURSIVE 0x04
+static inline num_arg_flags &
+operator&= (num_arg_flags &a, const num_arg_flags &b)
+{
+  a = static_cast<num_arg_flags> (static_cast<uint32_t> (a)
+                                  & static_cast<uint32_t> (b));
+  return a;
+}
 
-/* vi-mode commands that use result of motion command to define boundaries */
-#define VIM_DELETE 0x01
-#define VIM_CHANGE 0x02
-#define VIM_YANK 0x04
+static inline num_arg_flags
+operator~(const num_arg_flags &a)
+{
+  return static_cast<num_arg_flags> (~static_cast<uint32_t> (a));
+}
 
-/* various states for vi-mode commands that use motion commands.  reflects
-   RL_READLINE_STATE */
-#define VMSTATE_READ 0x01
-#define VMSTATE_NUMARG 0x02
+// A context for reading key sequences longer than a single character when
+// using the callback interface.
+enum keyseq_flags
+{
+  KSEQ_NOFLAGS = 0,
+  KSEQ_DISPATCHED = 0x01,
+  KSEQ_SUBSEQ = 0x02,
+  KSEQ_RECURSIVE = 0x04
+};
+
+static inline keyseq_flags &
+operator|= (keyseq_flags &a, const keyseq_flags &b)
+{
+  a = static_cast<keyseq_flags> (static_cast<uint32_t> (a)
+                                 | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline keyseq_flags
+operator| (const keyseq_flags &a, const keyseq_flags &b)
+{
+  return static_cast<keyseq_flags> (static_cast<uint32_t> (a)
+                                    | static_cast<uint32_t> (b));
+}
+
+// vi-mode commands that use result of motion command to define boundaries.
+enum vim_flags
+{
+  VIM_NOFLAGS = 0,
+  VIM_DELETE = 0x01,
+  VIM_CHANGE = 0x02,
+  VIM_YANK = 0x04
+};
 
 #define BRACK_PASTE_PREF "\033[200~"
 #define BRACK_PASTE_SUFF "\033[201~"
@@ -82,6 +123,40 @@ namespace readline
 
 #define BRACK_PASTE_INIT "\033[?2004h"
 #define BRACK_PASTE_FINI "\033[?2004l\r"
+
+extern "C"
+{
+  // Stupid comparison routine for qsort () ing strings.
+  int _rl_qsort_string_compare (const void *, const void *);
+}
+
+// Custom comparison function for sorting string vectors.
+struct string_comp
+{
+  bool
+  operator() (const std::string &s1, const std::string &s2)
+  {
+#if defined(HAVE_STRCOLL)
+    return strcoll (s1.c_str (), s2.c_str ()) < 0;
+#else
+    return strcmp (s1.c_str (), s2.c_str ()) < 0;
+#endif
+  }
+};
+
+// Custom comparison function for sorting string pointer vectors.
+struct string_ptr_comp
+{
+  bool
+  operator() (const std::string *s1, const std::string *s2)
+  {
+#if defined(HAVE_STRCOLL)
+    return strcoll (s1->c_str (), s2->c_str ()) < 0;
+#else
+    return strcmp (s1->c_str (), s2->c_str ()) < 0;
+#endif
+  }
+};
 
 } // namespace readline
 

@@ -56,42 +56,30 @@ Readline::rl_forward_search_history (int sign, int key)
    SEARCH_STRING contains the string that is being searched for,
    FLAGS are the rl_search_flags. */
 void
-Readline::rl_display_search (const char *search_string, rl_search_flags flags)
+Readline::rl_display_search (const std::string &search_string,
+                             rl_search_flags flags)
 {
-  size_t searchlen = search_string ? std::strlen (search_string) : 0;
+  std::string message;
+  message.reserve (search_string.size ());
 
-  char *message = new char[searchlen + 64];
-  size_t msglen = 0;
-
-  message[msglen++] = '(';
+  message.push_back ('(');
 
   if (flags & SF_FAILED)
-    {
-      std::strcpy (message + msglen, "failed ");
-      msglen += 7;
-    }
+    message += "failed ";
 
   if (flags & SF_REVERSE)
-    {
-      std::strcpy (message + msglen, "reverse-");
-      msglen += 8;
-    }
+    message += "reverse-";
 
-  std::strcpy (message + msglen, "i-search)`");
-  msglen += 10;
+  message += "i-search)`";
 
-  if (search_string && *search_string)
-    {
-      std::strcpy (message + msglen, search_string);
-      msglen += searchlen;
-    }
+  if (!search_string.empty ())
+    message += search_string;
   else
     _rl_optimize_redisplay ();
 
-  std::strcpy (message + msglen, "': ");
+  message += "': ";
 
-  rl_message ("%s", message);
-  delete[] message;
+  rl_message ("%s", message.c_str ());
 
   ((*this).*rl_redisplay_function) ();
 }
@@ -106,8 +94,8 @@ Readline::_rl_isearch_init (int direction)
   if (direction < 0)
     cxt->sflags = SF_REVERSE;
 
-  cxt->search_terminators = _rl_isearch_terminators
-                                ? _rl_isearch_terminators
+  cxt->search_terminators = _rl_isearch_terminators_custom
+                                ? _rl_isearch_terminators.c_str ()
                                 : default_isearch_terminators;
 
   /* Create an array of pointers to the lines that we want to search. */
@@ -171,7 +159,7 @@ Readline::_rl_isearch_fini (_rl_search_cxt *cxt)
       rl_deactivate_mark ();
     }
 
-  rl_point = static_cast<unsigned int> (cxt->sline_index);
+  rl_point = static_cast<size_t> (cxt->sline_index);
 
   /* Don't worry about where to put the mark here; rl_get_previous_history
      and rl_get_next_history take care of it.
@@ -216,8 +204,7 @@ int
 Readline::_rl_isearch_dispatch (_rl_search_cxt *cxt, int c)
 {
   int n, limit;
-  char *paste;
-  unsigned int pastelen, wstart, tmp;
+  size_t wstart, tmp;
   int j;
 
   rl_command_func_t f = nullptr;
@@ -484,9 +471,7 @@ opcode_dispatch:
       else
         {
           wstart = _rl_find_prev_mbchar (
-              cxt->search_string,
-              static_cast<unsigned int> (cxt->search_string.size ()),
-              MB_FIND_NONZERO);
+              cxt->search_string, cxt->search_string.size (), MB_FIND_NONZERO);
           cxt->search_string.resize (wstart);
         }
 
@@ -508,8 +493,7 @@ opcode_dispatch:
 
     case -5: /* C-W */
       /* skip over portion of line we already matched and yank word */
-      wstart
-          = rl_point + static_cast<unsigned int> (cxt->search_string.size ());
+      wstart = rl_point + cxt->search_string.size ();
       if (wstart >= rl_end ())
         {
           rl_ding ();
@@ -538,8 +522,7 @@ opcode_dispatch:
 
     case -6: /* C-Y */
       /* skip over portion of line we already matched and yank rest */
-      wstart
-          = rl_point + static_cast<unsigned int> (cxt->search_string.size ());
+      wstart = rl_point + cxt->search_string.size ();
       if (wstart >= rl_end ())
         {
           rl_ding ();
@@ -550,21 +533,18 @@ opcode_dispatch:
       cxt->search_string.append (rl_line_buffer, tmp);
       break;
 
-    case -7: /* bracketed paste */
-      paste = _rl_bracketed_text (&pastelen);
-      if (paste == nullptr || *paste == '\0')
-        {
-          delete[] paste;
+    case -7:
+      { // bracketed paste
+        std::string paste = _rl_bracketed_text ();
+        if (paste.empty ())
           break;
-        }
 
-      if (_rl_enable_active_region)
-        rl_activate_mark ();
+        if (_rl_enable_active_region)
+          rl_activate_mark ();
 
-      cxt->search_string.append (paste, pastelen);
-
-      delete[] paste;
-      break;
+        cxt->search_string.append (paste);
+        break;
+      }
 
     /* Add character to search string and continue search. */
     default:
@@ -638,7 +618,7 @@ opcode_dispatch:
             }
 
           /* Move to the next line. */
-          cxt->history_pos = static_cast<unsigned int> (
+          cxt->history_pos = static_cast<size_t> (
               static_cast<int> (cxt->history_pos) + cxt->direction);
 
           /* We will need these later. */
@@ -684,11 +664,10 @@ opcode_dispatch:
       if (_rl_enable_active_region)
         rl_activate_mark ();
 
-      rl_point = static_cast<unsigned int> (cxt->sline_index);
+      rl_point = static_cast<size_t> (cxt->sline_index);
 
       if (rl_mark_active_p () && !cxt->search_string.empty ())
-        rl_mark = rl_point
-                  + static_cast<unsigned int> (cxt->search_string.size ());
+        rl_mark = rl_point + cxt->search_string.size ();
 
       cxt->last_found_line = cxt->history_pos;
       rl_display_search (cxt->search_string.c_str (), cxt->sflags);
