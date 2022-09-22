@@ -311,16 +311,17 @@ class REDIRECT : public GENERIC_LIST
 public:
   REDIRECT (REDIRECTEE source_, r_instruction instruction_,
             REDIRECTEE dest_and_filename_, redir_flags flags_)
-      : redirector (source_), redirectee (dest_and_filename_), rflags (flags_),
-        instruction (instruction_)
+      : GENERIC_LIST (), redirector (source_), redirectee (dest_and_filename_),
+        rflags (flags_), instruction (instruction_)
   {
   }
 
   // Shallow copy constructor.
   REDIRECT (const REDIRECT &other)
-      : here_doc_eof (other.here_doc_eof), redirector (other.redirector),
-        redirectee (other.redirectee), rflags (other.rflags),
-        flags (other.flags), instruction (other.instruction)
+      : GENERIC_LIST (), here_doc_eof (other.here_doc_eof),
+        redirector (other.redirector), redirectee (other.redirectee),
+        rflags (other.rflags), flags (other.flags),
+        instruction (other.instruction)
   {
     if (other.rflags & REDIR_VARASSIGN)
       redirector.r.filename = new WORD_DESC (*(other.redirector.r.filename));
@@ -704,7 +705,7 @@ public:
   COMMAND *false_case; /* What to do if the test returned zero. */
 };
 
-enum loop_type
+enum loop_t
 { // is this an until or a while loop?
   LOOP_UNTIL,
   LOOP_WHILE
@@ -717,7 +718,7 @@ public:
   // Constructor called by parser that uses the line number of the 'test'
   // argument. In the C version of bash, the line number isn't initialized for
   // this struct.
-  UNTIL_WHILE_COM (loop_type type_, COMMAND *test_, COMMAND *action_)
+  UNTIL_WHILE_COM (loop_t type_, COMMAND *test_, COMMAND *action_)
       : COMMAND (test_->line), test (test_), action (action_),
         loop_type (type_)
   {
@@ -727,9 +728,9 @@ public:
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
 
-  COMMAND *test;       /* Thing to test. */
-  COMMAND *action;     /* Thing to do while test is non-zero. */
-  loop_type loop_type; // Whether this is an UNTIL or WHILE loop. */
+  COMMAND *test;    // Thing to test.
+  COMMAND *action;  // Thing to do while test is non-zero.
+  loop_t loop_type; // Whether this is an UNTIL or WHILE loop.
 };
 
 /* The arithmetic evaluation command, ((...)).  Just a set of flags and

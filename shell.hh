@@ -4700,7 +4700,7 @@ protected:
 
   //  ps_index_t *pidstat_table;	// FIXME: what type is this
 
-  bgpids bgpids;
+  bgpids bgpids_;
 
   procchain procsubs;
 
@@ -4937,7 +4937,7 @@ protected:
 #endif /* BUFFERED_INPUT */
   };
 
-  parser parser;
+  parser parser_;
 
   STREAM_SAVER *stream_list;
 

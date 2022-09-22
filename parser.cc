@@ -50,8 +50,8 @@ void
 Shell::debug_parser (parser::debug_level_type i)
 {
 #if YYDEBUG != 0
-  parser.set_debug_level (i);
-  parser.set_debug_stream (std::cerr);
+  parser_.set_debug_level (i);
+  parser_.set_debug_stream (std::cerr);
 #endif
 }
 #endif

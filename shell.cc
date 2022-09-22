@@ -1782,7 +1782,8 @@ Shell::shell_reinitialize ()
 
   /* Things that get 0. */
   login_shell = make_login_shell = interactive = executing = 0;
-  debugging = do_version = line_number = last_command_exit_value = 0;
+  debugging = do_version = false;
+  line_number = last_command_exit_value = 0;
   forced_interactive = interactive_shell = 0;
   subshell_environment = running_in_background = 0;
   expand_aliases = 0;
@@ -1791,7 +1792,7 @@ Shell::shell_reinitialize ()
   /* XXX - should we set jobs_m_flag to 0 here? */
 
 #if defined(HISTORY)
-  bash_history_reinit (enable_history_list = 0);
+  bash_history_reinit ((enable_history_list = 0));
 #endif /* HISTORY */
 
 #if defined(RESTRICTED_SHELL)

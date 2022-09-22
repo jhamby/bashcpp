@@ -225,6 +225,11 @@ Shell::pretty_print_loop ()
   return EXECUTION_SUCCESS;
 }
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
+#endif
+
 static void
 alrm_catcher (int)
 {
@@ -236,6 +241,10 @@ alrm_catcher (int)
   the_shell->bash_logout (); /* run ~/.bash_logout if this is a login shell */
   terminating_signal = SIGKILL; // XXX - throw EXITPROG as soon as possible
 }
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 /* Send an escape sequence to emacs term mode to tell it the
    current working directory. */

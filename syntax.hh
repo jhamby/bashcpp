@@ -27,6 +27,11 @@
 namespace bash
 {
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
+
 /* Defines for use by mksyntax.c */
 
 static const char *slashify_in_quotes = "\\`$\"\n";
@@ -50,6 +55,10 @@ static const char *ext_glob_chars = "";
 #endif
 
 static const char *shell_glob_chars = "*?[]^";
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 /* Defines shared by mksyntax.c and the rest of the shell code. */
 

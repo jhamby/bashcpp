@@ -212,6 +212,9 @@ string_to_rlimtype (char *s)
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wtautological-unsigned-zero-compare"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
 #endif
 
 void
@@ -243,6 +246,8 @@ print_rlimtype (RLIMTYPE n, int addnl)
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
 #endif
 
 #endif /* RLIMTYPE */
