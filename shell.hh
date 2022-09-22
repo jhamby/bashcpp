@@ -4973,7 +4973,7 @@ protected:
   struct LongArg
   {
     const char *name;
-    const arg_type type;
+    arg_type type;
     union
     {
       bool *bool_ptr;
