@@ -93,6 +93,7 @@ struct PROCESS
 enum JOB_STATE
 {
   JNONE = -1,
+  JSCANNING = 0,
   JRUNNING = 1,
   JSTOPPED = 2,
   JDEAD = 4,

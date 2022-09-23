@@ -89,7 +89,7 @@ Shell::let_builtin (WORD_LIST *list)
 
   /* Skip over leading `--' argument. */
   if (list && list->word && ISOPTION (list->word->word, '-'))
-    list = (WORD_LIST *)list->next;
+    list = list->next ();
 
   if (list == 0)
     {
@@ -97,7 +97,7 @@ Shell::let_builtin (WORD_LIST *list)
       return EXECUTION_FAILURE;
     }
 
-  for (; list; list = (WORD_LIST *)list->next)
+  for (; list; list = list->next ())
     {
       ret = evalexp (list->word->word, EXP_EXPANDED, &expok);
       if (expok == 0)

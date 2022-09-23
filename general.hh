@@ -389,7 +389,8 @@ constexpr int HIGH_FD_MAX = 256;
 #define RELPATH(x) ((x)[0] != '/')
 #else /* __CYGWIN__ */
 #define ABSPATH(x)                                                            \
-  (((x)[0] && ISALPHA ((unsigned char)(x)[0]) && (x)[1] == ':')               \
+  (((x)[0] && std::isalpha (static_cast<unsigned char> ((x)[0]))              \
+    && (x)[1] == ':')                                                         \
    || ISDIRSEP ((x)[0]))
 #define RELPATH(x) (ABSPATH (x) == 0)
 #endif /* __CYGWIN__ */

@@ -68,14 +68,14 @@ int sourcelevel = 0;
 static int
 Shell::_evalfile (const char *filename, int flags)
 {
-  volatile int old_interactive;
-  procenv_t old_return_catch;
+//   volatile int old_interactive;
+//   procenv_t old_return_catch;
   int return_val, fd, result, pflags, i, nnull;
   ssize_t nr; /* return value from read(2) */
   char *string;
   struct stat finfo;
   size_t file_size;
-  sh_vmsg_func_t *errfunc;
+  sh_vmsg_func_t errfunc;
 #if defined(ARRAY_VARS)
   SHELL_VAR *funcname_v, *bash_source_v, *bash_lineno_v;
   ARRAY *funcname_a, *bash_source_a, *bash_lineno_a;

@@ -654,9 +654,9 @@ protected:
   int subshell_argc;
 
   /* The random number seed.  You can change this by setting RANDOM. */
-  u_bits32_t rseed;
-  u_bits32_t rseed32;
-  u_bits32_t last_rand32;
+  uint32_t rseed;
+  uint32_t rseed32;
+  uint32_t last_rand32;
   int last_random_value;
 
   /* Set to errno when a here document cannot be created for some reason.
@@ -1501,6 +1501,8 @@ public:
   int exec_builtin (WORD_LIST *);
   int exit_builtin (WORD_LIST *);
   int logout_builtin (WORD_LIST *);
+
+  int exit_or_logout (WORD_LIST *);
 
 #if defined(HISTORY)
   int fc_builtin (WORD_LIST *);
@@ -2655,29 +2657,29 @@ protected:
   char *sh_realpath (const char *, char *);
 
   /* from lib/sh/random.c */
-  u_bits32_t genseed ();
+  uint32_t genseed ();
   int brand ();
-  u_bits32_t brand32 ();
-  u_bits32_t get_urandom32 ();
+  uint32_t brand32 ();
+  uint32_t get_urandom32 ();
 
   /* Set the random number generator seed to the least-significant 32 bits of
    * SEED. */
   void
   sbrand (unsigned long seed)
   {
-    rseed = static_cast<u_bits32_t> (seed);
+    rseed = static_cast<uint32_t> (seed);
     last_random_value = 0;
   }
 
   void
   seedrand ()
   {
-    u_bits32_t iv = genseed ();
+    uint32_t iv = genseed ();
     sbrand (iv);
   }
 
   void
-  sbrand32 (u_bits32_t seed)
+  sbrand32 (uint32_t seed)
   {
     last_rand32 = rseed32 = seed;
   }
@@ -2685,7 +2687,7 @@ protected:
   void
   seedrand32 ()
   {
-    u_bits32_t iv = genseed ();
+    uint32_t iv = genseed ();
     sbrand32 (iv);
   }
 
@@ -3300,6 +3302,10 @@ protected:
   void set_shell_name (const char *);
   void shell_initialize ();
   void shell_reinitialize ();
+
+#ifdef __CYGWIN__
+  void _cygwin32_check_tmp ();
+#endif
 
   /* A wrapper for exit that (optionally) can do other things. */
   static void
@@ -5057,7 +5063,7 @@ struct sh_parser_state_t
 {
   // pointer types first
 
-  int *token_state;     // array of 4 ints; free with delete[]
+  int *token_state; // array of 4 ints; free with delete[]
   char *token;
 
   const char **prompt_string_pointer;
@@ -5077,7 +5083,7 @@ struct sh_parser_state_t
 
   // 32-bit int types next
 
-  int token_buffer_size;  // ???
+  int token_buffer_size; // ???
 
   /* input line state -- line number saved elsewhere */
   int input_line_terminator;
@@ -5089,7 +5095,6 @@ struct sh_parser_state_t
   int remember_on_history;
   int history_expansion_inhibited;
 #endif
-
 };
 
 } // namespace bash

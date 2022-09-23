@@ -143,30 +143,6 @@
 namespace bash
 {
 
-#if 0
-static int find_minus_o_option (const char *);
-
-static void print_minus_o_option (char *, int, int);
-static void print_all_shell_variables (void);
-
-static char set_ignoreeof (char, const char *);
-static char set_posix_mode (char, const char *);
-
-#if defined(READLINE)
-static char set_edit_mode (char, const char *);
-static char get_edit_mode (const char *);
-#endif
-
-#if defined(HISTORY)
-static char bash_set_history (char, const char *);
-#endif
-
-static const char *const on = "on";
-static const char *const off = "off";
-
-static int previous_option_value;
-#endif
-
 /* A struct used to match long options for set -o to the corresponding
    option letter or internal variable.  The functions can be called to
    dynamically generate values.  If you add a new variable name here

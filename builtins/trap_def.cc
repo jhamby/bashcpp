@@ -295,7 +295,7 @@ display_traps (WORD_LIST *list, int show_all)
       return EXECUTION_SUCCESS;
     }
 
-  for (result = EXECUTION_SUCCESS; list; list = (WORD_LIST *)list->next)
+  for (result = EXECUTION_SUCCESS; list; list = list->next ())
     {
       i = decode_signal (list->word->word, DSIG_NOCASE | DSIG_SIGPREFIX);
       if (i == NO_SIG)

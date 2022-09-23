@@ -435,6 +435,13 @@ enum valid_array_flags
   VA_ONEWORD = 0x002
 };
 
+static inline valid_array_flags
+operator| (const valid_array_flags &a, const valid_array_flags &b)
+{
+  return static_cast<valid_array_flags> (static_cast<uint32_t> (a)
+                                         | static_cast<uint32_t> (b));
+}
+
 // Definitions previously in execute_cmd.hh.
 
 #if defined(ARRAY_VARS)

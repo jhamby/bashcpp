@@ -69,8 +69,8 @@ namespace bash
    instead of shell control structures, and it won't ever exit the
    shell. */
 
-static void
-builtin_error_prolog ()
+void
+Shell::builtin_error_prolog ()
 {
   const char *name;
 

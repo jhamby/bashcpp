@@ -142,6 +142,7 @@
 namespace bash
 {
 
+#if 0
 /* The list of remembered directories. */
 static char **pushd_directory_list = (char **)NULL;
 
@@ -157,6 +158,7 @@ static int cd_to_string (char *);
 static int change_to_temp (char *);
 static void add_dirstack_element (char *);
 static int get_dirstack_index (int64_t, int, int *);
+#endif
 
 #define NOCD 0x01
 #define ROTATE 0x02

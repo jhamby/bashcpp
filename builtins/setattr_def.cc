@@ -33,10 +33,6 @@
 #include "flags.hh"
 #include "shell.hh"
 
-#if 0
-extern sh_builtin_func_t *this_shell_builtin;
-#endif
-
 #define READONLY_OR_EXPORT                                                    \
   (this_shell_builtin == readonly_builtin                                     \
    || this_shell_builtin == export_builtin)
@@ -74,8 +70,6 @@ Shell::export_builtin (WORD_LIST *list)
   return set_or_show_attributes (list, att_exported, 0);
 }
 
-} // namespace bash
-
 // $BUILTIN readonly
 // $FUNCTION readonly_builtin
 // $SHORT_DOC readonly [-aAf] [name[=value] ...] or readonly -p
@@ -97,9 +91,6 @@ Shell::export_builtin (WORD_LIST *list)
 // Exit Status:
 // Returns success unless an invalid option is given or NAME is invalid.
 // $END
-
-namespace bash
-{
 
 /* For each variable name in LIST, make that variable readonly.  Given an
    empty LIST, print out all existing readonly variables. */

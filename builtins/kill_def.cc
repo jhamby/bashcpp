@@ -89,6 +89,7 @@ Shell::kill_builtin (WORD_LIST *list)
       builtin_usage ();
       return EX_USAGE;
     }
+
   CHECK_HELPOPT (list);
 
   bool any_succeeded = false, listing = false, saw_signal = false;

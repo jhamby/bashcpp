@@ -2197,6 +2197,7 @@ Shell::parse_matched_pair (
 
           FREE (nestret);
         }
+
 #if defined(PROCESS_SUBSTITUTION)
       if MBTEST ((ch == '<' || ch == '>') && (tflags & LEX_GTLT) == 0)
         tflags |= LEX_GTLT;
@@ -2209,8 +2210,7 @@ Shell::parse_matched_pair (
         tflags &= ~LEX_WASDOL;
     }
 
-  /*itrace("parse_matched_pair[%d]: returning %s", line_number, ret.c_str
-   * ());*/
+  // itrace("parse_matched_pair[%d]: returning %s", line_number, ret.c_str ());
   return ret;
 }
 

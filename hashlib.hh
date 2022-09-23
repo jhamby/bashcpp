@@ -137,7 +137,7 @@ private:
 
   /* The `khash' check below requires that strings that compare equally with
      strcmp hash to the same value. */
-  uint32_t
+  static uint32_t
   hash_string (const std::string &key)
   {
     uint32_t i;

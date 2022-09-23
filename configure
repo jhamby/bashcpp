@@ -872,7 +872,6 @@ ac_user_opts='
 enable_option_checking
 enable_silent_rules
 with_curses
-with_vfork_subshell
 enable_minimal_config
 enable_alias
 enable_arith_for_command
@@ -913,6 +912,7 @@ enable_usg_echo_default
 enable_xpg_echo_default
 enable_profiling
 enable_static_link
+enable_prefer_posix_spawn
 enable_dependency_tracking
 enable_shared
 enable_static
@@ -1651,6 +1651,9 @@ Optional Features:
                           default
   --enable-profiling      allow profiling with gprof
   --enable-static-link    link bash statically, for use as a root shell
+  --enable-prefer-posix-spawn
+                          prefer posix_spawn or vfork to fork when both are
+                          available
   --enable-dependency-tracking
                           do not reject slow dependency extractors
   --disable-dependency-tracking
@@ -1672,7 +1675,6 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-curses           use the curses library instead of the termcap
                           library
-  --with-vfork-subshell   prefer vfork to fork when both are available
   --with-pic[=PKGS]       try to use only PIC/non-PIC objects [default=use
                           both]
   --with-aix-soname=aix|svr4|both
@@ -3549,7 +3551,7 @@ as_fn_append ac_func_cxx_list " vsnprintf HAVE_VSNPRINTF"
 ac_aux_files="config.rpath config.guess config.sub ltmain.sh compile missing install-sh"
 
 # Locations in which to look for auxiliary files.
-ac_aux_dir_candidates="${srcdir}/./support"
+ac_aux_dir_candidates="${srcdir}/support"
 
 # Search for a directory containing all of the required auxiliary files,
 # $ac_aux_files, from the $PATH-style list $ac_aux_dir_candidates.
@@ -4338,7 +4340,7 @@ alp*|bet*|dev*|rc*|releng*|maint*)	opt_debug=yes ;;
 esac
 
 opt_curses=no
-opt_with_vfork_subshell=no
+opt_with_posix_spawn=no
 
 
 
@@ -4351,14 +4353,6 @@ opt_with_vfork_subshell=no
 if test ${with_curses+y}
 then :
   withval=$with_curses; opt_curses=$withval
-fi
-
-
-
-# Check whether --with-vfork-subshell was given.
-if test ${with_vfork_subshell+y}
-then :
-  withval=$with_vfork_subshell; opt_with_vfork_subshell=$withval
 fi
 
 
@@ -4408,6 +4402,7 @@ opt_dircomplete_expand_default=no
 opt_globascii_default=yes
 opt_function_import=yes
 opt_dev_fd_stat_broken=no
+opt_prefer_posix_spawn=yes
 
 opt_static_link=no
 opt_profiling=no
@@ -4668,6 +4663,13 @@ then :
 fi
 
 
+# Check whether --enable-prefer-posix-spawn was given.
+if test ${enable_prefer_posix_spawn+y}
+then :
+  enableval=$enable_prefer_posix_spawn; opt_prefer_posix_spawn=$enableval
+fi
+
+
 
 
 
@@ -4834,9 +4836,9 @@ printf "%s\n" "#define DEV_FD_STAT_BROKEN 1" >>confdefs.h
 
 fi
 
-if test $opt_with_vfork_subshell = yes; then
+if test $opt_prefer_posix_spawn = yes; then
 
-printf "%s\n" "#define VFORK_SUBSHELL 1" >>confdefs.h
+printf "%s\n" "#define PREFER_POSIX_SPAWN 1" >>confdefs.h
 
 fi
 
@@ -26398,12 +26400,6 @@ then :
   printf "%s\n" "#define HAVE_LIBINTL_H 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_header_compile "$LINENO" "malloc.h" "ac_cv_header_malloc_h" "$ac_includes_default"
-if test "x$ac_cv_header_malloc_h" = xyes
-then :
-  printf "%s\n" "#define HAVE_MALLOC_H 1" >>confdefs.h
-
-fi
 ac_fn_cxx_check_header_compile "$LINENO" "netdb.h" "ac_cv_header_netdb_h" "$ac_includes_default"
 if test "x$ac_cv_header_netdb_h" = xyes
 then :
@@ -26434,6 +26430,12 @@ then :
   printf "%s\n" "#define HAVE_SGTTY_H 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_header_compile "$LINENO" "spawn.h" "ac_cv_header_spawn_h" "$ac_includes_default"
+if test "x$ac_cv_header_spawn_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_SPAWN_H 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_header_compile "$LINENO" "stdint.h" "ac_cv_header_stdint_h" "$ac_includes_default"
 if test "x$ac_cv_header_stdint_h" = xyes
 then :
@@ -26444,12 +26446,6 @@ ac_fn_cxx_check_header_compile "$LINENO" "stdio_ext.h" "ac_cv_header_stdio_ext_h
 if test "x$ac_cv_header_stdio_ext_h" = xyes
 then :
   printf "%s\n" "#define HAVE_STDIO_EXT_H 1" >>confdefs.h
-
-fi
-ac_fn_cxx_check_header_compile "$LINENO" "strings.h" "ac_cv_header_strings_h" "$ac_includes_default"
-if test "x$ac_cv_header_strings_h" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRINGS_H 1" >>confdefs.h
 
 fi
 ac_fn_cxx_check_header_compile "$LINENO" "sys/dir.h" "ac_cv_header_sys_dir_h" "$ac_includes_default"
@@ -28099,6 +28095,24 @@ then :
   printf "%s\n" "#define HAVE_PATHCONF 1" >>confdefs.h
 
 fi
+ac_fn_cxx_check_func "$LINENO" "posix_spawn" "ac_cv_func_posix_spawn"
+if test "x$ac_cv_func_posix_spawn" = xyes
+then :
+  printf "%s\n" "#define HAVE_POSIX_SPAWN 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "posix_spawn_file_actions_init" "ac_cv_func_posix_spawn_file_actions_init"
+if test "x$ac_cv_func_posix_spawn_file_actions_init" = xyes
+then :
+  printf "%s\n" "#define HAVE_POSIX_SPAWN_FILE_ACTIONS_INIT 1" >>confdefs.h
+
+fi
+ac_fn_cxx_check_func "$LINENO" "posix_spawnattr_init" "ac_cv_func_posix_spawnattr_init"
+if test "x$ac_cv_func_posix_spawnattr_init" = xyes
+then :
+  printf "%s\n" "#define HAVE_POSIX_SPAWNATTR_INIT 1" >>confdefs.h
+
+fi
 ac_fn_cxx_check_func "$LINENO" "pselect" "ac_cv_func_pselect"
 if test "x$ac_cv_func_pselect" = xyes
 then :
@@ -29611,278 +29625,6 @@ printf "%s\n" "$ac_cv_sizeof_long_long" >&6; }
 
 printf "%s\n" "#define SIZEOF_LONG_LONG $ac_cv_sizeof_long_long" >>confdefs.h
 
-
-
-ac_fn_cxx_check_type "$LINENO" "u_int" "ac_cv_type_u_int" "$ac_includes_default"
-if test "x$ac_cv_type_u_int" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define u_int unsigned int" >>confdefs.h
-
-fi
-
-ac_fn_cxx_check_type "$LINENO" "u_long" "ac_cv_type_u_long" "$ac_includes_default"
-if test "x$ac_cv_type_u_long" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define u_long unsigned long" >>confdefs.h
-
-fi
-
-
-
-if test "$ac_cv_sizeof_short" = 2; then
-  ac_fn_cxx_check_type "$LINENO" "bits16_t" "ac_cv_type_bits16_t" "$ac_includes_default"
-if test "x$ac_cv_type_bits16_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define bits16_t short" >>confdefs.h
-
-fi
-
-elif test "$ac_cv_sizeof_char" = 2; then
-  ac_fn_cxx_check_type "$LINENO" "bits16_t" "ac_cv_type_bits16_t" "$ac_includes_default"
-if test "x$ac_cv_type_bits16_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define bits16_t char" >>confdefs.h
-
-fi
-
-else
-  ac_fn_cxx_check_type "$LINENO" "bits16_t" "ac_cv_type_bits16_t" "$ac_includes_default"
-if test "x$ac_cv_type_bits16_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define bits16_t short" >>confdefs.h
-
-fi
-
-fi
-
-
-if test "$ac_cv_sizeof_short" = 2; then
-  ac_fn_cxx_check_type "$LINENO" "u_bits16_t" "ac_cv_type_u_bits16_t" "$ac_includes_default"
-if test "x$ac_cv_type_u_bits16_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define u_bits16_t unsigned short" >>confdefs.h
-
-fi
-
-elif test "$ac_cv_sizeof_char" = 2; then
-  ac_fn_cxx_check_type "$LINENO" "u_bits16_t" "ac_cv_type_u_bits16_t" "$ac_includes_default"
-if test "x$ac_cv_type_u_bits16_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define u_bits16_t unsigned char" >>confdefs.h
-
-fi
-
-else
-  ac_fn_cxx_check_type "$LINENO" "u_bits16_t" "ac_cv_type_u_bits16_t" "$ac_includes_default"
-if test "x$ac_cv_type_u_bits16_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define u_bits16_t unsigned short" >>confdefs.h
-
-fi
-
-fi
-
-
-if test "$ac_cv_sizeof_int" = 4; then
-  ac_fn_cxx_check_type "$LINENO" "bits32_t" "ac_cv_type_bits32_t" "$ac_includes_default"
-if test "x$ac_cv_type_bits32_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define bits32_t int" >>confdefs.h
-
-fi
-
-elif test "$ac_cv_sizeof_long" = 4; then
-  ac_fn_cxx_check_type "$LINENO" "bits32_t" "ac_cv_type_bits32_t" "$ac_includes_default"
-if test "x$ac_cv_type_bits32_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define bits32_t long" >>confdefs.h
-
-fi
-
-else
-  ac_fn_cxx_check_type "$LINENO" "bits32_t" "ac_cv_type_bits32_t" "$ac_includes_default"
-if test "x$ac_cv_type_bits32_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define bits32_t int" >>confdefs.h
-
-fi
-
-fi
-
-
-if test "$ac_cv_sizeof_int" = 4; then
-  ac_fn_cxx_check_type "$LINENO" "u_bits32_t" "ac_cv_type_u_bits32_t" "$ac_includes_default"
-if test "x$ac_cv_type_u_bits32_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define u_bits32_t unsigned int" >>confdefs.h
-
-fi
-
-elif test "$ac_cv_sizeof_long" = 4; then
-  ac_fn_cxx_check_type "$LINENO" "u_bits32_t" "ac_cv_type_u_bits32_t" "$ac_includes_default"
-if test "x$ac_cv_type_u_bits32_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define u_bits32_t unsigned long" >>confdefs.h
-
-fi
-
-else
-  ac_fn_cxx_check_type "$LINENO" "u_bits32_t" "ac_cv_type_u_bits32_t" "$ac_includes_default"
-if test "x$ac_cv_type_u_bits32_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define u_bits32_t unsigned int" >>confdefs.h
-
-fi
-
-fi
-
-
-if test "$ac_cv_sizeof_char_p" = 8; then
-  ac_fn_cxx_check_type "$LINENO" "bits64_t" "ac_cv_type_bits64_t" "$ac_includes_default"
-if test "x$ac_cv_type_bits64_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define bits64_t char *" >>confdefs.h
-
-fi
-
-elif test "$ac_cv_sizeof_double" = 8; then
-  ac_fn_cxx_check_type "$LINENO" "bits64_t" "ac_cv_type_bits64_t" "$ac_includes_default"
-if test "x$ac_cv_type_bits64_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define bits64_t double" >>confdefs.h
-
-fi
-
-elif test -n "$ac_cv_type_long_long" && test "$ac_cv_sizeof_long_long" = 8; then
-  ac_fn_cxx_check_type "$LINENO" "bits64_t" "ac_cv_type_bits64_t" "$ac_includes_default"
-if test "x$ac_cv_type_bits64_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define bits64_t long long" >>confdefs.h
-
-fi
-
-elif test "$ac_cv_sizeof_long" = 8; then
-  ac_fn_cxx_check_type "$LINENO" "bits64_t" "ac_cv_type_bits64_t" "$ac_includes_default"
-if test "x$ac_cv_type_bits64_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define bits64_t long" >>confdefs.h
-
-fi
-
-else
-  ac_fn_cxx_check_type "$LINENO" "bits64_t" "ac_cv_type_bits64_t" "$ac_includes_default"
-if test "x$ac_cv_type_bits64_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define bits64_t double" >>confdefs.h
-
-fi
-
-fi
-
-
-
-if test "$ac_cv_sizeof_int" = "$ac_cv_sizeof_char_p"; then
-  ac_fn_cxx_check_type "$LINENO" "ptrdiff_t" "ac_cv_type_ptrdiff_t" "$ac_includes_default"
-if test "x$ac_cv_type_ptrdiff_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define ptrdiff_t int" >>confdefs.h
-
-fi
-
-elif test "$ac_cv_sizeof_long" = "$ac_cv_sizeof_char_p"; then
-  ac_fn_cxx_check_type "$LINENO" "ptrdiff_t" "ac_cv_type_ptrdiff_t" "$ac_includes_default"
-if test "x$ac_cv_type_ptrdiff_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define ptrdiff_t long" >>confdefs.h
-
-fi
-
-elif test "$ac_cv_type_long_long" = yes && test "$ac_cv_sizeof_long_long" = "$ac_cv_sizeof_char_p"; then
-  ac_fn_cxx_check_type "$LINENO" "ptrdiff_t" "ac_cv_type_ptrdiff_t" "$ac_includes_default"
-if test "x$ac_cv_type_ptrdiff_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define ptrdiff_t long long" >>confdefs.h
-
-fi
-
-else
-  ac_fn_cxx_check_type "$LINENO" "ptrdiff_t" "ac_cv_type_ptrdiff_t" "$ac_includes_default"
-if test "x$ac_cv_type_ptrdiff_t" = xyes
-then :
-
-else $as_nop
-
-printf "%s\n" "#define ptrdiff_t int" >>confdefs.h
-
-fi
-
-fi
 
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether stat file-mode macros are broken" >&5

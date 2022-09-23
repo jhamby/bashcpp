@@ -133,12 +133,9 @@ Shell::init_long_args ()
 #endif
 }
 
-#if 0
-#endif
-
 #ifdef __CYGWIN__
-static void
-_cygwin32_check_tmp ()
+void
+Shell::_cygwin32_check_tmp ()
 {
   struct stat sb;
 

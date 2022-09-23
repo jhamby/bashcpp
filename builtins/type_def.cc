@@ -119,8 +119,7 @@ Shell::type_builtin (WORD_LIST *list)
      the arguments and converting those options to the form that
      internal_getopt recognizes. Converts `--type', `--path', and `--all'
      also. THIS SHOULD REALLY GO AWAY. */
-  for (WORD_LIST *l = list; l && l->word->word[0] == '-';
-       l = (WORD_LIST *)l->next)
+  for (WORD_LIST *l = list; l && l->word->word[0] == '-'; l = l->next ())
     {
       char *flag = &(l->word->word[1]);
 
@@ -181,7 +180,7 @@ Shell::type_builtin (WORD_LIST *list)
         sh_notfound (list->word->word);
 
       any_failed |= (found == 0);
-      list = (WORD_LIST *)list->next;
+      list = list->next ();
     }
 
   opt = (!any_failed) ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
@@ -206,7 +205,7 @@ Shell::type_builtin (WORD_LIST *list)
  * return after finding it once.
  */
 bool
-describe_command (const char *command, int dflags)
+Shell::describe_command (const char *command, int dflags)
 {
   bool all = (dflags & CDESC_ALL) != 0;
   bool found = false, found_file = false;

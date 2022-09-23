@@ -109,7 +109,7 @@ int xpg_echo = 0;
    `-n', then don't print a trailing newline.  We also support the
    echo syntax from Version 9 Unix systems. */
 int
-echo_builtin (WORD_LIST *list)
+Shell::echo_builtin (WORD_LIST *list)
 {
   int display_return, do_v9, i, len;
   char *temp, *s;

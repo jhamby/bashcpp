@@ -94,8 +94,8 @@ bool source_searches_cwd = true;
    what we saved.  If the dollar vars are changed in the script, and we are
    not executing a shell function, we leave the new values alone and free
    the saved values. */
-static void
-maybe_pop_dollar_vars ()
+void
+Shell::maybe_pop_dollar_vars ()
 {
   if (variable_context == 0 && (dollar_vars_changed () & ARGS_SETBLTIN))
     dispose_saved_dollar_vars ();

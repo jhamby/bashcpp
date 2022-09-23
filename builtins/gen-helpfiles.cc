@@ -41,7 +41,6 @@
 #include <cstdio>
 
 #include "builtins.hh"
-#include "tmpbuiltins.hh"
 
 #define whitespace(c) (((c) == ' ') || ((c) == '\t'))
 

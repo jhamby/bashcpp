@@ -151,9 +151,9 @@ Shell::wait_builtin (WORD_LIST *list)
   if (vname)
     {
 #if defined(ARRAY_VARS)
-      int arrayflags;
+      valid_array_flags arrayflags;
 
-      arrayflags = assoc_expand_once ? (VA_NOEXPAND | VA_ONEWORD) : 0;
+      arrayflags = assoc_expand_once ? (VA_NOEXPAND | VA_ONEWORD) : VA_NOFLAGS;
       if (!legal_identifier (vname)
           && !valid_array_reference (vname, arrayflags))
 #else
@@ -163,6 +163,7 @@ Shell::wait_builtin (WORD_LIST *list)
           sh_invalidid (vname);
           WAIT_RETURN (EXECUTION_FAILURE);
         }
+
       if (builtin_unbind_variable (vname) == -2)
         WAIT_RETURN (EXECUTION_FAILURE);
     }

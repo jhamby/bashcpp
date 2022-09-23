@@ -430,9 +430,6 @@
    to 0 otherwise. */
 #undef HAVE_MALLOC
 
-/* Define to 1 if you have the <malloc.h> header file. */
-#undef HAVE_MALLOC_H
-
 /* Define to 1 if mbrtowc and mbstate_t are properly declared. */
 #undef HAVE_MBRTOWC
 
@@ -495,6 +492,15 @@
 
 /* Define if you have POSIX signal handling (struct sigaction and friends). */
 #undef HAVE_POSIX_SIGNALS
+
+/* Define to 1 if you have the `posix_spawn' function. */
+#undef HAVE_POSIX_SPAWN
+
+/* Define to 1 if you have the `posix_spawnattr_init' function. */
+#undef HAVE_POSIX_SPAWNATTR_INIT
+
+/* Define to 1 if you have the `posix_spawn_file_actions_init' function. */
+#undef HAVE_POSIX_SPAWN_FILE_ACTIONS_INIT
 
 /* Define if printf supports floating-point output in hex notation. */
 #undef HAVE_PRINTF_A_FORMAT
@@ -587,6 +593,9 @@
 
 /* Define to 1 if the system has the type `socklen_t'. */
 #undef HAVE_SOCKLEN_T
+
+/* Define to 1 if you have the <spawn.h> header file. */
+#undef HAVE_SPAWN_H
 
 /* Define to 1 if you have the <stddef.h> header file. */
 #undef HAVE_STDDEF_H
@@ -954,6 +963,9 @@
 /* Define if the pgrps from setpgrp can't be the pid of a zombie process. */
 #undef PGRP_PIPE
 
+/* Define to prefer posix_spawn or vfork to fork when both are available. */
+#undef PREFER_POSIX_SPAWN
+
 /* Define if <inttypes.h> exists and defines unusable PRI* macros. */
 #undef PRI_MACROS_BROKEN
 
@@ -1207,9 +1219,6 @@
 /* Version number of package */
 #undef VERSION
 
-/* Define to prefer vfork to fork when both are supported by the OS. */
-#undef VFORK_SUBSHELL
-
 /* Define if your WCONTINUED flag for waitpid is unavailable or available but
    broken. */
 #undef WCONTINUED_BROKEN
@@ -1238,15 +1247,6 @@
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
    #define below would cause a syntax error. */
 #undef _UINT8_T
-
-/* Define to `short' if <sys/types.h> does not define. */
-#undef bits16_t
-
-/* Define to `int' if <sys/types.h> does not define. */
-#undef bits32_t
-
-/* Define to `double' if <sys/types.h> does not define. */
-#undef bits64_t
 
 /* Please see the Gnulib manual for how to use these macros.
 
@@ -1343,7 +1343,8 @@
 /* Define as a signed integer type capable of holding a process identifier. */
 #undef pid_t
 
-/* Define to `int' if <sys/types.h> does not define. */
+/* Define as the type of the result of subtracting two pointers, if the system
+   doesn't define it. */
 #undef ptrdiff_t
 
 /* Define to rpl_realloc if the replacement function should be used. */
@@ -1357,18 +1358,6 @@
 
 /* Define to `long' if <sys/types.h> does not define. */
 #undef time_t
-
-/* Define to `unsigned short' if <sys/types.h> does not define. */
-#undef u_bits16_t
-
-/* Define to `unsigned int' if <sys/types.h> does not define. */
-#undef u_bits32_t
-
-/* Define to `unsigned int' if <sys/types.h> does not define. */
-#undef u_int
-
-/* Define to `unsigned long' if <sys/types.h> does not define. */
-#undef u_long
 
 /* Define to `int' if <sys/types.h> doesn't define. */
 #undef uid_t

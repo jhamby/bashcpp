@@ -32,7 +32,7 @@ namespace bash
 #define CHECK_HELPOPT(l)                                                      \
   do                                                                          \
     {                                                                         \
-      if ((l) && (l)->word && ISHELP ((l)->word->word))                       \
+      if ((l) && (l)->word && ISHELP ((l)->word->word.c_str ()))              \
         {                                                                     \
           builtin_help ();                                                    \
           return EX_USAGE;                                                    \

@@ -80,19 +80,6 @@ static int shopt_set_complete_direxpand (const char *, int);
 
 static int shopt_set_debug_mode (const char *, int);
 
-#if 0
-static char shopt_login_shell;
-static char shopt_compat31;
-static char shopt_compat32;
-static char shopt_compat40;
-static char shopt_compat41;
-static char shopt_compat42;
-static char shopt_compat43;
-static char shopt_compat44;
-
-typedef int shopt_set_func_t (const char *, int);
-#endif
-
 /* If you add a new variable name here, make sure to set the default value
    appropriately in reset_shopt_options. */
 

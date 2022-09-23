@@ -63,8 +63,6 @@ Shell::times_builtin (WORD_LIST *list)
 #if defined(HAVE_GETRUSAGE) && defined(HAVE_TIMEVAL) && defined(RUSAGE_SELF)
   struct rusage self, kids;
 
-  USE_VAR (list);
-
   if (no_options (list))
     return EX_USAGE;
 

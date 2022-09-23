@@ -6,6 +6,7 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 
 # Copyright (C) 1987-2020 Free Software Foundation, Inc.
+# Copyright 2022, Jake Hamby.
 
 #
 #   This program is free software: you can redistribute it and/or modify
@@ -32,7 +33,7 @@ AC_PREREQ([2.69])
 AC_CONFIG_SRCDIR(siglist.cc)
 
 dnl where to find install.sh, config.sub, and config.guess
-AC_CONFIG_AUX_DIR(./support)
+AC_CONFIG_AUX_DIR(support)
 AC_CONFIG_HEADERS(config.hh)
 AC_CONFIG_MACRO_DIRS([m4])
 
@@ -51,7 +52,7 @@ esac
 
 dnl configure defaults
 opt_curses=no
-opt_with_vfork_subshell=no
+opt_with_posix_spawn=no
 
 dnl
 dnl macros for the bash debugger
@@ -67,9 +68,6 @@ dnl arguments to configure
 dnl packages
 
 AC_ARG_WITH(curses, AS_HELP_STRING([--with-curses],[use the curses library instead of the termcap library]), opt_curses=$withval)
-
-dnl this is for my future vfork() refactoring work.
-AC_ARG_WITH(vfork-subshell, AS_HELP_STRING([--with-vfork-subshell],[prefer vfork to fork when both are available]), opt_with_vfork_subshell=$withval)
 
 if test "$opt_curses" = yes; then
 	prefer_curses=yes
@@ -118,6 +116,7 @@ opt_dircomplete_expand_default=no
 opt_globascii_default=yes
 opt_function_import=yes
 opt_dev_fd_stat_broken=no
+opt_prefer_posix_spawn=yes
 
 dnl options that affect how bash is compiled and linked
 opt_static_link=no
@@ -182,6 +181,9 @@ AC_ARG_ENABLE(xpg-echo-default, AS_HELP_STRING([--enable-xpg-echo-default],[make
 dnl options that alter how bash is compiled and linked
 AC_ARG_ENABLE(profiling, AS_HELP_STRING([--enable-profiling],[allow profiling with gprof]), opt_profiling=$enableval)
 AC_ARG_ENABLE(static-link, AS_HELP_STRING([--enable-static-link],[link bash statically, for use as a root shell]), opt_static_link=$enableval)
+
+dnl this is for my future posix_spawn () refactoring work.
+AC_ARG_ENABLE(prefer-posix-spawn, AS_HELP_STRING([--enable-prefer-posix-spawn],[prefer posix_spawn or vfork to fork when both are available]), opt_prefer_posix_spawn=$enableval)
 
 dnl So-called `precious' variables
 AC_ARG_VAR([CXX_FOR_BUILD], [C++ compiler used when compiling binaries used only at build time])
@@ -290,8 +292,8 @@ if test $opt_dev_fd_stat_broken = yes; then
 AC_DEFINE([DEV_FD_STAT_BROKEN], [1], [Define if stat on /dev/fd/N and fstat on file descriptor N don't return the same results.])
 fi
 
-if test $opt_with_vfork_subshell = yes; then
-AC_DEFINE([VFORK_SUBSHELL], [1], [Define to prefer vfork to fork when both are supported by the OS.])
+if test $opt_prefer_posix_spawn = yes; then
+AC_DEFINE([PREFER_POSIX_SPAWN], [1], [Define to prefer posix_spawn or vfork to fork when both are available.])
 fi
 
 if test $opt_debug = yes; then
@@ -443,10 +445,10 @@ fi
 AC_FUNC_ALLOCA
 AC_HEADER_MAJOR
 AC_CHECK_HEADERS([arpa/inet.h dirent.h fcntl.h grp.h inttypes.h langinfo.h libintl.h \
-                  malloc.h netdb.h netinet/in.h pwd.h regex.h sgtty.h stdint.h stdio_ext.h \
-                  strings.h sys/dir.h sys/file.h sys/ioctl.h sys/ndir.h sys/param.h \
-                  sys/random.h sys/resource.h sys/socket.h sys/time.h sys/wait.h syslog.h \
-                  termio.h termios.h unistd.h])
+		  netdb.h netinet/in.h pwd.h regex.h sgtty.h spawn.h stdint.h stdio_ext.h \
+		  sys/dir.h sys/file.h sys/ioctl.h sys/ndir.h sys/param.h \
+		  sys/random.h sys/resource.h sys/socket.h sys/time.h sys/wait.h syslog.h \
+		  termio.h termios.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
@@ -482,7 +484,8 @@ AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf eaccess getaddrinfo \
 		getrandom getrlimit getrusage getservbyname getservent \
 		gettimeofday group_member imaxdiv inet_aton isascii kill killpg \
 		localeconv localtime_r lstat mbschr mbsnrtowcs mkdir mkdtemp \
-		mkfifo mkstemp mmap nl_langinfo pathconf pselect putenv random \
+		mkfifo mkstemp mmap nl_langinfo pathconf posix_spawn \
+		posix_spawn_file_actions_init posix_spawnattr_init pselect putenv random \
 		readlink regcomp regexec rename select setdtablesize setenv setitimer \
 		setlocale setresgid setresuid setvbuf socket stpcpy strcasecmp \
 		strcasestr strchrnul strerror strncasecmp strnlen strpbrk \
@@ -530,17 +533,6 @@ AC_CHECK_SIZEOF(long, 4)
 AC_CHECK_SIZEOF(char *, 4)
 AC_CHECK_SIZEOF(double, 8)
 AC_CHECK_SIZEOF([long long], 8)
-
-AC_CHECK_TYPE(u_int, [unsigned int])
-AC_CHECK_TYPE(u_long, [unsigned long])
-
-BASH_TYPE_BITS16_T
-BASH_TYPE_U_BITS16_T
-BASH_TYPE_BITS32_T
-BASH_TYPE_U_BITS32_T
-BASH_TYPE_BITS64_T
-
-BASH_TYPE_PTRDIFF_T
 
 dnl structures
 AC_HEADER_STAT

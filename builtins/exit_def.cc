@@ -93,13 +93,14 @@ Shell::logout_builtin (WORD_LIST *list)
     return exit_or_logout (list);
 }
 
-static int
-exit_or_logout (WORD_LIST *list)
+int
+Shell::exit_or_logout (WORD_LIST *list)
 {
   int exit_value;
 
 #if defined(JOB_CONTROL)
-  int exit_immediate_okay, stopmsg;
+  bool exit_immediate_okay;
+  JOB_STATE stopmsg;
 
   exit_immediate_okay = (interactive == 0 || last_shell_builtin == exit_builtin
                          || last_shell_builtin == logout_builtin
@@ -109,7 +110,8 @@ exit_or_logout (WORD_LIST *list)
   if (exit_immediate_okay == 0)
     {
       int i;
-      for (i = stopmsg = 0; i < js.j_jobslots; i++)
+      stopmsg = JSCANNING;
+      for (i = 0; i < js.j_jobslots; i++)
         if (jobs[i] && STOPPED (i))
           stopmsg = JSTOPPED;
         else if (check_jobs_at_exit && stopmsg == 0 && jobs[i] && RUNNING (i))
@@ -155,7 +157,7 @@ exit_or_logout (WORD_LIST *list)
 }
 
 void
-bash_logout ()
+Shell::bash_logout ()
 {
   /* Run our `~/.bash_logout' file if it exists, and this is a login shell. */
   if (login_shell && sourced_logout++ == 0 && subshell_environment == 0)

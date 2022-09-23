@@ -260,7 +260,7 @@ int brand ();
 void sbrand (unsigned long); /* set bash random number generator. */
 void seedrand ();            /* seed generator randomly */
 void seedrand32 ();
-u_bits32_t get_urandom32 ();
+uint32_t get_urandom32 ();
 
 /* declarations for functions defined in lib/sh/setlinebuf.c */
 
