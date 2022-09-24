@@ -490,7 +490,7 @@ AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf eaccess getaddrinfo \
 		setlocale setresgid setresuid setvbuf socket stpcpy strcasecmp \
 		strcasestr strchrnul strerror strncasecmp strnlen strpbrk \
 		strsignal strtoimax strtoumax sysconf tcgetattr \
-		times ttyname tzset ulimit uname vprintf vsnprintf waitpid \
+		times ttyname tzset ulimit uname vprintf waitpid \
 		wcswidth wcwidth])
 
 # checks for obsolete functions (flagged in red by VS Code).
@@ -595,8 +595,6 @@ BASH_FUNC_ULIMIT_MAXFDS
 BASH_FUNC_FPURGE
 BASH_FUNC_GETENV
 BASH_FUNC_STRCOLL
-BASH_FUNC_SNPRINTF
-BASH_FUNC_VSNPRINTF
 
 dnl If putenv or unsetenv is not present, set the right define so the
 dnl prototype and declaration in lib/sh/getenv.c will be standard-conformant

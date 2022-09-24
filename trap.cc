@@ -67,7 +67,7 @@ Shell::initialize_traps ()
   for (i = 1; i < NSIG; i++)
     {
       pending_traps[i] = 0;
-      trap_list[i] = reinterpret_cast<char *> (DEFAULT_SIG);
+      trap_list[i] = DEFAULT_SIG;
       sigmodes[i] = SIG_INHERITED; /* XXX - only set, not used */
       original_signals[i] = IMPOSSIBLE_TRAP_HANDLER;
     }

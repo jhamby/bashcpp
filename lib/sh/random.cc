@@ -40,11 +40,11 @@
 namespace bash
 {
 
-static u_bits32_t intrand32 (u_bits32_t);
+static uint32_t intrand32 (uint32_t);
 
 /* Returns a 32-bit pseudo-random number. */
-static inline u_bits32_t
-intrand32 (u_bits32_t last)
+static inline uint32_t
+intrand32 (uint32_t last)
 {
   /* Minimal Standard generator from
      "Random number generators: good ones are hard to find",
@@ -62,29 +62,29 @@ intrand32 (u_bits32_t last)
      https://www.gnu.org/software/gsl/manual/html_node/Other-random-number-generators.html#Other-random-number-generators
    */
 
-  bits32_t h, l, t;
-  u_bits32_t ret;
+  int32_t h, l, t;
+  uint32_t ret;
 
   /* Can't seed with 0. */
   ret = (last == 0) ? 123459876 : last;
   h = ret / 127773;
-  l = static_cast<bits32_t> (ret) - (127773 * h);
+  l = static_cast<int32_t> (ret) - (127773 * h);
   t = 16807 * l - 2836 * h;
-  ret = static_cast<u_bits32_t> ((t < 0) ? t + 0x7fffffff : t);
+  ret = static_cast<uint32_t> ((t < 0) ? t + 0x7fffffff : t);
 
   return ret;
 }
 
-u_bits32_t
+uint32_t
 Shell::genseed ()
 {
   struct timeval tv;
-  u_bits32_t iv;
+  uint32_t iv;
 
   ::gettimeofday (&tv, nullptr);
-  iv = static_cast<u_bits32_t> (reinterpret_cast<uintptr_t> (
+  iv = static_cast<uint32_t> (reinterpret_cast<uintptr_t> (
       &intrand32)); // include a function ptr in the seed
-  iv = static_cast<u_bits32_t> (tv.tv_sec ^ tv.tv_usec ^ ::getpid ()
+  iv = static_cast<uint32_t> (tv.tv_sec ^ tv.tv_usec ^ ::getpid ()
                                 ^ ::getppid () ^ current_user.uid ^ iv);
   return iv;
 }
@@ -108,7 +108,7 @@ Shell::brand ()
 #define BASH_RAND32_MAX 0x7fffffff /* 32 bits */
 
 /* Returns a 32-bit pseudo-random number between 0 and 4294967295. */
-u_bits32_t
+uint32_t
 Shell::brand32 ()
 {
   rseed32 = intrand32 (rseed32);
@@ -154,10 +154,10 @@ getrandom (void *buf, size_t len, unsigned int flags)
 }
 #endif
 
-u_bits32_t
+uint32_t
 Shell::get_urandom32 ()
 {
-  u_bits32_t ret;
+  uint32_t ret;
 
   if (getrandom (&ret, sizeof (ret), GRND_NONBLOCK) == sizeof (ret))
     return last_rand32 = ret;

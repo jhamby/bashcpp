@@ -224,10 +224,9 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(SHDIR)/timeval.cc $(SHDIR)/makepath.cc $(SHDIR)/pathcanon.cc \
 	$(SHDIR)/pathphys.cc $(SHDIR)/tmpfile.cc $(SHDIR)/spell.cc \
 	$(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
-	$(SHDIR)/strcasestr.cc $(SHDIR)/snprintf.cc \
-	$(SHDIR)/mailstat.cc $(SHDIR)/fmtulong.cc \
-	$(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc $(SHDIR)/shmatch.cc \
-	$(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
+	$(SHDIR)/strcasestr.cc $(SHDIR)/mailstat.cc \
+	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
+	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
 	$(SHDIR)/strtoumax.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
 	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
 	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
@@ -309,22 +308,21 @@ am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	$(SHDIR)/pathcanon.$(OBJEXT) $(SHDIR)/pathphys.$(OBJEXT) \
 	$(SHDIR)/tmpfile.$(OBJEXT) $(SHDIR)/spell.$(OBJEXT) \
 	$(SHDIR)/shquote.$(OBJEXT) $(SHDIR)/strtrans.$(OBJEXT) \
-	$(SHDIR)/strcasestr.$(OBJEXT) $(SHDIR)/snprintf.$(OBJEXT) \
-	$(SHDIR)/mailstat.$(OBJEXT) $(SHDIR)/fmtulong.$(OBJEXT) \
-	$(SHDIR)/fmtullong.$(OBJEXT) $(SHDIR)/fmtumax.$(OBJEXT) \
-	$(SHDIR)/shmatch.$(OBJEXT) $(SHDIR)/strnlen.$(OBJEXT) \
-	$(SHDIR)/strtoimax.$(OBJEXT) $(SHDIR)/strtoumax.$(OBJEXT) \
-	$(SHDIR)/mbschr.$(OBJEXT) $(SHDIR)/zcatfd.$(OBJEXT) \
-	$(SHDIR)/zmapfd.$(OBJEXT) $(SHDIR)/winsize.$(OBJEXT) \
-	$(SHDIR)/eaccess.$(OBJEXT) $(SHDIR)/fpurge.$(OBJEXT) \
-	$(SHDIR)/zgetline.$(OBJEXT) $(SHDIR)/uconvert.$(OBJEXT) \
-	$(SHDIR)/ufuncs.$(OBJEXT) $(SHDIR)/casemod.$(OBJEXT) \
-	$(SHDIR)/dprintf.$(OBJEXT) $(SHDIR)/input_avail.$(OBJEXT) \
-	$(SHDIR)/fnxform.$(OBJEXT) $(SHDIR)/strchrnul.$(OBJEXT) \
-	$(SHDIR)/unicode.$(OBJEXT) $(SHDIR)/wcswidth.$(OBJEXT) \
-	$(SHDIR)/wcsnwidth.$(OBJEXT) $(SHDIR)/shmbchar.$(OBJEXT) \
-	$(SHDIR)/random.$(OBJEXT) $(SHDIR)/gettimeofday.$(OBJEXT) \
-	$(TLDIR)/tilde.$(OBJEXT)
+	$(SHDIR)/strcasestr.$(OBJEXT) $(SHDIR)/mailstat.$(OBJEXT) \
+	$(SHDIR)/fmtulong.$(OBJEXT) $(SHDIR)/fmtullong.$(OBJEXT) \
+	$(SHDIR)/fmtumax.$(OBJEXT) $(SHDIR)/shmatch.$(OBJEXT) \
+	$(SHDIR)/strnlen.$(OBJEXT) $(SHDIR)/strtoimax.$(OBJEXT) \
+	$(SHDIR)/strtoumax.$(OBJEXT) $(SHDIR)/mbschr.$(OBJEXT) \
+	$(SHDIR)/zcatfd.$(OBJEXT) $(SHDIR)/zmapfd.$(OBJEXT) \
+	$(SHDIR)/winsize.$(OBJEXT) $(SHDIR)/eaccess.$(OBJEXT) \
+	$(SHDIR)/fpurge.$(OBJEXT) $(SHDIR)/zgetline.$(OBJEXT) \
+	$(SHDIR)/uconvert.$(OBJEXT) $(SHDIR)/ufuncs.$(OBJEXT) \
+	$(SHDIR)/casemod.$(OBJEXT) $(SHDIR)/dprintf.$(OBJEXT) \
+	$(SHDIR)/input_avail.$(OBJEXT) $(SHDIR)/fnxform.$(OBJEXT) \
+	$(SHDIR)/strchrnul.$(OBJEXT) $(SHDIR)/unicode.$(OBJEXT) \
+	$(SHDIR)/wcswidth.$(OBJEXT) $(SHDIR)/wcsnwidth.$(OBJEXT) \
+	$(SHDIR)/shmbchar.$(OBJEXT) $(SHDIR)/random.$(OBJEXT) \
+	$(SHDIR)/gettimeofday.$(OBJEXT) $(TLDIR)/tilde.$(OBJEXT)
 bash_OBJECTS = $(am_bash_OBJECTS)
 bash_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -436,8 +434,7 @@ am__depfiles_remade = $(BLTDIR)/$(DEPDIR)/alias_def.Po \
 	$(SHDIR)/$(DEPDIR)/random.Po $(SHDIR)/$(DEPDIR)/rename.Po \
 	$(SHDIR)/$(DEPDIR)/setlinebuf.Po $(SHDIR)/$(DEPDIR)/shmatch.Po \
 	$(SHDIR)/$(DEPDIR)/shmbchar.Po $(SHDIR)/$(DEPDIR)/shquote.Po \
-	$(SHDIR)/$(DEPDIR)/snprintf.Po $(SHDIR)/$(DEPDIR)/spell.Po \
-	$(SHDIR)/$(DEPDIR)/strcasecmp.Po \
+	$(SHDIR)/$(DEPDIR)/spell.Po $(SHDIR)/$(DEPDIR)/strcasecmp.Po \
 	$(SHDIR)/$(DEPDIR)/strcasestr.Po \
 	$(SHDIR)/$(DEPDIR)/strchrnul.Po $(SHDIR)/$(DEPDIR)/strerror.Po \
 	$(SHDIR)/$(DEPDIR)/strnlen.Po $(SHDIR)/$(DEPDIR)/strpbrk.Po \
@@ -887,10 +884,9 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(SHDIR)/timeval.cc $(SHDIR)/makepath.cc $(SHDIR)/pathcanon.cc \
 	$(SHDIR)/pathphys.cc $(SHDIR)/tmpfile.cc $(SHDIR)/spell.cc \
 	$(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
-	$(SHDIR)/strcasestr.cc $(SHDIR)/snprintf.cc \
-	$(SHDIR)/mailstat.cc $(SHDIR)/fmtulong.cc \
-	$(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc $(SHDIR)/shmatch.cc \
-	$(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
+	$(SHDIR)/strcasestr.cc $(SHDIR)/mailstat.cc \
+	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
+	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
 	$(SHDIR)/strtoumax.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
 	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
 	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
@@ -1293,8 +1289,6 @@ $(SHDIR)/strtrans.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/strcasestr.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
-$(SHDIR)/snprintf.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
-	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/mailstat.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/fmtulong.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
@@ -1517,7 +1511,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/shmatch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/shmbchar.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/shquote.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/snprintf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/spell.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strcasecmp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strcasestr.Po@am__quote@ # am--include-marker
@@ -2105,7 +2098,6 @@ distclean: distclean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/shmatch.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/shmbchar.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/shquote.Po
-	-rm -f $(SHDIR)/$(DEPDIR)/snprintf.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/spell.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strcasecmp.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strcasestr.Po
@@ -2335,7 +2327,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/shmatch.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/shmbchar.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/shquote.Po
-	-rm -f $(SHDIR)/$(DEPDIR)/snprintf.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/spell.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strcasecmp.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strcasestr.Po

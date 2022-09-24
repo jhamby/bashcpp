@@ -5033,8 +5033,8 @@ protected:
 
   std::string shell_input_line_property;
 
-  // The list of aliases that we have.
-  HASH_TABLE<alias_t> aliases;
+  // A pointer to the list of aliases that we have (lazy init).
+  HASH_TABLE<alias_t> *aliases;
 
   // Buffer for buffered input.
   char localbuf[1024];

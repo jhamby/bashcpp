@@ -31,12 +31,14 @@
 namespace bash
 {
 
+#if 0
 static BUCKET_CONTENTS *copy_bucket_array (BUCKET_CONTENTS *,
                                            sh_string_func_t *);
 
 static void hash_rehash (HASH_TABLE *, int);
 static void hash_grow (HASH_TABLE *);
 static void hash_shrink (HASH_TABLE *);
+#endif
 
 int
 hash_size (HASH_TABLE *table)
@@ -45,8 +47,7 @@ hash_size (HASH_TABLE *table)
 }
 
 static BUCKET_CONTENTS *
-copy_bucket_array (BUCKET_CONTENTS *ba,
-                   sh_string_func_t *cpdata) /* data copy function */
+copy_bucket_array (BUCKET_CONTENTS *ba)
 {
   BUCKET_CONTENTS *new_bucket, *n, *e;
 

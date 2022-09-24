@@ -193,7 +193,7 @@ bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
 	$(SHDIR)/strpbrk.cc $(SHDIR)/timeval.cc $(SHDIR)/makepath.cc \
 	$(SHDIR)/pathcanon.cc $(SHDIR)/pathphys.cc $(SHDIR)/tmpfile.cc \
 	$(SHDIR)/spell.cc $(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
-	$(SHDIR)/strcasestr.cc $(SHDIR)/snprintf.cc $(SHDIR)/mailstat.cc \
+	$(SHDIR)/strcasestr.cc $(SHDIR)/mailstat.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
 	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc \
 	$(SHDIR)/strtoimax.cc $(SHDIR)/strtoumax.cc \

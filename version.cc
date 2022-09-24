@@ -21,6 +21,8 @@
 #include "config.hh"
 
 #include <cstdio>
+#include <sstream>
+#include <string>
 
 #include "conftypes.hh"
 #include "patchlevel.hh"
@@ -56,24 +58,27 @@ const char *const bash_license
 
 /* Functions for getting, setting, and displaying the shell version. */
 
-/* Forward declarations so we don't have to include externs.h */
-extern char *shell_version_string ();
+/* Forward declarations so we don't have to include externs.hh */
+extern std::string shell_version_string ();
 extern void show_shell_version (bool);
 
 /* Give version information about this shell. */
-char *
+std::string
 shell_version_string ()
 {
-  static char tt[32] = { '\0' };
+  static std::string tt;
 
-  if (tt[0] == '\0')
+  if (tt.empty ())
     {
+      std::ostringstream tmpstream;
       if (release_status)
-        std::snprintf (tt, sizeof (tt), "%s.%d(%d)-%s", dist_version,
-                       patch_level, build_version, release_status);
+        tmpstream << dist_version << '.' << patch_level << '(' << build_version
+                  << ')' << '-' << release_status;
       else
-        std::snprintf (tt, sizeof (tt), "%s.%d(%d)", dist_version, patch_level,
-                       build_version);
+        tmpstream << dist_version << '.' << patch_level << '(' << build_version
+                  << ')';
+
+      tt = tmpstream.str ();
     }
   return tt;
 }
@@ -81,8 +86,8 @@ shell_version_string ()
 void
 show_shell_version (bool extended)
 {
-  std::printf (_ ("GNU bash, version %s (%s)\n"), shell_version_string (),
-               MACHTYPE);
+  std::printf (_ ("GNU bash, version %s (%s)\n"),
+               shell_version_string ().c_str (), MACHTYPE);
   if (extended)
     {
       std::printf ("%s\n", _ (bash_copyright));

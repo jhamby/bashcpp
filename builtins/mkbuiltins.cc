@@ -38,6 +38,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include <string>
 #include <vector>
@@ -268,15 +269,17 @@ main (int argc, char **argv)
     std::exit (0);
 
   ofstream structfile, externfile;
-  char temp_struct_filename[24]; // big enough for a 64-bit pid
+  std::string temp_struct_filename;
 
   if (!bash::only_documentation)
     {
       /* Open the files. */
       if (!bash::struct_filename.empty ())
         {
-          std::snprintf (temp_struct_filename, 24, "mk-%ld",
-                         static_cast<long> (::getpid ()));
+          std::ostringstream filename_sstream;
+          filename_sstream << "mk-" << ::getpid ();
+          temp_struct_filename = filename_sstream.str ();
+
           structfile.open (temp_struct_filename);
 
           if (!structfile.is_open ())
@@ -326,7 +329,7 @@ main (int argc, char **argv)
         {
           bash::write_longdocs (structfile, bash::saved_builtins);
           structfile.close ();
-          ::rename (temp_struct_filename, bash::struct_filename.c_str ());
+          ::rename (temp_struct_filename.c_str (), bash::struct_filename.c_str ());
         }
     }
 

@@ -3544,8 +3544,6 @@ as_fn_append ac_header_cxx_list " sys/time.h sys_time_h HAVE_SYS_TIME_H"
 as_fn_append ac_func_cxx_list " alarm HAVE_ALARM"
 as_fn_append ac_func_cxx_list " fpurge HAVE_FPURGE"
 as_fn_append ac_func_cxx_list " __fpurge HAVE___FPURGE"
-as_fn_append ac_func_cxx_list " snprintf HAVE_SNPRINTF"
-as_fn_append ac_func_cxx_list " vsnprintf HAVE_VSNPRINTF"
 
 # Auxiliary files required by this configure script.
 ac_aux_files="config.rpath config.guess config.sub ltmain.sh compile missing install-sh"
@@ -19732,10 +19730,6 @@ esac
 
 
 
-
-
-
-
 # Checks for stat-related time functions.
 
 # Copyright (C) 1998-1999, 2001, 2003, 2005-2007, 2009-2012 Free Software
@@ -28323,12 +28317,6 @@ then :
   printf "%s\n" "#define HAVE_VPRINTF 1" >>confdefs.h
 
 fi
-ac_fn_cxx_check_func "$LINENO" "vsnprintf" "ac_cv_func_vsnprintf"
-if test "x$ac_cv_func_vsnprintf" = xyes
-then :
-  printf "%s\n" "#define HAVE_VSNPRINTF 1" >>confdefs.h
-
-fi
 ac_fn_cxx_check_func "$LINENO" "waitpid" "ac_cv_func_waitpid"
 if test "x$ac_cv_func_waitpid" = xyes
 then :
@@ -31545,143 +31533,6 @@ if test $bash_cv_func_strcoll_broken = yes; then
 printf "%s\n" "#define STRCOLL_BROKEN 1" >>confdefs.h
 
 fi
-
-
-
-
-  if test X$ac_cv_func_snprintf = Xyes; then
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for standard-conformant snprintf" >&5
-printf %s "checking for standard-conformant snprintf... " >&6; }
-if test ${bash_cv_func_snprintf+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  if test "$cross_compiling" = yes
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: cannot check standard snprintf if cross-compiling" >&5
-printf "%s\n" "$as_me: WARNING: cannot check standard snprintf if cross-compiling" >&2;}
-    bash_cv_func_snprintf=yes
-
-else $as_nop
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <stdio.h>
-#include <stdlib.h>
-
-int
-main()
-{
-  int n;
-  n = snprintf (0, 0, "%s", "0123456");
-  exit(n != 7);
-}
-
-_ACEOF
-if ac_fn_cxx_try_run "$LINENO"
-then :
-  bash_cv_func_snprintf=yes
-else $as_nop
-  bash_cv_func_snprintf=no
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $bash_cv_func_snprintf" >&5
-printf "%s\n" "$bash_cv_func_snprintf" >&6; }
-    if test $bash_cv_func_snprintf = no; then
-      ac_cv_func_snprintf=no
-    fi
-  fi
-  if test $ac_cv_func_snprintf = no; then
-
-printf "%s\n" "#define HAVE_SNPRINTF 0" >>confdefs.h
-
-  fi
-
-
-
-
-  if test X$ac_cv_func_vsnprintf = Xyes; then
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for standard-conformant vsnprintf" >&5
-printf %s "checking for standard-conformant vsnprintf... " >&6; }
-if test ${bash_cv_func_vsnprintf+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  if test "$cross_compiling" = yes
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: cannot check standard vsnprintf if cross-compiling" >&5
-printf "%s\n" "$as_me: WARNING: cannot check standard vsnprintf if cross-compiling" >&2;}
-    bash_cv_func_vsnprintf=yes
-
-else $as_nop
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#if HAVE_STDARG_H
-#include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
-#include <stdio.h>
-#include <stdlib.h>
-
-static int
-#if HAVE_STDARG_H
-foo(const char *fmt, ...)
-#else
-foo(format, va_alist)
-     const char *format;
-     va_dcl
-#endif
-{
-  va_list args;
-  int n;
-
-#if HAVE_STDARG_H
-  va_start(args, fmt);
-#else
-  va_start(args);
-#endif
-  n = vsnprintf(0, 0, fmt, args);
-  va_end (args);
-  return n;
-}
-
-int
-main()
-{
-  int n;
-  n = foo("%s", "0123456");
-  exit(n != 7);
-}
-
-_ACEOF
-if ac_fn_cxx_try_run "$LINENO"
-then :
-  bash_cv_func_vsnprintf=yes
-else $as_nop
-  bash_cv_func_vsnprintf=no
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $bash_cv_func_vsnprintf" >&5
-printf "%s\n" "$bash_cv_func_vsnprintf" >&6; }
-    if test $bash_cv_func_vsnprintf = no; then
-      ac_cv_func_vsnprintf=no
-    fi
-  fi
-  if test $ac_cv_func_vsnprintf = no; then
-
-printf "%s\n" "#define HAVE_VSNPRINTF 0" >>confdefs.h
-
-  fi
 
 
 

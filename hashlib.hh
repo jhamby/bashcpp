@@ -43,14 +43,17 @@ template <class T> class BUCKET_CONTENTS : public GENERIC_LIST
 public:
   // Constructor to create an empty bucket with the specified key and
   // optional next element to link with.
-  BUCKET_CONTENTS (const std::string &key_,
-                   BUCKET_CONTENTS *nextbucket_ = nullptr)
-      : GENERIC_LIST (nextbucket_), key (key_)
+  BUCKET_CONTENTS (const std::string &key, uint32_t khash, T *data = nullptr,
+                   BUCKET_CONTENTS *nextbucket = nullptr)
+      : GENERIC_LIST (nextbucket), key_ (key), khash_ (khash), data_ (data)
   {
   }
 
   // Destructor deletes the entire linked list.
-  ~BUCKET_CONTENTS () noexcept { delete next (); }
+  ~BUCKET_CONTENTS () noexcept {
+    delete next ();
+    delete *data_;
+  }
 
   BUCKET_CONTENTS *
   append (BUCKET_CONTENTS *new_item)
@@ -65,10 +68,10 @@ public:
     return static_cast<BUCKET_CONTENTS *> (next_);
   }
 
-  std::string key;    // What we look up.
-  T data;             // What we really want.
-  size_t times_found; // Number of times this item has been found.
-  uint32_t khash;     // What key hashes to
+  std::string key_;    // What we look up.
+  T *data_;            // What we really want.
+  size_t times_found_; // Number of times this item has been found.
+  uint32_t khash_;     // What key hashes to
 };
 
 template <class T> class HASH_TABLE

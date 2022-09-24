@@ -75,11 +75,11 @@ void strip_trailing (char *, int, bool);
 void itrace (const char *format, ...)
     __attribute__ ((__format__ (printf, 1, 2)));
 
-/* Functions from version.c. */
-char *shell_version_string ();
+/* Functions from version.cc. */
+std::string shell_version_string ();
 void show_shell_version (int);
 
-// functions from builtins/common.h
+// functions from builtins/common.hh
 
 /* Keeps track of the current working directory. */
 char *get_working_directory (const char *);

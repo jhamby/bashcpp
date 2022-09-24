@@ -585,7 +585,7 @@
 /* Define to 1 if the system has the type `sig_atomic_t'. */
 #undef HAVE_SIG_ATOMIC_T
 
-/* Define if you have a standard-conformant snprintf function. */
+/* Define to 1 if you have the `snprintf' function. */
 #undef HAVE_SNPRINTF
 
 /* Define to 1 if you have the `socket' function. */
@@ -834,9 +834,6 @@
 
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF
-
-/* Define if you have a standard-conformant vsnprintf function. */
-#undef HAVE_VSNPRINTF
 
 /* Define to 1 if you have the `waitpid' function. */
 #undef HAVE_WAITPID

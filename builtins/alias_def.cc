@@ -142,7 +142,7 @@ Shell::alias_builtin (WORD_LIST *list)
               any_failed++;
             }
         }
-      list = (WORD_LIST *)list->next;
+      list = list->next ();
     }
 
   return any_failed ? EXECUTION_FAILURE : EXECUTION_SUCCESS;
@@ -223,8 +223,8 @@ Shell::unalias_builtin (WORD_LIST *list)
 }
 
 /* Output ALIAS in such a way as to allow it to be read back in. */
-static void
-print_alias (alias_t *alias, int flags)
+void
+Shell::print_alias (alias_t *alias, int flags)
 {
   char *value;
 

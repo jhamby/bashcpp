@@ -65,7 +65,7 @@ static int rd_token (const char *, int);
 int alias_expand_all = 0;
 
 /* The list of aliases that we have. */
-HASH_TABLE *aliases = (HASH_TABLE *)NULL;
+HASH_TABLE *aliases = nullptr;
 #endif
 
 void
@@ -78,15 +78,15 @@ Shell::initialize_aliases ()
 /* Scan the list of aliases looking for one with NAME.  Return NULL
    if the alias doesn't exist, else a pointer to the alias_t. */
 alias_t *
-find_alias (const char *name)
+Shell::find_alias (const char *name)
 {
   BUCKET_CONTENTS *al;
 
   if (aliases == 0)
-    return (alias_t *)NULL;
+    return nullptr;
 
   al = hash_search (name, aliases, 0);
-  return al ? (alias_t *)al->data : (alias_t *)NULL;
+  return al ? (alias_t *)al->data : nullptr;
 }
 
 /* Return the value of the alias for NAME, or NULL if there is none. */
@@ -96,10 +96,10 @@ get_alias_value (const char *name)
   alias_t *alias;
 
   if (aliases == 0)
-    return (char *)NULL;
+    return nullptr;
 
   alias = find_alias (name);
-  return alias ? alias->value : (char *)NULL;
+  return alias ? alias->value : nullptr;
 }
 
 /* Make a new alias from NAME and VALUE.  If NAME can be found,
@@ -114,7 +114,7 @@ add_alias (const char *name, const char *value)
   if (aliases == 0)
     {
       initialize_aliases ();
-      temp = (alias_t *)NULL;
+      temp = nullptr;
     }
   else
     temp = find_alias (name);
@@ -199,7 +199,7 @@ delete_all_aliases ()
 
   hash_flush (aliases, free_alias_data);
   hash_dispose (aliases);
-  aliases = (HASH_TABLE *)NULL;
+  aliases = nullptr;
 #if defined(PROGRAMMABLE_COMPLETION)
   set_itemlist_dirty (&it_aliases);
 #endif
@@ -228,7 +228,7 @@ map_over_aliases (sh_alias_map_func_t *function)
           if (!function || (*function) (alias))
             {
               list[list_index++] = alias;
-              list[list_index] = (alias_t *)NULL;
+              list[list_index] = nullptr;
             }
         }
     }
@@ -262,7 +262,7 @@ all_aliases ()
   if (aliases == 0 || HASH_ENTRIES (aliases) == 0)
     return (alias_t **)NULL;
 
-  list = map_over_aliases ((sh_alias_map_func_t *)NULL);
+  list = map_over_aliases (nullptr);
   if (list)
     sort_aliases (list);
 
@@ -275,7 +275,7 @@ alias_expand_word (const char *s)
   alias_t *r;
 
   r = find_alias (s);
-  return r ? savestring (r->value) : (char *)NULL;
+  return r ? savestring (r->value) : nullptr;
 }
 
 /* Readline support functions -- expand all aliases in a line. */

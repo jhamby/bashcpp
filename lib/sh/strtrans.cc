@@ -237,23 +237,24 @@ ansic_quote (const std::string &str)
 {
   unsigned char c;
   size_t clen;
-  int b;
 #if defined(HANDLE_MULTIBYTE)
   wchar_t wc;
 #endif
 
   if (str.empty ())
-    return nullptr;
+    return str;
 
   std::string ret;
   ret.reserve (str.size () + 3);
 
-  *r++ = '$';
-  *r++ = '\'';
+  ret.push_back ('$');
+  ret.push_back ('\'');
 
-  for (const char *s = str; (c = *s); s++)
+  std::string::const_iterator it;
+  for (it = str.begin (); it != str.end (); ++it)
     {
-      b = l = 1; /* 1 == add backslash; 0 == no backslash */
+      c = static_cast<unsigned char> (*it);
+      bool b = true, l = true; // 1 == add backslash; 0 == no backslash
       clen = 1;
 
       switch (c)
@@ -290,19 +291,16 @@ ansic_quote (const std::string &str)
 #if defined(HANDLE_MULTIBYTE)
           b = is_basic (c);
           /* XXX - clen comparison to 0 is dicey */
-          if ((b == 0
-               && ((clen = std::mbrtowc (&wc, s, MB_CUR_MAX, 0))
-                       == (size_t)(-1)
-                   || MB_INVALIDCH (clen) || std::iswprint (wc) == 0))
-              || (b == 1 && std::isprint (c) == 0))
+          if ((!b && ((clen = std::mbrtowc (&wc, &(*it), MB_CUR_MAX, 0)) == static_cast<size_t> (-1)
+                   || MB_INVALIDCH (clen) || std::iswprint (wc) == 0)) || (b && std::isprint (c) == 0))
 #else
           if (std::isprint (c) == 0)
 #endif
             {
-              *r++ = '\\';
-              *r++ = tochar ((c >> 6) & 07);
-              *r++ = tochar ((c >> 3) & 07);
-              *r++ = tochar (c & 07);
+              ret.push_back ('\\');
+              ret.push_back ((c >> 6) & 07);
+              ret.push_back ((c >> 3) & 07);
+              ret.push_back (c & 07);
               continue;
             }
           l = 0;
@@ -312,10 +310,10 @@ ansic_quote (const std::string &str)
         break;
 
       if (l)
-        *r++ = '\\';
+        ret.push_back ('\\');
 
       if (clen == 1)
-        *r++ = c;
+        ret.push_back (c);
       else
         {
           for (b = 0; b < (int)clen; b++)
@@ -324,8 +322,7 @@ ansic_quote (const std::string &str)
         }
     }
 
-  *r++ = '\'';
-  *r = '\0';
+  ret.push_back ('\'');
   return ret;
 }
 
