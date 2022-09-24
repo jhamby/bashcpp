@@ -667,17 +667,6 @@ AC_DEFINE_UNQUOTED([CONF_OSTYPE], ["$build_os"], [The build target OS name.])
 AC_DEFINE_UNQUOTED([CONF_MACHTYPE], ["$build"], [The build target machine triplet.])
 AC_DEFINE_UNQUOTED([CONF_VENDOR], ["$build_vendor"], [The build target vendor name.])
 
-# directory where we install dynamically loadable builtins
-if test -z "$loadablesdir"; then
-	loadablesdir='${libdir}/bash'
-fi
-AC_SUBST(loadablesdir)
-
-if test -z "$headersdir"; then
-	headersdir='$(includedir)/$(PACKAGE_NAME)'
-fi
-AC_SUBST(headersdir)
-
 AC_SUBST(BASHVERS)
 AC_SUBST(RELSTATUS)
 

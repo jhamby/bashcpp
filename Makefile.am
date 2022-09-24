@@ -24,6 +24,8 @@ TLDIR = lib/tilde
 GLBDIR = lib/glob
 BLTDIR = builtins
 
+DEFS += -DLOCALEDIR=\"$(localedir)\"
+
 # TODO: add docs and tests subdirs
 SUBDIRS = po
 
@@ -32,12 +34,11 @@ bin_PROGRAMS = bash
 bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc \
 	expr.cc copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc mailcheck.cc \
-	test.cc trap.cc alias.cc braces.cc make_cmd.cc \
+	test.cc trap.cc alias.cc braces.cc make_cmd.cc syntax.cc \
 	input.cc bashhist.cc array.cc arrayfunc.cc assoc.cc sig.cc pathexp.cc \
 	siglist.cc bashline.cc bracecomp.cc error.cc \
 	stringlib.cc locale.cc findcmd.cc redir.cc \
-	pcomplete.cc pcomplib.cc syntax.cc \
-	alias.hh array.hh assoc.hh bashintl.hh \
+	pcomplete.cc pcomplib.cc alias.hh array.hh assoc.hh bashintl.hh \
 	bashtypes.hh builtins.hh command.hh config-bot.hh config-top.hh \
 	conftypes.hh externs.hh findcmd.hh flags.hh \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
@@ -82,15 +83,17 @@ bash_SOURCES += $(DEFSRC) $(BLTDIR)/builtins.cc \
 	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh
 
 # programs for generating sources and used by the test cases
-noinst_PROGRAMS = mkbuiltins psize mksignames
+noinst_PROGRAMS = mkbuiltins psize mksignames mksyntax
 
 mkbuiltins_SOURCES = $(BLTDIR)/mkbuiltins.cc
 psize_SOURCES = $(BLTDIR)/psize.cc
 mksignames_SOURCES = support/signames.cc support/mksignames.cc
+mksyntax_SOURCES = mksyntax.cc
 
 PSIZE = psize$(EXEEXT)
 MKBUILTINS = mkbuiltins$(EXEEXT)
 MKSIGNAMES = mksignames$(EXEEXT)
+MKSYNTAX = mksyntax$(EXEEXT)
 
 DIRECTDEFINE = -D $(srcdir)
 HELPDIRDEFINE = @HELPDIRDEFINE@
@@ -122,6 +125,10 @@ builtext.hh builtins.cc: $(MKBUILTINS) $(DEFSRC)
 signames.hh: $(MKSIGNAMES)
 	$(RM) $@
 	./$(MKSIGNAMES) $@
+
+syntax.cc: $(MKSYNTAX)
+	$(RM) $@
+	./$(MKSYNTAX) -o $@
 
 CLEANFILES = builtins.cc builtext.hh pipesize.hh psize.aux version.hh signames.hh
 

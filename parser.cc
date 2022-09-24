@@ -2120,21 +2120,18 @@ Shell::parse_matched_pair (
                       && (flags & P_DOLBRACE))
                     {
                       nestret = sh_single_quote (ttrans);
-                      free (ttrans);
-                      nestlen = strlen (nestret);
+                      ttrans.clear ();
                     }
                   else if ((rflags & P_DQUOTE) == 0)
                     {
                       nestret = sh_single_quote (ttrans);
-                      free (ttrans);
-                      nestlen = strlen (nestret);
+                      ttrans.clear ();
                     }
                   else
                     {
                       nestret = ttrans;
-                      nestlen = ttranslen;
                     }
-                  retind -= 2; /* back up before the $' */
+                  ret.erase (ret.size () - 2, 2); /* back up before the $' */
                 }
               else if MBTEST ((tflags & LEX_WASDOL) && ch == '"'
                               && (extended_quote || (rflags & P_DQUOTE) == 0))
@@ -2147,7 +2144,7 @@ Shell::parse_matched_pair (
                   nestret = sh_mkdoublequoted (ttrans, ttranslen, 0);
                   free (ttrans);
                   nestlen = ttranslen + 2;
-                  retind -= 2; /* back up before the $" */
+                  ret.erase (ret.size () - 2, 2); /* back up before the $" */
                 }
 
               APPEND_NESTRET ();

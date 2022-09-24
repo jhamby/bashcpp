@@ -60,7 +60,7 @@ static const char *shell_glob_chars = "*?[]^";
 #pragma GCC diagnostic pop
 #endif
 
-/* Defines shared by mksyntax.c and the rest of the shell code. */
+/* Defines shared by mksyntax.cc and the rest of the shell code. */
 
 /* Values for character flags in syntax tables */
 
@@ -83,9 +83,41 @@ enum char_flags
   CBLANK = 0x2000     /* whitespace (blank) character */
 };
 
-/* Defines for use by the rest of the shell. */
-// extern int sh_syntaxtab[];
-// extern int sh_syntabsiz;
+static inline char_flags &
+operator|= (char_flags &a, const char_flags &b)
+{
+  a = static_cast<char_flags> (static_cast<uint32_t> (a)
+                               | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline char_flags
+operator| (const char_flags &a, const char_flags &b)
+{
+  return static_cast<char_flags> (static_cast<uint32_t> (a)
+                                  | static_cast<uint32_t> (b));
+}
+
+static inline char_flags &
+operator&= (char_flags &a, const char_flags &b)
+{
+  a = static_cast<char_flags> (static_cast<uint32_t> (a)
+                               & static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline char_flags
+operator& (const char_flags &a, const char_flags &b)
+{
+  return static_cast<char_flags> (static_cast<uint32_t> (a)
+                                  & static_cast<uint32_t> (b));
+}
+
+static inline char_flags
+operator~(const char_flags &a)
+{
+  return static_cast<char_flags> (~static_cast<char_flags> (a));
+}
 
 #define shellmeta(c) (sh_syntaxtab[static_cast<unsigned char> (c)] & CSHMETA)
 #define shellbreak(c) (sh_syntaxtab[static_cast<unsigned char> (c)] & CSHBRK)

@@ -669,8 +669,6 @@ am__EXEEXT_TRUE
 LTLIBOBJS
 RELSTATUS
 BASHVERS
-headersdir
-loadablesdir
 JOB_CONTROL_FALSE
 JOB_CONTROL_TRUE
 TERMCAP_DEP
@@ -32677,17 +32675,6 @@ printf "%s\n" "#define CONF_MACHTYPE \"$build\"" >>confdefs.h
 
 
 printf "%s\n" "#define CONF_VENDOR \"$build_vendor\"" >>confdefs.h
-
-
-# directory where we install dynamically loadable builtins
-if test -z "$loadablesdir"; then
-	loadablesdir='${libdir}/bash'
-fi
-
-
-if test -z "$headersdir"; then
-	headersdir='$(includedir)/$(PACKAGE_NAME)'
-fi
 
 
 

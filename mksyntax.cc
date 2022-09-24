@@ -74,10 +74,9 @@ static const char preamble[] = "\
 \n";
 
 static const char includes[] = "\
-#include \"config.h\"\n\
-#include \"syntax.h\"\n\
-#include <inttypes.h>\n\
-#include \"shell.h\"\n\n\
+#include \"config.hh\"\n\
+#include \"syntax.hh\"\n\
+#include \"shell.hh\"\n\n\
 namespace bash {\n\n";
 
 static void __attribute__ ((__noreturn__)) usage ()
@@ -277,7 +276,7 @@ dump_lsyntax (FILE *fp)
 
   // std::fprintf (fp, "int sh_syntabsiz = %d;\n", SYNSIZE);	// declared
   // externally as const
-  std::fprintf (fp, "uint16_t Shell::sh_syntaxtab[%d] = {\n", SYNSIZE);
+  std::fprintf (fp, "char_flags Shell::sh_syntaxtab[%d] = {\n", SYNSIZE);
 
   for (i = 0; i < SYNSIZE; i++)
     {

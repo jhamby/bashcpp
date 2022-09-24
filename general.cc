@@ -1018,7 +1018,7 @@ Shell::initialize_group_array ()
 /* Return non-zero if GID is one that we have in our groups list. */
 #if !defined(HAVE_GROUP_MEMBER)
 int
-group_member (gid_t gid)
+Shell::group_member (gid_t gid)
 {
 #if defined(HAVE_GETGROUPS)
   int i;
@@ -1038,7 +1038,7 @@ group_member (gid_t gid)
 
   /* Search through the list looking for GID. */
   for (i = 0; i < ngroups; i++)
-    if (gid == (gid_t)group_array[i])
+    if (gid == static_cast<gid_t> (group_array[i]))
       return 1;
 #endif
 

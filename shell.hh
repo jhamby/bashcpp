@@ -514,6 +514,9 @@ operator~(const lexical_state_flags &a)
   return static_cast<lexical_state_flags> (~static_cast<uint32_t> (a));
 }
 
+// This char array size is assumed by subst.cc and elsewhere.
+#define SYNSIZE 256
+
 /* Simple shell state: variables that can be memcpy'd to subshells. */
 class SimpleState
 {
@@ -2208,7 +2211,7 @@ protected:
   int prompt_history_number (const char *);
 #endif
 
-  /* Declarations for functions defined in locale.c */
+  /* Declarations for functions defined in locale.cc */
   void set_default_locale ();
   void set_default_locale_vars ();
   bool set_locale_var (const char *, const char *);
@@ -2218,6 +2221,8 @@ protected:
   char *localetrans (const char *, int, int *);
   char *mk_msgstr (char *, bool *);
   char *localeexpand (const char *, int, int, int, int *);
+
+  void locale_setblanks ();
 
   /* Functions from errors.cc */
 
@@ -2697,17 +2702,17 @@ protected:
     rseed32 ^= genseed ();
   }
 
-  /* from lib/sh/shmatch.c */
+  /* from lib/sh/shmatch.cc */
 
   int sh_regmatch (const char *, const char *, int);
   int sh_eaccess (const char *, int);
   int sh_euidaccess (const char *, int);
 
-  /* from lib/sh/shmbchar.c */
+  /* from lib/sh/shmbchar.cc */
 
   const char *mbsmbchar (const char *);
 
-  /* from lib/sh/shquote.c */
+  /* from lib/sh/shquote.cc */
 
   std::string sh_double_quote (const std::string &);
   std::string sh_mkdoublequoted (const std::string &, int);
@@ -2715,7 +2720,7 @@ protected:
   std::string sh_backslash_quote (const std::string &, const char *, int);
   std::string sh_backslash_quote_for_double_quotes (const std::string &);
 
-  /* include all functions from lib/sh/shtty.c here: they're very small. */
+  /* include all functions from lib/sh/shtty.cc here: they're very small. */
   /* shtty.cc -- abstract interface to the terminal, focusing on capabilities.
    */
 
@@ -4402,6 +4407,10 @@ protected:
   bool check_selfref (const char *, const char *);
   bool check_identifier (WORD_DESC *, bool);
 
+#if !defined(HAVE_GROUP_MEMBER)
+  int group_member (gid_t gid);
+#endif
+
   // inlines moved from general.cc.
 
   bool
@@ -4785,7 +4794,9 @@ protected:
 
   SHELL_VAR *this_shell_function;
 
-  char_flags *sh_syntaxtab;
+  // The syntax table is static for ease of initialization, and because you
+  // can't have multiple locales active in the process simultaneously.
+  static char_flags sh_syntaxtab[SYNSIZE];
 
   char *list_optarg;
 

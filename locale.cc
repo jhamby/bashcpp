@@ -1,4 +1,4 @@
-/* locale.c - Miscellaneous internationalization functions. */
+/* locale.cc - Miscellaneous internationalization functions. */
 
 /* Copyright (C) 1996-2009,2012,2016,2020 Free Software Foundation, Inc.
 
@@ -64,7 +64,9 @@ Shell::set_default_locale ()
   locale_mb_cur_max = MB_CUR_MAX;
   locale_utf8locale = locale_isutf8 (default_locale);
 #if defined(HANDLE_MULTIBYTE)
-  locale_shiftstates = mblen ((char *)NULL, 0);
+  // XXX calling mblen with nullptr isn't portable. e.g. on Solaris 10,
+  // the man page says that it always returns 0 when passed nullptr.
+  locale_shiftstates = mblen (nullptr, 0);
 #else
   local_shiftstates = 0;
 #endif
@@ -536,12 +538,12 @@ localeexpand (const char *string, int start, int end, int lineno, int *lenp)
 
 /* Set every character in the <blank> character class to be a shell break
    character for the lexical analyzer when the locale changes. */
-static void
-locale_setblanks ()
+void
+Shell::locale_setblanks ()
 {
   int x;
 
-  for (x = 0; x < sh_syntabsiz; x++)
+  for (x = 0; x < SYNSIZE; x++)
     {
       if (std::isblank ((unsigned char)x))
         sh_syntaxtab[x] |= (CSHBRK | CBLANK);
@@ -563,10 +565,10 @@ locale_isutf8 (const char *lspec)
 {
   char *cp, *encoding;
 
-#if HAVE_LANGINFO_CODESET
+#if defined(HAVE_LANGINFO_CODESET)
   cp = nl_langinfo (CODESET);
   return STREQ (cp, "UTF-8") || STREQ (cp, "utf8");
-#elif HAVE_LOCALE_CHARSET
+#elif defined(HAVE_LOCALE_CHARSET)
   cp = locale_charset ();
   return STREQ (cp, "UTF-8") || STREQ (cp, "utf8");
 #else

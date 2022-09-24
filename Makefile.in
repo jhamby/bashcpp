@@ -110,7 +110,7 @@ bin_PROGRAMS = bash$(EXEEXT)
 @JOB_CONTROL_TRUE@am__append_1 = jobs.cc
 @JOB_CONTROL_FALSE@am__append_2 = nojobs.cc
 noinst_PROGRAMS = mkbuiltins$(EXEEXT) psize$(EXEEXT) \
-	mksignames$(EXEEXT)
+	mksignames$(EXEEXT) mksyntax$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
@@ -154,10 +154,10 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc expr.cc \
 	copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc \
 	mailcheck.cc test.cc trap.cc alias.cc braces.cc make_cmd.cc \
-	input.cc bashhist.cc array.cc arrayfunc.cc assoc.cc sig.cc \
-	pathexp.cc siglist.cc bashline.cc bracecomp.cc error.cc \
+	syntax.cc input.cc bashhist.cc array.cc arrayfunc.cc assoc.cc \
+	sig.cc pathexp.cc siglist.cc bashline.cc bracecomp.cc error.cc \
 	stringlib.cc locale.cc findcmd.cc redir.cc pcomplete.cc \
-	pcomplib.cc syntax.cc alias.hh array.hh assoc.hh bashintl.hh \
+	pcomplib.cc alias.hh array.hh assoc.hh bashintl.hh \
 	bashtypes.hh builtins.hh command.hh config-bot.hh \
 	config-top.hh conftypes.hh externs.hh findcmd.hh flags.hh \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
@@ -269,12 +269,12 @@ am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	subst.$(OBJEXT) hashcmd.$(OBJEXT) hashlib.$(OBJEXT) \
 	mailcheck.$(OBJEXT) test.$(OBJEXT) trap.$(OBJEXT) \
 	alias.$(OBJEXT) braces.$(OBJEXT) make_cmd.$(OBJEXT) \
-	input.$(OBJEXT) bashhist.$(OBJEXT) array.$(OBJEXT) \
-	arrayfunc.$(OBJEXT) assoc.$(OBJEXT) sig.$(OBJEXT) \
-	pathexp.$(OBJEXT) siglist.$(OBJEXT) bashline.$(OBJEXT) \
-	bracecomp.$(OBJEXT) error.$(OBJEXT) stringlib.$(OBJEXT) \
-	locale.$(OBJEXT) findcmd.$(OBJEXT) redir.$(OBJEXT) \
-	pcomplete.$(OBJEXT) pcomplib.$(OBJEXT) syntax.$(OBJEXT) \
+	syntax.$(OBJEXT) input.$(OBJEXT) bashhist.$(OBJEXT) \
+	array.$(OBJEXT) arrayfunc.$(OBJEXT) assoc.$(OBJEXT) \
+	sig.$(OBJEXT) pathexp.$(OBJEXT) siglist.$(OBJEXT) \
+	bashline.$(OBJEXT) bracecomp.$(OBJEXT) error.$(OBJEXT) \
+	stringlib.$(OBJEXT) locale.$(OBJEXT) findcmd.$(OBJEXT) \
+	redir.$(OBJEXT) pcomplete.$(OBJEXT) pcomplib.$(OBJEXT) \
 	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
 	$(BLTDIR)/builtins.$(OBJEXT) $(BLTDIR)/common.$(OBJEXT) \
 	$(BLTDIR)/evalstring.$(OBJEXT) $(BLTDIR)/evalfile.$(OBJEXT) \
@@ -336,6 +336,9 @@ am_mksignames_OBJECTS = support/signames.$(OBJEXT) \
 	support/mksignames.$(OBJEXT)
 mksignames_OBJECTS = $(am_mksignames_OBJECTS)
 mksignames_LDADD = $(LDADD)
+am_mksyntax_OBJECTS = mksyntax.$(OBJEXT)
+mksyntax_OBJECTS = $(am_mksyntax_OBJECTS)
+mksyntax_LDADD = $(LDADD)
 am_psize_OBJECTS = $(BLTDIR)/psize.$(OBJEXT)
 psize_OBJECTS = $(am_psize_OBJECTS)
 psize_LDADD = $(LDADD)
@@ -459,15 +462,15 @@ am__depfiles_remade = $(BLTDIR)/$(DEPDIR)/alias_def.Po \
 	./$(DEPDIR)/hashlib.Po ./$(DEPDIR)/input.Po \
 	./$(DEPDIR)/jobs.Po ./$(DEPDIR)/locale.Po \
 	./$(DEPDIR)/mailcheck.Po ./$(DEPDIR)/make_cmd.Po \
-	./$(DEPDIR)/nojobs.Po ./$(DEPDIR)/parse.Po \
-	./$(DEPDIR)/parser.Po ./$(DEPDIR)/pathexp.Po \
-	./$(DEPDIR)/pcomplete.Po ./$(DEPDIR)/pcomplib.Po \
-	./$(DEPDIR)/redir.Po ./$(DEPDIR)/shell.Po ./$(DEPDIR)/sig.Po \
-	./$(DEPDIR)/siglist.Po ./$(DEPDIR)/stringlib.Po \
-	./$(DEPDIR)/subst.Po ./$(DEPDIR)/syntax.Po ./$(DEPDIR)/test.Po \
-	./$(DEPDIR)/trap.Po ./$(DEPDIR)/variables.Po \
-	./$(DEPDIR)/version.Po support/$(DEPDIR)/mksignames.Po \
-	support/$(DEPDIR)/signames.Po
+	./$(DEPDIR)/mksyntax.Po ./$(DEPDIR)/nojobs.Po \
+	./$(DEPDIR)/parse.Po ./$(DEPDIR)/parser.Po \
+	./$(DEPDIR)/pathexp.Po ./$(DEPDIR)/pcomplete.Po \
+	./$(DEPDIR)/pcomplib.Po ./$(DEPDIR)/redir.Po \
+	./$(DEPDIR)/shell.Po ./$(DEPDIR)/sig.Po ./$(DEPDIR)/siglist.Po \
+	./$(DEPDIR)/stringlib.Po ./$(DEPDIR)/subst.Po \
+	./$(DEPDIR)/syntax.Po ./$(DEPDIR)/test.Po ./$(DEPDIR)/trap.Po \
+	./$(DEPDIR)/variables.Po ./$(DEPDIR)/version.Po \
+	support/$(DEPDIR)/mksignames.Po support/$(DEPDIR)/signames.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -516,9 +519,9 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(bash_SOURCES) $(mkbuiltins_SOURCES) $(mksignames_SOURCES) \
-	$(psize_SOURCES)
+	$(mksyntax_SOURCES) $(psize_SOURCES)
 DIST_SOURCES = $(am__bash_SOURCES_DIST) $(mkbuiltins_SOURCES) \
-	$(mksignames_SOURCES) $(psize_SOURCES)
+	$(mksignames_SOURCES) $(mksyntax_SOURCES) $(psize_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -651,7 +654,7 @@ CXX_FOR_BUILD = @CXX_FOR_BUILD@
 CYGPATH_W = @CYGPATH_W@
 DATADIRNAME = @DATADIRNAME@
 DEBUGGER_START_FILE = @DEBUGGER_START_FILE@
-DEFS = @DEFS@
+DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\"
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@
@@ -787,7 +790,6 @@ datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
-headersdir = @headersdir@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -799,7 +801,6 @@ infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-loadablesdir = @loadablesdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
@@ -835,10 +836,10 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc expr.cc \
 	copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc \
 	mailcheck.cc test.cc trap.cc alias.cc braces.cc make_cmd.cc \
-	input.cc bashhist.cc array.cc arrayfunc.cc assoc.cc sig.cc \
-	pathexp.cc siglist.cc bashline.cc bracecomp.cc error.cc \
+	syntax.cc input.cc bashhist.cc array.cc arrayfunc.cc assoc.cc \
+	sig.cc pathexp.cc siglist.cc bashline.cc bracecomp.cc error.cc \
 	stringlib.cc locale.cc findcmd.cc redir.cc pcomplete.cc \
-	pcomplib.cc syntax.cc alias.hh array.hh assoc.hh bashintl.hh \
+	pcomplib.cc alias.hh array.hh assoc.hh bashintl.hh \
 	bashtypes.hh builtins.hh command.hh config-bot.hh \
 	config-top.hh conftypes.hh externs.hh findcmd.hh flags.hh \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
@@ -918,9 +919,11 @@ DEFSRC = $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
 mkbuiltins_SOURCES = $(BLTDIR)/mkbuiltins.cc
 psize_SOURCES = $(BLTDIR)/psize.cc
 mksignames_SOURCES = support/signames.cc support/mksignames.cc
+mksyntax_SOURCES = mksyntax.cc
 PSIZE = psize$(EXEEXT)
 MKBUILTINS = mkbuiltins$(EXEEXT)
 MKSIGNAMES = mksignames$(EXEEXT)
+MKSYNTAX = mksyntax$(EXEEXT)
 DIRECTDEFINE = -D $(srcdir)
 CLEANFILES = builtins.cc builtext.hh pipesize.hh psize.aux version.hh signames.hh
 Program = bash$(EXEEXT)
@@ -1377,6 +1380,10 @@ support/mksignames.$(OBJEXT): support/$(am__dirstamp) \
 mksignames$(EXEEXT): $(mksignames_OBJECTS) $(mksignames_DEPENDENCIES) $(EXTRA_mksignames_DEPENDENCIES) 
 	@rm -f mksignames$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(mksignames_OBJECTS) $(mksignames_LDADD) $(LIBS)
+
+mksyntax$(EXEEXT): $(mksyntax_OBJECTS) $(mksyntax_DEPENDENCIES) $(EXTRA_mksyntax_DEPENDENCIES) 
+	@rm -f mksyntax$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(mksyntax_OBJECTS) $(mksyntax_LDADD) $(LIBS)
 $(BLTDIR)/psize.$(OBJEXT): $(BLTDIR)/$(am__dirstamp) \
 	$(BLTDIR)/$(DEPDIR)/$(am__dirstamp)
 
@@ -1559,6 +1566,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/locale.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mailcheck.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/make_cmd.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mksyntax.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nojobs.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parse.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@ # am--include-marker
@@ -2146,6 +2154,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/locale.Po
 	-rm -f ./$(DEPDIR)/mailcheck.Po
 	-rm -f ./$(DEPDIR)/make_cmd.Po
+	-rm -f ./$(DEPDIR)/mksyntax.Po
 	-rm -f ./$(DEPDIR)/nojobs.Po
 	-rm -f ./$(DEPDIR)/parse.Po
 	-rm -f ./$(DEPDIR)/parser.Po
@@ -2375,6 +2384,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/locale.Po
 	-rm -f ./$(DEPDIR)/mailcheck.Po
 	-rm -f ./$(DEPDIR)/make_cmd.Po
+	-rm -f ./$(DEPDIR)/mksyntax.Po
 	-rm -f ./$(DEPDIR)/nojobs.Po
 	-rm -f ./$(DEPDIR)/parse.Po
 	-rm -f ./$(DEPDIR)/parser.Po
@@ -2462,6 +2472,10 @@ builtext.hh builtins.cc: $(MKBUILTINS) $(DEFSRC)
 signames.hh: $(MKSIGNAMES)
 	$(RM) $@
 	./$(MKSIGNAMES) $@
+
+syntax.cc: $(MKSYNTAX)
+	$(RM) $@
+	./$(MKSYNTAX) -o $@
 
 # manual dependencies on generated files
 builtins/common.$(OBJEXT): builtext.hh
