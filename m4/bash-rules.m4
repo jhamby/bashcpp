@@ -4,92 +4,6 @@ dnl
 dnl Some derived from PDKSH 5.1.3 autoconf tests
 dnl
 
-AC_DEFUN([BASH_C_LONG_LONG],
-[AC_CACHE_CHECK([for long long], ac_cv_c_long_long,
-[if test "$GCC" = yes; then
-  ac_cv_c_long_long=yes
-else
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdlib.h>]],[[
-int
-main()
-{
-long long foo = 0;
-exit(sizeof(long long) < sizeof(long));
-}
-]])],[ac_cv_c_long_long=yes],[ac_cv_c_long_long=no])
-fi])
-if test $ac_cv_c_long_long = yes; then
-  AC_DEFINE([HAVE_LONG_LONG], 1, [Define if the `long long' type works.])
-fi
-])
-
-dnl
-dnl Check for <inttypes.h>.  This is separated out so that it can be
-dnl AC_REQUIREd.
-dnl
-dnl BASH_HEADER_INTTYPES
-AC_DEFUN([BASH_HEADER_INTTYPES],
-[
- AC_CHECK_HEADERS(inttypes.h)
-])
-
-dnl
-dnl check for typedef'd symbols in header files, but allow the caller to
-dnl specify the include files to be checked in addition to the default
-dnl
-dnl This could be changed to use AC_COMPILE_IFELSE instead of AC_EGREP_CPP
-dnl
-dnl BASH_CHECK_TYPE(TYPE, HEADERS, DEFAULT[, VALUE-IF-FOUND])
-AC_DEFUN([BASH_CHECK_TYPE],
-[
-AC_REQUIRE([BASH_HEADER_INTTYPES])
-AC_MSG_CHECKING(for $1)
-AC_CACHE_VAL(bash_cv_type_$1,
-[AC_EGREP_CPP($1, [#include <sys/types.h>
-#include <stdlib.h>
-#include <stddef.h>
-#if HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
-#if HAVE_STDINT_H
-#include <stdint.h>
-#endif
-$2
-], bash_cv_type_$1=yes, bash_cv_type_$1=no)])
-AC_MSG_RESULT($bash_cv_type_$1)
-ifelse($#, 4, [if test $bash_cv_type_$1 = yes; then
-	AC_DEFINE($4)
-	fi])
-if test $bash_cv_type_$1 = no; then
-  AC_DEFINE_UNQUOTED($1, $3)
-fi
-])
-
-dnl
-dnl BASH_CHECK_DECL(FUNC)
-dnl
-dnl Check for a declaration of FUNC in stdlib.h and inttypes.h like
-dnl AC_CHECK_DECL
-dnl
-AC_DEFUN([BASH_CHECK_DECL],
-[
-AC_REQUIRE([BASH_HEADER_INTTYPES])
-AC_CACHE_CHECK([for declaration of $1], bash_cv_decl_$1,
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <stdlib.h>
-#if HAVE_INTTYPES_H
-#  include <inttypes.h>
-#endif
-]], [[return !$1;]])],[bash_cv_decl_$1=yes],[bash_cv_decl_$1=no])])
-bash_tr_func=HAVE_DECL_`echo $1 | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
-if test $bash_cv_decl_$1 = yes; then
-  AC_DEFINE_UNQUOTED($bash_tr_func, 1)
-else
-  AC_DEFINE_UNQUOTED($bash_tr_func, 0)
-fi
-])
-
 dnl
 dnl Check for sys_siglist[] or _sys_siglist[]
 dnl
@@ -291,119 +205,6 @@ fi
 ])
 
 dnl
-dnl A signed 16-bit integer quantity
-dnl
-AC_DEFUN([BASH_TYPE_BITS16_T],
-[
-if test "$ac_cv_sizeof_short" = 2; then
-  AC_CHECK_TYPE(bits16_t, short)
-elif test "$ac_cv_sizeof_char" = 2; then
-  AC_CHECK_TYPE(bits16_t, char)
-else
-  AC_CHECK_TYPE(bits16_t, short)
-fi
-])
-
-dnl
-dnl An unsigned 16-bit integer quantity
-dnl
-AC_DEFUN([BASH_TYPE_U_BITS16_T],
-[
-if test "$ac_cv_sizeof_short" = 2; then
-  AC_CHECK_TYPE(u_bits16_t, unsigned short)
-elif test "$ac_cv_sizeof_char" = 2; then
-  AC_CHECK_TYPE(u_bits16_t, unsigned char)
-else
-  AC_CHECK_TYPE(u_bits16_t, unsigned short)
-fi
-])
-
-dnl
-dnl A signed 32-bit integer quantity
-dnl
-AC_DEFUN([BASH_TYPE_BITS32_T],
-[
-if test "$ac_cv_sizeof_int" = 4; then
-  AC_CHECK_TYPE(bits32_t, int)
-elif test "$ac_cv_sizeof_long" = 4; then
-  AC_CHECK_TYPE(bits32_t, long)
-else
-  AC_CHECK_TYPE(bits32_t, int)
-fi
-])
-
-dnl
-dnl An unsigned 32-bit integer quantity
-dnl
-AC_DEFUN([BASH_TYPE_U_BITS32_T],
-[
-if test "$ac_cv_sizeof_int" = 4; then
-  AC_CHECK_TYPE(u_bits32_t, unsigned int)
-elif test "$ac_cv_sizeof_long" = 4; then
-  AC_CHECK_TYPE(u_bits32_t, unsigned long)
-else
-  AC_CHECK_TYPE(u_bits32_t, unsigned int)
-fi
-])
-
-AC_DEFUN([BASH_TYPE_PTRDIFF_T],
-[
-if test "$ac_cv_sizeof_int" = "$ac_cv_sizeof_char_p"; then
-  AC_CHECK_TYPE(ptrdiff_t, int)
-elif test "$ac_cv_sizeof_long" = "$ac_cv_sizeof_char_p"; then
-  AC_CHECK_TYPE(ptrdiff_t, long)
-elif test "$ac_cv_type_long_long" = yes && test "$ac_cv_sizeof_long_long" = "$ac_cv_sizeof_char_p"; then
-  AC_CHECK_TYPE(ptrdiff_t, [long long])
-else
-  AC_CHECK_TYPE(ptrdiff_t, int)
-fi
-])
-
-dnl
-dnl A signed 64-bit quantity
-dnl
-AC_DEFUN([BASH_TYPE_BITS64_T],
-[
-if test "$ac_cv_sizeof_char_p" = 8; then
-  AC_CHECK_TYPE(bits64_t, char *)
-elif test "$ac_cv_sizeof_double" = 8; then
-  AC_CHECK_TYPE(bits64_t, double)
-elif test -n "$ac_cv_type_long_long" && test "$ac_cv_sizeof_long_long" = 8; then
-  AC_CHECK_TYPE(bits64_t, [long long])
-elif test "$ac_cv_sizeof_long" = 8; then
-  AC_CHECK_TYPE(bits64_t, long)
-else
-  AC_CHECK_TYPE(bits64_t, double)
-fi
-])
-
-AC_DEFUN([BASH_TYPE_LONG_LONG],
-[
-AC_CACHE_CHECK([for long long], bash_cv_type_long_long,
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-long long ll = 1; int i = 63;]], [[
-long long llm = (long long) -1;
-return ll << i | ll >> i | llm / ll | llm % ll;
-]])],[bash_cv_type_long_long='long long'],[bash_cv_type_long_long='long'])])
-if test "$bash_cv_type_long_long" = 'long long'; then
-  AC_DEFINE([HAVE_LONG_LONG], 1, [Define if we have the `long long' type.])
-fi
-])
-
-AC_DEFUN([BASH_TYPE_UNSIGNED_LONG_LONG],
-[
-AC_CACHE_CHECK([for unsigned long long], bash_cv_type_unsigned_long_long,
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-unsigned long long ull = 1; int i = 63;]], [[
-unsigned long long ullmax = (unsigned long long) -1;
-return ull << i | ull >> i | ullmax / ull | ullmax % ull;
-]])],[bash_cv_type_unsigned_long_long='unsigned long long'],[bash_cv_type_unsigned_long_long='unsigned long'])])
-if test "$bash_cv_type_unsigned_long_long" = 'unsigned long long'; then
-  AC_DEFINE([HAVE_UNSIGNED_LONG_LONG], 1, [Define if we have the `unsigned long long' type.])
-fi
-])
-
-dnl
 dnl Type of struct rlimit fields: some systems (OSF/1, NetBSD, RISC/os 5.0)
 dnl have a rlim_t, others (4.4BSD based systems) use quad_t, others use
 dnl long and still others use int (HP-UX 9.01, SunOS 4.1.3).  To simplify
@@ -559,31 +360,6 @@ exit (maxfds == -1L);
 AC_MSG_RESULT($bash_cv_ulimit_maxfds)
 if test $bash_cv_ulimit_maxfds = yes; then
 AC_DEFINE([ULIMIT_MAXFDS], 1, [Define if ulimit can substitute for getdtablesize to get the max fds.])
-fi
-])
-
-dnl
-dnl This needs BASH_CHECK_SOCKLIB, but since that's not called on every
-dnl system, we can't use AC_PREREQ([2.71])
-dnl
-AC_DEFUN([BASH_FUNC_GETHOSTBYNAME],
-[if test "X$bash_cv_have_gethostbyname" = "X"; then
-_bash_needmsg=yes
-else
-AC_MSG_CHECKING(for gethostbyname in socket library)
-_bash_needmsg=
-fi
-AC_CACHE_VAL(bash_cv_have_gethostbyname,
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]], [[ struct hostent *hp;
-  hp = gethostbyname("localhost");
-]])],[bash_cv_have_gethostbyname=yes],[bash_cv_have_gethostbyname=no])]
-)
-if test "X$_bash_needmsg" = Xyes; then
-    AC_MSG_CHECKING(for gethostbyname in socket library)
-fi
-AC_MSG_RESULT($bash_cv_have_gethostbyname)
-if test "$bash_cv_have_gethostbyname" = yes; then
-AC_DEFINE([HAVE_GETHOSTBYNAME], 1, [Define if you have the gethostbyname function.])
 fi
 ])
 
@@ -770,56 +546,6 @@ TERMCAP_DEP=
 else
 TERMCAP_LIB=-lcurses
 TERMCAP_DEP=
-fi
-])
-
-dnl
-dnl Check for the presence of getpeername in libsocket.
-dnl If libsocket is present, check for libnsl and add it to LIBS if
-dnl it's there, since most systems with libsocket require linking
-dnl with libnsl as well.  This should only be called if getpeername
-dnl was not found in libc.
-dnl
-dnl NOTE: IF WE FIND GETPEERNAME, WE ASSUME THAT WE HAVE BIND/CONNECT
-dnl	  AS WELL
-dnl
-AC_DEFUN([BASH_CHECK_LIB_SOCKET],
-[
-if test "X$bash_cv_have_socklib" = "X"; then
-_bash_needmsg=
-else
-AC_MSG_CHECKING(for socket library)
-_bash_needmsg=yes
-fi
-AC_CACHE_VAL(bash_cv_have_socklib,
-[AC_CHECK_LIB(socket, getpeername,
-        bash_cv_have_socklib=yes, bash_cv_have_socklib=no, -lnsl)])
-if test "X$_bash_needmsg" = Xyes; then
-  AC_MSG_RESULT($bash_cv_have_socklib)
-  _bash_needmsg=
-fi
-if test $bash_cv_have_socklib = yes; then
-  # check for libnsl, add it to LIBS if present
-  if test "X$bash_cv_have_libnsl" = "X"; then
-    _bash_needmsg=
-  else
-    AC_MSG_CHECKING(for libnsl)
-    _bash_needmsg=yes
-  fi
-  AC_CACHE_VAL(bash_cv_have_libnsl,
-	   [AC_CHECK_LIB(nsl, t_open,
-		 bash_cv_have_libnsl=yes, bash_cv_have_libnsl=no)])
-  if test "X$_bash_needmsg" = Xyes; then
-    AC_MSG_RESULT($bash_cv_have_libnsl)
-    _bash_needmsg=
-  fi
-  if test $bash_cv_have_libnsl = yes; then
-    LIBS="-lsocket -lnsl $LIBS"
-  else
-    LIBS="-lsocket $LIBS"
-  fi
-  AC_DEFINE([HAVE_LIBSOCKET], 1, [Define if you have the libsocket library.])
-  AC_DEFINE([HAVE_GETPEERNAME], 1, [Define if you have the getpeername function in libsocket.])
 fi
 ])
 
@@ -1807,4 +1533,37 @@ else
     bash_cv_fnmatch_equiv_value=0
 fi
 AC_DEFINE_UNQUOTED([FNMATCH_EQUIV_FALLBACK], [$bash_cv_fnmatch_equiv_value], [Whether fnmatch can be used for bracket equivalence classes])
+])
+
+dnl Useful macros to check libraries which are not implicit
+dnl in Solaris, for instance. Originally by Thomas E. Dickey.
+AC_DEFUN([BASH_LIB_NSL],
+[
+AC_CHECK_LIB(nsl, gethostbyname,
+[
+AC_MSG_CHECKING(if libnsl is mandatory)
+AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM([
+#include <sys/types.h>
+#include <netdb.h>
+char *domain; ],
+        [gethostbyname(domain)])], dnl
+ [AC_MSG_RESULT(no)], dnl
+ [AC_MSG_RESULT(yes); LIBS="${LIBS} -lnsl"])
+])
+])
+
+AC_DEFUN([BASH_LIB_SOCKET],
+[
+AC_CHECK_LIB(socket, socket,
+[
+AC_MSG_CHECKING(if libsocket is mandatory)
+AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM([
+#include <sys/types.h>
+#include <sys/socket.h>],
+        [socket (AF_INET, SOCK_STREAM, 0) ])], dnl
+ [AC_MSG_RESULT(no)], dnl
+ [AC_MSG_RESULT(yes); LIBS="${LIBS} -lsocket"])
+])
 ])

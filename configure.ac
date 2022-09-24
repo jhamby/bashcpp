@@ -441,6 +441,10 @@ if test x$ac_cv_langinfo_codeset = xyes; then
   AC_DEFINE([HAVE_LANGINFO_CODESET], [1], [have nl_langinfo (CODESET)])
 fi
 
+# Check if we need to include TCP/IP libraries.
+BASH_LIB_SOCKET
+BASH_LIB_NSL
+
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_MAJOR
@@ -503,15 +507,6 @@ dnl checks for the dynamic loading library functions in libc and libdl
 if test "$opt_static_link" != yes; then
 AC_CHECK_LIB(dl, dlopen)
 AC_CHECK_FUNCS(dlopen dlclose dlsym)
-fi
-
-dnl check for getpeername in the socket library only if it's not in libc
-if test "$ac_cv_func_getpeername" = no; then
-	BASH_CHECK_LIB_SOCKET
-fi
-dnl check for gethostbyname in socket libraries if it's not in libc
-if test "$ac_cv_func_gethostbyname" = no; then
-	BASH_FUNC_GETHOSTBYNAME
 fi
 
 dnl system types

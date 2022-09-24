@@ -296,7 +296,7 @@
 /* Define to 1 if you have the `getgroups' function. */
 #undef HAVE_GETGROUPS
 
-/* Define if you have the gethostbyname function. */
+/* Define to 1 if you have the `gethostbyname' function. */
 #undef HAVE_GETHOSTBYNAME
 
 /* Define to 1 if you have the `gethostname' function. */
@@ -305,7 +305,7 @@
 /* Define to 1 if you have the `getpagesize' function. */
 #undef HAVE_GETPAGESIZE
 
-/* Define if you have the getpeername function in libsocket. */
+/* Define to 1 if you have the `getpeername' function. */
 #undef HAVE_GETPEERNAME
 
 /* Define to 1 if you have the `getpwent' function. */
@@ -404,9 +404,6 @@
 
 /* Define to 1 if you have the <libintl.h> header file. */
 #undef HAVE_LIBINTL_H
-
-/* Define if you have the libsocket library. */
-#undef HAVE_LIBSOCKET
 
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
