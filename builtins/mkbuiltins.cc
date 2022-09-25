@@ -280,7 +280,7 @@ main (int argc, char **argv)
           filename_sstream << "mk-" << ::getpid ();
           temp_struct_filename = filename_sstream.str ();
 
-          structfile.open (temp_struct_filename);
+          structfile.open (temp_struct_filename.c_str ());
 
           if (!structfile.is_open ())
             bash::file_error (temp_struct_filename);

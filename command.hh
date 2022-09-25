@@ -239,16 +239,32 @@ public:
   word_desc_flags flags; /* Flags associated with this word. */
 };
 
+struct WORD_DESC_PTR
+{
+  WORD_DESC_PTR () : value (nullptr) {}
+  WORD_DESC_PTR (const WORD_DESC_PTR &other) : value (other.value) {}
+
+  WORD_DESC *value;
+};
+
 /* A linked list of words. */
 class WORD_LIST : public GENERIC_LIST
 {
 public:
-  WORD_LIST (WORD_DESC *word_) : word (word_) {}
+  WORD_LIST (WORD_DESC *word_) : GENERIC_LIST (nullptr), word (word_) {}
 
   // Constructor that takes another WORD_LIST to link to.
-  WORD_LIST (WORD_DESC *word_, WORD_LIST *n) : GENERIC_LIST (n), word (word_)
+  WORD_LIST (WORD_DESC *word_, WORD_LIST *next)
+      : GENERIC_LIST (next), word (word_)
   {
   }
+
+  WORD_LIST (const WORD_LIST &w) : GENERIC_LIST (w.next_), word (w.word) {}
+
+#if __cplusplus >= 201103L
+  WORD_LIST (WORD_LIST &&w)
+  noexcept : GENERIC_LIST (w.next_), word (w.word) {}
+#endif
 
   // Non-virtual destructor should be safe here with the static_cast.
   ~WORD_LIST () noexcept
@@ -279,6 +295,20 @@ public:
   WORD_DESC *word;
 };
 
+struct WORD_LIST_PTR
+{
+  WORD_LIST_PTR () : value (nullptr) {}
+  WORD_LIST_PTR (WORD_DESC_PTR word) : value (new WORD_LIST (word.value)) {}
+
+  // Constructor that takes another WORD_LIST to link to.
+  WORD_LIST_PTR (WORD_DESC_PTR word, WORD_LIST_PTR next)
+      : value (new WORD_LIST (word.value, next.value))
+  {
+  }
+
+  WORD_LIST *value;
+};
+
 /* **************************************************************** */
 /*								    */
 /*			Shell Command Structs			    */
@@ -296,6 +326,7 @@ public:
   // C++03-compatible constructors.
   REDIRECTEE (int64_t dest_) { r.dest = dest_; }
   REDIRECTEE (WORD_DESC &filename_) { r.filename = &filename_; }
+  REDIRECTEE (WORD_DESC_PTR ptr) { r.filename = ptr.value; }
 
   union redirectee_t
   {
@@ -417,6 +448,29 @@ public:
   r_instruction instruction; /* What to do with the information. */
 };
 
+struct REDIRECT_PTR
+{
+  REDIRECT_PTR () : value (nullptr) {}
+  REDIRECT_PTR (REDIRECTEE source_, r_instruction instruction_,
+                REDIRECTEE dest_and_filename_, redir_flags flags_)
+      : value (
+          new REDIRECT (source_, instruction_, dest_and_filename_, flags_))
+  {
+  }
+
+  REDIRECT_PTR (REDIRECT *value_) : value (value_) {}
+  REDIRECT_PTR (const REDIRECT_PTR &other) : value (other.value) {}
+
+  REDIRECT_PTR &
+  operator= (const REDIRECT_PTR &other)
+  {
+    value = other.value;
+    return *this;
+  }
+
+  REDIRECT *value;
+};
+
 /* An element used in parsing.  A single word or a single redirection.
    This is an ephemeral construct. */
 struct ELEMENT
@@ -519,6 +573,23 @@ private:
   COMMAND &operator= (const COMMAND &);
 };
 
+// This wrapper is used for all command types.
+struct COMMAND_PTR
+{
+  COMMAND_PTR () : value (nullptr) {}
+  COMMAND_PTR (COMMAND *value_) : value (value_) {}
+  COMMAND_PTR (const COMMAND_PTR &other) : value (other.value) {}
+
+  COMMAND_PTR &
+  operator= (const COMMAND_PTR &other)
+  {
+    value = other.value;
+    return *this;
+  }
+
+  COMMAND *value;
+};
+
 /* Structure used to represent the CONNECTION type. */
 class CONNECTION : public COMMAND
 {
@@ -611,6 +682,22 @@ public:
   WORD_LIST *patterns; /* Linked list of patterns to test. */
   COMMAND *action;     /* Thing to execute if a pattern matches. */
   pattern_flags flags;
+};
+
+struct PATTERN_LIST_PTR
+{
+  PATTERN_LIST_PTR () : value (nullptr) {}
+  PATTERN_LIST_PTR (PATTERN_LIST *value_) : value (value_) {}
+  PATTERN_LIST_PTR (const PATTERN_LIST_PTR &other) : value (other.value) {}
+
+  PATTERN_LIST_PTR &
+  operator= (const PATTERN_LIST_PTR &other)
+  {
+    value = other.value;
+    return *this;
+  }
+
+  PATTERN_LIST *value;
 };
 
 /* The CASE command. */

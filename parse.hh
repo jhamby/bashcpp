@@ -401,7 +401,7 @@ namespace bash {
       // simple_list1
       // pipeline_command
       // pipeline
-      char dummy1[sizeof (COMMAND*)];
+      char dummy1[sizeof (COMMAND_PTR)];
 
       // simple_command_element
       char dummy2[sizeof (ELEMENT)];
@@ -409,22 +409,22 @@ namespace bash {
       // case_clause
       // pattern_list
       // case_clause_sequence
-      char dummy3[sizeof (PATTERN_LIST*)];
+      char dummy3[sizeof (PATTERN_LIST_PTR)];
 
       // redirection
       // redirection_list
-      char dummy4[sizeof (REDIRECT*)];
+      char dummy4[sizeof (REDIRECT_PTR)];
 
       // WORD
       // ASSIGNMENT_WORD
       // REDIR_WORD
-      char dummy5[sizeof (WORD_DESC*)];
+      char dummy5[sizeof (WORD_DESC_PTR)];
 
       // ARITH_CMD
       // ARITH_FOR_EXPRS
       // word_list
       // pattern
-      char dummy6[sizeof (WORD_LIST*)];
+      char dummy6[sizeof (WORD_LIST_PTR)];
 
       // NUMBER
       // list_terminator
@@ -697,7 +697,7 @@ namespace bash {
       case symbol_kind::S_simple_list1: // simple_list1
       case symbol_kind::S_pipeline_command: // pipeline_command
       case symbol_kind::S_pipeline: // pipeline
-        value.move< COMMAND* > (std::move (that.value));
+        value.move< COMMAND_PTR > (std::move (that.value));
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
@@ -707,25 +707,25 @@ namespace bash {
       case symbol_kind::S_case_clause: // case_clause
       case symbol_kind::S_pattern_list: // pattern_list
       case symbol_kind::S_case_clause_sequence: // case_clause_sequence
-        value.move< PATTERN_LIST* > (std::move (that.value));
+        value.move< PATTERN_LIST_PTR > (std::move (that.value));
         break;
 
       case symbol_kind::S_redirection: // redirection
       case symbol_kind::S_redirection_list: // redirection_list
-        value.move< REDIRECT* > (std::move (that.value));
+        value.move< REDIRECT_PTR > (std::move (that.value));
         break;
 
       case symbol_kind::S_WORD: // WORD
       case symbol_kind::S_ASSIGNMENT_WORD: // ASSIGNMENT_WORD
       case symbol_kind::S_REDIR_WORD: // REDIR_WORD
-        value.move< WORD_DESC* > (std::move (that.value));
+        value.move< WORD_DESC_PTR > (std::move (that.value));
         break;
 
       case symbol_kind::S_ARITH_CMD: // ARITH_CMD
       case symbol_kind::S_ARITH_FOR_EXPRS: // ARITH_FOR_EXPRS
       case symbol_kind::S_word_list: // word_list
       case symbol_kind::S_pattern: // pattern
-        value.move< WORD_LIST* > (std::move (that.value));
+        value.move< WORD_LIST_PTR > (std::move (that.value));
         break;
 
       case symbol_kind::S_NUMBER: // NUMBER
@@ -756,12 +756,12 @@ namespace bash {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, COMMAND*&& v)
+      basic_symbol (typename Base::kind_type t, COMMAND_PTR&& v)
         : Base (t)
         , value (std::move (v))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const COMMAND*& v)
+      basic_symbol (typename Base::kind_type t, const COMMAND_PTR& v)
         : Base (t)
         , value (v)
       {}
@@ -780,48 +780,48 @@ namespace bash {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, PATTERN_LIST*&& v)
+      basic_symbol (typename Base::kind_type t, PATTERN_LIST_PTR&& v)
         : Base (t)
         , value (std::move (v))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const PATTERN_LIST*& v)
+      basic_symbol (typename Base::kind_type t, const PATTERN_LIST_PTR& v)
         : Base (t)
         , value (v)
       {}
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, REDIRECT*&& v)
+      basic_symbol (typename Base::kind_type t, REDIRECT_PTR&& v)
         : Base (t)
         , value (std::move (v))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const REDIRECT*& v)
+      basic_symbol (typename Base::kind_type t, const REDIRECT_PTR& v)
         : Base (t)
         , value (v)
       {}
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, WORD_DESC*&& v)
+      basic_symbol (typename Base::kind_type t, WORD_DESC_PTR&& v)
         : Base (t)
         , value (std::move (v))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const WORD_DESC*& v)
+      basic_symbol (typename Base::kind_type t, const WORD_DESC_PTR& v)
         : Base (t)
         , value (v)
       {}
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, WORD_LIST*&& v)
+      basic_symbol (typename Base::kind_type t, WORD_LIST_PTR&& v)
         : Base (t)
         , value (std::move (v))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const WORD_LIST*& v)
+      basic_symbol (typename Base::kind_type t, const WORD_LIST_PTR& v)
         : Base (t)
         , value (v)
       {}
@@ -889,7 +889,7 @@ switch (yykind)
       case symbol_kind::S_simple_list1: // simple_list1
       case symbol_kind::S_pipeline_command: // pipeline_command
       case symbol_kind::S_pipeline: // pipeline
-        value.template destroy< COMMAND* > ();
+        value.template destroy< COMMAND_PTR > ();
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
@@ -899,25 +899,25 @@ switch (yykind)
       case symbol_kind::S_case_clause: // case_clause
       case symbol_kind::S_pattern_list: // pattern_list
       case symbol_kind::S_case_clause_sequence: // case_clause_sequence
-        value.template destroy< PATTERN_LIST* > ();
+        value.template destroy< PATTERN_LIST_PTR > ();
         break;
 
       case symbol_kind::S_redirection: // redirection
       case symbol_kind::S_redirection_list: // redirection_list
-        value.template destroy< REDIRECT* > ();
+        value.template destroy< REDIRECT_PTR > ();
         break;
 
       case symbol_kind::S_WORD: // WORD
       case symbol_kind::S_ASSIGNMENT_WORD: // ASSIGNMENT_WORD
       case symbol_kind::S_REDIR_WORD: // REDIR_WORD
-        value.template destroy< WORD_DESC* > ();
+        value.template destroy< WORD_DESC_PTR > ();
         break;
 
       case symbol_kind::S_ARITH_CMD: // ARITH_CMD
       case symbol_kind::S_ARITH_FOR_EXPRS: // ARITH_FOR_EXPRS
       case symbol_kind::S_word_list: // word_list
       case symbol_kind::S_pattern: // pattern
-        value.template destroy< WORD_LIST* > ();
+        value.template destroy< WORD_LIST_PTR > ();
         break;
 
       case symbol_kind::S_NUMBER: // NUMBER
@@ -1023,26 +1023,26 @@ switch (yykind)
 #endif
       {}
 #if 201103L <= YY_CPLUSPLUS
-      symbol_type (int tok, COMMAND* v)
+      symbol_type (int tok, COMMAND_PTR v)
         : super_type (token_kind_type (tok), std::move (v))
 #else
-      symbol_type (int tok, const COMMAND*& v)
+      symbol_type (int tok, const COMMAND_PTR& v)
         : super_type (token_kind_type (tok), v)
 #endif
       {}
 #if 201103L <= YY_CPLUSPLUS
-      symbol_type (int tok, WORD_DESC* v)
+      symbol_type (int tok, WORD_DESC_PTR v)
         : super_type (token_kind_type (tok), std::move (v))
 #else
-      symbol_type (int tok, const WORD_DESC*& v)
+      symbol_type (int tok, const WORD_DESC_PTR& v)
         : super_type (token_kind_type (tok), v)
 #endif
       {}
 #if 201103L <= YY_CPLUSPLUS
-      symbol_type (int tok, WORD_LIST* v)
+      symbol_type (int tok, WORD_LIST_PTR v)
         : super_type (token_kind_type (tok), std::move (v))
 #else
-      symbol_type (int tok, const WORD_LIST*& v)
+      symbol_type (int tok, const WORD_LIST_PTR& v)
         : super_type (token_kind_type (tok), v)
 #endif
       {}
@@ -1497,14 +1497,14 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
-      make_WORD (WORD_DESC* v)
+      make_WORD (WORD_DESC_PTR v)
       {
         return symbol_type (token::WORD, std::move (v));
       }
 #else
       static
       symbol_type
-      make_WORD (const WORD_DESC*& v)
+      make_WORD (const WORD_DESC_PTR& v)
       {
         return symbol_type (token::WORD, v);
       }
@@ -1512,14 +1512,14 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
-      make_ASSIGNMENT_WORD (WORD_DESC* v)
+      make_ASSIGNMENT_WORD (WORD_DESC_PTR v)
       {
         return symbol_type (token::ASSIGNMENT_WORD, std::move (v));
       }
 #else
       static
       symbol_type
-      make_ASSIGNMENT_WORD (const WORD_DESC*& v)
+      make_ASSIGNMENT_WORD (const WORD_DESC_PTR& v)
       {
         return symbol_type (token::ASSIGNMENT_WORD, v);
       }
@@ -1527,14 +1527,14 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
-      make_REDIR_WORD (WORD_DESC* v)
+      make_REDIR_WORD (WORD_DESC_PTR v)
       {
         return symbol_type (token::REDIR_WORD, std::move (v));
       }
 #else
       static
       symbol_type
-      make_REDIR_WORD (const WORD_DESC*& v)
+      make_REDIR_WORD (const WORD_DESC_PTR& v)
       {
         return symbol_type (token::REDIR_WORD, v);
       }
@@ -1557,14 +1557,14 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
-      make_ARITH_CMD (WORD_LIST* v)
+      make_ARITH_CMD (WORD_LIST_PTR v)
       {
         return symbol_type (token::ARITH_CMD, std::move (v));
       }
 #else
       static
       symbol_type
-      make_ARITH_CMD (const WORD_LIST*& v)
+      make_ARITH_CMD (const WORD_LIST_PTR& v)
       {
         return symbol_type (token::ARITH_CMD, v);
       }
@@ -1572,14 +1572,14 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
-      make_ARITH_FOR_EXPRS (WORD_LIST* v)
+      make_ARITH_FOR_EXPRS (WORD_LIST_PTR v)
       {
         return symbol_type (token::ARITH_FOR_EXPRS, std::move (v));
       }
 #else
       static
       symbol_type
-      make_ARITH_FOR_EXPRS (const WORD_LIST*& v)
+      make_ARITH_FOR_EXPRS (const WORD_LIST_PTR& v)
       {
         return symbol_type (token::ARITH_FOR_EXPRS, v);
       }
@@ -1587,14 +1587,14 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
-      make_COND_CMD (COMMAND* v)
+      make_COND_CMD (COMMAND_PTR v)
       {
         return symbol_type (token::COND_CMD, std::move (v));
       }
 #else
       static
       symbol_type
-      make_COND_CMD (const COMMAND*& v)
+      make_COND_CMD (const COMMAND_PTR& v)
       {
         return symbol_type (token::COND_CMD, v);
       }
@@ -2254,7 +2254,7 @@ switch (yykind)
       case symbol_kind::S_simple_list1: // simple_list1
       case symbol_kind::S_pipeline_command: // pipeline_command
       case symbol_kind::S_pipeline: // pipeline
-        value.copy< COMMAND* > (YY_MOVE (that.value));
+        value.copy< COMMAND_PTR > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
@@ -2264,25 +2264,25 @@ switch (yykind)
       case symbol_kind::S_case_clause: // case_clause
       case symbol_kind::S_pattern_list: // pattern_list
       case symbol_kind::S_case_clause_sequence: // case_clause_sequence
-        value.copy< PATTERN_LIST* > (YY_MOVE (that.value));
+        value.copy< PATTERN_LIST_PTR > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_redirection: // redirection
       case symbol_kind::S_redirection_list: // redirection_list
-        value.copy< REDIRECT* > (YY_MOVE (that.value));
+        value.copy< REDIRECT_PTR > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_WORD: // WORD
       case symbol_kind::S_ASSIGNMENT_WORD: // ASSIGNMENT_WORD
       case symbol_kind::S_REDIR_WORD: // REDIR_WORD
-        value.copy< WORD_DESC* > (YY_MOVE (that.value));
+        value.copy< WORD_DESC_PTR > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_ARITH_CMD: // ARITH_CMD
       case symbol_kind::S_ARITH_FOR_EXPRS: // ARITH_FOR_EXPRS
       case symbol_kind::S_word_list: // word_list
       case symbol_kind::S_pattern: // pattern
-        value.copy< WORD_LIST* > (YY_MOVE (that.value));
+        value.copy< WORD_LIST_PTR > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_NUMBER: // NUMBER
@@ -2348,7 +2348,7 @@ switch (yykind)
       case symbol_kind::S_simple_list1: // simple_list1
       case symbol_kind::S_pipeline_command: // pipeline_command
       case symbol_kind::S_pipeline: // pipeline
-        value.move< COMMAND* > (YY_MOVE (s.value));
+        value.move< COMMAND_PTR > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_simple_command_element: // simple_command_element
@@ -2358,25 +2358,25 @@ switch (yykind)
       case symbol_kind::S_case_clause: // case_clause
       case symbol_kind::S_pattern_list: // pattern_list
       case symbol_kind::S_case_clause_sequence: // case_clause_sequence
-        value.move< PATTERN_LIST* > (YY_MOVE (s.value));
+        value.move< PATTERN_LIST_PTR > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_redirection: // redirection
       case symbol_kind::S_redirection_list: // redirection_list
-        value.move< REDIRECT* > (YY_MOVE (s.value));
+        value.move< REDIRECT_PTR > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_WORD: // WORD
       case symbol_kind::S_ASSIGNMENT_WORD: // ASSIGNMENT_WORD
       case symbol_kind::S_REDIR_WORD: // REDIR_WORD
-        value.move< WORD_DESC* > (YY_MOVE (s.value));
+        value.move< WORD_DESC_PTR > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_ARITH_CMD: // ARITH_CMD
       case symbol_kind::S_ARITH_FOR_EXPRS: // ARITH_FOR_EXPRS
       case symbol_kind::S_word_list: // word_list
       case symbol_kind::S_pattern: // pattern
-        value.move< WORD_LIST* > (YY_MOVE (s.value));
+        value.move< WORD_LIST_PTR > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_NUMBER: // NUMBER

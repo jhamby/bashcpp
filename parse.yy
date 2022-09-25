@@ -54,10 +54,10 @@ yylex ()
 
 /* More general tokens. yylex () knows how to make these. */
 
-%token <WORD_DESC*> WORD ASSIGNMENT_WORD REDIR_WORD
+%token <WORD_DESC_PTR> WORD ASSIGNMENT_WORD REDIR_WORD
 %token <int64_t> NUMBER
-%token <WORD_LIST*> ARITH_CMD ARITH_FOR_EXPRS
-%token <COMMAND*> COND_CMD
+%token <WORD_LIST_PTR> ARITH_CMD ARITH_FOR_EXPRS
+%token <COMMAND_PTR> COND_CMD
 %token AND_AND OR_OR GREATER_GREATER LESS_LESS LESS_AND LESS_LESS_LESS
 %token GREATER_AND SEMI_SEMI SEMI_AND SEMI_SEMI_AND
 %token LESS_LESS_MINUS AND_GREATER AND_GREATER_GREATER LESS_GREATER
@@ -65,19 +65,19 @@ yylex ()
 
 /* The types that the various syntactical units return. */
 
-%type <COMMAND*> inputunit command pipeline pipeline_command
-%type <COMMAND*> list list0 list1 compound_list simple_list simple_list1
-%type <COMMAND*> simple_command shell_command
-%type <COMMAND*> for_command select_command case_command group_command
-%type <COMMAND*> arith_command
-%type <COMMAND*> cond_command
-%type <COMMAND*> arith_for_command
-%type <COMMAND*> coproc
-%type <COMMAND*> function_def function_body if_command elif_clause subshell
-%type <REDIRECT*> redirection redirection_list
+%type <COMMAND_PTR> inputunit command pipeline pipeline_command
+%type <COMMAND_PTR> list list0 list1 compound_list simple_list simple_list1
+%type <COMMAND_PTR> simple_command shell_command
+%type <COMMAND_PTR> for_command select_command case_command group_command
+%type <COMMAND_PTR> arith_command
+%type <COMMAND_PTR> cond_command
+%type <COMMAND_PTR> arith_for_command
+%type <COMMAND_PTR> coproc
+%type <COMMAND_PTR> function_def function_body if_command elif_clause subshell
+%type <REDIRECT_PTR> redirection redirection_list
 %type <ELEMENT> simple_command_element
-%type <WORD_LIST*> word_list pattern
-%type <PATTERN_LIST*> pattern_list case_clause_sequence case_clause
+%type <WORD_LIST_PTR> word_list pattern
+%type <PATTERN_LIST_PTR> pattern_list case_clause_sequence case_clause
 %type <int64_t> timespec
 %type <int64_t> list_terminator
 
@@ -93,7 +93,7 @@ inputunit: simple_list simple_list_terminator
                   /* Case of regular command.  Discard the error
                      safety net, and return the command just parsed. */
                   Shell &sh = *the_shell;
-                  sh.global_command = $1;
+                  sh.global_command = $1.value;
                   sh.eof_encountered = 0;
                   /* discard_parser_constructs (0); */
                   if (sh.parser_state & PST_CMDSUBST)
@@ -157,345 +157,345 @@ inputunit: simple_list simple_list_terminator
 
 word_list: WORD
                 {
-                  $$ = new WORD_LIST ($1);
+                  $$ = WORD_LIST_PTR ($1);
                 }
         | word_list WORD
                 {
-                  $$ = new WORD_LIST ($2, $1);
+                  $$ = WORD_LIST_PTR ($2, $1);
                 }
         ;
 
 redirection: '>' WORD
                 {
                   REDIRECTEE source (1);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_output_direction, redir, REDIR_NOFLAGS);
                 }
         | '<' WORD
                 {
                   REDIRECTEE source (0);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_input_direction, redir, REDIR_NOFLAGS);
                 }
         | NUMBER '>' WORD
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_output_direction, redir, REDIR_NOFLAGS);
                 }
         | NUMBER '<' WORD
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_input_direction, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD '>' WORD
                 {
-                  REDIRECTEE source (*$1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE source ($1);
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_output_direction, redir, REDIR_VARASSIGN);
                 }
         | REDIR_WORD '<' WORD
                 {
-                  REDIRECTEE source (*$1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE source ($1);
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_input_direction, redir, REDIR_VARASSIGN);
                 }
         | GREATER_GREATER WORD
                 {
                   REDIRECTEE source (1);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_appending_to, redir, REDIR_NOFLAGS);
                 }
         | NUMBER GREATER_GREATER WORD
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_appending_to, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD GREATER_GREATER WORD
                 {
-                  REDIRECTEE source (*$1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE source ($1);
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_appending_to, redir, REDIR_VARASSIGN);
                 }
         | GREATER_BAR WORD
                 {
                   REDIRECTEE source (1);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_output_force, redir, REDIR_NOFLAGS);
                 }
         | NUMBER GREATER_BAR WORD
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_output_force, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD GREATER_BAR WORD
                 {
-                  REDIRECTEE source (*$1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE source ($1);
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_output_force, redir, REDIR_VARASSIGN);
                 }
         | LESS_GREATER WORD
                 {
                   REDIRECTEE source (0);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_input_output, redir, REDIR_NOFLAGS);
                 }
         | NUMBER LESS_GREATER WORD
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_input_output, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD LESS_GREATER WORD
                 {
-                  REDIRECTEE source (*$1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE source ($1);
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_input_output, redir, REDIR_VARASSIGN);
                 }
         | LESS_LESS WORD
                 {
                   REDIRECTEE source (0);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_reading_until, redir, REDIR_NOFLAGS);
-                  the_shell->push_heredoc ($$);
+                  the_shell->push_heredoc ($$.value);
                 }
         | NUMBER LESS_LESS WORD
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_reading_until, redir, REDIR_NOFLAGS);
-                  the_shell->push_heredoc ($$);
+                  the_shell->push_heredoc ($$.value);
                 }
         | REDIR_WORD LESS_LESS WORD
                 {
-                  REDIRECTEE source (*$1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE source ($1);
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_reading_until, redir, REDIR_VARASSIGN);
-                  the_shell->push_heredoc ($$);
+                  the_shell->push_heredoc ($$.value);
                 }
         | LESS_LESS_MINUS WORD
                 {
                   REDIRECTEE source (0);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_deblank_reading_until, redir, REDIR_NOFLAGS);
-                  the_shell->push_heredoc ($$);
+                  the_shell->push_heredoc ($$.value);
                 }
         | NUMBER LESS_LESS_MINUS WORD
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_deblank_reading_until, redir, REDIR_NOFLAGS);
-                  the_shell->push_heredoc ($$);
+                  the_shell->push_heredoc ($$.value);
                 }
         | REDIR_WORD LESS_LESS_MINUS WORD
                 {
-                  REDIRECTEE source (*$1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE source ($1);
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_deblank_reading_until, redir, REDIR_VARASSIGN);
-                  the_shell->push_heredoc ($$);
+                  the_shell->push_heredoc ($$.value);
                 }
         | LESS_LESS_LESS WORD
                 {
                   REDIRECTEE source (0);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_reading_string, redir, REDIR_NOFLAGS);
                 }
         | NUMBER LESS_LESS_LESS WORD
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_reading_string, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD LESS_LESS_LESS WORD
                 {
-                  REDIRECTEE source (*$1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE source ($1);
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_reading_string, redir, REDIR_VARASSIGN);
                 }
         | LESS_AND NUMBER
                 {
                   REDIRECTEE source (0);
                   REDIRECTEE redir ($2);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_duplicating_input, redir, REDIR_NOFLAGS);
                 }
         | NUMBER LESS_AND NUMBER
                 {
                   REDIRECTEE source ($1);
                   REDIRECTEE redir ($3);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_duplicating_input, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD LESS_AND NUMBER
                 {
-                  REDIRECTEE source (*$1);
+                  REDIRECTEE source ($1);
                   REDIRECTEE redir ($3);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_duplicating_input, redir, REDIR_VARASSIGN);
                 }
         | GREATER_AND NUMBER
                 {
                   REDIRECTEE source (1);
                   REDIRECTEE redir ($2);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_duplicating_output, redir, REDIR_NOFLAGS);
                 }
         | NUMBER GREATER_AND NUMBER
                 {
                   REDIRECTEE source ($1);
                   REDIRECTEE redir ($3);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_duplicating_output, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD GREATER_AND NUMBER
                 {
-                  REDIRECTEE source (*$1);
+                  REDIRECTEE source ($1);
                   REDIRECTEE redir ($3);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_duplicating_output, redir, REDIR_VARASSIGN);
                 }
         | LESS_AND WORD
                 {
                   REDIRECTEE source (0);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_duplicating_input_word, redir, REDIR_NOFLAGS);
                 }
         | NUMBER LESS_AND WORD
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_duplicating_input_word, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD LESS_AND WORD
                 {
-                  REDIRECTEE source (*$1);
-                  REDIRECTEE redir (*$3);
+                  REDIRECTEE source ($1);
+                  REDIRECTEE redir ($3);
                   $$
-                      = new REDIRECT (source, r_duplicating_input_word, redir,
+                      = REDIRECT_PTR (source, r_duplicating_input_word, redir,
                                       REDIR_VARASSIGN);
                 }
         | GREATER_AND WORD
                 {
                   REDIRECTEE source (1);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_duplicating_output_word, redir, REDIR_NOFLAGS);
                 }
         | NUMBER GREATER_AND WORD
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir (*$3);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($3);
+                  $$ = REDIRECT_PTR (
                       source, r_duplicating_output_word, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD GREATER_AND WORD
                 {
-                  REDIRECTEE source (*$1);
-                  REDIRECTEE redir (*$3);
+                  REDIRECTEE source ($1);
+                  REDIRECTEE redir ($3);
                   $$
-                      = new REDIRECT (source, r_duplicating_output_word, redir,
+                      = REDIRECT_PTR (source, r_duplicating_output_word, redir,
                                       REDIR_VARASSIGN);
                 }
         | GREATER_AND '-'
                 {
                   REDIRECTEE source (1);
                   REDIRECTEE redir (0);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_close_this, redir, REDIR_NOFLAGS);
                 }
         | NUMBER GREATER_AND '-'
                 {
                   REDIRECTEE source ($1);
                   REDIRECTEE redir (0);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_close_this, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD GREATER_AND '-'
                 {
-                  REDIRECTEE source (*$1);
+                  REDIRECTEE source ($1);
                   REDIRECTEE redir (0);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_close_this, redir, REDIR_VARASSIGN);
                 }
         | LESS_AND '-'
                 {
                   REDIRECTEE source (0);
                   REDIRECTEE redir (0);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_close_this, redir, REDIR_NOFLAGS);
                 }
         | NUMBER LESS_AND '-'
                 {
                   REDIRECTEE source ($1);
                   REDIRECTEE redir (0);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_close_this, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD LESS_AND '-'
                 {
-                  REDIRECTEE source (*$1);
+                  REDIRECTEE source ($1);
                   REDIRECTEE redir (0);
-                  $$ = new REDIRECT (
+                  $$ = REDIRECT_PTR (
                       source, r_close_this, redir, REDIR_VARASSIGN);
                 }
         | AND_GREATER WORD
                 {
                   REDIRECTEE source (1);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_err_and_out, redir, REDIR_NOFLAGS);
                 }
         | AND_GREATER_GREATER WORD
                 {
                   REDIRECTEE source (1);
-                  REDIRECTEE redir (*$2);
-                  $$ = new REDIRECT (
+                  REDIRECTEE redir ($2);
+                  $$ = REDIRECT_PTR (
                       source, r_append_err_and_out, redir, REDIR_NOFLAGS);
                 }
         ;
 
 simple_command_element: WORD
                 {
-                  $$.word = $1;
+                  $$.word = $1.value;
                   $$.redirect = nullptr;
                 }
         | ASSIGNMENT_WORD
                 {
-                  $$.word = $1;
+                  $$.word = $1.value;
                   $$.redirect = nullptr;
                 }
         | redirection
                 {
-                  $$.redirect = $1;
+                  $$.redirect = $1.value;
                   $$.word = nullptr;
                 }
         ;
@@ -506,7 +506,7 @@ redirection_list: redirection
                 }
         | redirection_list redirection
                 {
-                  $$ = $1->append ($2);
+                  $$ = REDIRECT_PTR ($1.value->append ($2.value));
                 }
         ;
 
@@ -530,16 +530,16 @@ command: simple_command
                 }
         | shell_command redirection_list
                 {
-                  COMMAND *tc = $1;
+                  COMMAND *tc = $1.value;
                   if (tc->redirects)
                     {
-                      tc->redirects->append ($2);
+                      tc->redirects->append ($2.value);
                     }
                   else
                     {
-                      tc->redirects = $2;
+                      tc->redirects = $2.value;
                     }
-                  $$ = tc;
+                  $$ = COMMAND_PTR (tc);
                 }
         | function_def
                 {
@@ -561,13 +561,13 @@ shell_command: for_command
                 }
         | WHILE compound_list DO compound_list DONE
                 {
-                  $$ = new UNTIL_WHILE_COM (
-                      LOOP_WHILE, $2, $4);
+                  $$ = COMMAND_PTR (new UNTIL_WHILE_COM (
+                      LOOP_WHILE, $2.value, $4.value));
                 }
         | UNTIL compound_list DO compound_list DONE
                 {
-                  $$ = new UNTIL_WHILE_COM (
-                      LOOP_UNTIL, $2, $4);
+                  $$ = COMMAND_PTR (new UNTIL_WHILE_COM (
+                      LOOP_UNTIL, $2.value, $4.value));
                 }
         | select_command
                 {
@@ -602,86 +602,86 @@ shell_command: for_command
 for_command: FOR WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      FOR_LOOP, $2,
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      FOR_LOOP, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
-                      $5,
-                      sh.word_lineno[sh.word_top]);
+                      $5.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | FOR WORD newline_list '{' compound_list '}'
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      FOR_LOOP, $2,
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      FOR_LOOP, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
-                      $5,
-                      sh.word_lineno[sh.word_top]);
+                      $5.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | FOR WORD ';' newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      FOR_LOOP, $2,
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      FOR_LOOP, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
-                      $6,
-                      sh.word_lineno[sh.word_top]);
+                      $6.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | FOR WORD ';' newline_list '{' compound_list '}'
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      FOR_LOOP, $2,
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      FOR_LOOP, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
-                      $6,
-                      sh.word_lineno[sh.word_top]);
+                      $6.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | FOR WORD newline_list IN word_list list_terminator newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      FOR_LOOP, $2,
-                      $5->reverse (),
-                      $9,
-                      sh.word_lineno[sh.word_top]);
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      FOR_LOOP, $2.value,
+                      $5.value->reverse (),
+                      $9.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | FOR WORD newline_list IN word_list list_terminator newline_list '{' compound_list '}'
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      FOR_LOOP, $2,
-                      $5->reverse (),
-                      $9,
-                      sh.word_lineno[sh.word_top]);
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      FOR_LOOP, $2.value,
+                      $5.value->reverse (),
+                      $9.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | FOR WORD newline_list IN list_terminator newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      FOR_LOOP, $2, nullptr,
-                      $8,
-                      sh.word_lineno[sh.word_top]);
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      FOR_LOOP, $2.value, nullptr,
+                      $8.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | FOR WORD newline_list IN list_terminator newline_list '{' compound_list '}'
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      FOR_LOOP, $2, nullptr,
-                      $8,
-                      sh.word_lineno[sh.word_top]);
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      FOR_LOOP, $2.value, nullptr,
+                      $8.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
@@ -693,7 +693,7 @@ arith_for_command: FOR ARITH_FOR_EXPRS list_terminator newline_list DO compound_
                   $$ = sh.make_arith_for_command (
                       $2,
                       $6, sh.arith_for_lineno);
-                  if ($$ == nullptr)
+                  if ($$.value == nullptr)
                     YYERROR;
                   if (sh.word_top > 0)
                     sh.word_top--;
@@ -704,7 +704,7 @@ arith_for_command: FOR ARITH_FOR_EXPRS list_terminator newline_list DO compound_
                   $$ = sh.make_arith_for_command (
                       $2,
                       $6, sh.arith_for_lineno);
-                  if ($$ == nullptr)
+                  if ($$.value == nullptr)
                     YYERROR;
                   if (sh.word_top > 0)
                     sh.word_top--;
@@ -715,7 +715,7 @@ arith_for_command: FOR ARITH_FOR_EXPRS list_terminator newline_list DO compound_
                   $$ = sh.make_arith_for_command (
                       $2,
                       $4, sh.arith_for_lineno);
-                  if ($$ == nullptr)
+                  if ($$.value == nullptr)
                     YYERROR;
                   if (sh.word_top > 0)
                     sh.word_top--;
@@ -726,7 +726,7 @@ arith_for_command: FOR ARITH_FOR_EXPRS list_terminator newline_list DO compound_
                   $$ = sh.make_arith_for_command (
                       $2,
                       $4, sh.arith_for_lineno);
-                  if ($$ == nullptr)
+                  if ($$.value == nullptr)
                     YYERROR;
                   if (sh.word_top > 0)
                     sh.word_top--;
@@ -736,86 +736,86 @@ arith_for_command: FOR ARITH_FOR_EXPRS list_terminator newline_list DO compound_
 select_command:	SELECT WORD newline_list DO list DONE
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      SELECT_LOOP, $2,
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      SELECT_LOOP, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
-                      $5,
-                      sh.word_lineno[sh.word_top]);
+                      $5.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | SELECT WORD newline_list '{' list '}'
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      SELECT_LOOP, $2,
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      SELECT_LOOP, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
-                      $5,
-                      sh.word_lineno[sh.word_top]);
+                      $5.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | SELECT WORD ';' newline_list DO list DONE
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      SELECT_LOOP, $2,
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      SELECT_LOOP, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
-                      $6,
-                      sh.word_lineno[sh.word_top]);
+                      $6.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | SELECT WORD ';' newline_list '{' list '}'
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      SELECT_LOOP, $2,
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      SELECT_LOOP, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
-                      $6,
-                      sh.word_lineno[sh.word_top]);
+                      $6.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | SELECT WORD newline_list IN word_list list_terminator newline_list DO list DONE
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      SELECT_LOOP, $2,
-                      $5->reverse (),
-                      $9,
-                      sh.word_lineno[sh.word_top]);
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      SELECT_LOOP, $2.value,
+                      $5.value->reverse (),
+                      $9.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | SELECT WORD newline_list IN word_list list_terminator newline_list '{' list '}'
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      SELECT_LOOP, $2,
-                      $5->reverse (),
-                      $9,
-                      sh.word_lineno[sh.word_top]);
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      SELECT_LOOP, $2.value,
+                      $5.value->reverse (),
+                      $9.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | SELECT WORD newline_list IN list_terminator newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      SELECT_LOOP, $2,
-                      nullptr, $8,
-                      sh.word_lineno[sh.word_top]);
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      SELECT_LOOP, $2.value,
+                      nullptr, $8.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | SELECT WORD newline_list IN list_terminator newline_list '{' compound_list '}'
                 {
                   Shell &sh = *the_shell;
-                  $$ = new FOR_SELECT_COM (
-                      SELECT_LOOP, $2,
-                      nullptr, $8,
-                      sh.word_lineno[sh.word_top]);
+                  $$ = COMMAND_PTR (new FOR_SELECT_COM (
+                      SELECT_LOOP, $2.value,
+                      nullptr, $8.value,
+                      sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
@@ -824,21 +824,24 @@ select_command:	SELECT WORD newline_list DO list DONE
 case_command: CASE WORD newline_list IN newline_list ESAC
                 {
                   Shell &sh = *the_shell;
-                  $$ = new CASE_COM ($2, nullptr, sh.word_lineno[sh.word_top]);
+                  $$ = COMMAND_PTR (new CASE_COM ($2.value, nullptr,
+                                    sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | CASE WORD newline_list IN case_clause_sequence newline_list ESAC
                 {
                   Shell &sh = *the_shell;
-                  $$ = new CASE_COM ($2, $5, sh.word_lineno[sh.word_top]);
+                  $$ = COMMAND_PTR (new CASE_COM ($2.value, $5.value,
+                                    sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
         | CASE WORD newline_list IN case_clause ESAC
                 {
                   Shell &sh = *the_shell;
-                  $$ = new CASE_COM ($2, $5, sh.word_lineno[sh.word_top]);
+                  $$ = COMMAND_PTR (new CASE_COM ($2.value, $5.value,
+                                    sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
@@ -880,7 +883,7 @@ function_body: shell_command
                 }
         | shell_command redirection_list
                 {
-                  COMMAND *tc = $1;
+                  COMMAND *tc = $1.value;
 
                   /* According to Posix.2 3.9.5, redirections
                      specified after the body of a function should
@@ -896,81 +899,81 @@ function_body: shell_command
                      though -- the only difference is in how the
                      command printing code displays the redirections. */
                   if (tc->redirects)
-                    tc->redirects->append ($2);
+                    tc->redirects->append ($2.value);
                   else
-                    tc->redirects = $2;
+                    tc->redirects = $2.value;
 
-                  $$ = $1;
+                  $$ = COMMAND_PTR ($1);
                 }
         ;
 
 subshell: '(' compound_list ')'
                 {
-                  $$ = new SUBSHELL_COM ($2);
+                  $$ = COMMAND_PTR (new SUBSHELL_COM ($2.value));
                 }
         ;
 
 coproc: COPROC shell_command
                 {
-                  $$ = new COPROC_COM ("COPROC", $2);
+                  $$ = COMMAND_PTR (new COPROC_COM ("COPROC", $2.value));
                 }
         | COPROC shell_command redirection_list
                 {
-                  COMMAND *tc = $2;
+                  COMMAND *tc = $2.value;
 
                   if (tc->redirects)
-                    tc->redirects->append ($3);
+                    tc->redirects->append ($3.value);
                   else
-                    tc->redirects = $3;
+                    tc->redirects = $3.value;
 
-                  $$ = new COPROC_COM ("COPROC", tc);
+                  $$ = COMMAND_PTR (new COPROC_COM ("COPROC", tc));
                 }
         | COPROC WORD shell_command
                 {
-                  $$ = new COPROC_COM ($2->word, $3);
+                  $$ = COMMAND_PTR (new COPROC_COM ($2.value->word, $3.value));
                 }
         | COPROC WORD shell_command redirection_list
                 {
-                  COMMAND *tc = $3;
+                  COMMAND *tc = $3.value;
 
                   if (tc->redirects)
-                    tc->redirects->append ($4);
+                    tc->redirects->append ($4.value);
                   else
-                    tc->redirects = $4;
+                    tc->redirects = $4.value;
 
-                  $$ = new COPROC_COM ($2->word, tc);
+                  $$ = COMMAND_PTR (new COPROC_COM ($2.value->word, tc));
                 }
         | COPROC simple_command
                 {
-                  $$ = new COPROC_COM (
-                      "COPROC", the_shell->clean_simple_command ($2));
+                  $$ = COMMAND_PTR (new COPROC_COM (
+                      "COPROC", the_shell->clean_simple_command ($2).value));
                 }
         ;
 
 if_command: IF compound_list THEN compound_list FI
                 {
-                  $$ = new IF_COM ($2, $4, nullptr);
+                  $$ = COMMAND_PTR (new IF_COM ($2.value, $4.value, nullptr));
                 }
         | IF compound_list THEN compound_list ELSE compound_list FI
                 {
-                  $$ = new IF_COM ($2, $4, $6);
+                  $$ = COMMAND_PTR (new IF_COM ($2.value, $4.value, $6.value));
                 }
         | IF compound_list THEN compound_list elif_clause FI
                 {
-                  $$ = new IF_COM ($2, $4, $5);
+                  $$ = COMMAND_PTR (new IF_COM ($2.value, $4.value, $5.value));
                 }
         ;
 
 
 group_command: '{' compound_list '}'
                 {
-                  $$ = new GROUP_COM ($2);
+                  $$ = COMMAND_PTR (new GROUP_COM ($2.value));
                 }
         ;
 
 arith_command: ARITH_CMD
                 {
-                  $$ = new ARITH_COM ($1);
+                  $$ = COMMAND_PTR (new ARITH_COM ($1.value));
                 }
         ;
 
@@ -982,41 +985,45 @@ cond_command: COND_START COND_CMD COND_END
 
 elif_clause: ELIF compound_list THEN compound_list
                 {
-                  $$ = new IF_COM ($2, $4, nullptr);
+                  $$ = COMMAND_PTR (new IF_COM ($2.value, $4.value, nullptr));
                 }
         | ELIF compound_list THEN compound_list ELSE compound_list
                 {
-                  $$ = new IF_COM ($2, $4, $6);
+                  $$ = COMMAND_PTR (new IF_COM ($2.value, $4.value, $6.value));
                 }
         | ELIF compound_list THEN compound_list elif_clause
                 {
-                  $$ = new IF_COM ($2, $4, $5);
+                  $$ = COMMAND_PTR (new IF_COM ($2.value, $4.value, $5.value));
                 }
         ;
 
 case_clause: pattern_list
         | case_clause_sequence pattern_list
                 {
-                  $2->set_next ($1);
+                  $2.value->set_next ($1.value);
                   $$ = $2;
                 }
         ;
 
 pattern_list: newline_list pattern ')' compound_list
                 {
-                  $$ = new PATTERN_LIST ($2, $4);
+                  $$ = PATTERN_LIST_PTR (
+                        new PATTERN_LIST ($2.value, $4.value));
                 }
         | newline_list pattern ')' newline_list
                 {
-                  $$ = new PATTERN_LIST ($2, nullptr);
+                  $$ = PATTERN_LIST_PTR (
+                        new PATTERN_LIST ($2.value, nullptr));
                 }
         | newline_list '(' pattern ')' compound_list
                 {
-                  $$ = new PATTERN_LIST ($3, $5);
+                  $$ = PATTERN_LIST_PTR (
+                        new PATTERN_LIST ($3.value, $5.value));
                 }
         | newline_list '(' pattern ')' newline_list
                 {
-                  $$ = new PATTERN_LIST ($3, nullptr);
+                  $$ = PATTERN_LIST_PTR (
+                        new PATTERN_LIST ($3.value, nullptr));
                 }
         ;
 
@@ -1026,40 +1033,40 @@ case_clause_sequence: pattern_list SEMI_SEMI
                 }
         | case_clause_sequence pattern_list SEMI_SEMI
                 {
-                  $2->set_next ($1);
+                  $2.value->set_next ($1.value);
                   $$ = $2;
                 }
         | pattern_list SEMI_AND
                 {
-                  $1->flags |= CASEPAT_FALLTHROUGH;
+                  $1.value->flags |= CASEPAT_FALLTHROUGH;
                   $$ = $1;
                 }
         | case_clause_sequence pattern_list SEMI_AND
                 {
-                  $2->flags |= CASEPAT_FALLTHROUGH;
-                  $2->set_next ($1);
+                  $2.value->flags |= CASEPAT_FALLTHROUGH;
+                  $2.value->set_next ($1.value);
                   $$ = $2;
                 }
         | pattern_list SEMI_SEMI_AND
                 {
-                  $1->flags |= CASEPAT_TESTNEXT;
+                  $1.value->flags |= CASEPAT_TESTNEXT;
                   $$ = $1;
                 }
         | case_clause_sequence pattern_list SEMI_SEMI_AND
                 {
-                  $2->flags |= CASEPAT_TESTNEXT;
-                  $2->set_next ($1);
+                  $2.value->flags |= CASEPAT_TESTNEXT;
+                  $2.value->set_next ($1.value);
                   $$ = $2;
                 }
         ;
 
 pattern: WORD
                 {
-                  $$ = new WORD_LIST ($1);
+                  $$ = WORD_LIST_PTR ($1);
                 }
         | pattern '|' WORD
                 {
-                  $$ = new WORD_LIST ($3, $1);
+                  $$ = WORD_LIST_PTR ($3, $1);
                 }
         ;
 
@@ -1086,40 +1093,40 @@ compound_list: list
 list0: list1 '\n' newline_list
         | list1 '&' newline_list
                 {
-                  COMMAND *cmd = $1;
+                  COMMAND *cmd = $1.value;
                   if (typeid (*cmd) == typeid (CONNECTION))
                     $$ = connect_async_list (cmd, nullptr, '&');
                   else
-                    $$ = new CONNECTION (cmd, nullptr, '&');
+                    $$ = COMMAND_PTR (new CONNECTION (cmd, nullptr, '&'));
                 }
         | list1 ';' newline_list
         ;
 
 list1: list1 AND_AND newline_list list1
                 {
-                  $$ = new CONNECTION ($1, $4,
-                                        static_cast<int> (token::AND_AND));
+                  $$ = COMMAND_PTR (new CONNECTION ($1.value, $4.value,
+                                        static_cast<int> (token::AND_AND)));
                 }
         | list1 OR_OR newline_list list1
                 {
-                  $$ = new CONNECTION ($1, $4,
-                                        static_cast<int> (token::OR_OR));
+                  $$ = COMMAND_PTR (new CONNECTION ($1.value, $4.value,
+                                        static_cast<int> (token::OR_OR)));
                 }
         | list1 '&' newline_list list1
                 {
-                  COMMAND *cmd = $1;
+                  COMMAND *cmd = $1.value;
                   if (typeid (*cmd) == typeid (CONNECTION))
-                    $$ = connect_async_list (cmd, $4, '&');
+                    $$ = connect_async_list (cmd, $4.value, '&');
                   else
-                    $$ = new CONNECTION (cmd, $4, '&');
+                    $$ = COMMAND_PTR (new CONNECTION (cmd, $4.value, '&'));
                 }
         | list1 ';' newline_list list1
                 {
-                  $$ = new CONNECTION ($1, $4, ';');
+                  $$ = COMMAND_PTR (new CONNECTION ($1.value, $4.value, ';'));
                 }
         | list1 '\n' newline_list list1
                 {
-                  $$ = new CONNECTION ($1, $4, ';');
+                  $$ = COMMAND_PTR (new CONNECTION ($1.value, $4.value, ';'));
                 }
         | pipeline_command
                 {
@@ -1158,7 +1165,7 @@ simple_list: simple_list1
                   if ((sh.parser_state & PST_CMDSUBST)
                       && sh.current_token == sh.shell_eof_token)
                     {
-                      sh.global_command = $1;
+                      sh.global_command = $1.value;
                       sh.eof_encountered = 0;
                       sh.rewind_input_string ();
                       YYACCEPT;
@@ -1166,11 +1173,11 @@ simple_list: simple_list1
                 }
         | simple_list1 '&'
                 {
-                  COMMAND *cmd = $1;
+                  COMMAND *cmd = $1.value;
                   if (typeid (*cmd) == typeid (CONNECTION))
                     $$ = connect_async_list (cmd, nullptr, '&');
                   else
-                    $$ = new CONNECTION (cmd, nullptr, '&');
+                    $$ = COMMAND_PTR (new CONNECTION (cmd, nullptr, '&'));
                   Shell &sh = *the_shell;
                   if (sh.need_here_doc)
                     sh.gather_here_documents ();
@@ -1192,7 +1199,7 @@ simple_list: simple_list1
                   if ((sh.parser_state & PST_CMDSUBST)
                       && sh.current_token == sh.shell_eof_token)
                     {
-                      sh.global_command = $1;
+                      sh.global_command = $1.value;
                       sh.eof_encountered = 0;
                       sh.rewind_input_string ();
                       YYACCEPT;
@@ -1202,25 +1209,25 @@ simple_list: simple_list1
 
 simple_list1: simple_list1 AND_AND newline_list simple_list1
                 {
-                  $$ = new CONNECTION ($1, $4,
-                                        static_cast<int> (token::AND_AND));
+                  $$ = COMMAND_PTR (new CONNECTION ($1.value, $4.value,
+                                        static_cast<int> (token::AND_AND)));
                 }
         | simple_list1 OR_OR newline_list simple_list1
                 {
-                  $$ = new CONNECTION ($1, $4,
-                                        static_cast<int> (token::OR_OR));
+                  $$ = COMMAND_PTR (new CONNECTION ($1.value, $4.value,
+                                        static_cast<int> (token::OR_OR)));
                 }
         | simple_list1 '&' simple_list1
                 {
-                  COMMAND *cmd = $1;
+                  COMMAND *cmd = $1.value;
                   if (typeid (*cmd) == typeid (CONNECTION))
-                    $$ = connect_async_list (cmd, $3, '&');
+                    $$ = connect_async_list (cmd, $3.value, '&');
                   else
-                    $$ = new CONNECTION (cmd, $3, '&');
+                    $$ = COMMAND_PTR (new CONNECTION (cmd, $3.value, '&'));
                 }
         | simple_list1 ';' simple_list1
                 {
-                  $$ = new CONNECTION ($1, $3, ';');
+                  $$ = COMMAND_PTR (new CONNECTION ($1.value, $3.value, ';'));
                 }
         | pipeline_command
                 {
@@ -1234,15 +1241,14 @@ pipeline_command: pipeline
                 }
         | BANG pipeline_command
                 {
-                  if ($2)
-                    $2->flags ^= CMD_INVERT_RETURN; /* toggle */
+                  if ($2.value)
+                    $2.value->flags ^= CMD_INVERT_RETURN; /* toggle */
                   $$ = $2;
                 }
         | timespec pipeline_command
                 {
-                  if ($2)
-                    $2->flags
-                        |= static_cast<cmd_flags> ($1);
+                  if ($2.value)
+                    $2.value->flags |= static_cast<cmd_flags> ($1);
 
                   $$ = $2;
                 }
@@ -1257,8 +1263,8 @@ pipeline_command: pipeline
                      terminate this, one to terminate the command) */
                   x.word = nullptr;
                   x.redirect = nullptr;
-                  $$ = new SIMPLE_COM (x, nullptr);
-                  $$->flags |= static_cast<cmd_flags> ($1);
+                  $$ = COMMAND_PTR (new SIMPLE_COM (x, nullptr));
+                  $$.value->flags |= static_cast<cmd_flags> ($1);
 
                   /* XXX - let's cheat and push a newline back */
                   Shell &sh = *the_shell;
@@ -1281,8 +1287,8 @@ pipeline_command: pipeline
                      terminate this, one to terminate the command) */
                   x.word = nullptr;
                   x.redirect = nullptr;
-                  $$ = new SIMPLE_COM (x, nullptr);
-                  $$->flags |= CMD_INVERT_RETURN;
+                  $$ = COMMAND_PTR (new SIMPLE_COM (x, nullptr));
+                  $$.value->flags |= CMD_INVERT_RETURN;
                   /* XXX - let's cheat and push a newline back */
                   Shell &sh = *the_shell;
                   if ($2 == '\n')
@@ -1296,7 +1302,7 @@ pipeline_command: pipeline
 
 pipeline: pipeline '|' newline_list pipeline
                 {
-                  $$ = new CONNECTION ($1, $4, '|');
+                  $$ = COMMAND_PTR (new CONNECTION ($1.value, $4.value, '|'));
                 }
         | pipeline BAR_AND newline_list pipeline
                 {
@@ -1305,9 +1311,10 @@ pipeline: pipeline '|' newline_list pipeline
                   REDIRECT *r;
                   REDIRECT **rp; // pointer to "redirects" to update
 
-                  tc = $1;
-                  if (typeid (*tc) == typeid (SIMPLE_COM))
-                    rp = &(dynamic_cast<SIMPLE_COM *> (tc)->simple_redirects);
+                  tc = $1.value;
+                  SIMPLE_COM *scp = dynamic_cast<SIMPLE_COM *> (tc);
+                  if (scp)
+                    rp = &(scp->simple_redirects);
                   else
                     rp = &(tc->redirects);
 
@@ -1320,7 +1327,7 @@ pipeline: pipeline '|' newline_list pipeline
                   else
                     *rp = r;
 
-                  $$ = new CONNECTION ($1, $4, '|');
+                  $$ = COMMAND_PTR (new CONNECTION ($1.value, $4.value, '|'));
                 }
         | command
                 {

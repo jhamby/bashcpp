@@ -104,6 +104,16 @@ class subst_expand_fatal : public subst_expand_error
   virtual const char *what () const noexcept override;
 };
 
+class extract_string_error : public std::exception
+{
+  virtual const char *what () const noexcept override;
+};
+
+class extract_string_fatal : public extract_string_error
+{
+  virtual const char *what () const noexcept override;
+};
+
 class matched_pair_error : public std::exception
 {
   virtual const char *what () const noexcept override;

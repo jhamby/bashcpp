@@ -1821,7 +1821,7 @@ Shell::show_shell_usage (FILE *fp, bool extra)
 
   if (extra)
     std::fprintf (fp, _ ("GNU bash, version %s-(%s)\n"),
-                  shell_version_string (), MACHTYPE);
+                  shell_version_string ().c_str (), MACHTYPE);
   std::fprintf (fp,
                 _ ("Usage:\t%s [GNU long option] [option] ...\n\t%s [GNU long "
                    "option] [option] script-file ...\n"),

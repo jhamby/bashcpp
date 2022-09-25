@@ -116,7 +116,7 @@ operator& (const char_flags &a, const char_flags &b)
 static inline char_flags
 operator~(const char_flags &a)
 {
-  return static_cast<char_flags> (~static_cast<char_flags> (a));
+  return static_cast<char_flags> (~static_cast<uint32_t> (a));
 }
 
 #define shellmeta(c) (sh_syntaxtab[static_cast<unsigned char> (c)] & CSHMETA)

@@ -1572,8 +1572,8 @@ Shell::reset_parser ()
   shell_input_line.clear ();
   shell_input_line_index = 0;
 
-  delete word_desc_to_read;
-  word_desc_to_read = nullptr;
+  delete word_desc_to_read.value;
+  word_desc_to_read.value = nullptr;
 
   eol_ungetc_lookahead = 0;
 
@@ -1604,14 +1604,14 @@ Shell::read_token (int command)
       if (token_to_read == parser::token::WORD)
         {
           parser::symbol_type word = parser::make_WORD (word_desc_to_read);
-          word_desc_to_read = nullptr;
+          word_desc_to_read.value = nullptr;
           return word;
         }
       else if (token_to_read == parser::token::ASSIGNMENT_WORD)
         {
           parser::symbol_type word
               = parser::make_ASSIGNMENT_WORD (word_desc_to_read);
-          word_desc_to_read = nullptr;
+          word_desc_to_read.value = nullptr;
           return word;
         }
 
@@ -1900,17 +1900,15 @@ Shell::parse_matched_pair (
     int qc, /* `"' if this construct is within double quotes */
     int open, int close, pgroup_flags flags)
 {
-  int count, ch, prevch;
+  int count, ch;
   int start_lineno;
-  //   char *ret, *nestret, *ttrans;
-  //   int retind, retsize;
   pgroup_flags rflags;
   dolbrace_state_t dolbrace_state;
 
   dolbrace_state = (flags & P_DOLBRACE) ? DOLBRACE_PARAM : DOLBRACE_NOFLAGS;
 
-  /*itrace("parse_matched_pair[%d]: open = %c close = %c flags = %d",
-   * line_number, open, close, flags);*/
+  // itrace ("parse_matched_pair[%d]: open = %c close = %c flags = %d",
+  //         line_number, open, close, flags);
   count = 1;
   lexical_state_flags tflags = LEX_NOFLAGS;
 
@@ -1927,7 +1925,6 @@ Shell::parse_matched_pair (
   ch = EOF; /* just in case */
   while (count)
     {
-      prevch = ch;
       ch = shell_getc (qc != '\'' && (tflags & (LEX_PASSNEXT)) == 0);
 
       if (ch == EOF)
@@ -2093,7 +2090,7 @@ Shell::parse_matched_pair (
                   else
                     nestret = parse_matched_pair (ch, ch, ch, rflags);
                 }
-              catch (const matched_pair_error &)
+              catch (const std::exception &)
                 {
                   dstack.pop_back ();
                   throw;
@@ -2137,18 +2134,12 @@ Shell::parse_matched_pair (
                               && (extended_quote || (rflags & P_DQUOTE) == 0))
                 {
                   /* Locale expand $"..." here. */
-                  ttrans = localeexpand (nestret, 0, nestlen - 1, start_lineno,
-                                         &ttranslen);
-                  free (nestret);
-
-                  nestret = sh_mkdoublequoted (ttrans, ttranslen, 0);
-                  free (ttrans);
-                  nestlen = ttranslen + 2;
+                  std::string ttrans = localeexpand (nestret, start_lineno);
+                  nestret = sh_mkdoublequoted (ttrans, 0);
                   ret.erase (ret.size () - 2, 2); /* back up before the $" */
                 }
 
-              APPEND_NESTRET ();
-              FREE (nestret);
+              ret += nestret;
             }
           else if ((flags & (P_ARRAYSUB | P_DOLBRACE)) && (tflags & LEX_WASDOL)
                    && (ch == '(' || ch == '{' || ch == '[')) /* ) } ] */
@@ -2161,38 +2152,36 @@ Shell::parse_matched_pair (
             goto parse_dollar_word;
 #endif
         }
+
       /* Parse an old-style command substitution within double quotes as a
          single word. */
       /* XXX - sh and ksh93 don't do this - XXX */
       else if MBTEST (open == '"' && ch == '`')
         {
-          nestret = parse_matched_pair (0, '`', '`', &nestlen, rflags);
-
-          CHECK_NESTRET_ERROR ();
-          APPEND_NESTRET ();
-
-          FREE (nestret);
+          // this call may throw matched_pair_error
+          std::string nestret = parse_matched_pair (0, '`', '`', rflags);
+          ret += nestret;
         }
       else if MBTEST (open != '`' && (tflags & LEX_WASDOL)
                       && (ch == '(' || ch == '{' || ch == '[')) /* ) } ] */
         /* check for $(), $[], or ${} inside quoted string. */
         {
         parse_dollar_word:
+          std::string nestret;
           if (open == ch) /* undo previous increment */
             count--;
           if (ch == '(') /* ) */
-            nestret = parse_comsub (0, '(', ')', &nestlen,
-                                    (rflags | P_COMMAND) & ~P_DQUOTE);
+            nestret
+                = parse_comsub (0, '(', ')', (rflags | P_COMMAND) & ~P_DQUOTE);
           else if (ch == '{') /* } */
+            // this call may throw matched_pair_error
             nestret = parse_matched_pair (
                 0, '{', '}', (P_FIRSTCLOSE | P_DOLBRACE | rflags));
           else if (ch == '[') /* ] */
-            nestret = parse_matched_pair (0, '[', ']', &nestlen, rflags);
+            // this call may throw matched_pair_error
+            nestret = parse_matched_pair (0, '[', ']', rflags);
 
-          CHECK_NESTRET_ERROR ();
-          APPEND_NESTRET ();
-
-          FREE (nestret);
+          ret += nestret;
         }
 
 #if defined(PROCESS_SUBSTITUTION)
@@ -2207,7 +2196,8 @@ Shell::parse_matched_pair (
         tflags &= ~LEX_WASDOL;
     }
 
-  // itrace("parse_matched_pair[%d]: returning %s", line_number, ret.c_str ());
+  // itrace ("parse_matched_pair[%d]: returning %s", line_number, ret.c_str
+  //         ());
   return ret;
 }
 
@@ -2290,24 +2280,25 @@ dump_tflags (lexical_state_flags flags)
 std::string
 Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
 {
-  int count, ch, peekc, lex_rwlen, lex_wlen, lex_firstind;
-  int nestlen, ttranslen, start_lineno, orig_histexp;
-  char *ret, *nestret, *ttrans, *heredelim;
-  int retind, retsize, rflags, hdlen;
+  int count, ch, peekc;
+  size_t lex_rwlen, lex_wlen, hdlen = 0;
+  ssize_t lex_firstind;
+  int start_lineno;
+  char *heredelim;
   lexical_state_flags tflags;
 
   /* Posix interp 217 says arithmetic expressions have precedence, so
      assume $(( introduces arithmetic expansion and parse accordingly. */
-  peekc = shell_getc (0);
+  peekc = shell_getc (false);
   shell_ungetc (peekc);
   if (peekc == '(')
-    return parse_matched_pair (qc, open, close, lenp, 0);
+    return parse_matched_pair (qc, open, close, P_NOFLAGS);
 
-  /*itrace("parse_comsub: qc = `%c' open = %c close = %c", qc, open, close);*/
+  // itrace ("parse_comsub: qc = `%c' open = %c close = %c", qc, open, close);
   count = 1;
   tflags = LEX_RESWDOK;
 #if defined(BANG_HISTORY)
-  orig_histexp = history_expansion_inhibited;
+  bool orig_histexp = history_expansion_inhibited;
 #endif
 
   if ((flags & P_COMMAND) && qc != '\'' && qc != '"'
@@ -2317,20 +2308,18 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
     tflags |= LEX_CKCOMMENT;
 
   /* RFLAGS is the set of flags we want to pass to recursive calls. */
-  rflags = (flags & P_DQUOTE);
+  pgroup_flags rflags = (flags & P_DQUOTE);
 
-  ret = (char *)xmalloc (retsize = 64);
-  retind = 0;
+  std::string ret;
 
   start_lineno = line_number;
   lex_rwlen = lex_wlen = 0;
 
-  heredelim = 0;
+  heredelim = nullptr;
   lex_firstind = -1;
 
   while (count)
     {
-    comsub_readchar:
       ch = shell_getc (
           qc != '\''
           && (tflags & (LEX_INCOMMENT | LEX_PASSNEXT | LEX_QUOTEDDOC)) == 0);
@@ -2341,13 +2330,12 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
 #if defined(BANG_HISTORY)
           history_expansion_inhibited = orig_histexp;
 #endif
-          free (ret);
-          FREE (heredelim);
+          delete[] heredelim;
           parser_error (start_lineno,
                         _ ("unexpected EOF while looking for matching `%c'"),
                         close);
           EOF_Reached = true; /* XXX */
-          return &matched_pair_error;
+          throw matched_pair_error ();
         }
 
       /* If we hit the end of a line and are reading the contents of a here
@@ -2362,31 +2350,32 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
               tflags &= ~LEX_HEREDELIM;
               tflags |= LEX_INHEREDOC;
 #if defined(BANG_HISTORY)
-              history_expansion_inhibited = 1;
+              history_expansion_inhibited = true;
 #endif
-              lex_firstind = retind + 1;
+              lex_firstind = static_cast<ssize_t> (ret.size () + 1);
             }
           else if (tflags & LEX_INHEREDOC)
             {
-              int tind;
-              tind = lex_firstind;
-              while ((tflags & LEX_STRIPDOC) && ret[tind] == '\t')
+              size_t tind = static_cast<size_t> (lex_firstind);
+              while ((tflags & LEX_STRIPDOC) && (tind < ret.size ())
+                     && (ret[tind] == '\t'))
                 tind++;
-              if (retind - tind == hdlen
-                  && STREQN (ret + tind, heredelim, hdlen))
+
+              if (ret.size () - tind == hdlen
+                  && STREQN (&(ret[tind]), heredelim, hdlen))
                 {
                   tflags &= ~(LEX_STRIPDOC | LEX_INHEREDOC | LEX_QUOTEDDOC);
-                  /*itrace("parse_comsub:%d: found here doc end `%s'",
-                   * line_number, ret + tind);*/
-                  free (heredelim);
-                  heredelim = 0;
+                  // itrace ("parse_comsub:%d: found here doc end `%s'",
+                  //         line_number, ret + tind);
+                  delete[] heredelim;
+                  heredelim = nullptr;
                   lex_firstind = -1;
 #if defined(BANG_HISTORY)
                   history_expansion_inhibited = orig_histexp;
 #endif
                 }
               else
-                lex_firstind = retind + 1;
+                lex_firstind = static_cast<ssize_t> (ret.size () + 1);
             }
         }
 
@@ -2399,27 +2388,27 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
          the #if 1 to #if 0 below */
       if ((tflags & LEX_INHEREDOC) && ch == close && count == 1)
         {
-          int tind;
-          /*itrace("parse_comsub:%d: in here doc, ch == close, retind -
-           * firstind = %d hdlen = %d retind = %d", line_number,
-           * retind-lex_firstind, hdlen, retind);*/
-          tind = lex_firstind;
+          // itrace ("parse_comsub:%d: in here doc, ch == close, retind -"
+          //         " firstind = %d hdlen = %d retind = %d", line_number,
+          //         retind - lex_firstind, hdlen, retind);
+          size_t tind = static_cast<size_t> (lex_firstind);
           while ((tflags & LEX_STRIPDOC) && ret[tind] == '\t')
             tind++;
 #if 1
-          if (retind - tind == hdlen && STREQN (ret + tind, heredelim, hdlen))
+          if (ret.size () - tind == hdlen
+              && STREQN (&(ret[tind]), heredelim, hdlen))
 #else
-          /* Posix-mode shells require the newline after the here-document
-             delimiter. */
-          if (retind - tind == hdlen && STREQN (ret + tind, heredelim, hdlen)
-              && posixly_correct == 0)
+          // Posix-mode shells require the newline after the here-document
+          // delimiter.
+          if (ret.size () - tind == hdlen
+              && STREQN (&(ret[tind]), heredelim, hdlen) && !posixly_correct)
 #endif
             {
               tflags &= ~(LEX_STRIPDOC | LEX_INHEREDOC | LEX_QUOTEDDOC);
-              /*itrace("parse_comsub:%d: found here doc end `%*s'",
-               * line_number, hdlen, ret + tind);*/
-              free (heredelim);
-              heredelim = 0;
+              // itrace ("parse_comsub:%d: found here doc end `%*s'",
+              //         line_number, hdlen, ret + tind);
+              delete[] heredelim;
+              heredelim = nullptr;
               lex_firstind = -1;
 #if defined(BANG_HISTORY)
               history_expansion_inhibited = orig_histexp;
@@ -2439,12 +2428,12 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
       if (tflags & (LEX_INCOMMENT | LEX_INHEREDOC))
         {
           /* Add this character. */
-          ret[retind++] = ch;
+          ret.push_back (static_cast<char> (ch));
 
           if ((tflags & LEX_INCOMMENT) && ch == '\n')
             {
-              /*itrace("parse_comsub:%d: lex_incomment -> 0 ch = `%c'",
-               * line_number, ch);*/
+              // itrace ("parse_comsub:%d: lex_incomment -> 0 ch = `%c'",
+              //         line_number, ch);
               tflags &= ~LEX_INCOMMENT;
             }
 
@@ -2453,20 +2442,22 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
 
       if (tflags & LEX_PASSNEXT) /* last char was backslash */
         {
-          /*itrace("parse_comsub:%d: lex_passnext -> 0 ch = `%c' (%d)",
-           * line_number, ch, __LINE__);*/
+          // itrace ("parse_comsub:%d: lex_passnext -> 0 ch = `%c' (%d)",
+          //         line_number, ch, __LINE__);
           tflags &= ~LEX_PASSNEXT;
           if (qc != '\''
               && ch == '\n') /* double-quoted \<newline> disappears. */
             {
-              if (retind > 0)
-                retind--; /* swallow previously-added backslash */
+              if (!ret.empty ())
+                // swallow previously-added backslash
+                ret.erase (ret.size () - 1, 1);
               continue;
             }
 
           if MBTEST (ch == CTLESC)
-            ret[retind++] = CTLESC;
-          ret[retind++] = ch;
+            ret.push_back (CTLESC);
+
+          ret.push_back (static_cast<char> (ch));
           continue;
         }
 
@@ -2475,21 +2466,21 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
       if MBTEST (shellbreak (ch))
         {
           tflags &= ~LEX_INWORD;
-          /*itrace("parse_comsub:%d: lex_inword -> 0 ch = `%c' (%d)",
-           * line_number, ch, __LINE__);*/
+          // itrace ("parse_comsub:%d: lex_inword -> 0 ch = `%c' (%d)",
+          //         line_number, ch, __LINE__);
         }
       else
         {
           if (tflags & LEX_INWORD)
             {
               lex_wlen++;
-              /*itrace("parse_comsub:%d: lex_inword == 1 ch = `%c' lex_wlen =
-               * %d (%d)", line_number, ch, lex_wlen, __LINE__);*/
+              // itrace ("parse_comsub:%d: lex_inword == 1 ch = `%c' lex_wlen"
+              //         " = %d (%d)", line_number, ch, lex_wlen, __LINE__);
             }
           else
             {
-              /*itrace("parse_comsub:%d: lex_inword -> 1 ch = `%c' (%d)",
-               * line_number, ch, __LINE__);*/
+              // itrace ("parse_comsub:%d: lex_inword -> 1 ch = `%c' (%d)",
+              //         line_number, ch, __LINE__);
               tflags |= LEX_INWORD;
               lex_wlen = 0;
               if (tflags & LEX_RESWDOK)
@@ -2502,7 +2493,7 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
                  && lex_rwlen == 0)
         {
           /* Add this character. */
-          ret[retind++] = ch;
+          ret.push_back (static_cast<char> (ch));
           continue;
         }
 
@@ -2516,26 +2507,28 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
       if (tflags & LEX_HEREDELIM)
         {
           if (lex_firstind == -1 && shellbreak (ch) == 0)
-            lex_firstind = retind;
+            lex_firstind = static_cast<ssize_t> (ret.size ());
           else if (lex_firstind >= 0 && (tflags & LEX_PASSNEXT) == 0
                    && shellbreak (ch))
             {
-              if (heredelim == 0)
+              if (heredelim == nullptr)
                 {
-                  nestret = substring (ret, lex_firstind, retind);
+                  char *nestret = substring (
+                      ret.c_str (), static_cast<size_t> (lex_firstind),
+                      ret.size ());
                   heredelim = string_quote_removal (nestret, 0);
-                  hdlen = STRLEN (heredelim);
-                  /*itrace("parse_comsub:%d: found here doc delimiter `%s'
-                   * (%d)", line_number, heredelim, hdlen);*/
+                  hdlen = std::strlen (heredelim);
+                  // itrace ("parse_comsub:%d: found here doc delimiter `%s'"
+                  //         " (%d)", line_number, heredelim, hdlen);
                   if (STREQ (heredelim, nestret) == 0)
                     tflags |= LEX_QUOTEDDOC;
-                  free (nestret);
+                  delete[] nestret;
                 }
               if (ch == '\n')
                 {
                   tflags |= LEX_INHEREDOC;
                   tflags &= ~LEX_HEREDELIM;
-                  lex_firstind = retind + 1;
+                  lex_firstind = static_cast<ssize_t> (ret.size () + 1);
 #if defined(BANG_HISTORY)
                   history_expansion_inhibited = 1;
 #endif
@@ -2545,22 +2538,20 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
             }
         }
 
-      /* Meta-characters that can introduce a reserved word.  Not perfect yet.
-       */
+      // Meta-characters that can introduce a reserved word. Not perfect yet.
       if MBTEST ((tflags & LEX_RESWDOK) == 0 && (tflags & LEX_CKCASE)
                  && (tflags & LEX_INCOMMENT) == 0
                  && (shellmeta (ch) || ch == '\n'))
         {
           /* Add this character. */
-          ret[retind++] = ch;
+          ret.push_back (static_cast<char> (ch));
           peekc = shell_getc (1);
           if (ch == peekc
-              && (ch == '&' || ch == '|'
-                  || ch == ';')) /* two-character tokens */
+              && (ch == '&' || ch == '|' || ch == ';')) // two-character tokens
             {
-              ret[retind++] = peekc;
-              /*itrace("parse_comsub:%d: set lex_reswordok = 1, ch = `%c'",
-               * line_number, ch);*/
+              ret.push_back (static_cast<char> (peekc));
+              // itrace ("parse_comsub:%d: set lex_reswordok = 1, ch = `%c'",
+              //         line_number, ch);
               tflags |= LEX_RESWDOK;
               lex_rwlen = 0;
               continue;
@@ -2568,8 +2559,8 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
           else if (ch == '\n' || COMSUB_META (ch))
             {
               shell_ungetc (peekc);
-              /*itrace("parse_comsub:%d: set lex_reswordok = 1, ch = `%c'",
-               * line_number, ch);*/
+              // itrace ("parse_comsub:%d: set lex_reswordok = 1, ch = `%c'",
+              //         line_number, ch);
               tflags |= LEX_RESWDOK;
               lex_rwlen = 0;
               continue;
@@ -2579,7 +2570,7 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
           else
             {
               /* `unget' the character we just added and fall through */
-              retind--;
+              ret.erase (ret.size () - 1, 1);
               shell_ungetc (peekc);
             }
         }
@@ -2587,51 +2578,52 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
       /* If we can read a reserved word, try to read one. */
       if (tflags & LEX_RESWDOK)
         {
-          if MBTEST (islower ((unsigned char)ch))
+          if MBTEST (std::islower (static_cast<unsigned char> (ch)))
             {
               /* Add this character. */
-              ret[retind++] = ch;
+              ret.push_back (static_cast<char> (ch));
               lex_rwlen++;
               continue;
             }
           else if MBTEST (lex_rwlen == 4 && shellbreak (ch))
             {
-              if (STREQN (ret + retind - 4, "case", 4))
+              const char *comparestr = &(ret[ret.size () - 4]);
+              if (STREQN (comparestr, "case", 4))
                 {
                   tflags |= LEX_INCASE;
                   tflags &= ~LEX_RESWDOK;
-                  /*itrace("parse_comsub:%d: found `case', lex_incase -> 1
-                   * lex_reswdok -> 0", line_number);*/
+                  // itrace ("parse_comsub:%d: found `case', lex_incase -> 1"
+                  //         " lex_reswdok -> 0", line_number);
                 }
-              else if (STREQN (ret + retind - 4, "esac", 4))
+              else if (STREQN (comparestr, "esac", 4))
                 {
                   tflags &= ~LEX_INCASE;
-                  /*itrace("parse_comsub:%d: found `esac', lex_incase -> 0
-                   * lex_reswdok -> 1", line_number);*/
+                  // itrace ("parse_comsub:%d: found `esac', lex_incase -> 0"
+                  //         " lex_reswdok -> 1", line_number);
                   tflags |= LEX_RESWDOK;
                   lex_rwlen = 0;
                 }
-              else if (STREQN (ret + retind - 4, "done", 4)
-                       || STREQN (ret + retind - 4, "then", 4)
-                       || STREQN (ret + retind - 4, "else", 4)
-                       || STREQN (ret + retind - 4, "elif", 4)
-                       || STREQN (ret + retind - 4, "time", 4))
+              else if (STREQN (comparestr, "done", 4)
+                       || STREQN (comparestr, "then", 4)
+                       || STREQN (comparestr, "else", 4)
+                       || STREQN (comparestr, "elif", 4)
+                       || STREQN (comparestr, "time", 4))
                 {
                   /* these are four-character reserved words that can be
                      followed by a reserved word; anything else turns off
                      the reserved-word-ok flag */
-                  /*itrace("parse_comsub:%d: found `%.4s', lex_reswdok -> 1",
-                   * line_number, ret+retind-4);*/
+                  // itrace ("parse_comsub:%d: found `%.4s', lex_reswdok -> 1",
+                  //         line_number, ret+retind-4);
                   tflags |= LEX_RESWDOK;
                   lex_rwlen = 0;
                 }
               else if (shellmeta (ch) == 0)
                 {
                   tflags &= ~LEX_RESWDOK;
-                  /*itrace("parse_comsub:%d: found `%.4s', lex_reswdok -> 0",
-                   * line_number, ret+retind-4);*/
+                  // itrace ("parse_comsub:%d: found `%.4s', lex_reswdok -> 0",
+                  //         line_number, ret+retind-4);
                 }
-              else /* can't be in a reserved word any more */
+              else // can't be in a reserved word any more
                 lex_rwlen = 0;
             }
           else if MBTEST ((tflags & LEX_CKCOMMENT) && ch == '#'
@@ -2642,12 +2634,13 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
              RESWDOK flag, but reset the reserved word length counter so we
              can read another one. */
           else if MBTEST (((tflags & LEX_INCASE) == 0)
-                          && (isblank ((unsigned char)ch) || ch == '\n')
+                          && (isblank (static_cast<unsigned char> (ch))
+                              || ch == '\n')
                           && lex_rwlen == 2
-                          && STREQN (ret + retind - 2, "do", 2))
+                          && STREQN (&(ret[ret.size () - 2]), "do", 2))
             {
-              /*itrace("parse_comsub:%d: lex_incase == 0 found `%c', found
-               * \"do\"", line_number, ch);*/
+              // itrace ("parse_comsub:%d: lex_incase == 0 found `%c', found"
+              //         " \"do\"", line_number, ch);
               lex_rwlen = 0;
             }
           else if MBTEST ((tflags & LEX_INCASE) && ch != '\n')
@@ -2659,14 +2652,14 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
              */
             {
               tflags &= ~LEX_RESWDOK;
-              /*itrace("parse_comsub:%d: lex_incase == 1 found `%c',
-               * lex_reswordok -> 0", line_number, ch);*/
+              // itrace ("parse_comsub:%d: lex_incase == 1 found `%c',
+              //         lex_reswordok -> 0", line_number, ch);
             }
           else if MBTEST (shellbreak (ch) == 0)
             {
               tflags &= ~LEX_RESWDOK;
-              /*itrace("parse_comsub:%d: found `%c', lex_reswordok -> 0",
-               * line_number, ch);*/
+              // itrace ("parse_comsub:%d: found `%c', lex_reswordok -> 0",
+              //         line_number, ch);
             }
 #if 0
 	  /* If we find a space or tab but have read something and it's not
@@ -2674,7 +2667,8 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
 	  else if MBTEST(isblank ((unsigned char)ch) && lex_rwlen > 0)
 	    {
 	      tflags &= ~LEX_RESWDOK;
-/*itrace("parse_comsub:%d: found `%c', lex_reswordok -> 0", line_number, ch);*/
+              // itrace ("parse_comsub:%d: found `%c', lex_reswordok -> 0",
+              //         line_number, ch);
 	    }
 #endif
         }
@@ -2684,19 +2678,19 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
                  && ch == '<')
         {
           /* Add this character. */
-          ret[retind++] = ch;
-          peekc = shell_getc (1);
+          ret.push_back (static_cast<char> (ch));
+          peekc = shell_getc (true);
           if (peekc == EOF)
             goto eof_error;
           if (peekc == ch)
             {
-              ret[retind++] = peekc;
-              peekc = shell_getc (1);
+              ret.push_back (static_cast<char> (peekc));
+              peekc = shell_getc (true);
               if (peekc == EOF)
                 goto eof_error;
               if (peekc == '-')
                 {
-                  ret[retind++] = peekc;
+                  ret.push_back (static_cast<char> (peekc));
                   tflags |= LEX_STRIPDOC;
                 }
               else
@@ -2719,35 +2713,35 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
                       && (((tflags & LEX_RESWDOK) && lex_rwlen == 0)
                           || ((tflags & LEX_INWORD) && lex_wlen == 0)))
         {
-          /*itrace("parse_comsub:%d: lex_incomment -> 1 (%d)", line_number,
-           * __LINE__);*/
+          // itrace ("parse_comsub:%d: lex_incomment -> 1 (%d)", line_number,
+          //         __LINE__);
           tflags |= LEX_INCOMMENT;
         }
 
       if MBTEST (ch == CTLESC || ch == CTLNUL) /* special shell escapes */
         {
-          ret[retind++] = CTLESC;
-          ret[retind++] = ch;
+          ret.push_back (CTLESC);
+          ret.push_back (static_cast<char> (ch));
           continue;
         }
       else if MBTEST (ch == close
                       && (tflags & LEX_INCASE) == 0) /* ending delimiter */
         {
           count--;
-          /*itrace("parse_comsub:%d: found close: count = %d", line_number,
-           * count);*/
+          // itrace ("parse_comsub:%d: found close: count = %d", line_number,
+          //         count);
         }
       else if MBTEST (((flags & P_FIRSTCLOSE) == 0)
                       && (tflags & LEX_INCASE) == 0
                       && ch == open) /* nested begin */
         {
           count++;
-          /*itrace("parse_comsub:%d: found open: count = %d", line_number,
-           * count);*/
+          // itrace ("parse_comsub:%d: found open: count = %d", line_number,
+          //         count);
         }
 
       /* Add this character. */
-      ret[retind++] = ch;
+      ret.push_back (static_cast<char> (ch));
 
       /* If we just read the ending character, don't bother continuing. */
       if (count == 0)
@@ -2758,53 +2752,53 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
 
       if MBTEST (shellquote (ch))
         {
+          std::string nestret;
+          dstack.push_back (static_cast<char> (ch));
+
           /* '', ``, or "" inside $(...). */
-          push_delimiter (dstack, ch);
-          if MBTEST ((tflags & LEX_WASDOL)
-                     && ch == '\'') /* $'...' inside group */
-            nestret = parse_matched_pair (ch, ch, ch, &nestlen,
-                                          (P_ALLOWESC | rflags));
-          else
-            nestret = parse_matched_pair (ch, ch, ch, &nestlen, rflags);
-          pop_delimiter (dstack);
-          CHECK_NESTRET_ERROR ();
+          try
+            {
+              if MBTEST ((tflags & LEX_WASDOL)
+                         && ch == '\'') /* $'...' inside group */
+                nestret
+                    = parse_matched_pair (ch, ch, ch, (P_ALLOWESC | rflags));
+              else
+                nestret = parse_matched_pair (ch, ch, ch, rflags);
+            }
+          catch (const std::exception &)
+            {
+              dstack.pop_back ();
+              throw;
+            }
+
+          dstack.pop_back ();
 
           if MBTEST ((tflags & LEX_WASDOL) && ch == '\''
                      && (extended_quote || (rflags & P_DQUOTE) == 0))
             {
               /* Translate $'...' here. */
-              ttrans = ansiexpand (nestret, 0, nestlen - 1, &ttranslen);
-              free (nestret);
+              std::string ttrans
+                  = ansiexpand (nestret.begin (), nestret.end ());
 
               if ((rflags & P_DQUOTE) == 0)
-                {
-                  nestret = sh_single_quote (ttrans);
-                  free (ttrans);
-                  nestlen = strlen (nestret);
-                }
+                nestret = sh_single_quote (ttrans);
               else
-                {
-                  nestret = ttrans;
-                  nestlen = ttranslen;
-                }
-              retind -= 2; /* back up before the $' */
+                nestret = ttrans;
+
+              ret.erase (ret.size () - 2, 2); /* back up before the $' */
             }
           else if MBTEST ((tflags & LEX_WASDOL) && ch == '"'
                           && (extended_quote || (rflags & P_DQUOTE) == 0))
             {
               /* Locale expand $"..." here. */
-              ttrans = localeexpand (nestret, 0, nestlen - 1, start_lineno,
-                                     &ttranslen);
-              free (nestret);
+              std::string ttrans = localeexpand (nestret, start_lineno);
 
-              nestret = sh_mkdoublequoted (ttrans, ttranslen, 0);
-              free (ttrans);
-              nestlen = ttranslen + 2;
-              retind -= 2; /* back up before the $" */
+              nestret = sh_mkdoublequoted (ttrans, 0);
+
+              ret.erase (ret.size () - 2, 2); /* back up before the $" */
             }
 
-          APPEND_NESTRET ();
-          FREE (nestret);
+          ret += nestret;
         }
       else if MBTEST ((tflags & LEX_WASDOL)
                       && (ch == '(' || ch == '{' || ch == '[')) /* ) } ] */
@@ -2813,19 +2807,18 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
           if ((tflags & LEX_INCASE) == 0
               && open == ch) /* undo previous increment */
             count--;
+
+          std::string nestret;
           if (ch == '(') /* ) */
-            nestret = parse_comsub (0, '(', ')', &nestlen,
-                                    (rflags | P_COMMAND) & ~P_DQUOTE);
+            nestret
+                = parse_comsub (0, '(', ')', (rflags | P_COMMAND) & ~P_DQUOTE);
           else if (ch == '{') /* } */
             nestret = parse_matched_pair (
-                0, '{', '}', &nestlen, (P_FIRSTCLOSE | P_DOLBRACE | rflags));
+                0, '{', '}', (P_FIRSTCLOSE | P_DOLBRACE | rflags));
           else if (ch == '[') /* ] */
-            nestret = parse_matched_pair (0, '[', ']', &nestlen, rflags);
+            nestret = parse_matched_pair (0, '[', ']', rflags);
 
-          CHECK_NESTRET_ERROR ();
-          APPEND_NESTRET ();
-
-          FREE (nestret);
+          ret += nestret;
         }
       if MBTEST (ch == '$' && (tflags & LEX_WASDOL) == 0)
         tflags |= LEX_WASDOL;
@@ -2836,11 +2829,9 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
 #if defined(BANG_HISTORY)
   history_expansion_inhibited = orig_histexp;
 #endif
-  FREE (heredelim);
-  ret[retind] = '\0';
-  if (lenp)
-    *lenp = retind;
-  /*itrace("parse_comsub:%d: returning `%s'", line_number, ret);*/
+  delete[] heredelim;
+
+  // itrace ("parse_comsub:%d: returning `%s'", line_number, ret);
   return ret;
 }
 
@@ -2871,14 +2862,17 @@ Shell::xparse_dolparen (const std::string &base, size_t indp, sx_flags flags)
       return ret;
     }
 
-  /*itrace("xparse_dolparen: size = %d shell_input_line = `%s' string=`%s'",
-   * shell_input_line_size, shell_input_line, string);*/
+  // itrace ("xparse_dolparen: size = %d shell_input_line = `%s' string=`%s'",
+  //         shell_input_line_size, shell_input_line, string);
+
   parse_flags sflags = SEVAL_NONINT | SEVAL_NOHIST | SEVAL_NOFREE;
   if (flags & SX_NOTHROW)
     sflags |= SEVAL_NOTHROW;
+
   save_parser_state (&ps);
   save_input_line_state (&ls);
   orig_eof_token = shell_eof_token;
+
 #if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
   saved_pushed_strings = pushed_string_list; /* separate parsing context */
   pushed_string_list = nullptr;
@@ -3798,8 +3792,8 @@ got_token:
 #endif
         {
           strcpy (the_word->word, token + 1);
-          /* itrace("read_token_word: returning REDIR_WORD for %s",
-           * the_word->word); */
+          // itrace ("read_token_word: returning REDIR_WORD for %s",
+          //         the_word->word);
           yylval.word = the_word; /* accommodate recursive call */
           return REDIR_WORD;
         }

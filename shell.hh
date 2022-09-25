@@ -466,6 +466,12 @@ operator| (const pgroup_flags &a, const pgroup_flags &b)
                                     | static_cast<uint32_t> (b));
 }
 
+static inline pgroup_flags
+operator~(const pgroup_flags &a)
+{
+  return static_cast<pgroup_flags> (~static_cast<uint32_t> (a));
+}
+
 /* Lexical state while parsing a grouping construct or $(...). */
 enum lexical_state_flags
 {
@@ -499,6 +505,13 @@ operator&= (lexical_state_flags &a, const lexical_state_flags &b)
   a = static_cast<lexical_state_flags> (static_cast<uint32_t> (a)
                                         & static_cast<uint32_t> (b));
   return a;
+}
+
+static inline lexical_state_flags
+operator| (const lexical_state_flags &a, const lexical_state_flags &b)
+{
+  return static_cast<lexical_state_flags> (static_cast<uint32_t> (a)
+                                           | static_cast<uint32_t> (b));
 }
 
 static inline lexical_state_flags
@@ -1760,15 +1773,15 @@ public:
     return new WORD_LIST (wd);
   }
 
-  ARITH_FOR_COM *make_arith_for_command (WORD_LIST *exprs, COMMAND *action,
-                                         int lineno);
+  COMMAND_PTR make_arith_for_command (WORD_LIST_PTR, COMMAND_PTR, int);
 
-  SIMPLE_COM *make_simple_command (ELEMENT element,
-                                   COMMAND *command = nullptr);
+  COMMAND_PTR make_simple_command (ELEMENT);
 
-  FUNCTION_DEF *make_function_def (WORD_DESC *, COMMAND *, int, int);
+  COMMAND_PTR make_simple_command (ELEMENT, COMMAND_PTR);
 
-  void make_here_document (REDIRECT *, int);
+  COMMAND_PTR make_function_def (WORD_DESC_PTR, COMMAND_PTR, int, int);
+
+  void make_here_document (REDIRECT_PTR, int);
 
   void
   push_heredoc (REDIRECT *r)
@@ -1786,10 +1799,10 @@ public:
 
   void gather_here_documents ();
 
-  COMMAND *
-  clean_simple_command (COMMAND *command)
+  COMMAND_PTR
+  clean_simple_command (COMMAND_PTR command)
   {
-    SIMPLE_COM *simple_com = dynamic_cast<SIMPLE_COM *> (command);
+    SIMPLE_COM *simple_com = dynamic_cast<SIMPLE_COM *> (command.value);
     if (simple_com)
       {
         simple_com->words = simple_com->words->reverse ();
@@ -2218,11 +2231,11 @@ protected:
   int set_lang (const char *, const char *);
   void set_default_lang ();
   const char *get_locale_var (const char *);
-  char *localetrans (const char *, int, int *);
-  char *mk_msgstr (char *, bool *);
-  char *localeexpand (const char *, int, int, int, int *);
+  std::string localetrans (const std::string &);
+  std::string localeexpand (const std::string &, int);
 
   void locale_setblanks ();
+  int reset_locale_vars ();
 
   /* Functions from errors.cc */
 
@@ -4916,7 +4929,7 @@ protected:
 
   std::string read_a_line_buffer;
 
-  WORD_DESC *word_desc_to_read;
+  WORD_DESC_PTR word_desc_to_read;
 
   REDIRECTEE source;
   REDIRECTEE redir;

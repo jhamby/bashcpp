@@ -125,6 +125,20 @@ subst_expand_fatal::what () const noexcept
   return "subst_expand_fatal";
 }
 
+// Return the type of the extract_string_error exception.
+const char *
+extract_string_error::what () const noexcept
+{
+  return "extract_string_error";
+}
+
+// Return the type of the extract_string_fatal exception.
+const char *
+extract_string_fatal::what () const noexcept
+{
+  return "extract_string_fatal";
+}
+
 // Return the type of the matched_pair_error exception.
 const char *
 matched_pair_error::what () const noexcept

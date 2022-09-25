@@ -39,11 +39,7 @@
 namespace bash
 {
 
-/* Called to reset all of the locale variables to their appropriate values
-   if (and only if) LC_ALL has not been assigned a value. */
-static int reset_locale_vars ();
-
-static void locale_setblanks ();
+static std::string mk_msgstr (const std::string &, bool *);
 static bool locale_isutf8 (const char *);
 
 /* Set the value of default_locale and make the current locale the
@@ -92,7 +88,7 @@ Shell::set_default_locale_vars ()
       locale_utf8locale = locale_isutf8 (lc_all);
 
 #if defined(HANDLE_MULTIBYTE)
-      locale_shiftstates = std::mblen ((char *)NULL, 0);
+      locale_shiftstates = std::mblen (nullptr, 0);
 #else
       local_shiftstates = 0;
 #endif
@@ -130,7 +126,7 @@ Shell::set_default_locale_vars ()
   val = get_string_value ("TEXTDOMAIN");
   if (val && *val)
     {
-      FREE (default_domain);
+      delete[] default_domain;
       default_domain = savestring (val);
       if (default_dir && *default_dir)
         bindtextdomain (default_domain, default_dir);
@@ -139,7 +135,7 @@ Shell::set_default_locale_vars ()
   val = get_string_value ("TEXTDOMAINDIR");
   if (val && *val)
     {
-      FREE (default_dir);
+      delete[] default_dir;
       default_dir = savestring (val);
       if (default_domain && *default_domain)
         bindtextdomain (default_domain, default_dir);
@@ -155,16 +151,16 @@ Shell::set_locale_var (const char *var, const char *value)
   errno = 0;
   if (var[0] == 'T' && var[10] == 0) /* TEXTDOMAIN */
     {
-      FREE (default_domain);
-      default_domain = value ? savestring (value) : (char *)NULL;
+      delete[] default_domain;
+      default_domain = value ? savestring (value) : nullptr;
       if (default_dir && *default_dir)
         bindtextdomain (default_domain, default_dir);
       return true;
     }
   else if (var[0] == 'T') /* TEXTDOMAINDIR */
     {
-      FREE (default_dir);
-      default_dir = value ? savestring (value) : (char *)NULL;
+      delete[] default_dir;
+      default_dir = value ? savestring (value) : nullptr;
       if (default_domain && *default_domain)
         bindtextdomain (default_domain, default_dir);
       return true;
@@ -174,12 +170,12 @@ Shell::set_locale_var (const char *var, const char *value)
 
   else if (var[3] == 'A') /* LC_ALL */
     {
-      FREE (lc_all);
+      delete[] lc_all;
       if (value)
         lc_all = savestring (value);
       else
         {
-          lc_all = (char *)xmalloc (1);
+          lc_all = new char[1];
           lc_all[0] = '\0';
         }
 #if defined(HAVE_SETLOCALE)
@@ -201,7 +197,7 @@ Shell::set_locale_var (const char *var, const char *value)
       if (*lc_all && x)
         locale_utf8locale = locale_isutf8 (lc_all);
 #if defined(HANDLE_MULTIBYTE)
-      locale_shiftstates = mblen ((char *)NULL, 0);
+      locale_shiftstates = mblen (nullptr, 0);
 #else
       local_shiftstates = 0;
 #endif
@@ -225,7 +221,7 @@ Shell::set_locale_var (const char *var, const char *value)
           if (x)
             locale_utf8locale = locale_isutf8 (x);
 #if defined(HANDLE_MULTIBYTE)
-          locale_shiftstates = std::mblen ((char *)NULL, 0);
+          locale_shiftstates = std::mblen (nullptr, 0);
 #else
           local_shiftstates = 0;
 #endif
@@ -282,12 +278,12 @@ Shell::set_locale_var (const char *var, const char *value)
 int
 Shell::set_lang (const char *var, const char *value)
 {
-  FREE (lang);
+  delete[] lang;
   if (value)
     lang = savestring (value);
   else
     {
-      lang = (char *)xmalloc (1);
+      lang = new char[1];
       lang[0] = '\0';
     }
 
@@ -334,7 +330,7 @@ Shell::get_locale_var (const char *var)
 /* Called to reset all of the locale variables to their appropriate values
    if (and only if) LC_ALL has not been assigned a value.  DO NOT CALL THIS
    IF LC_ALL HAS BEEN ASSIGNED A VALUE. */
-static int
+int
 Shell::reset_locale_vars ()
 {
   char *t, *x;
@@ -367,7 +363,7 @@ Shell::reset_locale_vars ()
   if (x)
     locale_utf8locale = locale_isutf8 (x);
 #if defined(HANDLE_MULTIBYTE)
-  locale_shiftstates = std::mblen ((char *)NULL, 0);
+  locale_shiftstates = std::mblen (nullptr, 0);
 #else
   local_shiftstates = 0;
 #endif
@@ -376,19 +372,16 @@ Shell::reset_locale_vars ()
   return 1;
 }
 
-/* Translate the contents of STRING, a $"..." quoted string, according
-   to the current locale.  In the `C' or `POSIX' locale, or if gettext()
-   is not available, the passed string is returned unchanged.  The
-   length of the translated string is returned in LENP, if non-null. */
-char *
-Shell::localetrans (const char *string, int len, int *lenp)
+// Translate the contents of STRING, a $"..." quoted string, according
+// to the current locale.  In the `C' or `POSIX' locale, or if gettext()
+// is not available, the passed string is returned unchanged.
+std::string
+Shell::localetrans (const std::string &string)
 {
   /* Don't try to translate null strings. */
-  if (string == 0 || *string == 0)
+  if (string.empty ())
     {
-      if (lenp)
-        *lenp = 0;
-      return (char *)NULL;
+      return std::string ();
     }
 
   const char *locale = get_locale_var ("LC_MESSAGES");
@@ -396,103 +389,68 @@ Shell::localetrans (const char *string, int len, int *lenp)
   /* If we don't have setlocale() or the current locale is `C' or `POSIX',
      just return the string.  If we don't have gettext(), there's no use
      doing anything else. */
-  char *t;
   if (locale == 0 || locale[0] == '\0'
       || (locale[0] == 'C' && locale[1] == '\0') || STREQ (locale, "POSIX"))
     {
-      t = (char *)xmalloc (len + 1);
-      std::strcpy (t, string);
-      if (lenp)
-        *lenp = len;
-      return t;
+      return string;
     }
 
   /* Now try to translate it. */
-  const char *translated;
-  if (default_domain && *default_domain)
-    translated = dgettext (default_domain, string);
-  else
-    translated = string;
 
-  if (translated
-      == string) /* gettext returns its argument if untranslatable */
-    {
-      t = (char *)xmalloc (len + 1);
-      std::strcpy (t, string);
-      if (lenp)
-        *lenp = len;
-    }
+  const char *translated;
+  const char *original = string.c_str ();
+
+  if (default_domain && *default_domain)
+    translated = dgettext (default_domain, original);
   else
-    {
-      int tlen = std::strlen (translated);
-      t = (char *)xmalloc (tlen + 1);
-      std::strcpy (t, translated);
-      if (lenp)
-        *lenp = tlen;
-    }
-  return t;
+    translated = original;
+
+  if (translated == original) // gettext returns its argument if untranslatable
+    return string;
+  else
+    return savestring (translated);
 }
 
-/* Change a bash string into a string suitable for inclusion in a `po' file.
-   This backslash-escapes `"' and `\' and changes newlines into \\\n"\n". */
-char *
-mk_msgstr (char *string, bool *foundnlp)
+// Change a bash string into a string suitable for inclusion in a `po' file.
+// This backslash-escapes `"' and `\' and changes newlines into \\\n"\n".
+std::string
+mk_msgstr (const std::string &string, bool *foundnlp)
 {
-  int c, len;
-  char *result, *r, *s;
+  std::string ret;
+  ret.reserve (string.length () + 2);
 
-  for (len = 0, s = string; s && *s; s++)
+  ret.push_back ('"');
+
+  std::string::const_iterator it;
+  for (it = string.begin (); it != string.end (); ++it)
     {
-      len++;
-      if (*s == '"' || *s == '\\')
-        len++;
-      else if (*s == '\n')
-        len += 5;
-    }
-
-  r = result = new char[len + 3];
-  *r++ = '"';
-
-  for (s = string; s && (c = *s); s++)
-    {
-      if (c == '\n') /* <NL> -> \n"<NL>" */
+      if (*it == '\n') /* <NL> -> \n"<NL>" */
         {
-          *r++ = '\\';
-          *r++ = 'n';
-          *r++ = '"';
-          *r++ = '\n';
-          *r++ = '"';
+          ret.append ("\\n\"\n\"");
           if (foundnlp)
             *foundnlp = true;
           continue;
         }
-      if (c == '"' || c == '\\')
-        *r++ = '\\';
-      *r++ = c;
+
+      if (*it == '"' || *it == '\\')
+        ret.push_back ('\\');
+
+      ret.push_back (*it);
     }
 
-  *r++ = '"';
-  *r++ = '\0';
-
-  return result;
+  ret.push_back ('"');
+  return ret;
 }
 
-/* $"..." -- Translate the portion of STRING between START and END
-   according to current locale using gettext (if available) and return
-   the result.  The caller will take care of leaving the quotes intact.
-   The string will be left without the leading `$' by the caller.
-   If translation is performed, the translated string will be double-quoted
-   by the caller.  The length of the translated string is returned in LENP,
-   if non-null. */
-char *
-localeexpand (const char *string, int start, int end, int lineno, int *lenp)
+// $"..." -- Translate STRING according to current locale using gettext (if
+// available) and return the result. The caller will take care of leaving the
+// quotes intact. The string will be left without the leading `$' by the
+// caller. If translation is performed, the translated string will be
+// double-quoted by the caller.
+std::string
+Shell::localeexpand (const std::string &string, int lineno)
 {
   int len, tlen;
-
-  char *temp = (char *)xmalloc (end - start + 1);
-  for (tlen = 0, len = start; len < end;)
-    temp[tlen++] = string[len++];
-  temp[tlen] = '\0';
 
   /* If we're just dumping translatable strings, don't do anything with the
      string itself, but if we're dumping in `po' file format, convert it into
@@ -506,34 +464,21 @@ localeexpand (const char *string, int start, int end, int lineno, int *lenp)
       if (dump_po_strings)
         {
           bool foundnl = false;
-          char *t = mk_msgstr (temp, &foundnl);
+          std::string t = mk_msgstr (string.c_str (), &foundnl);
           const char *t2 = foundnl ? "\"\"\n" : "";
 
           std::printf ("#: %s:%d\nmsgid %s%s\nmsgstr \"\"\n", yy_input_name (),
-                       lineno, t2, t);
-          std::free (t);
+                       lineno, t2, t.c_str ());
         }
       else
-        std::printf ("\"%s\"\n", temp);
+        std::printf ("\"%s\"\n", string.c_str ());
 
-      if (lenp)
-        *lenp = tlen;
-      return temp;
+      return string;
     }
-  else if (*temp)
-    {
-      char *t = localetrans (temp, tlen, &len);
-      std::free (temp);
-      if (lenp)
-        *lenp = len;
-      return t;
-    }
+  else if (!string.empty ())
+    return localetrans (string);
   else
-    {
-      if (lenp)
-        *lenp = 0;
-      return temp;
-    }
+    return string;
 }
 
 /* Set every character in the <blank> character class to be a shell break
@@ -545,7 +490,7 @@ Shell::locale_setblanks ()
 
   for (x = 0; x < SYNSIZE; x++)
     {
-      if (std::isblank ((unsigned char)x))
+      if (std::isblank (static_cast<unsigned char> (x)))
         sh_syntaxtab[x] |= (CSHBRK | CBLANK);
       else if (member (x, shell_break_chars))
         {

@@ -20,11 +20,10 @@
 
 #include "config.hh"
 
-#include <cstdio>
+#include "bashtypes.hh" // for nullptr in C++03
 
 #include <csignal>
-#include <sys/types.h>
-
+#include <cstdio>
 #include <cstdlib>
 
 #if !defined(NSIG)
