@@ -40,7 +40,12 @@ namespace bash
 {
 
 static std::string mk_msgstr (const std::string &, bool *);
+
+#if defined(HAVE_LANGINFO_CODESET) || defined(HAVE_LOCALE_CHARSET)
+static bool locale_isutf8 ();
+#else
 static bool locale_isutf8 (const char *);
+#endif
 
 /* Set the value of default_locale and make the current locale the
    system default locale.  This should be called very early in main(). */
@@ -58,7 +63,11 @@ Shell::set_default_locale ()
   textdomain (PACKAGE);
 
   locale_mb_cur_max = MB_CUR_MAX;
+#if defined(HAVE_LANGINFO_CODESET) || defined(HAVE_LOCALE_CHARSET)
+  locale_utf8locale = locale_isutf8 ();
+#else
   locale_utf8locale = locale_isutf8 (default_locale);
+#endif
 #if defined(HANDLE_MULTIBYTE)
   // XXX calling mblen with nullptr isn't portable. e.g. on Solaris 10,
   // the man page says that it always returns 0 when passed nullptr.
@@ -80,12 +89,16 @@ Shell::set_default_locale_vars ()
 
 #if defined(LC_CTYPE)
   val = get_string_value ("LC_CTYPE");
-  if (val == 0 && lc_all && *lc_all)
+  if (val == nullptr && lc_all && *lc_all)
     {
       std::setlocale (LC_CTYPE, lc_all);
       locale_setblanks ();
       locale_mb_cur_max = MB_CUR_MAX;
+#if defined(HAVE_LANGINFO_CODESET) || defined(HAVE_LOCALE_CHARSET)
+      locale_utf8locale = locale_isutf8 ();
+#else
       locale_utf8locale = locale_isutf8 (lc_all);
+#endif
 
 #if defined(HANDLE_MULTIBYTE)
       locale_shiftstates = std::mblen (nullptr, 0);
@@ -99,25 +112,25 @@ Shell::set_default_locale_vars ()
 
 #if defined(LC_COLLATE)
   val = get_string_value ("LC_COLLATE");
-  if (val == 0 && lc_all && *lc_all)
+  if (val == nullptr && lc_all && *lc_all)
     std::setlocale (LC_COLLATE, lc_all);
 #endif /* LC_COLLATE */
 
 #if defined(LC_MESSAGES)
   val = get_string_value ("LC_MESSAGES");
-  if (val == 0 && lc_all && *lc_all)
+  if (val == nullptr && lc_all && *lc_all)
     std::setlocale (LC_MESSAGES, lc_all);
 #endif /* LC_MESSAGES */
 
 #if defined(LC_NUMERIC)
   val = get_string_value ("LC_NUMERIC");
-  if (val == 0 && lc_all && *lc_all)
+  if (val == nullptr && lc_all && *lc_all)
     std::setlocale (LC_NUMERIC, lc_all);
 #endif /* LC_NUMERIC */
 
 #if defined(LC_TIME)
   val = get_string_value ("LC_TIME");
-  if (val == 0 && lc_all && *lc_all)
+  if (val == nullptr && lc_all && *lc_all)
     std::setlocale (LC_TIME, lc_all);
 #endif /* LC_TIME */
 
@@ -179,9 +192,9 @@ Shell::set_locale_var (const char *var, const char *value)
           lc_all[0] = '\0';
         }
 #if defined(HAVE_SETLOCALE)
-      bool r = *lc_all ? ((x = std::setlocale (LC_ALL, lc_all)) != 0)
+      bool r = *lc_all ? ((x = std::setlocale (LC_ALL, lc_all)) != nullptr)
                        : reset_locale_vars ();
-      if (x == 0)
+      if (x == nullptr)
         {
           if (errno == 0)
             internal_warning (
@@ -195,7 +208,11 @@ Shell::set_locale_var (const char *var, const char *value)
       locale_mb_cur_max = MB_CUR_MAX;
       /* if LC_ALL == "", reset_locale_vars has already called this */
       if (*lc_all && x)
+#if defined(HAVE_LANGINFO_CODESET) || defined(HAVE_LOCALE_CHARSET)
+        locale_utf8locale = locale_isutf8 ();
+#else
         locale_utf8locale = locale_isutf8 (lc_all);
+#endif
 #if defined(HANDLE_MULTIBYTE)
       locale_shiftstates = mblen (nullptr, 0);
 #else
@@ -212,14 +229,18 @@ Shell::set_locale_var (const char *var, const char *value)
   else if (var[3] == 'C' && var[4] == 'T') /* LC_CTYPE */
     {
 #if defined(LC_CTYPE)
-      if (lc_all == 0 || *lc_all == '\0')
+      if (lc_all == nullptr || *lc_all == '\0')
         {
           x = std::setlocale (LC_CTYPE, get_locale_var ("LC_CTYPE"));
           locale_setblanks ();
           locale_mb_cur_max = MB_CUR_MAX;
-          /* if setlocale() returns NULL, the locale is not changed */
+          /* if setlocale() returns nullptr, the locale is not changed */
           if (x)
+#if defined(HAVE_LANGINFO_CODESET) || defined(HAVE_LOCALE_CHARSET)
+            locale_utf8locale = locale_isutf8 ();
+#else
             locale_utf8locale = locale_isutf8 (x);
+#endif
 #if defined(HANDLE_MULTIBYTE)
           locale_shiftstates = std::mblen (nullptr, 0);
 #else
@@ -232,34 +253,34 @@ Shell::set_locale_var (const char *var, const char *value)
   else if (var[3] == 'C' && var[4] == 'O') /* LC_COLLATE */
     {
 #if defined(LC_COLLATE)
-      if (lc_all == 0 || *lc_all == '\0')
+      if (lc_all == nullptr || *lc_all == '\0')
         x = std::setlocale (LC_COLLATE, get_locale_var ("LC_COLLATE"));
 #endif /* LC_COLLATE */
     }
   else if (var[3] == 'M' && var[4] == 'E') /* LC_MESSAGES */
     {
 #if defined(LC_MESSAGES)
-      if (lc_all == 0 || *lc_all == '\0')
+      if (lc_all == nullptr || *lc_all == '\0')
         x = std::setlocale (LC_MESSAGES, get_locale_var ("LC_MESSAGES"));
 #endif /* LC_MESSAGES */
     }
   else if (var[3] == 'N' && var[4] == 'U') /* LC_NUMERIC */
     {
 #if defined(LC_NUMERIC)
-      if (lc_all == 0 || *lc_all == '\0')
+      if (lc_all == nullptr || *lc_all == '\0')
         x = std::setlocale (LC_NUMERIC, get_locale_var ("LC_NUMERIC"));
 #endif /* LC_NUMERIC */
     }
   else if (var[3] == 'T' && var[4] == 'I') /* LC_TIME */
     {
 #if defined(LC_TIME)
-      if (lc_all == 0 || *lc_all == '\0')
+      if (lc_all == nullptr || *lc_all == '\0')
         x = std::setlocale (LC_TIME, get_locale_var ("LC_TIME"));
 #endif /* LC_TIME */
     }
 #endif /* HAVE_SETLOCALE */
 
-  if (x == 0)
+  if (x == nullptr)
     {
       if (errno == 0)
         internal_warning (_ ("setlocale: %s: cannot change locale (%s)"), var,
@@ -269,14 +290,14 @@ Shell::set_locale_var (const char *var, const char *value)
                           var, get_locale_var (var), std::strerror (errno));
     }
 
-  return x != 0;
+  return x != nullptr;
 }
 
 /* Called when LANG is assigned a value.  Tracks value in `lang'.  Calls
    reset_locale_vars() to reset any default values if LC_ALL is unset or
    null. */
 int
-Shell::set_lang (const char *var, const char *value)
+Shell::set_lang (const char *, const char *value)
 {
   delete[] lang;
   if (value)
@@ -287,7 +308,7 @@ Shell::set_lang (const char *var, const char *value)
       lang[0] = '\0';
     }
 
-  return (lc_all == 0 || *lc_all == 0) ? reset_locale_vars () : 0;
+  return (lc_all == nullptr || *lc_all == 0) ? reset_locale_vars () : 0;
 }
 
 /* Set default values for LANG and LC_ALL.  Default values for all other
@@ -314,11 +335,11 @@ Shell::get_locale_var (const char *var)
 
   locale = lc_all;
 
-  if (locale == 0 || *locale == 0)
+  if (locale == nullptr || *locale == 0)
     locale = get_string_value (var); /* XXX - no mem leak */
-  if (locale == 0 || *locale == 0)
+  if (locale == nullptr || *locale == 0)
     locale = lang;
-  if (locale == 0 || *locale == 0)
+  if (locale == nullptr || *locale == 0)
 #if 0
     locale = default_locale;	/* system-dependent; not really portable.  should it be "C"? */
 #else
@@ -333,35 +354,39 @@ Shell::get_locale_var (const char *var)
 int
 Shell::reset_locale_vars ()
 {
-  char *t, *x;
+  char *x;
 #if defined(HAVE_SETLOCALE)
-  if (lang == 0 || *lang == '\0')
+  if (lang == nullptr || *lang == '\0')
     maybe_make_export_env (); /* trust that this will change environment for
                                  setlocale */
-  if (std::setlocale (LC_ALL, lang ? lang : "") == 0)
+  if (std::setlocale (LC_ALL, lang ? lang : "") == nullptr)
     return 0;
 
-  x = 0;
+  x = nullptr;
 #if defined(LC_CTYPE)
   x = std::setlocale (LC_CTYPE, get_locale_var ("LC_CTYPE"));
 #endif
 #if defined(LC_COLLATE)
-  t = std::setlocale (LC_COLLATE, get_locale_var ("LC_COLLATE"));
+  (void)std::setlocale (LC_COLLATE, get_locale_var ("LC_COLLATE"));
 #endif
 #if defined(LC_MESSAGES)
-  t = std::setlocale (LC_MESSAGES, get_locale_var ("LC_MESSAGES"));
+  (void)std::setlocale (LC_MESSAGES, get_locale_var ("LC_MESSAGES"));
 #endif
 #if defined(LC_NUMERIC)
-  t = std::setlocale (LC_NUMERIC, get_locale_var ("LC_NUMERIC"));
+  (void)std::setlocale (LC_NUMERIC, get_locale_var ("LC_NUMERIC"));
 #endif
 #if defined(LC_TIME)
-  t = std::setlocale (LC_TIME, get_locale_var ("LC_TIME"));
+  (void)std::setlocale (LC_TIME, get_locale_var ("LC_TIME"));
 #endif
 
   locale_setblanks ();
   locale_mb_cur_max = MB_CUR_MAX;
   if (x)
+#if defined(HAVE_LANGINFO_CODESET) || defined(HAVE_LOCALE_CHARSET)
+    locale_utf8locale = locale_isutf8 ();
+#else
     locale_utf8locale = locale_isutf8 (x);
+#endif
 #if defined(HANDLE_MULTIBYTE)
   locale_shiftstates = std::mblen (nullptr, 0);
 #else
@@ -389,7 +414,7 @@ Shell::localetrans (const std::string &string)
   /* If we don't have setlocale() or the current locale is `C' or `POSIX',
      just return the string.  If we don't have gettext(), there's no use
      doing anything else. */
-  if (locale == 0 || locale[0] == '\0'
+  if (locale == nullptr || locale[0] == '\0'
       || (locale[0] == 'C' && locale[1] == '\0') || STREQ (locale, "POSIX"))
     {
       return string;
@@ -450,8 +475,6 @@ mk_msgstr (const std::string &string, bool *foundnlp)
 std::string
 Shell::localeexpand (const std::string &string, int lineno)
 {
-  int len, tlen;
-
   /* If we're just dumping translatable strings, don't do anything with the
      string itself, but if we're dumping in `po' file format, convert it into
      a form more palatable to gettext(3) and friends by quoting `"' and `\'
@@ -492,7 +515,7 @@ Shell::locale_setblanks ()
     {
       if (std::isblank (static_cast<unsigned char> (x)))
         sh_syntaxtab[x] |= (CSHBRK | CBLANK);
-      else if (member (x, shell_break_chars))
+      else if (member (static_cast<char> (x), shell_break_chars))
         {
           sh_syntaxtab[x] |= CSHBRK;
           sh_syntaxtab[x] &= ~CBLANK;
@@ -506,9 +529,13 @@ Shell::locale_setblanks ()
      language[_territory][.codeset][@modifier][+special][,[sponsor][_revision]]
    and return TRUE if the codeset is UTF-8 or utf8 */
 static bool
+#if defined(HAVE_LANGINFO_CODESET) || defined(HAVE_LOCALE_CHARSET)
+locale_isutf8 ()
+#else
 locale_isutf8 (const char *lspec)
+#endif
 {
-  char *cp, *encoding;
+  char *cp;
 
 #if defined(HAVE_LANGINFO_CODESET)
   cp = nl_langinfo (CODESET);
@@ -522,6 +549,7 @@ locale_isutf8 (const char *lspec)
     {
       if (*cp == '.')
         {
+          char *encoding;
           for (encoding = ++cp; *cp && *cp != '@' && *cp != '+' && *cp != ',';
                cp++)
             ;

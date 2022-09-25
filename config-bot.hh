@@ -135,8 +135,12 @@
 #undef SYSLOG_HISTORY
 #endif
 
-#if defined(HAVE_VFORK) && !defined(HAVE_FORK)
-#define VFORK_SUBSHELL
+#if !defined(PREFER_POSIX_SPAWN) && !defined(HAVE_FORK)
+#define PREFER_POSIX_SPAWN
+#elif defined(PREFER_POSIX_SPAWN) && !defined(HAVE_VFORK)                     \
+    && (!defined(POSIX_SPAWN) || !defined(POSIX_SPAWNATTR_INIT)               \
+        || !defined(POSIX_SPAWN_FILE_ACTIONS_INIT))
+#undef PREFER_POSIX_SPAWN
 #endif
 
 /************************************************/

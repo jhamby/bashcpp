@@ -537,7 +537,7 @@ public:
   // Initialize with default values (defined in shell.c).
   SimpleState ();
 
-#if defined(VFORK_SUBSHELL)
+#if defined(PREFER_POSIX_SPAWN)
   SimpleState (int fd); // TODO: Load initial values from pipe
 #endif
 
@@ -559,6 +559,9 @@ protected:
   size_t ifs_firstc_len;
 #endif
 
+  /* The maximum bytes per char for this locale. */
+  size_t locale_mb_cur_max;
+
   /* ************************************************************** */
   /*		Bash Variables (32-bit int types)		    */
   /* ************************************************************** */
@@ -567,6 +570,7 @@ protected:
   token_t assigntok;
 
   // from bashhist.cc
+
   int history_lines_this_session;
   int history_lines_in_file;
   int history_control;
@@ -603,9 +607,6 @@ protected:
      signal handler. */
   int sigchld;
   int queue_sigchld;
-
-  /* The maximum bytes per char for this locale. */
-  int locale_mb_cur_max;
 
   /* The number of shift states for this locale. */
   int locale_shiftstates;
