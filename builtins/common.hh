@@ -51,13 +51,13 @@ enum parse_flags
   SEVAL_NONINT = 0x001,
   SEVAL_INTERACT = 0x002,
   SEVAL_NOHIST = 0x004,
-  SEVAL_NOFREE = 0x008,
+  // SEVAL_NOFREE = 0x008, // does this make sense for C++?
   SEVAL_RESETLINE = 0x010,
   SEVAL_PARSEONLY = 0x020,
   SEVAL_NOTHROW = 0x040,
-  SEVAL_FUNCDEF = 0x080,  /* only allow function definitions */
-  SEVAL_ONECMD = 0x100,   /* only allow a single command */
-  SEVAL_NOHISTEXP = 0x200 /* inhibit history expansion */
+  SEVAL_FUNCDEF = 0x080,  // only allow function definitions
+  SEVAL_ONECMD = 0x100,   // only allow a single command
+  SEVAL_NOHISTEXP = 0x200 // inhibit history expansion
 };
 
 static inline parse_flags &

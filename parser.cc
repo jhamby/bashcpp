@@ -77,8 +77,7 @@ void
 Shell::initialize_bash_input ()
 {
   bash_input.type = st_none;
-  delete[] bash_input.name;
-  bash_input.name = nullptr;
+  bash_input.name.clear ();
   bash_input.location.file = nullptr;
   bash_input.location.string = nullptr;
   bash_input.getter = nullptr;
@@ -89,11 +88,10 @@ Shell::initialize_bash_input ()
    GET, UNGET, TYPE, NAME, and LOCATION. */
 void
 Shell::init_yy_io (sh_cget_func_t get, sh_cunget_func_t unget,
-                   stream_type type, const char *name, INPUT_STREAM location)
+                   stream_type type, const std::string &name, INPUT_STREAM location)
 {
   bash_input.type = type;
-  delete[] bash_input.name;
-  bash_input.name = name ? savestring (name) : nullptr;
+  bash_input.name = name;
 
   /* XXX */
   bash_input.location = location;
@@ -218,11 +216,11 @@ Shell::yy_string_unget (int c)
 }
 
 void
-Shell::with_input_from_string (char *string, const char *name)
+Shell::with_input_from_string (const std::string &string, const std::string &name)
 {
   INPUT_STREAM location;
 
-  location.string = string;
+  location.string = &string;
   init_yy_io (&Shell::yy_string_get, &Shell::yy_string_unget, st_string, name,
               location);
 }
@@ -2837,7 +2835,7 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
 
 /* Recursively call the parser to parse a $(...) command substitution. */
 std::string
-Shell::xparse_dolparen (const std::string &base, size_t indp, sx_flags flags)
+Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
@@ -2847,7 +2845,7 @@ Shell::xparse_dolparen (const std::string &base, size_t indp, sx_flags flags)
   STRING_SAVER *saved_pushed_strings;
 #endif
 
-  /*debug_parser(1);*/
+  // debug_parser (1);
   orig_ind = *indp;
   ostring = string;
   start_lineno = line_number;
@@ -3890,7 +3888,7 @@ Shell::history_delimiting_chars (const char *line)
   if ((parser_state & PST_HEREDOC) == 0)
     last_was_heredoc = 0;
 
-  if (dstack.delimiter_depth != 0)
+  if (!dstack.empty ())
     return "\n";
 
   /* We look for current_command_line_count == 2 because we are looking to
@@ -3979,7 +3977,7 @@ Shell::prompt_again ()
 {
   char *temp_prompt;
 
-  if (interactive == 0 || expanding_alias ()) /* XXX */
+  if (!interactive || expanding_alias ()) /* XXX */
     return;
 
   ps1_prompt = get_string_value ("PS1");
@@ -4490,7 +4488,7 @@ Shell::decode_prompt_string (const char *string)
 /* Report a syntax error, and restart the parser.  Call here for fatal
    errors. */
 int
-yyerror (const char *msg)
+Shell::yyerror (const char *msg)
 {
   report_syntax_error (nullptr);
   reset_parser ();

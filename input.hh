@@ -23,6 +23,8 @@
 
 #include "bashtypes.hh"
 
+#include <string>
+
 namespace bash
 {
 
@@ -81,7 +83,7 @@ struct BUFFERED_STREAM
 union INPUT_STREAM
 {
   FILE *file;
-  char *string; /* written to by the parser */
+  const std::string *string;
 #if defined(BUFFERED_INPUT)
   int buffered_fd;
 #endif

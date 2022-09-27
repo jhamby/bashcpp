@@ -713,7 +713,7 @@ protected:
   int pending_traps[NSIG];
 
   /* Set to the number of the signal we're running the trap for + 1.
-     Used in execute_cmd.c and builtins/common.c to clean up when
+     Used in execute_cmd.cc and builtins/common.cc to clean up when
      parse_and_execute does not return normally after executing the
      trap command (e.g., when `return' is executed in the trap command). */
   int running_trap;
@@ -928,6 +928,7 @@ protected:
   bool array_needs_making;
 
   /* Shared state from bashhist.cc */
+
   bool remember_on_history;
   char enable_history_list; /* value for `set -o history' */
   char literal_history;     /* controlled by `shopt lithist' */
@@ -945,6 +946,7 @@ protected:
 #endif /* BANG_HISTORY */
 
   /* Shared state from bashline.c */
+
 #if defined(READLINE)
   bool bash_readline_initialized;
 #endif
@@ -1683,24 +1685,30 @@ public:
 #endif
   int display_signal_list (WORD_LIST *, int);
 
-  /* Functions from evalstring.c */
-  int parse_and_execute (const char *, const char *, parse_flags);
+  // Functions from builtins/evalstring.cc
+
+  int parse_and_execute (const std::string &, const std::string &,
+                         parse_flags);
+
   int evalstring (char *, const char *, int);
   void parse_and_execute_cleanup (int);
   int parse_string (char *, const char *, int, char **);
-  int should_suppress_fork (COMMAND *);
-  int can_optimize_connection (COMMAND *);
+  bool should_suppress_fork (COMMAND *);
+  bool can_optimize_connection (CONNECTION *);
   void optimize_fork (COMMAND *);
   void optimize_subshell_command (COMMAND *);
   void optimize_shell_function (COMMAND *);
+  int cat_file (REDIRECT *r);
 
-  /* Functions from evalfile.c */
+  // Functions from builtins/evalfile.cc
+
   int maybe_execute_file (const char *, bool);
   int force_execute_file (const char *, bool);
   int source_file (const char *, int);
   int fc_execute_file (const char *);
 
   /* Functions from flags.cc */
+
   int change_flag (int, int);
   void initialize_flags ();
 
@@ -1999,7 +2007,7 @@ protected:
   int yy_string_get ();
   int yy_string_unget (int);
 
-  void with_input_from_string (char *, const char *);
+  void with_input_from_string (const std::string &, const std::string &);
 
   int yy_stream_get ();
   int yy_stream_unget (int);
@@ -4309,7 +4317,7 @@ protected:
 
   /* The variable in NAME has just had its state changed.  Check to see if it
      is one of the special ones where something special happens. */
-  void stupidly_hack_special_variables (const char *);
+  void stupidly_hack_special_variables (const std::string &);
 
   // Methods implemented in parse.yy.
 
@@ -4321,19 +4329,20 @@ protected:
   int return_EOF ();
   void push_token (parser::token::token_kind_type);
   void reset_parser ();
-  WORD_LIST *parse_string_to_word_list (char *, int, const char *);
-  void init_yy_io (sh_cget_func_t, sh_cunget_func_t, stream_type, const char *,
-                   INPUT_STREAM);
+  WORD_LIST *parse_string_to_word_list (const std::string &, int,
+                                        const std::string &);
+  void init_yy_io (sh_cget_func_t, sh_cunget_func_t, stream_type,
+                   const std::string &, INPUT_STREAM);
   void with_input_from_stdin ();
-  void with_input_from_stream (FILE *, const char *);
+  void with_input_from_stream (FILE *, const std::string &);
   void initialize_bash_input ();
-  void execute_variable_command (const char *, const char *);
+  void execute_variable_command (const std::string &, const std::string &);
   std::string parse_comsub (int, int, int, pgroup_flags);
   int parse_arith_cmd (char **, int);
 
 #if defined(ARRAY_VARS)
-  int token_is_assignment (char *, int);
-  int token_is_ident (char *, int);
+  int token_is_assignment (const std::string &, int);
+  int token_is_ident (const std::string &, int);
 #endif
 
   /* Return true if a stream of type TYPE is saved on the stack. */
@@ -4349,10 +4358,10 @@ protected:
     return false;
   }
 
-  const char *
+  std::string
   yy_input_name ()
   {
-    return bash_input.name ? bash_input.name : "stdin";
+    return bash_input.name.empty () ? std::string ("stdin") : bash_input.name;
   }
 
   /* Get the next character of input. */
@@ -4619,8 +4628,7 @@ protected:
   int
   get_current_prompt_level ()
   {
-    return (current_prompt_string && current_prompt_string == ps2_prompt) ? 2
-                                                                          : 1;
+    return current_prompt_string == ps2_prompt ? 2 : 1;
   }
 
   void
@@ -4941,7 +4949,7 @@ protected:
   struct BASH_INPUT
   {
     stream_type type;
-    char *name; /* freed by the parser */
+    std::string name;
     INPUT_STREAM location;
     sh_cget_func_t getter;
     sh_cunget_func_t ungetter;
