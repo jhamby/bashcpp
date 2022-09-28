@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 5.1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2021-09-17 19:30+0700\n"
 "Last-Translator: Arif E. Nugroho <arif_endro@yahoo.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -1428,6 +1428,102 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: instruksi redireksi `%d' diluar dari jangkauan"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "EOF tidak terduga ketika mencari untuk pencocokan `%c'"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "EOF tidak terduga ketika mencari untuk `]]'"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "syntax error dalam ekspresi kondisional: tanda `%s' tidak terduga"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "syntax error dalam ekspresi kondisional"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "tanda `%s' tidak terduga, diduga `)'"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "diduga `)'"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "argumen tidak terduga `%s' ke operator kondisional unary"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "argumen tidak terduga untuk operasi unary kondisional"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "tanda `%s' tidak terduga, operator binary kondisional diduga"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "operator binary kondisional diduga"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "argumen `%s' tidak terduga ke operator binary kondisional"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "argumen tidak terduga ke operasi binary kondisional"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "tanda `%c' tidak terduga dalam perintah kondisional"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "tanda `%s' tidak terduga dalam perintah kondisional"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "tanda %d tidak terduga dalam perintah kondisional"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "syntax error didekat tanda `%s' yang tidak terduga"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "syntax error didekat `%s'"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "syntax error: tidak terduga diakhir dari berkas"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "syntax error"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Gunakan \"%s\" untuk meninggalkan shell.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "EOF tidak terduga ketika mencari untuk pencocokan ')'"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1606,6 +1702,10 @@ msgstr "bash halaman rumah: <http://www.gnu.org/software/bash>\n"
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "Bantuan umum menggunakan aplikasi GNU: <http:///www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "jumlah maksimal dokumen disini tercapai"
 
 #: sig.cc:686
 #, c-format
@@ -2139,84 +2239,6 @@ msgstr "TIDAK ADA GARANSI, selama masih diijinkan oleh hukum yang berlaku."
 #~ msgstr ""
 #~ "shell_getc: shell_input_line_size (%zu) terlampaui SIZE_MAX (%lu): baris "
 #~ "terpotong"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "jumlah maksimal dokumen disini tercapai"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "EOF tidak terduga ketika mencari untuk pencocokan `%c'"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "EOF tidak terduga ketika mencari untuk `]]'"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "syntax error dalam ekspresi kondisional: tanda `%s' tidak terduga"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "syntax error dalam ekspresi kondisional"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "tanda `%s' tidak terduga, diduga `)'"
-
-#~ msgid "expected `)'"
-#~ msgstr "diduga `)'"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "argumen tidak terduga `%s' ke operator kondisional unary"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "argumen tidak terduga untuk operasi unary kondisional"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "tanda `%s' tidak terduga, operator binary kondisional diduga"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "operator binary kondisional diduga"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "argumen `%s' tidak terduga ke operator binary kondisional"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "argumen tidak terduga ke operasi binary kondisional"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "tanda `%c' tidak terduga dalam perintah kondisional"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "tanda `%s' tidak terduga dalam perintah kondisional"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "tanda %d tidak terduga dalam perintah kondisional"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "syntax error didekat tanda `%s' yang tidak terduga"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "syntax error didekat `%s'"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "syntax error: tidak terduga diakhir dari berkas"
-
-#~ msgid "syntax error"
-#~ msgstr "syntax error"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Gunakan \"%s\" untuk meninggalkan shell.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "EOF tidak terduga ketika mencari untuk pencocokan ')'"
 
 #~ msgid "I have no name!"
 #~ msgstr "Aku tidak memiliki nama!"

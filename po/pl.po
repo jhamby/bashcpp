@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 5.2-rc1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2022-06-19 22:15+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -1429,6 +1429,102 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: instrukcja przekierowania `%d' poza zakresem"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "nieoczekiwany EOF podczas poszukiwania pasującego `%c'"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "nieoczekiwany EOF podczas poszukiwania `]]'"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "błąd składni w wyrażeniu warunkowym: nieoczekiwany znacznik `%s'"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "błąd składni w wyrażeniu warunkowym"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "nieoczekiwany znacznik `%s', oczekiwano `)'"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "oczekiwano `)'"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "nieoczekiwany argument `%s' jednoargumentowego operatora warunkowego"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "nieoczekiwany argument jednoargumentowego operatora warunkowego"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "nieoczekiwany argument `%s', oczekiwano dwuarg. operatora warunkowego"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "oczekiwano dwuargumentowego operatora warunkowego"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "nieoczekiwany argument `%s' dwuargumentowego operatora warunkowego"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "nieoczekiwany argument dwuargumentowego operatora warunkowego"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "nieoczekiwany znacznik `%c' w poleceniu warunkowym"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "nieoczekiwany znacznik `%s' w poleceniu warunkowym"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "nieoczekiwany znacznik %d w poleceniu warunkowym"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "błąd składni przy nieoczekiwanym znaczniku `%s'"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "błąd składni przy `%s'"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "błąd składni: nieoczekiwany koniec pliku"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "błąd składni"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Użyj \"%s\", aby opuścić tę powłokę.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "nieoczekiwany EOF podczas poszukiwania pasującego `)'"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1607,6 +1703,10 @@ msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "Ogólna pomoc przy użytkowaniu oprogramowania GNU: <http://www.gnu.org/"
 "gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "przekroczono maksymalną liczbę dokumentów w miejscu"
 
 #: sig.cc:686
 #, c-format
@@ -2137,86 +2237,6 @@ msgstr "Nie ma ŻADNEJ GWARANCJI w granicach dopuszczanych przez prawo."
 #~ msgstr ""
 #~ "shell_getc: shell_input_line_size (%zu) przekracza SIZE_MAX (%lu): linia "
 #~ "skrócona"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "przekroczono maksymalną liczbę dokumentów w miejscu"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "nieoczekiwany EOF podczas poszukiwania pasującego `%c'"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "nieoczekiwany EOF podczas poszukiwania `]]'"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "błąd składni w wyrażeniu warunkowym: nieoczekiwany znacznik `%s'"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "błąd składni w wyrażeniu warunkowym"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "nieoczekiwany znacznik `%s', oczekiwano `)'"
-
-#~ msgid "expected `)'"
-#~ msgstr "oczekiwano `)'"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr ""
-#~ "nieoczekiwany argument `%s' jednoargumentowego operatora warunkowego"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "nieoczekiwany argument jednoargumentowego operatora warunkowego"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr ""
-#~ "nieoczekiwany argument `%s', oczekiwano dwuarg. operatora warunkowego"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "oczekiwano dwuargumentowego operatora warunkowego"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "nieoczekiwany argument `%s' dwuargumentowego operatora warunkowego"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "nieoczekiwany argument dwuargumentowego operatora warunkowego"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "nieoczekiwany znacznik `%c' w poleceniu warunkowym"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "nieoczekiwany znacznik `%s' w poleceniu warunkowym"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "nieoczekiwany znacznik %d w poleceniu warunkowym"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "błąd składni przy nieoczekiwanym znaczniku `%s'"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "błąd składni przy `%s'"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "błąd składni: nieoczekiwany koniec pliku"
-
-#~ msgid "syntax error"
-#~ msgstr "błąd składni"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Użyj \"%s\", aby opuścić tę powłokę.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "nieoczekiwany EOF podczas poszukiwania pasującego `)'"
 
 #~ msgid "I have no name!"
 #~ msgstr "Nie mam nazwy!"

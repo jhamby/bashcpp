@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 5.0\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2019-01-16 21:05+0000\n"
 "Last-Translator: Séamus Ó Ciardhuáin <sociardhuain@gmail.com>\n"
 "Language-Team: Irish <gaeilge-gnulinux@lists.sourceforge.net>\n"
@@ -1451,6 +1451,105 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: ordú atreoraithe \"%d\" as raon."
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "Deireadh comhaid gan súil leis agus \"%c\" a mheaitseálann á lorg."
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "Deireadh comhaid gan súil leis agus \"]]\" á lorg."
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr ""
+"Earráid chomhréire i slonn coinníollach: comhartha \"%s\" gan suil leis."
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "Earráid chomhréire i slonn coinníollach."
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "Comhartha '%s' gan súil leis; ag súil le ')'."
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "Ag súil le \")\""
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "Argóint \"%s\" gan súil lei go hoibreoir aonártha coinníollach."
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "Argóint gan súil lei go hoibreoir coinníollach aonártha ."
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr ""
+"Comhartha \"%s\" gan súil leis. Bhíothas ag súil le hoibreoir coinníollach "
+"dénártha."
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "Bhíothas ag súil le hoibreoir coinníollach dénártha."
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "Argóint '%s' gan súil lei go hoibreoir dénártha coinníollach."
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "Argóint gan súil lei go hoibreoir dénártha coinníollach."
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "Comhartha '%c' gan súil leis in ordú coinníollach."
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "Comhartha \"%s\" gan súil leis in ordú coinníollach."
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "Comhartha %d gan súil leis in ordú coinníollach."
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "Earráid chomhréire in aice comhartha '%s' nach rabhthas ag súil leis."
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "Earráid chomhréire in aice '%s'"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "Earráid chomhréire: deireadh comhaid gan súil leis."
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "Earráid chomhréire"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Úsáid '%s' le scoir den mblaosc.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "Deireadh comhaid gan súil leis agus ')' á lorg le meaitseáil."
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1632,6 +1731,10 @@ msgstr "leathanach baile bash: <http://www.gnu.org/software/bash>\n"
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr "Cabhair ghinearálta le bogearraí GNU: <http://www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "Imithe thar uasfhad na cáipéise-anseo"
 
 #: sig.cc:686
 #, c-format
@@ -2166,88 +2269,6 @@ msgstr ""
 #~ msgstr ""
 #~ "shell_getc: tá méid an líne ionchuir blaoisce (%zu) níos mó ná SIZE_MAX "
 #~ "(%lu): líne giorraithe"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "Imithe thar uasfhad na cáipéise-anseo"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "Deireadh comhaid gan súil leis agus \"%c\" a mheaitseálann á lorg."
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "Deireadh comhaid gan súil leis agus \"]]\" á lorg."
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr ""
-#~ "Earráid chomhréire i slonn coinníollach: comhartha \"%s\" gan suil leis."
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "Earráid chomhréire i slonn coinníollach."
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "Comhartha '%s' gan súil leis; ag súil le ')'."
-
-#~ msgid "expected `)'"
-#~ msgstr "Ag súil le \")\""
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "Argóint \"%s\" gan súil lei go hoibreoir aonártha coinníollach."
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "Argóint gan súil lei go hoibreoir coinníollach aonártha ."
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr ""
-#~ "Comhartha \"%s\" gan súil leis. Bhíothas ag súil le hoibreoir "
-#~ "coinníollach dénártha."
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "Bhíothas ag súil le hoibreoir coinníollach dénártha."
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "Argóint '%s' gan súil lei go hoibreoir dénártha coinníollach."
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "Argóint gan súil lei go hoibreoir dénártha coinníollach."
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "Comhartha '%c' gan súil leis in ordú coinníollach."
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "Comhartha \"%s\" gan súil leis in ordú coinníollach."
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "Comhartha %d gan súil leis in ordú coinníollach."
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr ""
-#~ "Earráid chomhréire in aice comhartha '%s' nach rabhthas ag súil leis."
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "Earráid chomhréire in aice '%s'"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "Earráid chomhréire: deireadh comhaid gan súil leis."
-
-#~ msgid "syntax error"
-#~ msgstr "Earráid chomhréire"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Úsáid '%s' le scoir den mblaosc.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "Deireadh comhaid gan súil leis agus ')' á lorg le meaitseáil."
 
 #~ msgid "I have no name!"
 #~ msgstr "Níl ainm orm!"

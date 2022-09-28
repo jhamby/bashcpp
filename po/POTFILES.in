@@ -55,12 +55,13 @@ locale.cc
 mailcheck.cc
 make_cmd.cc
 nojobs.cc
-parse.yy
+parser.cc
 pcomplete.cc
 pcomplib.cc
 print_cmd.cc
 redir.cc
 shell.cc
+shell.hh
 sig.cc
 siglist.cc
 subst.cc

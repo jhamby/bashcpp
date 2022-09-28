@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash-4.2\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2013-03-09 20:21+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -1424,6 +1424,102 @@ msgstr "here-document v vrstici %d razmejen z end-of-file (želeno `%s')"
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: navodilo preusmeritve `%d' je izven dosega"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "nepričakovan konec datoteke med iskanjem ujemanja z `%c'"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "nepričakovan konec datoteke med iskanjem ujemanja z `]]'"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "skladenjska napaka v pogojnem izrazu: nepričakovan žeton `%s'"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "skladenjska napaka v pogojnem izrazu"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "nepričakovan žeton `%s', pričakovan je bil `)'"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "pričakovan `)'"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "nepričakovan argument `%s' do pogojnega enoslovnega operatorja"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "nepričakovan argument do pogojnega enoslovnega operatorja"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "nepričakovan žeton `%s', pričakovan je binarni pogojni operator"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "pričakovan je binarni pogojni operator"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "nepričakovan argument `%s' do pogojnega binarnega operatorja"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "nepričakovan argument do pogojnega binarnega operatorja"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "nepričakovan žeton `%c' v pogojnem ukazu"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "nepričakovan žeton `%s' v pogojnem ukazu"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "nepričakovan žeton %d v pogojnem ukazu"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "skladenjska napaka blizu nepričakovanega žetona `%s'"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "skladenjska napaka blizu `%s'"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "skladenjska napaka: nepričakovan konec datoteke"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "skladenjska napaka"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Uporabite \"%s\", če želite zapustiti lupino.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "nepričakovan konec datoteke med iskanjem ujemanja z `)'"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1596,6 +1692,10 @@ msgstr ""
 #: shell.cc:1876
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
+msgstr ""
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
 msgstr ""
 
 #: sig.cc:686
@@ -2124,81 +2224,6 @@ msgstr "Je BREZ KAKRŠNEKOLI GARANCIJE, v obsegu, ki ga dovoljuje zakonodaja.\n"
 #, c-format
 #~ msgid "register_free: %p already in table as free?\n"
 #~ msgstr "register_free: je %p že v razpredelnici kot prost?\n"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "nepričakovan konec datoteke med iskanjem ujemanja z `%c'"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "nepričakovan konec datoteke med iskanjem ujemanja z `]]'"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "skladenjska napaka v pogojnem izrazu: nepričakovan žeton `%s'"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "skladenjska napaka v pogojnem izrazu"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "nepričakovan žeton `%s', pričakovan je bil `)'"
-
-#~ msgid "expected `)'"
-#~ msgstr "pričakovan `)'"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "nepričakovan argument `%s' do pogojnega enoslovnega operatorja"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "nepričakovan argument do pogojnega enoslovnega operatorja"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "nepričakovan žeton `%s', pričakovan je binarni pogojni operator"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "pričakovan je binarni pogojni operator"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "nepričakovan argument `%s' do pogojnega binarnega operatorja"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "nepričakovan argument do pogojnega binarnega operatorja"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "nepričakovan žeton `%c' v pogojnem ukazu"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "nepričakovan žeton `%s' v pogojnem ukazu"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "nepričakovan žeton %d v pogojnem ukazu"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "skladenjska napaka blizu nepričakovanega žetona `%s'"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "skladenjska napaka blizu `%s'"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "skladenjska napaka: nepričakovan konec datoteke"
-
-#~ msgid "syntax error"
-#~ msgstr "skladenjska napaka"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Uporabite \"%s\", če želite zapustiti lupino.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "nepričakovan konec datoteke med iskanjem ujemanja z `)'"
 
 #~ msgid "I have no name!"
 #~ msgstr "Ni imena!"

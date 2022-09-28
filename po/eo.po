@@ -30,7 +30,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GNU bash 5.1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2020-12-13 10:53+0700\n"
 "Last-Translator: Sergio Pokrovskij <sergio.pokrovskij@gmail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -1466,6 +1466,102 @@ msgstr "Tuj-dokumenton de linio %d limigas dosierfino (mankas „%s‟)"
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: Alidirektada komando „%d‟ ekster sia variejo"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "Neatendita dosierfino dum serĉo de responda „%c‟"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "Neatendita dosierfino dum serĉo de „]]‟"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "Sintaksa eraro en kondiĉa esprimo: Neatendita simbolo „%s‟"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "Sintaksa eraro en kondiĉa esprimo"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "Nekonvena simbolo „%s‟ anstataŭ „)‟"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "Mankas „)‟"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "La argumento „%s‟ ne konvenas por unuloka kondiĉa operacisimbolo"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "Maltaŭga argumento por unuloka kondiĉa operacisimbolo"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "Misa simbolo „%s‟ anstataŭ duloka kondiĉa operacisigno"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "ĉi tie devas esti duloka kondiĉa operacisigno"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "La argumento „%s‟ ne konvenas por duloka kondiĉa operacisimbolo"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "<maltaŭga argumento por duloka kondiĉa operacisimbolo"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "Misa simbolo „%c‟ en kondiĉa komando"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "Misa simbolo „%s‟ en kondiĉa komando"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "Misa simbolo „%d‟ en kondiĉa komando"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "Sintaksa eraro apud neatendita simbolo „%s‟"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "Sintaksa eraro apud „%s‟"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "Sintaksa eraro: Neatendita dosierfino"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "Sintaksa eraro"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Uzu «%s» por eliri el la ŝelo.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "Neatendita dosierfino dum serĉo de responda „)‟"
+
 # XXX: internal_error
 #: pcomplete.cc:1068
 #, c-format
@@ -1653,6 +1749,10 @@ msgstr ""
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "Ĝenerala helpilo pri uzo de GNUa programaro: <http://www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "La nombro de tuj-documentoj superis sian maksimumon"
 
 # XXX: internal_error
 #: sig.cc:686
@@ -2249,84 +2349,6 @@ msgstr "NENIA GARANTIO estas donita, tiom kiom tion permesas la leĝo."
 #~ msgstr ""
 #~ "shell_getc: shell_input_line_size (%zu) superas SIZE_MAX (%lu): la linio "
 #~ "tranĉita"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "La nombro de tuj-documentoj superis sian maksimumon"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "Neatendita dosierfino dum serĉo de responda „%c‟"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "Neatendita dosierfino dum serĉo de „]]‟"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "Sintaksa eraro en kondiĉa esprimo: Neatendita simbolo „%s‟"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "Sintaksa eraro en kondiĉa esprimo"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "Nekonvena simbolo „%s‟ anstataŭ „)‟"
-
-#~ msgid "expected `)'"
-#~ msgstr "Mankas „)‟"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "La argumento „%s‟ ne konvenas por unuloka kondiĉa operacisimbolo"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "Maltaŭga argumento por unuloka kondiĉa operacisimbolo"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "Misa simbolo „%s‟ anstataŭ duloka kondiĉa operacisigno"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "ĉi tie devas esti duloka kondiĉa operacisigno"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "La argumento „%s‟ ne konvenas por duloka kondiĉa operacisimbolo"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "<maltaŭga argumento por duloka kondiĉa operacisimbolo"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "Misa simbolo „%c‟ en kondiĉa komando"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "Misa simbolo „%s‟ en kondiĉa komando"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "Misa simbolo „%d‟ en kondiĉa komando"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "Sintaksa eraro apud neatendita simbolo „%s‟"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "Sintaksa eraro apud „%s‟"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "Sintaksa eraro: Neatendita dosierfino"
-
-#~ msgid "syntax error"
-#~ msgstr "Sintaksa eraro"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Uzu «%s» por eliri el la ŝelo.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "Neatendita dosierfino dum serĉo de responda „)‟"
 
 #~ msgid "I have no name!"
 #~ msgstr "Mi ne havas nomon!"

@@ -25,7 +25,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 5.2-rc1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2022-06-18 14:25+0800\n"
 "Last-Translator: Wenbin Lv <wenbin816@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -1420,6 +1420,103 @@ msgstr "立即文档在第 %d 行被文件结束符分隔（需要 \"%s\"）"
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: 重定向指令 \"%d\" 超出范围"
 
+# %c 可能为引号
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "寻找匹配的 `%c' 时遇到了未预期的 EOF"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "寻找 \"]]\" 时遇到了未预期的 EOF"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "条件表达式中有语法错误：未预期的记号 \"%s\""
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "条件表达式中有语法错误"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "未预期的记号 \"%s\"，需要 \")\""
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "需要 \")\""
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "一元条件运算符使用了未预期的参数 \"%s\""
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "一元条件运算符使用了未预期的参数"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "未预期的记号 \"%s\"，需要二元条件运算符"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "需要二元条件运算符"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "二元条件运算符使用了未预期的参数 \"%s\""
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "二元条件运算符使用了未预期的参数"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "条件命令中有未预期的记号 \"%c\""
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "条件命令中有未预期的记号 \"%s\""
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "条件命令中有未预期的记号 %d"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "未预期的记号 \"%s\" 附近有语法错误"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "\"%s\" 附近有语法错误"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "语法错误：未预期的文件结束符"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "语法错误"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "使用 \"%s\" 退出 shell 。\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "寻找匹配的 \")\" 时遇到了未预期的 EOF"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1595,6 +1692,10 @@ msgstr "bash 主页：<http://www.gnu.org/software/bash>\n"
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr "使用 GNU 软件的通用帮助：<http://www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "超出最大立即文档计数"
 
 #: sig.cc:686
 #, c-format
@@ -2117,85 +2218,6 @@ msgstr "在法律许可的情况下特此明示，本软件不提供任何担保
 #~ "truncated"
 #~ msgstr ""
 #~ "shell_getc: shell_input_line_size (%zu) 超过 SIZE_MAX (%lu)：行已被截断"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "超出最大立即文档计数"
-
-# %c 可能为引号
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "寻找匹配的 `%c' 时遇到了未预期的 EOF"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "寻找 \"]]\" 时遇到了未预期的 EOF"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "条件表达式中有语法错误：未预期的记号 \"%s\""
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "条件表达式中有语法错误"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "未预期的记号 \"%s\"，需要 \")\""
-
-#~ msgid "expected `)'"
-#~ msgstr "需要 \")\""
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "一元条件运算符使用了未预期的参数 \"%s\""
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "一元条件运算符使用了未预期的参数"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "未预期的记号 \"%s\"，需要二元条件运算符"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "需要二元条件运算符"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "二元条件运算符使用了未预期的参数 \"%s\""
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "二元条件运算符使用了未预期的参数"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "条件命令中有未预期的记号 \"%c\""
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "条件命令中有未预期的记号 \"%s\""
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "条件命令中有未预期的记号 %d"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "未预期的记号 \"%s\" 附近有语法错误"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "\"%s\" 附近有语法错误"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "语法错误：未预期的文件结束符"
-
-#~ msgid "syntax error"
-#~ msgstr "语法错误"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "使用 \"%s\" 退出 shell 。\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "寻找匹配的 \")\" 时遇到了未预期的 EOF"
 
 # 这个是查看用户的 /etc/passwd 信息得到的名字。既然是用户的名字，就叫做无名氏吧。（有点想写“红领巾”来着。）
 #~ msgid "I have no name!"

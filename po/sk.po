@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 4.2\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2011-03-16 21:22+0100\n"
 "Last-Translator: Ivan Masár <helix84@centrum.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -1422,6 +1422,102 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: inštrukcia presmerovania „%d“ mimo rozsahu"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "neočakávaný koniec súboru počas hľadania zodpovedajúceho „%c“"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "neočakávaný koniec súboru počas hľadania „]]“"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "chyba syntaxe v podmienečnom príkaze: neočakávaný token „%s“"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "chyba syntaxe v podmienečnom príkaze"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "neočakávaný token „%s“, očakávalo sa `)'"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "očakávalo sa `)'"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "neočakávaný argument „%s“ podmienečného unárneho operátora"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "neočakávaný argument podmienečného unárneho operátora"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "neočakávaný token „%s“, očakáva sa podmienečný binárny operátor"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "očakáva sa podmienečný binárny operátor"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "neočakávaný argument „%s“ v podmienečnom binárnom operátore"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "neočakávaný argument v podmienečnom binárnom operátore"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "neočakávaný token „%c“ v podmienečnom príkaze"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "neočakávaný token „%s“ v podmienečnom príkaze"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "neočakávaný token %d v podmienečnom príkaze"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "chyba syntaxe neďaleko neočakávaného tokenu „%s“"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "chyba syntaxe neďaleko „%s“"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "chyba syntaxe: neočakávaný koniec súboru"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "chyba syntaxe"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Na opustenie shellu použite „%s“.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "neočakávaný koniec súboru počas hľadania zodpovedajúceho „)“"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1597,6 +1693,10 @@ msgstr ""
 #: shell.cc:1876
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
+msgstr ""
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
 msgstr ""
 
 #: sig.cc:686
@@ -2122,81 +2222,6 @@ msgstr ""
 #, c-format
 #~ msgid "register_free: %p already in table as free?\n"
 #~ msgstr "register_free: %p už je v tabuľke ako voľný?\n"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "neočakávaný koniec súboru počas hľadania zodpovedajúceho „%c“"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "neočakávaný koniec súboru počas hľadania „]]“"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "chyba syntaxe v podmienečnom príkaze: neočakávaný token „%s“"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "chyba syntaxe v podmienečnom príkaze"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "neočakávaný token „%s“, očakávalo sa `)'"
-
-#~ msgid "expected `)'"
-#~ msgstr "očakávalo sa `)'"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "neočakávaný argument „%s“ podmienečného unárneho operátora"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "neočakávaný argument podmienečného unárneho operátora"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "neočakávaný token „%s“, očakáva sa podmienečný binárny operátor"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "očakáva sa podmienečný binárny operátor"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "neočakávaný argument „%s“ v podmienečnom binárnom operátore"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "neočakávaný argument v podmienečnom binárnom operátore"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "neočakávaný token „%c“ v podmienečnom príkaze"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "neočakávaný token „%s“ v podmienečnom príkaze"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "neočakávaný token %d v podmienečnom príkaze"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "chyba syntaxe neďaleko neočakávaného tokenu „%s“"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "chyba syntaxe neďaleko „%s“"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "chyba syntaxe: neočakávaný koniec súboru"
-
-#~ msgid "syntax error"
-#~ msgstr "chyba syntaxe"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Na opustenie shellu použite „%s“.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "neočakávaný koniec súboru počas hľadania zodpovedajúceho „)“"
 
 #~ msgid "I have no name!"
 #~ msgstr "Nemám meno!"

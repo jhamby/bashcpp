@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash-5.2-rc1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2022-07-03 20:40+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
@@ -1418,6 +1418,102 @@ msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr ""
 "make_redirection: videresendinginstruks «%d» er utenfor tillatt rekkevidde"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "uforventet slutt på fil (EOF) under søk etter «%c»"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "uforventet slutt på fil (EOF) under søk etter «]]»"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "syntaksfeil i betinget uttrykk: forventet ikke symbolet «%s»"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "syntaksfeil i betinget uttrykk"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "forventet ikke symbolet «%s», men «)»"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "forventet «)»"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "«%s» er et uforventet argument for betinget unær operatør"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "uforventet argument for betinget unær operatør"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "«%s» er et uforventet symbol. Forventet betinget binær operatør"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "forventet betinget binæroperatør"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "«%s» er et uforventet argument for betinget binæroperatør"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "uforventet argument for betinget binæroperatør"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "«%c» er et uforventet symbol i en betinget kommando"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "«%s» er et uforventet symbol i en betinget kommando"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "«%d» er et uforventet symbol i en betinget kommando"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "syntaksfeil ved «%s», som er et uforventet symbol"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "syntaksfeil ved «%s»"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "syntaksfeil: uforventet slutt på fil"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "syntaksfeil"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Bruk «%s» for å gå ut av skallet.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "uforventet slutt på fil (EOF) under søk etter «)»"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1592,6 +1688,10 @@ msgstr "bash-nettside: <http://www.gnu.org/software/bash>\n"
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "Generell hjelp til bruk av GNU-programvare: <http://www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "grensa for maksimalt antall here-dokumenter er overskredet"
 
 #: sig.cc:686
 #, c-format
@@ -2123,84 +2223,6 @@ msgstr ""
 #~ msgstr ""
 #~ "shell_getc: «shell_input_line_size» (%zu) overskrider SIZE_MAX (%lu): "
 #~ "linja er forkortet"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "grensa for maksimalt antall here-dokumenter er overskredet"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "uforventet slutt på fil (EOF) under søk etter «%c»"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "uforventet slutt på fil (EOF) under søk etter «]]»"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "syntaksfeil i betinget uttrykk: forventet ikke symbolet «%s»"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "syntaksfeil i betinget uttrykk"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "forventet ikke symbolet «%s», men «)»"
-
-#~ msgid "expected `)'"
-#~ msgstr "forventet «)»"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "«%s» er et uforventet argument for betinget unær operatør"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "uforventet argument for betinget unær operatør"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "«%s» er et uforventet symbol. Forventet betinget binær operatør"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "forventet betinget binæroperatør"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "«%s» er et uforventet argument for betinget binæroperatør"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "uforventet argument for betinget binæroperatør"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "«%c» er et uforventet symbol i en betinget kommando"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "«%s» er et uforventet symbol i en betinget kommando"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "«%d» er et uforventet symbol i en betinget kommando"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "syntaksfeil ved «%s», som er et uforventet symbol"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "syntaksfeil ved «%s»"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "syntaksfeil: uforventet slutt på fil"
-
-#~ msgid "syntax error"
-#~ msgstr "syntaksfeil"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Bruk «%s» for å gå ut av skallet.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "uforventet slutt på fil (EOF) under søk etter «)»"
 
 #~ msgid "I have no name!"
 #~ msgstr "Jeg manger navn!"

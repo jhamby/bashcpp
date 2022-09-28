@@ -26,7 +26,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash-5.2-rc1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2022-06-23 10:18+0200\n"
 "Last-Translator: Benno Schulenberg <vertaling@coevern.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -1438,6 +1438,103 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection(): omleidingsinstructie '%d' valt buiten bereik"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "onverwacht bestandseinde tijdens zoeken naar bijpassende '%c'"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "onverwacht bestandseinde tijdens zoeken naar ']]'"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "syntaxfout in conditionele expressie: onverwacht symbool '%s'"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "syntaxfout in conditionele expressie"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "onverwacht symbool '%s'; ')' werd verwacht"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "')' werd verwacht"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "onverwacht argument '%s' bij eenzijdige conditionele operator"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "onverwacht argument bij eenzijdige conditionele operator"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr ""
+"onverwacht symbool '%s'; tweezijdige conditionele operator werd verwacht"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "tweezijdige conditionele operator werd verwacht"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "onverwacht argument '%s' bij tweezijdige conditionele operator"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "onverwacht argument bij tweezijdige conditionele operator"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "onverwacht symbool '%c' in conditionele opdracht"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "onverwacht symbool '%s' in conditionele opdracht"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "onverwacht symbool %d in conditionele opdracht"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "syntaxfout nabij onverwacht symbool '%s'"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "syntaxfout nabij '%s'"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "syntaxfout: onverwacht bestandseinde"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "syntaxfout"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Gebruik \"%s\" om de shell te verlaten.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "onverwacht bestandseinde tijdens zoeken naar bijpassende ')'"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1614,6 +1711,10 @@ msgstr "Webpagina van 'bash': <http://www.gnu.org/software/bash>\n"
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "Algemene hulp bij gebruik van GNU-software: <http://www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "maximum aantal \"hier\"-documenten is overschreden"
 
 #: sig.cc:686
 #, c-format
@@ -2148,85 +2249,6 @@ msgstr "Er is GEEN GARANTIE, voor zover de wet dit toestaat."
 #~ msgstr ""
 #~ "shell_getc(): lengte van invoerregel (%zu) overschrijdt SIZE_MAX (%lu): "
 #~ "regel is afgekapt"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "maximum aantal \"hier\"-documenten is overschreden"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "onverwacht bestandseinde tijdens zoeken naar bijpassende '%c'"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "onverwacht bestandseinde tijdens zoeken naar ']]'"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "syntaxfout in conditionele expressie: onverwacht symbool '%s'"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "syntaxfout in conditionele expressie"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "onverwacht symbool '%s'; ')' werd verwacht"
-
-#~ msgid "expected `)'"
-#~ msgstr "')' werd verwacht"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "onverwacht argument '%s' bij eenzijdige conditionele operator"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "onverwacht argument bij eenzijdige conditionele operator"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr ""
-#~ "onverwacht symbool '%s'; tweezijdige conditionele operator werd verwacht"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "tweezijdige conditionele operator werd verwacht"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "onverwacht argument '%s' bij tweezijdige conditionele operator"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "onverwacht argument bij tweezijdige conditionele operator"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "onverwacht symbool '%c' in conditionele opdracht"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "onverwacht symbool '%s' in conditionele opdracht"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "onverwacht symbool %d in conditionele opdracht"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "syntaxfout nabij onverwacht symbool '%s'"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "syntaxfout nabij '%s'"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "syntaxfout: onverwacht bestandseinde"
-
-#~ msgid "syntax error"
-#~ msgstr "syntaxfout"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Gebruik \"%s\" om de shell te verlaten.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "onverwacht bestandseinde tijdens zoeken naar bijpassende ')'"
 
 #~ msgid "I have no name!"
 #~ msgstr "Ik heb geen naam!"

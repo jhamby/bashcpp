@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 4.4-beta1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2015-10-18 07:47+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -1419,6 +1419,102 @@ msgstr "tài liệu này ở dòng %d định giới bằng kết thúc tập ti
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: chỉ dẫn chuyển hướng “%d” nằm ngoài phạm vi"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "gặp kết thúc tập tin bất thường trong khi tìm “%c” tương ứng"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "gặp kết thúc tập tin bất thường trong khi tìm “]]”"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "gặp lỗi cú pháp trong biểu thức điều kiện: thẻ bài bất thường “%s”"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "gặp lỗi cú pháp trong biểu thức điều kiện"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "gặp thẻ bài bất thường “%s”, cần “)”"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "cần “)”"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "đối số bất thường “%s” cho toán tử một ngôi điều kiện"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "đối số bất thường cho toán tử một ngôi điều kiện"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "thẻ bài bất thường “%s”, cần toán tử hai ngôi điều kiện"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "cần toán tử hai ngôi điều kiện"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "đối số bất thường “%s” cho toán tử hai ngôi điều kiện"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "đối số bất thường cho toán tử hai ngôi điều kiện"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "gặp thẻ bài bất thường “%c” trong câu lệnh điều kiện"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "gặp thẻ bài bất thường “%s” trong câu lệnh điều kiện"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "gặp thẻ bài bất thường “%d” trong câu lệnh điều kiện"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "có lỗi cú pháp ở gần thẻ bài bất thường “%s”"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "lỗi cú pháp ở gần “%s”"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "lỗi cú pháp: kết thúc tập tin bất thường"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "lỗi cú pháp"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Dùng \"%s\" để rời hệ vỏ.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "gặp kết thúc tập tin bất thường trong khi tìm “)” tương ứng"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1595,6 +1691,10 @@ msgstr "Trang chủ bash: <http://www.gnu.org/software/bash/>\n"
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "Trợ giúp chung về cách sử dụng phần mềm GNU : <http://www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "vượt quá số lượng tài-liệu-đây tối đa"
 
 #: sig.cc:686
 #, c-format
@@ -2124,84 +2224,6 @@ msgstr "Ở đây KHÔNG BẢO HÀNH GÌ CẢ, với điều kiện được ph�
 #, c-format
 #~ msgid "register_free: %p already in table as free?\n"
 #~ msgstr "register_free: %p đã có trong bảng như còn trống?\n"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "vượt quá số lượng tài-liệu-đây tối đa"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "gặp kết thúc tập tin bất thường trong khi tìm “%c” tương ứng"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "gặp kết thúc tập tin bất thường trong khi tìm “]]”"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "gặp lỗi cú pháp trong biểu thức điều kiện: thẻ bài bất thường “%s”"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "gặp lỗi cú pháp trong biểu thức điều kiện"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "gặp thẻ bài bất thường “%s”, cần “)”"
-
-#~ msgid "expected `)'"
-#~ msgstr "cần “)”"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "đối số bất thường “%s” cho toán tử một ngôi điều kiện"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "đối số bất thường cho toán tử một ngôi điều kiện"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "thẻ bài bất thường “%s”, cần toán tử hai ngôi điều kiện"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "cần toán tử hai ngôi điều kiện"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "đối số bất thường “%s” cho toán tử hai ngôi điều kiện"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "đối số bất thường cho toán tử hai ngôi điều kiện"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "gặp thẻ bài bất thường “%c” trong câu lệnh điều kiện"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "gặp thẻ bài bất thường “%s” trong câu lệnh điều kiện"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "gặp thẻ bài bất thường “%d” trong câu lệnh điều kiện"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "có lỗi cú pháp ở gần thẻ bài bất thường “%s”"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "lỗi cú pháp ở gần “%s”"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "lỗi cú pháp: kết thúc tập tin bất thường"
-
-#~ msgid "syntax error"
-#~ msgstr "lỗi cú pháp"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Dùng \"%s\" để rời hệ vỏ.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "gặp kết thúc tập tin bất thường trong khi tìm “)” tương ứng"
 
 #~ msgid "I have no name!"
 #~ msgstr "Không có tên!"

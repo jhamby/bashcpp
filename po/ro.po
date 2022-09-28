@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 5.2-rc1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2022-06-18 01:02+0200\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -1623,6 +1623,105 @@ msgstr ""
 "make_redirection: instrucțiunea de redirecționare „%d” este în afara "
 "intervalului"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr ""
+"sfârșit neașteptat al fișierului(EOF) în timp ce se căuta coincidența pentru "
+"„%c”"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "sfârșit neașteptat al fișierului(EOF) în timp ce se căuta „]]”"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "eroare de sintaxă în expresia condițională: simbol neașteptat „%s”"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "eroare de sintaxă în expresia condițională"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "simbol neașteptat „%s”, așteptat „)”"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "se aștepta „)”"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "argument neașteptat „%s” pentru operatorul unar condițional"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "argument neașteptat pentru operatorul unar condițional"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "identificator neașteptat „%s”, se aștepta operator binar condițional"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "se aștepta operator binar condițional"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "argument neașteptat „%s” pentru operatorul binar condițional"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "argument neașteptat pentru operatorul binar condițional"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "identificator neașteptat „%c” în comanda condițională"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "identificator neașteptat „%s” în comanda condițională"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "identificator neașteptat %d în comanda condițională"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "eroare de sintaxă neașteptată lângă „%s”"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "eroare de sintaxă neașteptată lângă „%s”"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "eroare de sintaxă: sfârșit de fișier neașteptat"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "eroare de sintaxă"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Utilizați „%s” pentru a părăsi shell-ul.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr ""
+"sfârșit neașteptat al fișierului în timp ce se căuta după perechea lui „)”"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1815,6 +1914,10 @@ msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "Ajutor general pentru utilizarea software-ului GNU: <http://www.gnu.org/"
 "gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "numărul maxim de «here-document» a fost depășit"
 
 #: sig.cc:686
 #, c-format
@@ -2370,88 +2473,6 @@ msgstr "NU EXISTĂ NICIO GARANȚIE, în măsura permisă de lege."
 #~ msgstr ""
 #~ "shell_getc: shell_input_line_size (%zu) depășește SIZE_MAX (%lu): linie "
 #~ "trunchiată"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "numărul maxim de «here-document» a fost depășit"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr ""
-#~ "sfârșit neașteptat al fișierului(EOF) în timp ce se căuta coincidența "
-#~ "pentru „%c”"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "sfârșit neașteptat al fișierului(EOF) în timp ce se căuta „]]”"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "eroare de sintaxă în expresia condițională: simbol neașteptat „%s”"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "eroare de sintaxă în expresia condițională"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "simbol neașteptat „%s”, așteptat „)”"
-
-#~ msgid "expected `)'"
-#~ msgstr "se aștepta „)”"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "argument neașteptat „%s” pentru operatorul unar condițional"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "argument neașteptat pentru operatorul unar condițional"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr ""
-#~ "identificator neașteptat „%s”, se aștepta operator binar condițional"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "se aștepta operator binar condițional"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "argument neașteptat „%s” pentru operatorul binar condițional"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "argument neașteptat pentru operatorul binar condițional"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "identificator neașteptat „%c” în comanda condițională"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "identificator neașteptat „%s” în comanda condițională"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "identificator neașteptat %d în comanda condițională"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "eroare de sintaxă neașteptată lângă „%s”"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "eroare de sintaxă neașteptată lângă „%s”"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "eroare de sintaxă: sfârșit de fișier neașteptat"
-
-#~ msgid "syntax error"
-#~ msgstr "eroare de sintaxă"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Utilizați „%s” pentru a părăsi shell-ul.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr ""
-#~ "sfârșit neașteptat al fișierului în timp ce se căuta după perechea lui „)”"
 
 #~ msgid "I have no name!"
 #~ msgstr "Nu am nici un nume!"

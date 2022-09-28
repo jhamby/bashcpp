@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash-5.2-rc1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2022-06-19 10:44+0200\n"
 "Last-Translator: Frédéric Marchal <fmarchal@perso.be>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -1448,6 +1448,107 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection : l'instruction de redirection « %d » est hors plage"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr ""
+"fin de fichier (EOF) prématurée lors de la recherche du « %c » correspondant"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "fin de fichier (EOF) prématurée lors de la recherche de « ]] »"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr ""
+"erreur de syntaxe dans une expression conditionnelle : symbole « %s » "
+"inattendu"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "erreur de syntaxe dans une expression conditionnelle"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "symbole inattendu « %s » au lieu de « ) »"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "« ) » attendu"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "argument inattendu « %s » pour l'opérateur conditionnel à un argument"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "argument inattendu pour l'opérateur conditionnel à un argument"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "symbole « %s » trouvé à la place d'un opérateur binaire conditionnel"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "opérateur binaire conditionnel attendu"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "argument « %s » inattendu pour l'opérateur binaire conditionnel"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "argument inattendu pour l'opérateur binaire conditionnel"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "symbole « %c » inattendu dans la commande conditionnelle"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "symbole « %s » inattendu dans la commande conditionnelle"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "symbole « %d » inattendu dans la commande conditionnelle"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "erreur de syntaxe près du symbole inattendu « %s »"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "erreur de syntaxe près de « %s »"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "erreur de syntaxe : fin de fichier prématurée"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "erreur de syntaxe"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Utilisez « %s » pour quitter le shell.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr ""
+"fin de fichier (EOF) prématurée lors de la recherche d'une « ) » "
+"correspondante"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1627,6 +1728,10 @@ msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "Aide générale sur l'utilisation de logiciels GNU : <http://www.gnu.org/"
 "gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "nombre maximum de documents en ligne (« here-document ») dépassé"
 
 #: sig.cc:686
 #, c-format
@@ -2170,92 +2275,6 @@ msgstr "AUCUNE GARANTIE n'est fournie, dans les limites permises par la loi."
 #~ msgstr ""
 #~ "shell_getc: shell_input_line_size (%zu) dépasse SIZE_MAX (%lu): ligne "
 #~ "tronquée"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "nombre maximum de documents en ligne (« here-document ») dépassé"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr ""
-#~ "fin de fichier (EOF) prématurée lors de la recherche du « %c » "
-#~ "correspondant"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "fin de fichier (EOF) prématurée lors de la recherche de « ]] »"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr ""
-#~ "erreur de syntaxe dans une expression conditionnelle : symbole « %s » "
-#~ "inattendu"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "erreur de syntaxe dans une expression conditionnelle"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "symbole inattendu « %s » au lieu de « ) »"
-
-#~ msgid "expected `)'"
-#~ msgstr "« ) » attendu"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr ""
-#~ "argument inattendu « %s » pour l'opérateur conditionnel à un argument"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "argument inattendu pour l'opérateur conditionnel à un argument"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr ""
-#~ "symbole « %s » trouvé à la place d'un opérateur binaire conditionnel"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "opérateur binaire conditionnel attendu"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "argument « %s » inattendu pour l'opérateur binaire conditionnel"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "argument inattendu pour l'opérateur binaire conditionnel"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "symbole « %c » inattendu dans la commande conditionnelle"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "symbole « %s » inattendu dans la commande conditionnelle"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "symbole « %d » inattendu dans la commande conditionnelle"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "erreur de syntaxe près du symbole inattendu « %s »"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "erreur de syntaxe près de « %s »"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "erreur de syntaxe : fin de fichier prématurée"
-
-#~ msgid "syntax error"
-#~ msgstr "erreur de syntaxe"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Utilisez « %s » pour quitter le shell.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr ""
-#~ "fin de fichier (EOF) prématurée lors de la recherche d'une « ) » "
-#~ "correspondante"
 
 #~ msgid "I have no name!"
 #~ msgstr "Je n'ai pas de nom !"

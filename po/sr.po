@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash-5.2-rc1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2022-08-22 00:19+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -1416,6 +1416,102 @@ msgstr "овде-документ у %d. реду је ограничен кра
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: упутсво преусмерења „%d“ је ван опсега"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "неочекивани крај датотеке приликом тражења поклапања „%c“"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "неочекивани крај датотеке приликом тражења „]]“"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "садржајна грешка у условном изразу: неочекивани симбол „%s“"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "садржајна грешка у условном изразу"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "неочекивани симбол „%s“, очекивана је )"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "очекивана је )"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "неочекивани аргумент „%s“ условном једночланом оператору"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "неочекивани аргумент условном једночланом оператору"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "неочекивани симбол „%s“, очекиван је условни двочлани оператор"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "очекиван је условни двочлани оператор"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "неочекивани аргумент „%s“ условном двочланом оператору"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "неочекивани аргумент условном двочланом оператору"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "неочекивани симбол „%c“ у условној наредби"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "неочекивани симбол „%s“ у условној наредби"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "неочекивани симбол „%d“ у условној наредби"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "садржајна грешка близу неочекиваног симбола „%s“"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "садржајна грешка близу „%s“"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "садржајна грешка: неочекивани крај датотеке"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "садржајна грешка"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Користите „%s“ да напустите шкољку.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "неочекивани крај датотеке приликом тражења поклапајуће )"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1588,6 +1684,10 @@ msgstr "Матична страница баша: <http://www.gnu.org/software/b
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr "Општа помоћ коришћења Гну софтвера: <http://www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "премашен је највећи број „овде-документ“"
 
 #: sig.cc:686
 #, c-format
@@ -2113,84 +2213,6 @@ msgstr "Нема НИКАКВЕ ГАРАНЦИЈЕ у оквирима дозв�
 #~ msgstr ""
 #~ "shell_getc: величина_реда_улаза_шкољке (%zu) је премашила "
 #~ "НАЈВЕЋУ_ВЕЛИЧИНУ (%lu): ред је скраћен"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "премашен је највећи број „овде-документ“"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "неочекивани крај датотеке приликом тражења поклапања „%c“"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "неочекивани крај датотеке приликом тражења „]]“"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "садржајна грешка у условном изразу: неочекивани симбол „%s“"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "садржајна грешка у условном изразу"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "неочекивани симбол „%s“, очекивана је )"
-
-#~ msgid "expected `)'"
-#~ msgstr "очекивана је )"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "неочекивани аргумент „%s“ условном једночланом оператору"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "неочекивани аргумент условном једночланом оператору"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "неочекивани симбол „%s“, очекиван је условни двочлани оператор"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "очекиван је условни двочлани оператор"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "неочекивани аргумент „%s“ условном двочланом оператору"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "неочекивани аргумент условном двочланом оператору"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "неочекивани симбол „%c“ у условној наредби"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "неочекивани симбол „%s“ у условној наредби"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "неочекивани симбол „%d“ у условној наредби"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "садржајна грешка близу неочекиваног симбола „%s“"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "садржајна грешка близу „%s“"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "садржајна грешка: неочекивани крај датотеке"
-
-#~ msgid "syntax error"
-#~ msgstr "садржајна грешка"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Користите „%s“ да напустите шкољку.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "неочекивани крај датотеке приликом тражења поклапајуће )"
 
 #~ msgid "I have no name!"
 #~ msgstr "Немам назив!"

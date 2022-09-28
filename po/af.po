@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 2.0\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2004-03-17 13:48+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -1372,6 +1372,108 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr ""
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr ""
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr ""
+
+#: parser.cc:2797
+#, fuzzy, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "Sintaks fout in patroon"
+
+#: parser.cc:2804
+#, fuzzy
+msgid "syntax error in conditional expression"
+msgstr "Sintaks fout in patroon"
+
+#: parser.cc:2853
+#, fuzzy, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "%s: binêre operator is verwag\n"
+
+#: parser.cc:2858
+#, fuzzy
+msgid "expected `)'"
+msgstr "')' is verwag\n"
+
+#: parser.cc:2893
+#, fuzzy, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "%s: binêre operator is verwag\n"
+
+#: parser.cc:2900
+#, fuzzy
+msgid "unexpected argument to conditional unary operator"
+msgstr "%s: binêre operator is verwag\n"
+
+#: parser.cc:2951
+#, fuzzy, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "%s: binêre operator is verwag\n"
+
+#: parser.cc:2958
+#, fuzzy
+msgid "conditional binary operator expected"
+msgstr "%s: binêre operator is verwag\n"
+
+#: parser.cc:2981
+#, fuzzy, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "%s: binêre operator is verwag\n"
+
+#: parser.cc:2989
+#, fuzzy
+msgid "unexpected argument to conditional binary operator"
+msgstr "%s: binêre operator is verwag\n"
+
+#: parser.cc:3001
+#, fuzzy, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "Soek die lêer vir 'n uitdrukking"
+
+#: parser.cc:3005
+#, fuzzy, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "Soek die lêer vir 'n uitdrukking"
+
+#: parser.cc:3011
+#, fuzzy, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "Soek die lêer vir 'n uitdrukking"
+
+#: parser.cc:4330
+#, fuzzy, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "Sintaks fout in patroon"
+
+#: parser.cc:4352
+#, fuzzy, c-format
+msgid "syntax error near `%s'"
+msgstr "Sintaks fout in patroon"
+
+#: parser.cc:4363
+#, fuzzy
+msgid "syntax error: unexpected end of file"
+msgstr "Onverwagte einde van lêer tydens inlees van hulpbron."
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "sintaksfout"
+
+#: parser.cc:4414
+#, fuzzy, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Gebruik Kaart na Los Tronk"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr ""
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1546,6 +1648,10 @@ msgstr ""
 #: shell.cc:1876
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
+msgstr ""
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
 msgstr ""
 
 #: sig.cc:686
@@ -2047,49 +2153,6 @@ msgstr ""
 
 #~ msgid "unknown"
 #~ msgstr "onbekend"
-
-#, fuzzy
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "Sintaks fout in patroon"
-
-#, fuzzy
-#~ msgid "expected `)'"
-#~ msgstr "')' is verwag\n"
-
-#, fuzzy, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "%s: binêre operator is verwag\n"
-
-#, fuzzy
-#~ msgid "conditional binary operator expected"
-#~ msgstr "%s: binêre operator is verwag\n"
-
-#, fuzzy, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "Soek die lêer vir 'n uitdrukking"
-
-#, fuzzy, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "Soek die lêer vir 'n uitdrukking"
-
-#, fuzzy, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "Soek die lêer vir 'n uitdrukking"
-
-#, fuzzy, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "Sintaks fout in patroon"
-
-#, fuzzy
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "Onverwagte einde van lêer tydens inlees van hulpbron."
-
-#~ msgid "syntax error"
-#~ msgstr "sintaksfout"
-
-#, fuzzy, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Gebruik Kaart na Los Tronk"
 
 #~ msgid "I have no name!"
 #~ msgstr "Ek het nie 'n naam nie!"

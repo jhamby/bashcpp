@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash-5.2-rc1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2022-06-25 01:50+0900\n"
 "Last-Translator: Seong-ho Cho <darkcircle.0426@gmail.com>\n"
 "Language-Team: Korean <translation-team-ko@googlegroups.com>\n"
@@ -1408,6 +1408,102 @@ msgstr "here-document가 %d번 행에서 파일의 끝으로 구분함 (`%s'아(
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: 방향재지정 처리 명령어 `%d' 범위 벗어남"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "`%c'을(를) 찾는 도중 예상치 못한 파일의 끝"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "']]'를 찾던 도중 예상치 못한 파일의 끝"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "조건 표현식에 문법 오류: 예상치 못한 토큰 `%s'"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "조건 표현식에 문법 오류"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "예상치 못한 토큰 `%s', ')' 필요함"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "')' 필요함"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "조건 단항 연산자에 예기치 않은 인자 `%s'"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "조건 단항 연산자에 예기치 않은 인자"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "예기치 않은 토큰 `%s', 조건 이항 연산자 필요함"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "조건 이항 연산자 필요함"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "조건 이항 연산자에 대해 예기치 않은 인자 `%s'"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "조건 이항 연산자에 대해 예기치 않은 인자"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "조건 명령어에서 예기치 않은 토큰 `%c'"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "조건 명령어에서 예기치 않은 토큰 `%s'"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "조건 명령어에서 예기치 않은 토큰 %d"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "예기치 않은 토큰 `%s' 근처에서 문법 오류"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "`%s' 근처에서 문법 오류"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "문법 오류: 예기치 않은 파일의 끝"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "문법 오류"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "셸을 나가려면 \"%s\" 명령을 사용하십시오.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "맞는 ')'를 찾던 도중 예기치 않은 파일의 끝"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1584,6 +1680,10 @@ msgstr "bash 홈페이지: <http://www.gnu.org/software/bash>\n"
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr "GNU 소프트웨어 사용자 일반 도움말: <http://www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "최대 here-document 카운트 초과"
 
 #: sig.cc:686
 #, c-format
@@ -2107,84 +2207,6 @@ msgstr "법률이 허용하는 모든 범위내의 보증은 없습니다."
 #~ "truncated"
 #~ msgstr ""
 #~ "shell_getc: shell_input_line_size(%zu)가 SIZE_MAX(%lu)를 초과함: 줄 잘림"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "최대 here-document 카운트 초과"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "`%c'을(를) 찾는 도중 예상치 못한 파일의 끝"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "']]'를 찾던 도중 예상치 못한 파일의 끝"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "조건 표현식에 문법 오류: 예상치 못한 토큰 `%s'"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "조건 표현식에 문법 오류"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "예상치 못한 토큰 `%s', ')' 필요함"
-
-#~ msgid "expected `)'"
-#~ msgstr "')' 필요함"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "조건 단항 연산자에 예기치 않은 인자 `%s'"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "조건 단항 연산자에 예기치 않은 인자"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "예기치 않은 토큰 `%s', 조건 이항 연산자 필요함"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "조건 이항 연산자 필요함"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "조건 이항 연산자에 대해 예기치 않은 인자 `%s'"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "조건 이항 연산자에 대해 예기치 않은 인자"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "조건 명령어에서 예기치 않은 토큰 `%c'"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "조건 명령어에서 예기치 않은 토큰 `%s'"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "조건 명령어에서 예기치 않은 토큰 %d"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "예기치 않은 토큰 `%s' 근처에서 문법 오류"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "`%s' 근처에서 문법 오류"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "문법 오류: 예기치 않은 파일의 끝"
-
-#~ msgid "syntax error"
-#~ msgstr "문법 오류"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "셸을 나가려면 \"%s\" 명령을 사용하십시오.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "맞는 ')'를 찾던 도중 예기치 않은 파일의 끝"
 
 #~ msgid "I have no name!"
 #~ msgstr "이름 없음!"

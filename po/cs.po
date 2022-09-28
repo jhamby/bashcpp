@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 5.2-rc1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2022-06-21 20:10+02:00\n"
 "Last-Translator: Petr Pisar <petr.pisar@atlas.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -1424,6 +1424,105 @@ msgstr "„here“ dokument na řádku %d ukončen koncem souboru (požadováno 
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: instrukce přesměrování „%d“ mimo rozsah"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "neočekávaný konec souboru při hledání znaku odpovídajícímu „%c“"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "neočekávaný konec souboru při hledání „]]“"
+
+# XXX: Condional means condition (adj.) probably. Can English distinguish
+# between the condition (podmínkový) and the code branch (podmíněný)? Check
+# for all "conditional" string occurences.
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "chyba syntaxe ve výrazu podmínky: neočekávaný token „%s“"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "chyba syntaxe ve výrazu podmínky"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "neočekávaný token „%s“, očekávána „)“"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "očekávána „)“"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "neočekávaný argument „%s“ u podmínkového unárního operátoru"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "neočekávaný argument u podmínkového unárního operátoru"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "neočekávaný token „%s“, očekáván podmínkový binární operátor"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "očekáván podmínkový binární operátor"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "neočekávaný argument „%s„ u podmínkového binárního operátoru"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "neočekávaný argument u podmínkového binárního operátoru"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "neočekávaný token „%c“ v podmínkovém příkazu"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "neočekávaný token „%s“ v podmínkovém příkazu"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "neočekávaný token %d v podmínkovém příkazu"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "chyba syntaxe poblíž neočekávaného tokenu „%s“"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "chyba syntaxe poblíž „%s“"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "chyba syntaxe: nenadálý konec souboru"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "chyba syntaxe"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Shell lze ukončit příkazem „%s“.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "nenadálý konec souboru při hledání odpovídající „)“"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1601,6 +1700,10 @@ msgstr "Domovská stránka bashe: <http://www.gnu.org/software/bash>\n"
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr "Obecný návod na použití softwaru GNU: <http://www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "maximální počet here dokumentů překročen"
 
 #: sig.cc:686
 #, c-format
@@ -2131,87 +2234,6 @@ msgstr "VEŠKERÉ ZÁRUKY chybí, jak jen zákon dovoluje."
 #~ msgstr ""
 #~ "shell_getc: shell_input_line_size (%zu) přesahuje SIZE_MAX (%lu): řádek "
 #~ "zkrácen"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "maximální počet here dokumentů překročen"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "neočekávaný konec souboru při hledání znaku odpovídajícímu „%c“"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "neočekávaný konec souboru při hledání „]]“"
-
-# XXX: Condional means condition (adj.) probably. Can English distinguish
-# between the condition (podmínkový) and the code branch (podmíněný)? Check
-# for all "conditional" string occurences.
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "chyba syntaxe ve výrazu podmínky: neočekávaný token „%s“"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "chyba syntaxe ve výrazu podmínky"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "neočekávaný token „%s“, očekávána „)“"
-
-#~ msgid "expected `)'"
-#~ msgstr "očekávána „)“"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "neočekávaný argument „%s“ u podmínkového unárního operátoru"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "neočekávaný argument u podmínkového unárního operátoru"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "neočekávaný token „%s“, očekáván podmínkový binární operátor"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "očekáván podmínkový binární operátor"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "neočekávaný argument „%s„ u podmínkového binárního operátoru"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "neočekávaný argument u podmínkového binárního operátoru"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "neočekávaný token „%c“ v podmínkovém příkazu"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "neočekávaný token „%s“ v podmínkovém příkazu"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "neočekávaný token %d v podmínkovém příkazu"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "chyba syntaxe poblíž neočekávaného tokenu „%s“"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "chyba syntaxe poblíž „%s“"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "chyba syntaxe: nenadálý konec souboru"
-
-#~ msgid "syntax error"
-#~ msgstr "chyba syntaxe"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Shell lze ukončit příkazem „%s“.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "nenadálý konec souboru při hledání odpovídající „)“"
 
 #~ msgid "I have no name!"
 #~ msgstr "Nemám žádné jméno!"

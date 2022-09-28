@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 3.2\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2006-11-11 16:38+0200\n"
 "Last-Translator: Toomas Soome <Toomas.Soome@microlink.ee>\n"
 "Language-Team: Estonian <et@li.org>\n"
@@ -1340,6 +1340,103 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr ""
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr ""
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr ""
+
+#: parser.cc:2797
+#, fuzzy, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "süntaksi viga tingimuslikus avaldises"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "süntaksi viga tingimuslikus avaldises"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "ootamatu märk `%s', oodati `)'"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "oodati `)'"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr ""
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr ""
+
+#: parser.cc:2951
+#, fuzzy, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "ootamatu märk `%s', oodati `)'"
+
+#: parser.cc:2958
+#, fuzzy
+msgid "conditional binary operator expected"
+msgstr "%s: eeldati binaarset operaatorit"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr ""
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr ""
+
+#: parser.cc:3001
+#, fuzzy, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "ootamatu märk `%s', oodati `)'"
+
+#: parser.cc:3005
+#, fuzzy, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "ootamatu märk `%s', oodati `)'"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr ""
+
+#: parser.cc:4330
+#, fuzzy, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "süntaksi viga kohal `%s'"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "süntaksi viga kohal `%s'"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "süntaksi viga: ootamatu faililõpp"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "süntaksi viga"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Käsuinterpretaatorist väljumiseks kasutage \"%s\".\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr ""
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1512,6 +1609,10 @@ msgstr ""
 #: shell.cc:1876
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
+msgstr ""
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
 msgstr ""
 
 #: sig.cc:686
@@ -1974,30 +2075,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "unknown"
 #~ msgstr "%s: tundmatu masin"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "süntaksi viga tingimuslikus avaldises"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "ootamatu märk `%s', oodati `)'"
-
-#~ msgid "expected `)'"
-#~ msgstr "oodati `)'"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "süntaksi viga kohal `%s'"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "süntaksi viga: ootamatu faililõpp"
-
-#~ msgid "syntax error"
-#~ msgstr "süntaksi viga"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Käsuinterpretaatorist väljumiseks kasutage \"%s\".\n"
 
 #~ msgid "I have no name!"
 #~ msgstr "Mul ei ole nime!"

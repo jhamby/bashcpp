@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash-4.2\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2011-10-17 09:14+0200\n"
 "Last-Translator: Sergio Zanchetta <primes2h@ubuntu.com>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -1430,6 +1430,103 @@ msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr ""
 "make_redirection: istruzione di reindirizzamento \"%d\" fuori dell'intervallo"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "EOF non atteso durante la ricerca di \"%c\""
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "EOF non atteso durante la ricerca di \"]]\""
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr ""
+"errore di sintassi nell'espressione condizionale: token non atteso \"%s\""
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "errore di sintassi nell'espressione condizionale"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "token non atteso \"%s\", era atteso \")\""
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "atteso \")\""
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "argomento non atteso \"%s\" per l'operatore unario condizionale"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "argomento non atteso per l'operatore unario condizionale"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "token non atteso \"%s\", era atteso un operatore binario condizionale"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "atteso operatore binario condizionale"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "argomento non atteso \"%s\" per l'operatore binario condizionale"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "argomento non atteso per l'operatore binario condizionale"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "token non atteso \"%c\" nel comando condizionale"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "token non atteso \"%s\" nel comando condizionale"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "token non atteso %d nel comando condizionale"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "errore di sintassi vicino al token non atteso \"%s\""
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "errore di sintassi vicino a \"%s\""
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "errore di sintassi: EOF non atteso"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "errore di sintassi"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Usare \"%s\" per uscire dalla shell.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "EOF non atteso durante la ricerca di \")\""
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1606,6 +1703,10 @@ msgstr ""
 #: shell.cc:1876
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
+msgstr ""
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
 msgstr ""
 
 #: sig.cc:686
@@ -2135,83 +2236,6 @@ msgstr "Non c'è ALCUNA GARANZIA, nei limiti permessi dalla legge.\n"
 #, c-format
 #~ msgid "register_free: %p already in table as free?\n"
 #~ msgstr "register_alloc: forse %p è già come libero nella tabella\n"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "EOF non atteso durante la ricerca di \"%c\""
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "EOF non atteso durante la ricerca di \"]]\""
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr ""
-#~ "errore di sintassi nell'espressione condizionale: token non atteso \"%s\""
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "errore di sintassi nell'espressione condizionale"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "token non atteso \"%s\", era atteso \")\""
-
-#~ msgid "expected `)'"
-#~ msgstr "atteso \")\""
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "argomento non atteso \"%s\" per l'operatore unario condizionale"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "argomento non atteso per l'operatore unario condizionale"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr ""
-#~ "token non atteso \"%s\", era atteso un operatore binario condizionale"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "atteso operatore binario condizionale"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "argomento non atteso \"%s\" per l'operatore binario condizionale"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "argomento non atteso per l'operatore binario condizionale"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "token non atteso \"%c\" nel comando condizionale"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "token non atteso \"%s\" nel comando condizionale"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "token non atteso %d nel comando condizionale"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "errore di sintassi vicino al token non atteso \"%s\""
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "errore di sintassi vicino a \"%s\""
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "errore di sintassi: EOF non atteso"
-
-#~ msgid "syntax error"
-#~ msgstr "errore di sintassi"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Usare \"%s\" per uscire dalla shell.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "EOF non atteso durante la ricerca di \")\""
 
 #~ msgid "I have no name!"
 #~ msgstr "Manca il nome"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 5.2-rc1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2022-06-17 19:34+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
@@ -1435,6 +1435,102 @@ msgstr "here-document з рядка %d закінчено кінцем файл�
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: інструкція переспрямування `%d' поза межами"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "файл скінчився раніше, ніж було знайдено відповідний «%c»"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "файл скінчився раніше, ніж було знайдено `]]'"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "синтаксична помилка в умовному виразі: неочікувана лексема «%s»"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "синтаксична помилка в умовному виразі"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "неочікувана лексема «%s», очікувалася `)'"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "очікувалася `)'"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "неочікуваний аргумент унарного умовного оператора «%s»"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "неочікуваний аргумент унарного умовного оператора"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "неочікувана лексема «%s», очікувався бінарний умовний оператор"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "очікувався бінарний умовний оператор"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "неочікуваний аргумент бінарного умовного оператора «%s»"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "неочікуваний аргумент бінарного умовного оператора"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "неочікувана лексема «%c» в умовній команді"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "неочікувана лексема «%s» в умовній команді"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "неочікувана лексема %d в умовній команді"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "синтаксична помилка коло неочікуваної лексеми «%s»"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "синтаксична помилка коло «%s»"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "синтаксична помилка: раптово скінчився файл"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "синтаксична помилка"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Використовуйте \"%s\", щоб вийти з оболонки.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "файл скінчився, перш ніж було знайдено відповідну `)'"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1618,6 +1714,10 @@ msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "Загальна довідкова інформація щодо використання програмного забезпечення "
 "GNU: <http://www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "перевищено максимальну можливу кількість here-document"
 
 #: sig.cc:686
 #, c-format
@@ -2155,84 +2255,6 @@ msgstr "Не надається НІЯКИХ ГАРАНТІЙ у межах, п
 #~ msgstr ""
 #~ "shell_getc: shell_input_line_size (%zu) перевищує обмеження SIZE_MAX "
 #~ "(%lu): рядок обрізано"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "перевищено максимальну можливу кількість here-document"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "файл скінчився раніше, ніж було знайдено відповідний «%c»"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "файл скінчився раніше, ніж було знайдено `]]'"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "синтаксична помилка в умовному виразі: неочікувана лексема «%s»"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "синтаксична помилка в умовному виразі"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "неочікувана лексема «%s», очікувалася `)'"
-
-#~ msgid "expected `)'"
-#~ msgstr "очікувалася `)'"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "неочікуваний аргумент унарного умовного оператора «%s»"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "неочікуваний аргумент унарного умовного оператора"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "неочікувана лексема «%s», очікувався бінарний умовний оператор"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "очікувався бінарний умовний оператор"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "неочікуваний аргумент бінарного умовного оператора «%s»"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "неочікуваний аргумент бінарного умовного оператора"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "неочікувана лексема «%c» в умовній команді"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "неочікувана лексема «%s» в умовній команді"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "неочікувана лексема %d в умовній команді"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "синтаксична помилка коло неочікуваної лексеми «%s»"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "синтаксична помилка коло «%s»"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "синтаксична помилка: раптово скінчився файл"
-
-#~ msgid "syntax error"
-#~ msgstr "синтаксична помилка"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Використовуйте \"%s\", щоб вийти з оболонки.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "файл скінчився, перш ніж було знайдено відповідну `)'"
 
 #~ msgid "I have no name!"
 #~ msgstr "У мене нема назви!"

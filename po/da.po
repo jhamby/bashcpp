@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash 4.2\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2011-03-18 01:36+0100\n"
 "Last-Translator: Kenneth Nielsen <k.nielsen81@gmail.com>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -1449,6 +1449,107 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_direction: videresendelsesinstruktion \"%d\" uden for interval"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "uventet EOF mens der ledtes efter samhørende \"%c\""
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "uventet EOF mens der ledtes efter \"]]\""
+
+# word   A sequence of characters considered as  a  single  unit  by  the
+#        shell.  Also known as a token.
+# Jeg har valgt udtryk
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "syntaksfejl i betingelsesudtryk: uventet element \"%s\""
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "syntaksfejl i betingelsesudtryk"
+
+# word   A sequence of characters considered as  a  single  unit  by  the
+#        shell.  Also known as a token.
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "uventet element \"%s\", forventede \")\""
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "forventede \")\""
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "uventet argument \"%s\" til unær betingelsesoperator"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "uventet argument til unær betingelsesoperator"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "uventet udtryk \"%s\", ventede binær betingelsesoperator"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "ventedet binær betingelsesoperator"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "uventet argument \"%s\" til binær betingelsesoperator"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "uventet argument til binær betingelsesoperator"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "uventet udtryk \"%c\" i betingelseskommando"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "uventet udtryk \"%s\" i betingelseskommando"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "uventet udtryk \"%d\" i betingelseskommando"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "syntaksfejl nær uventet udtryk \"%s\""
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "syntaksfejl nær \"%s\""
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "syntaksfejl: uventet slutning på fil"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "syntaksfejl"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Brug \"%s\" for at forlade skallen.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "uventet EOF mens der ledtes efter samhørende \")\""
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1626,6 +1727,10 @@ msgstr ""
 #: shell.cc:1876
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
+msgstr ""
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
 msgstr ""
 
 #: sig.cc:686
@@ -2152,86 +2257,6 @@ msgstr "Der er INGEN GARANTI i det omfang loven tillader.\n"
 #, c-format
 #~ msgid "register_free: %p already in table as free?\n"
 #~ msgstr "register_free: %p allerede i tabel som fri?\n"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "uventet EOF mens der ledtes efter samhørende \"%c\""
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "uventet EOF mens der ledtes efter \"]]\""
-
-# word   A sequence of characters considered as  a  single  unit  by  the
-#        shell.  Also known as a token.
-# Jeg har valgt udtryk
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "syntaksfejl i betingelsesudtryk: uventet element \"%s\""
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "syntaksfejl i betingelsesudtryk"
-
-# word   A sequence of characters considered as  a  single  unit  by  the
-#        shell.  Also known as a token.
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "uventet element \"%s\", forventede \")\""
-
-#~ msgid "expected `)'"
-#~ msgstr "forventede \")\""
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "uventet argument \"%s\" til unær betingelsesoperator"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "uventet argument til unær betingelsesoperator"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "uventet udtryk \"%s\", ventede binær betingelsesoperator"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "ventedet binær betingelsesoperator"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "uventet argument \"%s\" til binær betingelsesoperator"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "uventet argument til binær betingelsesoperator"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "uventet udtryk \"%c\" i betingelseskommando"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "uventet udtryk \"%s\" i betingelseskommando"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "uventet udtryk \"%d\" i betingelseskommando"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "syntaksfejl nær uventet udtryk \"%s\""
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "syntaksfejl nær \"%s\""
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "syntaksfejl: uventet slutning på fil"
-
-#~ msgid "syntax error"
-#~ msgstr "syntaksfejl"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Brug \"%s\" for at forlade skallen.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "uventet EOF mens der ledtes efter samhørende \")\""
 
 #~ msgid "I have no name!"
 #~ msgstr "Jeg har ikke noget navn!"

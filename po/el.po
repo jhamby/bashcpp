@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash-5.1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2021-04-12 10:35+0300\n"
 "Last-Translator: Lefteris Dimitroulakis <ledimitro@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -1363,6 +1363,102 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: η οδηγία της ανακατεύθυνσης «%d» εκτός ορίων"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "μη αναμενόμενο EOF κατά την αναζήτηση «%c»"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "μη αναμενόμενο EOF ενώ έψαχνα για «]]»"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "syntax error in conditional expression: μη αναμενόμενο σύμβολο «%s»"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "συντακτικό σφάλμα σ' έκφραση υπό συνθήκη"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "μη αναμενόμενο σύμβολο «%s», αναμενόταν «)»"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "αναμενόταν «)»"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "απροσδόκητο όρισμα «%s» στον υπό αίρεση μοναδιαίο τελεστή"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "απροσδόκητο όρισμα για τον μοναδιαίο τελεστή"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "απροσδόκητο σύμβολο «%s» βρέθηκε αντί για δυαδικό τελεστή υπό αίρεση"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "αναμενόταν δυαδικός τελεστής υπό αίρεση"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "απροσδόκητο όρισμα «%s» για δυαδικό τελεστή υπό αίρεση"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "απροσδόκητο όρισμα για δυαδικό τελεστή υπό αίρεση"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "απροσδόκητο σύμβολο «%c» σε εντολή υπό αίρεση"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "απροσδόκητο σύμβολο «%s» σε εντολή υπό αίρεση"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "απροσδόκητο σύμβολο %d σε εντολή υπό αίρεση"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "συντακτικό σφάλμα κοντά στο μη αναμενόμενο σύμβολο «%s»"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "συντακτικό σφάλμα κοντά σε «%s»"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "syntax error: μη αναμενόμενο τέλος αρχείου"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "συντακτικό σφάλμα"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Χρήση «%s» για έξοδο από το κέλυφος.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "μη αναμενόμενο EOF ενώ έψαχνα «)»"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1543,6 +1639,10 @@ msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "Γενική βοήθεια για την χρήση του λογισμικού GNU: <http://www.gnu.org/gethelp/"
 ">\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "ο μέγιστος αριθμός here-document ξεπεράστηκε"
 
 #: sig.cc:686
 #, c-format
@@ -2069,85 +2169,6 @@ msgstr "There is NO WARRANTY, to the extent permitted by law."
 #~ msgstr ""
 #~ "shell_getc: shell_input_line_size (%zu) υπερβαίνει το SIZE_MAX (%lu): "
 #~ "γραμμή κόπηκε"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "ο μέγιστος αριθμός here-document ξεπεράστηκε"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "μη αναμενόμενο EOF κατά την αναζήτηση «%c»"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "μη αναμενόμενο EOF ενώ έψαχνα για «]]»"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "syntax error in conditional expression: μη αναμενόμενο σύμβολο «%s»"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "συντακτικό σφάλμα σ' έκφραση υπό συνθήκη"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "μη αναμενόμενο σύμβολο «%s», αναμενόταν «)»"
-
-#~ msgid "expected `)'"
-#~ msgstr "αναμενόταν «)»"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "απροσδόκητο όρισμα «%s» στον υπό αίρεση μοναδιαίο τελεστή"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "απροσδόκητο όρισμα για τον μοναδιαίο τελεστή"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr ""
-#~ "απροσδόκητο σύμβολο «%s» βρέθηκε αντί για δυαδικό τελεστή υπό αίρεση"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "αναμενόταν δυαδικός τελεστής υπό αίρεση"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "απροσδόκητο όρισμα «%s» για δυαδικό τελεστή υπό αίρεση"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "απροσδόκητο όρισμα για δυαδικό τελεστή υπό αίρεση"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "απροσδόκητο σύμβολο «%c» σε εντολή υπό αίρεση"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "απροσδόκητο σύμβολο «%s» σε εντολή υπό αίρεση"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "απροσδόκητο σύμβολο %d σε εντολή υπό αίρεση"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "συντακτικό σφάλμα κοντά στο μη αναμενόμενο σύμβολο «%s»"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "συντακτικό σφάλμα κοντά σε «%s»"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "syntax error: μη αναμενόμενο τέλος αρχείου"
-
-#~ msgid "syntax error"
-#~ msgstr "συντακτικό σφάλμα"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Χρήση «%s» για έξοδο από το κέλυφος.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "μη αναμενόμενο EOF ενώ έψαχνα «)»"
 
 #~ msgid "I have no name!"
 #~ msgstr "Δεν έχω όνομα!"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GNU bash 5.2-rc1\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2022-06-19 23:10+0900\n"
 "Last-Translator: Hiroshi Takekawa <sian@big.or.jp>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -1416,6 +1416,102 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: リダイレクト指定 `%d' は範囲外です"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "対応する `%c' を探索中に予期しないファイル終了 (EOF) です"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "`]]' を探索中に予期しないファイル終了 (EOF) です"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "条件式に構文エラー: 予期しないトークン `%s' です"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "条件式に構文エラーがあります"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "予期しないトークン `%s' です。`)' が予期されます"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "`)' が予期されます"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "条件単項演算子に予期しない引数 `%s' です"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "条件単項演算子に予期しない引数です"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "`%s` は予期しないトークンです。条件二項演算子が予期されます"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "条件二項演算子が予期されます"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "条件二項演算子に予期しない引数 `%s' です"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "条件二項演算子に予期しない引数です"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "条件コマンドに予期しないトークン `%c' があります"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "条件コマンドに予期しないトークン `%s' があります"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "条件コマンドに予期しないトークン %d があります"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "予期しないトークン `%s' 周辺に構文エラーがあります"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "`%s' 周辺に構文エラーがあります"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "構文エラー: 予期しないファイル終了 (EOF) です"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "構文エラー"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "シェルから脱出するには \"%s\" を使用してください。\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "対応する `)' を探索中に予期しないファイル終了(EOF)です"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1590,6 +1686,10 @@ msgstr "bashホームページ: <http://www.gnu.org/software/bash>\n"
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "GNUソフトウェアを使用する時の一般的なヘルプ : <http://www.gnu.org/gethelp/>\n"
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
+msgstr "ヒアドキュメントの最大数を超えました"
 
 #: sig.cc:686
 #, c-format
@@ -2107,84 +2207,6 @@ msgstr "There is NO WARRANTY, to the extent permitted by law."
 #, c-format
 #~ msgid "register_free: %p already in table as free?\n"
 #~ msgstr "register_free: %p テーブル上では既に解放されています\n"
-
-#~ msgid "maximum here-document count exceeded"
-#~ msgstr "ヒアドキュメントの最大数を超えました"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "対応する `%c' を探索中に予期しないファイル終了 (EOF) です"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "`]]' を探索中に予期しないファイル終了 (EOF) です"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "条件式に構文エラー: 予期しないトークン `%s' です"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "条件式に構文エラーがあります"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "予期しないトークン `%s' です。`)' が予期されます"
-
-#~ msgid "expected `)'"
-#~ msgstr "`)' が予期されます"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "条件単項演算子に予期しない引数 `%s' です"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "条件単項演算子に予期しない引数です"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "`%s` は予期しないトークンです。条件二項演算子が予期されます"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "条件二項演算子が予期されます"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "条件二項演算子に予期しない引数 `%s' です"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "条件二項演算子に予期しない引数です"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "条件コマンドに予期しないトークン `%c' があります"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "条件コマンドに予期しないトークン `%s' があります"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "条件コマンドに予期しないトークン %d があります"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "予期しないトークン `%s' 周辺に構文エラーがあります"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "`%s' 周辺に構文エラーがあります"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "構文エラー: 予期しないファイル終了 (EOF) です"
-
-#~ msgid "syntax error"
-#~ msgstr "構文エラー"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "シェルから脱出するには \"%s\" を使用してください。\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "対応する `)' を探索中に予期しないファイル終了(EOF)です"
 
 #~ msgid "I have no name!"
 #~ msgstr "私は名前がありません!"

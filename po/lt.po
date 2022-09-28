@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash-4.0\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2009-03-25 16:49+0200\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -1366,6 +1366,102 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: nukreipimo instrukcija „%d“ už ribų"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "netikėta failo pabaiga ieškant atitinkamo „%c“"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "netikėta failo pabaiga ieškant „]]“"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "sintaksės klaida sąlygos išraiškoje: netikėta leksema „%s“"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "sintaksės klaida sąlygos išraiškoje"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "netikėta leksema „%s“, tikėtasi „)“"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "tikėtasi „)“"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "netikėtas argumentas „%s“ sąlygos unariniam operatoriui"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "netikėtas argumentas sąlygos unariniam operatoriui"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr "netikėta leksema „%s“, tikėtasi sąlyginio binarinio operatoriaus"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "tikėtasi sąlygos binarinio operatoriaus"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "netikėtas argumentas „%s“ sąlygos binariniam operatoriui"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "netikėtas argumentas sąlygos binariniam operatoriui"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "netikėta leksema „%c“ sąlygos komandoje"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "netikėta leksema „%s“ sąlygos komandoje"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "netikėta leksema %d sąlygos komandoje"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "sintaksės klaida prie netikėtos leksemos: „%s“"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "sintaksės klaida prie „%s“"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "sintaksės klaida: netikėta failo pabaiga"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "sintaksės klaida"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Naudokite „%s“, jei norite išeiti iš ap.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "netikėta failo pabaiga ieškant atitinkamo „)“"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1541,6 +1637,10 @@ msgstr ""
 #: shell.cc:1876
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
+msgstr ""
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
 msgstr ""
 
 #: sig.cc:686
@@ -2063,81 +2163,6 @@ msgstr "Nėra JOKIOS GARANTIJOS, kiek tik tą leidžia įstatymas.\n"
 #, c-format
 #~ msgid "register_free: %p already in table as free?\n"
 #~ msgstr "register_free: %p jau lentelėje kaip laisvas?\n"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "netikėta failo pabaiga ieškant atitinkamo „%c“"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "netikėta failo pabaiga ieškant „]]“"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr "sintaksės klaida sąlygos išraiškoje: netikėta leksema „%s“"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "sintaksės klaida sąlygos išraiškoje"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "netikėta leksema „%s“, tikėtasi „)“"
-
-#~ msgid "expected `)'"
-#~ msgstr "tikėtasi „)“"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "netikėtas argumentas „%s“ sąlygos unariniam operatoriui"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "netikėtas argumentas sąlygos unariniam operatoriui"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr "netikėta leksema „%s“, tikėtasi sąlyginio binarinio operatoriaus"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "tikėtasi sąlygos binarinio operatoriaus"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr "netikėtas argumentas „%s“ sąlygos binariniam operatoriui"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "netikėtas argumentas sąlygos binariniam operatoriui"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "netikėta leksema „%c“ sąlygos komandoje"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "netikėta leksema „%s“ sąlygos komandoje"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "netikėta leksema %d sąlygos komandoje"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "sintaksės klaida prie netikėtos leksemos: „%s“"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "sintaksės klaida prie „%s“"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "sintaksės klaida: netikėta failo pabaiga"
-
-#~ msgid "syntax error"
-#~ msgstr "sintaksės klaida"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Naudokite „%s“, jei norite išeiti iš ap.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "netikėta failo pabaiga ieškant atitinkamo „)“"
 
 #~ msgid "I have no name!"
 #~ msgstr "Neturiu vardo!"

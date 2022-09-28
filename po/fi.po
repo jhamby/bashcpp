@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bash-4.0\n"
 "Report-Msgid-Bugs-To: jake.hamby@gmail.com\n"
-"POT-Creation-Date: 2022-09-27 20:30-0700\n"
+"POT-Creation-Date: 2022-09-27 20:45-0700\n"
 "PO-Revision-Date: 2009-05-09 15:13+0300\n"
 "Last-Translator: Pekka Niemi <pekka.niemi@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -1424,6 +1424,103 @@ msgstr ""
 msgid "make_redirection: redirection instruction `%d' out of range"
 msgstr "make_redirection: uudelleenohjaus ”%d” rajojen ulkopuolella"
 
+#: parser.cc:1973 parser.cc:2654
+#, c-format
+msgid "unexpected EOF while looking for matching `%c'"
+msgstr "odottamaton EOF (tiedostonloppu) odotettaessa sulkevaa ”%c”"
+
+#: parser.cc:2791
+msgid "unexpected EOF while looking for `]]'"
+msgstr "odottamaton EOF odotettaessa ”]]”"
+
+#: parser.cc:2797
+#, c-format
+msgid "syntax error in conditional expression: unexpected token `%s'"
+msgstr "lauseoppivirhe ehdollisessa lausekkeessa: odottamaton avainsana ”%s”"
+
+#: parser.cc:2804
+msgid "syntax error in conditional expression"
+msgstr "lauseoppivirhe ehdollisessa lausekkeessa"
+
+#: parser.cc:2853
+#, c-format
+msgid "unexpected token `%s', expected `)'"
+msgstr "odottamaton avainsana ”%s”, odotettiin ”)”"
+
+#: parser.cc:2858
+msgid "expected `)'"
+msgstr "odototettiin ”)”"
+
+#: parser.cc:2893
+#, c-format
+msgid "unexpected argument `%s' to conditional unary operator"
+msgstr "odottamaton argumentti ”%s” ehdolliselle unaariselle operaattorille"
+
+#: parser.cc:2900
+msgid "unexpected argument to conditional unary operator"
+msgstr "odottamaton argumentti ehdolliselle unaariselle operaattorille"
+
+#: parser.cc:2951
+#, c-format
+msgid "unexpected token `%s', conditional binary operator expected"
+msgstr ""
+"odottamaton avainsana ”%s”, odotettiin ehdollista binääristä operaattoria"
+
+#: parser.cc:2958
+msgid "conditional binary operator expected"
+msgstr "odotettiin ehdollista binääristä operaattoria"
+
+#: parser.cc:2981
+#, c-format
+msgid "unexpected argument `%s' to conditional binary operator"
+msgstr "odottamaton argumentti ”%s” ehdolliselle binääriselle operaattorille"
+
+#: parser.cc:2989
+msgid "unexpected argument to conditional binary operator"
+msgstr "odottamaton argumentti ehdolliselle binääriselle operaattorille"
+
+#: parser.cc:3001
+#, c-format
+msgid "unexpected token `%c' in conditional command"
+msgstr "odottamaton avainsana ”%c” ehdollisessa komennossa"
+
+#: parser.cc:3005
+#, c-format
+msgid "unexpected token `%s' in conditional command"
+msgstr "odottamaton avainsana ”%s” ehdollisessa komennossa"
+
+#: parser.cc:3011
+#, c-format
+msgid "unexpected token %d in conditional command"
+msgstr "odottamaton avainsana %d ehdollisessa komennossa"
+
+#: parser.cc:4330
+#, c-format
+msgid "syntax error near unexpected token `%s'"
+msgstr "lauseoppivirhe lähellä odottamatonta avainsanaa ”%s”"
+
+#: parser.cc:4352
+#, c-format
+msgid "syntax error near `%s'"
+msgstr "lauseoppivirhe lähellä ”%s”"
+
+#: parser.cc:4363
+msgid "syntax error: unexpected end of file"
+msgstr "lauseoppivirhe: odottamaton tiedostonloppu"
+
+#: parser.cc:4364
+msgid "syntax error"
+msgstr "lauseoppivirhe"
+
+#: parser.cc:4414
+#, c-format
+msgid "Use \"%s\" to leave the shell.\n"
+msgstr "Kirjoita ”%s” poistuaksesi komentotulkista.\n"
+
+#: parser.cc:4581
+msgid "unexpected EOF while looking for matching `)'"
+msgstr "Odottamaton EOF odotettaessa vastaavaa ”)”"
+
 #: pcomplete.cc:1068
 #, c-format
 msgid "completion: function `%s' not found"
@@ -1601,6 +1698,10 @@ msgstr ""
 #: shell.cc:1876
 #, c-format
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
+msgstr ""
+
+#: shell.hh:1807
+msgid "maximum here-document count exceeded"
 msgstr ""
 
 #: sig.cc:686
@@ -2125,84 +2226,6 @@ msgstr "Takuuta ei ole lain määräämissä rajoissa.\n"
 #, c-format
 #~ msgid "register_free: %p already in table as free?\n"
 #~ msgstr "register_free: %p on jo taulukossa vapaana?\n"
-
-#, c-format
-#~ msgid "unexpected EOF while looking for matching `%c'"
-#~ msgstr "odottamaton EOF (tiedostonloppu) odotettaessa sulkevaa ”%c”"
-
-#~ msgid "unexpected EOF while looking for `]]'"
-#~ msgstr "odottamaton EOF odotettaessa ”]]”"
-
-#, c-format
-#~ msgid "syntax error in conditional expression: unexpected token `%s'"
-#~ msgstr ""
-#~ "lauseoppivirhe ehdollisessa lausekkeessa: odottamaton avainsana ”%s”"
-
-#~ msgid "syntax error in conditional expression"
-#~ msgstr "lauseoppivirhe ehdollisessa lausekkeessa"
-
-#, c-format
-#~ msgid "unexpected token `%s', expected `)'"
-#~ msgstr "odottamaton avainsana ”%s”, odotettiin ”)”"
-
-#~ msgid "expected `)'"
-#~ msgstr "odototettiin ”)”"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional unary operator"
-#~ msgstr "odottamaton argumentti ”%s” ehdolliselle unaariselle operaattorille"
-
-#~ msgid "unexpected argument to conditional unary operator"
-#~ msgstr "odottamaton argumentti ehdolliselle unaariselle operaattorille"
-
-#, c-format
-#~ msgid "unexpected token `%s', conditional binary operator expected"
-#~ msgstr ""
-#~ "odottamaton avainsana ”%s”, odotettiin ehdollista binääristä operaattoria"
-
-#~ msgid "conditional binary operator expected"
-#~ msgstr "odotettiin ehdollista binääristä operaattoria"
-
-#, c-format
-#~ msgid "unexpected argument `%s' to conditional binary operator"
-#~ msgstr ""
-#~ "odottamaton argumentti ”%s” ehdolliselle binääriselle operaattorille"
-
-#~ msgid "unexpected argument to conditional binary operator"
-#~ msgstr "odottamaton argumentti ehdolliselle binääriselle operaattorille"
-
-#, c-format
-#~ msgid "unexpected token `%c' in conditional command"
-#~ msgstr "odottamaton avainsana ”%c” ehdollisessa komennossa"
-
-#, c-format
-#~ msgid "unexpected token `%s' in conditional command"
-#~ msgstr "odottamaton avainsana ”%s” ehdollisessa komennossa"
-
-#, c-format
-#~ msgid "unexpected token %d in conditional command"
-#~ msgstr "odottamaton avainsana %d ehdollisessa komennossa"
-
-#, c-format
-#~ msgid "syntax error near unexpected token `%s'"
-#~ msgstr "lauseoppivirhe lähellä odottamatonta avainsanaa ”%s”"
-
-#, c-format
-#~ msgid "syntax error near `%s'"
-#~ msgstr "lauseoppivirhe lähellä ”%s”"
-
-#~ msgid "syntax error: unexpected end of file"
-#~ msgstr "lauseoppivirhe: odottamaton tiedostonloppu"
-
-#~ msgid "syntax error"
-#~ msgstr "lauseoppivirhe"
-
-#, c-format
-#~ msgid "Use \"%s\" to leave the shell.\n"
-#~ msgstr "Kirjoita ”%s” poistuaksesi komentotulkista.\n"
-
-#~ msgid "unexpected EOF while looking for matching `)'"
-#~ msgstr "Odottamaton EOF odotettaessa vastaavaa ”)”"
 
 #~ msgid "I have no name!"
 #~ msgstr "Minulla ei ole nimeä!"
