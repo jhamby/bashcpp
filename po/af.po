@@ -17,9 +17,8 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 
 #: arrayfunc.cc:77 error.cc:347
-#, fuzzy
 msgid "bad array subscript"
-msgstr "Os/2 Biskaart Skikking"
+msgstr ""
 
 #: arrayfunc.cc:404 builtins/declare_def.cc:661 variables.cc:2145
 #: variables.cc:2169 variables.cc:2971
@@ -33,9 +32,9 @@ msgid "%s: cannot convert indexed to associative array"
 msgstr ""
 
 #: arrayfunc.cc:678
-#, fuzzy, c-format
+#, c-format
 msgid "%s: invalid associative array key"
-msgstr "Veranderlike boom"
+msgstr ""
 
 #: arrayfunc.cc:680
 #, c-format
@@ -620,9 +619,9 @@ msgid "%s: invalid line count"
 msgstr ""
 
 #: builtins/mapfile_def.cc:285
-#, fuzzy, c-format
+#, c-format
 msgid "%s: invalid array origin"
-msgstr "Os/2 Biskaart Skikking"
+msgstr ""
 
 #: builtins/mapfile_def.cc:302
 #, c-format
