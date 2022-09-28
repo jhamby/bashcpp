@@ -1,6 +1,6 @@
 /* test.h -- external interface to the conditional command code. */
 
-/* Copyright (C) 1997-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1997-2021 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -29,7 +29,8 @@ enum binary_test_flags
   TEST_NOFLAGS = 0,
   TEST_PATMATCH = 0x01,
   TEST_ARITHEXP = 0x02,
-  TEST_LOCALE = 0x04
+  TEST_LOCALE = 0x04,
+  TEST_ARRAYEXP = 0x08 // array subscript expansion
 };
 
 extern bool test_unop (const std::string &);

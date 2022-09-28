@@ -1,11 +1,11 @@
 dnl
-dnl Configure script for bashcpp-5.1
+dnl Configure script for bash-5.2
 dnl
 dnl report bugs to jake.hamby@gmail.com
 dnl
 dnl Process this file with autoconf to produce a configure script.
 
-# Copyright (C) 1987-2020 Free Software Foundation, Inc.
+# Copyright (C) 1987-2022 Free Software Foundation, Inc.
 # Copyright 2022, Jake Hamby.
 
 #
@@ -22,9 +22,9 @@ dnl Process this file with autoconf to produce a configure script.
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-AC_REVISION([for Bash 5.1, version 5.022-cpp])dnl
+AC_REVISION([for Bash 5.2, version 5.046])dnl
 
-define(bashvers, 5.1)
+define(bashvers, 5.2)
 define(relstatus, dev)
 
 dnl make sure we are using a recent autoconf version
@@ -116,7 +116,12 @@ opt_dircomplete_expand_default=no
 opt_globascii_default=yes
 opt_function_import=yes
 opt_dev_fd_stat_broken=no
+opt_alt_array_impl=no
+opt_translatable_strings=yes
 opt_prefer_posix_spawn=yes
+
+dnl modified by alternate array implementation option
+ARRAY_O=array.o
 
 dnl options that affect how bash is compiled and linked
 opt_static_link=no
@@ -137,6 +142,7 @@ if test $opt_minimal_config = yes; then
 	opt_net_redirs=no opt_progcomp=no opt_separate_help=no
 	opt_multibyte=yes opt_cond_regexp=no opt_coproc=no
 	opt_casemod_attrs=no opt_casemod_expansions=no opt_extglob_default=no
+	opt_translatable_strings=no
 	opt_globascii_default=yes
 fi
 
@@ -309,7 +315,7 @@ fi
 HELPDIR= HELPDIRDEFINE= HELPINSTALL= HELPFILES_TARGET=
 if test "$opt_separate_help" != no; then
 	if test "$opt_separate_help" = "yes" ; then
-		HELPDIR='${datadir}/bash'
+		HELPDIR='${datadir}/bash/helpfiles'
 	else
 		HELPDIR=$opt_separate_help
 	fi
@@ -380,6 +386,8 @@ m4_include([m4/bash-rules.m4])
 
 m4_include([m4/stat-time.m4])
 m4_include([m4/timespec.m4])
+
+m4_include([m4/strtoimax.m4])
 
 dnl include files for gettext
 
@@ -526,6 +534,7 @@ AC_CHECK_SIZEOF(short, 2)
 AC_CHECK_SIZEOF(int, 4)
 AC_CHECK_SIZEOF(long, 4)
 AC_CHECK_SIZEOF(char *, 4)
+AC_CHECK_SIZEOF(size_t, 4)
 AC_CHECK_SIZEOF(double, 8)
 AC_CHECK_SIZEOF([long long], 8)
 
@@ -544,7 +553,6 @@ BASH_FUNC_LSTAT
 fi
 
 dnl behavior of system calls and library functions
-BASH_FUNC_CTYPE_NONASCII
 BASH_FUNC_DUP2_CLOEXEC_CHECK
 BASH_SYS_PGRP_SYNC
 BASH_SYS_SIGNAL_VINTAGE
@@ -564,7 +572,12 @@ AC_CHECK_TYPES([uintmax_t])
 if test "$ac_cv_header_sys_socket_h" = "yes"; then
 AC_CHECK_TYPES([socklen_t], [], [], [[#include <sys/socket.h>]])
 fi
+
+AC_CHECK_TYPE(quad_t, AC_DEFINE([HAVE_QUAD_T], [1]), [], )
 BASH_TYPE_RLIMIT
+
+AC_TYPE_INTMAX_T
+AC_TYPE_UINTMAX_T
 
 AC_CHECK_SIZEOF(intmax_t, 8)
 

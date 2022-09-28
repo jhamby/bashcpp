@@ -37,9 +37,9 @@
    element of array variable CSV, starting at index 0. The format of LINE is
    as described in RFC 4180. */
 static int
-csvsplit (csv, line)
-SHELL_VAR *csv;
-char *line;
+csvsplit (csv, line, dstring)
+     SHELL_VAR *csv;
+     char *line, *dstring;
 {
   arrayind_t ind;
   char *field, *prev, *buf, *xbuf;
@@ -53,33 +53,33 @@ char *line;
   do
     {
       if (*prev == '"')
-        {
-          if (xbuf == 0)
-            xbuf = xmalloc (strlen (prev) + 1);
-          buf = xbuf;
-          b = 0;
-          qstate = DQUOTE;
-          for (field = ++prev; *field; field++)
-            {
-              if (qstate == DQUOTE && *field == '"' && field[1] == '"')
-                buf[b++] = *field++; /* skip double quote */
-              else if (qstate == DQUOTE && *field == '"')
-                qstate = NQUOTE;
-              else if (qstate == NQUOTE && *field == ',')
-                break;
-              else
-                /* This copies any text between a closing double quote and the
-                   delimiter. If you want to change that, make sure to do the
-                   copy only if qstate == DQUOTE. */
-                buf[b++] = *field;
-            }
-          buf[b] = '\0';
-        }
+	{
+	  if (xbuf == 0)
+	    xbuf = xmalloc (strlen (prev) + 1);
+	  buf = xbuf;
+	  b = 0;
+	  qstate = DQUOTE;
+	  for (field = ++prev; *field; field++)
+	    {
+	      if (qstate == DQUOTE && *field == '"' && field[1] == '"')
+		buf[b++] = *field++;	/* skip double quote */
+	      else if (qstate == DQUOTE && *field == '"')
+	        qstate = NQUOTE;
+	      else if (qstate == NQUOTE && *field == *dstring)
+		break;
+	      else
+		/* This copies any text between a closing double quote and the
+		   delimiter. If you want to change that, make sure to do the
+		   copy only if qstate == DQUOTE. */
+		buf[b++] = *field;
+	    }
+	  buf[b] = '\0';
+	}
       else
-        {
-          buf = prev;
-          field = prev + strcspn (prev, ",");
-        }
+	{
+	  buf = prev;
+	  field = prev + strcspn (prev, dstring);
+	}
 
       delim = *field;
       *field = '\0';
@@ -89,10 +89,10 @@ char *line;
 
       *field = delim;
 
-      if (delim == ',')
-        prev = field + 1;
+      if (delim == *dstring)
+	prev = field + 1;
     }
-  while (delim == ',');
+  while (delim == *dstring);
 
   if (xbuf)
     free (xbuf);
@@ -163,7 +163,7 @@ WORD_LIST *list;
   if (csvstring == 0 || *csvstring == 0)
     return (EXECUTION_SUCCESS);
 
-  opt = csvsplit (v, csvstring);
+  opt = csvsplit (v, csvstring, ",");
   /* Maybe do something with OPT here, it's the number of fields */
 
   return (rval);

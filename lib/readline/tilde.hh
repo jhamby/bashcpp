@@ -1,6 +1,6 @@
 /* tilde.h: Externally available variables and function in libtilde.a. */
 
-/* Copyright (C) 1992-2009 Free Software Foundation, Inc.
+/* Copyright (C) 1992-2009,2021 Free Software Foundation, Inc.
 
    This file contains the Readline Library (Readline), a set of
    routines for providing Emacs style line input to programs that ask
@@ -25,10 +25,6 @@
 
 namespace readline
 {
-
-/* A function can be defined using prototypes and compile on both ANSI C
-   and traditional C compilers with something like this:
-        extern char *func (char *, char *, int); */
 
 typedef char *tilde_hook_func_t (char *);
 
@@ -60,6 +56,9 @@ extern char *tilde_expand (const char *);
 /* Do the work of tilde expansion on FILENAME.  FILENAME starts with a
    tilde.  If there is no expansion, call tilde_expansion_failure_hook. */
 extern char *tilde_expand_word (const char *);
+
+/* Find the portion of the string beginning with ~ that should be expanded. */
+extern char *tilde_find_word (const char *, int, int *);
 
 } // namespace readline
 

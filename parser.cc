@@ -88,7 +88,8 @@ Shell::initialize_bash_input ()
    GET, UNGET, TYPE, NAME, and LOCATION. */
 void
 Shell::init_yy_io (sh_cget_func_t get, sh_cunget_func_t unget,
-                   stream_type type, const std::string &name, INPUT_STREAM location)
+                   stream_type type, const std::string &name,
+                   INPUT_STREAM location)
 {
   bash_input.type = type;
   bash_input.name = name;
@@ -216,7 +217,8 @@ Shell::yy_string_unget (int c)
 }
 
 void
-Shell::with_input_from_string (const std::string &string, const std::string &name)
+Shell::with_input_from_string (const std::string &string,
+                               const std::string &name)
 {
   INPUT_STREAM location;
 

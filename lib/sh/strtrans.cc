@@ -291,8 +291,11 @@ ansic_quote (const std::string &str)
 #if defined(HANDLE_MULTIBYTE)
           b = is_basic (c);
           /* XXX - clen comparison to 0 is dicey */
-          if ((!b && ((clen = std::mbrtowc (&wc, &(*it), MB_CUR_MAX, 0)) == static_cast<size_t> (-1)
-                   || MB_INVALIDCH (clen) || std::iswprint (wc) == 0)) || (b && std::isprint (c) == 0))
+          if ((!b
+               && ((clen = std::mbrtowc (&wc, &(*it), MB_CUR_MAX, 0))
+                       == static_cast<size_t> (-1)
+                   || MB_INVALIDCH (clen) || std::iswprint (wc) == 0))
+              || (b && std::isprint (c) == 0))
 #else
           if (std::isprint (c) == 0)
 #endif

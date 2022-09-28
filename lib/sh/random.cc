@@ -85,7 +85,7 @@ Shell::genseed ()
   iv = static_cast<uint32_t> (reinterpret_cast<uintptr_t> (
       &intrand32)); // include a function ptr in the seed
   iv = static_cast<uint32_t> (tv.tv_sec ^ tv.tv_usec ^ ::getpid ()
-                                ^ ::getppid () ^ current_user.uid ^ iv);
+                              ^ ::getppid () ^ current_user.uid ^ iv);
   return iv;
 }
 

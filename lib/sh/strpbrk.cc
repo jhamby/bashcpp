@@ -1,9 +1,6 @@
 /* strpbrk.c - locate multiple characters in a string */
 
-/* Copyright (C) 1991, 1994 Free Software Foundation, Inc.
-
-   NOTE: The canonical source of this file is maintained with the GNU C
-   Library. Bugs can be reported to bug-glibc@prep.ai.mit.edu.
+/* Copyright (C) 1993-2021 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 

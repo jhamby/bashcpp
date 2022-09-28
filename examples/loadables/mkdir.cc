@@ -217,21 +217,21 @@ int nmode, parent_mode;
 }
 
 char *mkdir_doc[] = {
-  "Create directories.",
-  "",
-  "Make directories.  Create the directories named as arguments, in",
-  "the order specified, using mode rwxrwxrwx as modified by the current",
-  "umask (see `help umask').  The -m option causes the file permission",
-  "bits of the final directory to be MODE.  The MODE argument may be",
-  "an octal number or a symbolic mode like that used by chmod(1).  If",
-  "a symbolic mode is used, the operations are interpreted relative to",
-  "an initial mode of \"a=rwx\".  The -p option causes any required",
-  "intermediate directories in PATH to be created.  The directories",
-  "are created with permssion bits of rwxrwxrwx as modified by the current",
-  "umask, plus write and search permissions for the owner.  mkdir",
-  "returns 0 if the directories are created successfully, and non-zero",
-  "if an error occurs.",
-  (char *)NULL
+	"Create directories.",
+	"",
+	"Make directories.  Create the directories named as arguments, in",
+	"the order specified, using mode rwxrwxrwx as modified by the current",
+	"umask (see `help umask').  The -m option causes the file permission",
+	"bits of the final directory to be MODE.  The MODE argument may be",
+	"an octal number or a symbolic mode like that used by chmod(1).  If",
+	"a symbolic mode is used, the operations are interpreted relative to",
+	"an initial mode of \"a=rwx\".  The -p option causes any required",
+	"intermediate directories in PATH to be created.  The directories",
+	"are created with permission bits of rwxrwxrwx as modified by the current",
+	"umask, plus write and search permissions for the owner.  mkdir",
+	"returns 0 if the directories are created successfully, and non-zero",
+	"if an error occurs.",
+	(char *)NULL
 };
 
 struct builtin mkdir_struct

@@ -3,7 +3,7 @@
 /* See Makefile for compilation details. */
 
 /*
-   Copyright (C) 1999-2009 Free Software Foundation, Inc.
+   Copyright (C) 1999-2021 Free Software Foundation, Inc.
 
    This file is part of GNU Bash.
    Bash is free software: you can redistribute it and/or modify
@@ -54,6 +54,7 @@ WORD_LIST *list;
   list = loptend;
 
   t = ttyname (0);
+  QUIT;
   if (sflag == 0)
     puts (t ? t : "not a tty");
   return (t ? EXECUTION_SUCCESS : EXECUTION_FAILURE);

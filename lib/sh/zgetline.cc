@@ -59,7 +59,8 @@ typedef ssize_t creadfunc_t (int, char *);
 ssize_t
 zgetline (int fd, char **lineptr, size_t *n, int delim, bool unbuffered_read)
 {
-  int nr, retval;
+  int retval;
+  size_t nr;
   char *line, c;
 
   if (lineptr == 0 || n == 0 || (*lineptr == 0 && *n != 0))

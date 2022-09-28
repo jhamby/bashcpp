@@ -44,7 +44,7 @@
 
 // Remove __attribute__ if we're not using GCC or Clang.
 #ifndef __attribute__
-#if !defined (__clang__) && !defined (__GNUC__)
+#if !defined(__clang__) && !defined(__GNUC__)
 #define __attribute__(x)
 #endif
 #endif

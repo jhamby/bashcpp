@@ -58,9 +58,6 @@
    reserved word. */
 #undef COPROCESS_SUPPORT
 
-/* Define if the ctype macros accept non-ASCII characters. */
-#undef CTYPE_NON_ASCII
-
 /* Define to 1 if using 'alloca.c'. */
 #undef C_ALLOCA
 
@@ -1028,6 +1025,9 @@
 /* The size of `short', as computed by sizeof. */
 #undef SIZEOF_SHORT
 
+/* The size of `size_t', as computed by sizeof. */
+#undef SIZEOF_SIZE_T
+
 /* The size of `wchar_t', as computed by sizeof. */
 #undef SIZEOF_WCHAR_T
 
@@ -1325,6 +1325,10 @@
 #undef inline
 #endif
 
+/* Define to the widest signed integer type if <stdint.h> and <inttypes.h> do
+   not define. */
+#undef intmax_t
+
 /* Define to rpl_malloc if the replacement function should be used. */
 #undef malloc
 
@@ -1368,8 +1372,8 @@
    such a type exists and the standard includes do not define it. */
 #undef uint8_t
 
-/* Define to unsigned long or unsigned long long if <stdint.h> and
-   <inttypes.h> don't define. */
+/* Define to the widest unsigned integer type if <stdint.h> and <inttypes.h>
+   do not define. */
 #undef uintmax_t
 
 /* Define to the type of an unsigned integer type wide enough to hold a

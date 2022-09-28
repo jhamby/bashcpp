@@ -55,9 +55,8 @@ _remove_directory (const char *dirname)
           int fnsize;
 #endif
 
-          if (*dp->d_name == '.'
-              && (dp->d_name[1] == 0
-                  || (dp->d_name[1] == '.' && dp->d_name[2] == 0)))
+	  QUIT;
+          if (*dp->d_name == '.' && (dp->d_name[1] == 0 || (dp->d_name[1] == '.' && dp->d_name[2] == 0)))
             continue;
 
 #ifdef __GNUC__
@@ -73,6 +72,7 @@ _remove_directory (const char *dirname)
 #ifndef __GNUC__
           free (fname);
 #endif
+	   QUIT;
         }
 
       closedir (dir);
@@ -95,6 +95,7 @@ rm_file (const char *fname)
   if (unlink (fname) == 0)
     return 0;
 
+  QUIT;
   /* If FNAME is a directory glibc returns EISDIR but correct POSIX value
      would be EPERM.  If we get that error and FNAME is a directory and -r
      was supplied, recursively remove the directory and its contents */
@@ -152,8 +153,9 @@ WORD_LIST *list;
 
   for (l = list; l; l = l->next)
     {
-      if (rm_file (l->word->word) && force == 0)
-        rval = EXECUTION_FAILURE;
+      QUIT;
+      if (rm_file(l->word->word) && force == 0)
+	rval = EXECUTION_FAILURE;
     }
 
   return rval;

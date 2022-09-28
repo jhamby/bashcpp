@@ -704,7 +704,8 @@ Shell::_run_trap_internal (int sig, const char *tag)
 
       running_trap = sig + 1;
 
-      int old_int = interrupt_state; /* temporarily suppress pending interrupts */
+      int old_int
+          = interrupt_state; /* temporarily suppress pending interrupts */
       CLRINTERRUPT;
 
 #if defined(ARRAY_VARS)

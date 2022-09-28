@@ -50,7 +50,8 @@ public:
   }
 
   // Destructor deletes the entire linked list.
-  ~BUCKET_CONTENTS () noexcept {
+  ~BUCKET_CONTENTS () noexcept
+  {
     delete next ();
     delete *data_;
   }

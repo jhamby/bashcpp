@@ -18,14 +18,12 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __LOADABLES_H_
-#define __LOADABLES_H_
-
 #include "config.hh"
 
-#include "bashgetopt.hh"
+#if defined (HAVE_LONG_LONG_INT) && !defined (HAVE_STRTOLL)
+
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
-#endif
+#endif /* HAVE_LONG_LONG_INT && !HAVE_STRTOLL */

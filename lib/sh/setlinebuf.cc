@@ -1,6 +1,6 @@
 /* setlinebuf.c - line-buffer a stdio stream. */
 
-/* Copyright (C) 1997 Free Software Foundation, Inc.
+/* Copyright (C) 1997,2022 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -38,15 +38,10 @@ sh_setlinebuf (FILE *stream)
 #endif
 
 #if defined(HAVE_SETVBUF)
-
   char *local_linebuf = nullptr;
 
-#if defined(SETVBUF_REVERSED)
-  return setvbuf (stream, _IOLBF, local_linebuf, LBUF_BUFSIZE);
-#else  /* !SETVBUF_REVERSED */
-  return setvbuf (stream, local_linebuf, _IOLBF, LBUF_BUFSIZE);
-#endif /* !SETVBUF_REVERSED */
-#else  /* !HAVE_SETVBUF */
+  return (setvbuf (stream, local_linebuf, _IOLBF, LBUF_BUFSIZE));
+#else /* !HAVE_SETVBUF */
 
   setlinebuf (stream);
   return 0;
