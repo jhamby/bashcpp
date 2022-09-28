@@ -1085,6 +1085,9 @@
 /* Define if TIOCSTAT is defined in your sys/ioctl.h. */
 #undef TIOCSTAT_IN_SYS_IOCTL
 
+/* Support for $"..." translatable strings. */
+#undef TRANSLATABLE_STRINGS
+
 /* Define to 1 if the type of the st_atim member of a struct stat is struct
    timespec. */
 #undef TYPEOF_STRUCT_STAT_ST_ATIM_IS_STRUCT_TIMESPEC

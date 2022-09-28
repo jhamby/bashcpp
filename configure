@@ -906,6 +906,7 @@ enable_select
 enable_separate_helpfiles
 enable_single_help_strings
 enable_strict_posix_default
+enable_translatable_strings
 enable_usg_echo_default
 enable_xpg_echo_default
 enable_profiling
@@ -1642,6 +1643,8 @@ Optional Features:
                           translation
   --enable-strict-posix-default
                           configure bash to be posix-conformant by default
+  --enable-translatable-strings
+                          include support for $"..." translatable strings
   --enable-usg-echo-default
                           a synonym for --enable-xpg-echo-default
   --enable-xpg-echo-default
@@ -4402,7 +4405,6 @@ opt_alt_array_impl=no
 opt_translatable_strings=yes
 opt_prefer_posix_spawn=yes
 
-ARRAY_O=array.o
 
 opt_static_link=no
 opt_profiling=no
@@ -4638,6 +4640,12 @@ then :
   enableval=$enable_strict_posix_default; opt_strict_posix=$enableval
 fi
 
+# Check whether --enable-translatable-strings was given.
+if test ${enable_translatable_strings+y}
+then :
+  enableval=$enable_translatable_strings; opt_translatable_strings=$enableval
+fi
+
 # Check whether --enable-usg-echo-default was given.
 if test ${enable_usg_echo_default+y}
 then :
@@ -4834,6 +4842,12 @@ fi
 if test $opt_dev_fd_stat_broken = yes; then
 
 printf "%s\n" "#define DEV_FD_STAT_BROKEN 1" >>confdefs.h
+
+fi
+
+if test $opt_translatable_strings = yes; then
+
+printf "%s\n" "#define TRANSLATABLE_STRINGS 1" >>confdefs.h
 
 fi
 

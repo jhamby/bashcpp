@@ -51,7 +51,10 @@ enum pstate_flags
   PST_REDIRLIST = 0x080000,   /* parsing a list of redirections preceding a
                                  simple command name */
   PST_COMMENT = 0x100000,     /* parsing a shell comment; used by aliases */
-  PST_ENDALIAS = 0x200000 /* just finished expanding and consuming an alias */
+  PST_ENDALIAS = 0x200000, /* just finished expanding and consuming an alias */
+  PST_NOEXPAND = 0x400000, /* don't expand anything in read_token_word; for
+                              command substitution */
+  PST_NOERROR = 0x800000   /* don't print error messages in yyerror */
 };
 
 static inline pstate_flags &

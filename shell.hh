@@ -488,7 +488,10 @@ enum lexical_state_flags
   LEX_STRIPDOC = 0x0200,  // <<- strip tabs from here doc delim
   LEX_QUOTEDDOC = 0x0400, // here doc with quoted delim
   LEX_INWORD = 0x0800,
-  LEX_GTLT = 0x1000
+  LEX_GTLT = 0x1000,
+  LEX_CKESAC = 0x2000, // check esac after in -- for later
+  LEX_CASEWD = 0x4000, // word after case
+  LEX_PATLIST = 0x8000 // case statement pattern list
 };
 
 static inline lexical_state_flags &
@@ -1294,6 +1297,9 @@ protected:
 
   /* Set to true to suppress the effect of `set v' in the DEBUG trap. */
   bool suppress_debug_trap_verbose;
+
+  /* single-quote output of $"..." */
+  bool singlequote_translations;
 
   // Used by ttsave()/ttrestore() to check if there are valid saved settings.
   bool ttsaved;
@@ -2240,7 +2246,7 @@ protected:
   void set_default_lang ();
   const char *get_locale_var (const char *);
   std::string localetrans (const std::string &);
-  std::string localeexpand (const std::string &, int);
+  std::string locale_expand (const std::string &, int);
 
   void locale_setblanks ();
   int reset_locale_vars ();
@@ -2295,6 +2301,7 @@ public:
   {
   }
 #endif
+
 protected:
   /* Report an internal informational notice. */
   void internal_inform (const char *, ...)

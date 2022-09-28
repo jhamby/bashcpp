@@ -1205,11 +1205,12 @@ Shell::yylex ()
 
   if ((parser_state & PST_EOFTOKEN) && current_token == shell_eof_token)
     {
-      current_token = parser::token::yacc_EOF;
-      if (bash_input.type == st_string)
-        rewind_input_string ();
+      /* placeholder for any special handling. */
+      return symbol;
     }
-  parser_state &= ~PST_EOFTOKEN; /* ??? */
+
+  if (current_token < 0)
+    return parser::make_YYerror ();
 
   return symbol;
 }
@@ -1265,8 +1266,8 @@ command_token_position (int token, pstate_flags parser_state)
 }
 
 /* Are we in a position where we can read an assignment statement? */
-#define assignment_acceptable(token)                                          \
-  (command_token_position (token) && ((parser_state & PST_CASEPAT) == 0))
+#define assignment_acceptable(token, state)                                   \
+  (command_token_position (token, state) && ((state & PST_CASEPAT) == 0))
 
 /* Check to see if TOKEN is a reserved word and return the token
    value if it is. */
@@ -1286,11 +1287,14 @@ command_token_position (int token, pstate_flags parser_state)
                 if (word_token_alist[i].token == parser::token::TIME          \
                     && time_command_acceptable () == 0)                       \
                   break;                                                      \
-                if ((parser_state & PST_CASEPAT) && last_read_token == '|'    \
+                if ((parser_state & PST_CASEPAT) && last_read_token == '('    \
                     && word_token_alist[i].token == parser::token::ESAC)      \
-                  break; /* Posix grammar rule 4 */                           \
+                  break; /* phantom Posix grammar rule 4 */                   \
                 if (word_token_alist[i].token == parser::token::ESAC)         \
-                  parser_state &= ~(PST_CASEPAT | PST_CASESTMT);              \
+                  {                                                           \
+                    parser_state &= ~(PST_CASEPAT | PST_CASESTMT);            \
+                    esacs_needed_count--;                                     \
+                  }                                                           \
                 else if (word_token_alist[i].token == parser::token::CASE)    \
                   parser_state |= PST_CASESTMT;                               \
                 else if (word_token_alist[i].token                            \
@@ -1330,27 +1334,32 @@ Shell::alias_expand_token (const char *tokstr)
   char *expanded;
   alias_t *ap;
 
+#if 0
   if (((parser_state & PST_ALEXPNEXT)
        || command_token_position (last_read_token, parser_state))
       && (parser_state & PST_CASEPAT) == 0)
-    {
-      ap = find_alias (tokstr);
+#else
+  if ((parser_state & PST_ALEXPNEXT)
+      || assignment_acceptable (last_read_token, parser_state))
+#endif
+  {
+    ap = find_alias (tokstr);
 
-      /* Currently expanding this token. */
-      if (ap && (ap->flags & AL_BEINGEXPANDED))
-        return NO_EXPANSION;
+    /* Currently expanding this token. */
+    if (ap && (ap->flags & AL_BEINGEXPANDED))
+      return NO_EXPANSION;
 
-      expanded = ap ? savestring (ap->value) : nullptr;
+    expanded = ap ? savestring (ap->value) : nullptr;
 
-      if (expanded)
-        {
-          push_string (expanded, ap->flags & AL_EXPANDNEXT, ap);
-          return RE_READ_TOKEN;
-        }
-      else
-        /* This is an eligible token that does not have an expansion. */
-        return NO_EXPANSION;
-    }
+    if (expanded)
+      {
+        push_string (expanded, ap->flags & AL_EXPANDNEXT, ap);
+        return RE_READ_TOKEN;
+      }
+    else
+      /* This is an eligible token that does not have an expansion. */
+      return NO_EXPANSION;
+  }
   return NO_EXPANSION;
 }
 
@@ -1584,7 +1593,7 @@ Shell::reset_parser ()
 
 #if defined(EXTENDED_GLOB)
   /* Reset to global value of extended glob */
-  if (parser_state & PST_EXTPAT)
+  if (parser_state & (PST_EXTPAT | PST_CMDSUBST))
     extended_glob = global_extglob;
 #endif
 
@@ -1604,6 +1613,11 @@ Shell::reset_parser ()
   word_desc_to_read.value = nullptr;
 
   eol_ungetc_lookahead = 0;
+
+  /* added post-bash-5.1 */
+  need_here_doc = 0;
+  redir_stack[0] = nullptr;
+  esacs_needed_count = expecting_in_token = 0;
 
   current_token = '\n'; /* XXX */
   last_read_token = '\n';
@@ -1684,10 +1698,8 @@ re_read_token:
   if (character == '\0' && bash_input.type == st_string
       && !parser_expanding_alias ())
     {
-#if defined(DEBUG)
-      itrace ("shell_getc: bash_input.location.string = `%s'",
-              bash_input.location.string);
-#endif
+      internal_debug ("shell_getc: bash_input.location.string = `%s'",
+                      bash_input.location.string);
       EOF_Reached = true;
       return parser::make_yacc_EOF ();
     }
@@ -1702,7 +1714,7 @@ re_read_token:
       character = '\n'; /* this will take the next if statement and return. */
     }
 
-  if (character == '\n')
+  if MBTEST (character == '\n')
     {
       /* If we're about to return an unquoted newline, we can go and collect
          the text of any pending here document. */
@@ -1722,7 +1734,7 @@ re_read_token:
     goto tokword;
 
   /* Shell meta-characters. */
-  if MBTEST (shellmeta (character) && ((parser_state & PST_DBLPAREN) == 0))
+  if MBTEST (shellmeta (character))
     {
 #if defined(ALIAS)
       /* Turn off alias tokenization iff this character sequence would
@@ -1744,7 +1756,7 @@ re_read_token:
       else
         peek_char = shell_getc (1);
 
-      if (character == peek_char)
+      if MBTEST (character == peek_char)
         {
           switch (character)
             {
@@ -1965,7 +1977,7 @@ Shell::parse_matched_pair (
         }
 
       /* Possible reprompting. */
-      if (ch == '\n' && SHOULD_PROMPT ())
+      if MBTEST (ch == '\n' && SHOULD_PROMPT ())
         prompt_again ();
 
       /* Don't bother counting parens or doing anything else if in a comment
@@ -1975,7 +1987,7 @@ Shell::parse_matched_pair (
           /* Add this character. */
           ret.push_back (static_cast<char> (ch));
 
-          if (ch == '\n')
+          if MBTEST (ch == '\n')
             tflags &= ~LEX_INCOMMENT;
 
           continue;
@@ -1993,8 +2005,9 @@ Shell::parse_matched_pair (
       if (tflags & LEX_PASSNEXT) /* last char was backslash */
         {
           tflags &= ~LEX_PASSNEXT;
-          if (qc != '\''
-              && ch == '\n') /* double-quoted \<newline> disappears. */
+          /* XXX - PST_NOEXPAND? */
+          if MBTEST (qc != '\''
+                     && ch == '\n') /* double-quoted \<newline> disappears. */
             {
               // swallow previously-added backslash
               if (!ret.empty ())
@@ -2127,9 +2140,12 @@ Shell::parse_matched_pair (
               dstack.pop_back ();
 
               if MBTEST ((tflags & LEX_WASDOL) && ch == '\''
-                         && (extended_quote || (rflags & P_DQUOTE) == 0))
+                         && (extended_quote || (rflags & P_DQUOTE) == 0
+                             || dolbrace_state == DOLBRACE_QUOTE
+                             || dolbrace_state == DOLBRACE_QUOTE2))
                 {
                   /* Translate $'...' here. */
+                  /* PST_NOEXPAND */
                   std::string ttrans
                       = ansiexpand (nestret.begin (), nestret.end ());
                   nestret.clear ();
@@ -2141,12 +2157,24 @@ Shell::parse_matched_pair (
                      later */
                   /* FLAG POSIX INTERP 221 */
                   if ((shell_compatibility_level > 42) && (rflags & P_DQUOTE)
-                      && (dolbrace_state == DOLBRACE_QUOTE2)
+                      && (dolbrace_state == DOLBRACE_QUOTE2
+                          || dolbrace_state == DOLBRACE_QUOTE)
                       && (flags & P_DOLBRACE))
                     {
                       nestret = sh_single_quote (ttrans);
                       ttrans.clear ();
                     }
+#if 0 /* TAG:bash-5.3 */
+                  /* This single-quotes PARAM in ${PARAM OP WORD} when PARAM
+                     contains a $'...' even when extended_quote is set. */
+                  else if ((rflags & P_DQUOTE)
+                           && (dolbrace_state == DOLBRACE_PARAM)
+                           && (flags & P_DOLBRACE))
+                    {
+                      nestret = sh_single_quote (ttrans);
+                      ttrans.clear ();
+                    }
+#endif
                   else if ((rflags & P_DQUOTE) == 0)
                     {
                       nestret = sh_single_quote (ttrans);
@@ -2158,14 +2186,38 @@ Shell::parse_matched_pair (
                     }
                   ret.erase (ret.size () - 2, 2); /* back up before the $' */
                 }
+#if defined(TRANSLATABLE_STRINGS)
               else if MBTEST ((tflags & LEX_WASDOL) && ch == '"'
                               && (extended_quote || (rflags & P_DQUOTE) == 0))
                 {
                   /* Locale expand $"..." here. */
-                  std::string ttrans = localeexpand (nestret, start_lineno);
-                  nestret = sh_mkdoublequoted (ttrans, 0);
+                  /* PST_NOEXPAND */
+                  std::string ttrans = locale_expand (nestret, start_lineno);
+
+                  /* If we're supposed to single-quote translated strings,
+                    check whether the translated result is different from
+                    the original and single-quote the string if it is. */
+                  if (singlequote_translations
+                      && ((nestret.size () - 1) != ttrans.size ()
+                          || nestret == ttrans))
+                    {
+                      if ((rflags & P_DQUOTE) == 0)
+                        nestret = sh_single_quote (ttrans);
+                      else if ((rflags & P_DQUOTE)
+                               && (dolbrace_state == DOLBRACE_QUOTE2)
+                               && (flags & P_DOLBRACE))
+                        nestret = sh_single_quote (ttrans);
+                      else
+                        // single quotes aren't special, use backslash instead
+                        nestret
+                            = sh_backslash_quote_for_double_quotes (ttrans);
+                    }
+                  else
+                    nestret = sh_mkdoublequoted (ttrans, 0);
+
                   ret.erase (ret.size () - 2, 2); /* back up before the $" */
                 }
+#endif /* TRANSLATABLE_STRINGS */
 
               ret += nestret;
             }
@@ -2267,10 +2319,25 @@ dump_tflags (lexical_state_flags flags)
       f &= ~LEX_CKCASE;
       fprintf (stderr, "LEX_CKCASE%s", f ? "|" : "");
     }
+  if (f & LEX_CKESAC)
+    {
+      f &= ~LEX_CKESAC;
+      fprintf (stderr, "LEX_CKESAC%s", f ? "|" : "");
+    }
   if (f & LEX_INCASE)
     {
       f &= ~LEX_INCASE;
       fprintf (stderr, "LEX_INCASE%s", f ? "|" : "");
+    }
+  if (f & LEX_CASEWD)
+    {
+      f &= ~LEX_CASEWD;
+      fprintf (stderr, "LEX_CASEWD%s", f ? "|" : "");
+    }
+  if (f & LEX_PATLIST)
+    {
+      f &= ~LEX_PATLIST;
+      fprintf (stderr, "LEX_PATLIST%s", f ? "|" : "");
     }
   if (f & LEX_INHEREDOC)
     {
@@ -2303,563 +2370,169 @@ dump_tflags (lexical_state_flags flags)
 }
 #endif
 
-/* Parse a $(...) command substitution.  This is messier than I'd like, and
-   reproduces a lot more of the token-reading code than I'd like. */
+/* Parse a $(...) command substitution.  This reads input from the current
+   input stream. */
 std::string
 Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
 {
-  int count, ch, peekc;
-  size_t lex_rwlen, lex_wlen, hdlen = 0;
-  ssize_t lex_firstind;
-  int start_lineno;
-  char *heredelim;
-  lexical_state_flags tflags;
+//   int peekc, r;
+//   int start_lineno, local_extglob, was_extpat;
+//   char *ret, *tcmd;
+  sh_parser_state_t ps;
+  STRING_SAVER *saved_strings;
+  COMMAND *saved_global, *parsed_command;
 
   /* Posix interp 217 says arithmetic expressions have precedence, so
      assume $(( introduces arithmetic expansion and parse accordingly. */
-  peekc = shell_getc (false);
-  shell_ungetc (peekc);
-  if (peekc == '(')
-    return parse_matched_pair (qc, open, close, P_NOFLAGS);
-
-  // itrace ("parse_comsub: qc = `%c' open = %c close = %c", qc, open, close);
-  count = 1;
-  tflags = LEX_RESWDOK;
-#if defined(BANG_HISTORY)
-  bool orig_histexp = history_expansion_inhibited;
-#endif
-
-  if ((flags & P_COMMAND) && qc != '\'' && qc != '"'
-      && (flags & P_DQUOTE) == 0)
-    tflags |= LEX_CKCASE;
-  if ((tflags & LEX_CKCASE) && (interactive == 0 || interactive_comments))
-    tflags |= LEX_CKCOMMENT;
-
-  /* RFLAGS is the set of flags we want to pass to recursive calls. */
-  pgroup_flags rflags = (flags & P_DQUOTE);
-
-  std::string ret;
-
-  start_lineno = line_number;
-  lex_rwlen = lex_wlen = 0;
-
-  heredelim = nullptr;
-  lex_firstind = -1;
-
-  while (count)
+  if (open == '(') /*)*/
     {
-      ch = shell_getc (
-          qc != '\''
-          && (tflags & (LEX_INCOMMENT | LEX_PASSNEXT | LEX_QUOTEDDOC)) == 0);
-
-      if (ch == EOF)
-        {
-        eof_error:
-#if defined(BANG_HISTORY)
-          history_expansion_inhibited = orig_histexp;
-#endif
-          delete[] heredelim;
-          parser_error (start_lineno,
-                        _ ("unexpected EOF while looking for matching `%c'"),
-                        close);
-          EOF_Reached = true; /* XXX */
-          throw matched_pair_error ();
-        }
-
-      /* If we hit the end of a line and are reading the contents of a here
-         document, and it's not the same line that the document starts on,
-         check for this line being the here doc delimiter.  Otherwise, if
-         we're in a here document, mark the next character as the beginning
-         of a line. */
-      if (ch == '\n')
-        {
-          if ((tflags & LEX_HEREDELIM) && heredelim)
-            {
-              tflags &= ~LEX_HEREDELIM;
-              tflags |= LEX_INHEREDOC;
-#if defined(BANG_HISTORY)
-              history_expansion_inhibited = true;
-#endif
-              lex_firstind = static_cast<ssize_t> (ret.size () + 1);
-            }
-          else if (tflags & LEX_INHEREDOC)
-            {
-              size_t tind = static_cast<size_t> (lex_firstind);
-              while ((tflags & LEX_STRIPDOC) && (tind < ret.size ())
-                     && (ret[tind] == '\t'))
-                tind++;
-
-              if (ret.size () - tind == hdlen
-                  && STREQN (&(ret[tind]), heredelim, hdlen))
-                {
-                  tflags &= ~(LEX_STRIPDOC | LEX_INHEREDOC | LEX_QUOTEDDOC);
-                  // itrace ("parse_comsub:%d: found here doc end `%s'",
-                  //         line_number, ret + tind);
-                  delete[] heredelim;
-                  heredelim = nullptr;
-                  lex_firstind = -1;
-#if defined(BANG_HISTORY)
-                  history_expansion_inhibited = orig_histexp;
-#endif
-                }
-              else
-                lex_firstind = static_cast<ssize_t> (ret.size () + 1);
-            }
-        }
-
-      /* Possible reprompting. */
-      if (ch == '\n' && SHOULD_PROMPT ())
-        prompt_again ();
-
-      /* XXX -- we currently allow here doc to be delimited by ending right
-         paren in default mode and posix mode. To change posix mode, change
-         the #if 1 to #if 0 below */
-      if ((tflags & LEX_INHEREDOC) && ch == close && count == 1)
-        {
-          // itrace ("parse_comsub:%d: in here doc, ch == close, retind -"
-          //         " firstind = %d hdlen = %d retind = %d", line_number,
-          //         retind - lex_firstind, hdlen, retind);
-          size_t tind = static_cast<size_t> (lex_firstind);
-          while ((tflags & LEX_STRIPDOC) && ret[tind] == '\t')
-            tind++;
-#if 1
-          if (ret.size () - tind == hdlen
-              && STREQN (&(ret[tind]), heredelim, hdlen))
-#else
-          // Posix-mode shells require the newline after the here-document
-          // delimiter.
-          if (ret.size () - tind == hdlen
-              && STREQN (&(ret[tind]), heredelim, hdlen) && !posixly_correct)
-#endif
-            {
-              tflags &= ~(LEX_STRIPDOC | LEX_INHEREDOC | LEX_QUOTEDDOC);
-              // itrace ("parse_comsub:%d: found here doc end `%*s'",
-              //         line_number, hdlen, ret + tind);
-              delete[] heredelim;
-              heredelim = nullptr;
-              lex_firstind = -1;
-#if defined(BANG_HISTORY)
-              history_expansion_inhibited = orig_histexp;
-#endif
-            }
-        }
-
-      /* Don't bother counting parens or doing anything else if in a comment or
-         here document (not exactly right for here-docs -- if we want to allow
-         recursive calls to parse_comsub to have their own here documents,
-         change the LEX_INHEREDOC to LEX_QUOTEDDOC here and uncomment the next
-         clause below.  Note that to make this work completely, we need to make
-         additional changes to allow xparse_dolparen to work right when the
-         command substitution is parsed, because read_secondary_line doesn't
-         know to recursively parse through command substitutions embedded in
-         here- documents */
-      if (tflags & (LEX_INCOMMENT | LEX_INHEREDOC))
-        {
-          /* Add this character. */
-          ret.push_back (static_cast<char> (ch));
-
-          if ((tflags & LEX_INCOMMENT) && ch == '\n')
-            {
-              // itrace ("parse_comsub:%d: lex_incomment -> 0 ch = `%c'",
-              //         line_number, ch);
-              tflags &= ~LEX_INCOMMENT;
-            }
-
-          continue;
-        }
-
-      if (tflags & LEX_PASSNEXT) /* last char was backslash */
-        {
-          // itrace ("parse_comsub:%d: lex_passnext -> 0 ch = `%c' (%d)",
-          //         line_number, ch, __LINE__);
-          tflags &= ~LEX_PASSNEXT;
-          if (qc != '\''
-              && ch == '\n') /* double-quoted \<newline> disappears. */
-            {
-              if (!ret.empty ())
-                // swallow previously-added backslash
-                ret.erase (ret.size () - 1, 1);
-              continue;
-            }
-
-          if MBTEST (ch == CTLESC)
-            ret.push_back (CTLESC);
-
-          ret.push_back (static_cast<char> (ch));
-          continue;
-        }
-
-      /* If this is a shell break character, we are not in a word.  If not,
-         we either start or continue a word. */
-      if MBTEST (shellbreak (ch))
-        {
-          tflags &= ~LEX_INWORD;
-          // itrace ("parse_comsub:%d: lex_inword -> 0 ch = `%c' (%d)",
-          //         line_number, ch, __LINE__);
-        }
-      else
-        {
-          if (tflags & LEX_INWORD)
-            {
-              lex_wlen++;
-              // itrace ("parse_comsub:%d: lex_inword == 1 ch = `%c' lex_wlen"
-              //         " = %d (%d)", line_number, ch, lex_wlen, __LINE__);
-            }
-          else
-            {
-              // itrace ("parse_comsub:%d: lex_inword -> 1 ch = `%c' (%d)",
-              //         line_number, ch, __LINE__);
-              tflags |= LEX_INWORD;
-              lex_wlen = 0;
-              if (tflags & LEX_RESWDOK)
-                lex_rwlen = 0;
-            }
-        }
-
-      /* Skip whitespace */
-      if MBTEST (shellblank (ch) && (tflags & LEX_HEREDELIM) == 0
-                 && lex_rwlen == 0)
-        {
-          /* Add this character. */
-          ret.push_back (static_cast<char> (ch));
-          continue;
-        }
-
-      /* Either we are looking for the start of the here-doc delimiter
-         (lex_firstind == -1) or we are reading one (lex_firstind >= 0).
-         If this character is a shell break character and we are reading
-         the delimiter, save it and note that we are now reading a here
-         document.  If we've found the start of the delimiter, note it by
-         setting lex_firstind.  Backslashes can quote shell metacharacters
-         in here-doc delimiters. */
-      if (tflags & LEX_HEREDELIM)
-        {
-          if (lex_firstind == -1 && shellbreak (ch) == 0)
-            lex_firstind = static_cast<ssize_t> (ret.size ());
-          else if (lex_firstind >= 0 && (tflags & LEX_PASSNEXT) == 0
-                   && shellbreak (ch))
-            {
-              if (heredelim == nullptr)
-                {
-                  char *nestret = substring (
-                      ret.c_str (), static_cast<size_t> (lex_firstind),
-                      ret.size ());
-                  heredelim = string_quote_removal (nestret, 0);
-                  hdlen = std::strlen (heredelim);
-                  // itrace ("parse_comsub:%d: found here doc delimiter `%s'"
-                  //         " (%d)", line_number, heredelim, hdlen);
-                  if (STREQ (heredelim, nestret) == 0)
-                    tflags |= LEX_QUOTEDDOC;
-                  delete[] nestret;
-                }
-              if (ch == '\n')
-                {
-                  tflags |= LEX_INHEREDOC;
-                  tflags &= ~LEX_HEREDELIM;
-                  lex_firstind = static_cast<ssize_t> (ret.size () + 1);
-#if defined(BANG_HISTORY)
-                  history_expansion_inhibited = 1;
-#endif
-                }
-              else
-                lex_firstind = -1;
-            }
-        }
-
-      // Meta-characters that can introduce a reserved word. Not perfect yet.
-      if MBTEST ((tflags & LEX_RESWDOK) == 0 && (tflags & LEX_CKCASE)
-                 && (tflags & LEX_INCOMMENT) == 0
-                 && (shellmeta (ch) || ch == '\n'))
-        {
-          /* Add this character. */
-          ret.push_back (static_cast<char> (ch));
-          peekc = shell_getc (1);
-          if (ch == peekc
-              && (ch == '&' || ch == '|' || ch == ';')) // two-character tokens
-            {
-              ret.push_back (static_cast<char> (peekc));
-              // itrace ("parse_comsub:%d: set lex_reswordok = 1, ch = `%c'",
-              //         line_number, ch);
-              tflags |= LEX_RESWDOK;
-              lex_rwlen = 0;
-              continue;
-            }
-          else if (ch == '\n' || COMSUB_META (ch))
-            {
-              shell_ungetc (peekc);
-              // itrace ("parse_comsub:%d: set lex_reswordok = 1, ch = `%c'",
-              //         line_number, ch);
-              tflags |= LEX_RESWDOK;
-              lex_rwlen = 0;
-              continue;
-            }
-          else if (ch == EOF)
-            goto eof_error;
-          else
-            {
-              /* `unget' the character we just added and fall through */
-              ret.erase (ret.size () - 1, 1);
-              shell_ungetc (peekc);
-            }
-        }
-
-      /* If we can read a reserved word, try to read one. */
-      if (tflags & LEX_RESWDOK)
-        {
-          if MBTEST (std::islower (static_cast<unsigned char> (ch)))
-            {
-              /* Add this character. */
-              ret.push_back (static_cast<char> (ch));
-              lex_rwlen++;
-              continue;
-            }
-          else if MBTEST (lex_rwlen == 4 && shellbreak (ch))
-            {
-              const char *comparestr = &(ret[ret.size () - 4]);
-              if (STREQN (comparestr, "case", 4))
-                {
-                  tflags |= LEX_INCASE;
-                  tflags &= ~LEX_RESWDOK;
-                  // itrace ("parse_comsub:%d: found `case', lex_incase -> 1"
-                  //         " lex_reswdok -> 0", line_number);
-                }
-              else if (STREQN (comparestr, "esac", 4))
-                {
-                  tflags &= ~LEX_INCASE;
-                  // itrace ("parse_comsub:%d: found `esac', lex_incase -> 0"
-                  //         " lex_reswdok -> 1", line_number);
-                  tflags |= LEX_RESWDOK;
-                  lex_rwlen = 0;
-                }
-              else if (STREQN (comparestr, "done", 4)
-                       || STREQN (comparestr, "then", 4)
-                       || STREQN (comparestr, "else", 4)
-                       || STREQN (comparestr, "elif", 4)
-                       || STREQN (comparestr, "time", 4))
-                {
-                  /* these are four-character reserved words that can be
-                     followed by a reserved word; anything else turns off
-                     the reserved-word-ok flag */
-                  // itrace ("parse_comsub:%d: found `%.4s', lex_reswdok -> 1",
-                  //         line_number, ret+retind-4);
-                  tflags |= LEX_RESWDOK;
-                  lex_rwlen = 0;
-                }
-              else if (shellmeta (ch) == 0)
-                {
-                  tflags &= ~LEX_RESWDOK;
-                  // itrace ("parse_comsub:%d: found `%.4s', lex_reswdok -> 0",
-                  //         line_number, ret+retind-4);
-                }
-              else // can't be in a reserved word any more
-                lex_rwlen = 0;
-            }
-          else if MBTEST ((tflags & LEX_CKCOMMENT) && ch == '#'
-                          && (lex_rwlen == 0
-                              || ((tflags & LEX_INWORD) && lex_wlen == 0)))
-            ; /* don't modify LEX_RESWDOK if we're starting a comment */
-          /* Allow `do' followed by space, tab, or newline to preserve the
-             RESWDOK flag, but reset the reserved word length counter so we
-             can read another one. */
-          else if MBTEST (((tflags & LEX_INCASE) == 0)
-                          && (isblank (static_cast<unsigned char> (ch))
-                              || ch == '\n')
-                          && lex_rwlen == 2
-                          && STREQN (&(ret[ret.size () - 2]), "do", 2))
-            {
-              // itrace ("parse_comsub:%d: lex_incase == 0 found `%c', found"
-              //         " \"do\"", line_number, ch);
-              lex_rwlen = 0;
-            }
-          else if MBTEST ((tflags & LEX_INCASE) && ch != '\n')
-            /* If we can read a reserved word and we're in case, we're at the
-               point where we can read a new pattern list or an esac.  We
-               handle the esac case above.  If we read a newline, we want to
-               leave LEX_RESWDOK alone.  If we read anything else, we want to
-               turn off LEX_RESWDOK, since we're going to read a pattern list.
-             */
-            {
-              tflags &= ~LEX_RESWDOK;
-              // itrace ("parse_comsub:%d: lex_incase == 1 found `%c',
-              //         lex_reswordok -> 0", line_number, ch);
-            }
-          else if MBTEST (shellbreak (ch) == 0)
-            {
-              tflags &= ~LEX_RESWDOK;
-              // itrace ("parse_comsub:%d: found `%c', lex_reswordok -> 0",
-              //         line_number, ch);
-            }
-#if 0
-	  /* If we find a space or tab but have read something and it's not
-	     `do', turn off the reserved-word-ok flag */
-	  else if MBTEST(isblank ((unsigned char)ch) && lex_rwlen > 0)
-	    {
-	      tflags &= ~LEX_RESWDOK;
-              // itrace ("parse_comsub:%d: found `%c', lex_reswordok -> 0",
-              //         line_number, ch);
-	    }
-#endif
-        }
-
-      /* Might be the start of a here-doc delimiter */
-      if MBTEST ((tflags & LEX_INCOMMENT) == 0 && (tflags & LEX_CKCASE)
-                 && ch == '<')
-        {
-          /* Add this character. */
-          ret.push_back (static_cast<char> (ch));
-          peekc = shell_getc (true);
-          if (peekc == EOF)
-            goto eof_error;
-          if (peekc == ch)
-            {
-              ret.push_back (static_cast<char> (peekc));
-              peekc = shell_getc (true);
-              if (peekc == EOF)
-                goto eof_error;
-              if (peekc == '-')
-                {
-                  ret.push_back (static_cast<char> (peekc));
-                  tflags |= LEX_STRIPDOC;
-                }
-              else
-                shell_ungetc (peekc);
-              if (peekc != '<')
-                {
-                  tflags |= LEX_HEREDELIM;
-                  lex_firstind = -1;
-                }
-              continue;
-            }
-          else
-            {
-              shell_ungetc (peekc); /* not a here-doc, start over */
-              continue;
-            }
-        }
-      else if MBTEST ((tflags & LEX_CKCOMMENT) && (tflags & LEX_INCOMMENT) == 0
-                      && ch == '#'
-                      && (((tflags & LEX_RESWDOK) && lex_rwlen == 0)
-                          || ((tflags & LEX_INWORD) && lex_wlen == 0)))
-        {
-          // itrace ("parse_comsub:%d: lex_incomment -> 1 (%d)", line_number,
-          //         __LINE__);
-          tflags |= LEX_INCOMMENT;
-        }
-
-      if MBTEST (ch == CTLESC || ch == CTLNUL) /* special shell escapes */
-        {
-          ret.push_back (CTLESC);
-          ret.push_back (static_cast<char> (ch));
-          continue;
-        }
-      else if MBTEST (ch == close
-                      && (tflags & LEX_INCASE) == 0) /* ending delimiter */
-        {
-          count--;
-          // itrace ("parse_comsub:%d: found close: count = %d", line_number,
-          //         count);
-        }
-      else if MBTEST (((flags & P_FIRSTCLOSE) == 0)
-                      && (tflags & LEX_INCASE) == 0
-                      && ch == open) /* nested begin */
-        {
-          count++;
-          // itrace ("parse_comsub:%d: found open: count = %d", line_number,
-          //         count);
-        }
-
-      /* Add this character. */
-      ret.push_back (static_cast<char> (ch));
-
-      /* If we just read the ending character, don't bother continuing. */
-      if (count == 0)
-        break;
-
-      if MBTEST (ch == '\\') /* backslashes */
-        tflags |= LEX_PASSNEXT;
-
-      if MBTEST (shellquote (ch))
-        {
-          std::string nestret;
-          dstack.push_back (static_cast<char> (ch));
-
-          /* '', ``, or "" inside $(...). */
-          try
-            {
-              if MBTEST ((tflags & LEX_WASDOL)
-                         && ch == '\'') /* $'...' inside group */
-                nestret
-                    = parse_matched_pair (ch, ch, ch, (P_ALLOWESC | rflags));
-              else
-                nestret = parse_matched_pair (ch, ch, ch, rflags);
-            }
-          catch (const std::exception &)
-            {
-              dstack.pop_back ();
-              throw;
-            }
-
-          dstack.pop_back ();
-
-          if MBTEST ((tflags & LEX_WASDOL) && ch == '\''
-                     && (extended_quote || (rflags & P_DQUOTE) == 0))
-            {
-              /* Translate $'...' here. */
-              std::string ttrans
-                  = ansiexpand (nestret.begin (), nestret.end ());
-
-              if ((rflags & P_DQUOTE) == 0)
-                nestret = sh_single_quote (ttrans);
-              else
-                nestret = ttrans;
-
-              ret.erase (ret.size () - 2, 2); /* back up before the $' */
-            }
-          else if MBTEST ((tflags & LEX_WASDOL) && ch == '"'
-                          && (extended_quote || (rflags & P_DQUOTE) == 0))
-            {
-              /* Locale expand $"..." here. */
-              std::string ttrans = localeexpand (nestret, start_lineno);
-
-              nestret = sh_mkdoublequoted (ttrans, 0);
-
-              ret.erase (ret.size () - 2, 2); /* back up before the $" */
-            }
-
-          ret += nestret;
-        }
-      else if MBTEST ((tflags & LEX_WASDOL)
-                      && (ch == '(' || ch == '{' || ch == '[')) /* ) } ] */
-        /* check for $(), $[], or ${} inside command substitution. */
-        {
-          if ((tflags & LEX_INCASE) == 0
-              && open == ch) /* undo previous increment */
-            count--;
-
-          std::string nestret;
-          if (ch == '(') /* ) */
-            nestret
-                = parse_comsub (0, '(', ')', (rflags | P_COMMAND) & ~P_DQUOTE);
-          else if (ch == '{') /* } */
-            nestret = parse_matched_pair (
-                0, '{', '}', (P_FIRSTCLOSE | P_DOLBRACE | rflags));
-          else if (ch == '[') /* ] */
-            nestret = parse_matched_pair (0, '[', ']', rflags);
-
-          ret += nestret;
-        }
-      if MBTEST (ch == '$' && (tflags & LEX_WASDOL) == 0)
-        tflags |= LEX_WASDOL;
-      else
-        tflags &= ~LEX_WASDOL;
+      int peekc = shell_getc (1);
+      shell_ungetc (peekc);
+      if (peekc == '(') /*)*/
+        return parse_matched_pair (qc, open, close, P_NOFLAGS);
     }
 
-#if defined(BANG_HISTORY)
-  history_expansion_inhibited = orig_histexp;
-#endif
-  delete[] heredelim;
+  /*itrace("parse_comsub: qc = `%c' open = %c close = %c", qc, open, close);*/
 
-  // itrace ("parse_comsub:%d: returning `%s'", line_number, ret);
+  /*debug_parser(1);*/
+  int start_lineno = line_number;
+
+  save_parser_state (&ps);
+
+  bool was_extpat = (parser_state & PST_EXTPAT);
+
+  /* State flags we don't want to persist into command substitutions. */
+  parser_state &= ~(PST_REGEXP | PST_EXTPAT | PST_CONDCMD | PST_CONDEXPR
+                    | PST_COMPASSIGN);
+  /* Could do PST_CASESTMT too, but that also affects history. Setting
+     expecting_in_token below should take care of the parsing requirements.
+     Unsetting PST_REDIRLIST isn't strictly necessary because of how we set
+     token_to_read below, but we do it anyway. */
+  parser_state
+      &= ~(PST_CASEPAT | PST_ALEXPNEXT | PST_SUBSHELL | PST_REDIRLIST);
+  /* State flags we want to set for this run through the parser. */
+  parser_state |= PST_CMDSUBST | PST_EOFTOKEN | PST_NOEXPAND;
+
+  /* leave pushed_string_list alone, since we might need to consume characters
+     from it to satisfy this command substitution (in some perverse case). */
+  shell_eof_token = close;
+
+  saved_global = global_command; /* might not be necessary */
+  global_command = nullptr;
+
+  /* These are reset by reset_parser() */
+  need_here_doc = 0;
+  esacs_needed_count = expecting_in_token = 0;
+
+  /* We want to expand aliases on this pass if we're in posix mode, since the
+     standard says you have to take aliases into account when looking for the
+     terminating right paren. Otherwise, we defer until execution time for
+     backwards compatibility. */
+  if (expand_aliases)
+    expand_aliases = (posixly_correct != 0);
+
+#if defined(EXTENDED_GLOB)
+  char local_extglob;
+
+  /* If (parser_state & PST_EXTPAT), we're parsing an extended pattern for a
+     conditional command and have already set global_extglob appropriately. */
+  if (shell_compatibility_level <= 51 && !was_extpat)
+    {
+      local_extglob = global_extglob = extended_glob;
+      extended_glob = 1;
+    }
+#endif
+
+  current_token = '\n';     /* XXX */
+  token_to_read = parser::token::DOLPAREN; /* let's trick the parser */
+
+  int r = yyparse ();
+
+  if (need_here_doc > 0)
+    {
+      internal_warning (
+          "command substitution: %d unterminated here-document%s",
+          need_here_doc, (need_here_doc == 1) ? "" : "s");
+      gather_here_documents (); /* XXX check compatibility level? */
+    }
+
+#if defined(EXTENDED_GLOB)
+  if (shell_compatibility_level <= 51 && was_extpat == 0)
+    extended_glob = local_extglob;
+#endif
+
+  parsed_command = global_command;
+
+  if (EOF_Reached)
+    {
+      shell_eof_token = ps.eof_token;
+      expand_aliases = ps.expand_aliases;
+
+      /* yyparse() has already called yyerror() and reset_parser() */
+      throw matched_pair_error ();
+    }
+  else if (r != 0)
+    {
+      /* parser_error (start_lineno, _("could not parse command
+       * substitution")); */
+      // Non-interactive shells exit on parse error in a command substitution.
+      if (last_command_exit_value == 0)
+        last_command_exit_value = EXECUTION_FAILURE;
+      set_exit_status (last_command_exit_value);
+      if (interactive_shell == 0)
+        jump_to_top_level (FORCE_EOF); /* This is like reader_loop() */
+      else
+        {
+          shell_eof_token = ps.eof_token;
+          expand_aliases = ps.expand_aliases;
+
+          jump_to_top_level (
+              DISCARD); /* XXX - return (&matched_pair_error)? */
+        }
+    }
+
+  if (current_token != shell_eof_token)
+    {
+      internal_debug ("current_token (%d) != shell_eof_token (%c)",
+                       current_token, shell_eof_token);
+      token_to_read = current_token;
+
+      /* If we get here we can check eof_encountered and if it's 1 but the
+         previous EOF_Reached test didn't succeed, we can assume that the shell
+         is interactive and ignoreeof is set. We might want to restore the
+         parser state in this case. */
+      shell_eof_token = ps.eof_token;
+      expand_aliases = ps.expand_aliases;
+
+      throw matched_pair_error ();
+    }
+
+  /* We don't want to restore the old pushed string list, since we might have
+     used it to consume additional input from an alias while parsing this
+     command substitution. */
+  saved_strings = pushed_string_list;
+  restore_parser_state (&ps);
+  pushed_string_list = saved_strings;
+
+  tcmd = print_comsub (parsed_command); /* returns static memory */
+  retlen = strlen (tcmd);
+  if (tcmd[0] == '(') /* ) need a space to prevent arithmetic expansion */
+    retlen++;
+  ret = xmalloc (retlen + 2);
+  if (tcmd[0] == '(') /* ) */
+    {
+      ret[0] = ' ';
+      strcpy (ret + 1, tcmd);
+    }
+  else
+    strcpy (ret, tcmd);
+  ret[retlen++] = ')';
+  ret[retlen] = '\0';
+
+  delete parsed_command;
+  global_command = saved_global;
+
+  /*itrace("parse_comsub:%d: returning `%s'", line_number, ret);*/
   return ret;
 }
 

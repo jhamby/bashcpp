@@ -121,7 +121,7 @@ opt_translatable_strings=yes
 opt_prefer_posix_spawn=yes
 
 dnl modified by alternate array implementation option
-ARRAY_O=array.o
+dnl ARRAY_O=array.o
 
 dnl options that affect how bash is compiled and linked
 opt_static_link=no
@@ -181,6 +181,7 @@ AC_ARG_ENABLE(select, AS_HELP_STRING([--enable-select],[include select command])
 AC_ARG_ENABLE(separate-helpfiles, AS_HELP_STRING([--enable-separate-helpfiles],[use external files for help builtin documentation]), opt_separate_help=$enableval)
 AC_ARG_ENABLE(single-help-strings, AS_HELP_STRING([--enable-single-help-strings],[store help documentation as a single string to ease translation]), opt_single_longdoc_strings=$enableval)
 AC_ARG_ENABLE(strict-posix-default, AS_HELP_STRING([--enable-strict-posix-default],[configure bash to be posix-conformant by default]), opt_strict_posix=$enableval)
+AC_ARG_ENABLE(translatable-strings, AS_HELP_STRING([--enable-translatable-strings],[include support for $"..." translatable strings]), opt_translatable_strings=$enableval)
 AC_ARG_ENABLE(usg-echo-default, AS_HELP_STRING([--enable-usg-echo-default],[a synonym for --enable-xpg-echo-default]), opt_xpg_echo=$enableval)
 AC_ARG_ENABLE(xpg-echo-default, AS_HELP_STRING([--enable-xpg-echo-default],[make the echo builtin expand escape sequences by default]), opt_xpg_echo=$enableval)
 
@@ -296,6 +297,10 @@ AC_DEFINE([FUNCTION_IMPORT], [1], [Define to allow functions to be imported from
 fi
 if test $opt_dev_fd_stat_broken = yes; then
 AC_DEFINE([DEV_FD_STAT_BROKEN], [1], [Define if stat on /dev/fd/N and fstat on file descriptor N don't return the same results.])
+fi
+
+if test $opt_translatable_strings = yes; then
+AC_DEFINE([TRANSLATABLE_STRINGS], [1], [Support for $"..." translatable strings.])
 fi
 
 if test $opt_prefer_posix_spawn = yes; then
