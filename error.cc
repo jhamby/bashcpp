@@ -1,6 +1,6 @@
-/* error.c -- Functions for handling errors. */
+/* error.cc -- Functions for handling errors. */
 
-/* Copyright (C) 1993-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2021 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -222,6 +222,24 @@ Shell::internal_inform (const char *format, ...)
   va_end (args);
 }
 
+#ifdef DEBUG
+void
+Shell::internal_debug (const char *format, ...)
+{
+  va_list args;
+
+  error_prolog (1);
+  std::fprintf (stderr, _ ("DEBUG warning: "));
+
+  va_start (args, format);
+
+  std::vfprintf (stderr, format, args);
+  std::fprintf (stderr, "\n");
+
+  va_end (args);
+}
+#endif
+
 void
 Shell::sys_error (const char *format, ...)
 {
@@ -251,21 +269,20 @@ void
 Shell::parser_error (int lineno, const char *format, ...)
 {
   va_list args;
-  const char *ename, *iname;
 
-  ename = get_name_for_error ();
-  iname = yy_input_name ();
+  const char *ename = get_name_for_error ();
+  std::string iname = yy_input_name ();
 
   if (interactive)
     std::fprintf (stderr, "%s: ", ename);
   else if (interactive_shell)
-    std::fprintf (stderr, "%s: %s:%s%d: ", ename, iname,
+    std::fprintf (stderr, "%s: %s:%s%d: ", ename, iname.c_str (),
                   gnu_error_format ? "" : _ (" line "), lineno);
-  else if (STREQ (ename, iname))
+  else if (STREQ (ename, iname.c_str ()))
     std::fprintf (stderr, "%s:%s%d: ", ename,
                   gnu_error_format ? "" : _ (" line "), lineno);
   else
-    std::fprintf (stderr, "%s: %s:%s%d: ", ename, iname,
+    std::fprintf (stderr, "%s: %s:%s%d: ", ename, iname.c_str (),
                   gnu_error_format ? "" : _ (" line "), lineno);
 
   va_start (args, format);

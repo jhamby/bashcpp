@@ -1,6 +1,6 @@
 /* parse.yy - Bison C++ grammar for bash. */
 
-/* Copyright (C) 1989-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1989-2022 Free Software Foundation, Inc.
    Copyright 2022, Jake Hamby.
 
    This file is part of GNU Bash, the Bourne Again SHell.
@@ -63,16 +63,20 @@ yylex ()
 %token LESS_LESS_MINUS AND_GREATER AND_GREATER_GREATER LESS_GREATER
 %token GREATER_BAR BAR_AND
 
+/* Special; never created by yylex; only set by parse_comsub and xparse_dolparen */
+%token DOLPAREN
+
 /* The types that the various syntactical units return. */
 
 %type <COMMAND_PTR> inputunit command pipeline pipeline_command
-%type <COMMAND_PTR> list list0 list1 compound_list simple_list simple_list1
+%type <COMMAND_PTR> list0 list1 compound_list simple_list simple_list1
 %type <COMMAND_PTR> simple_command shell_command
 %type <COMMAND_PTR> for_command select_command case_command group_command
 %type <COMMAND_PTR> arith_command
 %type <COMMAND_PTR> cond_command
 %type <COMMAND_PTR> arith_for_command
 %type <COMMAND_PTR> coproc
+%type <COMMAND_PTR> comsub
 %type <COMMAND_PTR> function_def function_body if_command elif_clause subshell
 %type <REDIRECT_PTR> redirection redirection_list
 %type <ELEMENT> simple_command_element
@@ -100,7 +104,16 @@ inputunit: simple_list simple_list_terminator
                     sh.parser_state |= PST_EOFTOKEN;
                   YYACCEPT;
                 }
-        | '\n'
+       |       comsub
+                {
+                  /* This is special; look at the production and how
+                     parse_comsub sets token_to_read */
+                  Shell &sh = *the_shell;
+                  sh.global_command = $1.value;
+                  sh.eof_encountered = 0;
+                  YYACCEPT;
+                }
+       | '\n'
                 {
                   /* Case of regular command, but not a very
                      interesting one.  Return a nullptr command. */
@@ -733,7 +746,7 @@ arith_for_command: FOR ARITH_FOR_EXPRS list_terminator newline_list DO compound_
                 }
         ;
 
-select_command:	SELECT WORD newline_list DO list DONE
+select_command:	SELECT WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
@@ -744,7 +757,7 @@ select_command:	SELECT WORD newline_list DO list DONE
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
-        | SELECT WORD newline_list '{' list '}'
+        | SELECT WORD newline_list '{' compound_list '}'
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
@@ -755,7 +768,7 @@ select_command:	SELECT WORD newline_list DO list DONE
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
-        | SELECT WORD ';' newline_list DO list DONE
+        | SELECT WORD ';' newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
@@ -766,7 +779,7 @@ select_command:	SELECT WORD newline_list DO list DONE
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
-        | SELECT WORD ';' newline_list '{' list '}'
+        | SELECT WORD ';' newline_list '{' compound_list '}'
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
@@ -777,7 +790,7 @@ select_command:	SELECT WORD newline_list DO list DONE
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
-        | SELECT WORD newline_list IN word_list list_terminator newline_list DO list DONE
+        | SELECT WORD newline_list IN word_list list_terminator newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
@@ -788,7 +801,7 @@ select_command:	SELECT WORD newline_list DO list DONE
                   if (sh.word_top > 0)
                     sh.word_top--;
                 }
-        | SELECT WORD newline_list IN word_list list_terminator newline_list '{' list '}'
+        | SELECT WORD newline_list IN word_list list_terminator newline_list '{' compound_list '}'
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
@@ -912,6 +925,16 @@ subshell: '(' compound_list ')'
                   $$ = COMMAND_PTR (new SUBSHELL_COM ($2.value));
                 }
         ;
+
+comsub: DOLPAREN compound_list ')'
+                {
+                  $$ = $2;
+                }
+       | DOLPAREN newline_list ')'
+                {
+                  $$ = nullptr;
+                }
+       ;
 
 coproc: COPROC shell_command
                 {
@@ -1075,15 +1098,12 @@ pattern: WORD
    It must end with a newline or semicolon.
    Lists are used within commands such as if, for, while.  */
 
-list: newline_list list0
+compound_list: newline_list list0
                 {
                   $$ = $2;
-                  if (the_shell->need_here_doc)
+                  if (the_shell->need_here_doc && the_shell->last_read_token == '\n')
                     the_shell->gather_here_documents ();
                 }
-        ;
-
-compound_list: list
         | newline_list list1
                 {
                   $$ = $2;
@@ -1126,7 +1146,10 @@ list1: list1 AND_AND newline_list list1
                 }
         | list1 '\n' newline_list list1
                 {
-                  $$ = COMMAND_PTR (new CONNECTION ($1.value, $4.value, ';'));
+                  if (the_shell->parser_state & PST_CMDSUBST)
+                    $$ = COMMAND_PTR (new CONNECTION ($1.value, $4.value, '\n'));
+                  else
+                    $$ = COMMAND_PTR (new CONNECTION ($1.value, $4.value, ';'));
                 }
         | pipeline_command
                 {
@@ -1161,13 +1184,15 @@ simple_list: simple_list1
                   $$ = $1;
                   Shell &sh = *the_shell;
                   if (sh.need_here_doc)
-                    sh.gather_here_documents ();
+                    sh.gather_here_documents (); /* XXX */
                   if ((sh.parser_state & PST_CMDSUBST)
                       && sh.current_token == sh.shell_eof_token)
                     {
+        sh.internal_debug ("LEGACY: parser: command substitution simple_list1 -> simple_list");
                       sh.global_command = $1.value;
                       sh.eof_encountered = 0;
-                      sh.rewind_input_string ();
+                      if (sh.bash_input.type == st_string)
+                        sh.rewind_input_string ();
                       YYACCEPT;
                     }
                 }
@@ -1180,13 +1205,15 @@ simple_list: simple_list1
                     $$ = COMMAND_PTR (new CONNECTION (cmd, nullptr, '&'));
                   Shell &sh = *the_shell;
                   if (sh.need_here_doc)
-                    sh.gather_here_documents ();
+                    sh.gather_here_documents (); /* XXX */
                   if ((sh.parser_state & PST_CMDSUBST)
                       && sh.current_token == sh.shell_eof_token)
                     {
+        sh.internal_debug ("LEGACY: parser: command substitution simple_list1 '&' -> simple_list");
                       sh.global_command = cmd;
                       sh.eof_encountered = 0;
-                      sh.rewind_input_string ();
+                      if (sh.bash_input.type == st_string)
+                        sh.rewind_input_string ();
                       YYACCEPT;
                     }
                 }
@@ -1195,13 +1222,15 @@ simple_list: simple_list1
                   $$ = $1;
                   Shell &sh = *the_shell;
                   if (sh.need_here_doc)
-                    sh.gather_here_documents ();
+                    sh.gather_here_documents (); /* XXX */
                   if ((sh.parser_state & PST_CMDSUBST)
                       && sh.current_token == sh.shell_eof_token)
                     {
+        sh.internal_debug ("LEGACY: parser: command substitution simple_list1 ';' -> simple_list");
                       sh.global_command = $1.value;
                       sh.eof_encountered = 0;
-                      sh.rewind_input_string ();
+                      if (sh.bash_input.type == st_string)
+                        sh.rewind_input_string ();
                       YYACCEPT;
                     }
                 }

@@ -83,7 +83,7 @@ struct BUFFERED_STREAM
 union INPUT_STREAM
 {
   FILE *file;
-  const std::string *string;
+  char *string;
 #if defined(BUFFERED_INPUT)
   int buffered_fd;
 #endif

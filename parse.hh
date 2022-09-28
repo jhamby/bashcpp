@@ -387,13 +387,13 @@ namespace bash {
       // function_def
       // function_body
       // subshell
+      // comsub
       // coproc
       // if_command
       // group_command
       // arith_command
       // cond_command
       // elif_clause
-      // list
       // compound_list
       // list0
       // list1
@@ -519,7 +519,8 @@ namespace bash {
     LESS_GREATER = 301,            // LESS_GREATER
     GREATER_BAR = 302,             // GREATER_BAR
     BAR_AND = 303,                 // BAR_AND
-    yacc_EOF = 304                 // yacc_EOF
+    DOLPAREN = 304,                // DOLPAREN
+    yacc_EOF = 305                 // yacc_EOF
       };
       /// Backward compatibility alias (Bison 3.6).
       typedef token_kind_type yytokentype;
@@ -536,7 +537,7 @@ namespace bash {
     {
       enum symbol_kind_type
       {
-        YYNTOKENS = 61, ///< Number of tokens.
+        YYNTOKENS = 62, ///< Number of tokens.
         S_YYEMPTY = -2,
         S_YYEOF = 0,                             // "end of file"
         S_YYerror = 1,                           // error
@@ -587,56 +588,57 @@ namespace bash {
         S_LESS_GREATER = 46,                     // LESS_GREATER
         S_GREATER_BAR = 47,                      // GREATER_BAR
         S_BAR_AND = 48,                          // BAR_AND
-        S_49_ = 49,                              // '&'
-        S_50_ = 50,                              // ';'
-        S_51_n_ = 51,                            // '\n'
-        S_yacc_EOF = 52,                         // yacc_EOF
-        S_53_ = 53,                              // '|'
-        S_54_ = 54,                              // '>'
-        S_55_ = 55,                              // '<'
-        S_56_ = 56,                              // '-'
-        S_57_ = 57,                              // '{'
-        S_58_ = 58,                              // '}'
-        S_59_ = 59,                              // '('
-        S_60_ = 60,                              // ')'
-        S_YYACCEPT = 61,                         // $accept
-        S_inputunit = 62,                        // inputunit
-        S_word_list = 63,                        // word_list
-        S_redirection = 64,                      // redirection
-        S_simple_command_element = 65,           // simple_command_element
-        S_redirection_list = 66,                 // redirection_list
-        S_simple_command = 67,                   // simple_command
-        S_command = 68,                          // command
-        S_shell_command = 69,                    // shell_command
-        S_for_command = 70,                      // for_command
-        S_arith_for_command = 71,                // arith_for_command
-        S_select_command = 72,                   // select_command
-        S_case_command = 73,                     // case_command
-        S_function_def = 74,                     // function_def
-        S_function_body = 75,                    // function_body
-        S_subshell = 76,                         // subshell
-        S_coproc = 77,                           // coproc
-        S_if_command = 78,                       // if_command
-        S_group_command = 79,                    // group_command
-        S_arith_command = 80,                    // arith_command
-        S_cond_command = 81,                     // cond_command
-        S_elif_clause = 82,                      // elif_clause
-        S_case_clause = 83,                      // case_clause
-        S_pattern_list = 84,                     // pattern_list
-        S_case_clause_sequence = 85,             // case_clause_sequence
-        S_pattern = 86,                          // pattern
-        S_list = 87,                             // list
-        S_compound_list = 88,                    // compound_list
-        S_list0 = 89,                            // list0
-        S_list1 = 90,                            // list1
-        S_simple_list_terminator = 91,           // simple_list_terminator
-        S_list_terminator = 92,                  // list_terminator
-        S_newline_list = 93,                     // newline_list
-        S_simple_list = 94,                      // simple_list
-        S_simple_list1 = 95,                     // simple_list1
-        S_pipeline_command = 96,                 // pipeline_command
-        S_pipeline = 97,                         // pipeline
-        S_timespec = 98                          // timespec
+        S_DOLPAREN = 49,                         // DOLPAREN
+        S_50_ = 50,                              // '&'
+        S_51_ = 51,                              // ';'
+        S_52_n_ = 52,                            // '\n'
+        S_yacc_EOF = 53,                         // yacc_EOF
+        S_54_ = 54,                              // '|'
+        S_55_ = 55,                              // '>'
+        S_56_ = 56,                              // '<'
+        S_57_ = 57,                              // '-'
+        S_58_ = 58,                              // '{'
+        S_59_ = 59,                              // '}'
+        S_60_ = 60,                              // '('
+        S_61_ = 61,                              // ')'
+        S_YYACCEPT = 62,                         // $accept
+        S_inputunit = 63,                        // inputunit
+        S_word_list = 64,                        // word_list
+        S_redirection = 65,                      // redirection
+        S_simple_command_element = 66,           // simple_command_element
+        S_redirection_list = 67,                 // redirection_list
+        S_simple_command = 68,                   // simple_command
+        S_command = 69,                          // command
+        S_shell_command = 70,                    // shell_command
+        S_for_command = 71,                      // for_command
+        S_arith_for_command = 72,                // arith_for_command
+        S_select_command = 73,                   // select_command
+        S_case_command = 74,                     // case_command
+        S_function_def = 75,                     // function_def
+        S_function_body = 76,                    // function_body
+        S_subshell = 77,                         // subshell
+        S_comsub = 78,                           // comsub
+        S_coproc = 79,                           // coproc
+        S_if_command = 80,                       // if_command
+        S_group_command = 81,                    // group_command
+        S_arith_command = 82,                    // arith_command
+        S_cond_command = 83,                     // cond_command
+        S_elif_clause = 84,                      // elif_clause
+        S_case_clause = 85,                      // case_clause
+        S_pattern_list = 86,                     // pattern_list
+        S_case_clause_sequence = 87,             // case_clause_sequence
+        S_pattern = 88,                          // pattern
+        S_compound_list = 89,                    // compound_list
+        S_list0 = 90,                            // list0
+        S_list1 = 91,                            // list1
+        S_simple_list_terminator = 92,           // simple_list_terminator
+        S_list_terminator = 93,                  // list_terminator
+        S_newline_list = 94,                     // newline_list
+        S_simple_list = 95,                      // simple_list
+        S_simple_list1 = 96,                     // simple_list1
+        S_pipeline_command = 97,                 // pipeline_command
+        S_pipeline = 98,                         // pipeline
+        S_timespec = 99                          // timespec
       };
     };
 
@@ -683,13 +685,13 @@ namespace bash {
       case symbol_kind::S_function_def: // function_def
       case symbol_kind::S_function_body: // function_body
       case symbol_kind::S_subshell: // subshell
+      case symbol_kind::S_comsub: // comsub
       case symbol_kind::S_coproc: // coproc
       case symbol_kind::S_if_command: // if_command
       case symbol_kind::S_group_command: // group_command
       case symbol_kind::S_arith_command: // arith_command
       case symbol_kind::S_cond_command: // cond_command
       case symbol_kind::S_elif_clause: // elif_clause
-      case symbol_kind::S_list: // list
       case symbol_kind::S_compound_list: // compound_list
       case symbol_kind::S_list0: // list0
       case symbol_kind::S_list1: // list1
@@ -875,13 +877,13 @@ switch (yykind)
       case symbol_kind::S_function_def: // function_def
       case symbol_kind::S_function_body: // function_body
       case symbol_kind::S_subshell: // subshell
+      case symbol_kind::S_comsub: // comsub
       case symbol_kind::S_coproc: // coproc
       case symbol_kind::S_if_command: // if_command
       case symbol_kind::S_group_command: // group_command
       case symbol_kind::S_arith_command: // arith_command
       case symbol_kind::S_cond_command: // cond_command
       case symbol_kind::S_elif_clause: // elif_clause
-      case symbol_kind::S_list: // list
       case symbol_kind::S_compound_list: // compound_list
       case symbol_kind::S_list0: // list0
       case symbol_kind::S_list1: // list1
@@ -1842,6 +1844,21 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
+      make_DOLPAREN ()
+      {
+        return symbol_type (token::DOLPAREN);
+      }
+#else
+      static
+      symbol_type
+      make_DOLPAREN ()
+      {
+        return symbol_type (token::DOLPAREN);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
       make_yacc_EOF ()
       {
         return symbol_type (token::yacc_EOF);
@@ -2158,9 +2175,9 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 661,     ///< Last index in yytable_.
+      yylast_ = 740,     ///< Last index in yytable_.
       yynnts_ = 38,  ///< Number of nonterminal symbols.
-      yyfinal_ = 118 ///< Termination state number.
+      yyfinal_ = 121 ///< Termination state number.
     };
 
 
@@ -2178,18 +2195,18 @@ switch (yykind)
     translate_table[] =
     {
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      51,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+      52,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,    49,     2,
-      59,    60,     2,     2,     2,    56,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,    50,
-      55,     2,    54,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,    50,     2,
+      60,    61,     2,     2,     2,    57,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,    51,
+      56,     2,    55,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    57,    53,    58,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,    58,    54,    59,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -2207,10 +2224,10 @@ switch (yykind)
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
       25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
       35,    36,    37,    38,    39,    40,    41,    42,    43,    44,
-      45,    46,    47,    48,    52
+      45,    46,    47,    48,    49,    53
     };
     // Last valid token kind.
-    const int code_max = 304;
+    const int code_max = 305;
 
     if (t <= 0)
       return symbol_kind::S_YYEOF;
@@ -2240,13 +2257,13 @@ switch (yykind)
       case symbol_kind::S_function_def: // function_def
       case symbol_kind::S_function_body: // function_body
       case symbol_kind::S_subshell: // subshell
+      case symbol_kind::S_comsub: // comsub
       case symbol_kind::S_coproc: // coproc
       case symbol_kind::S_if_command: // if_command
       case symbol_kind::S_group_command: // group_command
       case symbol_kind::S_arith_command: // arith_command
       case symbol_kind::S_cond_command: // cond_command
       case symbol_kind::S_elif_clause: // elif_clause
-      case symbol_kind::S_list: // list
       case symbol_kind::S_compound_list: // compound_list
       case symbol_kind::S_list0: // list0
       case symbol_kind::S_list1: // list1
@@ -2334,13 +2351,13 @@ switch (yykind)
       case symbol_kind::S_function_def: // function_def
       case symbol_kind::S_function_body: // function_body
       case symbol_kind::S_subshell: // subshell
+      case symbol_kind::S_comsub: // comsub
       case symbol_kind::S_coproc: // coproc
       case symbol_kind::S_if_command: // if_command
       case symbol_kind::S_group_command: // group_command
       case symbol_kind::S_arith_command: // arith_command
       case symbol_kind::S_cond_command: // cond_command
       case symbol_kind::S_elif_clause: // elif_clause
-      case symbol_kind::S_list: // list
       case symbol_kind::S_compound_list: // compound_list
       case symbol_kind::S_list0: // list0
       case symbol_kind::S_list1: // list1
@@ -2451,7 +2468,7 @@ switch (yykind)
 
 #line 26 "../bashcpp/parse.yy"
 } // bash
-#line 2455 "../bashcpp/parse.hh"
+#line 2472 "../bashcpp/parse.hh"
 
 
 

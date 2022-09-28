@@ -169,7 +169,7 @@ Shell::with_input_from_stdin ()
 {
   INPUT_STREAM location;
 
-  if (bash_input.type != st_stdin && stream_on_stack (st_stdin) == 0)
+  if (bash_input.type != st_stdin && !stream_on_stack (st_stdin))
     {
       location.string = savestring (current_readline_line);
       init_yy_io (&Shell::yy_readline_get, &Shell::yy_readline_unget, st_stdin,
@@ -217,12 +217,11 @@ Shell::yy_string_unget (int c)
 }
 
 void
-Shell::with_input_from_string (const std::string &string,
-                               const std::string &name)
+Shell::with_input_from_string (std::string &string, const std::string &name)
 {
   INPUT_STREAM location;
 
-  location.string = &string;
+  location.string = &(string[0]);
   init_yy_io (&Shell::yy_string_get, &Shell::yy_string_unget, st_string, name,
               location);
 }
@@ -244,7 +243,7 @@ Shell::rewind_input_string ()
     xchars++;
 
   /* XXX - how to reflect bash_input.location.string back to string passed to
-     parse_and_execute or xparse_dolparen?  xparse_dolparen needs to know how
+     parse_and_execute or xparse_dolparen? xparse_dolparen needs to know how
      far into the string we parsed.  parse_and_execute knows where bash_input.
      location.string is, and how far from orig_string that is -- that's the
      number of characters the command consumed. */
@@ -288,7 +287,7 @@ Shell::yy_stream_unget (int c)
 }
 
 void
-Shell::with_input_from_stream (FILE *stream, const char *name)
+Shell::with_input_from_stream (FILE *stream, const std::string &name)
 {
   INPUT_STREAM location;
 
@@ -364,7 +363,6 @@ Shell::pop_stream ()
 
       line_number = saver->line;
 
-      delete[] saver->bash_input.name;
       delete saver;
     }
 }
@@ -377,8 +375,6 @@ Shell::pop_stream ()
  *	or `esac'
  *	everything between a `;;' and the next `)' or `esac'
  */
-
-#if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
 
 #define END_OF_ALIAS 0
 
@@ -443,10 +439,12 @@ Shell::pop_string ()
   shell_input_line_index = pushed_string_list->saved_line_index;
   shell_input_line_terminator = pushed_string_list->saved_line_terminator;
 
+#if defined(ALIAS)
   if (pushed_string_list->expand_alias)
     parser_state |= PST_ALEXPNEXT;
   else
     parser_state &= ~PST_ALEXPNEXT;
+#endif
 
   t = pushed_string_list;
   pushed_string_list = pushed_string_list->next ();
@@ -478,8 +476,6 @@ Shell::free_string_list ()
     }
   pushed_string_list = nullptr;
 }
-
-#endif /* ALIAS || DPAREN_ARITHMETIC */
 
 #if defined(ALIAS)
 /* Before freeing AP, make sure that there aren't any cases of pointer
@@ -525,12 +521,7 @@ Shell::read_a_line (bool remove_quoted_newline)
 
       /* Ignore null bytes in input. */
       if (c == 0)
-        {
-#if 0
-	  internal_warning ("read_a_line: ignored null byte in input");
-#endif
-          continue;
-        }
+        continue;
 
       /* If there is no more input, then we return nullptr. */
       if (c == EOF)
@@ -788,9 +779,6 @@ Shell::shell_getc (bool remove_quoted_newline)
 
           if (c == '\0')
             {
-#if 0
-	      internal_warning ("shell_getc: ignored null byte in input");
-#endif
               /* If we get EOS while parsing a string, treat it as EOF so we
                  don't just keep looping. Happens very rarely */
               if (bash_input.type == st_string)
@@ -920,16 +908,12 @@ Shell::shell_getc (bool remove_quoted_newline)
           else
             shell_input_line.push_back ('\n');
 
-#if 0
-	  set_line_mbstate ();		/* XXX - this is wasteful */
-#else
 #if defined(HANDLE_MULTIBYTE)
           /* This is kind of an abstraction violation, but there's no need to
              go through the entire shell_input_line again with a call to
              set_line_mbstate(). */
           shell_input_line_property.reserve (shell_input_line.size () + 1);
           shell_input_line_property[shell_input_line.size ()] = 1;
-#endif
 #endif
         }
     }
@@ -985,7 +969,9 @@ next_alias_char:
     }
 
 pop_alias:
-  /* This case works for PSH_DPAREN as well */
+#endif /* ALIAS || DPAREN_ARITHMETIC */
+  /* This case works for PSH_DPAREN as well as the shell_ungets() case that
+     uses push_string */
   if (uc == 0 && pushed_string_list && pushed_string_list->flags != PSH_SOURCE)
     {
       parser_state &= ~PST_ENDALIAS;
@@ -995,13 +981,13 @@ pop_alias:
       if (uc)
         shell_input_line_index++;
     }
-#endif /* ALIAS || DPAREN_ARITHMETIC */
 
   if MBTEST (uc == '\\' && remove_quoted_newline
              && shell_input_line[shell_input_line_index] == '\n')
     {
       if (SHOULD_PROMPT ())
         prompt_again ();
+
       line_number++;
 
       /* What do we do here if we're expanding an alias whose definition
@@ -1070,6 +1056,48 @@ Shell::shell_ungetc (int c)
     eol_ungetc_lookahead = c;
 }
 
+/* Push S back into shell_input_line; updating shell_input_line_index */
+void
+Shell::shell_ungets (const std::string &s)
+{
+  size_t slen = s.size ();
+
+  if (slen == shell_input_line_index)
+    {
+      /* Easy, just overwrite shell_input_line. This is preferred because it
+        saves on set_line_mbstate () and other overhead like push_string */
+      shell_input_line = s;
+      shell_input_line_index = 0;
+      shell_input_line_terminator = 0;
+    }
+  else if (shell_input_line_index >= slen)
+    {
+      /* Just as easy, just back up shell_input_line_index, but it means we
+        will re-process some characters in set_line_mbstate(). Need to
+        watch pushing back newlines here. */
+      while (slen > 0)
+        shell_input_line[--shell_input_line_index] = s[--slen];
+    }
+  else if (s[slen - 1] == '\n')
+    {
+      push_string (savestring (s), 0, nullptr);
+      /* push_string does set_line_mbstate () */
+      return;
+    }
+  else
+    {
+      /* Harder case: pushing back input string that's longer than what we've
+        consumed from shell_input_line so far. */
+      internal_debug ("shell_ungets: not at end of shell_input_line");
+      shell_input_line.replace (0, shell_input_line_index, s);
+      shell_input_line_index = 0;
+    }
+
+#if defined(HANDLE_MULTIBYTE)
+  set_line_mbstate (); /* XXX */
+#endif
+}
+
 const char *
 Shell::parser_remaining_input ()
 {
@@ -1098,7 +1126,8 @@ Shell::discard_until (int character)
 }
 
 void
-Shell::execute_variable_command (const char *command, const char *vname)
+Shell::execute_variable_command (const std::string &command,
+                                 const std::string &vname)
 {
   char *last_lastarg;
   sh_parser_state_t ps;
@@ -1108,8 +1137,7 @@ Shell::execute_variable_command (const char *command, const char *vname)
   if (last_lastarg)
     last_lastarg = savestring (last_lastarg);
 
-  parse_and_execute (savestring (command), vname,
-                     (SEVAL_NONINT | SEVAL_NOHIST));
+  parse_and_execute (command, vname, (SEVAL_NONINT | SEVAL_NOHIST));
 
   restore_parser_state (&ps);
   bind_variable ("_", last_lastarg, 0);

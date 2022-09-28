@@ -821,15 +821,14 @@ public:
   int cond_token;
 #endif
 
+  // The last read token, or 0. read_token () uses this for context checking.
+  int last_read_token;
+
 protected:
   // Back to protected access.
 
   /* Either zero or EOF. */
   int shell_input_line_terminator;
-
-  /* The last read token, or NULL.  read_token () uses this for context
-     checking. */
-  int last_read_token;
 
   /* The token read prior to last_read_token. */
   int token_before_that;
@@ -2007,7 +2006,7 @@ protected:
   int yy_string_get ();
   int yy_string_unget (int);
 
-  void with_input_from_string (const std::string &, const std::string &);
+  void with_input_from_string (std::string &, const std::string &);
 
   int yy_stream_get ();
   int yy_stream_unget (int);
@@ -2284,6 +2283,19 @@ protected:
   void internal_warning (const char *, ...)
       __attribute__ ((__format__ (printf, 2, 3)));
 
+public:
+#if defined(DEBUG)
+  /* Report an internal warning for debugging purposes. */
+  void internal_debug (const char *, ...)
+      __attribute__ ((__format__ (printf, 2, 3)));
+#else
+  void
+  internal_debug (const char *, ...)
+      __attribute__ ((__format__ (printf, 2, 3)))
+  {
+  }
+#endif
+protected:
   /* Report an internal informational notice. */
   void internal_inform (const char *, ...)
       __attribute__ ((__format__ (printf, 2, 3)));
@@ -4493,6 +4505,7 @@ protected:
 
   int shell_getc (bool);
   void shell_ungetc (int);
+  void shell_ungets (const std::string &);
 
   const char *parser_remaining_input ();
   void discard_until (int);
@@ -4681,6 +4694,18 @@ public:
 
   // Accessed by print () methods.
   REDIRECT *deferred_heredocs;
+
+  // Structure to hold all of our information about an input stream.
+  struct BASH_INPUT
+  {
+    stream_type type;
+    std::string name;
+    INPUT_STREAM location;
+    sh_cget_func_t getter;
+    sh_cunget_func_t ungetter;
+  };
+
+  BASH_INPUT bash_input;
 
 protected:
   // Back to protected access.
@@ -4945,17 +4970,6 @@ protected:
 
   FILE *yyoutstream;
   FILE *yyerrstream;
-
-  struct BASH_INPUT
-  {
-    stream_type type;
-    std::string name;
-    INPUT_STREAM location;
-    sh_cget_func_t getter;
-    sh_cunget_func_t ungetter;
-  };
-
-  BASH_INPUT bash_input;
 
   class STREAM_SAVER : public GENERIC_LIST
   {
