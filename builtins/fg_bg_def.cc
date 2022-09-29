@@ -1,4 +1,4 @@
-// This file is fg_bg.def, from which is created fg_bg.c.
+// This file is fg_bg_def.cc.
 // It implements the builtins "bg" and "fg" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES fg_bg.c
 
 // $BUILTIN fg
 // $FUNCTION fg_builtin
@@ -46,7 +44,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "jobs.hh"
 #include "shell.hh"
@@ -55,7 +52,6 @@ namespace bash
 {
 
 #if defined(JOB_CONTROL)
-static int fg_bg (WORD_LIST *, bool);
 
 /* How to bring a job into the foreground. */
 int
@@ -76,7 +72,7 @@ Shell::fg_builtin (WORD_LIST *list)
   /* If the last arg on the line is '&', then start this job in the
      background.  Else, fg the job. */
   WORD_LIST *t;
-  for (t = list; t && t->next; t = (WORD_LIST *)t->next)
+  for (t = list; t && t->next (); t = t->next ())
     ;
 
   bool fg_bit
@@ -125,7 +121,7 @@ Shell::bg_builtin (WORD_LIST *list)
       if (fg_bg (list, 0) == EXECUTION_FAILURE)
         r = EXECUTION_FAILURE;
       if (list)
-        list = (WORD_LIST *)list->next;
+        list = list->next ();
     }
   while (list);
 
@@ -133,8 +129,8 @@ Shell::bg_builtin (WORD_LIST *list)
 }
 
 /* How to put a job into the foreground/background. */
-static int
-fg_bg (WORD_LIST *list, bool foreground)
+int
+Shell::fg_bg (WORD_LIST *list, bool foreground)
 {
   sigset_t set, oset;
   int job, status, old_async_pid;

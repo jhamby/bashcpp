@@ -29,6 +29,9 @@ namespace bash
 #define ISOPTION(s, c) (s[0] == '-' && s[1] == c && !s[2])
 #define ISHELP(s) (STREQ ((s), "--help"))
 
+#define GETOPT_EOF -1
+#define GETOPT_HELP -99
+
 #define CHECK_HELPOPT(l)                                                      \
   do                                                                          \
     {                                                                         \
@@ -51,7 +54,6 @@ enum parse_flags
   SEVAL_NONINT = 0x001,
   SEVAL_INTERACT = 0x002,
   SEVAL_NOHIST = 0x004,
-  // SEVAL_NOFREE = 0x008, // does this make sense for C++?
   SEVAL_RESETLINE = 0x010,
   SEVAL_PARSEONLY = 0x020,
   SEVAL_NOTHROW = 0x040,

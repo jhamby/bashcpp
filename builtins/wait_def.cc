@@ -1,4 +1,4 @@
-// This file is wait.def, from which is created wait.c.
+// This file is wait_def.cc.
 // It implements the builtin "wait" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -21,7 +21,6 @@
 // $BUILTIN wait
 // $FUNCTION wait_builtin
 // $DEPENDS_ON JOB_CONTROL
-// $PRODUCES wait.c
 // $SHORT_DOC wait [-fn] [-p var] [id ...]
 // Wait for job completion and return exit status.
 
@@ -76,7 +75,6 @@
 
 #include "chartypes.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "jobs.hh"
 #include "shell.hh"

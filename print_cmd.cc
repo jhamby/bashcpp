@@ -1,6 +1,6 @@
-/* print_command -- A way to make readable commands from a command tree. */
+/* print_cmd.cc -- A way to make readable commands from a command tree. */
 
-/* Copyright (C) 1989-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1989-2022 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -40,8 +40,10 @@ namespace bash
 
 #define CHECK_XTRACE_FP xtrace_fp = (xtrace_fp ? xtrace_fp : stderr)
 
+#if 0
 /* shell expansion characters: used in print_redirection_list */
 #define EXPCHAR(c) ((c) == '{' || (c) == '~' || (c) == '$' || (c) == '`')
+#endif
 
 /* The internal function.  This is the real workhorse. */
 void
@@ -122,7 +124,6 @@ Shell::indirection_level_string ()
   int ps4_firstc_len;
 
   ps4 = get_string_value ("PS4");
-  indirection_string.clear ();
 
   if (ps4 == nullptr || *ps4 == '\0')
     return indirection_string.c_str ();
@@ -165,10 +166,11 @@ Shell::indirection_level_string ()
 }
 
 void
-Shell::xtrace_print_assignment (const char *name, const char *value,
-                                bool assign_list, int xflags)
+Shell::xtrace_print_assignment (const std::string &name,
+                                const std::string &value, bool assign_list,
+                                int xflags)
 {
-  char *nval;
+  std::string nval;
 
   CHECK_XTRACE_FP;
 
@@ -176,22 +178,19 @@ Shell::xtrace_print_assignment (const char *name, const char *value,
     std::fprintf (xtrace_fp, "%s", indirection_level_string ());
 
   /* VALUE should not be NULL when this is called. */
-  if (*value == '\0' || assign_list)
-    nval = const_cast<char *> (value);
+  if (value.empty () || assign_list)
+    nval = value;
   else if (sh_contains_shell_metas (value))
     nval = sh_single_quote (value);
   else if (ansic_shouldquote (value))
     nval = ansic_quote (value);
   else
-    nval = const_cast<char *> (value);
+    nval = value;
 
   if (assign_list)
-    std::fprintf (xtrace_fp, "%s=(%s)\n", name, nval);
+    std::fprintf (xtrace_fp, "%s=(%s)\n", name.c_str (), nval.c_str ());
   else
-    std::fprintf (xtrace_fp, "%s=%s\n", name, nval);
-
-  if (nval != value)
-    delete[] nval;
+    std::fprintf (xtrace_fp, "%s=%s\n", name.c_str (), nval.c_str ());
 
   std::fflush (xtrace_fp);
 }
@@ -205,7 +204,6 @@ void
 Shell::xtrace_print_word_list (WORD_LIST *list, int xtflags)
 {
   WORD_LIST *w;
-  const char *t, *x;
 
   CHECK_XTRACE_FP;
 
@@ -214,25 +212,23 @@ Shell::xtrace_print_word_list (WORD_LIST *list, int xtflags)
 
   for (w = list; w; w = w->next ())
     {
-      t = w->word->word.c_str ();
-      if (*t == '\0')
+      std::string &t = w->word->word;
+      if (t.empty ())
         std::fprintf (xtrace_fp, "''%s", w->next () ? " " : "");
       else if (xtflags & 2)
-        std::fprintf (xtrace_fp, "%s%s", t, w->next () ? " " : "");
+        std::fprintf (xtrace_fp, "%s%s", t.c_str (), w->next () ? " " : "");
       else if (sh_contains_shell_metas (t))
         {
-          x = sh_single_quote (t);
-          std::fprintf (xtrace_fp, "%s%s", x, w->next () ? " " : "");
-          delete[] x;
+          std::string x = sh_single_quote (t);
+          std::fprintf (xtrace_fp, "%s%s", x.c_str (), w->next () ? " " : "");
         }
       else if (ansic_shouldquote (t))
         {
-          x = ansic_quote (t);
-          std::fprintf (xtrace_fp, "%s%s", x, w->next () ? " " : "");
-          delete[] x;
+          std::string x = ansic_quote (t);
+          std::fprintf (xtrace_fp, "%s%s", x.c_str (), w->next () ? " " : "");
         }
       else
-        std::fprintf (xtrace_fp, "%s%s", t, w->next () ? " " : "");
+        std::fprintf (xtrace_fp, "%s%s", t.c_str (), w->next () ? " " : "");
     }
   std::fprintf (xtrace_fp, "\n");
   std::fflush (xtrace_fp);
@@ -555,11 +551,13 @@ Shell::xtrace_print_arith_cmd (WORD_LIST *list)
 void
 SIMPLE_COM::print (Shell *shell)
 {
-  shell->command_print_word_list (words, " ");
+  if (words)
+    shell->command_print_word_list (words, " ");
 
   if (redirects)
     {
-      shell->cprintf (" ");
+      if (words)
+        shell->cprintf (" ");
       shell->print_redirection_list (redirects);
     }
 }
@@ -617,6 +615,9 @@ Shell::print_redirection_list (REDIRECT *redirects)
           else
             hdtail = heredocs = newredir;
         }
+#if 0
+      /* Remove this heuristic now that the command printing code doesn't
+         unconditionally put in the redirector file descriptor. */
       else if (redirects->instruction == r_duplicating_output_word
                && (redirects->flags & REDIR_VARASSIGN) == 0
                && redirects->redirector.r.dest == 1)
@@ -629,6 +630,7 @@ Shell::print_redirection_list (REDIRECT *redirects)
           print_redirection (redirects);
           redirects->instruction = r_duplicating_output_word;
         }
+#endif
       else
         print_redirection (redirects);
 
@@ -652,10 +654,7 @@ Shell::print_redirection_list (REDIRECT *redirects)
 void
 Shell::print_heredoc_header (REDIRECT *redirect)
 {
-  int kill_leading;
-  char *x;
-
-  kill_leading = redirect->instruction == r_deblank_reading_until;
+  bool kill_leading = (redirect->instruction == r_deblank_reading_until);
 
   /* Here doc header */
   if (redirect->rflags & REDIR_VARASSIGN)
@@ -666,9 +665,8 @@ Shell::print_heredoc_header (REDIRECT *redirect)
   /* If the here document delimiter is quoted, single-quote it. */
   if (redirect->redirectee.r.filename->flags & W_QUOTED)
     {
-      x = sh_single_quote (redirect->here_doc_eof.c_str ());
-      cprintf ("<<%s%s", kill_leading ? "-" : "", x);
-      delete[] x;
+      std::string x = sh_single_quote (redirect->here_doc_eof);
+      cprintf ("<<%s%s", kill_leading ? "-" : "", x.c_str ());
     }
   else
     cprintf ("<<%s%s", kill_leading ? "-" : "",
@@ -779,6 +777,8 @@ Shell::print_redirection (REDIRECT *redirect)
       if (redirect->rflags & REDIR_VARASSIGN)
         cprintf ("{%s}<&%s", redir_word->word.c_str (),
                  redirectee->word.c_str ());
+      else if (redirector == 0)
+        cprintf ("<&%s", redirectee->word.c_str ());
       else
         cprintf ("%d<&%s", redirector, redirectee->word.c_str ());
       break;
@@ -787,6 +787,8 @@ Shell::print_redirection (REDIRECT *redirect)
       if (redirect->rflags & REDIR_VARASSIGN)
         cprintf ("{%s}>&%s", redir_word->word.c_str (),
                  redirectee->word.c_str ());
+      else if (redirector == 1)
+        cprintf (">&%s", redirectee->word.c_str ());
       else
         cprintf ("%d>&%s", redirector, redirectee->word.c_str ());
       break;
@@ -918,6 +920,7 @@ Shell::named_function_string (const char *name, COMMAND *command,
   the_printed_command.clear ();
   was_heredoc = false;
   deferred_heredocs = nullptr;
+  printing_comsub = 0;
 
   if (name && *name)
     {
@@ -1033,25 +1036,35 @@ CONNECTION::print (Shell *shell)
       break;
 
     case ';':
-      if (shell->deferred_heredocs == nullptr)
-        {
-          if (!shell->was_heredoc)
-            shell->cprintf (";");
-          else
-            shell->was_heredoc = false;
-        }
-      else
-        shell->print_deferred_heredocs (shell->inside_function_def ? "" : ";");
+    case '\n':
+      {
+        char c = static_cast<char> (connector);
 
-      if (shell->inside_function_def)
-        shell->cprintf ("\n");
-      else
-        {
-          shell->cprintf (" ");
-          if (second)
-            shell->skip_this_indent++;
-        }
-      break;
+        char s[2] = { (shell->printing_comsub ? c : ';'), '\0' };
+
+        if (shell->deferred_heredocs == nullptr)
+          {
+            if (!shell->was_heredoc)
+              shell->cprintf ("%s", s); /* inside_function_def? */
+            else
+              shell->was_heredoc = false;
+          }
+        else
+          /* print_deferred_heredocs special-cases `;' */
+          shell->print_deferred_heredocs (shell->inside_function_def ? ""
+                                                                     : ";");
+
+        if (shell->inside_function_def)
+          shell->cprintf ("\n");
+        else
+          {
+            if (c == ';')
+              shell->cprintf (" ");
+            if (second)
+              shell->skip_this_indent++;
+          }
+        break;
+      }
 
     default:
       shell->cprintf (_ ("print_command: bad connector `%d'"), connector);

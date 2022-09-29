@@ -1,5 +1,5 @@
-// This file is cd.def, from which is created cd.c.  It implements the
-// builtins "cd" and "pwd" in Bash.
+// This file is cd_def.cc.
+// It implements the builtins "cd" and "pwd" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES cd.c
 
 #include "config.hh"
 
@@ -41,7 +39,6 @@
 
 #include "tilde.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "flags.hh"
 #include "maxpath.hh"

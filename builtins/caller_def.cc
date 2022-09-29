@@ -1,5 +1,5 @@
-// This file is caller.def, from which is created caller.c.  It implements the
-// builtin "caller" in Bash.
+// This file is caller_def.cc.
+// It implements the builtin "caller" in Bash.
 
 // Copyright (C) 2002-2008 Rocky Bernstein for Free Software Foundation, Inc.
 // Copyright (C) 2008-2019 Free Software Foundation, Inc.
@@ -18,8 +18,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES caller.c
 
 // $BUILTIN caller
 // $FUNCTION caller_builtin
@@ -54,7 +52,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "shell.hh"
 
@@ -106,7 +103,7 @@ Shell::caller_builtin (WORD_LIST *list)
   if (funcname_a == 0 || array_empty (funcname_a))
     return EXECUTION_FAILURE;
 
-  if (legal_number (list->word->word, &num))
+  if (legal_number (list->word->word.c_str (), &num))
     {
       lineno_s = array_reference (bash_lineno_a, num);
       source_s = array_reference (bash_source_a, num + 1);
@@ -119,7 +116,7 @@ Shell::caller_builtin (WORD_LIST *list)
     }
   else
     {
-      sh_invalidnum (list->word->word);
+      sh_invalidnum (list->word->word.c_str ());
       builtin_usage ();
       return EX_USAGE;
     }

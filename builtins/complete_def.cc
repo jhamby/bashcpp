@@ -1,4 +1,4 @@
-// This file is complete.def, from which is created complete.c.
+// This file is complete_def.cc
 // It implements the builtins "complete", "compgen", and "compopt" in Bash.
 
 // Copyright (C) 1999-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES complete.c
 
 // $BUILTIN complete
 // $DEPENDS_ON PROGRAMMABLE_COMPLETION
@@ -63,7 +61,6 @@
 #include "pcomplete.hh"
 #include "shell.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 
 #include "readline.hh"
@@ -173,8 +170,8 @@ find_compopt (const char *name)
         EXECUTION_FAILURE = no options supplied
 */
 
-static int
-build_actions (WORD_LIST *list, struct _optflags *flagp, unsigned long *actp,
+int
+Shell::build_actions (WORD_LIST *list, struct _optflags *flagp, unsigned long *actp,
                unsigned long *optp)
 {
   int opt, ind, opt_given;

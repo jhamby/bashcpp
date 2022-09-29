@@ -1,4 +1,4 @@
-// This file is source.def, from which is created source.c.
+// This file is source_def.cc.
 // It implements the builtins "." and  "source" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES source.c
 
 // $BUILTIN source
 // $FUNCTION source_builtin
@@ -67,7 +65,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "findcmd.hh"
 #include "flags.hh"
@@ -76,8 +73,6 @@
 
 namespace bash
 {
-
-static void maybe_pop_dollar_vars (void);
 
 #if 0
 /* If non-zero, `.' uses $PATH to look up the script to be sourced. */

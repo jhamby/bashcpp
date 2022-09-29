@@ -1,7 +1,7 @@
-// This file is bind.def, from which is created bind.c.
+// This file is bind_def.cc.
 // It implements the builtin "bind" in Bash.
 
-// Copyright (C) 1987-2020 Free Software Foundation, Inc.
+// Copyright (C) 1987-2021 Free Software Foundation, Inc.
 
 // This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES bind.c
 
 #include "config.hh"
 
@@ -76,7 +74,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "shell.hh"
 
@@ -129,10 +126,10 @@ Shell::bind_builtin (WORD_LIST *list)
 #endif
     }
 
-  kmap = saved_keymap = (Keymap)NULL;
+  kmap = saved_keymap = nullptr;
   flags = 0;
   initfile = map_name = fun_name = unbind_name = remove_seq = cmd_seq
-      = (char *)NULL;
+      = nullptr;
   return_code = EXECUTION_SUCCESS;
 
   if (bash_readline_initialized == 0)

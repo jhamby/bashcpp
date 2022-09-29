@@ -1,4 +1,4 @@
-// This file is umask.def, from which is created umask.c.
+// This file is umask_def.cc.
 // It implements the builtin "umask" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES umask.c
 
 // $BUILTIN umask
 // $FUNCTION umask_builtin
@@ -56,7 +54,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "posixstat.hh"
 #include "shell.hh"
@@ -70,8 +67,8 @@ namespace bash
 /*                                                                  */
 /* **************************************************************** */
 
-static void print_symbolic_umask (mode_t);
-static int symbolic_umask (WORD_LIST *);
+// static void print_symbolic_umask (mode_t);
+// static int symbolic_umask (WORD_LIST *);
 
 /* Set or display the mask used by the system when creating files.  Flag
    of -S means display the umask in a symbolic mode. */

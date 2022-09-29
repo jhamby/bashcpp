@@ -191,6 +191,11 @@ SimpleState::SimpleState ()
   pgrp_pipe[0] = -1;
   pgrp_pipe[1] = -1;
 #endif
+
+  // manual init for C++03 compatibility
+  getopt_errstr[0] = '-';
+  getopt_errstr[1] = '\0';
+  getopt_errstr[2] = '\0';
 }
 
 Shell::Shell ()

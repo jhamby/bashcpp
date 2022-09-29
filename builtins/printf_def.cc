@@ -1,4 +1,4 @@
-// This file is printf.def, from which is created printf.c.
+// This file is printf_def.cc.
 // It implements the builtin "printf" in Bash.
 
 // Copyright (C) 1997-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES printf.c
 
 // $BUILTIN printf
 // $FUNCTION printf_builtin
@@ -63,7 +61,6 @@
 #include "bashintl.hh"
 #include "posixtime.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "shell.hh"
 #include "shmbutil.hh"
@@ -164,7 +161,7 @@ namespace bash
 #define SKIP1 "#'-+ 0"
 #define LENMODS "hjlLtz"
 
-extern time_t shell_start_time;
+// extern time_t shell_start_time;
 
 #if !HAVE_ASPRINTF
 extern int asprintf (char **, const char *, ...)

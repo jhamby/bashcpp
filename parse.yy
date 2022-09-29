@@ -104,7 +104,7 @@ inputunit: simple_list simple_list_terminator
                     sh.parser_state |= PST_EOFTOKEN;
                   YYACCEPT;
                 }
-       |       comsub
+       | comsub
                 {
                   /* This is special; look at the production and how
                      parse_comsub sets token_to_read */

@@ -1,4 +1,4 @@
-/* getopt.h - declarations for getopt. */
+/* getopt.hh - declarations for getopt. */
 
 /* Copyright (C) 1989-2020 Free Software Foundation, Inc.
 
@@ -26,6 +26,7 @@
 namespace bash
 {
 
+#if 0
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,
    the argument value is returned here.
@@ -61,8 +62,9 @@ extern int sh_optopt;
 extern int sh_badopt;
 
 extern int sh_getopt (int, char *const *, const char *);
+#endif
 
-typedef struct sh_getopt_state
+struct sh_getopt_state_t
 {
   char *gs_optarg;
   int gs_optind;
@@ -70,8 +72,9 @@ typedef struct sh_getopt_state
   char *gs_nextchar;
   int gs_charindex;
   int gs_flags;
-} sh_getopt_state_t;
+};
 
+#if 0
 extern void sh_getopt_restore_state (char **);
 
 extern sh_getopt_state_t *sh_getopt_alloc_istate (void);
@@ -79,6 +82,7 @@ extern void sh_getopt_dispose_istate (sh_getopt_state_t *);
 
 extern sh_getopt_state_t *sh_getopt_save_istate (void);
 extern void sh_getopt_restore_istate (sh_getopt_state_t *);
+#endif
 
 } // namespace bash
 

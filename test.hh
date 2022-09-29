@@ -40,6 +40,6 @@ extern bool unary_test (const std::string &, const std::string &);
 extern bool binary_test (const std::string &, const std::string &,
                          const std::string &, binary_test_flags);
 
-extern int test_command (int, std::string *);
+extern int test_command (int, char **);
 
 #endif /* _TEST_H_ */

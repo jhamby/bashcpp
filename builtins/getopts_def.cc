@@ -1,4 +1,4 @@
-// This file is getopts.def, from which is created getopts.c.
+// This file is getopts_def.cc.
 // It implements the builtin "getopts" in Bash.
 
 // Copyright (C) 1987-2019 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES getopts.c
 
 // $BUILTIN getopts
 // $FUNCTION getopts_builtin
@@ -70,7 +68,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "getopt.hh"
 #include "shell.hh"

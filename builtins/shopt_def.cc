@@ -1,4 +1,4 @@
-// This file is shopt.def, from which is created shopt.c.
+// This file is shopt_def.cc.
 // It implements the Bash `shopt' builtin.
 
 // Copyright (C) 1994-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES shopt.c
 
 // $BUILTIN shopt
 // $FUNCTION shopt_builtin
@@ -51,7 +49,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "flags.hh"
 #include "shell.hh"

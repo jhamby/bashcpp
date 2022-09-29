@@ -1,4 +1,4 @@
-// This file is setattr.def, from which is created setattr.c.
+// This file is setattr_def.cc.
 // It implements the builtins "export" and "readonly", in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -18,8 +18,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 
-// $PRODUCES setattr.c
-
 #include "config.hh"
 
 #if defined(HAVE_UNISTD_H)
@@ -28,7 +26,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "flags.hh"
 #include "shell.hh"

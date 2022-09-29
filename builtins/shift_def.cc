@@ -1,4 +1,4 @@
-// This file is shift.def, from which is created shift.c.
+// This file is shift_def.cc.
 // It implements the builtin "shift" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES shift.c
 
 #include "config.hh"
 
@@ -46,10 +44,6 @@
 namespace bash
 {
 
-#if 0
-char print_shift_error;
-#endif
-
 /* Shift the arguments ``left''.  Shift DOLLAR_VARS down then take one
    off of REST_OF_ARGS and place it into DOLLAR_VARS[9].  If LIST has
    anything in it, it is a number which says where to start the
@@ -58,7 +52,7 @@ int
 Shell::shift_builtin (WORD_LIST *list)
 {
   int64_t times;
-  int itimes, nargs;
+  int nargs;
 
   CHECK_HELPOPT (list);
 
@@ -69,20 +63,22 @@ Shell::shift_builtin (WORD_LIST *list)
     return EXECUTION_SUCCESS;
   else if (times < 0)
     {
-      sh_erange (list ? list->word->word : NULL, _ ("shift count"));
+      sh_erange (list ? list->word->word.c_str () : nullptr,
+                 _ ("shift count"));
       return EXECUTION_FAILURE;
     }
   nargs = number_of_args ();
   if (times > nargs)
     {
       if (print_shift_error)
-        sh_erange (list ? list->word->word : NULL, _ ("shift count"));
+        sh_erange (list ? list->word->word.c_str () : nullptr,
+                   _ ("shift count"));
       return EXECUTION_FAILURE;
     }
   else if (times == nargs)
     clear_dollar_vars ();
   else
-    shift_args (itimes = times);
+    shift_args (static_cast<int> (times));
 
   invalidate_cached_quoted_dollar_at ();
 

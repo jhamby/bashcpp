@@ -1,4 +1,4 @@
-// This file is builtin.def, from which is created builtin.c.
+// This file is builtin_def.cc
 // It implements the builtin "builtin" in Bash.
 
 // Copyright (C) 1987-2017 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES builtin.c
 
 // $BUILTIN builtin
 // $FUNCTION builtin_builtin
@@ -40,7 +38,6 @@
 #include <unistd.h>
 #endif
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "shell.hh"
 
@@ -52,7 +49,7 @@ namespace bash
 int
 Shell::builtin_builtin (WORD_LIST *list)
 {
-  sh_builtin_func_t *function;
+  sh_builtin_func_t function;
 
   if (no_options (list))
     return EX_USAGE;
@@ -77,7 +74,7 @@ Shell::builtin_builtin (WORD_LIST *list)
     {
       this_command_name = command;
       this_shell_builtin = function; /* overwrite "builtin" as this builtin */
-      list = (WORD_LIST *)list->next;
+      list = list->next ();
       return (*function) (list);
     }
 }

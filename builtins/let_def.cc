@@ -1,4 +1,4 @@
-// This file is let.def, from which is created let.c.
+// This file is let_def.cc.
 // It implements the builtin "let" in Bash.
 
 // Copyright (C) 1987-2009 Free Software Foundation, Inc.
@@ -20,7 +20,6 @@
 
 // $BUILTIN let
 // $FUNCTION let_builtin
-// $PRODUCES let.c
 // $SHORT_DOC let arg [arg ...]
 // Evaluate arithmetic expressions.
 

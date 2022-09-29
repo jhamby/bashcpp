@@ -1,4 +1,4 @@
-// This file is break.def, from which is created break.c.
+// This file is break_def.cc.
 // It implements the builtins "break" and "continue" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES break.c
 
 // $BUILTIN break
 // $FUNCTION break_builtin
@@ -46,6 +44,7 @@
 namespace bash
 {
 
+#if 0
 static int check_loop_level (void);
 
 /* The depth of while's and until's. */
@@ -56,6 +55,7 @@ int breaking = 0;
 
 /* Non-zero when we have encountered a continue instruction. */
 int continuing = 0;
+#endif
 
 /* Set up to break x levels, where x defaults to 1, but can be specified
    as the first argument. */
@@ -73,7 +73,7 @@ Shell::break_builtin (WORD_LIST *list)
 
   if (newbreak <= 0)
     {
-      sh_erange (list->word->word, _ ("loop count"));
+      sh_erange (list->word->word.c_str (), _ ("loop count"));
       breaking = loop_level;
       return EXECUTION_FAILURE;
     }
@@ -114,7 +114,7 @@ Shell::continue_builtin (WORD_LIST *list)
 
   if (newcont <= 0)
     {
-      sh_erange (list->word->word, _ ("loop count"));
+      sh_erange (list->word->word.c_str (), _ ("loop count"));
       breaking = loop_level;
       return EXECUTION_FAILURE;
     }

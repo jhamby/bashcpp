@@ -1,4 +1,4 @@
-// This file is history.def, from which is created history.c.
+// This file is history_def.cc.
 // It implements the builtin "history" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES history.c
 
 // $BUILTIN history
 // $FUNCTION history_builtin
@@ -75,7 +73,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "flags.hh"
 #include "history.hh"
@@ -85,10 +82,12 @@
 namespace bash
 {
 
+#if 0
 static char *histtime (HIST_ENTRY *, const char *);
 static int display_history (WORD_LIST *);
 static void push_history (WORD_LIST *);
 static int expand_and_print_history (WORD_LIST *);
+#endif
 
 #define AFLAG 0x01
 #define RFLAG 0x02

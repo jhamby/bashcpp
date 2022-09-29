@@ -1,4 +1,4 @@
-// This file is jobs.def, from which is created jobs.c.
+// This file is jobs_def.cc.
 // It implements the builtins "jobs" and "disown" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES jobs.c
 
 // $BUILTIN jobs
 // $FUNCTION jobs_builtin
@@ -60,7 +58,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "jobs.hh"
 #include "shell.hh"

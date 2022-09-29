@@ -1,4 +1,4 @@
-// This file is mapfile.def, from which is created mapfile.c.
+// This file is mapfile_def.cc.
 // It implements the builtin "mapfile" in Bash.
 
 // Copyright (C) 2005-2006 Rocky Bernstein for Free Software Foundation, Inc.
@@ -18,8 +18,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES mapfile.c
 
 // $BUILTIN mapfile
 // $FUNCTION mapfile_builtin
@@ -59,9 +57,8 @@
 
 // $BUILTIN readarray
 // $FUNCTION mapfile_builtin
-// $SHORT_DOC readarray [-d delim] [-n count] [-O origin] [-s count] [-t] [-u
-// fd] [-C callback] [-c quantum] [array] Read lines from a file into an array
-// variable.
+// $SHORT_DOC readarray [-d delim] [-n count] [-O origin] [-s count] [-t] [-u fd] [-C callback] [-c quantum] [array]
+// Read lines from a file into an array variable.
 
 // A synonym for `mapfile'.
 // $END
@@ -75,7 +72,6 @@
 #include <unistd.h>
 #endif
 
-#include "bashgetopt.hh"
 #include "bashintl.hh"
 #include "common.hh"
 #include "shell.hh"
@@ -85,7 +81,7 @@ namespace bash
 
 #if defined(ARRAY_VARS)
 
-static int run_callback (const char *, unsigned int, const char *);
+// static int run_callback (const char *, unsigned int, const char *);
 
 #define DEFAULT_ARRAY_NAME "MAPFILE"
 #define DEFAULT_VARIABLE_NAME "MAPLINE" /* not used right now */
@@ -97,10 +93,10 @@ static int run_callback (const char *, unsigned int, const char *);
 #define MAPF_CLEARARRAY 0x01
 #define MAPF_CHOP 0x02
 
-static int delim;
+// static int delim;
 
-static int
-run_callback (const char *callback, unsigned int curindex, const char *curline)
+int
+Shell::run_callback (const char *callback, unsigned int curindex, const char *curline)
 {
   unsigned int execlen;
   char *execstr, *qline;

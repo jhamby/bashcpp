@@ -63,43 +63,6 @@ struct alias_t
   alias_flags flags;
 };
 
-#if 0
-/* The list of known aliases. */
-extern HASH_TABLE *aliases;
-
-extern void initialize_aliases ();
-
-/* Scan the list of aliases looking for one with NAME.  Return NULL
-   if the alias doesn't exist, else a pointer to the alias. */
-extern alias_t *find_alias (const char *);
-
-/* Return the value of the alias for NAME, or NULL if there is none. */
-extern char *get_alias_value (const char *);
-
-/* Make a new alias from NAME and VALUE.  If NAME can be found,
-   then replace its value. */
-extern void add_alias (const char *, const char *);
-
-/* Remove the alias with name NAME from the alias list.  Returns
-   the index of the removed alias, or -1 if the alias didn't exist. */
-extern int remove_alias (const char *);
-
-/* Remove all aliases. */
-extern void delete_all_aliases ();
-
-/* Return an array of all defined aliases. */
-extern alias_t **all_aliases ();
-
-/* Expand a single word for aliases. */
-extern char *alias_expand_word (const char *);
-
-/* Return a new line, with any aliases expanded. */
-extern char *alias_expand (const char *);
-
-/* Helper definition for the parser */
-extern void clear_string_list_expander (alias_t *);
-#endif
-
 } // namespace bash
 
 #endif /* _ALIAS_H_ */

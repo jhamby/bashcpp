@@ -1,4 +1,4 @@
-// This file is hash.def, from which is created hash.c.
+// This file is hash_def.cc.
 // It implements the builtin "hash" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES hash.c
 
 // $BUILTIN hash
 // $FUNCTION hash_builtin
@@ -56,7 +54,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "findcmd.hh"
@@ -67,6 +64,7 @@
 namespace bash
 {
 
+#if 0
 extern bool dot_found_in_search;
 
 static int add_hashed_command (char *, int);
@@ -74,6 +72,7 @@ static int print_hash_info (BUCKET_CONTENTS *);
 static int print_portable_hash_info (BUCKET_CONTENTS *);
 static bool print_hashed_commands (bool);
 static int list_hashed_filename_targets (WORD_LIST *, bool);
+#endif
 
 /* Print statistics on the current state of hashed commands.  If LIST is
    not empty, then rehash (or hash in the first place) the specified

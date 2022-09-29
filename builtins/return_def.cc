@@ -1,4 +1,4 @@
-// This file is return.def, from which is created return.c.
+// This file is return_def.cc.
 // It implements the builtin "return" in Bash.
 
 // Copyright (C) 1987-2015 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES return.c
 
 // $BUILTIN return
 
@@ -42,7 +40,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "shell.hh"
 

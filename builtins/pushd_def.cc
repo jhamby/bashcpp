@@ -1,5 +1,5 @@
-// This file is pushd.def, from which is created pushd.c.  It implements the
-// builtins "pushd", "popd", and "dirs" in Bash.
+// This file is pushd_def.cc.
+// It implements the builtins "pushd", "popd", and "dirs" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
@@ -174,7 +174,7 @@ Shell::pushd_builtin (WORD_LIST *list)
   CHECK_HELPOPT (list);
   if (list && list->word && ISOPTION (list->word->word, '-'))
     {
-      list = (WORD_LIST *)list->next;
+      list = list->next ();
       skipopt = true;
     }
   else

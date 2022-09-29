@@ -1,4 +1,4 @@
-// This file is times.def, from which is created times.c.
+// This file is times_def.cc.
 // It implements the builtin "times" in Bash.
 
 // Copyright (C) 1987-2009 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES times.c
 
 // $BUILTIN times
 // $FUNCTION times_builtin

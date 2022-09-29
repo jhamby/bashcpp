@@ -1,4 +1,4 @@
-// This file is reserved.def, in which the shell reserved words are defined.
+// This file is reserved_def.cc, in which the shell reserved words are defined.
 // It has no direct C file production, but defines builtins for the Bash
 // builtin help command.
 
@@ -98,8 +98,8 @@
 // $END
 
 // $BUILTIN if
-// $SHORT_DOC if COMMANDS; then COMMANDS; [ elif COMMANDS; then COMMANDS; ]...
-// [ else COMMANDS; ] fi Execute commands based on conditional.
+// $SHORT_DOC if COMMANDS; then COMMANDS; [ elif COMMANDS; then COMMANDS; ]... [ else COMMANDS; ] fi
+// Execute commands based on conditional.
 
 // The `if COMMANDS' list is executed.  If its exit status is zero, then the
 // `then COMMANDS' list is executed.  Otherwise, each `elif COMMANDS' list is

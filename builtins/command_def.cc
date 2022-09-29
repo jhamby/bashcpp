@@ -1,4 +1,4 @@
-// This file is command.def, from which is created command.c.
+// This file is command_def.cc
 // It implements the builtin "command" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES command.c
 
 // $BUILTIN command
 // $FUNCTION command_builtin
@@ -45,7 +43,6 @@
 #include <unistd.h>
 #endif
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "flags.hh"
 #include "shell.hh"
@@ -104,7 +101,7 @@ Shell::command_builtin (WORD_LIST *list)
     {
       int found, any_found;
 
-      for (any_found = 0; list; list = (WORD_LIST *)list->next)
+      for (any_found = 0; list; list = list->next ())
         {
           found = describe_command (list->word->word,
                                     verbose | use_standard_path);

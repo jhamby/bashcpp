@@ -1,4 +1,4 @@
-// This file is fc.def, from which is created fc.c.
+// This file is fc_def.cc.
 // It implements the builtin "fc" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES fc.c
 
 // $BUILTIN fc
 // $FUNCTION fc_builtin
@@ -71,7 +69,6 @@
 #include "bashintl.hh"
 #include "chartypes.hh"
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "flags.hh"

@@ -1,4 +1,4 @@
-// This file is suspend.def, from which is created suspend.c.
+// This file is suspend_def.cc.
 // It implements the builtin "suspend" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES suspend.c
 
 // $BUILTIN suspend
 // $DEPENDS_ON JOB_CONTROL
@@ -48,7 +46,6 @@
 
 #include <csignal>
 
-#include "bashgetopt.hh"
 #include "bashintl.hh"
 #include "common.hh"
 #include "jobs.hh"

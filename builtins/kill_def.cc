@@ -1,4 +1,4 @@
-// This file is kill.def, from which is created kill.c.
+// This file is kill_def.cc.
 // It implements the builtin "kill" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES kill.c
 
 // $BUILTIN kill
 // $FUNCTION kill_builtin

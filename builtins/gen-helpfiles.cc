@@ -1,4 +1,4 @@
-/* gen-helpfiles - create files containing builtin help text */
+/* gen-helpfiles.cc - create files containing builtin help text */
 
 /* Copyright (C) 2012-2021 Free Software Foundation, Inc.
 

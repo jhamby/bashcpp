@@ -1,4 +1,4 @@
-/* evalstring.c - evaluate a string as one or more shell commands. */
+/* evalstring.cc - evaluate a string as one or more shell commands. */
 
 /* Copyright (C) 1996-2020 Free Software Foundation, Inc.
 
@@ -571,14 +571,14 @@ Shell::parse_and_execute (const std::string &string,
    command substitutions during parsing to obey Posix rules about finding
    the end of the command and balancing parens. */
 int
-Shell::parse_string (const std::string &string, const std::string &from_file,
-                     parse_flags flags, char **endp)
+Shell::parse_string (const std::string &string, const char *from_file,
+                     parse_flags flags, std::string::const_iterator *endp)
 {
   int code, nc;
-  volatile int should_jump_to_top_level;
+  bool should_jump_to_top_level;
   COMMAND *command, *oglobal;
   char *ostring;
-  volatile sigset_t ps_sigmask;
+  sigset_t ps_sigmask;
 
   parse_prologue (string, flags, PS_TAG);
 

@@ -1,4 +1,4 @@
-// This file is colon.def, from which is created colon.c.
+// This file is colon_def.cc.
 // It implements the builtin ":" in Bash.
 
 // Copyright (C) 1987-2019 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES colon.c
 
 // $BUILTIN :
 // $DOCNAME colon

@@ -1,4 +1,4 @@
-/* common.c - utility functions for all builtins */
+/* common.cc - utility functions for all builtins */
 
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
@@ -36,9 +36,6 @@
 
 #include "bashintl.hh"
 
-// #define NEED_FPURGE_DECL
-
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "flags.hh"

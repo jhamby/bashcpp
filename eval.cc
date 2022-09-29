@@ -262,7 +262,7 @@ Shell::send_pwd_to_eterm ()
 #if defined(ARRAY_VARS)
 /* Caller ensures that A has a non-zero number of elements */
 void
-Shell::execute_array_command (ARRAY *a, const char *tag)
+Shell::execute_array_command (ARRAY *a, const std::string &tag)
 {
   int argc = 0;
   char **argv = array_to_argv (a, &argc);

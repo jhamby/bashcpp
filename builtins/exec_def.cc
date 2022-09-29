@@ -1,4 +1,4 @@
-// This file is exec.def, from which is created exec.c.
+// This file is exec_def.cc.
 // It implements the builtin "exec" in Bash.
 
 // Copyright (C) 1987-2019 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES exec.c
 
 // $BUILTIN exec
 // $FUNCTION exec_builtin
@@ -64,7 +62,6 @@
 #include "jobs.hh"
 #endif
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "flags.hh"
 #include "input.hh"
@@ -73,10 +70,12 @@
 namespace bash
 {
 
+#if 0
 extern REDIRECT *redirection_undo_list;
 extern char *exec_argv0;
 
 int no_exit_on_failed_exec;
+#endif
 
 /* If the user wants this to look like a login shell, then
    prepend a `-' onto NAME and return the new name. */

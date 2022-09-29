@@ -1,4 +1,4 @@
-// This file is read.def, from which is created read.c.
+// This file is read_def.cc.
 // It implements the builtin "read" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES read.c
 
 // $BUILTIN read
 // $FUNCTION read_builtin
@@ -85,7 +83,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "shell.hh"
 #include "trap.hh"

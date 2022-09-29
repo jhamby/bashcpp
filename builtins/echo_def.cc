@@ -1,4 +1,4 @@
-// This file is echo.def, from which is created echo.c.
+// This file is echo_def.cc
 // It implements the builtin "echo" in Bash.
 
 // Copyright (C) 1987-2018 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES echo.c
 
 #include "config.hh"
 
@@ -111,17 +109,18 @@ int xpg_echo = 0;
 int
 Shell::echo_builtin (WORD_LIST *list)
 {
-  int display_return, do_v9, i, len;
-  char *temp, *s;
+//   int display_return, do_v9, i, len;
+  size_t i;
+  const char *temp, *s;
 
-  do_v9 = xpg_echo;
-  display_return = 1;
+  bool do_v9 = xpg_echo;
+  bool display_return = true;
 
   if (posixly_correct && xpg_echo)
     goto just_echo;
 
-  for (; list && (temp = list->word->word) && *temp == '-';
-       list = (WORD_LIST *)list->next)
+  for (; list && (temp = list->word->word.c_str ()) && *temp == '-';
+       list = list->next ())
     {
       /* If it appears that we are handling options, then make sure that
          all of the options specified are actually valid.  Otherwise, the
@@ -167,7 +166,7 @@ just_echo:
 
   while (list)
     {
-      i = len = 0;
+      i = 0;
       temp = do_v9 ? ansicstr (list->word->word, STRLEN (list->word->word), 1,
                                &i, &len)
                    : list->word->word;
@@ -180,17 +179,13 @@ just_echo:
             }
           else
             printf ("%s", temp);
-#if defined(SunOS5)
-          fflush (stdout); /* Fix for bug in SunOS 5.5 printf(3) */
-#endif
         }
+
       QUIT;
-      if (do_v9 && temp)
-        free (temp);
-      list = (WORD_LIST *)list->next;
+      list = list->next ();
       if (i)
         {
-          display_return = 0;
+          display_return = false;
           break;
         }
       if (list)

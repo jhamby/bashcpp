@@ -1,4 +1,4 @@
-// This file is exit.def, from which is created exit.c.
+// This file is exit_def.cc.
 // It implements the builtins "exit", and "logout" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES exit.c
 
 // $BUILTIN exit
 // $FUNCTION exit_builtin

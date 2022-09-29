@@ -1,4 +1,4 @@
-// This file is trap.def, from which is created trap.c.
+// This file is trap_def.cc.
 // It implements the builtin "trap" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES trap.c
 
 // $BUILTIN trap
 // $FUNCTION trap_builtin
@@ -66,7 +64,6 @@
 
 #include <csignal>
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "shell.hh"
 #include "trap.hh"
@@ -74,8 +71,8 @@
 namespace bash
 {
 
-static void showtrap (int, int);
-static int display_traps (WORD_LIST *, int);
+// static void showtrap (int, int);
+// static int display_traps (WORD_LIST *, int);
 
 /* The trap command:
 

@@ -1,4 +1,4 @@
-// This file is ulimit.def, from which is created ulimit.c.
+// This file is ulimit_def.cc.
 // It implements the builtin "ulimit" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES ulimit.c
 
 // $BUILTIN ulimit
 // $FUNCTION ulimit_builtin
@@ -84,7 +82,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "shell.hh"
 

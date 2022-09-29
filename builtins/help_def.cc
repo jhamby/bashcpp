@@ -1,4 +1,4 @@
-// This file is help.def, from which is created help.c.
+// This file is help_def.cc.
 // It implements the builtin "help" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES help.c
 
 // $BUILTIN help
 // $FUNCTION help_builtin
@@ -55,7 +53,6 @@
 
 #include "bashintl.hh"
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "pathexp.hh"
@@ -70,11 +67,13 @@ namespace bash
 extern const char *const bash_copyright;
 extern const char *const bash_license;
 
+#if 0
 static void show_builtin_command_help (void);
 static int open_helpfile (const char *);
 static void show_desc (const char *, int);
 static void show_manpage (const char *, int);
 static void show_longdoc (int);
+#endif
 
 /* Print out a list of the known functions in the shell, and what they do.
    If LIST is supplied, print out the list which matches for each pattern

@@ -179,19 +179,20 @@ enum match_flags
 
 enum sd_flags
 {
-  SD_NOTHROW = 0x001, /* don't throw exception on fatal error. */
-  SD_INVERT = 0x002,  /* look for chars NOT in passed set */
+  SD_NOTHROW = 0x001, // don't throw exception on fatal error.
+  SD_INVERT = 0x002,  // look for chars NOT in passed set
   SD_NOQUOTEDELIM
-  = 0x004, /* don't let single or double quotes act as delimiters */
-  SD_NOSKIPCMD = 0x008, /* don't skip over $(, <(, or >( command/process
-                           substitution; parse them as commands */
-  SD_EXTGLOB = 0x010, /* skip over extended globbing patterns if appropriate */
-  SD_IGNOREQUOTE = 0x020, /* single and double quotes are not special */
-  SD_GLOB = 0x040,      /* skip over glob patterns like bracket expressions */
-  SD_NOPROCSUB = 0x080, /* don't parse process substitutions as commands */
-  SD_COMPLETE = 0x100,  /* skip_to_delim during completion */
-  SD_HISTEXP = 0x200,   /* skip_to_delim during history expansion */
-  SD_ARITHEXP = 0x400   /* skip_to_delim during arithmetic expansion */
+  = 0x004,              // don't let single or double quotes act as delimiters
+  SD_NOSKIPCMD = 0x008, // don't skip over $(, <(, or >( command/process
+                        // substitution; parse them as commands
+  SD_EXTGLOB = 0x010,   // skip over extended globbing patterns if appropriate
+  SD_IGNOREQUOTE = 0x020, // single and double quotes are not special
+  SD_GLOB = 0x040,        // skip over glob patterns like bracket expressions
+  SD_NOPROCSUB = 0x080,   // don't parse process substitutions as commands
+  SD_COMPLETE = 0x100,    // skip_to_delim during completion
+  SD_HISTEXP = 0x200,     // skip_to_delim during history expansion
+  SD_ARITHEXP = 0x400,    // skip_to_delim during arithmetic expansion
+  SD_NOERROR = 0x800      // don't print error messages
 };
 
 static inline sd_flags
@@ -530,6 +531,22 @@ operator~(const lexical_state_flags &a)
   return static_cast<lexical_state_flags> (~static_cast<uint32_t> (a));
 }
 
+#if defined(ALIAS)
+enum print_alias_flags
+{
+  PAL_NOFLAGS = 0,
+  PAL_REUSABLE = 0x01
+};
+
+static inline print_alias_flags &
+operator|= (print_alias_flags &a, const print_alias_flags &b)
+{
+  a = static_cast<print_alias_flags> (static_cast<uint32_t> (a)
+                                      | static_cast<uint32_t> (b));
+  return a;
+}
+#endif
+
 // This char array size is assumed by subst.cc and elsewhere.
 #define SYNSIZE 256
 
@@ -698,6 +715,7 @@ protected:
 
   int list_optopt;
   int list_opttype;
+  word_desc_flags list_optflags;
 
   int export_env_index;
   int export_env_size;
@@ -816,6 +834,9 @@ public:
   /* Non-zero means stuff being printed is inside of a connection. */
   int printing_connection;
 
+  /* Non-zero means stuff being printed is inside of a command sub. */
+  int printing_comsub;
+
   /* The globally known line number. */
   int line_number;
 
@@ -866,6 +887,9 @@ protected:
   /* When non-zero, an open-brace used to create a group is awaiting a close
      brace partner. */
   int open_brace_count;
+
+  // List index used by builtins/bashgetopt.cc.
+  int getopt_sp;
 
   /* ************************************************************** */
   /*		Bash Variables (8-bit bool/char types)		    */
@@ -1281,10 +1305,15 @@ protected:
   char debugging_mode; /* In debugging mode with --debugger */
 #endif
   bool no_line_editing; /* non-zero -> don't do fancy line editing. */
+
+#if defined(TRANSLATABLE_STRINGS)
   bool dump_translatable_strings; /* Dump strings in $"...", don't execute. */
   bool dump_po_strings;           /* Dump strings in $"..." in po format */
-  bool wordexp_only;              /* Do word expansion only */
-  bool protected_mode;            /* No command substitution with --wordexp */
+  bool singlequote_translations;  /* single-quote output of $"..." */
+#endif
+
+  bool wordexp_only;   /* Do word expansion only */
+  bool protected_mode; /* No command substitution with --wordexp */
 
   bool pretty_print_mode; /* pretty-print a shell script */
 
@@ -1297,9 +1326,6 @@ protected:
 
   /* Set to true to suppress the effect of `set v' in the DEBUG trap. */
   bool suppress_debug_trap_verbose;
-
-  /* single-quote output of $"..." */
-  bool singlequote_translations;
 
   // Used by ttsave()/ttrestore() to check if there are valid saved settings.
   bool ttsaved;
@@ -1331,6 +1357,9 @@ protected:
   bool unquoted_backslash;
 
   bool here_doc_first_line;
+
+  // Temporary array used by internal_getopt ().
+  char getopt_errstr[3];
 
 #ifndef HAVE_LOCALE_CHARSET
   char charsetbuf[40];
@@ -1497,6 +1526,9 @@ public:
 #if defined(ALIAS)
   int alias_builtin (WORD_LIST *);
   int unalias_builtin (WORD_LIST *);
+
+  void print_alias (alias_t *, print_alias_flags);
+
 #endif /* ALIAS */
 
 #if defined(READLINE)
@@ -1697,7 +1729,10 @@ public:
 
   int evalstring (char *, const char *, int);
   void parse_and_execute_cleanup (int);
-  int parse_string (char *, const char *, int, char **);
+
+  int parse_string (const std::string &, const char *, parse_flags,
+                    std::string::const_iterator *);
+
   bool should_suppress_fork (COMMAND *);
   bool can_optimize_connection (CONNECTION *);
   void optimize_fork (COMMAND *);
@@ -1932,8 +1967,8 @@ public:
   void
   indent (int count)
   {
-    indentation_string.assign (static_cast<size_t> (count), ' ');
-    cprintf ("%s", indentation_string.c_str ());
+    std::string spaces (static_cast<size_t> (count), ' ');
+    cprintf ("%s", spaces.c_str ());
   }
 
   void
@@ -2137,9 +2172,11 @@ protected:
 #ifdef NEED_XTRACE_SET_DECL
   void xtrace_set (int, FILE *);
 #endif
+
   void xtrace_reset ();
   const char *indirection_level_string ();
-  void xtrace_print_assignment (const char *, const char *, bool, int);
+  void xtrace_print_assignment (const std::string &, const std::string &, bool,
+                                int);
   void xtrace_print_word_list (WORD_LIST *, int);
   void xtrace_print_for_command_head (FOR_SELECT_COM *);
 
@@ -2171,7 +2208,7 @@ protected:
   void send_pwd_to_eterm ();
 
 #if defined(ARRAY_VARS)
-  void execute_array_command (ARRAY *, const char *);
+  void execute_array_command (ARRAY *, const std::string &);
 #endif
 
   void execute_prompt_command ();
@@ -2229,13 +2266,13 @@ protected:
     shell_input_line.clear ();
   }
 
-  char *decode_prompt_string (const char *);
+  char *decode_prompt_string (const std::string &);
 
 #if defined(HISTORY)
   void bash_initialize_history ();
   void load_history ();
-  const char *history_delimiting_chars (const char *);
-  int prompt_history_number (const char *);
+  std::string history_delimiting_chars (const std::string &);
+  int prompt_history_number (const std::string &);
 #endif
 
   /* Declarations for functions defined in locale.cc */
@@ -3179,7 +3216,7 @@ protected:
 
   /* from bashhist.cc */
 #if defined(BANG_HISTORY)
-  bool bash_history_inhibit_expansion (const char *, int);
+  bool bash_history_inhibit_expansion (const std::string &, int);
 #endif
 
   char *last_history_line ();
@@ -3189,10 +3226,10 @@ protected:
   void bash_history_reinit (bool);
 
 #if defined(HISTORY)
-  void maybe_add_history (const char *);
+  void maybe_add_history (const std::string &);
 #endif
 
-  char *pre_process_line (const char *, bool, bool);
+  char *pre_process_line (const std::string &, bool, bool);
 
   /* Functions declared in execute_cmd.c, used by many other files */
 
@@ -3832,6 +3869,18 @@ protected:
     return the_printed_command.c_str ();
   }
 
+  /* Print a command substitution after parsing it in parse_comsub to turn it
+     back into an external representation without turning newlines into `;'.
+     Placeholder for other changes, if any are necessary. */
+  const char *
+  print_comsub (COMMAND *command)
+  {
+    printing_comsub++;
+    const char *ret = make_command_string (command);
+    printing_comsub--;
+    return ret;
+  }
+
   // definitions from subst.h
 
   /* Remove backslashes which are quoting backquotes from STRING.  Modifies
@@ -4356,7 +4405,7 @@ protected:
   void with_input_from_stream (FILE *, const std::string &);
   void initialize_bash_input ();
   void execute_variable_command (const std::string &, const std::string &);
-  std::string parse_comsub (int, int, int, pgroup_flags);
+  std::string parse_comsub (int, int, int);
   int parse_arith_cmd (char **, int);
 
 #if defined(ARRAY_VARS)
@@ -4408,13 +4457,9 @@ protected:
   size_t tilde_find_suffix (const char *);
   char *tilde_expand (const char *);
 
-  // Methods in array.cc.
-
-  alias_t *find_alias (const char *);
-
   // Methods in arrayfunc.cc.
 
-  bool valid_array_reference (const char *, valid_array_flags);
+  bool valid_array_reference (const std::string &, valid_array_flags);
 
   // Methods in general.cc.
 
@@ -4517,7 +4562,14 @@ protected:
   const char *parser_remaining_input ();
   void discard_until (int);
 
-  parser::symbol_type read_token (int);
+  // Command to read_token () explaining what we want it to do.
+  enum read_token_cmd
+  {
+    READ = 0,
+    RESET = 1
+  };
+
+  parser::symbol_type read_token (read_token_cmd);
   parser::symbol_type read_token_word (int);
 
 #if defined(ALIAS)
@@ -4670,6 +4722,36 @@ protected:
   // methods from alias.cc
 
   void initialize_aliases ();
+
+  // Scan the list of aliases looking for one with NAME. Return nullptr
+  // if the alias doesn't exist, else a pointer to the alias.
+  alias_t *find_alias (const std::string &);
+
+  // Return the value of the alias for NAME, or nullptr if there is none.
+  char *get_alias_value (const char *);
+
+  // Make a new alias from NAME and VALUE.  If NAME can be found, then
+  // replace its value.
+  void add_alias (const char *, const char *);
+
+  // Remove the alias with name NAME from the alias list. Returns
+  // the index of the removed alias, or -1 if the alias didn't exist.
+  int remove_alias (const std::string &);
+
+  // Remove all aliases.
+  void delete_all_aliases ();
+
+  // Return an array of all defined aliases.
+  alias_t **all_aliases ();
+
+  // Expand a single word for aliases.
+  std::string alias_expand_word (const std::string &);
+
+  // Return a new line, with any aliases expanded.
+  std::string alias_expand (const std::string &);
+
+  // Helper definition for the parser.
+  void clear_string_list_expander (alias_t &);
 
   /* ************************************************************** */
   /*		Private Shell Variables (ptr types)		    */
@@ -4834,9 +4916,6 @@ protected:
   // Buffer to indicate the indirection level (PS4) when set -x is enabled.
   std::string indirection_string;
 
-  // Buffer for the indentation string.
-  std::string indentation_string;
-
   /* The printed representation of the currently-executing command (same as
      the_printed_command), except when a trap is being executed.  Useful for
      a debugger to know where exactly the program is currently executing. */
@@ -4852,10 +4931,12 @@ protected:
   // can't have multiple locales active in the process simultaneously.
   static char_flags sh_syntaxtab[SYNSIZE];
 
-  char *list_optarg;
+  // C++ string holding a copy of the current option, or nullptr.
+  std::string list_optarg;
 
   WORD_LIST *lcurrent;
   WORD_LIST *loptend;
+  WORD_LIST *lhead;
 
   /* The arithmetic expression evaluator's stack of expression contexts. */
   std::vector<EXPR_CONTEXT *> expr_stack;
@@ -5137,11 +5218,14 @@ struct sh_parser_state_t
 
   // 32-bit int types next
 
-  int token_buffer_size; // ???
+  size_t token_buffer_size; // ???
+
+  int eof_token;
 
   /* input line state -- line number saved elsewhere */
   int input_line_terminator;
   int eof_encountered;
+  int eol_lookahead;
 
   /* history state affecting or modified by the parser */
   int current_command_line_count;
@@ -5149,6 +5233,21 @@ struct sh_parser_state_t
   int remember_on_history;
   int history_expansion_inhibited;
 #endif
+
+  /* execution state possibly modified by the parser */
+  int last_command_exit_value;
+
+  int need_here_doc;
+  int here_doc_first_line;
+
+  int esacs_needed;
+  int expecting_in;
+
+  // 8-bit values last
+
+  /* flags state affecting the parser */
+  char expand_aliases;
+  char echo_input_at_read;
 };
 
 } // namespace bash

@@ -1,4 +1,4 @@
-/* getopt.c - getopt for Bash.  Used by the getopt builtin. */
+/* getopt.cc - getopt for Bash.  Used by the getopt builtin. */
 
 /* Copyright (C) 1993-2009 Free Software Foundation, Inc.
 
@@ -31,6 +31,7 @@
 namespace bash
 {
 
+#if 0
 /* For communication from `sh_getopt' to the caller.
    When `sh_getopt' finds an option that takes an argument,
    the argument value is returned here. */
@@ -77,6 +78,7 @@ int sh_optopt = '?';
 
 /* Set to 1 when we see an invalid option; public so getopts can reset it. */
 int sh_badopt = 0;
+#endif
 
 /* Scan elements of ARGV (whose length is ARGC) for option characters
    given in OPTSTRING.
@@ -216,21 +218,6 @@ sh_getopt_restore_state (char **argv)
 {
   if (nextchar)
     nextchar = argv[sh_curopt] + sh_charindex;
-}
-
-sh_getopt_state_t *
-sh_getopt_alloc_istate ()
-{
-  sh_getopt_state_t *ret;
-
-  ret = (sh_getopt_state_t *)xmalloc (sizeof (sh_getopt_state_t));
-  return ret;
-}
-
-void
-sh_getopt_dispose_istate (sh_getopt_state_t *gs)
-{
-  free (gs);
 }
 
 sh_getopt_state_t *

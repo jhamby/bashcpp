@@ -1,4 +1,4 @@
-// This file is alias.def, from which is created alias.c
+// This file is alias_def.cc.
 // It implements the builtins "alias" and "unalias" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -21,7 +21,6 @@
 // $BUILTIN alias
 // $FUNCTION alias_builtin
 // $DEPENDS_ON ALIAS
-// $PRODUCES alias.c
 // $SHORT_DOC alias [-p] [name[=value] ... ]
 // Define or display aliases.
 
@@ -51,35 +50,29 @@
 #include "bashintl.hh"
 
 #include "alias.hh"
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "shell.hh"
 
 namespace bash
 {
 
-/* Flags for print_alias */
-#define AL_REUSABLE 0x01
-
-static void print_alias (alias_t *, int);
-
 /* Hack the alias command in a Korn shell way. */
 int
 Shell::alias_builtin (WORD_LIST *list)
 {
-  int any_failed, offset, pflag, dflags;
+  int offset;
   alias_t **alias_list, *t;
   char *name, *value;
 
-  dflags = posixly_correct ? 0 : AL_REUSABLE;
-  pflag = 0;
+  print_alias_flags dflags = posixly_correct ? AL_NOFLAGS : AL_REUSABLE;
+  bool pflag = false;
   reset_internal_getopt ();
   while ((offset = internal_getopt (list, "p")) != -1)
     {
       switch (offset)
         {
         case 'p':
-          pflag = 1;
+          pflag = true;
           dflags |= AL_REUSABLE;
           break;
           CASE_HELPOPT;
@@ -110,7 +103,7 @@ Shell::alias_builtin (WORD_LIST *list)
         return sh_chkwrite (EXECUTION_SUCCESS);
     }
 
-  any_failed = 0;
+  bool any_failed = false;
   while (list)
     {
       name = list->word->word;
@@ -126,7 +119,7 @@ Shell::alias_builtin (WORD_LIST *list)
           if (legal_alias_name (name, 0) == 0)
             {
               builtin_error (_ ("`%s': invalid alias name"), name);
-              any_failed++;
+              any_failed = true;
             }
           else
             add_alias (name, value);
@@ -139,7 +132,7 @@ Shell::alias_builtin (WORD_LIST *list)
           else
             {
               sh_notfound (name);
-              any_failed++;
+              any_failed = true;
             }
         }
       list = list->next ();
@@ -171,16 +164,16 @@ namespace bash
 int
 Shell::unalias_builtin (WORD_LIST *list)
 {
-  int opt, aflag;
+  int opt;
 
-  aflag = 0;
+  bool aflag = false;
   reset_internal_getopt ();
   while ((opt = internal_getopt (list, "a")) != -1)
     {
       switch (opt)
         {
         case 'a':
-          aflag = 1;
+          aflag = true;
           break;
           CASE_HELPOPT;
         default:
@@ -203,7 +196,7 @@ Shell::unalias_builtin (WORD_LIST *list)
       return EX_USAGE;
     }
 
-  aflag = 0;
+  aflag = false;
   while (list)
     {
       alias_t *alias = find_alias (list->word->word);
@@ -212,11 +205,11 @@ Shell::unalias_builtin (WORD_LIST *list)
         remove_alias (alias->name);
       else
         {
-          sh_notfound (list->word->word);
-          aflag++;
+          sh_notfound (list->word->word.c_str ());
+          aflag = true;
         }
 
-      list = (WORD_LIST *)list->next;
+      list = list->next ();
     }
 
   return aflag ? EXECUTION_FAILURE : EXECUTION_SUCCESS;
@@ -224,17 +217,14 @@ Shell::unalias_builtin (WORD_LIST *list)
 
 /* Output ALIAS in such a way as to allow it to be read back in. */
 void
-Shell::print_alias (alias_t *alias, int flags)
+Shell::print_alias (alias_t *alias, print_alias_flags flags)
 {
-  char *value;
-
-  value = sh_single_quote (alias->value);
+  std::string value = sh_single_quote (alias->value);
   if (flags & AL_REUSABLE)
-    std::printf ("alias %s",
-                 (alias->name && alias->name[0] == '-') ? "-- " : "");
-  std::printf ("%s=%s\n", alias->name, value);
-
-  delete[] value;
+    std::printf ("alias %s", (!(alias->name.empty ()) && alias->name[0] == '-')
+                                 ? "-- "
+                                 : "");
+  std::printf ("%s=%s\n", alias->name, value.c_str ());
 
   std::fflush (stdout);
 }

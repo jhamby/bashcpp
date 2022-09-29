@@ -1,4 +1,4 @@
-// This file is eval.def, from which is created eval.c.
+// This file is eval_def.cc.
 // It implements the builtin "eval" in Bash.
 
 // Copyright (C) 1987-2016 Free Software Foundation, Inc.
@@ -18,8 +18,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 
-// $PRODUCES eval.c
-
 // $BUILTIN eval
 // $FUNCTION eval_builtin
 // $SHORT_DOC eval [arg ...]
@@ -38,7 +36,6 @@
 #include <unistd.h>
 #endif
 
-#include "bashgetopt.hh"
 #include "common.hh"
 #include "shell.hh"
 

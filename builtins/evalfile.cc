@@ -1,4 +1,4 @@
-/* evalfile.c - read and evaluate commands from a file or file descriptor */
+/* evalfile.cc - read and evaluate commands from a file or file descriptor */
 
 /* Copyright (C) 1996-2017 Free Software Foundation, Inc.
 

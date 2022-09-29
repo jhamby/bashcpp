@@ -835,8 +835,7 @@ Shell::shell_getc (bool remove_quoted_newline)
 #endif
           /* Calling with a third argument of 1 allows remember_on_history to
              determine whether or not the line is saved to the history list */
-          expansions
-              = pre_process_line (shell_input_line.c_str (), true, true);
+          expansions = pre_process_line (shell_input_line, true, true);
 #if defined(BANG_HISTORY)
           history_quoting_state = 0;
 #endif
@@ -861,13 +860,13 @@ Shell::shell_getc (bool remove_quoted_newline)
                quoted string.  This means we've got a line consisting of only
                a newline in a quoted string.  We want to make sure this line
                gets added to the history. */
-            maybe_add_history (shell_input_line.c_str ());
+            maybe_add_history (shell_input_line);
           else
             {
-              const char *hdcs;
-              hdcs = history_delimiting_chars (shell_input_line.c_str ());
-              if (hdcs && hdcs[0] == ';')
-                maybe_add_history (shell_input_line.c_str ());
+              std::string hdcs;
+              hdcs = history_delimiting_chars (shell_input_line);
+              if (!hdcs.empty () && hdcs[0] == ';')
+                maybe_add_history (shell_input_line);
             }
         }
 
@@ -1166,9 +1165,6 @@ static char *token = nullptr;
 static int token_buffer_size;
 #endif
 
-/* Command to read_token () explaining what we want it to do. */
-#define READ 0
-#define RESET 1
 #define prompt_is_ps1                                                         \
   (!prompt_string_pointer || prompt_string_pointer == &ps1_prompt)
 
@@ -1627,7 +1623,7 @@ Shell::reset_parser ()
 /* Read the next token.  Command can be READ (normal operation) or
    RESET (to normalize state). */
 parser::symbol_type
-Shell::read_token (int command)
+Shell::read_token (read_token_cmd command)
 {
   int character; /* Current character. */
   int peek_char; /* Temporary look-ahead character. */
@@ -2251,8 +2247,7 @@ Shell::parse_matched_pair (
           if (open == ch) /* undo previous increment */
             count--;
           if (ch == '(') /* ) */
-            nestret
-                = parse_comsub (0, '(', ')', (rflags | P_COMMAND) & ~P_DQUOTE);
+            nestret = parse_comsub (0, '(', ')');
           else if (ch == '{') /* } */
             // this call may throw matched_pair_error
             nestret = parse_matched_pair (
@@ -2373,11 +2368,8 @@ dump_tflags (lexical_state_flags flags)
 /* Parse a $(...) command substitution.  This reads input from the current
    input stream. */
 std::string
-Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
+Shell::parse_comsub (int qc, int open, int close)
 {
-//   int peekc, r;
-//   int start_lineno, local_extglob, was_extpat;
-//   char *ret, *tcmd;
   sh_parser_state_t ps;
   STRING_SAVER *saved_strings;
   COMMAND *saved_global, *parsed_command;
@@ -2395,7 +2387,6 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
   /*itrace("parse_comsub: qc = `%c' open = %c close = %c", qc, open, close);*/
 
   /*debug_parser(1);*/
-  int start_lineno = line_number;
 
   save_parser_state (&ps);
 
@@ -2432,7 +2423,7 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
     expand_aliases = (posixly_correct != 0);
 
 #if defined(EXTENDED_GLOB)
-  char local_extglob;
+  char local_extglob = 0;
 
   /* If (parser_state & PST_EXTPAT), we're parsing an extended pattern for a
      conditional command and have already set global_extglob appropriately. */
@@ -2443,7 +2434,7 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
     }
 #endif
 
-  current_token = '\n';     /* XXX */
+  current_token = '\n';                    /* XXX */
   token_to_read = parser::token::DOLPAREN; /* let's trick the parser */
 
   int r = yyparse ();
@@ -2457,7 +2448,7 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
     }
 
 #if defined(EXTENDED_GLOB)
-  if (shell_compatibility_level <= 51 && was_extpat == 0)
+  if (shell_compatibility_level <= 51 && !was_extpat)
     extended_glob = local_extglob;
 #endif
 
@@ -2478,23 +2469,26 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
       // Non-interactive shells exit on parse error in a command substitution.
       if (last_command_exit_value == 0)
         last_command_exit_value = EXECUTION_FAILURE;
+
       set_exit_status (last_command_exit_value);
-      if (interactive_shell == 0)
-        jump_to_top_level (FORCE_EOF); /* This is like reader_loop() */
+
+      if (!interactive_shell)
+        throw bash_exception (FORCE_EOF); /* This is like reader_loop() */
       else
         {
           shell_eof_token = ps.eof_token;
           expand_aliases = ps.expand_aliases;
 
-          jump_to_top_level (
-              DISCARD); /* XXX - return (&matched_pair_error)? */
+          throw bash_exception (
+              DISCARD); /* XXX - throw matched_pair_error ()? */
         }
     }
 
   if (current_token != shell_eof_token)
     {
       internal_debug ("current_token (%d) != shell_eof_token (%c)",
-                       current_token, shell_eof_token);
+                      current_token, shell_eof_token);
+
       token_to_read = current_token;
 
       /* If we get here we can check eof_encountered and if it's 1 but the
@@ -2514,77 +2508,89 @@ Shell::parse_comsub (int qc, int open, int close, pgroup_flags flags)
   restore_parser_state (&ps);
   pushed_string_list = saved_strings;
 
-  tcmd = print_comsub (parsed_command); /* returns static memory */
-  retlen = strlen (tcmd);
+  const char *tcmd = print_comsub (parsed_command); // returns static memory
+
+  size_t retlen = std::strlen (tcmd);
   if (tcmd[0] == '(') /* ) need a space to prevent arithmetic expansion */
     retlen++;
-  ret = xmalloc (retlen + 2);
+
+  std::string ret;
+  ret.reserve (retlen + 1);
+
   if (tcmd[0] == '(') /* ) */
     {
-      ret[0] = ' ';
-      strcpy (ret + 1, tcmd);
+      ret.push_back (' ');
+      ret += tcmd;
     }
   else
-    strcpy (ret, tcmd);
-  ret[retlen++] = ')';
-  ret[retlen] = '\0';
+    ret = tcmd;
+
+  ret.push_back (')');
 
   delete parsed_command;
   global_command = saved_global;
 
-  /*itrace("parse_comsub:%d: returning `%s'", line_number, ret);*/
+  // itrace("parse_comsub:%d: returning `%s'", line_number, ret.c_str ());
   return ret;
 }
 
-/* Recursively call the parser to parse a $(...) command substitution. */
+/* Recursively call the parser to parse a $(...) command substitution. This is
+   called by the word expansion code and so does not have to reset as much
+   parser state before calling yyparse(). */
 std::string
 Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
-  int orig_ind, nc, orig_eof_token, start_lineno;
-//   char *ret, *ep, *ostring;
 #if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
   STRING_SAVER *saved_pushed_strings;
 #endif
 
   // debug_parser (1);
-  orig_ind = *indp;
-  ostring = string;
-  start_lineno = line_number;
+  size_t orig_ind = *indp;
+  int start_lineno = line_number;
 
-  if (*string == 0)
+  if (orig_ind == base.size ())
     {
       if (flags & SX_NOALLOC)
         return nullptr;
 
-      ret = (char *)xmalloc (1);
-      ret[0] = '\0';
-      return ret;
+      return std::string ();
     }
 
   // itrace ("xparse_dolparen: size = %d shell_input_line = `%s' string=`%s'",
   //         shell_input_line_size, shell_input_line, string);
 
-  parse_flags sflags = SEVAL_NONINT | SEVAL_NOHIST | SEVAL_NOFREE;
+  parse_flags sflags = SEVAL_NONINT | SEVAL_NOHIST;
   if (flags & SX_NOTHROW)
     sflags |= SEVAL_NOTHROW;
 
   save_parser_state (&ps);
   save_input_line_state (&ls);
-  orig_eof_token = shell_eof_token;
 
 #if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
-  saved_pushed_strings = pushed_string_list; /* separate parsing context */
   pushed_string_list = nullptr;
 #endif
 
   /*(*/
-  parser_state |= (PST_CMDSUBST | PST_EOFTOKEN); /* allow instant ')' */ /*(*/
-  shell_eof_token = ')';
 
-  /* Should we save and restore the bison/yacc lookahead token (yychar) here?
-     Or only if it's not YYEMPTY? */
+  parser_state |= (PST_CMDSUBST | PST_EOFTOKEN); /* allow instant ')' */
+  shell_eof_token = ')';
+  if (flags & SX_COMPLETE)
+    parser_state |= PST_NOERROR;
+
+  /* Don't expand aliases on this pass at all. Either parse_comsub() does it
+     at parse time, in which case this string already has aliases expanded,
+     or command_substitute() does it in the child process executing the
+     command substitution and we want to defer it completely until then. The
+     old value will be restored by restore_parser_state(). */
+  expand_aliases = 0;
+
+#if defined(EXTENDED_GLOB)
+  global_extglob = extended_glob; /* for reset_parser() */
+#endif
+
+  token_to_read = parser::token::DOLPAREN; /* let's trick the parser */
 
   nc = parse_string (string, "command substitution", sflags, &ep);
 
@@ -2596,7 +2602,6 @@ Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
      parser_state, so we want to reset things, then restore what we need. */
   restore_input_line_state (&ls);
 
-  shell_eof_token = orig_eof_token;
   restore_parser_state (&ps);
 
 #if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
@@ -2613,17 +2618,18 @@ Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
       clear_shell_input_line ();        /* XXX */
       if (bash_input.type != st_string) /* paranoia */
         parser_state &= ~(PST_CMDSUBST | PST_EOFTOKEN);
-      jump_to_top_level (-nc); /* XXX */
+      if ((flags & SX_NOTHROW) == 0)
+        throw bash_exception (-nc); /* XXX */
     }
 
-  /* Need to find how many characters parse_and_execute consumed, update
+  /* Need to find how many characters parse_string() consumed, update
      *indp, if flags != 0, copy the portion of the string parsed into RET
      and return it.  If flags & 1 (SX_NOALLOC) we can return nullptr. */
 
   /*(*/
   if (ep[-1] != ')')
     {
-#if DEBUG
+#if 0
       if (ep[-1] != '\n')
         itrace ("xparse_dolparen:%d: ep[-1] != RPAREN (%d), ep = `%s'",
                 line_number, ep[-1], ep);
@@ -2637,7 +2643,7 @@ Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
   *indp = ep - base - 1;
 
   /*((*/
-#if DEBUG
+#if 0
   if (base[*indp] != ')')
     itrace ("xparse_dolparen:%d: base[%d] != RPAREN (%d), base = `%s'",
             line_number, *indp, base[*indp], base);
@@ -2647,26 +2653,22 @@ Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
         line_number, *indp, orig_ind, ostring);
 #endif
 
-  if (base[*indp] != ')')
+  if (base[*indp] != ')' && (flags & SX_NOTHROW) == 0)
     {
       /*(*/
-      parser_error (start_lineno,
+      if ((flags & SX_NOERROR) == 0)
+        parser_error (start_lineno,
                     _ ("unexpected EOF while looking for matching `%c'"), ')');
-      jump_to_top_level (DISCARD);
+      throw bash_exception (DISCARD);
     }
 
   if (flags & SX_NOALLOC)
     return nullptr;
 
   if (nc == 0)
-    {
-      ret = (char *)xmalloc (1);
-      ret[0] = '\0';
-    }
+    return std::string ();
   else
     ret = substring (ostring, 0, nc - 1);
-
-  return ret;
 }
 
 #if defined(DPAREN_ARITHMETIC) || defined(ARITH_FOR_COMMAND)
@@ -2903,7 +2905,7 @@ Shell::cond_term ()
 
       (void)cond_skip_newlines ();
     }
-  else if (tok == WORD) /* left argument to binary operator */
+  else if (tok == parser::token::WORD) /* left argument to binary operator */
     {
       /* lhs */
       tleft = make_cond_node (COND_TERM, yylval.word, nullptr, nullptr);
@@ -2922,7 +2924,7 @@ Shell::cond_term ()
             parser_state |= PST_EXTPAT;
         }
 #if defined(COND_REGEXP)
-      else if (tok == WORD && STREQ (yylval.word->word, "=~"))
+      else if (tok == parser::token::WORD && STREQ (yylval.word->word, "=~"))
         {
           op = yylval.word;
           parser_state |= PST_REGEXP;
@@ -3707,13 +3709,11 @@ Shell::prompt_again ()
 #if defined(READLINE)
   if (!no_line_editing)
     {
-      FREE (current_readline_prompt);
       current_readline_prompt = temp_prompt;
     }
   else
 #endif /* READLINE */
     {
-      FREE (current_decoded_prompt);
       current_decoded_prompt = temp_prompt;
     }
 }

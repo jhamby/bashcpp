@@ -1,4 +1,4 @@
-// This file is test.def, from which is created test.c.
+// This file is test_def.cc.
 // It implements the builtin "test" in Bash.
 
 // Copyright (C) 1987-2015 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES test.c
 
 // $BUILTIN test
 // $FUNCTION test_builtin
@@ -150,7 +148,7 @@ Shell::test_builtin (WORD_LIST *list)
 
   argv = make_builtin_argv (list, &argc);
   result = test_command (argc, argv);
-  free ((char *)argv);
+  xfree ((char *)argv);
 
   return result;
 }

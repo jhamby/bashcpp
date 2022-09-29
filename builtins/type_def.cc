@@ -1,4 +1,4 @@
-// This file is type.def, from which is created type.c.
+// This file is type_def.cc.
 // It implements the builtin "type" in Bash.
 
 // Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -17,8 +17,6 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Bash.  If not, see <http://www.gnu.org/licenses/>.
-
-// $PRODUCES type.c
 
 // $BUILTIN type
 // $FUNCTION type_builtin
@@ -70,13 +68,12 @@
 #include "alias.hh"
 #endif /* ALIAS */
 
-#include "bashgetopt.hh"
 #include "common.hh"
 
 namespace bash
 {
 
-extern int find_reserved_word (char *);
+// extern int find_reserved_word (char *);
 
 /* For each word in LIST, find out what the shell is going to do with
    it as a simple command. i.e., which file would this shell use to

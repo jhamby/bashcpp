@@ -1,6 +1,6 @@
-/* subst.h -- Names of externally visible functions in subst.c. */
+/* subst.hh -- Names of externally visible functions in subst.cc. */
 
-/* Copyright (C) 1993-2017 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2021 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -57,34 +57,38 @@ enum assign_flags
   ASS_APPEND = 0x0001,
   ASS_MKLOCAL = 0x0002,
   ASS_MKASSOC = 0x0004,
-  ASS_MKGLOBAL = 0x0008,  /* force global assignment */
-  ASS_NAMEREF = 0x0010,   /* assigning to nameref variable */
-  ASS_FORCE = 0x0020,     /* force assignment even to readonly variable */
-  ASS_CHKLOCAL = 0x0040,  /* check local variable before assignment */
-  ASS_NOEXPAND = 0x0080,  /* don't expand associative array subscripts */
-  ASS_NOEVAL = 0x0100,    /* don't evaluate value as expression */
-  ASS_NOLONGJMP = 0x0200, /* don't longjmp on fatal assignment error */
-  ASS_NOINVIS = 0x0400    /* don't resolve local invisible variables */
+  ASS_MKGLOBAL = 0x0008,    // force global assignment
+  ASS_NAMEREF = 0x0010,     // assigning to nameref variable
+  ASS_FORCE = 0x0020,       // force assignment even to readonly variable
+  ASS_CHKLOCAL = 0x0040,    // check local variable before assignment
+  ASS_NOEXPAND = 0x0080,    // don't expand associative array subscripts
+  ASS_NOEVAL = 0x0100,      // don't evaluate value as expression
+  ASS_NOLONGJMP = 0x0200,   // don't longjmp on fatal assignment error
+  ASS_NOINVIS = 0x0400,     // don't resolve local invisible variables
+  ASS_ALLOWALLSUB = 0x0800, // allow * and @ as associative array keys
+  ASS_ONEWORD
+  = 0x1000 // don't check array subscripts, assume higher level has done that
 };
 
 /* Flags for the string extraction functions. */
 enum sx_flags
 {
   SX_NOFLAGS = 0,
-  SX_NOALLOC = 0x0001,     /* just skip; don't return substring */
-  SX_VARNAME = 0x0002,     /* variable name; for string_extract () */
-  SX_REQMATCH = 0x0004,    /* closing/matching delimiter required */
-  SX_COMMAND = 0x0008,     /* extracting a shell script/command */
-  SX_NOCTLESC = 0x0010,    /* don't honor CTLESC quoting */
-  SX_NOESCCTLNUL = 0x0020, /* don't let CTLESC quote CTLNUL */
-  SX_NOTHROW = 0x0040,     /* don't longjmp on fatal error */
-  SX_ARITHSUB = 0x0080,    /* extracting $(( ... )) (currently unused) */
-  SX_POSIXEXP = 0x0100, /* extracting new Posix pattern removal expansions in
-                           extract_dollar_brace_string */
-  SX_WORD = 0x0200,     /* extracting word in ${param op word} */
-  SX_COMPLETE = 0x0400, /* extracting word for completion */
+  SX_NOALLOC = 0x0001,     // just skip; don't return substring
+  SX_VARNAME = 0x0002,     // variable name; for string_extract ()
+  SX_REQMATCH = 0x0004,    // closing/matching delimiter required
+  SX_COMMAND = 0x0008,     // extracting a shell script/command
+  SX_NOCTLESC = 0x0010,    // don't honor CTLESC quoting
+  SX_NOESCCTLNUL = 0x0020, // don't let CTLESC quote CTLNUL
+  SX_NOTHROW = 0x0040,     // don't longjmp on fatal error
+  SX_ARITHSUB = 0x0080,    // extracting $(( ... )) (currently unused)
+  SX_POSIXEXP = 0x0100, // extracting new Posix pattern removal expansions in
+                        // extract_dollar_brace_string
+  SX_WORD = 0x0200,     // extracting word in ${param op word}
+  SX_COMPLETE = 0x0400, // extracting word for completion
   SX_STRIPDQ
-  = 0x0800 /* strip double quotes when extracting double-quoted string */
+  = 0x0800, // strip double quotes when extracting double-quoted string
+  SX_NOERROR = 0x1000 // don't print parser error messages
 };
 
 static inline sx_flags &

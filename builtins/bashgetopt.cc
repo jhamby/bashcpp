@@ -1,6 +1,6 @@
-/* bashgetopt.c -- `getopt' for use by the builtins. */
+/* bashgetopt.cc -- `getopt' for use by the builtins. */
 
-/* Copyright (C) 1992-2002 Free Software Foundation, Inc.
+/* Copyright (C) 1992-2021 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -31,8 +31,6 @@
 #include "common.hh"
 #include "shell.hh"
 
-#include "bashgetopt.hh"
-
 namespace bash
 {
 
@@ -53,69 +51,73 @@ namespace bash
 int
 Shell::internal_getopt (WORD_LIST *list, const char *opts)
 {
-  int plus; /* nonzero means to handle +option */
-  static char errstr[3] = { '-', '\0', '\0' };
+  bool plus; /* true means to handle +option */
 
-  plus = *opts == '+';
+  plus = (*opts == '+');
   if (plus)
     opts++;
 
-  if (list == 0)
+  if (list == nullptr)
     {
       list_optarg = nullptr;
+      list_optflags = W_NOFLAGS;
       loptend = nullptr; /* No non-option arguments */
       return -1;
     }
 
-  if (list != lhead || lhead == 0)
+  if (list != lhead || lhead == nullptr)
     {
       /* Hmmm.... called with a different word list.  Reset. */
-      sp = 1;
+      getopt_sp = 1;
       lcurrent = lhead = list;
       loptend = nullptr;
     }
 
-  if (sp == 1)
+  const char *current_word = lcurrent->word->word.c_str ();
+
+  if (getopt_sp == 1)
     {
-      if (lcurrent == 0 || NOTOPT (lcurrent->word->word))
+      if (lcurrent == 0 || NOTOPT (current_word))
         {
           lhead = nullptr;
           loptend = lcurrent;
-          return (-1);
+          return -1;
         }
-      else if (ISHELP (lcurrent->word->word))
+      else if (ISHELP (current_word))
         {
           lhead = nullptr;
           loptend = lcurrent;
           return GETOPT_HELP;
         }
-      else if (lcurrent->word->word[0] == '-' && lcurrent->word->word[1] == '-'
-               && lcurrent->word->word[2] == 0)
+      else if (current_word[0] == '-' && current_word[1] == '-'
+               && current_word[2] == 0)
         {
           lhead = nullptr;
-          loptend = (WORD_LIST *)lcurrent->next;
-          return (-1);
+          loptend = lcurrent->next ();
+          return -1;
         }
-      errstr[0] = list_opttype = lcurrent->word->word[0];
+      getopt_errstr[0] = list_opttype = current_word[0];
     }
 
   int c;
   const char *cp;
-  list_optopt = c = lcurrent->word->word[sp];
+  list_optopt = c = current_word[getopt_sp];
 
   if (c == ':' || (cp = strchr (opts, c)) == NULL)
     {
-      errstr[1] = c;
-      sh_invalidopt (errstr);
-      if (lcurrent->word->word[++sp] == '\0')
+      getopt_errstr[1] = c;
+      sh_invalidopt (getopt_errstr);
+      if (current_word[++getopt_sp] == '\0')
         {
-          lcurrent = (WORD_LIST *)lcurrent->next;
-          sp = 1;
+          lcurrent = lcurrent->next ();
+          current_word = lcurrent->word->word.c_str ();
+          getopt_sp = 1;
         }
-      list_optarg = NULL;
+      list_optarg = nullptr;
+      list_optflags = W_NOFLAGS;
       if (lcurrent)
-        loptend = (WORD_LIST *)lcurrent->next;
-      return ('?');
+        loptend = lcurrent->next ();
+      return '?';
     }
 
   if (*++cp == ':' || *cp == ';')
@@ -123,69 +125,74 @@ Shell::internal_getopt (WORD_LIST *list, const char *opts)
       /* `:': Option requires an argument. */
       /* `;': option argument may be missing */
       /* We allow -l2 as equivalent to -l 2 */
-      if (lcurrent->word->word[sp + 1])
+      if (current_word[getopt_sp + 1])
         {
-          list_optarg = lcurrent->word->word + sp + 1;
-          lcurrent = (WORD_LIST *)lcurrent->next;
+          list_optarg = current_word + getopt_sp + 1;
+          list_optflags = W_NOFLAGS;
+          lcurrent = lcurrent->next ();
           /* If the specifier is `;', don't set optarg if the next
              argument looks like another option. */
-#if 0
-		} else if (lcurrent->next && (*cp == ':' || lcurrent->next->word->word[0] != '-')) {
-#else
         }
-      else if (lcurrent->next
+      else if (lcurrent->next ()
                && (*cp == ':'
-                   || NOTOPT (((WORD_LIST *)lcurrent->next)->word->word)))
+                   || NOTOPT ((lcurrent->next ())->word->word.c_str ())))
         {
-#endif
-          lcurrent = (WORD_LIST *)lcurrent->next;
-          list_optarg = lcurrent->word->word;
-          lcurrent = (WORD_LIST *)lcurrent->next;
+          lcurrent = lcurrent->next ();
+          list_optarg = lcurrent->word->word.c_str ();
+          list_optflags = W_NOFLAGS;
+          lcurrent = lcurrent->next ();
         }
       else if (*cp == ';')
         {
           list_optarg = nullptr;
-          lcurrent = (WORD_LIST *)lcurrent->next;
+          list_optflags = W_NOFLAGS;
+          lcurrent = lcurrent->next ();
         }
       else
         { /* lcurrent->next == NULL */
-          errstr[1] = c;
-          sh_needarg (errstr);
-          sp = 1;
+          getopt_errstr[1] = c;
+          sh_needarg (getopt_errstr);
+          getopt_sp = 1;
           list_optarg = nullptr;
+          list_optflags = W_NOFLAGS;
           return ('?');
         }
-      sp = 1;
+      getopt_sp = 1;
     }
   else if (*cp == '#')
     {
       /* option requires a numeric argument */
-      if (lcurrent->word->word[sp + 1])
+      if (lcurrent->word->word[getopt_sp + 1])
         {
-          if (DIGIT (lcurrent->word->word[sp + 1]))
+          if (std::isdigit (lcurrent->word->word[getopt_sp + 1]))
             {
-              list_optarg = lcurrent->word->word + sp + 1;
-              lcurrent = (WORD_LIST *)lcurrent->next;
+              list_optarg = lcurrent->word->word.c_str () + getopt_sp + 1;
+              list_optflags = W_NOFLAGS;
+              lcurrent = lcurrent->next ();
             }
           else
-            list_optarg = nullptr;
+            {
+              list_optarg = nullptr;
+              list_optflags = W_NOFLAGS;
+            }
         }
       else
         {
-          if (lcurrent->next
-              && legal_number (((WORD_LIST *)lcurrent->next)->word->word,
-                               (int64_t *)0))
+          if (lcurrent->next ()
+              && legal_number ((lcurrent->next ())->word->word.c_str (), nullptr))
             {
-              lcurrent = (WORD_LIST *)lcurrent->next;
-              list_optarg = lcurrent->word->word;
-              lcurrent = (WORD_LIST *)lcurrent->next;
+              lcurrent = lcurrent->next ();
+              list_optarg = lcurrent->word->word.c_str ();
+              list_optflags = W_NOFLAGS;
+              lcurrent = lcurrent->next ();
             }
           else
             {
-              errstr[1] = c;
-              sh_neednumarg (errstr);
-              sp = 1;
+              getopt_errstr[1] = c;
+              sh_neednumarg (getopt_errstr);
+              getopt_sp = 1;
               list_optarg = nullptr;
+              list_optflags = W_NOFLAGS;
               return '?';
             }
         }
@@ -193,15 +200,16 @@ Shell::internal_getopt (WORD_LIST *list, const char *opts)
   else
     {
       /* No argument, just return the option. */
-      if (lcurrent->word->word[++sp] == '\0')
+      if (lcurrent->word->word[++getopt_sp] == '\0')
         {
-          sp = 1;
-          lcurrent = (WORD_LIST *)lcurrent->next;
+          getopt_sp = 1;
+          lcurrent = lcurrent->next ();
         }
       list_optarg = nullptr;
+      list_optflags = W_NOFLAGS;
     }
 
-  return (c);
+  return c;
 }
 
 /*
@@ -212,7 +220,7 @@ void
 Shell::reset_internal_getopt ()
 {
   lhead = lcurrent = loptend = nullptr;
-  sp = 1;
+  getopt_sp = 1;
 }
 
 } // namespace bash
