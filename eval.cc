@@ -262,16 +262,17 @@ Shell::send_pwd_to_eterm ()
 #if defined(ARRAY_VARS)
 /* Caller ensures that A has a non-zero number of elements */
 void
-Shell::execute_array_command (ARRAY *a, const std::string &tag)
+Shell::execute_array_command (ARRAY *a, const char *tag)
 {
-  int argc = 0;
-  char **argv = array_to_argv (a, &argc);
-  for (int i = 0; i < argc; i++)
+  STRINGLIST *argv = array_to_argv (a);
+
+  STRINGLIST::iterator it;
+  for (it = argv->begin (); it != argv->end (); ++it)
     {
-      if (argv[i] && argv[i][0])
-        execute_variable_command (argv[i], tag);
+      if (*it && (*it)[0])
+        execute_variable_command (*it, tag);
     }
-  strvec_dispose (argv);
+  strlist_dispose (argv);
 }
 #endif
 

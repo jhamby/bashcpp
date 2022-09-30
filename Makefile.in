@@ -227,7 +227,8 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(SHDIR)/strcasestr.cc $(SHDIR)/mailstat.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
 	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
-	$(SHDIR)/strtoumax.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/strtoumax.cc $(SHDIR)/stringlist.cc \
+	$(SHDIR)/stringvec.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
 	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
 	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
 	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
@@ -312,7 +313,8 @@ am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	$(SHDIR)/fmtulong.$(OBJEXT) $(SHDIR)/fmtullong.$(OBJEXT) \
 	$(SHDIR)/fmtumax.$(OBJEXT) $(SHDIR)/shmatch.$(OBJEXT) \
 	$(SHDIR)/strnlen.$(OBJEXT) $(SHDIR)/strtoimax.$(OBJEXT) \
-	$(SHDIR)/strtoumax.$(OBJEXT) $(SHDIR)/mbschr.$(OBJEXT) \
+	$(SHDIR)/strtoumax.$(OBJEXT) $(SHDIR)/stringlist.$(OBJEXT) \
+	$(SHDIR)/stringvec.$(OBJEXT) $(SHDIR)/mbschr.$(OBJEXT) \
 	$(SHDIR)/zcatfd.$(OBJEXT) $(SHDIR)/zmapfd.$(OBJEXT) \
 	$(SHDIR)/winsize.$(OBJEXT) $(SHDIR)/eaccess.$(OBJEXT) \
 	$(SHDIR)/fpurge.$(OBJEXT) $(SHDIR)/zgetline.$(OBJEXT) \
@@ -440,8 +442,9 @@ am__depfiles_remade = $(BLTDIR)/$(DEPDIR)/alias_def.Po \
 	$(SHDIR)/$(DEPDIR)/spell.Po $(SHDIR)/$(DEPDIR)/strcasecmp.Po \
 	$(SHDIR)/$(DEPDIR)/strcasestr.Po \
 	$(SHDIR)/$(DEPDIR)/strchrnul.Po $(SHDIR)/$(DEPDIR)/strerror.Po \
-	$(SHDIR)/$(DEPDIR)/strnlen.Po $(SHDIR)/$(DEPDIR)/strpbrk.Po \
-	$(SHDIR)/$(DEPDIR)/strtoimax.Po \
+	$(SHDIR)/$(DEPDIR)/stringlist.Po \
+	$(SHDIR)/$(DEPDIR)/stringvec.Po $(SHDIR)/$(DEPDIR)/strnlen.Po \
+	$(SHDIR)/$(DEPDIR)/strpbrk.Po $(SHDIR)/$(DEPDIR)/strtoimax.Po \
 	$(SHDIR)/$(DEPDIR)/strtoumax.Po $(SHDIR)/$(DEPDIR)/strtrans.Po \
 	$(SHDIR)/$(DEPDIR)/timeval.Po $(SHDIR)/$(DEPDIR)/tmpfile.Po \
 	$(SHDIR)/$(DEPDIR)/uconvert.Po $(SHDIR)/$(DEPDIR)/ufuncs.Po \
@@ -888,7 +891,8 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(SHDIR)/strcasestr.cc $(SHDIR)/mailstat.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
 	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
-	$(SHDIR)/strtoumax.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/strtoumax.cc $(SHDIR)/stringlist.cc \
+	$(SHDIR)/stringvec.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
 	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
 	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
 	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
@@ -1308,6 +1312,10 @@ $(SHDIR)/strtoimax.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/strtoumax.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/stringlist.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/stringvec.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/mbschr.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/zcatfd.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
@@ -1523,6 +1531,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strcasestr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strchrnul.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strerror.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/stringlist.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/stringvec.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strnlen.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strpbrk.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strtoimax.Po@am__quote@ # am--include-marker
@@ -2111,6 +2121,8 @@ distclean: distclean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/strcasestr.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strchrnul.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strerror.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/stringlist.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/stringvec.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strnlen.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strpbrk.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strtoimax.Po
@@ -2341,6 +2353,8 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/strcasestr.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strchrnul.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strerror.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/stringlist.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/stringvec.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strnlen.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strpbrk.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strtoimax.Po

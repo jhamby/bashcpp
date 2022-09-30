@@ -221,6 +221,21 @@ public:
   {
     next_ = next;
   }
+
+  size_t
+  size () const
+  {
+    size_t size = 1;
+    GENERIC_LIST *list = next_;
+
+    while (list)
+      {
+        size++;
+        list = list->next_;
+      }
+
+    return size;
+  }
 };
 
 // Compare two strings for equality.

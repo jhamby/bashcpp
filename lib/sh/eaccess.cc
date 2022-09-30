@@ -158,7 +158,7 @@ Shell::sh_stataccess (const char *path, int mode)
   return -1;
 }
 
-#if HAVE_DECL_SETREGID
+#if defined(HAVE_DECL_SETREGID)
 /* Version to call when uid != euid or gid != egid.  We temporarily swap
    the effective and real uid and gid as appropriate. */
 int

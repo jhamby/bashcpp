@@ -135,8 +135,8 @@ Shell::hash_builtin (WORD_LIST *list)
   if (list == 0 && !expunge_hash_table)
     {
       opt = print_hashed_commands (list_portably);
-      if (opt == 0 && posixly_correct == 0
-          && (list_portably == 0 || shell_compatibility_level <= 50))
+      if (!opt && !posixly_correct
+          && (!list_portably || shell_compatibility_level <= 50))
         printf (_ ("%s: hash table empty\n"), this_command_name);
 
       return EXECUTION_SUCCESS;
@@ -170,7 +170,7 @@ Shell::hash_builtin (WORD_LIST *list)
     }
 #endif
 
-  for (opt = EXECUTION_SUCCESS; list; list = (WORD_LIST *)list->next)
+  for (opt = EXECUTION_SUCCESS; list; list = list->next ())
     {
       /* Add, remove or rehash the specified commands. */
       char *w = list->word->word;

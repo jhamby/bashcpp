@@ -59,151 +59,137 @@ namespace bash
 #define UNSETOPT 0
 #define SETOPT 1
 
-#define OPTFMT "%-15s\t%s\n"
-
-static void shopt_error (const char *);
-
-static int set_shellopts_after_change (const char *, int);
-static int set_compatibility_level (const char *, int);
-
-#if defined(RESTRICTED_SHELL)
-static int set_restricted_shell (const char *, int);
-#endif
-
-#if defined(READLINE)
-static int shopt_enable_hostname_completion (const char *, int);
-static int shopt_set_complete_direxpand (const char *, int);
-#endif
-
-static int shopt_set_debug_mode (const char *, int);
-
 /* If you add a new variable name here, make sure to set the default value
    appropriately in reset_shopt_options. */
 
-static struct
+void
+Shell::initialize_shopt_vars_table ()
 {
-  const char *name;
-  char *value;
-  Shell::shopt_set_func_t set_func;
-} shopt_vars[]
-    = { { "autocd", &autocd, nullptr },
+  shopt_vars.push_back (shopt_var_t ("autocd", &autocd));
 #if defined(ARRAY_VARS)
-        { "assoc_expand_once", &assoc_expand_once, nullptr },
+  shopt_vars.push_back (shopt_var_t ("assoc_expand_once", &assoc_expand_once));
 #endif
-        { "cdable_vars", &cdable_vars, nullptr },
-        { "cdspell", &cdspelling, nullptr },
-        { "checkhash", &check_hashed_filenames, nullptr },
+  shopt_vars.push_back (shopt_var_t ("cdable_vars", &cdable_vars));
+  shopt_vars.push_back (shopt_var_t ("cdspell", &cdspelling));
+  shopt_vars.push_back (shopt_var_t ("checkhash", &check_hashed_filenames));
 #if defined(JOB_CONTROL)
-        { "checkjobs", &check_jobs_at_exit, nullptr },
+  shopt_vars.push_back (shopt_var_t ("checkjobs", &check_jobs_at_exit));
 #endif
-        { "checkwinsize", &check_window_size, nullptr },
+  shopt_vars.push_back (shopt_var_t ("checkwinsize", &check_window_size));
 #if defined(HISTORY)
-        { "cmdhist", &command_oriented_history, nullptr },
+  shopt_vars.push_back (shopt_var_t ("cmdhist", &command_oriented_history));
 #endif
-        { "compat31", &shopt_compat31, &Shell::set_compatibility_level },
-        { "compat32", &shopt_compat32, &Shell::set_compatibility_level },
-        { "compat40", &shopt_compat40, &Shell::set_compatibility_level },
-        { "compat41", &shopt_compat41, &Shell::set_compatibility_level },
-        { "compat42", &shopt_compat42, &Shell::set_compatibility_level },
-        { "compat43", &shopt_compat43, &Shell::set_compatibility_level },
-        { "compat44", &shopt_compat44, &Shell::set_compatibility_level },
+  shopt_vars.push_back (shopt_var_t ("compat31", &shopt_compat31,
+                                     &Shell::set_compatibility_level));
+  shopt_vars.push_back (shopt_var_t ("compat32", &shopt_compat32,
+                                     &Shell::set_compatibility_level));
+  shopt_vars.push_back (shopt_var_t ("compat40", &shopt_compat40,
+                                     &Shell::set_compatibility_level));
+  shopt_vars.push_back (shopt_var_t ("compat41", &shopt_compat41,
+                                     &Shell::set_compatibility_level));
+  shopt_vars.push_back (shopt_var_t ("compat42", &shopt_compat42,
+                                     &Shell::set_compatibility_level));
+  shopt_vars.push_back (shopt_var_t ("compat43", &shopt_compat43,
+                                     &Shell::set_compatibility_level));
+  shopt_vars.push_back (shopt_var_t ("compat44", &shopt_compat44,
+                                     &Shell::set_compatibility_level));
 #if defined(READLINE)
-        { "complete_fullquote", &complete_fullquote,
-          nullptr },
-        { "direxpand", &dircomplete_expand, &Shell::shopt_set_complete_direxpand },
-        { "dirspell", &dircomplete_spelling, nullptr },
+  shopt_vars.push_back (
+      shopt_var_t ("complete_fullquote", &complete_fullquote));
+  shopt_vars.push_back (shopt_var_t ("direxpand", &dircomplete_expand,
+                                     &Shell::shopt_set_complete_direxpand));
+  shopt_vars.push_back (shopt_var_t ("dirspell", &dircomplete_spelling));
 #endif
-        { "dotglob", &glob_dot_filenames, nullptr },
-        { "execfail", &no_exit_on_failed_exec, nullptr },
-        { "expand_aliases", &expand_aliases, nullptr },
+  shopt_vars.push_back (shopt_var_t ("dotglob", &glob_dot_filenames));
+  shopt_vars.push_back (shopt_var_t ("execfail", &no_exit_on_failed_exec));
+  shopt_vars.push_back (shopt_var_t ("expand_aliases", &expand_aliases));
 #if defined(DEBUGGER)
-        { "extdebug", &debugging_mode, &Shell::shopt_set_debug_mode },
+  shopt_vars.push_back (
+      shopt_var_t ("extdebug", &debugging_mode, &Shell::shopt_set_debug_mode));
 #endif
 #if defined(EXTENDED_GLOB)
-        { "extglob", &extended_glob, nullptr },
+  shopt_vars.push_back (shopt_var_t ("extglob", &extended_glob));
 #endif
-        { "extquote", &extended_quote, nullptr },
-        { "failglob", &fail_glob_expansion, nullptr },
+  shopt_vars.push_back (shopt_var_t ("extquote", &extended_quote));
+  shopt_vars.push_back (shopt_var_t ("failglob", &fail_glob_expansion));
 #if defined(READLINE)
-        { "force_fignore", &force_fignore, nullptr },
+  shopt_vars.push_back (shopt_var_t ("force_fignore", &force_fignore));
 #endif
-        { "globasciiranges", &glob_asciirange, nullptr },
-        { "globstar", &glob_star, nullptr },
-        { "gnu_errfmt", &gnu_error_format, nullptr },
+  shopt_vars.push_back (shopt_var_t ("globasciiranges", &glob_asciirange));
+  shopt_vars.push_back (shopt_var_t ("globstar", &glob_star));
+  shopt_vars.push_back (shopt_var_t ("gnu_errfmt", &gnu_error_format));
 #if defined(HISTORY)
-        { "histappend", &force_append_history, nullptr },
+  shopt_vars.push_back (shopt_var_t ("histappend", &force_append_history));
 #endif
 #if defined(READLINE)
-        { "histreedit", &history_reediting, nullptr },
-        { "histverify", &hist_verify, nullptr },
-        { "hostcomplete", &perform_hostname_completion,
-          &Shell::shopt_enable_hostname_completion },
+  shopt_vars.push_back (shopt_var_t ("histreedit", &history_reediting));
+  shopt_vars.push_back (shopt_var_t ("histverify", &hist_verify));
+  shopt_vars.push_back (
+      shopt_var_t ("hostcomplete", &perform_hostname_completion,
+                   &Shell::shopt_enable_hostname_completion));
 #endif
-        { "huponexit", &hup_on_exit, nullptr },
-        { "inherit_errexit", &inherit_errexit, nullptr },
-        { "interactive_comments", &interactive_comments,
-          &Shell::set_shellopts_after_change },
-        { "lastpipe", &lastpipe_opt, nullptr },
+  shopt_vars.push_back (shopt_var_t ("huponexit", &hup_on_exit));
+  shopt_vars.push_back (shopt_var_t ("inherit_errexit", &inherit_errexit));
+  shopt_vars.push_back (shopt_var_t ("interactive_comments",
+                                     &interactive_comments,
+                                     &Shell::set_shellopts_after_change));
+  shopt_vars.push_back (shopt_var_t ("lastpipe", &lastpipe_opt));
 #if defined(HISTORY)
-        { "lithist", &literal_history, nullptr },
+  shopt_vars.push_back (shopt_var_t ("lithist", &literal_history));
 #endif
-        { "localvar_inherit", &localvar_inherit, nullptr },
-        { "localvar_unset", &localvar_unset, nullptr },
-        { "login_shell", &shopt_login_shell, set_login_shell },
-        { "mailwarn", &mail_warning, nullptr },
+  shopt_vars.push_back (shopt_var_t ("localvar_inherit", &localvar_inherit));
+  shopt_vars.push_back (shopt_var_t ("localvar_unset", &localvar_unset));
+  shopt_vars.push_back (shopt_var_t ("login_shell", &shopt_login_shell,
+                                     &Shell::set_login_shell));
+  shopt_vars.push_back (shopt_var_t ("mailwarn", &mail_warning));
 #if defined(READLINE)
-        { "no_empty_cmd_completion", &no_empty_command_completion,
-          nullptr },
+  shopt_vars.push_back (
+      shopt_var_t ("no_empty_cmd_completion", &no_empty_command_completion));
 #endif
-        { "nocaseglob", &glob_ignore_case, nullptr },
-        { "nocasematch", &match_ignore_case, nullptr },
-        { "nullglob", &allow_null_glob_expansion, nullptr },
+  shopt_vars.push_back (shopt_var_t ("nocaseglob", &glob_ignore_case));
+  shopt_vars.push_back (shopt_var_t ("nocasematch", &match_ignore_case));
+  shopt_vars.push_back (shopt_var_t ("nullglob", &allow_null_glob_expansion));
 #if defined(PROGRAMMABLE_COMPLETION)
-        { "progcomp", &prog_completion_enabled, nullptr },
+  shopt_vars.push_back (shopt_var_t ("progcomp", &prog_completion_enabled));
 #if defined(ALIAS)
-        { "progcomp_alias", &progcomp_alias, nullptr },
+  shopt_vars.push_back (shopt_var_t ("progcomp_alias", &progcomp_alias));
 #endif
 #endif
-        { "promptvars", &promptvars, nullptr },
+  shopt_vars.push_back (shopt_var_t ("promptvars", &promptvars));
 #if defined(RESTRICTED_SHELL)
-        { "restricted_shell", &restricted_shell, &Shell::set_restricted_shell },
+  shopt_vars.push_back (shopt_var_t ("restricted_shell", &restricted_shell,
+                                     &Shell::set_restricted_shell));
 #endif
-        { "shift_verbose", &print_shift_error, nullptr },
-        { "sourcepath", &source_uses_path, nullptr },
+  shopt_vars.push_back (shopt_var_t ("shift_verbose", &print_shift_error));
+  shopt_vars.push_back (shopt_var_t ("sourcepath", &source_uses_path));
 #if defined(SYSLOG_HISTORY) && defined(SYSLOG_SHOPT)
-        { "syslog_history", &syslog_history, nullptr },
+  shopt_vars.push_back (shopt_var_t ("syslog_history", &syslog_history));
 #endif
-        { "xpg_echo", &xpg_echo, nullptr },
-        { nullptr, nullptr, nullptr } };
+  shopt_vars.push_back (shopt_var_t ("xpg_echo", &xpg_echo));
 
-#define N_SHOPT_OPTIONS (sizeof (shopt_vars) / sizeof (shopt_vars[0]))
+#if __cplusplus < 201103L
+  shopt_vars.reserve (shopt_vars.size ());
+#else
+  shopt_vars.shrink_to_fit ();
+#endif
+}
 
-#define GET_SHOPT_OPTION_VALUE(i) (*shopt_vars[i].value)
+// We only need the enum operators in this file.
 
-static const char *const on = "on";
-static const char *const off = "off";
-
-static int find_shopt (const char *);
-static int toggle_shopts (int, WORD_LIST *, int);
-static void print_shopt (const char *, int, int);
-static int list_shopts (WORD_LIST *, int);
-static int list_some_shopts (int, int);
-static int list_shopt_o_options (WORD_LIST *, int);
-static int list_some_o_options (int, int);
-static int set_shopt_o_options (int, WORD_LIST *, int);
-
-#define SFLAG 0x01
-#define UFLAG 0x02
-#define QFLAG 0x04
-#define OFLAG 0x08
-#define PFLAG 0x10
+static inline Shell::shopt_flags &
+operator|= (Shell::shopt_flags &a, const Shell::shopt_flags &b)
+{
+  a = static_cast<Shell::shopt_flags> (static_cast<uint32_t> (a)
+                                       | static_cast<uint32_t> (b));
+  return a;
+}
 
 int
 Shell::shopt_builtin (WORD_LIST *list)
 {
-  int opt, flags, rval;
+  int opt, rval;
 
-  flags = 0;
+  shopt_flags flags = SHOPT_NOFLAGS;
   reset_internal_getopt ();
   while ((opt = internal_getopt (list, "psuoq")) != -1)
     {
@@ -230,6 +216,7 @@ Shell::shopt_builtin (WORD_LIST *list)
           return EX_USAGE;
         }
     }
+
   list = loptend;
 
   if ((flags & (SFLAG | UFLAG)) == (SFLAG | UFLAG))
@@ -242,13 +229,11 @@ Shell::shopt_builtin (WORD_LIST *list)
   if ((flags & OFLAG) && ((flags & (SFLAG | UFLAG)) == 0)) /* shopt -o */
     rval = list_shopt_o_options (list, flags);
   else if (list && (flags & OFLAG)) /* shopt -so args */
-    rval = set_shopt_o_options ((flags & SFLAG) ? FLAG_ON : FLAG_OFF, list,
-                                flags & QFLAG);
+    rval = set_shopt_o_options ((flags & SFLAG) ? FLAG_ON : FLAG_OFF, list);
   else if (flags & OFLAG) /* shopt -so */
     rval = list_some_o_options ((flags & SFLAG) ? 1 : 0, flags);
   else if (list && (flags & (SFLAG | UFLAG))) /* shopt -su args */
-    rval = toggle_shopts ((flags & SFLAG) ? SETOPT : UNSETOPT, list,
-                          flags & QFLAG);
+    rval = toggle_shopts ((flags & SFLAG) ? SETOPT : UNSETOPT, list);
   else if ((flags & (SFLAG | UFLAG)) == 0) /* shopt [args] */
     rval = list_shopts (list, flags);
   else /* shopt -su */
@@ -338,25 +323,20 @@ Shell::reset_shopt_options ()
   shopt_login_shell = login_shell;
 }
 
-static int
+int
 Shell::find_shopt (const char *name)
 {
-  int i;
+  std::vector<shopt_var_t>::iterator it;
 
-  for (i = 0; shopt_vars[i].name; i++)
-    if (STREQ (name, shopt_vars[i].name))
-      return i;
+  for (it = shopt_vars.begin (); it != shopt_vars.end (); ++it)
+    if (STREQ (name, (*it).name))
+      return static_cast<int> (it - shopt_vars.begin ());
+
   return -1;
 }
 
-static void
-Shell::shopt_error (const char *s)
-{
-  builtin_error (_ ("%s: invalid shell option name"), s);
-}
-
-static int
-Shell::toggle_shopts (int mode, WORD_LIST *list, int quiet)
+int
+Shell::toggle_shopts (char mode, WORD_LIST *list)
 {
   WORD_LIST *l;
   int ind, rval;
@@ -364,17 +344,17 @@ Shell::toggle_shopts (int mode, WORD_LIST *list, int quiet)
 
   for (l = list, rval = EXECUTION_SUCCESS; l; l = l->next ())
     {
-      ind = find_shopt (l->word->word);
+      ind = find_shopt (l->word->word.c_str ());
       if (ind < 0)
         {
-          shopt_error (l->word->word);
+          shopt_error (l->word->word.c_str ());
           rval = EXECUTION_FAILURE;
         }
       else
         {
           *shopt_vars[ind].value = mode; /* 1 for set, 0 for unset */
           if (shopt_vars[ind].set_func)
-            (*shopt_vars[ind].set_func) (shopt_vars[ind].name, mode);
+            ((*this).*shopt_vars[ind].set_func) (shopt_vars[ind].name, mode);
         }
     }
 
@@ -384,69 +364,64 @@ Shell::toggle_shopts (int mode, WORD_LIST *list, int quiet)
   return rval;
 }
 
-static void
-Shell::print_shopt (const char *name, int val, int flags)
-{
-  if (flags & PFLAG)
-    std::printf ("shopt %s %s\n", val ? "-s" : "-u", name);
-  else
-    std::printf (OPTFMT, name, val ? on : off);
-}
-
 /* List the values of all or any of the `shopt' options.  Returns 0 if
    all were listed or all variables queried were on; 1 otherwise. */
-static int
-Shell::list_shopts (WORD_LIST *list, int flags)
+int
+Shell::list_shopts (WORD_LIST *list, shopt_flags flags)
 {
   WORD_LIST *l;
-  int i, val, rval;
+  int rval;
 
-  if (list == 0)
+  if (list == nullptr)
     {
-      for (i = 0; shopt_vars[i].name; i++)
+      std::vector<shopt_var_t>::iterator it;
+      for (it = shopt_vars.begin (); it != shopt_vars.end (); ++it)
         {
-          val = *shopt_vars[i].value;
+          char val = *(*it).value;
           if ((flags & QFLAG) == 0)
-            print_shopt (shopt_vars[i].name, val, flags);
+            print_shopt ((*it).name, val, flags);
         }
       return sh_chkwrite (EXECUTION_SUCCESS);
     }
 
-  for (l = list, rval = EXECUTION_SUCCESS; l; l = (WORD_LIST *)l->next)
+  for (l = list, rval = EXECUTION_SUCCESS; l; l = l->next ())
     {
-      i = find_shopt (l->word->word);
+      int i = find_shopt (l->word->word.c_str ());
       if (i < 0)
         {
-          shopt_error (l->word->word);
+          shopt_error (l->word->word.c_str ());
           rval = EXECUTION_FAILURE;
           continue;
         }
-      val = *shopt_vars[i].value;
+
+      char val = *shopt_vars[static_cast<size_t> (i)].value;
       if (val == 0)
         rval = EXECUTION_FAILURE;
+
       if ((flags & QFLAG) == 0)
-        print_shopt (l->word->word, val, flags);
+        print_shopt (l->word->word.c_str (), val, flags);
     }
 
   return sh_chkwrite (rval);
 }
 
-static int
-Shell::list_some_shopts (int mode, int flags)
+int
+Shell::list_some_shopts (char mode, shopt_flags flags)
 {
-  int val, i;
+  std::vector<shopt_var_t>::iterator it;
 
-  for (i = 0; shopt_vars[i].name; i++)
+  for (it = shopt_vars.begin (); it != shopt_vars.end (); ++it)
     {
-      val = *shopt_vars[i].value;
+      char val = *(*it).value;
       if (((flags & QFLAG) == 0) && mode == val)
-        print_shopt (shopt_vars[i].name, val, flags);
+        print_shopt ((*it).name, val, flags);
     }
+
   return sh_chkwrite (EXECUTION_SUCCESS);
 }
 
-static int
-Shell::list_shopt_o_options (WORD_LIST *list, int flags)
+int
+Shell::list_shopt_o_options (WORD_LIST *list, shopt_flags flags)
 {
   WORD_LIST *l;
   int val, rval;
@@ -458,12 +433,12 @@ Shell::list_shopt_o_options (WORD_LIST *list, int flags)
       return sh_chkwrite (EXECUTION_SUCCESS);
     }
 
-  for (l = list, rval = EXECUTION_SUCCESS; l; l = (WORD_LIST *)l->next)
+  for (l = list, rval = EXECUTION_SUCCESS; l; l = l->next ())
     {
-      val = minus_o_option_value (l->word->word);
+      val = minus_o_option_value (l->word->word.c_str ());
       if (val == -1)
         {
-          sh_invalidoptname (l->word->word);
+          sh_invalidoptname (l->word->word.c_str ());
           rval = EXECUTION_FAILURE;
           continue;
         }
@@ -472,31 +447,32 @@ Shell::list_shopt_o_options (WORD_LIST *list, int flags)
       if ((flags & QFLAG) == 0)
         {
           if (flags & PFLAG)
-            printf ("set %co %s\n", val ? '-' : '+', l->word->word);
+            printf ("set %co %s\n", val ? '-' : '+', l->word->word.c_str ());
           else
-            printf (OPTFMT, l->word->word, val ? on : off);
+            printf (OPTFMT, l->word->word.c_str (), val ? on : off);
         }
     }
   return sh_chkwrite (rval);
 }
 
-static int
-Shell::list_some_o_options (int mode, int flags)
+int
+Shell::list_some_o_options (char mode, shopt_flags flags)
 {
   if ((flags & QFLAG) == 0)
     list_minus_o_opts (mode, (flags & PFLAG));
   return sh_chkwrite (EXECUTION_SUCCESS);
 }
 
-static int
-Shell::set_shopt_o_options (int mode, WORD_LIST *list, int quiet)
+int
+Shell::set_shopt_o_options (char mode, WORD_LIST *list)
 {
   WORD_LIST *l;
   int rval;
 
-  for (l = list, rval = EXECUTION_SUCCESS; l; l = (WORD_LIST *)l->next)
+  for (l = list, rval = EXECUTION_SUCCESS; l; l = l->next ())
     {
-      if (set_minus_o_option (mode, l->word->word) == EXECUTION_FAILURE)
+      if (set_minus_o_option (mode, l->word->word.c_str ())
+          == EXECUTION_FAILURE)
         rval = EXECUTION_FAILURE;
     }
   set_shellopts ();
@@ -505,35 +481,35 @@ Shell::set_shopt_o_options (int mode, WORD_LIST *list, int quiet)
 
 /* If we set or unset interactive_comments with shopt, make sure the
    change is reflected in $SHELLOPTS. */
-static int
-Shell::set_shellopts_after_change (const char *option_name, int mode)
+int
+Shell::set_shellopts_after_change (const char *option_name, char mode)
 {
   set_shellopts ();
   return 0;
 }
 
-static int
-Shell::shopt_set_debug_mode (const char *option_name, int mode)
-{
 #if defined(DEBUGGER)
+int
+Shell::shopt_set_debug_mode (const char *option_name, char mode)
+{
   error_trace_mode = function_trace_mode = debugging_mode;
   set_shellopts ();
   if (debugging_mode)
     init_bash_argv ();
-#endif
   return 0;
 }
+#endif
 
 #if defined(READLINE)
-static int
-Shell::shopt_enable_hostname_completion (const char *option_name, int mode)
+int
+Shell::shopt_enable_hostname_completion (const char *option_name, char mode)
 {
   return enable_hostname_completion (mode);
 }
 #endif
 
-static int
-Shell::set_compatibility_level (const char *option_name, int mode)
+int
+Shell::set_compatibility_level (const char *option_name, char mode)
 {
   int ind;
   char *rhs;
@@ -613,8 +589,8 @@ Shell::set_compatibility_opts ()
 }
 
 #if defined(READLINE)
-static int
-Shell::shopt_set_complete_direxpand (const char *option_name, int mode)
+int
+Shell::shopt_set_complete_direxpand (const char *option_name, char mode)
 {
   set_directory_hook ();
   return 0;
@@ -623,12 +599,9 @@ Shell::shopt_set_complete_direxpand (const char *option_name, int mode)
 
 #if defined(RESTRICTED_SHELL)
 /* Don't allow the value of restricted_shell to be modified. */
-
-static int
-Shell::set_restricted_shell (const char *option_name, int mode)
+int
+Shell::set_restricted_shell (const char *option_name, char mode)
 {
-  static int save_restricted = -1;
-
   if (save_restricted == -1)
     save_restricted = shell_is_restricted (shell_name);
 
@@ -637,15 +610,14 @@ Shell::set_restricted_shell (const char *option_name, int mode)
 }
 #endif /* RESTRICTED_SHELL */
 
-/* Not static so shell.c can call it to initialize shopt_login_shell */
 int
-Shell::set_login_shell (const char *option_name, int mode)
+Shell::set_login_shell (const char *option_name, char mode)
 {
-  shopt_login_shell = login_shell != 0;
+  shopt_login_shell = (login_shell != 0);
   return 0;
 }
 
-char **
+STRINGLIST *
 Shell::get_shopt_options ()
 {
   char **ret;
@@ -665,24 +637,24 @@ Shell::get_shopt_options ()
  * REUSABLE is 1 if we want to print output in a form that may be reused.
  */
 int
-Shell::shopt_setopt (const char *name, int mode)
+Shell::shopt_setopt (const char *name, char mode)
 {
   WORD_LIST *wl;
   int r;
 
   wl = add_string_to_list (name, nullptr);
-  r = toggle_shopts (mode, wl, 0);
+  r = toggle_shopts (mode, wl);
   dispose_words (wl);
   return r;
 }
 
 int
-Shell::shopt_listopt (const char *name, int reusable)
+Shell::shopt_listopt (const char *name, bool reusable)
 {
   int i;
 
   if (name == 0)
-    return list_shopts (nullptr, reusable ? PFLAG : 0);
+    return list_shopts (nullptr, reusable ? PFLAG : SHOPT_NOFLAGS);
 
   i = find_shopt (name);
   if (i < 0)
@@ -691,7 +663,7 @@ Shell::shopt_listopt (const char *name, int reusable)
       return EXECUTION_FAILURE;
     }
 
-  print_shopt (name, *shopt_vars[i].value, reusable ? PFLAG : 0);
+  print_shopt (name, *shopt_vars[i].value, reusable ? PFLAG : SHOPT_NOFLAGS);
   return sh_chkwrite (EXECUTION_SUCCESS);
 }
 
@@ -754,45 +726,37 @@ Shell::set_bashopts ()
 }
 
 void
-parse_bashopts (char *value)
+Shell::parse_bashopts (const char *value)
 {
   char *vname;
-  int vptr, ind;
 
-  vptr = 0;
+  size_t vptr = 0;
   while ((vname = extract_colon_unit (value, &vptr)))
     {
-      ind = find_shopt (vname);
+      int ind = find_shopt (vname);
       if (ind >= 0)
         {
           *shopt_vars[ind].value = 1;
           if (shopt_vars[ind].set_func)
-            (*shopt_vars[ind].set_func) (shopt_vars[ind].name, 1);
+            ((*this).*shopt_vars[ind].set_func) (shopt_vars[ind].name, 1);
         }
-      free (vname);
+      delete[] vname;
     }
 }
 
 void
-initialize_bashopts (int no_bashopts)
+Shell::initialize_bashopts (bool no_bashopts)
 {
-  char *temp;
-  SHELL_VAR *var;
-
-  if (no_bashopts == 0)
+  if (!no_bashopts)
     {
-      var = find_variable ("BASHOPTS");
+      SHELL_VAR *var = find_variable ("BASHOPTS");
       /* set up any shell options we may have inherited. */
-      if (var && imported_p (var))
+      if (var && var->imported ())
         {
-          temp = (array_p (var) || assoc_p (var))
-                     ? nullptr
-                     : savestring (value_cell (var));
+          const char *temp
+              = (var->array () || var->assoc ()) ? nullptr : var->str_value ();
           if (temp)
-            {
-              parse_bashopts (temp);
-              free (temp);
-            }
+            parse_bashopts (temp);
         }
     }
 

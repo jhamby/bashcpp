@@ -94,7 +94,7 @@ WORD_LIST *array_keys_to_word_list (ARRAY *);
 
 ARRAY *array_assign_list (ARRAY *, WORD_LIST *);
 
-char **array_to_argv (ARRAY *, int *);
+std::vector<char *> *array_to_argv (ARRAY *);
 
 char *array_to_kvpair (ARRAY *, int);
 char *array_to_assign (ARRAY *, int);

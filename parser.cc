@@ -217,7 +217,7 @@ Shell::yy_string_unget (int c)
 }
 
 void
-Shell::with_input_from_string (std::string &string, const std::string &name)
+Shell::with_input_from_string (char *string, const char *name)
 {
   INPUT_STREAM location;
 
@@ -312,7 +312,7 @@ Shell::push_stream (int reset_lineno)
 #endif /* BUFFERED_INPUT */
 
   saver->line = line_number;
-  bash_input.name = nullptr;
+  bash_input.name.clear ();
   saver->set_next (stream_list);
   stream_list = saver;
   EOF_Reached = false;
@@ -1125,8 +1125,7 @@ Shell::discard_until (int character)
 }
 
 void
-Shell::execute_variable_command (const std::string &command,
-                                 const std::string &vname)
+Shell::execute_variable_command (char *command, const char *vname)
 {
   char *last_lastarg;
   sh_parser_state_t ps;
@@ -2537,8 +2536,9 @@ Shell::parse_comsub (int qc, int open, int close)
 /* Recursively call the parser to parse a $(...) command substitution. This is
    called by the word expansion code and so does not have to reset as much
    parser state before calling yyparse(). */
-std::string
-Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
+char *
+Shell::xparse_dolparen (const char *base, char *string, size_t *indp,
+                        sx_flags flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
@@ -2594,8 +2594,10 @@ Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
 
   nc = parse_string (string, "command substitution", sflags, &ep);
 
-  if (current_token == shell_eof_token)
-    yyclearin; /* might want to clear lookahead token unconditionally */
+  // FIXME: the C++ Bison parser only allows yyclearin from within parse ().
+  // FIXME: the EOF token handling in parse.yy may have to integrate this.
+  //   if (current_token == shell_eof_token)
+  //     yyclearin; /* might want to clear lookahead token unconditionally */
 
   reset_parser ();
   /* reset_parser() clears shell_input_line and associated variables, including
@@ -2658,7 +2660,8 @@ Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
       /*(*/
       if ((flags & SX_NOERROR) == 0)
         parser_error (start_lineno,
-                    _ ("unexpected EOF while looking for matching `%c'"), ')');
+                      _ ("unexpected EOF while looking for matching `%c'"),
+                      ')');
       throw bash_exception (DISCARD);
     }
 

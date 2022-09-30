@@ -27,7 +27,9 @@
 #include <cstring>
 #include <ctime>
 
+#include <algorithm>
 #include <string>
+#include <vector>
 
 #include "bashtypes.hh"
 #include "general.hh"
@@ -316,72 +318,172 @@ char *dirspell (const char *);
 
 /* declarations for functions and structures defined in lib/sh/stringlist.c */
 
+// String lists and vectors are now the same thing.
+typedef std::vector<char *> STRINGLIST;
+
 #if 0
-typedef std::vector<std::string> STRINGLIST;
-
-// typedef int sh_strlist_map_func_t (char *);
-
 static inline STRINGLIST *
-strlist_create (int n)
+strlist_create (size_t n)
 {
-  if (n)
-    return new STRINGLIST(n);
-  else
-    return new STRINGLIST;
+  return new STRINGLIST (n);
 }
 
+// Note: call resize () directly, with or without size check.
 static inline STRINGLIST *
-strlist_resize (STRINGLIST *sl, int n)
+strlist_resize (STRINGLIST *sl, size_t n)
 {
-  if (n > sl->size())
-    sl->resize(n);
+  if (n > sl->size ())
+    sl->resize (n);
 
   return sl;
 }
-
-void strlist_flush (STRINGLIST *);
-void strlist_dispose (STRINGLIST *);
-int strlist_remove (STRINGLIST *, char *);
-STRINGLIST *strlist_copy (STRINGLIST *);
-STRINGLIST *strlist_merge (STRINGLIST *, STRINGLIST *);
-STRINGLIST *strlist_append (STRINGLIST *, STRINGLIST *);
-STRINGLIST *strlist_prefix_suffix (STRINGLIST *, char *, char *);
-void strlist_print (STRINGLIST *, char *);
-void strlist_walk (STRINGLIST *, sh_strlist_map_func_t *);
-void strlist_sort (STRINGLIST *);
 #endif
+
+int strlist_remove (STRINGLIST *, char *);
+STRINGLIST *strlist_copy (const STRINGLIST *);
+STRINGLIST *strlist_merge (const STRINGLIST *, const STRINGLIST *);
+void strlist_append (STRINGLIST *, const STRINGLIST *);
+void strlist_prefix_suffix (STRINGLIST *, const char *, const char *);
+
+static inline void
+strlist_print (const STRINGLIST *sl, const char *prefix)
+{
+  if (sl == nullptr)
+    return;
+
+  STRINGLIST::const_iterator it;
+  for (it = sl->begin (); it != sl->end (); ++it)
+    printf ("%s%s\n", prefix ? prefix : "", *it);
+}
+
+// Custom comparison function for sorting string pointer vectors.
+struct string_ptr_comp
+{
+  bool
+  operator() (const std::string *s1, const std::string *s2)
+  {
+#if defined(HAVE_STRCOLL)
+    return strcoll (s1->c_str (), s2->c_str ()) < 0;
+#else
+    return strcmp (s1->c_str (), s2->c_str ()) < 0;
+#endif
+  }
+};
+
+/* Comparison routine for use by qsort that conforms to the new Posix
+   requirements (http://austingroupbugs.net/view.php?id=1070).
+
+   Perform a bytewise comparison if *S1 and *S2 collate equally. */
+struct strlist_posixcmp
+{
+  bool
+  operator() (const char *s1, const char *s2)
+  {
+    int result;
+
+#if defined(HAVE_STRCOLL)
+    result = strcoll (s1, s2);
+    if (result != 0)
+      return (result < 0);
+#endif
+
+    return strcmp (s1, s2) < 0;
+  }
+};
+
+/* Comparison routine for use with qsort() on arrays of strings.  Uses
+   strcoll(3) if available, otherwise it uses strcmp(3). */
+struct strlist_strcmp
+{
+  bool
+  operator() (const char *s1, const char *s2)
+  {
+#if defined(HAVE_STRCOLL)
+    return strcoll (s1, s2) < 0;
+#else  /* !HAVE_STRCOLL */
+    return strcmp (s1, s2) < 0;
+#endif /* !HAVE_STRCOLL */
+  }
+};
+
+/* Sort ARRAY, a null terminated array of pointers to strings. */
+static inline void
+strlist_sort (STRINGLIST *array, bool posix)
+{
+  if (posix)
+    {
+      strlist_posixcmp posixcmp;
+      std::sort (array->begin (), array->end (), posixcmp);
+    }
+  else
+    {
+      strlist_strcmp strcollcmp;
+      std::sort (array->begin (), array->end (), strcollcmp);
+    }
+}
 
 /* declarations for functions defined in lib/sh/stringvec.c */
 
-#if 0
-char **strvec_create (int);
-char **strvec_resize (char **, int);
-char **strvec_mcreate (int);
-char **strvec_mresize (char **, int);
-void strvec_flush (char **);
-int strvec_remove (char **, char *);
-size_t strvec_len (char **);
-int strvec_search (char **, char *);
-char **strvec_copy (char **);
-int strvec_posixcmp (char **, char **);
-int strvec_strcmp (char **, char **);
-void strvec_sort (char **, int);
+// There is now a single STRINGLIST typedef for both sets of functions.
 
-char **strvec_from_word_list (WORD_LIST *, int, int, int *);
-WORD_LIST *strvec_to_word_list (char **, int, int);
-#endif
-
+/* Free the contents of sl, a C++ vector of char *. */
 static inline void
-strvec_dispose (char **array)
+strlist_flush (STRINGLIST *sl)
 {
-  if (array == nullptr)
+  if (sl == nullptr)
     return;
 
-  for (int i = 0; array[i]; i++)
-    delete[] array[i];
-
-  delete[] array;
+  STRINGLIST::iterator it;
+  for (it = sl->begin (); it != sl->end (); ++it)
+    delete[](*it);
 }
+
+// Free the contents of sl, a C++ vector of char *, then the array itself.
+static inline void
+strlist_dispose (STRINGLIST *sl)
+{
+  if (sl == nullptr)
+    return;
+
+  strlist_flush (sl);
+  delete sl;
+}
+
+// Search for and remove the first occurrence of the specified name. Returns
+// true if an item was found; false otherwise.
+static inline bool
+strlist_remove (STRINGLIST *sl, const char *name)
+{
+  if (sl == nullptr)
+    return false;
+
+  STRINGLIST::iterator it;
+  for (it = sl->begin (); it != sl->end (); ++it)
+    if (STREQ (name, *it))
+      {
+        delete[](*it);
+        return true;
+      }
+  return false;
+}
+
+// Find NAME in STRINGLIST.  Return the index of NAME, or -1 if not present.
+static inline int
+strlist_search (const STRINGLIST *array, const char *name)
+{
+  STRINGLIST::const_iterator it;
+
+  for (it = array->begin (); it != array->end (); ++it)
+    if (STREQ (name, *it))
+      return static_cast<int> (it - array->begin ());
+
+  return -1;
+}
+
+class WORD_LIST;
+
+STRINGLIST *strlist_from_word_list (const WORD_LIST *, size_t);
+WORD_LIST *strlist_to_word_list (const STRINGLIST *, size_t);
 
 /* declarations for functions defined in lib/sh/strtrans.c */
 
@@ -729,7 +831,7 @@ printable_filename (const std::string &fn, int flags)
     return fn;
 }
 
-char *extract_colon_unit (char *, size_t *);
+char *extract_colon_unit (const char *, size_t *);
 
 void tilde_initialize ();
 char *bash_tilde_find_word (const char *, int, size_t *);

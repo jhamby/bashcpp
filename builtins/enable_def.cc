@@ -158,7 +158,7 @@ Shell::enable_builtin (WORD_LIST *list)
   /* Restricted shells cannot load new builtins. */
   if (restricted && (flags & (FFLAG | DFLAG)))
     {
-      sh_restricted ((char *)NULL);
+      sh_restricted (nullptr);
       return EXECUTION_FAILURE;
     }
 #endif
@@ -195,7 +195,7 @@ Shell::enable_builtin (WORD_LIST *list)
           opt = dyn_unload_builtin (list->word->word);
           if (opt == EXECUTION_FAILURE)
             result = EXECUTION_FAILURE;
-          list = (WORD_LIST *)list->next;
+          list = list->next ();
         }
 #if defined(PROGRAMMABLE_COMPLETION)
       set_itemlist_dirty (&it_builtins);
@@ -213,7 +213,7 @@ Shell::enable_builtin (WORD_LIST *list)
               sh_notbuiltin (list->word->word);
               result = EXECUTION_FAILURE;
             }
-          list = (WORD_LIST *)list->next;
+          list = list->next ();
         }
     }
   return result;
@@ -344,7 +344,7 @@ dyn_load_builtin (WORD_LIST *list, int flags, const char *filename)
      structure.  If this is overwriting an existing builtin, do so, otherwise
      save the loaded struct for creating the new list of builtins. */
   int replaced;
-  for (replaced = new_size = 0; list; list = (WORD_LIST *)list->next)
+  for (replaced = new_size = 0; list; list = list->next ())
     {
       name = list->word->word;
 

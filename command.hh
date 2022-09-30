@@ -1,7 +1,7 @@
-/* command.h -- The structures used internally to represent commands, and
+/* command.hh -- The structures used internally to represent commands, and
    the extern declarations of the functions used to create them. */
 
-/* Copyright (C) 1993-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2021 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -114,29 +114,30 @@ TRANSLATE_REDIRECT (r_instruction ri)
 enum word_desc_flags
 {
   W_NOFLAGS = 0,
-  W_HASDOLLAR = 1 << 0,   // Dollar sign present.
-  W_QUOTED = 1 << 1,      // Some form of quote character is present.
-  W_ASSIGNMENT = 1 << 2,  // This word is a variable assignment.
-  W_SPLITSPACE = 1 << 3,  // Split this word on " " regardless of IFS
-  W_NOSPLIT = 1 << 4,     // Do not perform word splitting on this word because
-                          // ifs is empty string.
-  W_NOGLOB = 1 << 5,      // Do not perform globbing on this word.
-  W_NOSPLIT2 = 1 << 6,    // Don't split word except for $@ expansion (using
-                          // spaces) because context does not allow it.
-  W_TILDEEXP = 1 << 7,    // Tilde expand this assignment word
-  W_DOLLARAT = 1 << 8,    // $@ and its special handling -- UNUSED
-  W_DOLLARSTAR = 1 << 9,  // $* and its special handling -- UNUSED
-  W_NOCOMSUB = 1 << 10,   // Don't perform command substitution on this word
-  W_ASSIGNRHS = 1 << 11,  // Word is rhs of an assignment statement
-  W_NOTILDE = 1 << 12,    // Don't perform tilde expansion on this word
-  W_ITILDE = 1 << 13,     // Internal flag for word expansion
+  W_HASDOLLAR = 1 << 0,  // Dollar sign present.
+  W_QUOTED = 1 << 1,     // Some form of quote character is present.
+  W_ASSIGNMENT = 1 << 2, // This word is a variable assignment.
+  W_SPLITSPACE = 1 << 3, // Split this word on " " regardless of IFS
+  W_NOSPLIT = 1 << 4,    // Do not perform word splitting on this word because
+                         // ifs is empty string.
+  W_NOGLOB = 1 << 5,     // Do not perform globbing on this word.
+  W_NOSPLIT2 = 1 << 6,   // Don't split word except for $@ expansion (using
+                         // spaces) because context does not allow it.
+  W_TILDEEXP = 1 << 7,   // Tilde expand this assignment word
+  W_DOLLARAT = 1 << 8,   // UNUSED - $@ and its special handling
+  W_ARRAYREF = 1 << 9,   // word is a valid array reference
+  W_NOCOMSUB = 1 << 10,  // Don't perform command substitution on this word
+  W_ASSIGNRHS = 1 << 11, // Word is rhs of an assignment statement
+  W_NOTILDE = 1 << 12,   // Don't perform tilde expansion on this word
+  W_NOASSNTILDE
+  = 1 << 13, // don't do tilde expansion like an assignment statement
   W_EXPANDRHS = 1 << 14,  // Expanding word in ${paramOPword}
   W_COMPASSIGN = 1 << 15, // Compound assignment
   W_ASSNBLTIN = 1 << 16,  // word is a builtin command that takes assignments
   W_ASSIGNARG = 1 << 17,  // word is assignment argument to command
   W_HASQUOTEDNULL = 1 << 18, // word contains a quoted null character
-  W_DQUOTE = 1 << 19,        // word should be treated as if double-quoted
-  W_NOPROCSUB = 1 << 20,     // don't perform process substitution
+  W_DQUOTE = 1 << 19,    // UNUSED - word should be treated as if double-quoted
+  W_NOPROCSUB = 1 << 20, // don't perform process substitution
   W_SAWQUOTEDNULL = 1 << 21, // word contained a quoted null that was removed
   W_ASSIGNASSOC = 1 << 22,   // word looks like associative array assignment
   W_ASSIGNARRAY
@@ -144,12 +145,10 @@ enum word_desc_flags
   W_ARRAYIND = 1 << 24, // word is an array index being expanded
   W_ASSNGLOBAL
   = 1 << 25, // word is a global assignment to declare (declare/typeset -g)
-  W_NOBRACE = 1 << 26,  // Don't perform brace expansion
-  W_COMPLETE = 1 << 27, // word is being expanded for completion
-  W_CHKLOCAL = 1 << 28, // check for local vars on assignment
-  W_NOASSNTILDE
-  = 1 << 29, // don't do tilde expansion like an assignment statement
-  W_FORCELOCAL = 1 << 30 // force assignments to be to local variables,
+  W_NOBRACE = 1 << 26,   // Don't perform brace expansion
+  W_COMPLETE = 1 << 27,  // word is being expanded for completion
+  W_CHKLOCAL = 1 << 28,  // check for local vars on assignment
+  W_FORCELOCAL = 1 << 29 // force assignments to be to local variables,
                          // non-fatal on assignment errors
 };
 
@@ -284,6 +283,12 @@ public:
   next ()
   {
     return static_cast<WORD_LIST *> (next_);
+  }
+
+  const WORD_LIST *
+  next () const
+  {
+    return static_cast<const WORD_LIST *> (next_);
   }
 
   WORD_LIST *

@@ -160,6 +160,9 @@ constexpr int EX_EXPFAIL = 261;   /* word expansion failed */
 constexpr int EX_DISKFALLBACK
     = 262; /* fall back to disk command from builtin */
 
+static const char *str_on = "on";
+static const char *str_off = "off";
+
 /* Flag values that control parameter pattern substitution. */
 enum match_flags
 {
@@ -547,6 +550,9 @@ operator|= (print_alias_flags &a, const print_alias_flags &b)
 }
 #endif
 
+// Friend class used to save/restore parser state.
+class EvalStringUnwindHandler;
+
 // This char array size is assumed by subst.cc and elsewhere.
 #define SYNSIZE 256
 
@@ -656,9 +662,11 @@ protected:
   int shell_level;
 
   /* variables from evalfile.c */
+
   int sourcelevel;
 
   /* Variables declared in execute_cmd.c, used by many other files */
+
   int return_catch_flag;
   int return_catch_value;
 
@@ -757,6 +765,7 @@ public:
   int current_token;
 
   /* variables from evalstring.c */
+
   int parse_and_execute_level;
 
   /* The value returned by the last synchronous command (possibly modified
@@ -891,6 +900,9 @@ protected:
   // List index used by builtins/bashgetopt.cc.
   int getopt_sp;
 
+  /* Non-zero means disable filename globbing. */
+  int disallow_filename_globbing;
+
   /* ************************************************************** */
   /*		Bash Variables (8-bit bool/char types)		    */
   /* ************************************************************** */
@@ -955,7 +967,7 @@ protected:
 
   /* Shared state from bashhist.cc */
 
-  bool remember_on_history;
+  char remember_on_history;
   char enable_history_list; /* value for `set -o history' */
   char literal_history;     /* controlled by `shopt lithist' */
   char force_append_history;
@@ -984,7 +996,7 @@ protected:
      execution? */
   bool builtin_ignoring_errexit;
 
-  bool match_ignore_case;
+  char match_ignore_case;
   bool executing_command_builtin;
 
   /* Set to 1 if fd 0 was the subject of redirection to a subshell.  Global
@@ -1010,7 +1022,7 @@ protected:
   bool EOF_Reached;
 
   /* If non-zero, command substitution inherits the value of errexit option.
-     Managed by builtins/shopt.def. */
+     Managed by builtins/shopt_def.cc. */
   char inherit_errexit;
 
   /* Sentinel to tell when we are performing variable assignments preceding a
@@ -1023,11 +1035,11 @@ protected:
   bool no_throw_on_fatal_error;
 
   /* Non-zero means to allow unmatched globbed filenames to expand to
-     a null file. Managed by builtins/shopt.def. */
+     a null file. Managed by builtins/shopt_def.cc. */
   char allow_null_glob_expansion;
 
   /* Non-zero means to throw an error when globbing fails to match anything.
-     Managed by builtins/shopt.def. */
+     Managed by builtins/shopt_def.cc. */
   char fail_glob_expansion;
 
   // We're waiting for a child.
@@ -1052,9 +1064,6 @@ protected:
      bash uses internally. */
   char errexit_flag;
   char exit_immediately_on_error;
-
-  /* Non-zero means disable filename globbing. */
-  char disallow_filename_globbing;
 
   /* Non-zero means that all keyword arguments are placed into the environment
      for a command, not just those that appear on the line before the command
@@ -1125,6 +1134,7 @@ protected:
      output redirection. */
   char restricted;       /* currently restricted */
   char restricted_shell; /* shell was started in restricted mode. */
+  char save_restricted;  /* saved original restricted mode. */
 #endif                   /* RESTRICTED_SHELL */
 
   /* Non-zero means that this shell is running in `privileged' mode.  This
@@ -1151,7 +1161,7 @@ protected:
 
   /* ************************************************************** */
   /*								    */
-  /*		     Flags managed by shopt.def.		    */
+  /*		   Flags managed by shopt_def.cc.		    */
   /*								    */
   /* ************************************************************** */
 
@@ -1224,10 +1234,20 @@ protected:
   char perform_hostname_completion;
 #endif
 
-  // from shell.h
+  char shopt_compat31;
+  char shopt_compat32;
+  char shopt_compat40;
+  char shopt_compat41;
+  char shopt_compat42;
+  char shopt_compat43;
+  char shopt_compat44;
+
+  char shopt_login_shell;
 
   // Set to 1 to use GNU error format.
   char gnu_error_format;
+
+  // from shell.h
 
   /* Non-zero means that this shell has already been run; i.e. you should
      call shell_reinitialize () if you need to start afresh. */
@@ -1452,6 +1472,8 @@ public:
   };
 
 protected:
+  friend class EvalStringUnwindHandler;
+
   // typedefs moved from general.h so they can become method pointers to Shell.
 
   /* Map over jobs for job control. */
@@ -1513,7 +1535,19 @@ public:
   int set_ignoreeof (int, const char *);
   int set_posix_mode (int, const char *);
 
-  typedef int (Shell::*shopt_set_func_t) (const char *, int);
+  typedef int (Shell::*shopt_set_func_t) (const char *, char);
+
+  struct shopt_var_t
+  {
+    shopt_var_t (const char *name_, char *value_,
+                 shopt_set_func_t set_func_ = nullptr)
+        : name (name_), value (value_), set_func (set_func_)
+    {
+    }
+    const char *name;
+    char *value;
+    Shell::shopt_set_func_t set_func;
+  };
 
   // Called from generated parser on EOF.
   void handle_eof_input_unit ();
@@ -1629,8 +1663,6 @@ public:
 
   // other functions moved from builtins/common.hh
 
-  int set_login_shell (const char *, int);
-
   void initialize_shell_builtins ();
 
   /* Functions from exit.def */
@@ -1661,20 +1693,73 @@ public:
   char *get_current_options ();
   void set_current_options (const char *);
 
-  /* Functions from shopt.def */
+  /* Functions from shopt_def.cc */
+
+  enum shopt_flags
+  {
+    SHOPT_NOFLAGS,
+    SFLAG = 0x01,
+    UFLAG = 0x02,
+    QFLAG = 0x04,
+    OFLAG = 0x08,
+    PFLAG = 0x10
+  };
+
+  void initialize_shopt_vars_table ();
+
   void reset_shopt_options ();
   char **get_shopt_options ();
 
-  int shopt_setopt (const char *, int);
-  int shopt_listopt (const char *, int);
+  int shopt_setopt (const char *, char);
+  int shopt_listopt (const char *, bool);
 
   void set_bashopts ();
   void parse_bashopts (const char *);
-  void initialize_bashopts (int);
+  void initialize_bashopts (bool);
 
   void set_compatibility_opts ();
 
-  /* Functions from common.c */
+  int set_login_shell (const char *, char);
+  int set_compatibility_level (const char *, char);
+#if defined(READLINE)
+  int shopt_set_complete_direxpand (const char *, char);
+  int shopt_enable_hostname_completion (const char *, char);
+#endif
+#if defined(DEBUGGER)
+  int shopt_set_debug_mode (const char *, char);
+#endif
+  int set_shellopts_after_change (const char *, char);
+#if defined(RESTRICTED_SHELL)
+  int set_restricted_shell (const char *, char);
+#endif
+
+  int find_shopt (const char *);
+  int toggle_shopts (char, WORD_LIST *);
+  int list_shopts (WORD_LIST *, shopt_flags);
+  int list_some_shopts (char, shopt_flags);
+  int list_shopt_o_options (WORD_LIST *, shopt_flags);
+  int list_some_o_options (char, shopt_flags);
+  int set_shopt_o_options (char, WORD_LIST *);
+
+#define OPTFMT "%-15s\t%s\n"
+
+  void
+  print_shopt (const char *name, char val, shopt_flags flags)
+  {
+    if (flags & PFLAG)
+      std::printf ("shopt %s %s\n", val ? "-s" : "-u", name);
+    else
+      std::printf (OPTFMT, name, val ? str_on : str_off);
+  }
+
+  void
+  shopt_error (const char *s)
+  {
+    builtin_error (_ ("%s: invalid shell option name"), s);
+  }
+
+  /* Functions from builtins/common.cc */
+
   void builtin_error (const char *, ...)
       __attribute__ ((__format__ (printf, 2, 3)));
   void builtin_warning (const char *, ...)
@@ -1724,21 +1809,23 @@ public:
 
   // Functions from builtins/evalstring.cc
 
-  int parse_and_execute (const std::string &, const std::string &,
-                         parse_flags);
+  bool should_optimize_fork (const COMMAND *, bool);
+  bool should_suppress_fork (const COMMAND *);
+  bool can_optimize_connection (const CONNECTION *);
 
-  int evalstring (char *, const char *, int);
-  void parse_and_execute_cleanup (int);
-
-  int parse_string (const std::string &, const char *, parse_flags,
-                    std::string::const_iterator *);
-
-  bool should_suppress_fork (COMMAND *);
-  bool can_optimize_connection (CONNECTION *);
-  void optimize_fork (COMMAND *);
+  void optimize_connection_fork (COMMAND *);
   void optimize_subshell_command (COMMAND *);
   void optimize_shell_function (COMMAND *);
-  int cat_file (REDIRECT *r);
+  bool can_optimize_cat_file (const COMMAND *);
+
+  int parse_and_execute (char *, const char *, parse_flags);
+
+  int parse_string (char *, const char *, parse_flags, COMMAND **, char **);
+
+  int evalstring (char *, const char *, parse_flags);
+
+  int open_redir_file (REDIRECT *, char **);
+  int cat_file (REDIRECT *);
 
   // Functions from builtins/evalfile.cc
 
@@ -2047,7 +2134,7 @@ protected:
   int yy_string_get ();
   int yy_string_unget (int);
 
-  void with_input_from_string (std::string &, const std::string &);
+  void with_input_from_string (char *, const char *);
 
   int yy_stream_get ();
   int yy_stream_unget (int);
@@ -2083,8 +2170,6 @@ protected:
   int find_reserved_word (const char *);
 
   // Functions provided by various builtins.
-
-  int evalstring (char *, const char *, parse_flags);
 
   int internal_getopt (WORD_LIST *, const char *);
   void reset_internal_getopt ();
@@ -2208,7 +2293,7 @@ protected:
   void send_pwd_to_eterm ();
 
 #if defined(ARRAY_VARS)
-  void execute_array_command (ARRAY *, const std::string &);
+  void execute_array_command (ARRAY *, const char *);
 #endif
 
   void execute_prompt_command ();
@@ -3910,11 +3995,14 @@ protected:
   /* Extract the <( or >( construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "<(".
      Make (SINDEX) get the position just after the matching ")". */
-  std::string
+  char *
   extract_process_subst (const char *string, size_t *sindex, sx_flags xflags)
   {
-    xflags |= (no_throw_on_fatal_error ? SX_NOTHROW : SX_NOFLAGS);
-    return xparse_dolparen (string, sindex, xflags);
+    if (no_throw_on_fatal_error)
+      xflags |= SX_NOTHROW;
+
+    return xparse_dolparen (string, const_cast<char *> (string + *sindex),
+                            sindex, xflags);
   }
 #endif /* PROCESS_SUBSTITUTION */
 
@@ -4393,7 +4481,7 @@ protected:
 
   // Methods implemented in parser.cc.
 
-  std::string xparse_dolparen (const std::string &, size_t *, sx_flags);
+  char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
   int return_EOF ();
   void push_token (parser::token::token_kind_type);
   void reset_parser ();
@@ -4404,7 +4492,7 @@ protected:
   void with_input_from_stdin ();
   void with_input_from_stream (FILE *, const std::string &);
   void initialize_bash_input ();
-  void execute_variable_command (const std::string &, const std::string &);
+  void execute_variable_command (char *, const char *);
   std::string parse_comsub (int, int, int);
   int parse_arith_cmd (char **, int);
 
@@ -4902,6 +4990,7 @@ protected:
   VAR_CONTEXT *last_context_searched;
 
   /* variables from common.c */
+
   sh_builtin_func_t this_shell_builtin;
   sh_builtin_func_t last_shell_builtin;
 
@@ -5170,6 +5259,8 @@ protected:
 
   // A pointer to the list of aliases that we have (lazy init).
   HASH_TABLE<alias_t> *aliases;
+
+  std::vector<shopt_var_t> shopt_vars;
 
   // Buffer for buffered input.
   char localbuf[1024];

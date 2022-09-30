@@ -169,6 +169,9 @@ SimpleState::SimpleState ()
       history_expansion (HISTEXPAND_DEFAULT),
 #endif
       interactive_comments (1),
+#if defined(RESTRICTED_SHELL)
+      save_restricted (-1),
+#endif
 #if defined(BRACE_EXPANSION)
       brace_expansion (1),
 #endif

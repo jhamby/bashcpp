@@ -44,7 +44,7 @@ namespace bash
 {
 
 static char *isolate_tilde_prefix (const char *, size_t *);
-static char *glue_prefix_and_suffix (char *, const char *, size_t);
+static char *glue_prefix_and_suffix (const char *, const char *, size_t);
 
 /* Find the start of a tilde expansion in STRING, and return the index of
    the tilde which starts the expansion.  Place the length of the text
@@ -190,7 +190,7 @@ isolate_tilde_prefix (const char *fname, size_t *lenp)
 /* Return a string that is PREFIX concatenated with SUFFIX starting at
    SUFFIND. */
 static char *
-glue_prefix_and_suffix (char *prefix, const char *suffix, size_t suffind)
+glue_prefix_and_suffix (const char *prefix, const char *suffix, size_t suffind)
 {
   size_t plen = (prefix && *prefix) ? std::strlen (prefix) : 0;
   size_t slen = std::strlen (suffix + suffind);
@@ -207,7 +207,7 @@ glue_prefix_and_suffix (char *prefix, const char *suffix, size_t suffind)
 char *
 Shell::tilde_expand_word (const char *filename)
 {
-  char *dirname, *expansion, *username;
+  const char *expansion;
   struct passwd *user_entry;
 
   if (filename == nullptr)
@@ -231,29 +231,30 @@ Shell::tilde_expand_word (const char *filename)
       /* If there is no HOME variable, look up the directory in
          the password database. */
       if (expansion == nullptr)
-        expansion = sh_get_home_dir ();
+        expansion = sh_get_home_dir ().c_str ();
 
-      return (glue_prefix_and_suffix (expansion, filename, 1));
+      return glue_prefix_and_suffix (expansion, filename, 1);
     }
 
   size_t user_len;
-  username = isolate_tilde_prefix (filename, &user_len);
+  char *username = isolate_tilde_prefix (filename, &user_len);
 
   if (tilde_expansion_preexpansion_hook)
     {
       expansion = ((*this).*tilde_expansion_preexpansion_hook) (username);
       if (expansion)
         {
-          dirname = glue_prefix_and_suffix (expansion, filename, user_len);
+          char *dirname
+              = glue_prefix_and_suffix (expansion, filename, user_len);
           delete[] username;
           delete[] expansion;
-          return (dirname);
+          return dirname;
         }
     }
 
   /* No preexpansion hook, or the preexpansion hook failed.  Look in the
      password database. */
-  dirname = nullptr;
+  char *dirname = nullptr;
 
 #if defined(HAVE_GETPWNAM)
   user_entry = ::getpwnam (username);

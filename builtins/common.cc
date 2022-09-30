@@ -288,7 +288,7 @@ sh_ttyerror (int set)
 }
 
 int
-sh_chkwrite (int s)
+Shell::sh_chkwrite (int s)
 {
   QUIT;
   fflush (stdout);

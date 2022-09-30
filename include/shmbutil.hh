@@ -27,6 +27,8 @@
 #include <cstring>
 #include <cwchar>
 
+#include <string>
+
 #if defined(HANDLE_MULTIBYTE)
 #include "shmbchar.hh"
 #endif

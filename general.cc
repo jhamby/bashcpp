@@ -762,13 +762,13 @@ Shell::trim_pathname (char *name)
    return the next one pointed to by (P_INDEX), or nullptr if there are no
    more. Advance (P_INDEX) to the character after the colon. */
 char *
-extract_colon_unit (char *string, size_t *p_index)
+extract_colon_unit (const char *string, size_t *p_index)
 {
   size_t i, start, len;
   char *value;
 
   if (string == nullptr)
-    return string;
+    return nullptr;
 
   len = std::strlen (string);
   if (*p_index >= len)
