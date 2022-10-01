@@ -159,7 +159,7 @@ SimpleState::SimpleState ()
 #endif
       rseed (1), rseed32 (1073741823), last_command_subst_pid (NO_PID),
       current_command_subst_pid (NO_PID), eof_encountered_limit (10),
-      word_top (-1), indentation_amount (4), xtrace_fd (-1),
+      word_top (-1), indentation_amount (4), xtrace_fd (-1), xattrfd (-1),
       array_needs_making (true),
 #if defined(JOB_CONTROL)
       job_control (true),
@@ -215,6 +215,8 @@ Shell::Shell ()
   posix_vars[2] = &expand_aliases;
   posix_vars[3] = &inherit_errexit;
   posix_vars[4] = &print_shift_error;
+
+  init_token_lists ();
 }
 
 // Virtual destructor for Shell.
@@ -1175,8 +1177,10 @@ run_wordexp (char *words)
           /* Some kind of throw to top_level has occurred. */
         case FORCE_EOF:
           return last_command_exit_value = 127;
-        case ERREXIT:
         case EXITPROG:
+        case ERREXIT:
+        case SIGEXIT:
+        case EXITBLTIN:
           return last_command_exit_value;
         case DISCARD:
           return last_command_exit_value = 1;
@@ -1253,8 +1257,10 @@ Shell::run_one_command (const char *command)
           /* Some kind of throw to top_level has occurred. */
         case FORCE_EOF:
           return last_command_exit_value = 127;
-        case ERREXIT:
         case EXITPROG:
+        case ERREXIT:
+        case SIGEXIT:
+        case EXITBLTIN:
           return last_command_exit_value;
         case DISCARD:
           return last_command_exit_value = 1;
@@ -1845,13 +1851,9 @@ Shell::show_shell_usage (FILE *fp, bool extra)
       fp);
 
   char *set_opts = nullptr;
-  std::vector<Builtin>::iterator it;
-  for (it = shell_builtins.begin (); it != shell_builtins.end (); ++it)
-    if (STREQ ((*it).name, "set"))
-      {
-        set_opts = savestring ((*it).short_doc);
-        break;
-      }
+  std::map<std::string, Builtin>::iterator it = shell_builtins.find ("set");
+  if (it != shell_builtins.end ())
+    set_opts = savestring ((*it).second.short_doc);
 
   if (set_opts)
     {

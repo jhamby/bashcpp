@@ -2593,9 +2593,9 @@ namespace bash {
                   /* XXX - let's cheat and push a newline back */
                   Shell &sh = *the_shell;
                   if (yystack_[0].value.as < int64_t > () == '\n')
-                    sh.token_to_read = '\n';
+                    sh.token_to_read = static_cast<parser::token_kind_type> ('\n');
                   else if (yystack_[0].value.as < int64_t > () == ';')
-                    sh.token_to_read = ';';
+                    sh.token_to_read = static_cast<parser::token_kind_type> (';');
                   sh.parser_state
                       &= ~PST_REDIRLIST; /* SIMPLE_COM constructor sets this */
                 }
@@ -2620,9 +2620,9 @@ namespace bash {
                   /* XXX - let's cheat and push a newline back */
                   Shell &sh = *the_shell;
                   if (yystack_[0].value.as < int64_t > () == '\n')
-                    sh.token_to_read = '\n';
+                    sh.token_to_read = static_cast<parser::token_kind_type> ('\n');
                   if (yystack_[0].value.as < int64_t > () == ';')
-                    sh.token_to_read = ';';
+                    sh.token_to_read = static_cast<parser::token_kind_type> (';');
                   sh.parser_state
                       &= ~PST_REDIRLIST; /* SIMPLE_COM constructor sets this */
                 }

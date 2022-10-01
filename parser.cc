@@ -30,15 +30,15 @@ namespace bash
 #define last_shell_getc_is_singlebyte                                         \
   ((shell_input_line.size () > 1)                                             \
        ? shell_input_line_property[shell_input_line.size () - 1]              \
-       : 1)
+       : true)
 #define MBTEST(x) ((x) && last_shell_getc_is_singlebyte)
 #else
-#define last_shell_getc_is_singlebyte 1
+#define last_shell_getc_is_singlebyte true
 #define MBTEST(x) ((x))
 #endif
 
-static void print_prompt ();
-static bool reserved_word_acceptable (int);
+/* Initial size to reserve for tokens. */
+#define TOKEN_DEFAULT_INITIAL_SIZE 496
 
 /* Should we call prompt_again? */
 #define SHOULD_PROMPT()                                                       \
@@ -616,79 +616,113 @@ Shell::read_secondary_line (bool remove_quoted_newline)
 /*								    */
 /* **************************************************************** */
 
-/* Reserved words.  These are only recognized as the first word of a
-   command. */
-static constexpr STRING_INT_ALIST word_token_alist[]
-    = { STRING_INT_ALIST ("if", parser::token::IF),
-        STRING_INT_ALIST ("then", parser::token::THEN),
-        STRING_INT_ALIST ("else", parser::token::ELSE),
-        STRING_INT_ALIST ("elif", parser::token::ELIF),
-        STRING_INT_ALIST ("fi", parser::token::FI),
-        STRING_INT_ALIST ("case", parser::token::CASE),
-        STRING_INT_ALIST ("esac", parser::token::ESAC),
-        STRING_INT_ALIST ("for", parser::token::FOR),
+#if __cplusplus < 201103L
+#define emplace(x) insert (x)
+#endif
+
+void
+Shell::init_token_lists ()
+{
+  // Reserved words. Only recognized as the first word of a command.
+
+  word_token_map.emplace (std::make_pair ("if", parser::token::IF));
+  word_token_map.emplace (std::make_pair ("then", parser::token::THEN));
+  word_token_map.emplace (std::make_pair ("else", parser::token::ELSE));
+  word_token_map.emplace (std::make_pair ("elif", parser::token::ELIF));
+  word_token_map.emplace (std::make_pair ("fi", parser::token::FI));
+  word_token_map.emplace (std::make_pair ("case", parser::token::CASE));
+  word_token_map.emplace (std::make_pair ("esac", parser::token::ESAC));
+  word_token_map.emplace (std::make_pair ("for", parser::token::FOR));
 #if defined(SELECT_COMMAND)
-        STRING_INT_ALIST ("select", parser::token::SELECT),
+  word_token_map.emplace (std::make_pair ("select", parser::token::SELECT));
 #endif
-        STRING_INT_ALIST ("while", parser::token::WHILE),
-        STRING_INT_ALIST ("until", parser::token::UNTIL),
-        STRING_INT_ALIST ("do", parser::token::DO),
-        STRING_INT_ALIST ("done", parser::token::DONE),
-        STRING_INT_ALIST ("in", parser::token::IN),
-        STRING_INT_ALIST ("function", parser::token::FUNCTION),
+  word_token_map.emplace (std::make_pair ("while", parser::token::WHILE));
+  word_token_map.emplace (std::make_pair ("until", parser::token::UNTIL));
+  word_token_map.emplace (std::make_pair ("do", parser::token::DO));
+  word_token_map.emplace (std::make_pair ("done", parser::token::DONE));
+  word_token_map.emplace (std::make_pair ("in", parser::token::IN));
+  word_token_map.emplace (
+      std::make_pair ("function", parser::token::FUNCTION));
 #if defined(COMMAND_TIMING)
-        STRING_INT_ALIST ("time", parser::token::TIME),
+  word_token_map.emplace (std::make_pair ("time", parser::token::TIME));
 #endif
-        STRING_INT_ALIST ("{", '{'),
-        STRING_INT_ALIST ("}", '}'),
-        STRING_INT_ALIST ("!", parser::token::BANG),
+  word_token_map.emplace (std::make_pair ("{", parser::token_kind_type ('{')));
+  word_token_map.emplace (std::make_pair ("}", parser::token_kind_type ('}')));
+  word_token_map.emplace (std::make_pair ("!", parser::token::BANG));
 #if defined(COND_COMMAND)
-        STRING_INT_ALIST ("[[", parser::token::COND_START),
-        STRING_INT_ALIST ("]]", parser::token::COND_END),
+  word_token_map.emplace (std::make_pair ("[[", parser::token::COND_START));
+  word_token_map.emplace (std::make_pair ("]]", parser::token::COND_END));
 #endif
 #if defined(COPROCESS_SUPPORT)
-        STRING_INT_ALIST ("coproc", parser::token::COPROC),
+  word_token_map.emplace (std::make_pair ("coproc", parser::token::COPROC));
 #endif
-        STRING_INT_ALIST (nullptr, 0) };
 
-/* other tokens that can be returned by read_token() */
-static constexpr STRING_INT_ALIST other_token_alist[] = {
+  // other tokens that can be returned by read_token ()
+
   /* Multiple-character tokens with special values */
-  STRING_INT_ALIST ("--", parser::token::TIMEIGN),
-  STRING_INT_ALIST ("-p", parser::token::TIMEOPT),
-  STRING_INT_ALIST ("&&", parser::token::AND_AND),
-  STRING_INT_ALIST ("||", parser::token::OR_OR),
-  STRING_INT_ALIST (">>", parser::token::GREATER_GREATER),
-  STRING_INT_ALIST ("<<", parser::token::LESS_LESS),
-  STRING_INT_ALIST ("<&", parser::token::LESS_AND),
-  STRING_INT_ALIST (">&", parser::token::GREATER_AND),
-  STRING_INT_ALIST (";;", parser::token::SEMI_SEMI),
-  STRING_INT_ALIST (";&", parser::token::SEMI_AND),
-  STRING_INT_ALIST (";;&", parser::token::SEMI_SEMI_AND),
-  STRING_INT_ALIST ("<<-", parser::token::LESS_LESS_MINUS),
-  STRING_INT_ALIST ("<<<", parser::token::LESS_LESS_LESS),
-  STRING_INT_ALIST ("&>", parser::token::AND_GREATER),
-  STRING_INT_ALIST ("&>>", parser::token::AND_GREATER_GREATER),
-  STRING_INT_ALIST ("<>", parser::token::LESS_GREATER),
-  STRING_INT_ALIST (">|", parser::token::GREATER_BAR),
-  STRING_INT_ALIST ("|&", parser::token::BAR_AND),
-  STRING_INT_ALIST ("EOF", parser::token::yacc_EOF),
-  /* Tokens whose value is the character itself */
-  STRING_INT_ALIST (">", '>'), STRING_INT_ALIST ("<", '<'),
-  STRING_INT_ALIST ("-", '-'), STRING_INT_ALIST ("{", '{'),
-  STRING_INT_ALIST ("}", '}'), STRING_INT_ALIST (";", ';'),
-  STRING_INT_ALIST ("(", '('), STRING_INT_ALIST (")", ')'),
-  STRING_INT_ALIST ("|", '|'), STRING_INT_ALIST ("&", '&'),
-  STRING_INT_ALIST ("newline", '\n'), STRING_INT_ALIST (nullptr, 0)
-};
 
-/* others not listed here:
-        WORD			look at yylval.word
-        ASSIGNMENT_WORD		look at yylval.word
-        NUMBER			look at yylval.number
-        ARITH_CMD		look at yylval.word_list
-        ARITH_FOR_EXPRS		look at yylval.word_list
-        COND_CMD		look at yylval.command
+  other_token_map.emplace (std::make_pair ("--", parser::token::TIMEIGN));
+  other_token_map.emplace (std::make_pair ("-p", parser::token::TIMEOPT));
+  other_token_map.emplace (std::make_pair ("&&", parser::token::AND_AND));
+  other_token_map.emplace (std::make_pair ("||", parser::token::OR_OR));
+  other_token_map.emplace (
+      std::make_pair (">>", parser::token::GREATER_GREATER));
+  other_token_map.emplace (std::make_pair ("<<", parser::token::LESS_LESS));
+  other_token_map.emplace (std::make_pair ("<&", parser::token::LESS_AND));
+  other_token_map.emplace (std::make_pair (">&", parser::token::GREATER_AND));
+  other_token_map.emplace (std::make_pair (";;", parser::token::SEMI_SEMI));
+  other_token_map.emplace (std::make_pair (";&", parser::token::SEMI_AND));
+  other_token_map.emplace (
+      std::make_pair (";;&", parser::token::SEMI_SEMI_AND));
+  other_token_map.emplace (
+      std::make_pair ("<<-", parser::token::LESS_LESS_MINUS));
+  other_token_map.emplace (
+      std::make_pair ("<<<", parser::token::LESS_LESS_LESS));
+  other_token_map.emplace (std::make_pair ("&>", parser::token::AND_GREATER));
+  other_token_map.emplace (
+      std::make_pair ("&>>", parser::token::AND_GREATER_GREATER));
+  other_token_map.emplace (std::make_pair ("<>", parser::token::LESS_GREATER));
+  other_token_map.emplace (std::make_pair (">|", parser::token::GREATER_BAR));
+  other_token_map.emplace (std::make_pair ("|&", parser::token::BAR_AND));
+  other_token_map.emplace (std::make_pair ("EOF", parser::token::yacc_EOF));
+
+  /* Tokens whose value is the character itself */
+
+  other_token_map.emplace (
+      std::make_pair (">", parser::token_kind_type ('>')));
+  other_token_map.emplace (
+      std::make_pair ("<", parser::token_kind_type ('<')));
+  other_token_map.emplace (
+      std::make_pair ("-", parser::token_kind_type ('-')));
+  other_token_map.emplace (
+      std::make_pair ("{", parser::token_kind_type ('{')));
+  other_token_map.emplace (
+      std::make_pair ("}", parser::token_kind_type ('}')));
+  other_token_map.emplace (
+      std::make_pair (";", parser::token_kind_type (';')));
+  other_token_map.emplace (
+      std::make_pair ("(", parser::token_kind_type ('(')));
+  other_token_map.emplace (
+      std::make_pair (")", parser::token_kind_type (')')));
+  other_token_map.emplace (
+      std::make_pair ("|", parser::token_kind_type ('|')));
+  other_token_map.emplace (
+      std::make_pair ("&", parser::token_kind_type ('&')));
+  other_token_map.emplace (
+      std::make_pair ("newline", parser::token_kind_type ('\n')));
+}
+
+#if __cplusplus < 201103L
+#undef emplace
+#endif
+
+/* others not listed here (values contained in parser::symbol_type):
+        WORD
+        ASSIGNMENT_WORD
+        NUMBER
+        ARITH_CMD
+        ARITH_FOR_EXPRS
+        COND_CMD
 */
 
 /* Return the next shell input character.  This always reads characters
@@ -1142,17 +1176,7 @@ Shell::execute_variable_command (char *command, const char *vname)
   delete[] last_lastarg;
 
   if (token_to_read == '\n') /* reset_parser was called */
-    token_to_read = 0;
-}
-
-void
-Shell::push_token (parser::token::token_kind_type x)
-{
-  two_tokens_ago = token_before_that;
-  token_before_that = last_read_token;
-  last_read_token = current_token;
-
-  current_token = x;
+    token_to_read = parser::token::YYEOF;
 }
 
 #if 0
@@ -1195,19 +1219,8 @@ Shell::yylex ()
   token_before_that = last_read_token;
   last_read_token = current_token;
 
-  parser::symbol_type symbol = read_token (READ);
-  current_token = symbol.kind ();
-
-  if ((parser_state & PST_EOFTOKEN) && current_token == shell_eof_token)
-    {
-      /* placeholder for any special handling. */
-      return symbol;
-    }
-
-  if (current_token < 0)
-    return parser::make_YYerror ();
-
-  return symbol;
+  // read_token () will set 'current_token' to the new value.
+  return read_token (READ);
 }
 
 void
@@ -1226,88 +1239,9 @@ Shell::gather_here_documents ()
   here_doc_first_line = false; /* just in case */
 }
 
-/* In the following three macros, `token' is always last_read_token */
-
-/* Are we in the middle of parsing a redirection where we are about to read
-   a word?  This is used to make sure alias expansion doesn't happen in the
-   middle of a redirection, even though we're parsing a simple command. */
-static inline bool
-parsing_redirection (int token)
-{
-  return token == '<' || token == '>'
-         || token == parser::token::GREATER_GREATER
-         || token == parser::token::GREATER_BAR
-         || token == parser::token::LESS_GREATER
-         || token == parser::token::LESS_LESS_MINUS
-         || token == parser::token::LESS_LESS
-         || token == parser::token::LESS_LESS_LESS
-         || token == parser::token::LESS_AND
-         || token == parser::token::GREATER_AND
-         || token == parser::token::AND_GREATER;
-}
-
-/* Is `token' one that will allow a WORD to be read in a command position?
-   We can read a simple command name on which we should attempt alias expansion
-   or we can read an assignment statement. */
-static inline bool
-command_token_position (int token, pstate_flags parser_state)
-{
-  return (token == parser::token::ASSIGNMENT_WORD)
-         || ((parser_state & PST_REDIRLIST) && !parsing_redirection (token))
-         || (token != parser::token::SEMI_SEMI
-             && token != parser::token::SEMI_AND
-             && token != parser::token::SEMI_SEMI_AND
-             && reserved_word_acceptable (token));
-}
-
 /* Are we in a position where we can read an assignment statement? */
-#define assignment_acceptable(token, state)                                   \
-  (command_token_position (token, state) && ((state & PST_CASEPAT) == 0))
-
-/* Check to see if TOKEN is a reserved word and return the token
-   value if it is. */
-#define CHECK_FOR_RESERVED_WORD(tok)                                          \
-  do                                                                          \
-    {                                                                         \
-      if (!dollar_present && !quoted                                          \
-          && reserved_word_acceptable (last_read_token))                      \
-        {                                                                     \
-          int i;                                                              \
-          for (i = 0; word_token_alist[i].word != nullptr; i++)               \
-            if (STREQ (tok, word_token_alist[i].word))                        \
-              {                                                               \
-                if ((parser_state & PST_CASEPAT)                              \
-                    && (word_token_alist[i].token != parser::token::ESAC))    \
-                  break;                                                      \
-                if (word_token_alist[i].token == parser::token::TIME          \
-                    && time_command_acceptable () == 0)                       \
-                  break;                                                      \
-                if ((parser_state & PST_CASEPAT) && last_read_token == '('    \
-                    && word_token_alist[i].token == parser::token::ESAC)      \
-                  break; /* phantom Posix grammar rule 4 */                   \
-                if (word_token_alist[i].token == parser::token::ESAC)         \
-                  {                                                           \
-                    parser_state &= ~(PST_CASEPAT | PST_CASESTMT);            \
-                    esacs_needed_count--;                                     \
-                  }                                                           \
-                else if (word_token_alist[i].token == parser::token::CASE)    \
-                  parser_state |= PST_CASESTMT;                               \
-                else if (word_token_alist[i].token                            \
-                         == parser::token::COND_END)                          \
-                  parser_state &= ~(PST_CONDCMD | PST_CONDEXPR);              \
-                else if (word_token_alist[i].token                            \
-                         == parser::token::COND_START)                        \
-                  parser_state |= PST_CONDCMD;                                \
-                else if (word_token_alist[i].token == '{')                    \
-                  open_brace_count++;                                         \
-                else if (word_token_alist[i].token == '}'                     \
-                         && open_brace_count)                                 \
-                  open_brace_count--;                                         \
-                return word_token_alist[i].token;                             \
-              }                                                               \
-        }                                                                     \
-    }                                                                         \
-  while (0)
+#define assignment_acceptable(token)                                          \
+  (command_token_position (token) && ((parser_state & PST_CASEPAT) == 0))
 
 #if defined(ALIAS)
 
@@ -1324,18 +1258,18 @@ command_token_position (int token, pstate_flags parser_state)
    Special cases that disqualify:
      In a pattern list in a case statement (parser_state & PST_CASEPAT). */
 Shell::alias_expand_token_result
-Shell::alias_expand_token (const char *tokstr)
+Shell::alias_expand_token (const std::string &tokstr)
 {
   char *expanded;
   alias_t *ap;
 
 #if 0
   if (((parser_state & PST_ALEXPNEXT)
-       || command_token_position (last_read_token, parser_state))
+       || command_token_position (last_read_token))
       && (parser_state & PST_CASEPAT) == 0)
 #else
   if ((parser_state & PST_ALEXPNEXT)
-      || assignment_acceptable (last_read_token, parser_state))
+      || assignment_acceptable (last_read_token))
 #endif
   {
     ap = find_alias (tokstr);
@@ -1364,14 +1298,12 @@ bool
 Shell::time_command_acceptable ()
 {
 #if defined(COMMAND_TIMING)
-  size_t i;
-
   if (posixly_correct && shell_compatibility_level > 41)
     {
       /* Quick check of the rest of the line to find the next token.  If it
          begins with a `-', Posix says to not return `time' as the token.
          This was interp 267. */
-      i = shell_input_line_index;
+      size_t i = shell_input_line_index;
       while (i < shell_input_line.size ()
              && (shell_input_line[i] == ' ' || shell_input_line[i] == '\t'))
         i++;
@@ -1379,11 +1311,12 @@ Shell::time_command_acceptable ()
         return false;
     }
 
-  switch (last_read_token)
+  // cast to int to suppress warnings about case values not in enum type
+  switch (static_cast<int> (last_read_token))
     {
-    case 0:
-    case ';':
-    case '\n':
+    case parser::token::YYEOF:
+    case static_cast<parser::token_kind_type> (';'):
+    case static_cast<parser::token_kind_type> ('\n'):
       if (token_before_that == '|')
         return false;
       __attribute__ ((fallthrough));
@@ -1391,7 +1324,7 @@ Shell::time_command_acceptable ()
 
     case parser::token::AND_AND:
     case parser::token::OR_OR:
-    case '&':
+    case static_cast<parser::token_kind_type> ('&'):
     case parser::token::WHILE:
     case parser::token::DO:
     case parser::token::UNTIL:
@@ -1399,13 +1332,14 @@ Shell::time_command_acceptable ()
     case parser::token::THEN:
     case parser::token::ELIF:
     case parser::token::ELSE:
-    case '{':                    /* } */
-    case '(':                    /* )( */
-    case ')':                    /* only valid in case statement */
-    case parser::token::BANG:    /* ! time pipeline */
-    case parser::token::TIME:    /* time time pipeline */
-    case parser::token::TIMEOPT: /* time -p time pipeline */
-    case parser::token::TIMEIGN: /* time -p -- ... */
+    case static_cast<parser::token_kind_type> ('{'): // }
+    case static_cast<parser::token_kind_type> ('('): // )(
+    case static_cast<parser::token_kind_type> (
+        ')'):                    // only valid in case statement
+    case parser::token::BANG:    // ! time pipeline
+    case parser::token::TIME:    // time time pipeline
+    case parser::token::TIMEOPT: // time -p time pipeline
+    case parser::token::TIMEIGN: // time -p -- ...
       return true;
     default:
       return false;
@@ -1440,8 +1374,8 @@ Shell::time_command_acceptable ()
         `time' is returned as TIME if and only if it is immediately
         preceded by one of `;', `\n', `||', `&&', or `&'.
 */
-int
-Shell::special_case_tokens (const char *tokstr)
+parser::symbol_type
+Shell::special_case_tokens (const std::string &tokstr)
 {
   /* Posix grammar rule 6 */
   if ((last_read_token == parser::token::WORD) &&
@@ -1455,7 +1389,7 @@ Shell::special_case_tokens (const char *tokstr)
        || (token_before_that == parser::token::CASE))
       &&
 #endif
-      (tokstr[0] == 'i' && tokstr[1] == 'n' && tokstr[2] == '\0'))
+      (tokstr == "in"))
     {
       if (token_before_that == parser::token::CASE)
         {
@@ -1464,7 +1398,7 @@ Shell::special_case_tokens (const char *tokstr)
         }
       if (expecting_in_token)
         expecting_in_token--;
-      return parser::token::IN;
+      return parser::make_IN ();
     }
 
   /* XXX - leaving above code intact for now, but it should eventually be
@@ -1472,7 +1406,7 @@ Shell::special_case_tokens (const char *tokstr)
   /* Posix grammar rule 6 */
   if (expecting_in_token
       && (last_read_token == parser::token::WORD || last_read_token == '\n')
-      && (tokstr[0] == 'i' && tokstr[1] == 'n' && tokstr[2] == 0))
+      && (tokstr == "in"))
     {
       if (parser_state & PST_CASESTMT)
         {
@@ -1480,15 +1414,15 @@ Shell::special_case_tokens (const char *tokstr)
           esacs_needed_count++;
         }
       expecting_in_token--;
-      return parser::token::IN;
+      return parser::make_IN ();
     }
   /* Posix grammar rule 6, third word in FOR: for i; do command-list; done */
   else if (expecting_in_token
            && (last_read_token == '\n' || last_read_token == ';')
-           && (tokstr[0] == 'd' && tokstr[1] == 'o' && tokstr[2] == '\0'))
+           && (tokstr == "do"))
     {
       expecting_in_token--;
-      return parser::token::DO;
+      return parser::make_DO ();
     }
 
   /* for i do; command-list; done */
@@ -1500,11 +1434,11 @@ Shell::special_case_tokens (const char *tokstr)
 #else
       (token_before_that == parser::token::FOR) &&
 #endif
-      (tokstr[0] == 'd' && tokstr[1] == 'o' && tokstr[2] == '\0'))
+      (tokstr == "do"))
     {
       if (expecting_in_token)
         expecting_in_token--;
-      return parser::token::DO;
+      return parser::make_DO ();
     }
 
   /* Ditto for ESAC in the CASE case.
@@ -1515,11 +1449,11 @@ Shell::special_case_tokens (const char *tokstr)
      the designers disagree. */
   if (esacs_needed_count)
     {
-      if (last_read_token == parser::token::IN && STREQ (tokstr, "esac"))
+      if (last_read_token == parser::token::IN && tokstr == "esac")
         {
           esacs_needed_count--;
           parser_state &= ~PST_CASEPAT;
-          return parser::token::ESAC;
+          return parser::make_ESAC ();
         }
     }
 
@@ -1527,55 +1461,52 @@ Shell::special_case_tokens (const char *tokstr)
   if (parser_state & PST_ALLOWOPNBRC)
     {
       parser_state &= ~PST_ALLOWOPNBRC;
-      if (tokstr[0] == '{' && tokstr[1] == '\0') /* } */
+      if (tokstr == "{") // }
         {
           open_brace_count++;
           function_bstart = line_number;
-          return '{'; /* } */
+          return parser::symbol_type ('{'); // }
         }
     }
 
   /* We allow a `do' after a for ((...)) without an intervening
      list_terminator */
-  if (last_read_token == parser::token::ARITH_FOR_EXPRS && tokstr[0] == 'd'
-      && tokstr[1] == 'o' && !tokstr[2])
-    return parser::token::DO;
-  if (last_read_token == parser::token::ARITH_FOR_EXPRS && tokstr[0] == '{'
-      && tokstr[1] == '\0') /* } */
+  if (last_read_token == parser::token::ARITH_FOR_EXPRS && tokstr == "do")
+    return parser::make_DO ();
+
+  if (last_read_token == parser::token::ARITH_FOR_EXPRS && tokstr == "{")
     {
       open_brace_count++;
-      return '{'; /* } */
+      return parser::symbol_type ('{'); // }
     }
 
   if (open_brace_count && reserved_word_acceptable (last_read_token)
-      && tokstr[0] == '}' && !tokstr[1])
+      && tokstr == "}")
     {
-      open_brace_count--; /* { */
-      return '}';
+      open_brace_count--; // {
+      return parser::symbol_type ('}');
     }
 
 #if defined(COMMAND_TIMING)
   /* Handle -p after `time'. */
-  if (last_read_token == parser::token::TIME && tokstr[0] == '-'
-      && tokstr[1] == 'p' && !tokstr[2])
-    return parser::token::TIMEOPT;
+  if (last_read_token == parser::token::TIME && tokstr == "-p")
+    return parser::make_TIMEOPT ();
+
   /* Handle -- after `time'. */
-  if (last_read_token == parser::token::TIME && tokstr[0] == '-'
-      && tokstr[1] == '-' && !tokstr[2])
-    return parser::token::TIMEIGN;
+  if (last_read_token == parser::token::TIME && tokstr == "--")
+    return parser::make_TIMEIGN ();
+
   /* Handle -- after `time -p'. */
-  if (last_read_token == parser::token::TIMEOPT && tokstr[0] == '-'
-      && tokstr[1] == '-' && !tokstr[2])
-    return parser::token::TIMEIGN;
+  if (last_read_token == parser::token::TIMEOPT && tokstr == "--")
+    return parser::make_TIMEIGN ();
 #endif
 
 #if defined(COND_COMMAND) /* [[ */
-  if ((parser_state & PST_CONDEXPR) && tokstr[0] == ']' && tokstr[1] == ']'
-      && tokstr[2] == '\0')
-    return parser::token::COND_END;
+  if ((parser_state & PST_CONDEXPR) && tokstr == "]]")
+    return parser::make_COND_END ();
 #endif
 
-  return -1;
+  return parser::make_YYerror ();
 }
 
 /* Called from shell.cc when Control-C is typed at top level, or by the error
@@ -1614,45 +1545,45 @@ Shell::reset_parser ()
   redir_stack[0] = nullptr;
   esacs_needed_count = expecting_in_token = 0;
 
-  current_token = '\n'; /* XXX */
-  last_read_token = '\n';
-  token_to_read = '\n';
+  current_token = static_cast<parser::token_kind_type> ('\n');
+  last_read_token = static_cast<parser::token_kind_type> ('\n');
+  token_to_read = static_cast<parser::token_kind_type> ('\n');
 }
 
 /* Read the next token.  Command can be READ (normal operation) or
-   RESET (to normalize state). */
+   RESET (to normalize state). CURRENT_TOKEN is set to the token
+   that was read, before returning a new symbol to the parser. */
 parser::symbol_type
 Shell::read_token (read_token_cmd command)
 {
   int character; /* Current character. */
   int peek_char; /* Temporary look-ahead character. */
-  int result;    /* The thing to return. */
 
   if (command == RESET)
     {
-      reset_parser ();
+      reset_parser (); // this sets current_token
       return parser::symbol_type ('\n');
     }
 
   if (token_to_read)
     {
-      result = token_to_read;
-      token_to_read = 0;
-      if (token_to_read == parser::token::WORD)
+      current_token = token_to_read;
+      token_to_read = parser::token::YYEOF;
+
+      if (current_token == parser::token::WORD)
         {
-          parser::symbol_type word = parser::make_WORD (word_desc_to_read);
+          WORD_DESC_PTR wdp = word_desc_to_read;
           word_desc_to_read.value = nullptr;
-          return word;
+          return parser::make_WORD (wdp);
         }
-      else if (token_to_read == parser::token::ASSIGNMENT_WORD)
+      else if (current_token == parser::token::ASSIGNMENT_WORD)
         {
-          parser::symbol_type word
-              = parser::make_ASSIGNMENT_WORD (word_desc_to_read);
+          WORD_DESC_PTR wdp = word_desc_to_read;
           word_desc_to_read.value = nullptr;
-          return word;
+          return parser::make_ASSIGNMENT_WORD (wdp);
         }
 
-      return parser::symbol_type (result);
+      return parser::symbol_type (current_token);
     }
 
 #if defined(COND_COMMAND)
@@ -1660,15 +1591,15 @@ Shell::read_token (read_token_cmd command)
     {
       cond_lineno = line_number;
       parser_state |= PST_CONDEXPR;
-      COMMAND *cond_command = parse_cond_command ();
-      if (cond_token != parser::token::COND_END)
+      parser::symbol_type cond_symbol (parse_cond_command ());
+      if (cond_symbol.kind () != parser::symbol_kind::S_COND_END)
         {
-          cond_error ();
-          return -1;
+          cond_error (cond_symbol);
+          return parser::make_YYerror ();
         }
       token_to_read = parser::token::COND_END;
       parser_state &= ~(PST_CONDEXPR | PST_CONDCMD);
-      return parser::make_COND_CMD (cond_command);
+      return cond_symbol;
     }
 #endif
 
@@ -1685,6 +1616,7 @@ re_read_token:
   if (character == EOF)
     {
       EOF_Reached = true;
+      current_token = parser::token::yacc_EOF;
       return parser::make_yacc_EOF ();
     }
 
@@ -1696,6 +1628,7 @@ re_read_token:
       internal_debug ("shell_getc: bash_input.location.string = `%s'",
                       bash_input.location.string);
       EOF_Reached = true;
+      current_token = parser::token::yacc_EOF;
       return parser::make_yacc_EOF ();
     }
 
@@ -1747,9 +1680,9 @@ re_read_token:
          layers deal with quoted newlines following the command substitution.
        */
       if ((parser_state & PST_CMDSUBST) && character == shell_eof_token)
-        peek_char = shell_getc (0);
+        peek_char = shell_getc (false);
       else
-        peek_char = shell_getc (1);
+        peek_char = shell_getc (true);
 
       if MBTEST (character == peek_char)
         {
@@ -1795,11 +1728,14 @@ re_read_token:
 
 #if defined(DPAREN_ARITHMETIC) || defined(ARITH_FOR_COMMAND)
             case '(': /* ) */
-              result = parse_dparen (character);
-              if (result == -2)
-                break;
-              else
-                return result;
+              try
+                {
+                  return parse_dparen (character);
+                }
+              catch (const parse_error &)
+                {
+                  break;
+                }
 #endif
             }
         }
@@ -1883,8 +1819,7 @@ tokword:
 #endif
       /* Okay, if we got this far, we have to read a word.  Read one,
          and then check it against the known ones. */
-      parser::symbol_type symbol = read_token_word (character);
-      return symbol;
+      return read_token_word (character);
 
 #if defined(ALIAS)
     }
@@ -1935,9 +1870,8 @@ Shell::parse_matched_pair (
     int qc, /* `"' if this construct is within double quotes */
     int open, int close, pgroup_flags flags)
 {
-  int count, ch;
+  int count;
   int start_lineno;
-  pgroup_flags rflags;
   dolbrace_state_t dolbrace_state;
 
   dolbrace_state = (flags & P_DOLBRACE) ? DOLBRACE_PARAM : DOLBRACE_NOFLAGS;
@@ -1952,15 +1886,14 @@ Shell::parse_matched_pair (
     tflags |= LEX_CKCOMMENT;
 
   /* RFLAGS is the set of flags we want to pass to recursive calls. */
-  rflags = (qc == '"') ? P_DQUOTE : (flags & P_DQUOTE);
+  pgroup_flags rflags = (qc == '"') ? P_DQUOTE : (flags & P_DQUOTE);
 
   std::string ret;
 
   start_lineno = line_number;
-  ch = EOF; /* just in case */
   while (count)
     {
-      ch = shell_getc (qc != '\'' && (tflags & (LEX_PASSNEXT)) == 0);
+      int ch = shell_getc (qc != '\'' && (tflags & (LEX_PASSNEXT)) == 0);
 
       if (ch == EOF)
         {
@@ -2433,7 +2366,7 @@ Shell::parse_comsub (int qc, int open, int close)
     }
 #endif
 
-  current_token = '\n';                    /* XXX */
+  current_token = static_cast<parser::token_kind_type> ('\n'); /* XXX */
   token_to_read = parser::token::DOLPAREN; /* let's trick the parser */
 
   int r = yyparse ();
@@ -2542,20 +2475,20 @@ Shell::xparse_dolparen (const char *base, char *string, size_t *indp,
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
-#if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
-  STRING_SAVER *saved_pushed_strings;
-#endif
 
   // debug_parser (1);
-  size_t orig_ind = *indp;
+  // size_t orig_ind = *indp;
+  char *ostring = string;
   int start_lineno = line_number;
 
-  if (orig_ind == base.size ())
+  if (*string == '\0')
     {
       if (flags & SX_NOALLOC)
         return nullptr;
 
-      return std::string ();
+      char *ret = new char[1];
+      ret[0] = '\0';
+      return ret;
     }
 
   // itrace ("xparse_dolparen: size = %d shell_input_line = `%s' string=`%s'",
@@ -2573,7 +2506,6 @@ Shell::xparse_dolparen (const char *base, char *string, size_t *indp,
 #endif
 
   /*(*/
-
   parser_state |= (PST_CMDSUBST | PST_EOFTOKEN); /* allow instant ')' */
   shell_eof_token = ')';
   if (flags & SX_COMPLETE)
@@ -2592,36 +2524,38 @@ Shell::xparse_dolparen (const char *base, char *string, size_t *indp,
 
   token_to_read = parser::token::DOLPAREN; /* let's trick the parser */
 
-  nc = parse_string (string, "command substitution", sflags, &ep);
+  char *ep = nullptr;
+  bash_exception_t exception = NOEXCEPTION;
+  size_t nc = 0;
 
-  // FIXME: the C++ Bison parser only allows yyclearin from within parse ().
-  // FIXME: the EOF token handling in parse.yy may have to integrate this.
-  //   if (current_token == shell_eof_token)
-  //     yyclearin; /* might want to clear lookahead token unconditionally */
+  try
+    {
+      nc = parse_string (string, "command substitution", sflags, nullptr, &ep);
+    }
+  catch (const bash_exception &e)
+    {
+      exception = e.type;
+    }
 
   reset_parser ();
+
   /* reset_parser() clears shell_input_line and associated variables, including
      parser_state, so we want to reset things, then restore what we need. */
   restore_input_line_state (&ls);
-
   restore_parser_state (&ps);
 
-#if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
-  pushed_string_list = saved_pushed_strings;
-#endif
-
-  token_to_read = 0;
+  token_to_read = parser::token::YYEOF;
 
   /* If parse_string returns < 0, we need to jump to top level with the
      negative of the return value. We abandon the rest of this input line
      first */
-  if (nc < 0)
+  if (exception)
     {
       clear_shell_input_line ();        /* XXX */
       if (bash_input.type != st_string) /* paranoia */
         parser_state &= ~(PST_CMDSUBST | PST_EOFTOKEN);
       if ((flags & SX_NOTHROW) == 0)
-        throw bash_exception (-nc); /* XXX */
+        throw bash_exception (exception); /* XXX */
     }
 
   /* Need to find how many characters parse_string() consumed, update
@@ -2641,8 +2575,8 @@ Shell::xparse_dolparen (const char *base, char *string, size_t *indp,
         ep--;
     }
 
-  nc = ep - ostring;
-  *indp = ep - base - 1;
+  nc = static_cast<size_t> (ep - ostring);
+  *indp = static_cast<size_t> (ep - base - 1);
 
   /*((*/
 #if 0
@@ -2669,9 +2603,87 @@ Shell::xparse_dolparen (const char *base, char *string, size_t *indp,
     return nullptr;
 
   if (nc == 0)
-    return std::string ();
+    {
+      char *ret = new char[1];
+      ret[0] = '\0';
+      return ret;
+    }
   else
-    ret = substring (ostring, 0, nc - 1);
+    return substring (ostring, 0, nc - 1);
+}
+
+/* Recursively call the parser to parse the string from a $(...) command
+   substitution to a COMMAND *. This is called from command_substitute () and
+   has the same parser state constraints as xparse_dolparen(). */
+COMMAND *
+Shell::parse_string_to_command (char *string, sx_flags flags)
+{
+  sh_parser_state_t ps;
+  sh_input_line_state_t ls;
+
+  if (string == nullptr)
+    return nullptr;
+
+  char *ep = string;
+  size_t slen = std::strlen (string);
+
+  /*itrace("parse_string_to_command: size = %d shell_input_line = `%s'
+   * string=`%s'", shell_input_line_size, shell_input_line, string);*/
+
+  parse_flags sflags = SEVAL_NONINT | SEVAL_NOHIST | SEVAL_NOFREE;
+
+  if (flags & SX_NOTHROW)
+    sflags |= SEVAL_NOTHROW;
+
+  save_parser_state (&ps);
+  save_input_line_state (&ls);
+
+#if defined(ALIAS) || defined(DPAREN_ARITHMETIC)
+  pushed_string_list = nullptr;
+#endif
+
+  if (flags & SX_COMPLETE)
+    parser_state |= PST_NOERROR;
+
+  expand_aliases = 0;
+
+  bash_exception_t exception = NOEXCEPTION;
+  size_t nc = 0;
+  COMMAND *cmd = nullptr;
+  try
+    {
+      nc = parse_string (string, "command substitution", sflags, &cmd, &ep);
+    }
+  catch (const bash_exception &e)
+    {
+      exception = e.type;
+    }
+
+  reset_parser ();
+  /* reset_parser() clears shell_input_line and associated variables, including
+     parser_state, so we want to reset things, then restore what we need. */
+  restore_input_line_state (&ls);
+  restore_parser_state (&ps);
+
+  /* If parse_string returns < 0, we need to jump to top level with the
+     negative of the return value. We abandon the rest of this input line
+     first */
+  if (exception)
+    {
+      clear_shell_input_line (); /* XXX */
+      if ((flags & SX_NOTHROW) == 0)
+        throw bash_exception (exception); /* XXX */
+    }
+
+  /* Need to check how many characters parse_string() consumed, make sure it's
+     the entire string. */
+  if (nc < slen)
+    {
+      delete cmd;
+      return nullptr;
+    }
+
+  return cmd;
 }
 
 #if defined(DPAREN_ARITHMETIC) || defined(ARITH_FOR_COMMAND)
@@ -2679,43 +2691,41 @@ Shell::xparse_dolparen (const char *base, char *string, size_t *indp,
    command, an arithmetic `for' command, or a nested subshell.  Returns
    the parsed token, -1 on error, or -2 if we didn't do anything and
    should just go on. */
-int
+parser::symbol_type
 Shell::parse_dparen (int c)
 {
-  int cmdtyp, sline;
-  char *wval;
-  WORD_DESC *wd;
-
 #if defined(ARITH_FOR_COMMAND)
   if (last_read_token == parser::token::FOR)
     {
-      arith_for_lineno = line_number;
-      cmdtyp = parse_arith_cmd (&wval, 0);
+      if (word_top < MAX_CASE_NEST)
+        word_top++;
+
+      arith_for_lineno = word_lineno[word_top] = line_number;
+
+      char *wval;
+      int cmdtyp = parse_arith_cmd (&wval, 0);
       if (cmdtyp == 1)
         {
-          wd = alloc_word_desc ();
-          wd->word = wval;
-          yylval.word_list = make_word_list (wd, nullptr);
-          return parser::token::ARITH_FOR_EXPRS;
+          WORD_DESC *wd = new WORD_DESC (wval);
+          return parser::make_ARITH_FOR_EXPRS (WORD_LIST_PTR (wd));
         }
       else
-        return -1; /* ERROR */
+        throw parse_error (); /* ERROR */
     }
 #endif
 
 #if defined(DPAREN_ARITHMETIC)
   if (reserved_word_acceptable (last_read_token))
     {
-      sline = line_number;
-
-      cmdtyp = parse_arith_cmd (&wval, 0);
+      char *wval;
+      int cmdtyp = parse_arith_cmd (&wval, 0);
       if (cmdtyp == 1) /* arithmetic command */
         {
-          wd = alloc_word_desc ();
-          wd->word = wval;
-          wd->flags = W_QUOTED | W_NOSPLIT | W_NOGLOB | W_DQUOTE;
-          yylval.word_list = make_word_list (wd, nullptr);
-          return parser::token::ARITH_CMD;
+          WORD_DESC *wd = new WORD_DESC (wval, W_QUOTED | W_NOSPLIT | W_NOGLOB
+                                                   | W_NOTILDE | W_NOPROCSUB);
+          delete[] wval;
+
+          return parser::make_ARITH_CMD (WORD_LIST_PTR (wd));
         }
       else if (cmdtyp == 0) /* nested subshell */
         {
@@ -2726,11 +2736,11 @@ Shell::parse_dparen (int c)
           return c;
         }
       else /* ERROR */
-        return -1;
+        throw parse_error ();
     }
 #endif
 
-  return -2; /* XXX */
+  throw parse_error (); /* XXX */
 }
 
 /* We've seen a `(('.  Look for the matching `))'.  If we get it, return 1.
@@ -2739,70 +2749,69 @@ Shell::parse_dparen (int c)
    allocated buffer and make *ep point to that buffer.  Return -1 on an
    error, for example EOF. */
 int
-Shell::parse_arith_cmd (char **ep, int adddq)
+Shell::parse_arith_cmd (char **ep, bool adddq)
 {
-  int exp_lineno, rval, c;
-  char *ttok, *tokstr;
-  int ttoklen;
+  std::string ttok;
 
-  exp_lineno = line_number;
-  ttok = parse_matched_pair (0, '(', ')', &ttoklen, 0);
-  rval = 1;
-  if (ttok == &matched_pair_error)
-    return -1;
+  try
+    {
+      ttok = parse_matched_pair (0, '(', ')', P_NOFLAGS);
+    }
+  catch (const matched_pair_error &)
+    {
+      return -1;
+    }
+
+  int rval = 1;
+
   /* Check that the next character is the closing right paren.  If
      not, this is a syntax error. ( */
-  c = shell_getc (0);
+  int c = shell_getc (0);
   if MBTEST (c != ')')
     rval = 0;
 
-  tokstr = (char *)xmalloc (ttoklen + 4);
+  std::string tokstr;
 
   /* if ADDDQ != 0 then (( ... )) -> "..." */
   if (rval == 1 && adddq) /* arith cmd, add double quotes */
     {
-      tokstr[0] = '"';
-      strncpy (tokstr + 1, ttok, ttoklen - 1);
-      tokstr[ttoklen] = '"';
-      tokstr[ttoklen + 1] = '\0';
+      tokstr.push_back ('"');
+      tokstr += ttok;
+      tokstr.push_back ('"');
     }
   else if (rval == 1) /* arith cmd, don't add double quotes */
     {
-      strncpy (tokstr, ttok, ttoklen - 1);
-      tokstr[ttoklen - 1] = '\0';
+      tokstr = ttok;
     }
   else /* nested subshell */
     {
-      tokstr[0] = '(';
-      strncpy (tokstr + 1, ttok, ttoklen - 1);
-      tokstr[ttoklen] = ')';
-      tokstr[ttoklen + 1] = c;
-      tokstr[ttoklen + 2] = '\0';
+      tokstr.push_back ('(');
+      tokstr += ttok;
+      tokstr.push_back (')');
+      tokstr.push_back (static_cast<char> (c));
     }
 
-  *ep = tokstr;
-  FREE (ttok);
+  *ep = savestring (tokstr);
   return rval;
 }
 #endif /* DPAREN_ARITHMETIC || ARITH_FOR_COMMAND */
 
 #if defined(COND_COMMAND)
 void
-Shell::cond_error ()
+Shell::cond_error (const parser::symbol_type &cond_symbol)
 {
-  char *etext;
-
-  if (EOF_Reached && cond_token != parser::token::COND_ERROR) /* [[ */
+  /* [[ */
+  if (EOF_Reached && cond_symbol.kind () != parser::symbol_kind::S_COND_ERROR)
     parser_error (cond_lineno, _ ("unexpected EOF while looking for `]]'"));
-  else if (cond_token != parser::token::COND_ERROR)
+  else if (cond_symbol.kind () != parser::symbol_kind::S_COND_ERROR)
     {
-      if ((etext = error_token_from_token (cond_token)))
+      std::string etext (error_string_from_symbol (cond_symbol));
+      if (!etext.empty ())
         {
           parser_error (cond_lineno,
                         _ ("syntax error in conditional expression: "
                            "unexpected token `%s'"),
-                        etext);
-          free (etext);
+                        etext.c_str ());
         }
       else
         parser_error (cond_lineno,
@@ -2810,21 +2819,29 @@ Shell::cond_error ()
     }
 }
 
-int
+parser::symbol_type
 Shell::cond_skip_newlines ()
 {
-  while ((cond_token = read_token (READ)) == '\n')
+  parser::token_kind_type saved_current_token = current_token;
+  while (true)
     {
+      parser::symbol_type new_token = read_token (READ);
+      if (current_token != '\n')
+        {
+          cond_token = current_token;
+          current_token = saved_current_token;
+          return new_token;
+        }
+
       if (SHOULD_PROMPT ())
         prompt_again ();
     }
-  return cond_token;
 }
 
 #define COND_RETURN_ERROR()                                                   \
   do                                                                          \
     {                                                                         \
-      cond_token = COND_ERROR;                                                \
+      cond_token = parser::token::COND_ERROR;                                 \
       return nullptr;                                                         \
     }                                                                         \
   while (0)
@@ -2834,186 +2851,202 @@ Shell::cond_term ()
 {
   WORD_DESC *op;
   COND_COM *term, *tleft, *tright;
-  int tok, lineno;
-  char *etext;
+  int lineno;
 
   /* Read a token.  It can be a left paren, a `!', a unary operator, or a
      word that should be the first argument of a binary operator.  Start by
      skipping newlines, since this is a compound command. */
-  tok = cond_skip_newlines ();
+  parser::symbol_type tok (cond_skip_newlines ());
   lineno = line_number;
-  if (tok == parser::token::COND_END)
+  if (cond_token == parser::token::COND_END)
     {
       COND_RETURN_ERROR ();
     }
-  else if (tok == '(')
+  else if (cond_token == static_cast<parser::token_kind_type> ('('))
     {
       term = cond_expr ();
-      if (cond_token != ')')
+      if (cond_token != static_cast<parser::token_kind_type> (')'))
         {
           if (term)
-            dispose_cond_node (term); /* ( */
-          if ((etext = error_token_from_token (cond_token)))
+            delete term; /* ( */
+
+          std::string etext (error_string_from_symbol (tok));
+          if (!etext.empty ())
             {
               parser_error (lineno, _ ("unexpected token `%s', expected `)'"),
-                            etext);
-              free (etext);
+                            etext.c_str ());
             }
           else
             parser_error (lineno, _ ("expected `)'"));
           COND_RETURN_ERROR ();
         }
-      term = make_cond_node (COND_EXPR, nullptr, term, nullptr);
+      term = new COND_COM (line_number, COND_EXPR, nullptr, term, nullptr);
       (void)cond_skip_newlines ();
     }
-  else if (tok == parser::token::BANG
-           || (tok == parser::token::WORD
-               && (yylval.word->word[0] == '!'
-                   && yylval.word->word[1] == '\0')))
+  else if (cond_token == parser::token::BANG
+           || (cond_token == parser::token::WORD
+               && (tok.value.as<WORD_DESC_PTR> ().value->word.size () == 1
+                   && tok.value.as<WORD_DESC_PTR> ().value->word[0] == '!')))
     {
-      if (tok == parser::token::WORD)
-        dispose_word (yylval.word); /* not needed */
       term = cond_term ();
       if (term)
         term->flags ^= CMD_INVERT_RETURN;
     }
-  else if (tok == parser::token::WORD && yylval.word->word[0] == '-'
-           && yylval.word->word[1] && yylval.word->word[2] == 0
-           && test_unop (yylval.word->word))
+  else if (cond_token == parser::token::WORD)
     {
-      op = yylval.word;
-      tok = read_token (READ);
-      if (tok == parser::token::WORD)
+      WORD_DESC *word = tok.value.as<WORD_DESC_PTR> ().value;
+      if (test_unop (word->word))
         {
-          tleft = make_cond_node (COND_TERM, yylval.word, nullptr, nullptr);
-          term = make_cond_node (COND_UNARY, op, tleft, nullptr);
-        }
-      else
-        {
-          dispose_word (op);
-          if ((etext = error_token_from_token (tok)))
+          parser::symbol_type tok2 (read_token (READ));
+          if (tok2.kind () == parser::symbol_kind::S_WORD)
             {
-              parser_error (
-                  line_number,
-                  _ ("unexpected argument `%s' to conditional unary operator"),
-                  etext);
-              free (etext);
+              WORD_DESC *word2 = tok2.value.as<WORD_DESC_PTR> ().value;
+              tleft = new COND_COM (line_number, COND_TERM, word2, nullptr,
+                                    nullptr);
+              term = new COND_COM (line_number, COND_UNARY, word, tleft,
+                                   nullptr);
             }
           else
-            parser_error (
-                line_number,
-                _ ("unexpected argument to conditional unary operator"));
-          COND_RETURN_ERROR ();
+            {
+              delete word;
+              std::string etext (error_string_from_symbol (tok));
+              if (!etext.empty ())
+                {
+                  parser_error (line_number,
+                                _ ("unexpected argument `%s' to conditional "
+                                   "unary operator"),
+                                etext.c_str ());
+                }
+              else
+                parser_error (
+                    line_number,
+                    _ ("unexpected argument to conditional unary operator"));
+              COND_RETURN_ERROR ();
+            }
+
+          (void)cond_skip_newlines ();
         }
-
-      (void)cond_skip_newlines ();
-    }
-  else if (tok == parser::token::WORD) /* left argument to binary operator */
-    {
-      /* lhs */
-      tleft = make_cond_node (COND_TERM, yylval.word, nullptr, nullptr);
-
-      /* binop */
-      tok = read_token (READ);
-      if (tok == parser::token::WORD && test_binop (yylval.word->word))
+      else /* left argument to binary operator */
         {
-          op = yylval.word;
-          if (op->word[0] == '='
-              && (op->word[1] == '\0'
-                  || (op->word[1] == '=' && op->word[2] == '\0')))
-            parser_state |= PST_EXTPAT;
-          else if (op->word[0] == '!' && op->word[1] == '='
-                   && op->word[2] == '\0')
-            parser_state |= PST_EXTPAT;
-        }
+          /* lhs */
+          tleft
+              = new COND_COM (line_number, COND_TERM, word, nullptr, nullptr);
+
+          /* binop */
+          /* tok = cond_skip_newlines (); ? */
+          parser::symbol_type tok2 (read_token (READ));
+          if (tok2.kind () == parser::symbol_kind::S_WORD
+              && test_binop (tok2.value.as<WORD_DESC_PTR> ().value->word))
+            {
+              op = tok2.value.as<WORD_DESC_PTR> ().value;
+              if (op->word == "=" || op->word == "==")
+                parser_state |= PST_EXTPAT;
+              else if (op->word == "!=")
+                parser_state |= PST_EXTPAT;
+            }
 #if defined(COND_REGEXP)
-      else if (tok == parser::token::WORD && STREQ (yylval.word->word, "=~"))
-        {
-          op = yylval.word;
-          parser_state |= PST_REGEXP;
-        }
+          else if (tok2.kind () == parser::symbol_kind::S_WORD
+                   && tok2.value.as<WORD_DESC_PTR> ().value->word == "=~")
+            {
+              op = tok2.value.as<WORD_DESC_PTR> ().value;
+              parser_state |= PST_REGEXP;
+            }
 #endif
-      else if (tok == '<' || tok == '>')
-        op = make_word_from_token (tok); /* ( */
-      /* There should be a check before blindly accepting the `)' that we have
-         seen the opening `('. */
-      else if (tok == parser::token::COND_END || tok == parser::token::AND_AND
-               || tok == parser::token::OR_OR || tok == ')')
-        {
-          /* Special case.  [[ x ]] is equivalent to [[ -n x ]], just like
-             the test command.  Similarly for [[ x && expr ]] or
-             [[ x || expr ]] or [[ (x) ]]. */
-          op = make_word ("-n");
-          term = make_cond_node (COND_UNARY, op, tleft, nullptr);
-          cond_token = tok;
-          return term;
-        }
-      else
-        {
-          if ((etext = error_token_from_token (tok)))
+          else if (current_token == '<' || current_token == '>')
+            op = new WORD_DESC (static_cast<char> (current_token)); /* ( */
+          /* There should be a check before blindly accepting the `)' that we
+             have seen the opening `('. */
+          else if (cond_token == parser::token::COND_END
+                   || cond_token == parser::token::AND_AND
+                   || cond_token == parser::token::OR_OR
+                   || cond_token == static_cast<parser::token_kind_type> (')'))
             {
-              parser_error (line_number,
-                            _ ("unexpected token `%s', conditional binary "
-                               "operator expected"),
-                            etext);
-              free (etext);
+              /* Special case.  [[ x ]] is equivalent to [[ -n x ]], just like
+                 the test command.  Similarly for [[ x && expr ]] or
+                 [[ x || expr ]] or [[ (x) ]]. */
+              op = make_word ("-n");
+              term
+                  = new COND_COM (line_number, COND_UNARY, op, tleft, nullptr);
+              // XXX cond_token = tok2;
+              return term;
             }
           else
-            parser_error (line_number,
-                          _ ("conditional binary operator expected"));
-          dispose_cond_node (tleft);
-          COND_RETURN_ERROR ();
-        }
-
-      /* rhs */
-      if (parser_state & PST_EXTPAT)
-        extended_glob = 1;
-      tok = read_token (READ);
-      if (parser_state & PST_EXTPAT)
-        extended_glob = global_extglob;
-      parser_state &= ~(PST_REGEXP | PST_EXTPAT);
-
-      if (tok == WORD)
-        {
-          tright = make_cond_node (COND_TERM, yylval.word, nullptr, nullptr);
-          term = make_cond_node (COND_BINARY, op, tleft, tright);
-        }
-      else
-        {
-          if ((etext = error_token_from_token (tok)))
             {
-              parser_error (line_number,
-                            _ ("unexpected argument `%s' to conditional "
-                               "binary operator"),
-                            etext);
-              free (etext);
+              std::string etext (error_string_from_symbol (tok2));
+              if (!etext.empty ())
+                {
+                  parser_error (line_number,
+                                _ ("unexpected token `%s', conditional binary "
+                                   "operator expected"),
+                                etext.c_str ());
+                }
+              else
+                parser_error (line_number,
+                              _ ("conditional binary operator expected"));
+              delete tleft;
+              COND_RETURN_ERROR ();
+            }
+
+          /* rhs */
+          char local_extglob = extended_glob;
+          if (parser_state & PST_EXTPAT)
+            extended_glob = 1;
+
+          parser::symbol_type tok3 (read_token (READ));
+          if (parser_state & PST_EXTPAT)
+            extended_glob = local_extglob;
+          parser_state &= ~(PST_REGEXP | PST_EXTPAT);
+
+          if (tok3.kind () == parser::symbol_kind::S_WORD)
+            {
+              WORD_DESC *op2 = tok3.value.as<WORD_DESC_PTR> ().value;
+              tright = new COND_COM (line_number, COND_TERM, op2, nullptr,
+                                     nullptr);
+              term
+                  = new COND_COM (line_number, COND_BINARY, op, tleft, tright);
             }
           else
-            parser_error (
-                line_number,
-                _ ("unexpected argument to conditional binary operator"));
-          dispose_cond_node (tleft);
-          dispose_word (op);
-          COND_RETURN_ERROR ();
-        }
+            {
+              std::string etext (error_string_from_symbol (tok3));
+              if (!etext.empty ())
+                {
+                  parser_error (line_number,
+                                _ ("unexpected argument `%s' to conditional "
+                                   "binary operator"),
+                                etext.c_str ());
+                }
+              else
+                parser_error (
+                    line_number,
+                    _ ("unexpected argument to conditional binary operator"));
+              delete tleft;
+              delete op;
+              COND_RETURN_ERROR ();
+            }
 
-      (void)cond_skip_newlines ();
+          (void)cond_skip_newlines ();
+        }
     }
   else
     {
-      if (tok < 256)
+      if (cond_token < 256)
         parser_error (line_number,
-                      _ ("unexpected token `%c' in conditional command"), tok);
-      else if ((etext = error_token_from_token (tok)))
-        {
-          parser_error (line_number,
-                        _ ("unexpected token `%s' in conditional command"),
-                        etext);
-          free (etext);
-        }
+                      _ ("unexpected token `%c' in conditional command"),
+                      static_cast<char> (cond_token));
       else
-        parser_error (line_number,
-                      _ ("unexpected token %d in conditional command"), tok);
+        {
+          std::string etext (error_string_from_symbol (tok));
+          if (!etext.empty ())
+            {
+              parser_error (line_number,
+                            _ ("unexpected token `%s' in conditional command"),
+                            etext.c_str ());
+            }
+          else
+            parser_error (line_number,
+                          _ ("unexpected token %d in conditional command"),
+                          cond_token);
+        }
       COND_RETURN_ERROR ();
     }
   return term;
@@ -3021,43 +3054,19 @@ Shell::cond_term ()
 #endif
 
 #if defined(ARRAY_VARS)
-/* When this is called, it's guaranteed that we don't care about anything
-   in t beyond i.  We use a buffer with room for the characters we add just
-   in case assignment() ends up doing something like parsing a command
-   substitution that will reallocate atoken.  We don't want to write beyond
-   the end of an allocated buffer. */
-int
-Shell::token_is_assignment (char *t, int i)
+// This is now called with a modifiable buffer.
+bool
+Shell::token_is_assignment (std::string &t)
 {
-  int r;
-  char *atoken;
+  t.push_back ('=');
 
-  atoken = (char *)xmalloc (i + 3);
-  memcpy (atoken, t, i);
-  atoken[i] = '=';
-  atoken[i + 1] = '\0';
+  size_t r = assignment (t.c_str (), (parser_state & PST_COMPASSIGN) != 0);
 
-  r = assignment (atoken, (parser_state & PST_COMPASSIGN) != 0);
+  t.erase (t.size () - 1, 1);
 
-  free (atoken);
-
-  /* XXX - check that r == i to avoid returning false positive for
-     t containing `=' before t[i]. */
-  return r > 0 && r == i;
-}
-
-/* XXX - possible changes here for `+=' */
-int
-Shell::token_is_ident (char *t, int i)
-{
-  unsigned char c;
-  int r;
-
-  c = t[i];
-  t[i] = '\0';
-  r = legal_identifier (t);
-  t[i] = c;
-  return r;
+  /* XXX - check that r == t.size () to avoid returning false positive for
+     t containing `=' before t[t.size ()]. */
+  return r > 0 && r == t.size ();
 }
 #endif
 
@@ -3067,39 +3076,35 @@ Shell::read_token_word (int character)
   /* The value for YYLVAL when a WORD is read. */
   WORD_DESC *the_word;
 
-  /* Index into the token that we are building. */
-  int token_index;
-
   /* ALL_DIGITS becomes zero when we see a non-digit. */
-  int all_digit_token;
+  bool all_digit_token;
 
   /* DOLLAR_PRESENT becomes non-zero if we see a `$'. */
-  int dollar_present;
+  bool dollar_present;
 
   /* COMPOUND_ASSIGNMENT becomes non-zero if we are parsing a compound
      assignment. */
-  int compound_assignment;
+  bool compound_assignment;
 
   /* QUOTED becomes non-zero if we see one of ("), ('), (`), or (\). */
-  int quoted;
+  bool quoted;
 
   /* Non-zero means to ignore the value of the next character, and just
      to add it no matter what. */
-  int pass_next_character;
+  bool pass_next_character;
 
   /* The current delimiting character. */
-  int cd;
-  int result, peek_char;
-  char *ttok, *ttrans;
-  int ttoklen, ttranslen;
-  int64_t lvalue;
+  char cd;
 
-  if (token_buffer_size < TOKEN_DEFAULT_INITIAL_SIZE)
-    token = (char *)xrealloc (token,
-                              token_buffer_size = TOKEN_DEFAULT_INITIAL_SIZE);
+  //   int result, peek_char;
+  //   char *ttok, *ttrans;
+  //   int ttoklen, ttranslen;
+  //   int64_t lvalue;
 
-  token_index = 0;
-  all_digit_token = DIGIT (character);
+  if (token_buffer.capacity () < TOKEN_DEFAULT_INITIAL_SIZE)
+    token_buffer.reserve (TOKEN_DEFAULT_INITIAL_SIZE);
+
+  all_digit_token = std::isdigit (character);
   dollar_present = quoted = pass_next_character = compound_assignment = 0;
 
   for (;;)
@@ -3113,13 +3118,13 @@ Shell::read_token_word (int character)
           goto got_escaped_character;
         }
 
-      cd = current_delimiter (dstack);
+      cd = dstack.back ();
 
       /* Handle backslashes.  Quote lots of things when not inside of
          double-quotes, quote some things inside of double-quotes. */
       if MBTEST (character == '\\')
         {
-          peek_char = shell_getc (0);
+          int peek_char = shell_getc (false);
 
           /* Backslash-newline is ignored in all cases except
              when quoted with single quotes. */
@@ -3136,9 +3141,9 @@ Shell::read_token_word (int character)
               if (cd == 0 || cd == '`'
                   || (cd == '"' && peek_char >= 0
                       && (sh_syntaxtab[peek_char] & CBSDQUOTE)))
-                pass_next_character++;
+                pass_next_character = true;
 
-              quoted = 1;
+              quoted = true;
               goto got_character;
             }
         }
@@ -3146,20 +3151,30 @@ Shell::read_token_word (int character)
       /* Parse a matched pair of quote characters. */
       if MBTEST (shellquote (character))
         {
-          push_delimiter (dstack, character);
-          ttok = parse_matched_pair (character, character, character, &ttoklen,
-                                     (character == '`') ? P_COMMAND : 0);
-          pop_delimiter (dstack);
-          if (ttok == &matched_pair_error)
-            return -1; /* Bail immediately. */
-          token[token_index++] = character;
-          strcpy (token + token_index, ttok);
-          token_index += ttoklen;
-          all_digit_token = 0;
+          dstack.push_back (static_cast<char> (character));
+          std::string ttok;
+          try
+            {
+              ttok = parse_matched_pair (character, character, character,
+                                         (character == '`') ? P_COMMAND
+                                                            : P_NOFLAGS);
+            }
+          catch (const matched_pair_error &)
+            {
+              dstack.pop_back ();
+              return parser::make_YYerror (); // Bail immediately.
+            }
+          dstack.pop_back ();
+
+          token_buffer.push_back (static_cast<char> (character));
+          token_buffer += ttok;
+
+          all_digit_token = false;
           if (character != '`')
-            quoted = 1;
-          dollar_present |= (character == '"' && strchr (ttok, '$') != 0);
-          FREE (ttok);
+            quoted = true;
+
+          dollar_present
+              |= (character == '"' && ttok.find ('$') != std::string::npos);
           goto next_character;
         }
 
@@ -3173,16 +3188,22 @@ Shell::read_token_word (int character)
           if (character == '|')
             goto got_character;
 
-          push_delimiter (dstack, character);
-          ttok = parse_matched_pair (cd, '(', ')', &ttoklen, 0);
-          pop_delimiter (dstack);
-          if (ttok == &matched_pair_error)
-            return -1; /* Bail immediately. */
-          token[token_index++] = character;
-          strcpy (token + token_index, ttok);
-          token_index += ttoklen;
-          FREE (ttok);
-          dollar_present = all_digit_token = 0;
+          dstack.push_back (static_cast<char> (character));
+          std::string ttok;
+          try
+            {
+              ttok = parse_matched_pair (cd, '(', ')', P_NOFLAGS);
+            }
+          catch (const matched_pair_error &)
+            {
+              dstack.pop_back ();
+              return parser::make_YYerror (); // Bail immediately.
+            }
+          dstack.pop_back ();
+
+          token_buffer.push_back (static_cast<char> (character));
+          token_buffer += ttok;
+          dollar_present = all_digit_token = false;
           goto next_character;
         }
 #endif /* COND_REGEXP */
@@ -3191,20 +3212,27 @@ Shell::read_token_word (int character)
       /* Parse a ksh-style extended pattern matching specification. */
       if MBTEST (extended_glob && PATTERN_CHAR (character))
         {
-          peek_char = shell_getc (1);
+          char peek_char = static_cast<char> (shell_getc (true));
+
           if MBTEST (peek_char == '(') /* ) */
             {
-              push_delimiter (dstack, peek_char);
-              ttok = parse_matched_pair (cd, '(', ')', &ttoklen, 0);
-              pop_delimiter (dstack);
-              if (ttok == &matched_pair_error)
-                return -1; /* Bail immediately. */
-              token[token_index++] = character;
-              token[token_index++] = peek_char;
-              strcpy (token + token_index, ttok);
-              token_index += ttoklen;
-              FREE (ttok);
-              dollar_present = all_digit_token = 0;
+              dstack.push_back (peek_char);
+              std::string ttok;
+              try
+                {
+                  ttok = parse_matched_pair (cd, '(', ')', P_NOFLAGS);
+                }
+              catch (const matched_pair_error &)
+                {
+                  dstack.pop_back ();
+                  return parser::make_YYerror (); // Bail immediately.
+                }
+              dstack.pop_back ();
+
+              token_buffer.push_back (static_cast<char> (character));
+              token_buffer.push_back (peek_char);
+              token_buffer += ttok;
+              dollar_present = all_digit_token = false;
               goto next_character;
             }
           else
@@ -3216,95 +3244,102 @@ Shell::read_token_word (int character)
          the shell expansions that must be read as a single word. */
       if (shellexp (character))
         {
-          peek_char = shell_getc (1);
-          /* $(...), <(...), >(...), $((...)), ${...}, and $[...] constructs */
+          char peek_char = static_cast<char> (shell_getc (true));
+          // $(...), <(...), >(...), $((...)), ${...}, and $[...] constructs
           if MBTEST (peek_char == '('
                      || ((peek_char == '{' || peek_char == '[')
                          && character == '$')) /* ) ] } */
             {
-              if (peek_char == '{') /* } */
-                ttok = parse_matched_pair (cd, '{', '}', &ttoklen,
-                                           (P_FIRSTCLOSE | P_DOLBRACE));
-              else if (peek_char == '(') /* ) */
+              std::string ttok;
+              try
                 {
-                  /* XXX - push and pop the `(' as a delimiter for use by
-                     the command-oriented-history code.  This way newlines
-                     appearing in the $(...) string get added to the
-                     history literally rather than causing a possibly-
-                     incorrect `;' to be added. ) */
-                  push_delimiter (dstack, peek_char);
-                  ttok = parse_comsub (cd, '(', ')', &ttoklen, P_COMMAND);
-                  pop_delimiter (dstack);
+                  if (peek_char == '{') /* } */
+                    ttok = parse_matched_pair (cd, '{', '}',
+                                               P_FIRSTCLOSE | P_DOLBRACE);
+                  else if (peek_char == '(') /* ) */
+                    {
+                      /* XXX - push and pop the `(' as a delimiter for use by
+                         the command-oriented-history code.  This way newlines
+                         appearing in the $(...) string get added to the
+                         history literally rather than causing a possibly-
+                         incorrect `;' to be added. ) */
+                      dstack.push_back (peek_char);
+                      ttok = parse_comsub (cd, '(', ')');
+                      dstack.pop_back ();
+                    }
+                  else
+                    ttok = parse_matched_pair (cd, '[', ']', P_NOFLAGS);
                 }
-              else
-                ttok = parse_matched_pair (cd, '[', ']', &ttoklen, 0);
-              if (ttok == &matched_pair_error)
-                return -1; /* Bail immediately. */
-              token[token_index++] = character;
-              token[token_index++] = peek_char;
-              strcpy (token + token_index, ttok);
-              token_index += ttoklen;
-              FREE (ttok);
-              dollar_present = 1;
-              all_digit_token = 0;
+              catch (const matched_pair_error &)
+                {
+                  if (peek_char == '(')
+                    dstack.pop_back ();
+
+                  return parser::make_YYerror (); // Bail immediately.
+                }
+
+              token_buffer.push_back (static_cast<char> (character));
+              token_buffer.push_back (peek_char);
+              token_buffer += ttok;
+              dollar_present = true;
+              all_digit_token = false;
               goto next_character;
             }
           /* This handles $'...' and $"..." new-style quoted strings. */
           else if MBTEST (character == '$'
                           && (peek_char == '\'' || peek_char == '"'))
             {
-              int first_line;
+              int first_line = line_number;
+              dstack.push_back (peek_char);
 
-              first_line = line_number;
-              push_delimiter (dstack, peek_char);
-              ttok = parse_matched_pair (peek_char, peek_char, peek_char,
-                                         &ttoklen,
-                                         (peek_char == '\'') ? P_ALLOWESC : 0);
-              pop_delimiter (dstack);
-              if (ttok == &matched_pair_error)
-                return -1;
+              std::string ttok;
+              try
+                {
+                  ttok = parse_matched_pair (peek_char, peek_char, peek_char,
+                                             (peek_char == '\'') ? P_ALLOWESC
+                                                                 : P_NOFLAGS);
+                }
+              catch (const matched_pair_error &)
+                {
+                  dstack.pop_back ();
+                  return parser::make_YYerror (); // Bail immediately.
+                }
+              dstack.pop_back ();
+
+              std::string ttrans;
               if (peek_char == '\'')
                 {
-                  ttrans = ansiexpand (ttok, 0, ttoklen - 1, &ttranslen);
-                  free (ttok);
+                  ttrans = ansiexpand (ttok.begin (), ttok.end ());
+                  ttok.clear ();
 
                   /* Insert the single quotes and correctly quote any
                      embedded single quotes (allowed because P_ALLOWESC was
                      passed to parse_matched_pair). */
-                  ttok = sh_single_quote (ttrans);
-                  free (ttrans);
-                  ttranslen = strlen (ttok);
-                  ttrans = ttok;
+                  ttrans = sh_single_quote (ttrans);
                 }
               else
                 {
                   /* Try to locale-expand the converted string. */
-                  ttrans = localeexpand (ttok, 0, ttoklen - 1, first_line,
-                                         &ttranslen);
-                  free (ttok);
+                  ttrans = locale_expand (ttok, first_line);
+                  ttok.clear ();
 
                   /* Add the double quotes back */
-                  ttok = sh_mkdoublequoted (ttrans, ttranslen, 0);
-                  free (ttrans);
-                  ttranslen += 2;
-                  ttrans = ttok;
+                  ttrans = sh_mkdoublequoted (ttrans, 0);
                 }
 
-              strcpy (token + token_index, ttrans);
-              token_index += ttranslen;
-              FREE (ttrans);
-              quoted = 1;
-              all_digit_token = 0;
+              token_buffer += ttrans;
+              quoted = true;
+              all_digit_token = false;
               goto next_character;
             }
           /* This could eventually be extended to recognize all of the
              shell's single-character parameter expansions, and set flags.*/
           else if MBTEST (character == '$' && peek_char == '$')
             {
-              token[token_index++] = '$';
-              token[token_index++] = peek_char;
-              dollar_present = 1;
-              all_digit_token = 0;
+              token_buffer.push_back ('$');
+              token_buffer.push_back (peek_char);
+              dollar_present = true;
+              all_digit_token = false;
               goto next_character;
             }
           else
@@ -3313,47 +3348,46 @@ Shell::read_token_word (int character)
 
 #if defined(ARRAY_VARS)
       /* Identify possible array subscript assignment; match [...].  If
-         parser_state&PST_COMPASSIGN, we need to parse [sub]=words treating
+         parser_state & PST_COMPASSIGN, we need to parse [sub]=words treating
          `sub' as if it were enclosed in double quotes. */
       else if MBTEST (character == '[' && /* ] */
-                      ((token_index > 0
+                      ((!token_buffer.empty ()
                         && assignment_acceptable (last_read_token)
-                        && token_is_ident (token, token_index))
-                       || (token_index == 0
+                        && token_is_ident (token_buffer))
+                       || (token_buffer.empty ()
                            && (parser_state & PST_COMPASSIGN))))
         {
-          ttok = parse_matched_pair (cd, '[', ']', &ttoklen, P_ARRAYSUB);
-          if (ttok == &matched_pair_error)
-            return -1; /* Bail immediately. */
-          token[token_index++] = character;
-          strcpy (token + token_index, ttok);
-          token_index += ttoklen;
-          FREE (ttok);
-          all_digit_token = 0;
+          std::string ttok;
+          try
+            {
+              ttok = parse_matched_pair (cd, '[', ']', P_ARRAYSUB);
+            }
+          catch (const matched_pair_error &)
+            {
+              return parser::make_YYerror (); // Bail immediately.
+            }
+
+          token_buffer.push_back (static_cast<char> (character));
+          token_buffer += ttok;
+          all_digit_token = false;
           goto next_character;
         }
       /* Identify possible compound array variable assignment. */
-      else if MBTEST (character == '=' && token_index > 0
+      else if MBTEST (character == '=' && !token_buffer.empty ()
                       && (assignment_acceptable (last_read_token)
                           || (parser_state & PST_ASSIGNOK))
-                      && token_is_assignment (token, token_index))
+                      && token_is_assignment (token_buffer))
         {
-          peek_char = shell_getc (1);
+          char peek_char = static_cast<char> (shell_getc (true));
           if MBTEST (peek_char == '(') /* ) */
             {
-              ttok = parse_compound_assignment (&ttoklen);
-
-              token[token_index++] = '=';
-              token[token_index++] = '(';
-              if (ttok)
-                {
-                  strcpy (token + token_index, ttok);
-                  token_index += ttoklen;
-                }
-              token[token_index++] = ')';
-              FREE (ttok);
-              all_digit_token = 0;
-              compound_assignment = 1;
+              std::string ttok = parse_compound_assignment ();
+              token_buffer.push_back ('=');
+              token_buffer.push_back ('(');
+              token_buffer += ttok;
+              token_buffer.push_back (')');
+              all_digit_token = false;
+              compound_assignment = true;
 #if 1
               goto next_character;
 #else
@@ -3376,13 +3410,13 @@ Shell::read_token_word (int character)
     got_character:
       if (character == CTLESC || character == CTLNUL)
         {
-          token[token_index++] = CTLESC;
+          token_buffer.push_back (CTLESC);
         }
 
     got_escaped_character:
-      token[token_index++] = character;
+      token_buffer.push_back (static_cast<char> (character));
 
-      all_digit_token &= DIGIT (character);
+      all_digit_token &= std::isdigit (character);
       dollar_present |= character == '$';
 
     next_character:
@@ -3392,14 +3426,11 @@ Shell::read_token_word (int character)
       /* We want to remove quoted newlines (that is, a \<newline> pair)
          unless we are within single quotes or pass_next_character is
          set (the shell equivalent of literal-next). */
-      cd = current_delimiter (dstack);
-      character = shell_getc (cd != '\'' && pass_next_character == 0);
+      cd = dstack.back ();
+      character = shell_getc (cd != '\'' && !pass_next_character);
     } /* end for (;;) */
 
 got_token:
-
-  /* Calls to RESIZE_MALLOCED_BUFFER ensure there is sufficient room. */
-  token[token_index] = '\0';
 
   /* Check to see what thing we should return.  If the last_read_token
      is a `<', or a `&', or the character which ended this token is
@@ -3410,30 +3441,37 @@ got_token:
                  || last_read_token == parser::token::LESS_AND
                  || last_read_token == parser::token::GREATER_AND))
     {
-      if (legal_number (token, &lvalue) && (int)lvalue == lvalue)
-        {
-          yylval.number = lvalue;
-          return NUMBER;
-        }
+      int64_t lvalue;
+      if (legal_number (token_buffer.c_str (), &lvalue))
+        return parser::make_NUMBER (lvalue);
     }
 
   /* Check for special case tokens. */
-  result = (last_shell_getc_is_singlebyte) ? special_case_tokens (token) : -1;
-  if (result >= 0)
-    return result;
+  if (last_shell_getc_is_singlebyte)
+    {
+      parser::symbol_type sctok (special_case_tokens (token_buffer));
+      if (sctok.kind () != parser::symbol_kind::S_YYerror)
+        return sctok;
+    }
 
 #if defined(ALIAS)
   /* Posix.2 does not allow reserved words to be aliased, so check for all
      of them, including special cases, before expanding the current token
      as an alias. */
   if MBTEST (posixly_correct)
-    CHECK_FOR_RESERVED_WORD (token);
+    if (!dollar_present && !quoted
+        && reserved_word_acceptable (last_read_token))
+      {
+        parser::symbol_type restok (check_for_reserved_word (token_buffer));
+        if (restok.kind () != parser::symbol_kind::S_YYerror)
+          return restok;
+      }
 
   /* Aliases are expanded iff EXPAND_ALIASES is non-zero, and quoting
      inhibits alias expansion. */
-  if (expand_aliases && quoted == 0)
+  if (expand_aliases && !quoted)
     {
-      result = alias_expand_token (token);
+      alias_expand_token_result result = alias_expand_token (token_buffer);
       if (result == RE_READ_TOKEN)
         return RE_READ_TOKEN;
       else if (result == NO_EXPANSION)
@@ -3443,24 +3481,27 @@ got_token:
 
   /* If not in Posix.2 mode, check for reserved words after alias
      expansion. */
-  if MBTEST (posixly_correct == 0)
+  if MBTEST (!posixly_correct)
 #endif
-    CHECK_FOR_RESERVED_WORD (token);
+    if (!dollar_present && !quoted
+        && reserved_word_acceptable (last_read_token))
+      {
+        parser::symbol_type restok (check_for_reserved_word (token_buffer));
+        if (restok.kind () != parser::symbol_kind::S_YYerror)
+          return restok;
+      }
 
-  the_word = alloc_word_desc ();
-  the_word->word = (char *)xmalloc (1 + token_index);
-  the_word->flags = 0;
-  strcpy (the_word->word, token);
+  the_word = new WORD_DESC (token_buffer);
   if (dollar_present)
     the_word->flags |= W_HASDOLLAR;
   if (quoted)
     the_word->flags |= W_QUOTED; /*(*/
-  if (compound_assignment && token[token_index - 1] == ')')
+  if (compound_assignment && token_buffer[token_buffer.size () - 1] == ')')
     the_word->flags |= W_COMPASSIGN;
   /* A word is an assignment if it appears at the beginning of a
      simple command, or after another assignment word.  This is
      context-dependent, so it cannot be handled in the grammar. */
-  if (assignment (token, (parser_state & PST_COMPASSIGN) != 0))
+  if (assignment (token_buffer, (parser_state & PST_COMPASSIGN) != 0))
     {
       the_word->flags |= W_ASSIGNMENT;
       /* Don't perform word splitting on assignment statements. */
@@ -3534,52 +3575,33 @@ got_token:
   return result;
 }
 
-/* Return the index of TOKEN in the alist of reserved words, or -1 if
-   TOKEN is not a shell reserved word. */
-int
-find_reserved_word (const char *tokstr)
-{
-  int i;
-  for (i = 0; word_token_alist[i].word; i++)
-    if (STREQ (tokstr, word_token_alist[i].word))
-      return i;
-  return -1;
-}
-
-/* An interface to let the rest of the shell (primarily the completion
-   system) know what the parser is expecting. */
-int
-parser_in_command_position ()
-{
-  return command_token_position (last_read_token);
-}
-
 #if defined(HISTORY)
 
 /* A list of tokens which can be followed by newlines, but not by
    semi-colons.  When concatenating multiple lines of history, the
    newline separator for such tokens is replaced with a space. */
-static const int no_semi_successors[] = { '\n',
-                                          '{',
-                                          '(',
-                                          ')',
-                                          ';',
-                                          '&',
-                                          '|',
-                                          parser::token::CASE,
-                                          parser::token::DO,
-                                          parser::token::ELSE,
-                                          parser::token::IF,
-                                          parser::token::SEMI_SEMI,
-                                          parser::token::SEMI_AND,
-                                          parser::token::SEMI_SEMI_AND,
-                                          parser::token::THEN,
-                                          parser::token::UNTIL,
-                                          parser::token::WHILE,
-                                          parser::token::AND_AND,
-                                          parser::token::OR_OR,
-                                          parser::token::IN,
-                                          0 };
+static const parser::token_kind_type no_semi_successors[]
+    = { static_cast<parser::token_kind_type> ('\n'),
+        static_cast<parser::token_kind_type> ('{'),
+        static_cast<parser::token_kind_type> ('('),
+        static_cast<parser::token_kind_type> (')'),
+        static_cast<parser::token_kind_type> (';'),
+        static_cast<parser::token_kind_type> ('&'),
+        static_cast<parser::token_kind_type> ('|'),
+        parser::token::CASE,
+        parser::token::DO,
+        parser::token::ELSE,
+        parser::token::IF,
+        parser::token::SEMI_SEMI,
+        parser::token::SEMI_AND,
+        parser::token::SEMI_SEMI_AND,
+        parser::token::THEN,
+        parser::token::UNTIL,
+        parser::token::WHILE,
+        parser::token::AND_AND,
+        parser::token::OR_OR,
+        parser::token::IN,
+        parser::token::YYEOF };
 
 /* If we are not within a delimited expression, try to be smart
    about which separators can be semi-colons and which must be
@@ -3589,8 +3611,8 @@ static const int no_semi_successors[] = { '\n',
 const char *
 Shell::history_delimiting_chars (const char *line)
 {
-  static int last_was_heredoc
-      = 0; /* was the last entry the start of a here document? */
+  // static int last_was_heredoc = 0; /* was the last entry the start of a here
+  // document? */
   int i;
 
   if ((parser_state & PST_HEREDOC) == 0)
@@ -4006,8 +4028,8 @@ Shell::decode_prompt_string (const char *string)
 #undef DOUBLE_SLASH_ROOT
                 else
                   {
-                    /* polite_directory_format is guaranteed to return a string
-                       no longer than PATH_MAX - 1 characters. */
+                    /* polite_directory_format is guaranteed to return a
+                       string no longer than PATH_MAX - 1 characters. */
                     const char *t2 = polite_directory_format (t_string);
                     if (t2 != t_string)
                       strcpy (t_string, t2);
@@ -4196,13 +4218,14 @@ Shell::decode_prompt_string (const char *string)
 int
 Shell::yyerror (const char *msg)
 {
-  report_syntax_error (nullptr);
+  if ((parser_state & PST_NOERROR) == 0)
+    report_syntax_error (nullptr);
   reset_parser ();
   return 0;
 }
 
-static char *
-error_token_from_token (int tok)
+std::string
+Shell::error_string_from_symbol (const parser::symbol_type &symbol)
 {
   char *t;
 
@@ -4240,8 +4263,8 @@ error_token_from_token (int tok)
   return t;
 }
 
-static char *
-error_token_from_text ()
+char *
+Shell::error_token_from_text ()
 {
   char *msg, *t;
   int token_end, i;
@@ -4282,8 +4305,8 @@ error_token_from_text ()
   return msg;
 }
 
-static void
-print_offending_line ()
+void
+Shell::print_offending_line ()
 {
   char *msg;
   int token_end;
@@ -4322,7 +4345,7 @@ Shell::report_syntax_error (const char *message)
      objectionable token.  First, try to figure out what token the
      parser's complaining about by looking at current_token. */
   if (current_token != 0 && !EOF_Reached
-      && (msg = error_token_from_token (current_token)))
+      && (msg = error_string_from_symbol (current_token)))
     {
       if (ansic_shouldquote (msg))
         {
@@ -4362,10 +4385,17 @@ Shell::report_syntax_error (const char *message)
     }
   else
     {
-      const char *cmsg = EOF_Reached
-                             ? _ ("syntax error: unexpected end of file")
-                             : _ ("syntax error");
-      parser_error (line_number, "%s", cmsg);
+      if (EOF_Reached && shell_eof_token && current_token != shell_eof_token)
+        parser_error (line_number,
+                      _ ("unexpected EOF while looking for matching `%c'"),
+                      shell_eof_token);
+      else
+        {
+          msg = EOF_Reached ? _ ("syntax error: unexpected end of file")
+                            : _ ("syntax error");
+          parser_error (line_number, "%s", msg);
+        }
+
       /* When the shell is interactive, this file uses EOF_Reached
          only for error reporting.  Other mechanisms are used to
          decide whether or not to exit. */
@@ -4457,39 +4487,40 @@ WORD_LIST *
 Shell::parse_string_to_word_list (char *s, int flags, const char *whom)
 {
   WORD_LIST *wl;
-  int tok, orig_current_token, orig_line_number, orig_input_terminator;
-  int orig_line_count;
-  int old_echo_input, old_expand_aliases, ea;
-#if defined(HISTORY)
-  int old_remember_on_history, old_history_expansion_inhibited;
-#endif
+  int tok, orig_current_token, orig_line_number;
+  int orig_parser_state;
+  sh_parser_state_t ps;
+  int ea;
+
+  orig_line_number = line_number;
+  save_parser_state (&ps);
 
 #if defined(HISTORY)
-  old_remember_on_history = remember_on_history;
-#if defined(BANG_HISTORY)
-  old_history_expansion_inhibited = history_expansion_inhibited;
-#endif
   bash_history_disable ();
 #endif
 
-  orig_line_number = line_number;
-  orig_line_count = current_command_line_count;
-  orig_input_terminator = shell_input_line_terminator;
-  old_echo_input = echo_input_at_read;
-  old_expand_aliases = expand_aliases;
-
   push_stream (1);
-  if ((ea = expanding_alias ()))
+  if (ea = expanding_alias ())
     parser_save_alias ();
-  last_read_token = WORD; /* WORD to allow reserved words here */
+
+  /* WORD to avoid parsing reserved words as themselves and just parse them
+     as WORDs. */
+  last_read_token = WORD;
+
   current_command_line_count = 0;
   echo_input_at_read = expand_aliases = 0;
 
   with_input_from_string (s, whom);
-  wl = nullptr;
+  wl = (WORD_LIST *)NULL;
 
   if (flags & 1)
-    parser_state |= (PST_COMPASSIGN | PST_REPARSE);
+    {
+      orig_parser_state = parser_state; /* XXX - not needed? */
+      /* State flags we don't want to persist into compound assignments. */
+      parser_state &= ~PST_NOEXPAND; /* parse_comsub sentinel */
+      /* State flags we want to set for this run through the tokenizer. */
+      parser_state |= PST_COMPASSIGN | PST_REPARSE;
+    }
 
   while ((tok = read_token (READ)) != yacc_EOF)
     {
@@ -4502,7 +4533,7 @@ Shell::parse_string_to_word_list (char *s, int flags, const char *whom)
           line_number = orig_line_number + line_number - 1;
           orig_current_token = current_token;
           current_token = tok;
-          yyerror (nullptr); /* does the right thing */
+          yyerror (NULL); /* does the right thing */
           current_token = orig_current_token;
           if (wl)
             dispose_words (wl);
@@ -4518,21 +4549,10 @@ Shell::parse_string_to_word_list (char *s, int flags, const char *whom)
   if (ea)
     parser_restore_alias ();
 
-#if defined(HISTORY)
-  remember_on_history = old_remember_on_history;
-#if defined(BANG_HISTORY)
-  history_expansion_inhibited = old_history_expansion_inhibited;
-#endif /* BANG_HISTORY */
-#endif /* HISTORY */
-
-  echo_input_at_read = old_echo_input;
-  expand_aliases = old_expand_aliases;
-
-  current_command_line_count = orig_line_count;
-  shell_input_line_terminator = orig_input_terminator;
+  restore_parser_state (&ps);
 
   if (flags & 1)
-    parser_state &= ~(PST_COMPASSIGN | PST_REPARSE);
+    parser_state = orig_parser_state; /* XXX - not needed? */
 
   if (wl == &parse_string_error)
     {
@@ -4543,37 +4563,45 @@ Shell::parse_string_to_word_list (char *s, int flags, const char *whom)
         jump_to_top_level (DISCARD);
     }
 
-  return REVERSE_LIST (wl, WORD_LIST *);
+  return (REVERSE_LIST (wl, WORD_LIST *));
 }
 
-char *
-Shell::parse_compound_assignment (size_t *retlenp)
+std::string
+Shell::parse_compound_assignment ()
 {
   WORD_LIST *wl, *rl;
-  int tok, orig_line_number, orig_token_size, orig_last_token, assignok;
-  char *saved_token, *ret;
+  int tok, orig_line_number, assignok;
+  sh_parser_state_t ps;
+  char *ret;
 
-  saved_token = token;
-  orig_token_size = token_buffer_size;
   orig_line_number = line_number;
-  orig_last_token = last_read_token;
+  save_parser_state (&ps);
 
-  last_read_token = WORD; /* WORD to allow reserved words here */
+  /* WORD to avoid parsing reserved words as themselves and just parse them
+     as WORDs. Plus it means we won't be in a command position and so alias
+     expansion won't happen. */
+  last_read_token = WORD;
 
-  token = nullptr;
+  token = (char *)NULL;
   token_buffer_size = 0;
+  wl = (WORD_LIST *)NULL; /* ( */
 
   assignok = parser_state & PST_ASSIGNOK; /* XXX */
 
-  wl = nullptr; /* ( */
+  /* State flags we don't want to persist into compound assignments. */
+  parser_state &= ~(PST_NOEXPAND | PST_CONDCMD | PST_CONDEXPR | PST_REGEXP
+                    | PST_EXTPAT);
+  /* State flags we want to set for this run through the tokenizer. */
   parser_state |= PST_COMPASSIGN;
+
+  esacs_needed_count = expecting_in_token = 0;
 
   while ((tok = read_token (READ)) != ')')
     {
       if (tok == '\n') /* Allow newlines in compound assignments */
         {
           if (SHOULD_PROMPT ())
-            prompt_again ();
+            prompt_again (0);
           continue;
         }
       if (tok != WORD && tok != ASSIGNMENT_WORD)
@@ -4583,7 +4611,7 @@ Shell::parse_compound_assignment (size_t *retlenp)
             parser_error (orig_line_number,
                           _ ("unexpected EOF while looking for matching `)'"));
           else
-            yyerror (nullptr); /* does the right thing */
+            yyerror (NULL); /* does the right thing */
           if (wl)
             dispose_words (wl);
           wl = &parse_string_error;
@@ -4592,11 +4620,7 @@ Shell::parse_compound_assignment (size_t *retlenp)
       wl = make_word_list (yylval.word, wl);
     }
 
-  FREE (token);
-  token = saved_token;
-  token_buffer_size = orig_token_size;
-
-  parser_state &= ~PST_COMPASSIGN;
+  restore_parser_state (&ps);
 
   if (wl == &parse_string_error)
     {
@@ -4608,8 +4632,6 @@ Shell::parse_compound_assignment (size_t *retlenp)
         jump_to_top_level (DISCARD);
     }
 
-  last_read_token = orig_last_token; /* XXX - was WORD? */
-
   if (wl)
     {
       rl = REVERSE_LIST (wl, WORD_LIST *);
@@ -4617,7 +4639,7 @@ Shell::parse_compound_assignment (size_t *retlenp)
       dispose_words (rl);
     }
   else
-    ret = nullptr;
+    ret = (char *)NULL;
 
   if (retlenp)
     *retlenp = (ret && *ret) ? strlen (ret) : 0;
@@ -4645,6 +4667,7 @@ Shell::save_parser_state (sh_parser_state_t *ps)
 
   ps->input_line_terminator = shell_input_line_terminator;
   ps->eof_encountered = eof_encountered;
+  ps->eol_lookahead = eol_ungetc_lookahead;
 
   ps->prompt_string_pointer = prompt_string_pointer;
 
@@ -4670,14 +4693,17 @@ Shell::save_parser_state (sh_parser_state_t *ps)
   ps->need_here_doc = need_here_doc;
   ps->here_doc_first_line = here_doc_first_line;
 
+  ps->esacs_needed = esacs_needed_count;
+  ps->expecting_in = expecting_in_token;
+
   if (need_here_doc == 0)
     ps->redir_stack[0] = 0;
   else
     memcpy (ps->redir_stack, redir_stack,
             sizeof (redir_stack[0]) * HEREDOC_MAX);
 
-  ps->token = token;
-  ps->token_buffer_size = token_buffer_size;
+  ps->token_buffer = token_buffer;
+
   /* Force reallocation on next call to read_token_word */
   token = 0;
   token_buffer_size = 0;
@@ -4686,7 +4712,7 @@ Shell::save_parser_state (sh_parser_state_t *ps)
 }
 
 void
-restore_parser_state (sh_parser_state_t *ps)
+Shell::restore_parser_state (sh_parser_state_t *ps)
 {
   int i;
 
@@ -4727,16 +4753,11 @@ restore_parser_state (sh_parser_state_t *ps)
   need_here_doc = ps->need_here_doc;
   here_doc_first_line = ps->here_doc_first_line;
 
-#if 0
-  for (i = 0; i < HEREDOC_MAX; i++)
-    redir_stack[i] = ps->redir_stack[i];
-#else
   if (need_here_doc == 0)
     redir_stack[0] = 0;
   else
     memcpy (redir_stack, ps->redir_stack,
             sizeof (redir_stack[0]) * HEREDOC_MAX);
-#endif
 
   FREE (token);
   token = ps->token;
@@ -4744,12 +4765,10 @@ restore_parser_state (sh_parser_state_t *ps)
 }
 
 sh_input_line_state_t *
-save_input_line_state (sh_input_line_state_t *ls)
+Shell::save_input_line_state (sh_input_line_state_t *ls)
 {
-  if (ls == 0)
-    ls = (sh_input_line_state_t *)xmalloc (sizeof (sh_input_line_state_t));
-  if (ls == 0)
-    return nullptr;
+  if (ls == nullptr)
+    ls = new sh_input_line_state_t ();
 
   ls->input_line = shell_input_line;
   ls->input_line_size = shell_input_line_size;
@@ -4774,7 +4793,7 @@ save_input_line_state (sh_input_line_state_t *ls)
 }
 
 void
-restore_input_line_state (sh_input_line_state_t *ls)
+Shell::restore_input_line_state (sh_input_line_state_t *ls)
 {
   FREE (shell_input_line);
   shell_input_line = ls->input_line;
@@ -4807,17 +4826,16 @@ restore_input_line_state (sh_input_line_state_t *ls)
 void
 Shell::set_line_mbstate ()
 {
-  int c;
-  size_t i, previ, len;
+  //   int c;
+  //   size_t i, previ, len;
   mbstate_t mbs, prevs;
   size_t mbclen;
-  int ilen;
 
-  if (shell_input_line == nullptr)
-    return;
-  len = STRLEN (shell_input_line); /* XXX - shell_input_line_len ? */
+  size_t len = shell_input_line.size ();
+
   if (len == 0)
     return;
+
   if (shell_input_line_propsize >= MAX_PROPSIZE && len < MAX_PROPSIZE >> 1)
     {
       free (shell_input_line_property);
@@ -4839,15 +4857,15 @@ Shell::set_line_mbstate ()
 
   /* XXX - use whether or not we are in a UTF-8 locale to avoid calls to
      mbrlen */
-  if (locale_utf8locale == 0)
+  if (!locale_utf8locale)
     memset (&prevs, '\0', sizeof (mbstate_t));
 
   for (i = previ = 0; i < len; i++)
     {
-      if (locale_utf8locale == 0)
+      if (!locale_utf8locale)
         mbs = prevs;
 
-      c = shell_input_line[i];
+      int c = shell_input_line[i];
       if (c == EOF)
         {
           size_t j;
@@ -4862,21 +4880,22 @@ Shell::set_line_mbstate ()
             mbclen = 1;
           else
             {
-              ilen = utf8_mblen (shell_input_line + previ, i - previ + 1);
+              size_t ilen
+                  = utf8_mblen (shell_input_line + previ, i - previ + 1);
               mbclen = (ilen == -1)
-                           ? (size_t)-1
-                           : ((ilen == -2) ? (size_t)-2 : (size_t)ilen);
+                           ? static_cast<size_t> (-1)
+                           : ((ilen == -2) ? static_cast<size_t> (-2) : ilen);
             }
         }
       else
         mbclen = mbrlen (shell_input_line + previ, i - previ + 1, &mbs);
 
-      if (mbclen == 1 || mbclen == (size_t)-1)
+      if (mbclen == 1 || mbclen == static_cast<size_t> (-1))
         {
           mbclen = 1;
           previ = i + 1;
         }
-      else if (mbclen == (size_t)-2)
+      else if (mbclen == static_cast<size_t> (-2))
         mbclen = 0;
       else if (mbclen > 1)
         {

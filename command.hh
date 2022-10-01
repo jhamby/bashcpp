@@ -223,11 +223,16 @@ enum subshell_flags
 class WORD_DESC
 {
 public:
-  WORD_DESC () : flags (W_NOFLAGS) {}
-
-  WORD_DESC (const std::string &w) : word (w), flags (W_NOFLAGS) {}
-  WORD_DESC (const char *w) : word (w), flags (W_NOFLAGS) {}
+  WORD_DESC (const std::string &w, word_desc_flags f = W_NOFLAGS)
+      : word (w), flags (f)
+  {
+  }
+  WORD_DESC (const char *w, word_desc_flags f = W_NOFLAGS)
+      : word (w), flags (f)
+  {
+  }
   WORD_DESC (const WORD_DESC &w) : word (w.word), flags (w.flags) {}
+  WORD_DESC (char token) : flags (W_NOFLAGS) { word = token; }
 
 #if __cplusplus >= 201103L
   WORD_DESC (WORD_DESC &&w)
@@ -303,7 +308,9 @@ public:
 struct WORD_LIST_PTR
 {
   WORD_LIST_PTR () : value (nullptr) {}
+  WORD_LIST_PTR (WORD_LIST *v) : value (v) {}
   WORD_LIST_PTR (WORD_DESC_PTR word) : value (new WORD_LIST (word.value)) {}
+  WORD_LIST_PTR (WORD_DESC *word) : value (new WORD_LIST (word)) {}
 
   // Constructor that takes another WORD_LIST to link to.
   WORD_LIST_PTR (WORD_DESC_PTR word, WORD_LIST_PTR next)

@@ -124,7 +124,7 @@ advance_char (std::string::const_iterator &it,
     {
       std::mbstate_t state_bak;
       size_t mblength;
-      if (is_basic (static_cast<unsigned char> (*it)))
+      if (is_basic (*it))
         mblength = 1;
       else if (locale_utf8locale && ((*it) & 0x80) == 0)
         mblength = (it != end);
@@ -210,7 +210,7 @@ advance_char_minus_one (std::string::const_iterator &it,
     {
       std::mbstate_t state_bak;
       size_t mblength;
-      if (is_basic (static_cast<unsigned char> (*it)))
+      if (is_basic (*it))
         mblength = 1;
       else if (locale_utf8locale && ((*it) & 0x80) == 0)
         mblength = (it != end);
@@ -371,7 +371,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
     {
       std::mbstate_t state_bak;
       size_t mblength;
-      if (is_basic (static_cast<unsigned char> (*it)))
+      if (is_basic (*it))
         mblength = 1;
       else if (locale_utf8locale && ((*it) & 0x80) == 0)
         mblength = (it != end);

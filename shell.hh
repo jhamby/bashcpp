@@ -36,6 +36,7 @@
 #include <cstdlib>
 
 #include <algorithm>
+#include <map>
 #include <vector>
 
 #if defined(HAVE_SYS_FILE_H)
@@ -47,17 +48,17 @@
 #endif
 
 #include "bashintl.hh"
-#include "posixstat.hh"
+#include "general.hh"
 
 #include "alias.hh"
 #include "builtins.hh"
 #include "command.hh"
 #include "externs.hh"
-#include "general.hh"
 #include "jobs.hh"
 #include "maxpath.hh"
 #include "parser.hh"
 #include "pathnames.hh"
+#include "posixstat.hh"
 #include "quit.hh"
 #include "shtty.hh"
 #include "sig.hh"
@@ -267,7 +268,7 @@ enum token_t
   COMMA = ','
 };
 
-struct lvalue
+struct token_lvalue
 {
   std::string tokstr; /* possibly-rewritten lvalue if not nullptr */
   int64_t tokval;     /* expression evaluated value */
@@ -289,7 +290,7 @@ struct EXPR_CONTEXT
   std::string expression, tp, lasttp;
   std::string tokstr;
   int64_t tokval;
-  struct lvalue lval;
+  struct token_lvalue lval;
   token_t curtok, lasttok;
   int noeval;
 };
@@ -550,8 +551,41 @@ operator|= (print_alias_flags &a, const print_alias_flags &b)
 }
 #endif
 
+/* Flags for _evalfile() */
+enum evalfile_flags_t
+{
+  FEVAL_NOFLAGS = 0,
+  FEVAL_ENOENTOK = 0x001,
+  FEVAL_BUILTIN = 0x002,
+  FEVAL_UNWINDPROT = 0x004,
+  FEVAL_NONINT = 0x008,
+  FEVAL_THROW = 0x010,
+  FEVAL_HISTORY = 0x020,
+  FEVAL_CHECKBINARY = 0x040,
+  FEVAL_REGFILE = 0x080,
+  FEVAL_NOPUSHARGS = 0x100
+};
+
+static inline evalfile_flags_t &
+operator|= (evalfile_flags_t &a, const evalfile_flags_t &b)
+{
+  a = static_cast<evalfile_flags_t> (static_cast<uint32_t> (a)
+                                     | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline evalfile_flags_t
+operator| (const evalfile_flags_t &a, const evalfile_flags_t &b)
+{
+  return static_cast<evalfile_flags_t> (static_cast<uint32_t> (a)
+                                        | static_cast<uint32_t> (b));
+}
+
 // Friend class used to save/restore parser state.
 class EvalStringUnwindHandler;
+
+// Data type for token lookup.
+typedef std::map<std::string, parser::token_kind_type> STRING_TOKEN_MAP;
 
 // This char array size is assumed by subst.cc and elsewhere.
 #define SYNSIZE 256
@@ -762,7 +796,7 @@ public:
   int shell_eof_token;
 
   /* The token currently being read. */
-  int current_token;
+  parser::token_kind_type current_token;
 
   /* variables from evalstring.c */
 
@@ -808,7 +842,7 @@ public:
      regardless of what text is (or isn't) present to be read.  This
      is reset by read_token.  If token_to_read == WORD or
      ASSIGNMENT_WORD, yylval.word should be set to word_desc_to_read. */
-  int token_to_read;
+  parser::token_kind_type token_to_read;
 
   // Current printing indentation level.
   int indentation;
@@ -851,11 +885,11 @@ public:
 
 #if defined(COND_COMMAND)
   int cond_lineno;
-  int cond_token;
+  parser::token_kind_type cond_token;
 #endif
 
   // The last read token, or 0. read_token () uses this for context checking.
-  int last_read_token;
+  parser::token_kind_type last_read_token;
 
 protected:
   // Back to protected access.
@@ -864,10 +898,10 @@ protected:
   int shell_input_line_terminator;
 
   /* The token read prior to last_read_token. */
-  int token_before_that;
+  parser::token_kind_type token_before_that;
 
   /* The token read prior to token_before_that. */
-  int two_tokens_ago;
+  parser::token_kind_type two_tokens_ago;
 
   /* When non-zero, we have read the required tokens
      which allow ESAC to be the next one read. */
@@ -902,6 +936,8 @@ protected:
 
   /* Non-zero means disable filename globbing. */
   int disallow_filename_globbing;
+
+  int xattrfd;
 
   /* ************************************************************** */
   /*		Bash Variables (8-bit bool/char types)		    */
@@ -1378,6 +1414,10 @@ protected:
 
   bool here_doc_first_line;
 
+  bool eflag;
+
+  bool xattrflag; // O_XATTR support for openat
+
   // Temporary array used by internal_getopt ().
   char getopt_errstr[3];
 
@@ -1395,6 +1435,7 @@ protected:
 #endif
 
 struct sh_parser_state_t;
+struct sh_input_line_state_t;
 
 /* Shell class, containing global variables and the methods that use them. */
 class Shell : public SimpleState PARENT_CLASS
@@ -1663,22 +1704,38 @@ public:
 
   // other functions moved from builtins/common.hh
 
+  // This is now in the generated builtins.cc file.
   void initialize_shell_builtins ();
 
-  /* Functions from exit.def */
+  /* functions from cd_def.cc */
+
+  int bindpwd (bool);
+  int setpwd (const char *);
+  char *resetpwd (const char *);
+  bool change_to_directory (const char *, bool, bool);
+
+  int cdxattr (char *, char **);
+  void resetxattr ();
+
+  /* Functions from exit_def.cc */
+
   void bash_logout ();
 
-  /* Functions from getopts.def */
+  /* Functions from getopts_def.cc */
+
   void getopts_reset (int);
 
-  /* Functions from help.def */
+  /* Functions from help_def.cc */
+
   void builtin_help ();
 
-  /* Functions from read.def */
+  /* Functions from read_def.cc */
+
   void read_tty_cleanup ();
   int read_tty_modified ();
 
-  /* Functions from set.def */
+  /* Functions from set_def.cc */
+
   int minus_o_option_value (const char *);
   void list_minus_o_opts (int, int);
   char **get_minus_o_opts ();
@@ -1813,14 +1870,14 @@ public:
   bool should_suppress_fork (const COMMAND *);
   bool can_optimize_connection (const CONNECTION *);
 
-  void optimize_connection_fork (COMMAND *);
+  void optimize_connection_fork (CONNECTION *);
   void optimize_subshell_command (COMMAND *);
   void optimize_shell_function (COMMAND *);
   bool can_optimize_cat_file (const COMMAND *);
 
   int parse_and_execute (char *, const char *, parse_flags);
 
-  int parse_string (char *, const char *, parse_flags, COMMAND **, char **);
+  size_t parse_string (char *, const char *, parse_flags, COMMAND **, char **);
 
   int evalstring (char *, const char *, parse_flags);
 
@@ -1833,6 +1890,8 @@ public:
   int force_execute_file (const char *, bool);
   int source_file (const char *, int);
   int fc_execute_file (const char *);
+
+  int _evalfile (const char *, evalfile_flags_t);
 
   /* Functions from flags.cc */
 
@@ -1891,7 +1950,7 @@ public:
     tokenizer[0] = static_cast<char> (token);
     tokenizer[1] = '\0';
 
-    return make_word (tokenizer);
+    return new WORD_DESC (tokenizer);
   }
 
   WORD_LIST *
@@ -2106,6 +2165,9 @@ protected:
   sh_parser_state_t *save_parser_state (sh_parser_state_t *);
   void restore_parser_state (sh_parser_state_t *);
 
+  sh_input_line_state_t *save_input_line_state (sh_input_line_state_t *);
+  void restore_input_line_state (sh_input_line_state_t *);
+
 #if defined(READLINE)
 
   int yy_readline_get ();
@@ -2143,10 +2205,10 @@ protected:
   void pop_stream ();
 
   /* Save the current token state and return it in a new array. */
-  int *
+  parser::token_kind_type *
   save_token_state ()
   {
-    int *ret = new int[4];
+    parser::token_kind_type *ret = new parser::token_kind_type[4];
 
     ret[0] = last_read_token;
     ret[1] = token_before_that;
@@ -2156,7 +2218,7 @@ protected:
   }
 
   void
-  restore_token_state (int *ts)
+  restore_token_state (parser::token_kind_type *ts)
   {
     if (ts == nullptr)
       return;
@@ -2167,7 +2229,8 @@ protected:
     current_token = ts[3];
   }
 
-  int find_reserved_word (const char *);
+  // Get error string for this symbol, as a C++ string.
+  std::string error_string_from_symbol (const parser::symbol_type &);
 
   // Functions provided by various builtins.
 
@@ -2303,7 +2366,13 @@ protected:
   char **brace_expand (char *);
 #endif
 
-  int parser_in_command_position ();
+  /* An interface to let the rest of the shell (primarily the completion
+     system) know what the parser is expecting. */
+  int
+  parser_in_command_position ()
+  {
+    return command_token_position (last_read_token);
+  }
 
   void
   free_pushed_string_input ()
@@ -2782,7 +2851,7 @@ protected:
 
   /* from lib/sh/casemod.cc */
 
-  std::string sh_modcase (const std::string &, const char *, sh_modcase_flags);
+  char *sh_modcase (const char *, const char *, sh_modcase_flags);
 
   /* from lib/sh/eaccess.cc */
 
@@ -2884,8 +2953,8 @@ protected:
   std::string sh_backslash_quote_for_double_quotes (const std::string &);
 
   /* include all functions from lib/sh/shtty.cc here: they're very small. */
-  /* shtty.cc -- abstract interface to the terminal, focusing on capabilities.
-   */
+
+  // shtty.cc -- abstract interface to the terminal, focusing on capabilities.
 
   static int
   ttgetattr (int fd, TTYSTRUCT *ttp)
@@ -2995,8 +3064,7 @@ protected:
 #endif
   }
 
-  /* Set the tty associated with FD and TTP into one-character-at-a-time mode
-   */
+  // Set the tty associated with FD and TTP into one-character-at-a-time mode
   static int
   ttfd_onechar (int fd, TTYSTRUCT *ttp)
   {
@@ -3300,6 +3368,7 @@ protected:
   }
 
   /* from bashhist.cc */
+
 #if defined(BANG_HISTORY)
   bool bash_history_inhibit_expansion (const std::string &, int);
 #endif
@@ -3381,7 +3450,8 @@ protected:
   void restore_funcarray_state (void *);
 #endif
 
-  /* Functions from mailcheck.c */
+  /* Functions from mailcheck.cc */
+
   int time_to_check_mail ();
   void reset_mail_timer ();
   void reset_mail_files ();
@@ -3391,7 +3461,7 @@ protected:
   void init_mail_dates ();
   void check_mail ();
 
-  /* Functions from redir.c */
+  /* Functions from redir.cc */
 
   /* Values for flags argument to do_redirections */
   enum redir_flags
@@ -4193,7 +4263,7 @@ protected:
 #if defined(COND_COMMAND)
   char *remove_backslashes (const char *);
   char *cond_expand_word (WORD_DESC *, int);
-  void cond_error ();
+  void cond_error (const parser::symbol_type &);
 #endif
 
   size_t skip_to_delim (const char *, size_t, const char *, sd_flags);
@@ -4481,9 +4551,20 @@ protected:
 
   // Methods implemented in parser.cc.
 
+  void init_token_lists ();
+
   char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
   int return_EOF ();
-  void push_token (parser::token::token_kind_type);
+
+  void
+  push_token (parser::token_kind_type x)
+  {
+    two_tokens_ago = token_before_that;
+    token_before_that = last_read_token;
+    last_read_token = current_token;
+    current_token = x;
+  }
+
   void reset_parser ();
   WORD_LIST *parse_string_to_word_list (const std::string &, int,
                                         const std::string &);
@@ -4494,11 +4575,17 @@ protected:
   void initialize_bash_input ();
   void execute_variable_command (char *, const char *);
   std::string parse_comsub (int, int, int);
-  int parse_arith_cmd (char **, int);
+  int parse_arith_cmd (char **, bool);
 
 #if defined(ARRAY_VARS)
-  int token_is_assignment (const std::string &, int);
-  int token_is_ident (const std::string &, int);
+  bool token_is_assignment (std::string &);
+
+  /* XXX - possible changes here for `+=' */
+  bool
+  token_is_ident (const std::string &t)
+  {
+    return legal_identifier (t.c_str ());
+  }
 #endif
 
   /* Return true if a stream of type TYPE is saved on the stack. */
@@ -4537,6 +4624,44 @@ protected:
   void set_line_mbstate ();
   void pop_string ();
   void free_string_list ();
+
+  // Check if TOKEN is a reserved word and return a parser symbol if so.
+  // Otherwise, returns YYerror.
+  parser::symbol_type
+  check_for_reserved_word (const std::string &tok)
+  {
+    STRING_TOKEN_MAP::iterator it (word_token_map.find (tok));
+    if (it != word_token_map.end ())
+      {
+        if ((parser_state & PST_CASEPAT)
+            && (it->second != parser::token::ESAC))
+          return parser::make_YYerror ();
+        if (it->second == parser::token::TIME && !time_command_acceptable ())
+          return parser::make_YYerror ();
+        if ((parser_state & PST_CASEPAT) && last_read_token == '('
+            && it->second == parser::token::ESAC)
+          return parser::make_YYerror (); // phantom Posix grammar rule 4
+        if (it->second == parser::token::ESAC)
+          {
+            parser_state &= ~(PST_CASEPAT | PST_CASESTMT);
+            esacs_needed_count--;
+          }
+        else if (it->second == parser::token::CASE)
+          parser_state |= PST_CASESTMT;
+        else if (it->second == parser::token::COND_END)
+          parser_state &= ~(PST_CONDCMD | PST_CONDEXPR);
+        else if (it->second == parser::token::COND_START)
+          parser_state |= PST_CONDCMD;
+        else if (it->second == '{')
+          open_brace_count++;
+        else if (it->second == '}' && open_brace_count)
+          open_brace_count--;
+
+        return parser::symbol_type (it->second);
+      }
+
+    return parser::make_YYerror ();
+  }
 
   // Methods in lib/tilde/tilde.cc.
 
@@ -4599,7 +4724,7 @@ protected:
   }
 
   bool legal_alias_name (const char *);
-  size_t assignment (const char *, int);
+  size_t assignment (const std::string &, int);
 
   char *make_absolute (const char *, const char *);
   char *full_pathname (char *);
@@ -4663,33 +4788,33 @@ protected:
 #if defined(ALIAS)
 
   enum alias_expand_token_result{ RE_READ_TOKEN = -99, NO_EXPANSION = -100 };
-  alias_expand_token_result alias_expand_token (const char *);
+  alias_expand_token_result alias_expand_token (const std::string &);
 
 #endif
 
   bool time_command_acceptable ();
 
-  int special_case_tokens (const char *);
+  parser::symbol_type special_case_tokens (const std::string &);
 
   void
   reset_readahead_token ()
   {
     if (token_to_read == '\n')
-      token_to_read = 0;
+      token_to_read = parser::token::YYEOF;
   }
 
   std::string parse_matched_pair (int, int, int, pgroup_flags);
 
   /* This is kind of bogus -- we slip a mini recursive-descent parser in
      here to handle the conditional statement syntax. */
-  COMMAND *
+  parser::symbol_type
   parse_cond_command ()
   {
     COND_COM *cexp;
 
     global_extglob = extended_glob;
     cexp = cond_expr ();
-    return cexp;
+    return parser::make_COND_CMD (COMMAND_PTR (cexp));
   }
 
   COND_COM *
@@ -4726,19 +4851,54 @@ protected:
     return l;
   }
 
-  int cond_skip_newlines ();
+  parser::symbol_type cond_skip_newlines ();
   COND_COM *cond_term ();
 
 #if defined(DPAREN_ARITHMETIC) || defined(ARITH_FOR_COMMAND)
-  int parse_dparen (int);
+  parser::symbol_type parse_dparen (int);
 #endif
+
+  /* In the following three macros, `token' is always last_read_token */
+
+  /* Are we in the middle of parsing a redirection where we are about to read
+     a word?  This is used to make sure alias expansion doesn't happen in the
+     middle of a redirection, even though we're parsing a simple command. */
+  bool
+  parsing_redirection (parser::token_kind_type token)
+  {
+    return token == parser::token_kind_type ('<')
+           || token == parser::token_kind_type ('>')
+           || token == parser::token::GREATER_GREATER
+           || token == parser::token::GREATER_BAR
+           || token == parser::token::LESS_GREATER
+           || token == parser::token::LESS_LESS_MINUS
+           || token == parser::token::LESS_LESS
+           || token == parser::token::LESS_LESS_LESS
+           || token == parser::token::LESS_AND
+           || token == parser::token::GREATER_AND
+           || token == parser::token::AND_GREATER;
+  }
+
+  /* Is `token' one that will allow a WORD to be read in a command position?
+     We can read a simple command name on which we should attempt alias
+     expansion or we can read an assignment statement. */
+  bool
+  command_token_position (parser::token_kind_type token)
+  {
+    return (token == parser::token::ASSIGNMENT_WORD)
+           || ((parser_state & PST_REDIRLIST) && !parsing_redirection (token))
+           || (token != parser::token::SEMI_SEMI
+               && token != parser::token::SEMI_AND
+               && token != parser::token::SEMI_SEMI_AND
+               && reserved_word_acceptable (token));
+  }
 
   /* Return true if TOKSYM is a token that after being read would allow
      a reserved word to be seen, else false. */
   bool
-  reserved_word_acceptable (int toksym)
+  reserved_word_acceptable (parser::token_kind_type toksym)
   {
-    switch (toksym)
+    switch (static_cast<int> (toksym))
       {
       case '\n':
       case ';':
@@ -4805,7 +4965,9 @@ protected:
     std::fflush (stderr);
   }
 
-  char *parse_compound_assignment (size_t *);
+  std::string parse_compound_assignment ();
+
+  COMMAND *parse_string_to_command (char *, sx_flags);
 
   // methods from alias.cc
 
@@ -4840,6 +5002,51 @@ protected:
 
   // Helper definition for the parser.
   void clear_string_list_expander (alias_t &);
+
+  // Methods from test.cc.
+
+  // Return true if OP is one of the test command's unary operators.
+  bool
+  test_unop (const std::string &op)
+  {
+    if (op.size () != 2 || op[0] != '-')
+      return false;
+
+    switch (op[1])
+      {
+      case 'a':
+      case 'b':
+      case 'c':
+      case 'd':
+      case 'e':
+      case 'f':
+      case 'g':
+      case 'h':
+      case 'k':
+      case 'n':
+      case 'o':
+      case 'p':
+      case 'r':
+      case 's':
+      case 't':
+      case 'u':
+      case 'v':
+      case 'w':
+      case 'x':
+      case 'z':
+      case 'G':
+      case 'L':
+      case 'O':
+      case 'S':
+      case 'N':
+      case 'R':
+        return true;
+      }
+
+    return false;
+  }
+
+  bool test_binop (const std::string &op);
 
   /* ************************************************************** */
   /*		Private Shell Variables (ptr types)		    */
@@ -4917,12 +5124,19 @@ protected:
 
   FILE *default_input;
 
+  // FIXME: change this to a std::map type.
   std::vector<STRING_INT_ALIST> shopt_alist;
 
-  /* The thing that we build the array of builtins out of. */
+  /* The thing that we build the map of builtins out of. */
   struct Builtin
   {
-    const char *name;            /* The name that the user types. */
+    Builtin (sh_builtin_func_t func_, const char *const *ldoc_,
+             const char *sdoc_, void *h_, builtin_flags flags_)
+        : function (func_), long_doc (ldoc_), short_doc (sdoc_), handle (h_),
+          flags (flags_)
+    {
+    }
+
     sh_builtin_func_t function;  /* The address of the invoked function. */
     const char *const *long_doc; /* NULL terminated array of strings. */
     const char *short_doc;       /* Short version of documentation. */
@@ -4930,8 +5144,8 @@ protected:
     builtin_flags flags;         /* One or more of the #defines above. */
   };
 
-  // TODO: initialize this vector at startup from generated builtins.cc.
-  std::vector<Builtin> shell_builtins;
+  // initialized at startup by init method in generated builtins.cc.
+  std::map<std::string, Builtin> shell_builtins;
 
   jobstats js;
 
@@ -4994,7 +5208,7 @@ protected:
   sh_builtin_func_t this_shell_builtin;
   sh_builtin_func_t last_shell_builtin;
 
-  std::string the_current_working_directory;
+  char *the_current_working_directory;
 
   // The buffer used by print_cmd.cc. */
   std::string the_printed_command;
@@ -5033,7 +5247,7 @@ protected:
   /* The current context for the expression being evaluated. */
   EXPR_CONTEXT expr_current;
 
-  lvalue lastlval;
+  token_lvalue lastlval;
 
   /* The list of things to do originally, before we started trapping. */
   SigHandler original_signals[NSIG];
@@ -5255,12 +5469,18 @@ protected:
      can screw up the parser's quoting state. */
   std::vector<char> temp_dstack;
 
-  std::string shell_input_line_property;
+  // This could be a vector of either bool or char (if bool is too slow).
+  std::vector<bool> shell_input_line_property;
+
+  std::string token_buffer;
 
   // A pointer to the list of aliases that we have (lazy init).
   HASH_TABLE<alias_t> *aliases;
 
   std::vector<shopt_var_t> shopt_vars;
+
+  STRING_TOKEN_MAP word_token_map;
+  STRING_TOKEN_MAP other_token_map;
 
   // Buffer for buffered input.
   char localbuf[1024];
@@ -5290,7 +5510,7 @@ struct sh_parser_state_t
   // pointer types first
 
   int *token_state; // array of 4 ints; free with delete[]
-  char *token;
+  std::string token_buffer;
 
   const char **prompt_string_pointer;
 
@@ -5308,8 +5528,6 @@ struct sh_parser_state_t
   REDIRECT *redir_stack[HEREDOC_MAX];
 
   // 32-bit int types next
-
-  size_t token_buffer_size; // ???
 
   int eof_token;
 

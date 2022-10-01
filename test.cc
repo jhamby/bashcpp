@@ -1,8 +1,8 @@
-/* test.c - GNU test program (ksb and mjb) */
+/* test.cc - GNU test program (ksb and mjb) */
 
 /* Modified to run with the GNU shell Apr 25, 1988 by bfox. */
 
-/* Copyright (C) 1987-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1987-2021 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -28,25 +28,28 @@
 
 #include "bashtypes.hh"
 
+#if !defined(HAVE_LIMITS_H) && defined(HAVE_SYS_PARAM_H)
+#include <sys/param.h>
+#endif
+
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
 
-#include "filecntl.hh"
-#include "posixstat.hh"
-#include "stat-time.hh"
-
-#include "bashintl.hh"
+#include "shell.hh"
 
 #include "builtins/common.hh"
-#include "pathexp.hh"
-#include "shell.hh"
-#include "test.hh"
-
-#include "strmatch.hh"
+#include "lib/glob/strmatch.hh"
 
 namespace bash
 {
+
+#if !defined(R_OK)
+#define R_OK 4
+#define W_OK 2
+#define X_OK 1
+#define F_OK 0
+#endif /* R_OK */
 
 #define EQ 0
 #define NE 1
@@ -59,15 +62,14 @@ namespace bash
 #define OT 1
 #define EF 2
 
-/* The following few defines control the truth and false output of each stage.
-   TRUE and FALSE are what we use to compute the final output value.
-   SHELL_BOOLEAN is the form which returns truth or falseness in shell terms.
-   Default is TRUE = 1, FALSE = 0, SHELL_BOOLEAN = (!value). */
+/* SHELL_BOOLEAN is the form which returns truth or falseness in shell terms.
+   Default is SHELL_BOOLEAN = (!value). */
 #define SHELL_BOOLEAN(value) (!(value))
 
 #define TEST_ERREXIT_STATUS 2
 
-// static procenv_t test_exit_buf;
+#if 0
+static procenv_t test_exit_buf;
 static int test_error_return;
 #define test_exit(val)                                                        \
   do                                                                          \
@@ -77,36 +79,35 @@ static int test_error_return;
     }                                                                         \
   while (0)
 
-extern int sh_stat (const char *, struct stat *);
+extern int sh_stat PARAMS((const char *, struct stat *));
 
-static int pos;     /* The offset of the current argument in ARGV. */
-static int argc;    /* The number of arguments present in ARGV. */
-static char **argv; /* The argument list. */
+static int pos;		/* The offset of the current argument in ARGV. */
+static int argc;	/* The number of arguments present in ARGV. */
+static char **argv;	/* The argument list. */
 static int noeval;
 
-static void test_syntax_error (const char *, const char *)
-    __attribute__ ((__noreturn__));
-static void beyond (void) __attribute__ ((__noreturn__));
-static void integer_expected_error (const char *)
-    __attribute__ ((__noreturn__));
+static void test_syntax_error PARAMS((char *, char *)) __attribute__((__noreturn__));
+static void beyond PARAMS((void)) __attribute__((__noreturn__));
+static void integer_expected_error PARAMS((char *)) __attribute__((__noreturn__));
 
-static bool unary_operator (void);
-static bool binary_operator (void);
-static bool two_arguments (void);
-static bool three_arguments (void);
-static bool posixtest (void);
+static int unary_operator PARAMS((void));
+static int binary_operator PARAMS((void));
+static int two_arguments PARAMS((void));
+static int three_arguments PARAMS((void));
+static int posixtest PARAMS((void));
 
-static bool expr (void);
-static bool term (void);
-static bool and_ (void);
-static bool or_ (void);
+static int expr PARAMS((void));
+static int term PARAMS((void));
+static int and PARAMS((void));
+static int or PARAMS((void));
 
-static bool filecomp (const char *, const char *, int);
-static bool arithcomp (const char *, const char *, int, int);
-static bool patcomp (const char *, const char *, int);
+static int filecomp PARAMS((char *, char *, int));
+static int arithcomp PARAMS((char *, char *, int, int));
+static int patcomp PARAMS((char *, char *, int));
+#endif
 
-static void
-test_syntax_error (const char *format, const char *arg)
+void
+Shell::test_syntax_error (const char *format, const char *arg)
 {
   builtin_error (format, arg);
   test_exit (TEST_ERREXIT_STATUS);
@@ -116,16 +117,16 @@ test_syntax_error (const char *format, const char *arg)
  * beyond - call when we're beyond the end of the argument list (an
  *	error condition)
  */
-static void
-beyond ()
+void
+Shell::test_beyond ()
 {
   test_syntax_error (_ ("argument expected"), nullptr);
 }
 
 /* Syntax error for when an integer argument was expected, but
    something else was found. */
-static void
-integer_expected_error (const char *pch)
+void
+Shell::integer_expected_error (const char *pch)
 {
   test_syntax_error (_ ("%s: integer expression expected"), pch);
 }
@@ -153,13 +154,13 @@ integer_expected_error (const char *pch)
  * expr:
  *	or
  */
-static bool
-expr ()
+bool
+Shell::test_expr ()
 {
   if (pos >= argc)
     beyond ();
 
-  return or_ (); /* Same with this. */
+  return test_or (); /* Same with this. */
 }
 
 /*
@@ -167,17 +168,17 @@ expr ()
  *	and
  *	and '-o' or
  */
-static bool
-or_ ()
+bool
+Shell::test_or ()
 {
   int value, v2;
 
-  value = and_ ();
+  value = and();
   if (pos < argc && argv[pos][0] == '-' && argv[pos][1] == 'o'
       && !argv[pos][2])
     {
       advance (0);
-      v2 = or_ ();
+      v2 = or ();
       return value || v2;
     }
 
@@ -189,8 +190,8 @@ or_ ()
  *	term
  *	term '-a' and
  */
-static bool
-and_ ()
+bool
+Shell::test_and ()
 {
   int value, v2;
 
@@ -199,7 +200,7 @@ and_ ()
       && !argv[pos][2])
     {
       advance (0);
-      v2 = and_ ();
+      v2 = and();
       return value && v2;
     }
   return value;
@@ -225,10 +226,10 @@ and_ ()
  * int ::=
  *	positive and negative integers
  */
-static bool
-term ()
+int
+Shell::term ()
 {
-  bool value;
+  int value;
 
   if (pos >= argc)
     beyond ();
@@ -236,11 +237,11 @@ term ()
   /* Deal with leading `not's. */
   if (argv[pos][0] == '!' && argv[pos][1] == '\0')
     {
-      value = false;
+      value = 0;
       while (pos < argc && argv[pos][0] == '!' && argv[pos][1] == '\0')
         {
           advance (1);
-          value = !value;
+          value = 1 - value;
         }
 
       return value ? !term () : term ();
@@ -252,7 +253,7 @@ term ()
       advance (1);
       value = expr ();
       if (argv[pos] == 0) /* ( */
-        test_syntax_error (_ ("`)' expected"), nullptr);
+        test_syntax_error (_ ("`)' expected"), (char *)NULL);
       else if (argv[pos][0] != ')' || argv[pos][1]) /* ( */
         test_syntax_error (_ ("`)' expected, found %s"), argv[pos]);
       advance (0);
@@ -277,8 +278,8 @@ term ()
   return value;
 }
 
-static int
-stat_mtime (const char *fn, struct stat *st, struct timespec *ts)
+int
+Shell::stat_mtime (const char *fn, struct stat *st, struct timespec *ts)
 {
   int r;
 
@@ -289,8 +290,8 @@ stat_mtime (const char *fn, struct stat *st, struct timespec *ts)
   return 0;
 }
 
-static bool
-filecomp (const char *s, const char *t, int op)
+int
+Shell::filecomp (const char *s, const char *t, int op)
 {
   struct stat st1, st2;
   struct timespec ts1, ts2;
@@ -319,20 +320,23 @@ filecomp (const char *s, const char *t, int op)
   return false;
 }
 
-bool
+int
 Shell::arithcomp (const char *s, const char *t, int op, int flags)
 {
-  int64_t l, r;
+  intmax_t l, r;
+  int expok;
 
-  if (flags & TEST_ARITHEXP)
+  if (flags & TEST_ARITHEXP) /* conditional command */
     {
-      bool expok;
-      l = evalexp (s, EXP_EXPANDED, &expok);
-      if (!expok)
-        test_exit (SHELL_BOOLEAN (false)); /* should probably longjmp here */
-      r = evalexp (t, EXP_EXPANDED, &expok);
-      if (!expok)
-        test_exit (SHELL_BOOLEAN (false)); /* ditto */
+      int eflag;
+
+      eflag = (shell_compatibility_level > 51) ? 0 : EXP_EXPANDED;
+      l = evalexp (s, eflag, &expok);
+      if (expok == 0)
+        return false; /* should probably longjmp here */
+      r = evalexp (t, eflag, &expok);
+      if (expok == 0)
+        return false; /* ditto */
     }
   else
     {
@@ -361,18 +365,17 @@ Shell::arithcomp (const char *s, const char *t, int op, int flags)
   return false;
 }
 
-bool
+int
 Shell::patcomp (const char *string, const char *pat, int op)
 {
   int m;
 
-  m = strmatch (pat, string, (FNMATCH_EXTFLAG | FNMATCH_IGNCASE));
+  m = strmatch (pat, string, FNMATCH_EXTFLAG | FNMATCH_IGNCASE);
   return (op == EQ) ? (m == 0) : (m != 0);
 }
 
-bool
-Shell::binary_test (const char *op, const char *arg1, const char *arg2,
-                    int flags)
+int
+binary_test (const char *op, const char *arg1, const char *arg2, int flags)
 {
   int patmatch;
 
@@ -384,12 +387,12 @@ Shell::binary_test (const char *op, const char *arg1, const char *arg2,
     {
 #if defined(HAVE_STRCOLL)
       if (shell_compatibility_level > 40 && flags & TEST_LOCALE)
-        return (op[0] == '>') ? (strcoll (arg1, arg2) > 0)
-                              : (strcoll (arg1, arg2) < 0);
+        return ((op[0] == '>') ? (strcoll (arg1, arg2) > 0)
+                               : (strcoll (arg1, arg2) < 0));
       else
 #endif
-        return (op[0] == '>') ? (strcmp (arg1, arg2) > 0)
-                              : (strcmp (arg1, arg2) < 0);
+        return ((op[0] == '>') ? (strcmp (arg1, arg2) > 0)
+                               : (strcmp (arg1, arg2) < 0));
     }
   else if (op[0] == '!' && op[1] == '=' && op[2] == '\0')
     return patmatch ? patcomp (arg1, arg2, NE) : (STREQ (arg1, arg2) == 0);
@@ -434,10 +437,10 @@ Shell::binary_test (const char *op, const char *arg1, const char *arg2,
   return false; /* should never get here */
 }
 
-static bool
-binary_operator ()
+int
+Shell::binary_operator ()
 {
-  bool value;
+  int value;
   char *w;
 
   w = argv[pos + 1];
@@ -472,11 +475,11 @@ binary_operator ()
   return value;
 }
 
-static bool
-unary_operator ()
+int
+Shell::unary_operator ()
 {
   char *op;
-  int64_t r;
+  intmax_t r;
 
   op = argv[pos];
   if (test_unop (op) == 0)
@@ -491,13 +494,13 @@ unary_operator ()
           if (legal_number (argv[pos], &r))
             {
               advance (0);
-              return unary_test (op, argv[pos - 1]);
+              return unary_test (op, argv[pos - 1], 0);
             }
           else
             return false;
         }
       else
-        return unary_test (op, "1");
+        return unary_test (op, "1", 0);
     }
 
   /* All of the unary operators take an argument, so we first call
@@ -505,16 +508,17 @@ unary_operator ()
      argument, and then advances pos right past it.  This means that
      pos - 1 is the location of the argument. */
   unary_advance ();
-  return unary_test (op, argv[pos - 1]);
+  return unary_test (op, argv[pos - 1], 0);
 }
 
-bool
-Shell::unary_test (const char *op, const char *arg)
+int
+Shell::unary_test (const char *op, const char *arg, int flags)
 {
-  int64_t r;
+  intmax_t r;
   struct stat stat_buf;
   struct timespec mtime, atime;
   SHELL_VAR *v;
+  int aflags;
 
   switch (op[1])
     {
@@ -593,24 +597,24 @@ Shell::unary_test (const char *op, const char *arg)
 #endif /* S_IFLNK && HAVE_LSTAT */
 
     case 'u': /* File is setuid? */
-      return sh_stat (arg, &stat_buf) == 0
-             && (stat_buf.st_mode & S_ISUID) != 0;
+      return (sh_stat (arg, &stat_buf) == 0
+              && (stat_buf.st_mode & S_ISUID) != 0);
 
     case 'g': /* File is setgid? */
-      return sh_stat (arg, &stat_buf) == 0
-             && (stat_buf.st_mode & S_ISGID) != 0;
+      return (sh_stat (arg, &stat_buf) == 0
+              && (stat_buf.st_mode & S_ISGID) != 0);
 
     case 'k': /* File has sticky bit set? */
 #if !defined(S_ISVTX)
       /* This is not Posix, and is not defined on some Posix systems. */
       return false;
 #else
-      return sh_stat (arg, &stat_buf) == 0
-             && (stat_buf.st_mode & S_ISVTX) != 0;
+      return (sh_stat (arg, &stat_buf) == 0
+              && (stat_buf.st_mode & S_ISVTX) != 0);
 #endif
 
     case 't': /* File fd is a terminal? */
-      if (!legal_number (arg, &r))
+      if (legal_number (arg, &r) == 0)
         return false;
       return (r == (int)r) && isatty ((int)r);
 
@@ -625,18 +629,27 @@ Shell::unary_test (const char *op, const char *arg)
 
     case 'v':
 #if defined(ARRAY_VARS)
-      if (valid_array_reference (arg, 0))
+      aflags = assoc_expand_once ? AV_NOEXPAND : 0;
+      if (valid_array_reference (arg, aflags))
         {
           char *t;
-          int rtype, flags;
-          bool ret;
+          int ret;
+          array_eltstate_t es;
 
           /* Let's assume that this has already been expanded once. */
-          flags = assoc_expand_once ? AV_NOEXPAND : 0;
-          t = array_value (arg, 0, flags, &rtype, (arrayind_t *)0);
-          ret = t;
-          if (rtype > 0) /* subscript is * or @ */
+          /* XXX - TAG:bash-5.2 fix with corresponding fix to execute_cmd.c:
+             execute_cond_node() that passes TEST_ARRAYEXP in FLAGS */
+
+          if (shell_compatibility_level > 51)
+            /* Allow associative arrays to use `test -v array[@]' to look for
+               a key named `@'. */
+            aflags |= AV_ATSTARKEYS; /* XXX */
+          init_eltstate (&es);
+          t = get_array_value (arg, aflags | AV_ALLOWALL, &es);
+          ret = (t != nullptr);
+          if (es.subtype > 0) /* subscript is * or @ */
             free (t);
+          flush_eltstate (&es);
           return ret;
         }
       else if (legal_number (arg, &r)) /* -v n == is $n set? */
@@ -647,13 +660,13 @@ Shell::unary_test (const char *op, const char *arg)
           char *t;
           /* [[ -v foo ]] == [[ -v foo[0] ]] */
           t = array_reference (array_cell (v), 0);
-          return t;
+          return t != nullptr;
         }
       else if (v && invisible_p (v) == 0 && assoc_p (v))
         {
           char *t;
           t = assoc_reference (assoc_cell (v), "0");
-          return t;
+          return t != nullptr;
         }
 #else
       v = find_variable (arg);
@@ -671,20 +684,20 @@ Shell::unary_test (const char *op, const char *arg)
 
 /* Return TRUE if OP is one of the test command's binary operators. */
 bool
-test_binop (const char *op)
+Shell::test_binop (const std::string &op)
 {
-  if (op[0] == '=' && op[1] == '\0')
-    return 1;                                               /* '=' */
-  else if ((op[0] == '<' || op[0] == '>') && op[1] == '\0') /* string <, > */
-    return 1;
-  else if ((op[0] == '=' || op[0] == '!') && op[1] == '=' && op[2] == '\0')
-    return 1; /* `==' and `!=' */
+  if (op == "=")
+    return true; /* '=' */
+  else if (op == "<" || op == ">") /* string <, > */
+    return true;
+  else if (op == "==" || op == "!=")
+    return true; /* `==' and `!=' */
 #if defined(PATTERN_MATCHING)
-  else if (op[2] == '\0' && op[1] == '~' && (op[0] == '=' || op[0] == '!'))
-    return 1;
+  else if (op == "=~" || op == "!~")
+    return true;
 #endif
   else if (op[0] != '-' || op[1] == '\0' || op[2] == '\0' || op[3] != '\0')
-    return 0;
+    return false;
   else
     {
       if (op[2] == 't')
@@ -722,49 +735,8 @@ test_binop (const char *op)
     }
 }
 
-/* Return non-zero if OP is one of the test command's unary operators. */
-bool
-test_unop (const char *op)
-{
-  if (op[0] != '-' || (op[1] && op[2] != 0))
-    return false;
-
-  switch (op[1])
-    {
-    case 'a':
-    case 'b':
-    case 'c':
-    case 'd':
-    case 'e':
-    case 'f':
-    case 'g':
-    case 'h':
-    case 'k':
-    case 'n':
-    case 'o':
-    case 'p':
-    case 'r':
-    case 's':
-    case 't':
-    case 'u':
-    case 'v':
-    case 'w':
-    case 'x':
-    case 'z':
-    case 'G':
-    case 'L':
-    case 'O':
-    case 'S':
-    case 'N':
-    case 'R':
-      return true;
-    }
-
-  return false;
-}
-
-static bool
-two_arguments ()
+int
+Shell::two_arguments ()
 {
   if (argv[pos][0] == '!' && argv[pos][1] == '\0')
     return argv[pos + 1][0] == '\0';
@@ -778,7 +750,7 @@ two_arguments ()
   else
     test_syntax_error (_ ("%s: unary operator expected"), argv[pos]);
 
-  return false;
+  return 0;
 }
 
 #define ANDOR(s) (s[0] == '-' && (s[1] == 'a' || s[1] == 'o') && s[2] == 0)
@@ -787,10 +759,10 @@ two_arguments ()
    POSIX requires that `-t' be given an argument. */
 #define ONE_ARG_TEST(s) ((s)[0] != '\0')
 
-static bool
-three_arguments ()
+int
+Shell::three_arguments ()
 {
-  bool value;
+  int value;
 
   if (test_binop (argv[pos + 1]))
     {
@@ -809,6 +781,7 @@ three_arguments ()
     {
       advance (1);
       value = !two_arguments ();
+      pos = argc;
     }
   else if (argv[pos][0] == '(' && argv[pos + 2][0] == ')')
     {
@@ -822,10 +795,10 @@ three_arguments ()
 }
 
 /* This is an implementation of a Posix.2 proposal by David Korn. */
-static bool
-posixtest ()
+int
+Shell::posixtest ()
 {
-  bool value;
+  int value;
 
   switch (argc - 1) /* one extra passed in */
     {
@@ -878,10 +851,12 @@ posixtest ()
  *	test expr
  */
 int
-test_command (int margc, char **margv)
+Shell::test_command (int margc, char **margv)
 {
   int value;
   int code;
+
+  USE_VAR (margc);
 
   code = setjmp_nosigs (test_exit_buf);
 
@@ -895,7 +870,7 @@ test_command (int margc, char **margv)
       --margc;
 
       if (margv[margc] && (margv[margc][0] != ']' || margv[margc][1]))
-        test_syntax_error (_ ("missing `]'"), nullptr);
+        test_syntax_error (_ ("missing `]'"), (char *)NULL);
 
       if (margc < 2)
         test_exit (SHELL_BOOLEAN (false));
@@ -915,7 +890,7 @@ test_command (int margc, char **margv)
       if (pos < argc && argv[pos][0] == '-')
         test_syntax_error (_ ("syntax error: `%s' unexpected"), argv[pos]);
       else
-        test_syntax_error (_ ("too many arguments"), nullptr);
+        test_syntax_error (_ ("too many arguments"), (char *)NULL);
     }
 
   test_exit (SHELL_BOOLEAN (value));

@@ -97,7 +97,7 @@ Shell::reader_loop ()
                           fprintf (stderr, "%s", ps0_string);
                           fflush (stderr);
                         }
-                      free (ps0_string);
+                      delete[] ps0_string;
                     }
 
                   current_command_number++;
@@ -129,8 +129,10 @@ Shell::reader_loop ()
             {
               /* Some kind of throw to top_level has occurred. */
             case FORCE_EOF:
-            case ERREXIT:
             case EXITPROG:
+            case ERREXIT:
+            case SIGEXIT:
+            case EXITBLTIN:
               current_command = nullptr;
               if (exit_immediately_on_error)
                 variable_context = 0; /* not in a function */

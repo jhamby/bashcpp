@@ -329,7 +329,8 @@ main (int argc, char **argv)
         {
           bash::write_longdocs (structfile, bash::saved_builtins);
           structfile.close ();
-          ::rename (temp_struct_filename.c_str (), bash::struct_filename.c_str ());
+          ::rename (temp_struct_filename.c_str (),
+                    bash::struct_filename.c_str ());
         }
     }
 
@@ -863,14 +864,7 @@ static const char *structfile_header[] = {
   nullptr
 };
 
-static const char *structfile_footer[]
-    = { "  { nullptr, nullptr, 0, nullptr, nullptr, nullptr }", "};", "",
-        //   "bash::Builtin *shell_builtins = static_shell_builtins;",
-        //   "bash::Builtin *current_builtin;",
-        //   "",
-        "int num_shell_builtins =",
-        "\tsizeof (static_shell_builtins) / sizeof (Builtin) - 1;", "}",
-        nullptr };
+static const char *structfile_footer[] = { "}", "", "}", nullptr };
 
 /* Write out any necessary opening information for
    STRUCTFILE and EXTERNFILE. */
@@ -885,16 +879,19 @@ write_file_headers (ofstream &structfile, ofstream &externfile)
       structfile << "#include \""
                  << (extern_filename.empty () ? "builtext.hh"
                                               : extern_filename.c_str ())
-                 << "\"\n#include \"bashintl.hh\"\n"
+                 << "\"\n#include \"shell.hh\"\n"
                  << "\nnamespace bash {\n"
-                 << "\nbash::Builtin static_shell_builtins[] = {\n";
+                 << "\n#if __cplusplus < 201103L"
+                 << "\n#define emplace(x) insert (x)"
+                 << "\n#endif"
+                 << "\nvoid\nShell::initialize_shell_builtins ()\n{\n";
     }
 
   if (externfile.is_open ())
     externfile << "/* "
-               << (extern_filename.empty () ? "builtext.h"
+               << (extern_filename.empty () ? "builtext.hh"
                                             : extern_filename.c_str ())
-               << " - The list of builtins found in libbuiltins.a. */\n";
+               << " - The list of builtins found in builtins/_def.cc. */\n";
 }
 
 /* Write out any necessary closing information for
@@ -947,27 +944,15 @@ write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
               /* Write the structure definition. */
               if (structfile.is_open ())
                 {
-                  structfile << "  { \"" << builtin->name << "\", ";
+                  structfile << "shell_builtins.emplace (std::make_pair (\""
+                             << builtin->name << "\", Builtin (";
 
                   if (!builtin->function.empty () && !inhibit_functions)
                     structfile << "&Shell::" << builtin->function << ", ";
                   else
                     structfile << "nullptr, ";
 
-                  structfile << "BUILTIN_ENABLED | STATIC_BUILTIN"
-                             << ((builtin->flags & BUILTIN_FLAG_SPECIAL)
-                                     ? " | SPECIAL_BUILTIN"
-                                     : "")
-                             << ((builtin->flags & BUILTIN_FLAG_ASSIGNMENT)
-                                     ? " | ASSIGNMENT_BUILTIN"
-                                     : "")
-                             << ((builtin->flags & BUILTIN_FLAG_LOCALVAR)
-                                     ? " | LOCALVAR_BUILTIN"
-                                     : "")
-                             << ((builtin->flags & BUILTIN_FLAG_POSIX_BUILTIN)
-                                     ? " | POSIX_BUILTIN"
-                                     : "")
-                             << ", " << document_name (*builtin) << "_doc,\n";
+                  structfile << document_name (*builtin) << "_doc,\n";
 
                   /* Don't translate short document summaries that are
                      identical to command names */
@@ -980,13 +965,13 @@ write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
                             << (!builtin->shortdoc.empty () ? builtin->shortdoc
                                                             : builtin->name)
                             << "\", \"" << document_name (*builtin)
-                            << "\" },\n";
+                            << "\",\n";
                       else
                         structfile
                             << "     \""
                             << (!builtin->shortdoc.empty () ? builtin->shortdoc
                                                             : builtin->name)
-                            << "\", nullptr },\n";
+                            << "\", nullptr,\n";
                     }
                   else
                     {
@@ -996,15 +981,32 @@ write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
                             << (!builtin->shortdoc.empty () ? builtin->shortdoc
                                                             : builtin->name)
                             << "\"), \"" << document_name (*builtin)
-                            << "\" },\n";
+                            << "\",\n";
                       else
                         structfile
                             << "     N_(\""
                             << (!builtin->shortdoc.empty () ? builtin->shortdoc
                                                             : builtin->name)
-                            << "\"), nullptr },\n";
+                            << "\"), nullptr,\n";
                     }
                 }
+
+                // Moved flags to the end of the struct, to reduce padding.
+                structfile << "BUILTIN_ENABLED | STATIC_BUILTIN"
+                             << ((builtin->flags & BUILTIN_FLAG_SPECIAL)
+                                     ? " | SPECIAL_BUILTIN"
+                                     : "")
+                             << ((builtin->flags & BUILTIN_FLAG_ASSIGNMENT)
+                                     ? " | ASSIGNMENT_BUILTIN"
+                                     : "")
+                             << ((builtin->flags & BUILTIN_FLAG_LOCALVAR)
+                                     ? " | LOCALVAR_BUILTIN"
+                                     : "")
+                             << ((builtin->flags & BUILTIN_FLAG_POSIX_BUILTIN)
+                                     ? " | POSIX_BUILTIN"
+                                     : "");
+
+              structfile << " )));\n";
 
               if (structfile.is_open () || separate_helpfiles)
                 {

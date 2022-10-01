@@ -70,117 +70,91 @@ Shell::should_suppress_fork (const COMMAND *command)
   bool subshell;
 
   subshell = subshell_environment & SUBSHELL_PROCSUB; /* salt to taste */
-  return (startup_state == 2 && parse_and_execute_level == 1
-          && *bash_input.location.string == '\0' && !parser_expanding_alias ()
-          && should_optimize_fork (command, subshell));
+  return startup_state == 2 && parse_and_execute_level == 1
+         && *bash_input.location.string == '\0' && !parser_expanding_alias ()
+         && should_optimize_fork (command, subshell);
 }
 
 bool
 Shell::can_optimize_connection (const CONNECTION *connection)
 {
-  return (*bash_input.location.string == '\0' && !parser_expanding_alias ()
-          && (connection->connector == AND_AND
-              || connection->connector == OR_OR
-              || connection->connector == ';')
-          && connection->second->type == cm_simple);
+  return *bash_input.location.string == '\0' && !parser_expanding_alias ()
+         && (connection->connector == parser::token::AND_AND
+             || connection->connector == parser::token::OR_OR
+             || connection->connector == ';')
+         && typeid (*connection->second) == typeid (SIMPLE_COM);
 }
 
 void
-Shell::optimize_connection_fork (COMMAND *command)
+Shell::optimize_connection_fork (CONNECTION *connection)
 {
-  if (command->type == cm_connection
-      && (command->value.Connection->connector == AND_AND
-          || command->value.Connection->connector == OR_OR
-          || command->value.Connection->connector == ';')
-      && (command->value.Connection->second->flags & CMD_TRY_OPTIMIZING)
-      && ((startup_state == 2
-           && should_suppress_fork (command->value.Connection->second))
+  if ((connection->connector == parser::token::AND_AND
+       || connection->connector == parser::token::OR_OR
+       || connection->connector == ';')
+      && (connection->second->flags & CMD_TRY_OPTIMIZING)
+      && ((startup_state == 2 && should_suppress_fork (connection->second))
           || ((subshell_environment & SUBSHELL_PAREN)
-              && should_optimize_fork (command->value.Connection->second, 0))))
+              && should_optimize_fork (connection->second, false))))
     {
-      command->value.Connection->second->flags |= CMD_NO_FORK;
-      command->value.Connection->second->value.Simple->flags |= CMD_NO_FORK;
+      connection->second->flags |= CMD_NO_FORK;
     }
 }
 
 void
 Shell::optimize_subshell_command (COMMAND *command)
 {
-  if (should_optimize_fork (command, 0))
+  if (should_optimize_fork (command, false))
+    command->flags |= CMD_NO_FORK;
+  else
     {
-      command->flags |= CMD_NO_FORK;
-      command->value.Simple->flags |= CMD_NO_FORK;
-    }
-  else if (command->type == cm_connection
-           && (command->value.Connection->connector == AND_AND
-               || command->value.Connection->connector == OR_OR
-               || command->value.Connection->connector == ';')
-           && command->value.Connection->second->type == cm_simple
-           && parser_expanding_alias () == 0)
-    {
-      command->value.Connection->second->flags |= CMD_TRY_OPTIMIZING;
-      command->value.Connection->second->value.Simple->flags
-          |= CMD_TRY_OPTIMIZING;
+      CONNECTION *connection = dynamic_cast<CONNECTION *> (command);
+      if (connection
+          && (connection->connector == parser::token::AND_AND
+              || connection->connector == parser::token::OR_OR
+              || connection->connector == ';')
+          && typeid (*connection->second) == typeid (SIMPLE_COM)
+          && !parser_expanding_alias ())
+        {
+          connection->second->flags |= CMD_TRY_OPTIMIZING;
+        }
     }
 }
 
 void
 Shell::optimize_shell_function (COMMAND *command)
 {
-  COMMAND *fc;
+  GROUP_COM *gcm = dynamic_cast<GROUP_COM *> (command);
+  COMMAND *fc = gcm ? gcm->command : command;
 
-  fc = (command->type == cm_group) ? command->value.Group->command : command;
-
-  if (fc->type == cm_simple && should_suppress_fork (fc))
+  if (typeid (*fc) == typeid (SIMPLE_COM) && should_suppress_fork (fc))
+    fc->flags |= CMD_NO_FORK;
+  else
     {
-      fc->flags |= CMD_NO_FORK;
-      fc->value.Simple->flags |= CMD_NO_FORK;
-    }
-  else if (fc->type == cm_connection && can_optimize_connection (fc)
-           && should_suppress_fork (fc->value.Connection->second))
-    {
-      fc->value.Connection->second->flags |= CMD_NO_FORK;
-      fc->value.Connection->second->value.Simple->flags |= CMD_NO_FORK;
+      CONNECTION *connection = dynamic_cast<CONNECTION *> (command);
+      if (connection && can_optimize_connection (connection)
+          && should_suppress_fork (connection->second))
+        connection->second->flags |= CMD_NO_FORK;
     }
 }
 
 bool
 Shell::can_optimize_cat_file (const COMMAND *command)
 {
-  return (command->type == cm_simple && !command->redirects
-          && (command->flags & CMD_TIME_PIPELINE) == 0
-          && command->value.Simple->words == 0
-          && command->value.Simple->redirects
-          && command->value.Simple->redirects->next == 0
-          && command->value.Simple->redirects->instruction == r_input_direction
-          && command->value.Simple->redirects->redirector.dest == 0);
+  const SIMPLE_COM *scm = dynamic_cast<const SIMPLE_COM *> (command);
+
+  return scm && command->redirects == nullptr
+         && (command->flags & CMD_TIME_PIPELINE) == 0 && scm->words == nullptr
+         && scm->simple_redirects && scm->simple_redirects->next () == nullptr
+         && scm->simple_redirects->instruction == r_input_direction
+         && scm->simple_redirects->redirector.r.dest == 0;
 }
 
-/* How to force parse_and_execute () to clean up after itself. */
-void
-Shell::parse_and_execute_cleanup (int old_running_trap)
-{
-  if (running_trap > 0)
-    {
-      /* We assume if we have a different value for running_trap than when
-         we started (the only caller that cares is evalstring()), the
-         original caller will perform the cleanup, and we should not step
-         on them. */
-      if (running_trap != old_running_trap)
-        run_trap_cleanup (running_trap - 1);
-      unfreeze_jobs_list ();
-    }
-
-  if (have_unwind_protects ())
-    run_unwind_frame (PE_TAG);
-  else
-    parse_and_execute_level = 0; /* XXX */
-}
-
-// This class replaces parse_prologue () and parse_and_execute_cleanup ().
+// This class replaces parse_prologue ().
 class EvalStringUnwindHandler
 {
-  EvalStringUnwindHandler (Shell &shell, const char *string, parse_flags flags)
+public:
+  EvalStringUnwindHandler (Shell &s, const char *string, parse_flags pf)
+      : shell (s), flags (pf)
   {
     parse_and_execute_level = shell.parse_and_execute_level;
     indirection_level = shell.indirection_level;
@@ -199,50 +173,83 @@ class EvalStringUnwindHandler
 #endif /* BANG_HISTORY */
 #endif /* HISTORY */
 
-  if (shell.interactive_shell)
-    {
-      x = get_current_prompt_level ();
-      add_unwind_protect (set_current_prompt_level, x);
-    }
+    if (shell.interactive_shell)
+      {
+        x = get_current_prompt_level ();
+        add_unwind_protect (set_current_prompt_level, x);
+      }
 
-  if (the_printed_command_except_trap)
-    {
-      lastcom = savestring (the_printed_command_except_trap);
-      add_unwind_protect (restore_lastcom, lastcom);
-    }
+    if (the_printed_command_except_trap)
+      {
+        lastcom = savestring (the_printed_command_except_trap);
+        add_unwind_protect (restore_lastcom, lastcom);
+      }
 
-  add_unwind_protect (pop_stream, (char *)NULL);
-  if (parser_expanding_alias ())
-    add_unwind_protect (parser_restore_alias, (char *)NULL);
+    add_unwind_protect (pop_stream, (char *)NULL);
+    if (parser_expanding_alias ())
+      add_unwind_protect (parser_restore_alias, (char *)NULL);
 
-  if (orig_string && ((flags & SEVAL_NOFREE) == 0))
-    add_unwind_protect (xfree, orig_string);
-  end_unwind_frame ();
+    if (orig_string && ((flags & SEVAL_NOFREE) == 0))
+      add_unwind_protect (xfree, orig_string);
+    end_unwind_frame ();
 
-  if (flags & (SEVAL_NONINT | SEVAL_INTERACT))
-    interactive = (flags & SEVAL_NONINT) ? 0 : 1;
+    if (flags & (SEVAL_NONINT | SEVAL_INTERACT))
+      interactive = (flags & SEVAL_NONINT) ? 0 : 1;
 
 #if defined(HISTORY)
-  if (flags & SEVAL_NOHIST)
-    bash_history_disable ();
+    if (flags & SEVAL_NOHIST)
+      bash_history_disable ();
 #if defined(BANG_HISTORY)
-  if (flags & SEVAL_NOHISTEXP)
-    history_expansion_inhibited = 1;
+    if (flags & SEVAL_NOHISTEXP)
+      history_expansion_inhibited = 1;
 #endif /* BANG_HISTORY */
 #endif /* HISTORY */
   }
 
-  ~EvalStringUnwindHandler () {}
+  ~EvalStringUnwindHandler ()
+  {
+    if (!unwound)
+      unwind ();
+  }
+
+  // This doesn't check if it's been called already.
+  void
+  unwind ()
+  {
+    shell.parse_and_execute_level = parse_and_execute_level;
+    shell.indirection_level = indirection_level;
+    shell.line_number = line_number;
+    shell.line_number_for_err_trap = line_number_for_err_trap;
+    shell.loop_level = loop_level;
+    shell.executing_list = executing_list;
+    shell.comsub_ignore_return = comsub_ignore_return;
+    if (flags & (SEVAL_NONINT | SEVAL_INTERACT))
+      shell.interactive = interactive;
+
+#if defined(HISTORY)
+    shell.remember_on_history = remember_on_history;
+#if defined(BANG_HISTORY)
+    shell.history_expansion_inhibited = history_expansion_inhibited;
+#endif /* BANG_HISTORY */
+#endif /* HISTORY */
+
+    unwound = true;
+  }
 
 private:
+  Shell &shell;
+  parse_flags flags;
   int parse_and_execute_level;
   int indirection_level;
   int line_number;
   int line_number_for_err_trap;
   int loop_level;
   int executing_list;
+  bool unwound;
   bool comsub_ignore_return;
   bool interactive;
+  char remember_on_history;
+  bool history_expansion_inhibited;
 };
 
 /* Parse and execute the commands in STRING.  Returns whatever
@@ -264,7 +271,8 @@ Shell::parse_and_execute (char *string, const char *from_file,
   //   volatile int should_jump_to_top_level, last_result;
   //   COMMAND *volatile command;
 
-  parse_prologue (string, flags, PE_TAG);
+  // This will restore the previous state on destruction or unwind ().
+  EvalStringUnwindHandler unwind_handler (*this, string, flags);
 
   parse_and_execute_level++;
 
@@ -302,7 +310,7 @@ Shell::parse_and_execute (char *string, const char *from_file,
   clear_shell_input_line ();
   while (*(bash_input.location.string) || parser_expanding_alias ())
     {
-      command = (COMMAND *)NULL;
+      command = nullptr;
 
       if (interrupt_state)
         {
@@ -407,7 +415,7 @@ Shell::parse_and_execute (char *string, const char *from_file,
 
               if (flags & SEVAL_FUNCDEF)
                 {
-                  char *x;
+                  const char *x;
 
                   /* If the command parses to something other than a straight
                      function definition, or if we have not consumed the entire
@@ -436,7 +444,7 @@ Shell::parse_and_execute (char *string, const char *from_file,
               add_unwind_protect (dispose_fd_bitmap, bitmap);
               add_unwind_protect (dispose_command, command); /* XXX */
 
-              global_command = (COMMAND *)NULL;
+              global_command = nullptr;
 
               if ((subshell_environment & SUBSHELL_COMSUB)
                   && comsub_ignore_return)
@@ -468,7 +476,7 @@ Shell::parse_and_execute (char *string, const char *from_file,
                  (&& and || are left-associative) and after the single parse,
                  if we are at the end of the command string, the last in a
                  series of connection commands is
-                 command->value.Connection->second. */
+                 connection->second. */
               else if (command->type == cm_connection
                        && can_optimize_connection (command))
                 {
@@ -527,7 +535,7 @@ Shell::parse_and_execute (char *string, const char *from_file,
 
 out:
 
-  run_unwind_frame (PE_TAG);
+  unwind_handler.unwind ();
 
   if (interrupt_state && parse_and_execute_level == 0)
     {
@@ -551,17 +559,17 @@ out:
    to the position in the string where the parse ended.  Used to validate
    command substitutions during parsing to obey Posix rules about finding
    the end of the command and balancing parens. */
-int
+size_t
 Shell::parse_string (char *string, const char *from_file, parse_flags flags,
                      COMMAND **cmdp, char **endp)
 {
-  int code, nc;
-  int should_jump_to_top_level;
+  bool should_jump_to_top_level;
   COMMAND *command, *oglobal;
   char *ostring;
   sigset_t ps_sigmask;
 
-  parse_prologue (string, flags, PS_TAG);
+  // This will restore the previous state on destruction or unwind ().
+  EvalStringUnwindHandler unwind_handler (*this, string, flags);
 
 #if defined(HAVE_POSIX_SIGNALS)
   /* If we longjmp and are going to go on, use this to restore signal mask */
@@ -578,14 +586,14 @@ Shell::parse_string (char *string, const char *from_file, parse_flags flags,
     /* push current shell_input_line */
     parser_save_alias ();
 
-  code = should_jump_to_top_level = 0;
+  should_jump_to_top_level = false;
   oglobal = global_command;
 
   with_input_from_string (string, from_file);
   ostring = bash_input.location.string;
   while (*(bash_input.location.string)) /* XXX - parser_expanding_alias () ? */
     {
-      command = (COMMAND *)NULL;
+      command = nullptr;
 
 #if 0
       if (interrupt_state)
@@ -661,7 +669,7 @@ out:
   if (endp)
     *endp = bash_input.location.string;
 
-  run_unwind_frame (PS_TAG);
+  unwind_handler.unwind ();
 
   /* If we return < 0, the caller (xparse_dolparen) will jump_to_top_level for
      us, after doing cleanup */
@@ -737,21 +745,39 @@ Shell::cat_file (REDIRECT *r)
 int
 Shell::evalstring (char *string, const char *from_file, parse_flags flags)
 {
+  /* Are we running a trap when we execute this function? */
+  int was_trap = running_trap;
+
   /* If we are in a place where `return' is valid, we have to catch
      `eval "... return"' and make sure parse_and_execute cleans up. Then
      we can trampoline to the previous saved return_catch location. */
   if (return_catch_flag)
     {
       int saved_return_catch_flag = return_catch_flag;
-      return_catch_flag++;
+      return_catch_flag++; /* increment so we have a counter */
 
       try
         {
           /* Note that parse_and_execute () frees the string it is passed. */
-          return parse_and_execute (string, from_file, flags);
+          int r = parse_and_execute (string, from_file, flags);
+          return_catch_flag = saved_return_catch_flag;
+          return r;
         }
-      catch (const std::exception &e)
+      catch (const bash_exception &)
         {
+          /* We care about whether or not we are running the same trap we were
+             when we entered this function. */
+          if (running_trap > 0)
+            {
+              /* We assume if we have a different value for running_trap than
+                 when we started (the only caller that cares is evalstring()),
+                 the original caller will perform the cleanup, and we should
+                 not step on them. */
+              if (running_trap != was_trap)
+                run_trap_cleanup (running_trap - 1);
+
+              unfreeze_jobs_list ();
+            }
           return_catch_flag = saved_return_catch_flag;
           throw;
         }

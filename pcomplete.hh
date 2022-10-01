@@ -164,7 +164,8 @@ extern COMPSPEC *pcomp_curcs;
 extern const char *pcomp_curcmd;
 #endif
 
-/* Functions from pcomplib.c */
+/* Functions from pcomplib.cc */
+
 extern COMPSPEC *compspec_create (void);
 extern void compspec_dispose (COMPSPEC *);
 extern COMPSPEC *compspec_copy (COMPSPEC *);
@@ -180,9 +181,8 @@ extern int progcomp_remove (char *);
 
 extern COMPSPEC *progcomp_search (const std::string &);
 
-extern void progcomp_walk (hash_wfunc *);
+/* Functions from pcomplete.cc */
 
-/* Functions from pcomplete.c */
 extern void set_itemlist_dirty (ITEMLIST *);
 
 extern STRINGLIST *completions_to_stringlist (const std::string &);

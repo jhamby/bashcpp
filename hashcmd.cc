@@ -124,19 +124,19 @@ phash_insert (const char *filename, const char *full_path, bool check_dot,
    returns a newly-allocated string; the caller is responsible
    for freeing it. */
 char *
-phash_search (const char *filename)
+Shell::phash_search (const char *filename)
 {
   BUCKET_CONTENTS *item;
   char *path, *dotted_filename, *tail;
   int same;
 
   if (hashing_enabled == 0 || hashed_filenames == 0)
-    return (char *)NULL;
+    return nullptr;
 
   item = hash_search (filename, hashed_filenames, 0);
 
   if (item == NULL)
-    return (char *)NULL;
+    return nullptr;
 
   /* If this filename is hashed, but `.' comes before it in the path,
      see if ./filename is executable.  If the hashed value is not an
@@ -165,7 +165,7 @@ phash_search (const char *filename)
 
 #if 0
       if (pathdata(item)->flags & HASH_RELPATH)
-	return (char *)NULL;
+	return nullptr;
 #endif
 
       /* Watch out.  If this file was hashed to "./filename", and
@@ -190,7 +190,7 @@ phash_search (const char *filename)
               *tail = '/';
             }
 
-          return same ? (char *)NULL : savestring (path);
+          return same ? nullptr : savestring (path);
         }
     }
 

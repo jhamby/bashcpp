@@ -65,7 +65,6 @@ namespace bash
 /* This is a lot like report_error (), but it is for shell builtins
    instead of shell control structures, and it won't ever exit the
    shell. */
-
 void
 Shell::builtin_error_prolog ()
 {

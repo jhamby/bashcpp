@@ -1298,9 +1298,9 @@ pipeline_command: pipeline
                   /* XXX - let's cheat and push a newline back */
                   Shell &sh = *the_shell;
                   if ($2 == '\n')
-                    sh.token_to_read = '\n';
+                    sh.token_to_read = static_cast<parser::token_kind_type> ('\n');
                   else if ($2 == ';')
-                    sh.token_to_read = ';';
+                    sh.token_to_read = static_cast<parser::token_kind_type> (';');
                   sh.parser_state
                       &= ~PST_REDIRLIST; /* SIMPLE_COM constructor sets this */
                 }
@@ -1321,9 +1321,9 @@ pipeline_command: pipeline
                   /* XXX - let's cheat and push a newline back */
                   Shell &sh = *the_shell;
                   if ($2 == '\n')
-                    sh.token_to_read = '\n';
+                    sh.token_to_read = static_cast<parser::token_kind_type> ('\n');
                   if ($2 == ';')
-                    sh.token_to_read = ';';
+                    sh.token_to_read = static_cast<parser::token_kind_type> (';');
                   sh.parser_state
                       &= ~PST_REDIRLIST; /* SIMPLE_COM constructor sets this */
                 }

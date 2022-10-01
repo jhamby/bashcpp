@@ -40,6 +40,31 @@
 #include <exception>
 #include <string>
 
+#ifdef malloc
+#undef malloc
+#endif
+#define malloc(x) Error - use C++ new instead !
+
+#ifdef free
+#undef free
+#endif
+#define free(x) Error - Use C++ delete instead !
+
+#ifdef calloc
+#undef calloc
+#endif
+#define calloc(x, y) Error - Use C++ vector instead !
+
+#ifdef realloc
+#undef realloc
+#endif
+#define realloc(x, y) Error - Use C++ vector instead !
+
+#ifdef strdup
+#undef strdup
+#endif
+#define strdup(x) Error - Use savestring () instead !
+
 namespace bash
 {
 
@@ -51,7 +76,9 @@ enum bash_exception_t
   FORCE_EOF = 1,   // We want to stop parsing.
   DISCARD = 2,     // Discard current command.
   EXITPROG = 3,    // Unconditionally exit the program now.
-  ERREXIT = 4      // Exit due to error condition.
+  ERREXIT = 4,     // Exit due to error condition.
+  SIGEXIT = 5,     // Exit due to fatal terminating signal.
+  EXITBLTIN = 6    // Exit due to the exit builtin.
 };
 
 /* General shell exception, including an exception type enum. */
@@ -115,6 +142,11 @@ class extract_string_fatal : public extract_string_error
 };
 
 class matched_pair_error : public std::exception
+{
+  virtual const char *what () const noexcept override;
+};
+
+class parse_error : public std::exception
 {
   virtual const char *what () const noexcept override;
 };

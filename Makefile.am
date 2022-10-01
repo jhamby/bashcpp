@@ -49,7 +49,7 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
 	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
-	include/unionwait.hh pathnames.hh
+	include/unionwait.hh include/timer.hh pathnames.hh
 
 if JOB_CONTROL
 bash_SOURCES += jobs.cc
@@ -204,8 +204,8 @@ bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
 	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc \
 	$(SHDIR)/strtoimax.cc $(SHDIR)/strtoumax.cc \
-	$(SHDIR)/stringlist.cc $(SHDIR)/stringvec.cc \
-	$(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/stringlist.cc $(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc \
+	$(SHDIR)/mbschr.cc $(SHDIR)/timers.cc $(SHDIR)/zcatfd.cc \
 	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
 	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
 	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \

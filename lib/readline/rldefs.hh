@@ -104,6 +104,31 @@
 #define S_ISDIR(m) (((m)&S_IFMT) == S_IFDIR)
 #endif
 
+#ifdef malloc
+#undef malloc
+#endif
+#define malloc(x) Error - use C++ new instead !
+
+#ifdef free
+#undef free
+#endif
+#define free(x) Error - Use C++ delete instead !
+
+#ifdef calloc
+#undef calloc
+#endif
+#define calloc(x, y) Error - Use C++ vector instead !
+
+#ifdef realloc
+#undef realloc
+#endif
+#define realloc(x, y) Error - Use C++ vector instead !
+
+#ifdef strdup
+#undef strdup
+#endif
+#define strdup(x) Error - Use savestring () instead !
+
 namespace readline
 {
 

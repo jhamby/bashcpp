@@ -1,7 +1,7 @@
 // This file is cd_def.cc.
 // It implements the builtins "cd" and "pwd" in Bash.
 
-// Copyright (C) 1987-2020 Free Software Foundation, Inc.
+// Copyright (C) 1987-2022 Free Software Foundation, Inc.
 
 // This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -71,7 +71,7 @@ static int xattrfd = -1;
 // Change the shell working directory.
 
 // Change the current directory to DIR.  The default DIR is the value of the
-// HOME shell variable.
+// HOME shell variable. If DIR is "-", it is converted to $OLDPWD.
 
 // The variable CDPATH defines the search path for the directory containing
 // DIR.  Alternative directory names in CDPATH are separated by a colon (:).
@@ -109,17 +109,17 @@ namespace bash
 {
 
 /* Just set $PWD, don't change OLDPWD.  Used by `pwd -P' in posix mode. */
-static int
-setpwd (const char *dirname)
+int
+Shell::setpwd (const char *dirname)
 {
   bool old_anm;
   SHELL_VAR *tvar;
 
   old_anm = array_needs_making;
   tvar = bind_variable ("PWD", (char *)(dirname ? dirname : ""), 0);
-  if (tvar && readonly_p (tvar))
+  if (tvar && tvar->readonly ())
     return EXECUTION_FAILURE;
-  if (tvar && !old_anm && array_needs_making && exported_p (tvar))
+  if (tvar && !old_anm && array_needs_making && tvar->exported ())
     {
       update_export_env_inplace ("PWD=", 4, dirname ? dirname : "");
       array_needs_making = false;
@@ -127,20 +127,19 @@ setpwd (const char *dirname)
   return EXECUTION_SUCCESS;
 }
 
-static int
-bindpwd (bool no_symlinks)
+int
+Shell::bindpwd (bool no_symlinks)
 {
   int r = sh_chkwrite (EXECUTION_SUCCESS);
 
 #define tcwd the_current_working_directory
-  char *dirname = tcwd ? (no_symlinks ? sh_physpath (tcwd, 0) : tcwd)
+  char *dirname = tcwd ? (no_symlinks ? sh_physpath (tcwd) : tcwd)
                        : get_working_directory ("cd");
 #undef tcwd
 
-  /* If canonicalization fails, reset dirname to the_current_working_directory
-   */
+  // If canonicalization fails, reset dirname to the_current_working_directory
   bool canon_failed = false;
-  if (dirname == 0)
+  if (dirname == nullptr)
     {
       canon_failed = true;
       dirname = the_current_working_directory;
@@ -150,10 +149,10 @@ bindpwd (bool no_symlinks)
   char *pwdvar = get_string_value ("PWD");
 
   SHELL_VAR *tvar = bind_variable ("OLDPWD", pwdvar, 0);
-  if (tvar && readonly_p (tvar))
+  if (tvar && tvar->readonly ())
     r = EXECUTION_FAILURE;
 
-  if (!old_anm && array_needs_making && exported_p (tvar))
+  if (!old_anm && array_needs_making && tvar->exported ())
     {
       update_export_env_inplace ("OLDPWD=", 7, pwdvar);
       array_needs_making = false;
@@ -165,27 +164,24 @@ bindpwd (bool no_symlinks)
     r = EXECUTION_FAILURE;
 
   if (dirname && dirname != the_current_working_directory)
-    free (dirname);
+    delete[] dirname;
 
   return r;
 }
 
 /* Call get_working_directory to reset the value of
    the_current_working_directory () */
-static char *
-resetpwd (const char *caller)
+char *
+Shell::resetpwd (const char *caller)
 {
-  char *tdir;
-
-  FREE (the_current_working_directory);
-  the_current_working_directory = (char *)NULL;
-  tdir = get_working_directory (caller);
-  return tdir;
+  delete[] the_current_working_directory;
+  the_current_working_directory = nullptr;
+  return get_working_directory (caller);
 }
 
-static int
-cdxattr (char *dir,    /* don't assume we can always free DIR */
-         char **ndirp) /* return new constructed directory name */
+int
+Shell::cdxattr (char *dir,    /* don't assume we can always free DIR */
+                char **ndirp) /* return new constructed directory name */
 {
 #if defined(O_XATTR)
   int apfd, fd, r, e;
@@ -228,8 +224,8 @@ cdxattr (char *dir,    /* don't assume we can always free DIR */
 }
 
 /* Clean up the O_XATTR baggage.  Currently only closes xattrfd */
-static void
-resetxattr ()
+void
+Shell::resetxattr ()
 {
 #if defined(O_XATTR)
   if (xattrfd >= 0)
@@ -254,8 +250,9 @@ resetxattr ()
 int
 Shell::cd_builtin (WORD_LIST *list)
 {
-  char *dirname, *cdpath, *path, *temp;
-  int path_index, no_symlinks, opt, lflag, e;
+  const char *dirname, *cdpath;
+  char *path;
+  int opt, lflag, e;
 
 #if defined(RESTRICTED_SHELL)
   if (restricted)
@@ -265,9 +262,9 @@ Shell::cd_builtin (WORD_LIST *list)
     }
 #endif /* RESTRICTED_SHELL */
 
-  eflag = 0;
-  no_symlinks = no_symbolic_links;
-  xattrflag = 0;
+  eflag = false;
+  char no_symlinks = no_symbolic_links;
+  xattrflag = false;
   reset_internal_getopt ();
 #if defined(O_XATTR)
   while ((opt = internal_getopt (list, "eLP@")) != -1)
@@ -309,7 +306,7 @@ Shell::cd_builtin (WORD_LIST *list)
       /* `cd' without arguments is equivalent to `cd $HOME' */
       dirname = get_string_value ("HOME");
 
-      if (dirname == 0)
+      if (dirname == nullptr)
         {
           builtin_error (_ ("HOME not set"));
           return EXECUTION_FAILURE;
@@ -317,7 +314,7 @@ Shell::cd_builtin (WORD_LIST *list)
       lflag = 0;
     }
 #if defined(CD_COMPLAINS)
-  else if (list->next)
+  else if (list->next ())
     {
       builtin_error (_ ("too many arguments"));
       return EXECUTION_FAILURE;
@@ -346,20 +343,20 @@ Shell::cd_builtin (WORD_LIST *list)
       lflag = LCD_PRINTPATH; /* According to SUSv3 */
 #endif
     }
-  else if (absolute_pathname (list->word->word))
-    dirname = list->word->word;
+  else if (absolute_pathname (list->word->word.c_str ()))
+    dirname = list->word->word.c_str ();
   else if (privileged_mode == 0 && (cdpath = get_string_value ("CDPATH")))
     {
-      dirname = list->word->word;
+      dirname = list->word->word.c_str ();
 
       /* Find directory in $CDPATH. */
-      path_index = 0;
+      size_t path_index = 0;
       while ((path = extract_colon_unit (cdpath, &path_index)))
         {
           /* OPT is 1 if the path element is non-empty */
           opt = path[0] != '\0';
-          temp = sh_makepath (path, dirname, MP_DOTILDE);
-          free (path);
+          char *temp = sh_makepath (path, dirname, MP_DOTILDE);
+          delete[] path;
 
           if (change_to_directory (temp, no_symlinks, xattrflag))
             {
@@ -372,7 +369,7 @@ Shell::cd_builtin (WORD_LIST *list)
                       = no_symlinks ? temp : the_current_working_directory))
                 printf ("%s\n", path);
 
-              free (temp);
+              delete[] temp;
 #if 0
 	      /* Posix.2 says that after using CDPATH, the resultant
 		 value of $PWD will not contain `.' or `..'. */
@@ -382,7 +379,7 @@ Shell::cd_builtin (WORD_LIST *list)
 #endif
             }
           else
-            free (temp);
+            delete[] temp;
         }
 
 #if 0
@@ -400,7 +397,7 @@ Shell::cd_builtin (WORD_LIST *list)
 #endif
     }
   else
-    dirname = list->word->word;
+    dirname = list->word->word.c_str ();
 
   /* When we get here, DIRNAME is the directory to change to.  If we
      chdir successfully, just return. */
@@ -433,18 +430,16 @@ Shell::cd_builtin (WORD_LIST *list)
       if (temp && change_to_directory (temp, no_symlinks, xattrflag))
         {
           printf ("%s\n", temp);
-          free (temp);
+          delete[] temp;
           return bindpwd (no_symlinks);
         }
       else
-        FREE (temp);
+        delete[] temp;
     }
 
   e = errno;
-  temp = printable_filename (dirname, 0);
+  std::string temp = printable_filename (std::string (dirname), 0);
   builtin_error ("%s: %s", temp, strerror (e));
-  if (temp != dirname)
-    free (temp);
   return EXECUTION_FAILURE;
 }
 
@@ -505,11 +500,10 @@ Shell::pwd_builtin (WORD_LIST *list)
   /* Try again using getcwd() if canonicalization fails (for instance, if
      the file system has changed state underneath bash). */
   if ((tcwd && directory == 0)
-      || (posixly_correct
-          && same_file (".", tcwd, (struct stat *)0, (struct stat *)0) == 0))
+      || (posixly_correct && same_file (".", tcwd, nullptr, nullptr) == 0))
     {
       if (directory && directory != tcwd)
-        free (directory);
+        delete[] directory;
       directory = resetpwd ("pwd");
     }
 
@@ -523,7 +517,7 @@ Shell::pwd_builtin (WORD_LIST *list)
       if (posixly_correct && pflag)
         opt = setpwd (directory);
       if (directory != the_current_working_directory)
-        free (directory);
+        delete[] directory;
       return sh_chkwrite (opt);
     }
   else
@@ -536,15 +530,15 @@ Shell::pwd_builtin (WORD_LIST *list)
    getcwd() will eventually be called), or set to a string corresponding
    to the working directory.  Return 1 on success, 0 on failure. */
 
-static bool
-change_to_directory (const char *newdir, bool nolinks, bool xattr)
+bool
+Shell::change_to_directory (const char *newdir, bool nolinks, bool xattr)
 {
   char *t;
 
   if (the_current_working_directory == 0)
     {
       t = get_working_directory ("chdir");
-      FREE (t);
+      delete[] t;
     }
 
   t = make_absolute (newdir, the_current_working_directory);
@@ -561,10 +555,10 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
      failed, use the non-canonical form. */
   bool canon_failed = false;
   if (tdir && *tdir)
-    free (t);
+    delete[] t;
   else
     {
-      FREE (tdir);
+      delete[] tdir;
       tdir = t;
       canon_failed = true;
     }
@@ -585,7 +579,7 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
       if (errno != ENOENT)
 #endif
         errno = ENOTDIR;
-      free (tdir);
+      delete[] tdir;
       return false;
     }
 
@@ -597,13 +591,13 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
       if (r >= 0)
         {
           canon_failed = false;
-          free (tdir);
+          delete[] tdir;
           tdir = ndir;
         }
       else
         {
           err = errno;
-          free (tdir);
+          delete[] tdir;
           errno = err;
           return false; /* no xattr */
         }
@@ -627,12 +621,12 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
           if (t == 0)
             set_working_directory (tdir);
           else
-            free (t);
+            delete[] t;
         }
       else
         set_working_directory (tdir);
 
-      free (tdir);
+      delete[] tdir;
       return true;
     }
 
@@ -640,7 +634,7 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
      what the user passed (nolinks != 0), punt now. */
   if (nolinks)
     {
-      free (tdir);
+      delete[] tdir;
       return false;
     }
 
@@ -656,7 +650,7 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
       if (t == 0)
         set_working_directory (tdir);
       else
-        free (t);
+        delete[] t;
 
       r = 1;
     }
@@ -666,8 +660,8 @@ change_to_directory (const char *newdir, bool nolinks, bool xattr)
       r = 0;
     }
 
-  free (tdir);
-  return (bool)r;
+  delete[] tdir;
+  return r != 0;
 }
 
 } // namespace bash

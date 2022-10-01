@@ -1,7 +1,7 @@
-/* externs.h -- extern function declarations which do not appear in their
+/* externs.hh -- extern function declarations which do not appear in their
    own header file. */
 
-/* Copyright (C) 1993-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1993-2021 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -42,13 +42,12 @@
 namespace bash
 {
 
-struct StringIntAlist;
+struct STRING_INT_ALIST;
 
 /* Declarations for functions defined in stringlib.c */
 
-int find_string_in_alist (char *, StringIntAlist *, int);
-char *find_token_in_alist (int, StringIntAlist *, int);
-int find_index_in_alist (char *, StringIntAlist *, int);
+int find_string_in_alist (char *, STRING_INT_ALIST *, int);
+int find_index_in_alist (char *, STRING_INT_ALIST *, int);
 
 // Cons a new string from STRING starting at START and ending at END,
 // not including END.

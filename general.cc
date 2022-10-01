@@ -77,6 +77,12 @@ bash_exception::what () const noexcept
     case ERREXIT:
       return "ERREXIT";
 
+    case SIGEXIT:
+      return "SIGEXIT";
+
+    case EXITBLTIN:
+      return "EXITBLTIN";
+
     case NOEXCEPTION:
     default:
       return "NOEXCEPTION";
@@ -144,6 +150,13 @@ const char *
 matched_pair_error::what () const noexcept
 {
   return "matched_pair_error";
+}
+
+// Return the type of the parse_error exception.
+const char *
+parse_error::what () const noexcept
+{
+  return "parse_error";
 }
 
 #if defined(ALIAS)
@@ -432,12 +445,12 @@ Shell::legal_alias_name (const char *string)
    assignment and require an array subscript before the `=' to denote an
    assignment statement. */
 size_t
-Shell::assignment (const char *string, int flags)
+Shell::assignment (const std::string &string, int flags)
 {
-  unsigned char c;
-  size_t newi, indx;
+  if (string.empty ())
+    return 0;
 
-  c = static_cast<unsigned char> (string[indx = 0]);
+  unsigned char c = static_cast<unsigned char> (string[0]);
 
 #if defined(ARRAY_VARS)
   /* If parser_state includes PST_COMPASSIGN, FLAGS will include 1, so we are
@@ -456,7 +469,9 @@ Shell::assignment (const char *string, int flags)
 #endif
     return 0;
 
-  while ((c = static_cast<unsigned char> (string[indx])))
+  size_t indx = 0;
+  const char *cstring = string.c_str ();
+  while ((c = static_cast<unsigned char> (cstring[indx])))
     {
       /* The following is safe.  Note that '=' at the start of a word
          is not an assignment statement. */
@@ -466,7 +481,7 @@ Shell::assignment (const char *string, int flags)
 #if defined(ARRAY_VARS)
       if (c == '[')
         {
-          newi = skipsubscript (string, indx, (flags & 2) ? 1 : 0);
+          size_t newi = skipsubscript (cstring, indx, (flags & 2) ? 1 : 0);
           /* XXX - why not check for blank subscripts here, if we do in
              valid_array_reference? */
           if (string[newi++] != ']')
@@ -663,7 +678,7 @@ Shell::full_pathname (char *file)
     return file;
 
   ret = sh_makepath (nullptr, file, (MP_DOCWD | MP_RMDOT));
-  free (file);
+  delete[] file;
 
   return ret;
 }

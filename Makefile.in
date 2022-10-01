@@ -168,8 +168,8 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
 	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
-	include/unionwait.hh pathnames.hh jobs.cc nojobs.cc \
-	$(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc \
+	include/unionwait.hh include/timer.hh pathnames.hh jobs.cc \
+	nojobs.cc $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc \
 	$(BLTDIR)/break_def.cc $(BLTDIR)/builtin_def.cc \
 	$(BLTDIR)/caller_def.cc $(BLTDIR)/cd_def.cc \
 	$(BLTDIR)/colon_def.cc $(BLTDIR)/command_def.cc \
@@ -228,10 +228,11 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
 	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
 	$(SHDIR)/strtoumax.cc $(SHDIR)/stringlist.cc \
-	$(SHDIR)/stringvec.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
-	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
-	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
-	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
+	$(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc $(SHDIR)/mbschr.cc \
+	$(SHDIR)/timers.cc $(SHDIR)/zcatfd.cc $(SHDIR)/zmapfd.cc \
+	$(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc $(SHDIR)/fpurge.cc \
+	$(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc \
+	$(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
 	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
 	$(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc $(SHDIR)/wcswidth.cc \
 	$(SHDIR)/wcsnwidth.cc $(SHDIR)/shmbchar.cc $(SHDIR)/random.cc \
@@ -314,7 +315,8 @@ am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	$(SHDIR)/fmtumax.$(OBJEXT) $(SHDIR)/shmatch.$(OBJEXT) \
 	$(SHDIR)/strnlen.$(OBJEXT) $(SHDIR)/strtoimax.$(OBJEXT) \
 	$(SHDIR)/strtoumax.$(OBJEXT) $(SHDIR)/stringlist.$(OBJEXT) \
-	$(SHDIR)/stringvec.$(OBJEXT) $(SHDIR)/mbschr.$(OBJEXT) \
+	$(SHDIR)/stringvec.$(OBJEXT) $(SHDIR)/strvis.$(OBJEXT) \
+	$(SHDIR)/mbschr.$(OBJEXT) $(SHDIR)/timers.$(OBJEXT) \
 	$(SHDIR)/zcatfd.$(OBJEXT) $(SHDIR)/zmapfd.$(OBJEXT) \
 	$(SHDIR)/winsize.$(OBJEXT) $(SHDIR)/eaccess.$(OBJEXT) \
 	$(SHDIR)/fpurge.$(OBJEXT) $(SHDIR)/zgetline.$(OBJEXT) \
@@ -446,6 +448,7 @@ am__depfiles_remade = $(BLTDIR)/$(DEPDIR)/alias_def.Po \
 	$(SHDIR)/$(DEPDIR)/stringvec.Po $(SHDIR)/$(DEPDIR)/strnlen.Po \
 	$(SHDIR)/$(DEPDIR)/strpbrk.Po $(SHDIR)/$(DEPDIR)/strtoimax.Po \
 	$(SHDIR)/$(DEPDIR)/strtoumax.Po $(SHDIR)/$(DEPDIR)/strtrans.Po \
+	$(SHDIR)/$(DEPDIR)/strvis.Po $(SHDIR)/$(DEPDIR)/timers.Po \
 	$(SHDIR)/$(DEPDIR)/timeval.Po $(SHDIR)/$(DEPDIR)/tmpfile.Po \
 	$(SHDIR)/$(DEPDIR)/uconvert.Po $(SHDIR)/$(DEPDIR)/ufuncs.Po \
 	$(SHDIR)/$(DEPDIR)/unicode.Po $(SHDIR)/$(DEPDIR)/vprint.Po \
@@ -853,12 +856,13 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
 	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
-	include/unionwait.hh pathnames.hh $(am__append_1) \
-	$(am__append_2) $(DEFSRC) $(BLTDIR)/builtins.cc \
-	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc \
-	$(BLTDIR)/evalfile.cc $(BLTDIR)/getopt.cc \
-	$(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh $(GLBDIR)/glob.cc \
-	$(GLBDIR)/smatch.cc $(GLBDIR)/gmisc.cc $(GLBDIR)/xmbsrtowcs.cc \
+	include/unionwait.hh include/timer.hh pathnames.hh \
+	$(am__append_1) $(am__append_2) $(DEFSRC) \
+	$(BLTDIR)/builtins.cc $(BLTDIR)/common.cc \
+	$(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
+	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc \
+	$(BLTDIR)/getopt.hh $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc \
+	$(GLBDIR)/gmisc.cc $(GLBDIR)/xmbsrtowcs.cc \
 	$(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh $(GLBDIR)/glob_loop.hh \
 	$(GLBDIR)/gm_loop.hh $(GLBDIR)/ndir.hh $(GLBDIR)/sm_loop.hh \
 	$(GLBDIR)/strmatch.hh $(RLDIR)/readline.cc $(RLDIR)/funmap.cc \
@@ -892,10 +896,11 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
 	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc $(SHDIR)/strtoimax.cc \
 	$(SHDIR)/strtoumax.cc $(SHDIR)/stringlist.cc \
-	$(SHDIR)/stringvec.cc $(SHDIR)/mbschr.cc $(SHDIR)/zcatfd.cc \
-	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
-	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
-	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
+	$(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc $(SHDIR)/mbschr.cc \
+	$(SHDIR)/timers.cc $(SHDIR)/zcatfd.cc $(SHDIR)/zmapfd.cc \
+	$(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc $(SHDIR)/fpurge.cc \
+	$(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc \
+	$(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
 	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
 	$(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc $(SHDIR)/wcswidth.cc \
 	$(SHDIR)/wcsnwidth.cc $(SHDIR)/shmbchar.cc $(SHDIR)/random.cc \
@@ -1316,7 +1321,11 @@ $(SHDIR)/stringlist.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/stringvec.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/strvis.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/mbschr.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/timers.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/zcatfd.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
@@ -1538,6 +1547,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strtoimax.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strtoumax.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strtrans.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strvis.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/timers.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/timeval.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/tmpfile.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/uconvert.Po@am__quote@ # am--include-marker
@@ -2128,6 +2139,8 @@ distclean: distclean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/strtoimax.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strtoumax.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strtrans.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strvis.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/timers.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/timeval.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/tmpfile.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/uconvert.Po
@@ -2360,6 +2373,8 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/strtoimax.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strtoumax.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strtrans.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/strvis.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/timers.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/timeval.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/tmpfile.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/uconvert.Po

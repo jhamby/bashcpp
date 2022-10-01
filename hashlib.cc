@@ -73,7 +73,7 @@ copy_bucket_array (BUCKET_CONTENTS *ba)
                         : NULL;
       n->khash = e->khash;
       n->times_found = e->times_found;
-      n->next = (BUCKET_CONTENTS *)NULL;
+      n->next = nullptr;
     }
 
   return new_bucket;
@@ -95,7 +95,7 @@ hash_rehash (HASH_TABLE *table, int nsize)
   table->bucket_array = (BUCKET_CONTENTS **)xmalloc (
       table->nbuckets * sizeof (BUCKET_CONTENTS *));
   for (i = 0; i < table->nbuckets; i++)
-    table->bucket_array[i] = (BUCKET_CONTENTS *)NULL;
+    table->bucket_array[i] = nullptr;
 
   for (j = 0; j < osize; j++)
     {
@@ -170,7 +170,7 @@ hash_search (const char *string, HASH_TABLE *table, int flags)
   unsigned int hv;
 
   if (table == 0 || ((flags & HASH_CREATE) == 0 && HASH_ENTRIES (table) == 0))
-    return (BUCKET_CONTENTS *)NULL;
+    return nullptr;
 
   bucket = HASH_BUCKET (string, table, hv);
 
@@ -206,7 +206,7 @@ hash_search (const char *string, HASH_TABLE *table, int flags)
       return list;
     }
 
-  return (BUCKET_CONTENTS *)NULL;
+  return nullptr;
 }
 
 /* Remove the item specified by STRING from the hash table TABLE.
@@ -220,10 +220,10 @@ hash_remove (const char *string, HASH_TABLE *table, int flags)
   unsigned int hv;
 
   if (table == 0 || HASH_ENTRIES (table) == 0)
-    return (BUCKET_CONTENTS *)NULL;
+    return nullptr;
 
   bucket = HASH_BUCKET (string, table, hv);
-  prev = (BUCKET_CONTENTS *)NULL;
+  prev = nullptr;
   for (temp = table->bucket_array[bucket]; temp; temp = temp->next)
     {
       if (hv == temp->khash && STREQ (temp->key, string))
@@ -238,7 +238,7 @@ hash_remove (const char *string, HASH_TABLE *table, int flags)
         }
       prev = temp;
     }
-  return (BUCKET_CONTENTS *)NULL;
+  return nullptr;
 }
 
 /* Create an entry for STRING, in TABLE.  If the entry already
@@ -253,7 +253,7 @@ hash_insert (char *string, HASH_TABLE *table, int flags)
   if (table == 0)
     table = hash_create (0);
 
-  item = (flags & HASH_NOSRCH) ? (BUCKET_CONTENTS *)NULL
+  item = (flags & HASH_NOSRCH) ? nullptr
                                : hash_search (string, table, 0);
 
   if (item == 0)
@@ -306,7 +306,7 @@ hash_flush (HASH_TABLE *table, sh_free_func_t *free_data)
           free (item->key);
           free (item);
         }
-      table->bucket_array[i] = (BUCKET_CONTENTS *)NULL;
+      table->bucket_array[i] = nullptr;
     }
 
   table->nentries = 0;

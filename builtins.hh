@@ -23,9 +23,7 @@
 
 #include "config.hh"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
+#include "bashtypes.hh"
 
 namespace bash
 {
@@ -42,6 +40,13 @@ enum builtin_flags
   = 0x20, /* This builtin is special in the Posix command search order. */
   LOCALVAR_BUILTIN = 0x40 /* This builtin creates local variables */
 };
+
+static inline builtin_flags
+operator| (const builtin_flags &a, const builtin_flags &b)
+{
+  return static_cast<builtin_flags> (static_cast<uint32_t> (a)
+                                     | static_cast<uint32_t> (b));
+}
 
 const int BASE_INDENT = 4;
 
