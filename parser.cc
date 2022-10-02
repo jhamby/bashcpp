@@ -45,6 +45,12 @@ namespace bash
   (interactive                                                                \
    && (bash_input.type == st_stdin || bash_input.type == st_stream))
 
+#if defined(ALIAS)
+#define expanding_alias() (pushed_string_list && pushed_string_list->expander)
+#else
+#define expanding_alias() (false)
+#endif
+
 #ifdef DEBUG
 void
 Shell::debug_parser (parser::debug_level_type i)
@@ -130,8 +136,7 @@ Shell::yy_readline_get ()
         }
 
       sh_unset_nodelay_mode (::fileno (rl_instream)); /* just in case */
-      current_readline_line
-          = readline (current_readline_prompt ? current_readline_prompt : "");
+      current_readline_line = readline (current_readline_prompt);
 
       CHECK_TERMSIG;
       if (signal_is_ignored (SIGINT) == 0)
@@ -710,6 +715,31 @@ Shell::init_token_lists ()
       std::make_pair ("&", parser::token_kind_type ('&')));
   other_token_map.emplace (
       std::make_pair ("newline", parser::token_kind_type ('\n')));
+
+#if defined(HISTORY)
+
+  no_semi_successors.emplace (static_cast<parser::token_kind_type> ('\n'));
+  no_semi_successors.emplace (static_cast<parser::token_kind_type> ('{'));
+  no_semi_successors.emplace (static_cast<parser::token_kind_type> ('('));
+  no_semi_successors.emplace (static_cast<parser::token_kind_type> (')'));
+  no_semi_successors.emplace (static_cast<parser::token_kind_type> (';'));
+  no_semi_successors.emplace (static_cast<parser::token_kind_type> ('&'));
+  no_semi_successors.emplace (static_cast<parser::token_kind_type> ('|'));
+  no_semi_successors.emplace (parser::token::CASE);
+  no_semi_successors.emplace (parser::token::DO);
+  no_semi_successors.emplace (parser::token::ELSE);
+  no_semi_successors.emplace (parser::token::IF);
+  no_semi_successors.emplace (parser::token::SEMI_SEMI);
+  no_semi_successors.emplace (parser::token::SEMI_AND);
+  no_semi_successors.emplace (parser::token::SEMI_SEMI_AND);
+  no_semi_successors.emplace (parser::token::THEN);
+  no_semi_successors.emplace (parser::token::UNTIL);
+  no_semi_successors.emplace (parser::token::WHILE);
+  no_semi_successors.emplace (parser::token::AND_AND);
+  no_semi_successors.emplace (parser::token::OR_OR);
+  no_semi_successors.emplace (parser::token::IN);
+
+#endif
 }
 
 #if __cplusplus < 201103L
@@ -2440,9 +2470,9 @@ Shell::parse_comsub (int qc, int open, int close)
   restore_parser_state (&ps);
   pushed_string_list = saved_strings;
 
-  const char *tcmd = print_comsub (parsed_command); // returns static memory
+  std::string tcmd (print_comsub (parsed_command));
 
-  size_t retlen = std::strlen (tcmd);
+  size_t retlen = tcmd.size ();
   if (tcmd[0] == '(') /* ) need a space to prevent arithmetic expansion */
     retlen++;
 
@@ -2469,27 +2499,17 @@ Shell::parse_comsub (int qc, int open, int close)
 /* Recursively call the parser to parse a $(...) command substitution. This is
    called by the word expansion code and so does not have to reset as much
    parser state before calling yyparse(). */
-char *
-Shell::xparse_dolparen (const char *base, char *string, size_t *indp,
-                        sx_flags flags)
+std::string
+Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
 
   // debug_parser (1);
-  // size_t orig_ind = *indp;
-  char *ostring = string;
   int start_lineno = line_number;
 
-  if (*string == '\0')
-    {
-      if (flags & SX_NOALLOC)
-        return nullptr;
-
-      char *ret = new char[1];
-      ret[0] = '\0';
-      return ret;
-    }
+  if (*indp >= base.size ())
+    return std::string ();
 
   // itrace ("xparse_dolparen: size = %d shell_input_line = `%s' string=`%s'",
   //         shell_input_line_size, shell_input_line, string);
@@ -2524,9 +2544,10 @@ Shell::xparse_dolparen (const char *base, char *string, size_t *indp,
 
   token_to_read = parser::token::DOLPAREN; /* let's trick the parser */
 
-  char *ep = nullptr;
+  std::string::const_iterator ep;
   bash_exception_t exception = NOEXCEPTION;
   size_t nc = 0;
+  std::string string (base, *indp);
 
   try
     {
@@ -2571,12 +2592,12 @@ Shell::xparse_dolparen (const char *base, char *string, size_t *indp,
                 line_number, ep[-1], ep);
 #endif
 
-      while (ep > ostring && ep[-1] == '\n')
+      while (ep > string.begin () && ep[-1] == '\n')
         ep--;
     }
 
-  nc = static_cast<size_t> (ep - ostring);
-  *indp = static_cast<size_t> (ep - base - 1);
+  nc = static_cast<size_t> (ep - string.begin ());
+  *indp += (nc - 1);
 
   /*((*/
 #if 0
@@ -2599,17 +2620,10 @@ Shell::xparse_dolparen (const char *base, char *string, size_t *indp,
       throw bash_exception (DISCARD);
     }
 
-  if (flags & SX_NOALLOC)
-    return nullptr;
-
-  if (nc == 0)
-    {
-      char *ret = new char[1];
-      ret[0] = '\0';
-      return ret;
-    }
+  if (nc == 0 || flags & SX_NOALLOC)
+    return std::string ();
   else
-    return substring (ostring, 0, nc - 1);
+    return string.substr (0, nc);
 }
 
 /* Recursively call the parser to parse the string from a $(...) command
@@ -3498,6 +3512,7 @@ got_token:
     the_word->flags |= W_QUOTED; /*(*/
   if (compound_assignment && token_buffer[token_buffer.size () - 1] == ')')
     the_word->flags |= W_COMPASSIGN;
+
   /* A word is an assignment if it appears at the beginning of a
      simple command, or after another assignment word.  This is
      context-dependent, so it cannot be handled in the grammar. */
@@ -3516,45 +3531,41 @@ got_token:
 
   if (command_token_position (last_read_token))
     {
-      struct builtin *b;
-      b = builtin_address_internal (token, 0);
-      if (b && (b->flags & ASSIGNMENT_BUILTIN))
+      std::map<std::string, Builtin>::iterator it
+          = shell_builtins.find (token_buffer);
+
+      if (it != shell_builtins.end ()
+          && ((*it).second.flags & ASSIGNMENT_BUILTIN))
         parser_state |= PST_ASSIGNOK;
-      else if (STREQ (token, "eval") || STREQ (token, "let"))
+      else if (token_buffer == "eval" || token_buffer == "let")
         parser_state |= PST_ASSIGNOK;
     }
 
-  yylval.word = the_word;
-
   /* should we check that quoted == 0 as well? */
-  if (token[0] == '{' && token[token_index - 1] == '}'
+  if (token_buffer[0] == '{' && token_buffer[token_buffer.size () - 1] == '}'
       && (character == '<' || character == '>'))
     {
       /* can use token; already copied to the_word */
-      token[token_index - 1] = '\0';
+      std::string token_plus_1 (token_buffer.substr (1));
+
 #if defined(ARRAY_VARS)
-      if (legal_identifier (token + 1) || valid_array_reference (token + 1, 0))
+      if (legal_identifier (token_plus_1)
+          || valid_array_reference (token_plus_1, VA_NOFLAGS))
 #else
-      if (legal_identifier (token + 1))
+      if (legal_identifier (token_plus_1))
 #endif
         {
-          strcpy (the_word->word, token + 1);
+          the_word->word = token_plus_1;
           // itrace ("read_token_word: returning REDIR_WORD for %s",
-          //         the_word->word);
-          yylval.word = the_word; /* accommodate recursive call */
-          return REDIR_WORD;
+          //         the_word->word.c_str ());
+          return parser::make_REDIR_WORD (WORD_DESC_PTR (the_word));
         }
-      else
-        /* valid_array_reference can call the parser recursively; need to
-           make sure that yylval.word doesn't change if we are going to
-           return WORD or ASSIGNMENT_WORD */
-        yylval.word = the_word;
     }
 
-  result = ((the_word->flags & (W_ASSIGNMENT | W_NOSPLIT))
-            == (W_ASSIGNMENT | W_NOSPLIT))
-               ? parser::token::ASSIGNMENT_WORD
-               : parser::token::WORD;
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
 
   switch (last_read_token)
     {
@@ -3570,9 +3581,19 @@ got_token:
       word_lineno[word_top] = line_number;
       expecting_in_token++;
       break;
+    default:
+      break;
     }
 
-  return result;
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+  if ((the_word->flags & (W_ASSIGNMENT | W_NOSPLIT))
+      == (W_ASSIGNMENT | W_NOSPLIT))
+    return parser::make_ASSIGNMENT_WORD (WORD_DESC_PTR (the_word));
+  else
+    return parser::make_WORD (WORD_DESC_PTR (the_word));
 }
 
 #if defined(HISTORY)
@@ -3609,14 +3630,10 @@ static const parser::token_kind_type no_semi_successors[]
    history entry.  LINE is the line we're about to add; it helps
    make some more intelligent decisions in certain cases. */
 const char *
-Shell::history_delimiting_chars (const char *line)
+Shell::history_delimiting_chars (const std::string &line)
 {
-  // static int last_was_heredoc = 0; /* was the last entry the start of a here
-  // document? */
-  int i;
-
   if ((parser_state & PST_HEREDOC) == 0)
-    last_was_heredoc = 0;
+    last_was_heredoc = false;
 
   if (!dstack.empty ())
     return "\n";
@@ -3630,7 +3647,7 @@ Shell::history_delimiting_chars (const char *line)
     {
       if (last_was_heredoc)
         {
-          last_was_heredoc = 0;
+          last_was_heredoc = false;
           return "\n";
         }
       return here_doc_first_line ? "\n" : "";
@@ -3657,41 +3674,43 @@ Shell::history_delimiting_chars (const char *line)
       else
         return "; "; /* (...) subshell */
     }
-  else if (token_before_that == WORD && two_tokens_ago == FUNCTION)
+  else if (token_before_that == parser::token::WORD
+           && two_tokens_ago == parser::token::FUNCTION)
     return " "; /* function def using `function name' without `()' */
 
   /* If we're not in a here document, but we think we're about to parse one,
      and we would otherwise return a `;', return a newline to delimit the
      line with the here-doc delimiter */
   else if ((parser_state & PST_HEREDOC) == 0 && current_command_line_count > 1
-           && last_read_token == '\n' && strstr (line, "<<"))
+           && last_read_token == parser::token_kind_type ('\n')
+           && line.find ("<<") != line.npos)
     {
-      last_was_heredoc = 1;
+      last_was_heredoc = true;
       return "\n";
     }
   else if ((parser_state & PST_HEREDOC) == 0 && current_command_line_count > 1
            && need_here_doc > 0)
     return "\n";
-  else if (token_before_that == WORD && two_tokens_ago == FOR)
+  else if (token_before_that == parser::token::WORD
+           && two_tokens_ago == parser::token::FOR)
     {
+      size_t i;
+      const char *input_line_cstr = shell_input_line.c_str ();
       /* Tricky.  `for i\nin ...' should not have a semicolon, but
          `for i\ndo ...' should.  We do what we can. */
-      for (i = shell_input_line_index; whitespace (shell_input_line[i]); i++)
+      for (i = shell_input_line_index; whitespace (input_line_cstr[i]); i++)
         ;
-      if (shell_input_line[i] && shell_input_line[i] == 'i'
-          && shell_input_line[i + 1] == 'n')
+      if (input_line_cstr[i] == 'i' && input_line_cstr[i + 1] == 'n')
         return " ";
       return ";";
     }
-  else if (two_tokens_ago == CASE && token_before_that == WORD
+  else if (two_tokens_ago == parser::token::CASE
+           && token_before_that == parser::token::WORD
            && (parser_state & PST_CASESTMT))
     return " ";
 
-  for (i = 0; no_semi_successors[i]; i++)
-    {
-      if (token_before_that == no_semi_successors[i])
-        return " ";
-    }
+  if (no_semi_successors.find (token_before_that) != no_semi_successors.end ())
+    return " ";
 
   if (line_isblank (line))
     return "";
@@ -3705,8 +3724,6 @@ Shell::history_delimiting_chars (const char *line)
 void
 Shell::prompt_again ()
 {
-  char *temp_prompt;
-
   if (!interactive || expanding_alias ()) /* XXX */
     return;
 
@@ -3718,15 +3735,10 @@ Shell::prompt_again ()
   if (!prompt_string_pointer)
     prompt_string_pointer = &ps1_prompt;
 
-  temp_prompt = *prompt_string_pointer
-                    ? decode_prompt_string (*prompt_string_pointer)
-                    : nullptr;
+  std::string temp_prompt;
 
-  if (temp_prompt == 0)
-    {
-      temp_prompt = (char *)xmalloc (1);
-      temp_prompt[0] = '\0';
-    }
+  if (!prompt_string_pointer->empty ())
+    temp_prompt = decode_prompt_string (*prompt_string_pointer);
 
   current_prompt_string = *prompt_string_pointer;
   prompt_string_pointer = &ps2_prompt;
@@ -3747,12 +3759,10 @@ Shell::prompt_again ()
 /* The history library increments the history offset as soon as it stores
    the first line of a potentially multi-line command, so we compensate
    here by returning one fewer when appropriate. */
-int
-Shell::prompt_history_number (const char *pmt)
+size_t
+Shell::prompt_history_number (const std::string &pmt)
 {
-  int ret;
-
-  ret = history_number ();
+  size_t ret = history_number ();
   if (ret == 1)
     return ret;
 
@@ -3799,51 +3809,49 @@ Shell::prompt_history_number (const char *pmt)
         \[	begin a sequence of non-printing chars
         \]	end a sequence of non-printing chars
 */
-char *
-Shell::decode_prompt_string (const char *string)
+#define PROMPT_GROWTH 48
+std::string
+Shell::decode_prompt_string (const std::string &string)
 {
-  WORD_LIST *list;
-  char *result, *t;
-  struct dstack save_dstack;
-  int last_exit_value, last_comsub_pid;
 #if defined(PROMPT_STRING_DECODE)
-  size_t result_size;
-  int result_index;
-  int c, n, i;
-  char *temp, *t_host, octal_string[4];
-  struct tm *tm;
+  size_t size;
+  int n;
+  struct tm *now;
   time_t the_time;
+  char octal_string[4];
   char timebuf[128];
-  char *timefmt;
+  char *temp;
 
-  result = (char *)xmalloc (result_size = PROMPT_GROWTH);
-  result[result_index = 0] = 0;
-  temp = nullptr;
-  const char *orig_string = string;
+  std::string result;
+  result.reserve (PROMPT_GROWTH);
 
-  while ((c = *string++))
+  std::string::const_iterator it;
+  for (it = string.begin (); it != string.end (); ++it)
     {
-      if (posixly_correct && c == '!')
+      if (posixly_correct && *it == '!')
         {
-          if (*string == '!')
+          if (*(it + 1) == '!')
             {
-              temp = savestring ("!");
-              goto add_string;
+              result.push_back ('!');
+              ++it;
+              continue;
             }
           else
             {
 #if !defined(HISTORY)
-              temp = savestring ("1");
-#else                   /* HISTORY */
-              temp = itos (prompt_history_number (orig_string));
-#endif                  /* HISTORY */
-              string--; /* add_string increments string again. */
-              goto add_string;
+              result.push_back ("1");
+#else  /* HISTORY */
+              temp = itos (
+                  static_cast<int64_t> (prompt_history_number (string)));
+              result += temp;
+              delete[] temp;
+#endif /* HISTORY */
+              continue;
             }
         }
-      if (c == '\\')
+      if (*it == '\\')
         {
-          c = *string;
+          char c = *(++it);
 
           switch (c)
             {
@@ -3855,34 +3863,30 @@ Shell::decode_prompt_string (const char *string)
             case '5':
             case '6':
             case '7':
-              strncpy (octal_string, string, 3);
+              strncpy (octal_string, &(*it), 3);
               octal_string[3] = '\0';
 
               n = read_octal (octal_string);
-              temp = (char *)xmalloc (3);
 
               if (n == CTLESC || n == CTLNUL)
                 {
-                  temp[0] = CTLESC;
-                  temp[1] = n;
-                  temp[2] = '\0';
+                  result.push_back (CTLESC);
+                  result.push_back (static_cast<char> (n));
                 }
               else if (n == -1)
-                {
-                  temp[0] = '\\';
-                  temp[1] = '\0';
-                }
+                result.push_back ('\\');
               else
+                result.push_back (static_cast<char> (n));
+
+              if (n != -1)
                 {
-                  temp[0] = n;
-                  temp[1] = '\0';
+                  for (int i = 0;
+                       i < 3 && it != string.end () && isoctal (*it); i++)
+                    ++it;
+
+                  --it; // back up one
                 }
-
-              for (c = 0; n != -1 && c < 3 && ISOCTAL (*string); c++)
-                string++;
-
-              c = 0; /* tested at add_string: */
-              goto add_string;
+              break;
 
             case 'd':
             case 't':
@@ -3894,99 +3898,108 @@ Shell::decode_prompt_string (const char *string)
 #if defined(HAVE_TZSET)
               sv_tz ("TZ"); /* XXX -- just make sure */
 #endif
-              tm = localtime (&the_time);
-
+              now = localtime (&the_time);
+              size = 0;
               if (c == 'd')
-                n = strftime (timebuf, sizeof (timebuf), "%a %b %d", tm);
+                size = strftime (timebuf, sizeof (timebuf), "%a %b %d", now);
               else if (c == 't')
-                n = strftime (timebuf, sizeof (timebuf), "%H:%M:%S", tm);
+                size = strftime (timebuf, sizeof (timebuf), "%H:%M:%S", now);
               else if (c == 'T')
-                n = strftime (timebuf, sizeof (timebuf), "%I:%M:%S", tm);
+                size = strftime (timebuf, sizeof (timebuf), "%I:%M:%S", now);
               else if (c == '@')
-                n = strftime (timebuf, sizeof (timebuf), "%I:%M %p", tm);
+                size = strftime (timebuf, sizeof (timebuf), "%I:%M %p", now);
               else if (c == 'A')
-                n = strftime (timebuf, sizeof (timebuf), "%H:%M", tm);
+                size = strftime (timebuf, sizeof (timebuf), "%H:%M", now);
 
-              if (n == 0)
-                timebuf[0] = '\0';
-              else
-                timebuf[sizeof (timebuf) - 1] = '\0';
-
-              temp = savestring (timebuf);
-              goto add_string;
+              if (size != 0)
+                {
+                  timebuf[sizeof (timebuf) - 1] = '\0';
+                  result += timebuf;
+                }
+              break;
 
             case 'D':               /* strftime format */
-              if (string[1] != '{') /* } */
+              if (*(it + 1) != '{') /* } */
                 goto not_escape;
 
-              (void)time (&the_time);
-              tm = localtime (&the_time);
-              string += 2; /* skip { */
-              timefmt = (char *)xmalloc (strlen (string) + 3);
-              for (t = timefmt; *string && *string != '}';)
-                *t++ = *string++;
-              *t = '\0';
-              c = *string; /* tested at add_string */
-              if (timefmt[0] == '\0')
-                {
-                  timefmt[0] = '%';
-                  timefmt[1] = 'X'; /* locale-specific current time */
-                  timefmt[2] = '\0';
-                }
-              n = strftime (timebuf, sizeof (timebuf), timefmt, tm);
-              free (timefmt);
+              it += 2; /* skip { */
+              {
+                (void)time (&the_time);
+                now = localtime (&the_time);
 
-              if (n == 0)
-                timebuf[0] = '\0';
-              else
-                timebuf[sizeof (timebuf) - 1] = '\0';
+                // make a time format substring to pass to strftime ()
+                size_t start_pos = static_cast<size_t> (it - string.begin ());
+                size_t close_bracket = string.find ('}', start_pos);
+                it = (string.begin ()
+                      + static_cast<ptrdiff_t> (close_bracket));
 
-              if (promptvars || posixly_correct)
-                /* Make sure that expand_prompt_string is called with a
-                   second argument of Q_DOUBLE_QUOTES if we use this
-                   function here. */
-                temp = sh_backslash_quote_for_double_quotes (timebuf);
-              else
-                temp = savestring (timebuf);
-              goto add_string;
+                std::string timefmt (
+                    string.substr (start_pos, (close_bracket - start_pos)));
+                if (timefmt.empty ())
+                  timefmt = "%X"; // locale-specific current time
+
+                size = strftime (timebuf, sizeof (timebuf), timefmt.c_str (),
+                                 now);
+
+                if (size != 0)
+                  {
+                    timebuf[sizeof (timebuf) - 1] = '\0';
+                    if (promptvars || posixly_correct)
+                      /* Make sure that expand_prompt_string is called with a
+                         second argument of Q_DOUBLE_QUOTES if we use this
+                         function here. */
+                      result += sh_backslash_quote_for_double_quotes (
+                          std::string (timebuf));
+                    else
+                      result += timebuf;
+                  }
+              }
+              break;
 
             case 'n':
-              temp = (char *)xmalloc (3);
-              temp[0] = no_line_editing ? '\n' : '\r';
-              temp[1] = no_line_editing ? '\0' : '\n';
-              temp[2] = '\0';
-              goto add_string;
+              if (no_line_editing)
+                result.push_back ('\n');
+              else
+                result += "\r\n";
+              break;
 
             case 's':
-              temp = (char *)base_pathname (shell_name);
-              /* Try to quote anything the user can set in the file system */
-              if (promptvars || posixly_correct)
-                temp = sh_backslash_quote_for_double_quotes (temp);
-              else
-                temp = savestring (temp);
-              goto add_string;
+              {
+                std::string stemp (sh_strvis (base_pathname (shell_name)));
+                // Try to quote anything the user can set in the file system
+                if (promptvars || posixly_correct)
+                  result += sh_backslash_quote_for_double_quotes (stemp);
+                else
+                  result += stemp;
+              }
+              break;
 
             case 'v':
+              result += dist_version;
+              break;
+
             case 'V':
-              temp = (char *)xmalloc (16);
-              if (c == 'v')
-                strcpy (temp, dist_version);
-              else
-                sprintf (temp, "%s.%d", dist_version, patch_level);
-              goto add_string;
+              {
+                result += dist_version;
+                result.push_back ('.');
+                temp = itos (patch_level);
+                result += temp;
+                delete[] temp;
+              }
+              break;
 
             case 'w':
             case 'W':
               {
                 /* Use the value of PWD because it is much more efficient. */
                 char t_string[PATH_MAX];
-                int tlen;
+                size_t tlen;
 
                 temp = get_string_value ("PWD");
 
-                if (temp == 0)
+                if (temp == nullptr)
                   {
-                    if (getcwd (t_string, sizeof (t_string)) == 0)
+                    if (getcwd (t_string, sizeof (t_string)) == nullptr)
                       {
                         t_string[0] = '.';
                         tlen = 1;
@@ -4011,12 +4024,12 @@ Shell::decode_prompt_string (const char *string)
 #define ROOT_PATH(x) ((x)[0] == '/' && (x)[1] == 0)
 #define DOUBLE_SLASH_ROOT(x) ((x)[0] == '/' && (x)[1] == '/' && (x)[2] == 0)
                 /* Abbreviate \W as ~ if $PWD == $HOME */
+                char *t;
                 if (c == 'W'
-                    && (((t = get_string_value ("HOME")) == 0)
-                        || STREQ (t, t_string) == 0))
+                    && (((t = get_string_value ("HOME")) == nullptr)
+                        || !STREQ (t, t_string)))
                   {
-                    if (ROOT_PATH (t_string) == 0
-                        && DOUBLE_SLASH_ROOT (t_string) == 0)
+                    if (!ROOT_PATH (t_string) && !DOUBLE_SLASH_ROOT (t_string))
                       {
                         t = strrchr (t_string, '/');
                         if (t)
@@ -4035,174 +4048,169 @@ Shell::decode_prompt_string (const char *string)
                       strcpy (t_string, t2);
                   }
 
-                temp = trim_pathname (t_string, PATH_MAX - 1);
                 /* If we're going to be expanding the prompt string later,
                    quote the directory name. */
                 if (promptvars || posixly_correct)
                   /* Make sure that expand_prompt_string is called with a
                      second argument of Q_DOUBLE_QUOTES if we use this
                      function here. */
-                  temp = sh_backslash_quote_for_double_quotes (t_string);
+                  result += sh_backslash_quote_for_double_quotes (
+                      sh_strvis (t_string));
                 else
-                  temp = savestring (t_string);
+                  result += sh_strvis (t_string);
 
-                goto add_string;
+                break;
               }
 
             case 'u':
-              if (current_user.user_name == 0)
+              if (current_user.user_name == nullptr)
                 get_current_user_info ();
-              temp = savestring (current_user.user_name);
-              goto add_string;
+              result += current_user.user_name;
+              break;
 
             case 'h':
             case 'H':
-              t_host = savestring (current_host_name);
-              if (c == 'h' && (t = (char *)strchr (t_host, '.')))
-                *t = '\0';
-              if (promptvars || posixly_correct)
-                /* Make sure that expand_prompt_string is called with a
-                   second argument of Q_DOUBLE_QUOTES if we use this
-                   function here. */
-                temp = sh_backslash_quote_for_double_quotes (t_host);
-              else
-                temp = savestring (t_host);
-              free (t_host);
-              goto add_string;
+              {
+                std::string t_host (current_host_name);
+                if (c == 'h' && ((size = t_host.find ('.')) != t_host.npos))
+                  t_host.resize (size);
+                if (promptvars || posixly_correct)
+                  /* Make sure that expand_prompt_string is called with a
+                     second argument of Q_DOUBLE_QUOTES if we use this
+                     function here. */
+                  result += sh_backslash_quote_for_double_quotes (t_host);
+                else
+                  result += t_host;
+              }
+              break;
 
             case '#':
               n = current_command_number;
               /* If we have already incremented current_command_number (PS4,
                  ${var@P}), compensate */
-              if (orig_string != ps0_prompt && orig_string != ps1_prompt
-                  && orig_string != ps2_prompt)
+              if (string != ps0_prompt && string != ps1_prompt
+                  && string != ps2_prompt)
                 n--;
               temp = itos (n);
-              goto add_string;
+              break;
 
             case '!':
 #if !defined(HISTORY)
-              temp = savestring ("1");
+              result.push_back ('1');
 #else  /* HISTORY */
-              temp = itos (prompt_history_number (orig_string));
+              temp = itos (
+                  static_cast<int64_t> (prompt_history_number (string)));
+              result += temp;
+              delete[] temp;
 #endif /* HISTORY */
-              goto add_string;
+              break;
 
             case '$':
-              t = temp = (char *)xmalloc (3);
               if ((promptvars || posixly_correct) && (current_user.euid != 0))
-                *t++ = '\\';
-              *t++ = current_user.euid == 0 ? '#' : '$';
-              *t = '\0';
-              goto add_string;
+                result.push_back ('\\');
+              result.push_back (current_user.euid == 0 ? '#' : '$');
+              break;
 
             case 'j':
               temp = itos (count_all_jobs ());
-              goto add_string;
+              result += temp;
+              delete[] temp;
+              break;
 
             case 'l':
 #if defined(HAVE_TTYNAME)
-              temp = (char *)ttyname (fileno (stdin));
-              t = temp ? (char *)base_pathname (temp) : (char *)"tty";
-              temp = savestring (t);
+              temp = ttyname (fileno (stdin));
+              if (temp)
+                result += base_pathname (temp);
+              else
+                result += "tty";
 #else
-              temp = savestring ("tty");
+              result += "tty";
 #endif /* !HAVE_TTYNAME */
-              goto add_string;
+              break;
 
 #if defined(READLINE)
             case '[':
             case ']':
               if (no_line_editing)
-                {
-                  string++;
-                  break;
-                }
-              temp = (char *)xmalloc (3);
-              n = (c == '[') ? RL_PROMPT_START_IGNORE : RL_PROMPT_END_IGNORE;
-              i = 0;
-              if (n == CTLESC || n == CTLNUL)
-                temp[i++] = CTLESC;
-              temp[i++] = n;
-              temp[i] = '\0';
-              goto add_string;
+                break;
+
+              c = (c == '[') ? RL_PROMPT_START_IGNORE : RL_PROMPT_END_IGNORE;
+              if (c == CTLESC || c == CTLNUL)
+                result.push_back (CTLESC);
+
+              result.push_back (c);
+              break;
 #endif /* READLINE */
 
             case '\\':
+              result.push_back (*it);
+              break;
+
             case 'a':
+              result.push_back ('\07');
+              break;
+
             case 'e':
+              result.push_back ('\033');
+              break;
+
             case 'r':
-              temp = (char *)xmalloc (2);
-              if (c == 'a')
-                temp[0] = '\07';
-              else if (c == 'e')
-                temp[0] = '\033';
-              else if (c == 'r')
-                temp[0] = '\r';
-              else /* (c == '\\') */
-                temp[0] = c;
-              temp[1] = '\0';
-              goto add_string;
+              result.push_back ('\r');
+              break;
 
             default:
             not_escape:
-              temp = (char *)xmalloc (3);
-              temp[0] = '\\';
-              temp[1] = c;
-              temp[2] = '\0';
-
-            add_string:
-              if (c)
-                string++;
-              result = sub_append_string (temp, result, &result_index,
-                                          &result_size);
-              temp = nullptr; /* Freed in sub_append_string (). */
-              result[result_index] = '\0';
-              break;
+              result.push_back ('\\');
+              result.push_back (*it);
             }
         }
       else
         {
           /* dequote_string should take care of removing this if we are not
              performing the rest of the word expansions. */
-          if (c == CTLESC || c == CTLNUL)
-            result[result_index++] = CTLESC;
-          result[result_index++] = c;
-          result[result_index] = '\0';
+          if (*it == CTLESC || *it == CTLNUL)
+            result.push_back (CTLESC);
+
+          result.push_back (*it);
         }
     }
 #else  /* !PROMPT_STRING_DECODE */
-  result = savestring (string);
+  std::string result (string);
 #endif /* !PROMPT_STRING_DECODE */
 
-  /* Save the delimiter stack and point `dstack' to temp space so any
-     command substitutions in the prompt string won't result in screwing
-     up the parser's quoting state. */
-  save_dstack = dstack;
-  dstack = temp_dstack;
-  dstack.delimiter_depth = 0;
+#if __cplusplus >= 201103L
+  // Save the delimiter stack and clear `dstack' so any command substitutions
+  // in the prompt string won't screw up the parser state.
+  temp_dstack = std::move (dstack);
+#else
+  temp_dstack = dstack;
+#endif
+  dstack.clear ();
 
   /* Perform variable and parameter expansion and command substitution on
      the prompt string. */
   if (promptvars || posixly_correct)
     {
-      last_exit_value = last_command_exit_value;
-      last_comsub_pid = last_command_subst_pid;
-      list = expand_prompt_string (result, Q_DOUBLE_QUOTES, 0);
-      free (result);
+      int last_exit_value = last_command_exit_value;
+      pid_t last_comsub_pid = last_command_subst_pid;
+      WORD_LIST *list = expand_prompt_string (result, Q_DOUBLE_QUOTES, 0);
       result = string_list (list);
-      dispose_words (list);
+      delete list;
       last_command_exit_value = last_exit_value;
       last_command_subst_pid = last_comsub_pid;
     }
   else
-    {
-      t = dequote_string (result);
-      free (result);
-      result = t;
-    }
+    result = dequote_string (result);
 
-  dstack = save_dstack;
+#if __cplusplus >= 201103L
+  // Save the delimiter stack and clear `dstack' so any command substitutions
+  // in the prompt string won't screw up the parser state.
+  dstack = std::move (temp_dstack);
+#else
+  dstack = temp_dstack;
+#endif
+  temp_dstack.clear ();
 
   return result;
 }
@@ -4213,8 +4221,7 @@ Shell::decode_prompt_string (const char *string)
  *						*
  ************************************************/
 
-/* Report a syntax error, and restart the parser.  Call here for fatal
-   errors. */
+// Report a syntax error and restart the parser. Call here for fatal errors.
 int
 Shell::yyerror (const char *msg)
 {
@@ -4478,8 +4485,6 @@ Shell::handle_eof_input_unit ()
 
 /* It's very important that these two functions treat the characters
    between ( and ) identically. */
-
-// static WORD_LIST parse_string_error;
 
 /* Take a string and run it through the shell parser, returning the
    resultant word list.  Used by compound array assignment. */

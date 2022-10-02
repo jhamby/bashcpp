@@ -87,17 +87,16 @@ Shell::reader_loop ()
                   /* If the shell is interactive, expand and display $PS0 after
                      reading a command (possibly a list or pipeline) and before
                      executing it. */
-                  if (interactive && ps0_prompt)
+                  if (interactive && !ps0_prompt.empty ())
                     {
-                      char *ps0_string;
+                      std::string ps0_string (
+                          decode_prompt_string (ps0_prompt));
 
-                      ps0_string = decode_prompt_string (ps0_prompt);
-                      if (ps0_string && *ps0_string)
+                      if (!ps0_string.empty ())
                         {
-                          fprintf (stderr, "%s", ps0_string);
+                          fprintf (stderr, "%s", ps0_string.c_str ());
                           fflush (stderr);
                         }
-                      delete[] ps0_string;
                     }
 
                   current_command_number++;
@@ -186,7 +185,6 @@ int
 Shell::pretty_print_loop ()
 {
   COMMAND *current_command;
-  const char *command_to_print;
   bool global_posix_mode, last_was_newline;
 
   global_posix_mode = posixly_correct;
@@ -200,11 +198,13 @@ Shell::pretty_print_loop ()
               current_command = global_command;
               global_command = nullptr;
               posixly_correct = true; /* print posix-conformant */
+              std::string command_to_print;
               if (current_command
-                  && (command_to_print
-                      = make_command_string (current_command)))
+                  && !((command_to_print
+                        = make_command_string (current_command))
+                           .empty ()))
                 {
-                  printf ("%s\n", command_to_print); /* for now */
+                  printf ("%s\n", command_to_print.c_str ()); // for now
                   last_was_newline = 0;
                 }
               else if (!last_was_newline)

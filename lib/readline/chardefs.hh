@@ -56,9 +56,10 @@ member (char c, const char *s)
 #define CTRL(c) ((c)&control_character_mask)
 #define META(c) ((c) | meta_character_bit)
 
-#define UNMETA(c) ((c) & (~meta_character_bit))
+#define UNMETA(c) (static_cast<char> ((c) & (~meta_character_bit)))
+
 #define UNCTRL(c)                                                             \
-  (static_cast<char> (_rl_to_upper (((c) | control_character_bit))))
+  (static_cast<char> (readline::_rl_to_upper (((c) | control_character_bit))))
 
 #define IN_CTYPE_DOMAIN(c) 1
 

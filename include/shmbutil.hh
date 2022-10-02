@@ -364,7 +364,7 @@ advance_char_minus_one (std::string::const_iterator &it,
 // The iterator is incremented past the bytes that were copied.
 static inline void
 append_char (std::string &dst, std::string::const_iterator &it,
-             const std::string::const_iterator end, int locale_mb_cur_max,
+             const std::string::const_iterator end, size_t locale_mb_cur_max,
              bool locale_utf8locale, std::mbstate_t &state)
 {
   if (locale_mb_cur_max > 1)
@@ -434,6 +434,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
     }                                                                         \
   while (0)
 #else
+#error append_char needs to be implemented for this path.
 #define COPY_CHAR_P(_dst, _src, _srcend) *(_dst)++ = *(_src)++
 #endif /* !HANDLE_MULTIBYTE */
 

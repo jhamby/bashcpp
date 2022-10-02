@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <map>
+#include <set>
 #include <vector>
 
 #if defined(HAVE_SYS_FILE_H)
@@ -1418,6 +1419,9 @@ protected:
 
   bool xattrflag; // O_XATTR support for openat
 
+  // was the last entry the start of a here document?
+  bool last_was_heredoc;
+
   // Temporary array used by internal_getopt ().
   char getopt_errstr[3];
 
@@ -1875,23 +1879,25 @@ public:
   void optimize_shell_function (COMMAND *);
   bool can_optimize_cat_file (const COMMAND *);
 
-  int parse_and_execute (char *, const char *, parse_flags);
+  int parse_and_execute (const std::string &, const std::string &,
+                         parse_flags);
 
-  size_t parse_string (char *, const char *, parse_flags, COMMAND **, char **);
+  size_t parse_string (const std::string &, const std::string &, parse_flags,
+                       COMMAND **, std::string::const_iterator *);
 
-  int evalstring (char *, const char *, parse_flags);
+  int evalstring (std::string &, const std::string &, parse_flags);
 
   int open_redir_file (REDIRECT *, char **);
   int cat_file (REDIRECT *);
 
   // Functions from builtins/evalfile.cc
 
-  int maybe_execute_file (const char *, bool);
-  int force_execute_file (const char *, bool);
-  int source_file (const char *, int);
-  int fc_execute_file (const char *);
+  int maybe_execute_file (const std::string &, bool);
+  int force_execute_file (const std::string &, bool);
+  int source_file (const std::string &, int);
+  int fc_execute_file (const std::string &);
 
-  int _evalfile (const char *, evalfile_flags_t);
+  int _evalfile (const std::string &, evalfile_flags_t);
 
   /* Functions from flags.cc */
 
@@ -2420,13 +2426,23 @@ protected:
     shell_input_line.clear ();
   }
 
-  char *decode_prompt_string (const std::string &);
+  std::string decode_prompt_string (const std::string &);
 
 #if defined(HISTORY)
   void bash_initialize_history ();
   void load_history ();
-  std::string history_delimiting_chars (const std::string &);
-  int prompt_history_number (const std::string &);
+  const char *history_delimiting_chars (const std::string &);
+  size_t prompt_history_number (const std::string &);
+
+  size_t
+  history_number ()
+  {
+    using_history ();
+    return (remember_on_history || enable_history_list)
+               ? history_base + where_history ()
+               : 1;
+  }
+
 #endif
 
   /* Declarations for functions defined in locale.cc */
@@ -2448,10 +2464,9 @@ protected:
   const char *get_name_for_error ();
 
   /* Report an error having to do with FILENAME. */
-  void file_error (const char *);
+  void file_error (const std::string &);
 
-  /* Report a programmer's error, and abort.  Pass REASON, and ARG1 ... ARG5.
-   */
+  // Report a programmer's error, and abort.  Pass REASON, and ARG1 ... ARG5.
   void programming_error (const char *, ...) __attribute__ ((__noreturn__))
   __attribute__ ((__format__ (printf, 2, 3)));
 
@@ -2459,12 +2474,11 @@ protected:
   void report_error (const char *, ...)
       __attribute__ ((__format__ (printf, 2, 3)));
 
-  /* Error messages for parts of the parser that don't call report_syntax_error
-   */
+  // Error messages for parts of the parser that don't call report_syntax_error
   void parser_error (int, const char *, ...)
       __attribute__ ((__format__ (printf, 3, 4)));
 
-  /* Report an unrecoverable error and exit.  Pass FORMAT and ARG1 ... ARG5. */
+  // Report an unrecoverable error and exit.  Pass FORMAT and ARG1 ... ARG5.
   void fatal_error (const char *, ...) __attribute__ ((__noreturn__))
   __attribute__ ((__format__ (printf, 2, 3)));
 
@@ -2899,10 +2913,10 @@ protected:
   uint32_t brand32 ();
   uint32_t get_urandom32 ();
 
-  /* Set the random number generator seed to the least-significant 32 bits of
-   * SEED. */
+  // Set the random number generator seed to the least-significant 32 bits of
+  // SEED.
   void
-  sbrand (unsigned long seed)
+  sbrand (uint64_t seed)
   {
     rseed = static_cast<uint32_t> (seed);
     last_random_value = 0;
@@ -3218,33 +3232,37 @@ protected:
     return ttfd_cbreak (0, &tt);
   }
 
-  /* from lib/sh/strtrans.c */
+  /* from lib/sh/strtrans.cc */
 
   std::string ansicstr (const std::string &, int, bool *);
 
   std::string ansiexpand (std::string::const_iterator,
                           std::string::const_iterator);
 
-  /* from lib/sh/tmpfile.c */
+  /* from lib/sh/strvis.cc */
+
+  std::string sh_strvis (const std::string &);
+
+  /* from lib/sh/tmpfile.cc */
 
   const char *get_tmpdir (int);
 
-  /* from lib/sh/unicode.c */
+  /* from lib/sh/unicode.cc */
 
   char *stub_charset ();
   void u32reset ();
 
   void u32cconv (uint32_t, std::string &);
 
-  /* from lib/sh/winsize.c */
+  /* from lib/sh/winsize.cc */
 
   void get_new_window_size (int, int *, int *);
 
-  /* from lib/sh/zcatfd.c */
+  /* from lib/sh/zcatfd.cc */
 
   ssize_t zcatfd (int, int, const char *);
 
-  /* from lib/sh/zread.c */
+  /* from lib/sh/zread.cc */
 
   /* Read LEN bytes from FD into BUF.  Retry the read on EINTR.  Any other
      error causes the loop to break. */
@@ -3271,7 +3289,7 @@ protected:
     return r;
   }
 
-  /* from lib/sh/zmapfd.c */
+  /* from lib/sh/zmapfd.cc */
 
   int zmapfd (int, char **, const char *);
 
@@ -3337,7 +3355,7 @@ protected:
   ssize_t zreadcintr (int, char *);
   ssize_t zreadn (int, char *, size_t);
 
-  /* function moved from lib/sh/zwrite.c */
+  /* function moved from lib/sh/zwrite.cc */
 
   /* Write NB bytes from BUF to file descriptor FD, retrying the write if
      it is interrupted.  We retry three times if we get a zero-length
@@ -3497,14 +3515,14 @@ protected:
 
   void run_shopt_alist ();
 
-  void execute_env_file (char *);
+  void execute_env_file (const std::string &);
   void run_startup_files ();
-  int open_shell_script (const char *);
+  int open_shell_script (const std::string &);
   void set_bash_input ();
-  int run_one_command (const char *);
+  int run_one_command (const std::string &);
 
 #if defined(WORDEXP_OPTION)
-  int run_wordexp (const char *);
+  int run_wordexp (const std::string &);
 #endif
 
   bool uidget ();
@@ -4007,31 +4025,29 @@ protected:
   void
   print_command (COMMAND *command)
   {
-    std::printf ("%s", make_command_string (command));
+    std::printf ("%s", make_command_string (command).c_str ());
   }
 
-  /* Make a string which is the printed representation of the command
-     tree in COMMAND.  We return this string.  However, the string
-     buffer is reused, so you have to make a copy if you want it to
-     remain around. */
-  const char *
+  // Return a new string which is the printed representation of the command
+  // tree in COMMAND.
+  std::string
   make_command_string (COMMAND *command)
   {
     the_printed_command.clear ();
     was_heredoc = false;
     deferred_heredocs = nullptr;
     make_command_string_internal (command);
-    return the_printed_command.c_str ();
+    return the_printed_command;
   }
 
   /* Print a command substitution after parsing it in parse_comsub to turn it
      back into an external representation without turning newlines into `;'.
      Placeholder for other changes, if any are necessary. */
-  const char *
+  std::string
   print_comsub (COMMAND *command)
   {
     printing_comsub++;
-    const char *ret = make_command_string (command);
+    std::string ret (make_command_string (command));
     printing_comsub--;
     return ret;
   }
@@ -4040,22 +4056,22 @@ protected:
 
   /* Remove backslashes which are quoting backquotes from STRING.  Modifies
    STRING. */
-  void de_backslash (char *);
+  void de_backslash (std::string &);
 
   /* Replace instances of \! in a string with !. */
-  void unquote_bang (char *);
+  void unquote_bang (std::string &);
 
   /* Extract the $( construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "$(".
-     Make (SINDEX) get the position just after the matching ")".
+     Make (SINDEX) get the position of the matching ")".
      XFLAGS is additional flags to pass to other extraction functions, */
-  char *extract_command_subst (const char *, size_t *, sx_flags);
+  std::string extract_command_subst (const std::string &, size_t *, sx_flags);
 
   /* Extract the $[ construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "$[".
-     Make (SINDEX) get the position just after the matching "]". */
-  char *
-  extract_arithmetic_subst (const char *string, size_t *sindex)
+     Make (SINDEX) get the position of the matching "]". */
+  std::string
+  extract_arithmetic_subst (const std::string &string, size_t *sindex)
   {
     return extract_delimited_string (string, sindex, "$[", "[", "]",
                                      SX_NOFLAGS); /*]*/
@@ -4064,15 +4080,15 @@ protected:
 #if defined(PROCESS_SUBSTITUTION)
   /* Extract the <( or >( construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "<(".
-     Make (SINDEX) get the position just after the matching ")". */
-  char *
-  extract_process_subst (const char *string, size_t *sindex, sx_flags xflags)
+     Make (SINDEX) get the position of the matching ")". */
+  std::string
+  extract_process_subst (const std::string &string, size_t *sindex,
+                         sx_flags xflags)
   {
     if (no_throw_on_fatal_error)
       xflags |= SX_NOTHROW;
 
-    return xparse_dolparen (string, const_cast<char *> (string + *sindex),
-                            sindex, xflags);
+    return xparse_dolparen (string, sindex, xflags);
   }
 #endif /* PROCESS_SUBSTITUTION */
 
@@ -4131,36 +4147,36 @@ protected:
      returning it, but do not perform word splitting.  The call to
      remove_quoted_nulls () is made here because word splitting normally
      takes care of quote removal. */
-  WORD_LIST *expand_string_unsplit (const char *, int);
+  WORD_LIST *expand_string_unsplit (const std::string &, int);
 
   /* Expand the rhs of an assignment statement. */
-  WORD_LIST *expand_string_assignment (const char *, int);
+  WORD_LIST *expand_string_assignment (const std::string &, int);
 
   /* Expand a prompt string. */
-  WORD_LIST *expand_prompt_string (const char *, int, int);
+  WORD_LIST *expand_prompt_string (const std::string &, int, int);
 
   /* Expand STRING just as if you were expanding a word.  This also returns
      a list of words.  Note that filename globbing is *NOT* done for word
      or string expansion, just when the shell is expanding a command.  This
      does parameter expansion, command substitution, arithmetic expansion,
      and word splitting.  Dequote the resultant WORD_LIST before returning. */
-  WORD_LIST *expand_string (const char *, int);
+  WORD_LIST *expand_string (const std::string &, int);
 
   /* Convenience functions that expand strings to strings, taking care of
      converting the WORD_LIST * returned by the expand_string* functions
      to a string and deallocating the WORD_LIST *. */
-  char *expand_string_to_string (const char *, int);
-  char *expand_string_unsplit_to_string (const char *, int);
-  char *expand_assignment_string_to_string (const char *, int);
+  std::string expand_string_to_string (const std::string &, int);
+  std::string expand_string_unsplit_to_string (const std::string &, int);
+  std::string expand_assignment_string_to_string (const std::string &, int);
 
   /* Expand an arithmetic expression string */
-  char *expand_arith_string (const char *, int);
+  std::string expand_arith_string (const std::string &, int);
 
   /* De-quote quoted characters in STRING. */
-  char *dequote_string (const char *);
+  std::string dequote_string (const std::string &);
 
   /* De-quote CTLESC-escaped CTLESC or CTLNUL characters in STRING. */
-  char *dequote_escapes (const char *);
+  std::string dequote_escapes (const std::string &);
 
   WORD_DESC *dequote_word (WORD_DESC *);
 
@@ -4179,25 +4195,24 @@ protected:
   WORD_LIST *expand_word_leave_quoted (WORD_DESC *, int);
 
   /* Return the value of a positional parameter.  This handles values > 10. */
-  char *get_dollar_var_value (int64_t);
+  std::string get_dollar_var_value (int64_t);
 
   /* Quote a string to protect it from word splitting. */
-  char *quote_string (const char *);
+  std::string quote_string (const std::string &);
 
   /* Quote escape characters (characters special to internals of expansion)
      in a string. */
-  char *quote_escapes (const char *);
+  std::string quote_escapes (const std::string &);
 
   /* And remove such quoted special characters. */
-  char *remove_quoted_escapes (char *);
+  std::string remove_quoted_escapes (const std::string &);
 
-  /* Remove CTLNUL characters from STRING unless they are quoted with CTLESC.
-   */
-  char *remove_quoted_nulls (char *);
+  // Remove CTLNUL characters from STRING unless they are quoted with CTLESC.
+  std::string remove_quoted_nulls (const std::string &);
 
   /* Perform quote removal on STRING.  If QUOTED > 0, assume we are obeying the
      backslash quoting rules for within double quotes. */
-  char *string_quote_removal (const char *, int);
+  std::string string_quote_removal (const std::string &, int);
 
   /* Perform quote removal on word WORD.  This allocates and returns a new
      WORD_DESC *. */
@@ -4217,7 +4232,7 @@ protected:
   /* This splits a single word into a WORD LIST on $IFS, but only if the word
      is not quoted.  list_string () performs quote removal for us, even if we
      don't do any splitting. */
-  WORD_LIST *word_split (WORD_DESC *, const char *);
+  WORD_LIST *word_split (WORD_DESC *, const std::string &);
 
   /* Take the list of words in LIST and do the various substitutions.  Return
      a new list of words which is the expanded list, and without things like
@@ -4233,9 +4248,10 @@ protected:
      command substitution, arithmetic expansion, and word splitting. */
   WORD_LIST *expand_words_shellexp (WORD_LIST *);
 
-  WORD_DESC *command_substitute (char *, int, int);
+  WORD_DESC *command_substitute (const std::string &, int, int);
 
-  char *pat_subst (const char *, const char *, const char *, int);
+  std::string pat_subst (const std::string &, const std::string &,
+                         const std::string &, int);
 
 #if defined(PROCESS_SUBSTITUTION)
   int fifos_pending ();
@@ -4257,61 +4273,68 @@ protected:
 #endif
 
 #if defined(ARRAY_VARS)
-  char *extract_array_assignment_list (const char *, int *);
+  char *extract_array_assignment_list (const std::string &, int *);
 #endif
 
 #if defined(COND_COMMAND)
-  char *remove_backslashes (const char *);
+  char *remove_backslashes (const std::string &);
   char *cond_expand_word (WORD_DESC *, int);
   void cond_error (const parser::symbol_type &);
 #endif
 
-  size_t skip_to_delim (const char *, size_t, const char *, sd_flags);
+  size_t skip_to_delim (const std::string &, size_t, const std::string &,
+                        sd_flags);
 
 #if defined(BANG_HISTORY)
-  size_t skip_to_histexp (const char *, size_t, const char *, sd_flags);
+  size_t skip_to_histexp (const std::string &, size_t, const std::string &,
+                          sd_flags);
 #endif
 
 #if defined(READLINE)
-  unsigned int char_is_quoted (const char *, int); /* rl_linebuf_func_t */
-  bool unclosed_pair (const char *, int, const char *);
-  WORD_LIST *split_at_delims (const char *, int, const char *, int, sd_flags,
-                              int *, int *);
+  unsigned int char_is_quoted (const std::string &,
+                               int); /* rl_linebuf_func_t */
+  bool unclosed_pair (const std::string &, int, const std::string &);
+  WORD_LIST *split_at_delims (const std::string &, int, const std::string &,
+                              int, sd_flags, int *, int *);
 #endif
 
   void invalidate_cached_quoted_dollar_at ();
 
   // private methods from subst.c
 
-  char *string_extract (const char *, size_t *, const char *, sx_flags);
+  std::string string_extract (const std::string &, size_t *,
+                              const std::string &, sx_flags);
 
-  char *string_extract_double_quoted (const char *, size_t *, sx_flags);
+  std::string string_extract_double_quoted (const std::string &, size_t *,
+                                            sx_flags);
 
-  size_t skip_double_quoted (const char *, size_t, size_t, sx_flags);
+  size_t skip_double_quoted (const std::string &, size_t, size_t, sx_flags);
 
-  char *string_extract_single_quoted (const char *, size_t *);
+  std::string string_extract_single_quoted (const std::string &, size_t *);
 
-  size_t skip_single_quoted (const char *, size_t, size_t, sx_flags);
+  size_t skip_single_quoted (const std::string &, size_t, size_t, sx_flags);
 
-  char *string_extract_verbatim (const char *, size_t, size_t *, const char *,
-                                 sx_flags);
+  std::string string_extract_verbatim (const std::string &, size_t, size_t *,
+                                       const std::string &, sx_flags);
 
-  char *extract_delimited_string (const char *, size_t *, const char *,
-                                  const char *, const char *, sx_flags);
+  std::string extract_delimited_string (const std::string &, size_t *,
+                                        const std::string &,
+                                        const std::string &,
+                                        const std::string &, sx_flags);
 
-  char *extract_dollar_brace_string (const char *, size_t *, quoted_flags,
-                                     sx_flags);
+  std::string extract_dollar_brace_string (const std::string &, size_t *,
+                                           quoted_flags, sx_flags);
 
   void exp_throw_to_top_level (const std::exception &);
 
 #if defined(ARRAY_VARS)
-  size_t skip_matched_pair (const char *, size_t, char, char, int);
+  size_t skip_matched_pair (const std::string &, size_t, char, char, int);
 
   /* Flags has 1 as a reserved value, since skip_matched_pair uses it for
      skipping over quoted strings and taking the first instance of the
      closing character. */
   size_t
-  skipsubscript (const char *string, size_t start, int flags)
+  skipsubscript (const std::string &string, size_t start, int flags)
   {
     return skip_matched_pair (string, start, '[', ']', flags);
   }
@@ -4324,16 +4347,15 @@ protected:
     return ifs_cmap[static_cast<unsigned char> (c)];
   }
 
-  SHELL_VAR *do_compound_assignment (const char *, const char *, assign_flags);
+  SHELL_VAR *do_compound_assignment (const std::string &, const std::string &,
+                                     assign_flags);
 
   // from variables.cc
 
   void validate_inherited_value (SHELL_VAR *, int);
 
-  SHELL_VAR *set_if_not (const char *, const char *);
+  SHELL_VAR *set_if_not (const std::string &, const std::string &);
 
-  virtual void sh_set_lines_and_columns (unsigned int,
-                                         unsigned int) RL_OVERRIDE;
   void set_pwd ();
   void set_ppid ();
   void make_funcname_visible (bool);
@@ -4344,33 +4366,33 @@ protected:
 
   void reinit_special_variables ();
 
-  SHELL_VAR *var_lookup (const char *, VAR_CONTEXT *);
+  SHELL_VAR *var_lookup (const std::string &, VAR_CONTEXT *);
 
-  SHELL_VAR *find_function_var (const char *);
-  FUNCTION_DEF *find_function_def (const char *);
-  SHELL_VAR *find_variable (const char *);
-  SHELL_VAR *find_variable_noref (const char *);
-  SHELL_VAR *find_var_last_nameref (const char *, int);
-  SHELL_VAR *find_global_var_last_nameref (const char *, int);
+  SHELL_VAR *find_function_var (const std::string &);
+  FUNCTION_DEF *find_function_def (const std::string &);
+  SHELL_VAR *find_variable (const std::string &);
+  SHELL_VAR *find_variable_noref (const std::string &);
+  SHELL_VAR *find_var_last_nameref (const std::string &, int);
+  SHELL_VAR *find_global_var_last_nameref (const std::string &, int);
   SHELL_VAR *find_var_nameref (SHELL_VAR *);
-  SHELL_VAR *find_var_nameref_for_create (const char *, int);
-  SHELL_VAR *find_var_nameref_for_assignment (const char *, int);
-  /* SHELL_VAR *find_internal (const char *, int); */
-  SHELL_VAR *find_tempenv (const char *);
-  SHELL_VAR *find_no_tempenv (const char *);
-  SHELL_VAR *find_global (const char *);
-  SHELL_VAR *find_global_noref (const char *);
-  SHELL_VAR *find_shell (const char *);
-  SHELL_VAR *find_no_invisible (const char *);
-  SHELL_VAR *find_for_assignment (const char *);
-  char *nameref_transform_name (const char *, int);
+  SHELL_VAR *find_var_nameref_for_create (const std::string &, int);
+  SHELL_VAR *find_var_nameref_for_assignment (const std::string &, int);
+  /* SHELL_VAR *find_internal (const std::string &, int); */
+  SHELL_VAR *find_tempenv (const std::string &);
+  SHELL_VAR *find_no_tempenv (const std::string &);
+  SHELL_VAR *find_global (const std::string &);
+  SHELL_VAR *find_global_noref (const std::string &);
+  SHELL_VAR *find_shell (const std::string &);
+  SHELL_VAR *find_no_invisible (const std::string &);
+  SHELL_VAR *find_for_assignment (const std::string &);
+  char *nameref_transform_name (const std::string &, int);
   //   SHELL_VAR *copy_variable (SHELL_VAR *);
-  SHELL_VAR *make_local (const char *, int);
-  SHELL_VAR *bind_variable (const char *, const char *, int);
-  SHELL_VAR *bind_global (const char *, const char *, int);
-  SHELL_VAR *bind_function (const char *, COMMAND *);
+  SHELL_VAR *make_local (const std::string &, int);
+  SHELL_VAR *bind_variable (const std::string &, const std::string &, int);
+  SHELL_VAR *bind_global (const std::string &, const std::string &, int);
+  SHELL_VAR *bind_function (const std::string &, COMMAND *);
 
-  void bind_function_def (const char *, FUNCTION_DEF *, int);
+  void bind_function_def (const std::string &, FUNCTION_DEF *, int);
 
   SHELL_VAR **map_over (sh_var_map_func_t *, VAR_CONTEXT *);
   SHELL_VAR **map_over_funcs (sh_var_map_func_t *);
@@ -4385,20 +4407,21 @@ protected:
 #if defined(ARRAY_VARS)
   SHELL_VAR **all_array ();
 #endif
-  char **all_matching_prefix (const char *);
+  char **all_matching_prefix (const std::string &);
 
-  char **add_or_supercede_exported_var (const char *, int);
+  char **add_or_supercede_exported_var (const std::string &, int);
 
   char *get_variable_value (SHELL_VAR *);
-  char *get_string_value (const char *);
-  char *make_variable_value (SHELL_VAR *, const char *, int);
+  char *get_string_value (const std::string &);
+  char *make_variable_value (SHELL_VAR *, const std::string &, int);
 
-  /* These four are virtual callbacks when Readline is used. */
+  /* These five are virtual callbacks when Readline is used. */
 
-  const char *sh_get_env_value (const char *) override;
-  std::string sh_single_quote (const std::string &) override;
-  std::string sh_get_home_dir () override;
-  int sh_unset_nodelay_mode (int) override;
+  void sh_set_lines_and_columns (unsigned int, unsigned int) RL_OVERRIDE;
+  const char *sh_get_env_value (const char *) RL_OVERRIDE;
+  std::string sh_single_quote (const std::string &) RL_OVERRIDE;
+  std::string sh_get_home_dir () RL_OVERRIDE;
+  int sh_unset_nodelay_mode (int) RL_OVERRIDE;
 
   SHELL_VAR *bind_variable_value (SHELL_VAR *, const char *, int);
   SHELL_VAR *bind_int_variable (const char *, const char *, assign_flags);
@@ -4553,7 +4576,8 @@ protected:
 
   void init_token_lists ();
 
-  char *xparse_dolparen (const char *, char *, size_t *, sx_flags);
+  std::string xparse_dolparen (const std::string &, size_t *, sx_flags);
+
   int return_EOF ();
 
   void
@@ -4581,10 +4605,10 @@ protected:
   bool token_is_assignment (std::string &);
 
   /* XXX - possible changes here for `+=' */
-  bool
+  static bool
   token_is_ident (const std::string &t)
   {
-    return legal_identifier (t.c_str ());
+    return legal_identifier (t);
   }
 #endif
 
@@ -4961,13 +4985,13 @@ protected:
   void
   print_prompt ()
   {
-    std::fprintf (stderr, "%s", current_decoded_prompt);
+    std::fprintf (stderr, "%s", current_decoded_prompt.c_str ());
     std::fflush (stderr);
   }
 
   std::string parse_compound_assignment ();
 
-  COMMAND *parse_string_to_command (char *, sx_flags);
+  COMMAND *parse_string_to_command (const std::string &, sx_flags);
 
   // methods from alias.cc
 
@@ -4978,11 +5002,11 @@ protected:
   alias_t *find_alias (const std::string &);
 
   // Return the value of the alias for NAME, or nullptr if there is none.
-  char *get_alias_value (const char *);
+  char *get_alias_value (const std::string &);
 
   // Make a new alias from NAME and VALUE.  If NAME can be found, then
   // replace its value.
-  void add_alias (const char *, const char *);
+  void add_alias (const std::string &, const std::string &);
 
   // Remove the alias with name NAME from the alias list. Returns
   // the index of the removed alias, or -1 if the alias didn't exist.
@@ -5317,21 +5341,22 @@ protected:
   // Previously-global variables moved from parse.yy.
 
   /* Default prompt strings */
-  const char *primary_prompt;
-  const char *secondary_prompt;
 
-  /* PROMPT_STRING_POINTER points to one of these, never to an actual string.
-   */
-  const char *ps1_prompt, *ps2_prompt;
+  std::string primary_prompt;
+  std::string secondary_prompt;
 
-  /* Displayed after reading a command but before executing it in an
-   * interactive shell */
-  const char *ps0_prompt;
+  // PROMPT_STRING_POINTER points to one of these, never to an actual string.
+  std::string ps1_prompt, ps2_prompt;
 
-  /* Handle on the current prompt string.  Indirectly points through
-     ps1_ or ps2_prompt. */
-  const char **prompt_string_pointer;
-  const char *current_prompt_string;
+  // Displayed after reading a command but before executing it in an
+  // interactive shell
+  std::string ps0_prompt;
+
+  // Handle on the current prompt string. Indirectly points through
+  // ps1_ or ps2_prompt.
+  const std::string *prompt_string_pointer;
+
+  std::string current_prompt_string;
 
   /* Variables to manage the task of reading here documents, because we need to
      defer the reading until after a complete command has been collected. */
@@ -5340,14 +5365,15 @@ protected:
   /* Where shell input comes from.  History expansion is performed on each
      line when the shell is interactive. */
   std::string shell_input_line;
+
   size_t shell_input_line_index;
 
   /* The decoded prompt string.  Used if READLINE is not defined or if
      editing is turned off.  Analogous to current_readline_prompt. */
-  char *current_decoded_prompt;
+  std::string current_decoded_prompt;
 
 #if defined(READLINE)
-  char *current_readline_prompt;
+  std::string current_readline_prompt;
   std::string current_readline_line;
   size_t current_readline_line_index;
 #endif
@@ -5381,6 +5407,7 @@ protected:
 #endif /* BUFFERED_INPUT */
   };
 
+  // The generated Bison parser.
   parser parser_;
 
   STREAM_SAVER *stream_list;
@@ -5481,6 +5508,15 @@ protected:
 
   STRING_TOKEN_MAP word_token_map;
   STRING_TOKEN_MAP other_token_map;
+
+#if defined(HISTORY)
+
+  /* A set of tokens which can be followed by newlines, but not by
+     semi-colons. When concatenating multiple lines of history, the
+     newline separator for such tokens is replaced with a space. */
+  std::set<parser::token_kind_type> no_semi_successors;
+
+#endif
 
   // Buffer for buffered input.
   char localbuf[1024];

@@ -68,7 +68,7 @@ namespace bash
 extern const unsigned int is_basic_table[];
 
 static inline bool
-is_basic (char c)
+is_basic (int c)
 {
   unsigned char uc = static_cast<unsigned char> (c);
   return (is_basic_table[uc >> 5] >> (uc & 31)) & 1;

@@ -32,17 +32,7 @@
 #include <unistd.h>
 #endif
 
-#include "chartypes.hh"
-
-#include "bashintl.hh"
-
-#include "findcmd.hh"
-#include "flags.hh"
-#include "parser.hh"
-#include "pathexp.hh"
 #include "shell.hh"
-#include "test.hh"
-#include "trap.hh"
 
 #include "builtins/common.hh"
 
@@ -337,26 +327,6 @@ legal_number (const char *string, int64_t *result)
   return false;
 }
 
-/* Return true if this token is a legal shell `identifier', i.e. it consists
-   solely of letters, digits, and underscores, and does not begin with a digit.
- */
-bool
-legal_identifier (const char *name)
-{
-  const char *s;
-  char c;
-
-  if (!name || !(c = *name) || (legal_variable_starter (c) == 0))
-    return false;
-
-  for (s = name + 1; (c = *s) != 0; s++)
-    {
-      if (legal_variable_char (c) == 0)
-        return false;
-    }
-  return true;
-}
-
 /* Return true if NAME is a valid value that can be assigned to a nameref
    variable.  FLAGS can be 2, in which case the name is going to be used
    to create a variable.  Other values are currently unused, but could
@@ -504,19 +474,6 @@ Shell::assignment (const std::string &string, int flags)
       indx++;
     }
   return 0;
-}
-
-bool
-line_isblank (const char *line)
-{
-  int i;
-
-  if (line == nullptr)
-    return false; /* XXX */
-  for (i = 0; line[i]; i++)
-    if (isblank (static_cast<unsigned char> (line[i])) == 0)
-      break;
-  return line[i] == '\0';
 }
 
 /* **************************************************************** */

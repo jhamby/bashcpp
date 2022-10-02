@@ -893,15 +893,6 @@ really_add_history (const char *line)
   history_lines_this_session++;
 }
 
-int
-history_number ()
-{
-  using_history ();
-  return (remember_on_history || enable_history_list)
-             ? history_base + where_history ()
-             : 1;
-}
-
 static bool
 should_expand (const char *s)
 {

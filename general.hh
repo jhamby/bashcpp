@@ -487,14 +487,42 @@ void print_rlimtype (RLIMTYPE, int);
 // forward declaration for prototype below
 class WORD_DESC;
 
+// Return true if this token is a legal shell `identifier', i.e. it consists
+// solely of letters, digits, and underscores, and does not begin with a digit.
+static inline bool
+legal_identifier (const std::string &name)
+{
+  if (name.empty () || (legal_variable_starter (name[0]) == 0))
+    return false;
+
+  std::string::const_iterator it;
+  for (it = name.begin () + 1; it != name.end (); ++it)
+    {
+      if (!legal_variable_char (*it))
+        return false;
+    }
+  return true;
+}
+
+static inline bool
+line_isblank (const std::string &line)
+{
+  std::string::const_iterator it;
+  for (it = line.begin (); it != line.end (); ++it)
+    {
+      if (!isblank (static_cast<unsigned char> (*it)))
+        return false;
+    }
+
+  return true;
+}
+
 bool all_digits (const char *);
 bool legal_number (const char *, int64_t *);
-bool legal_identifier (const char *);
 bool check_identifier (WORD_DESC *, int);
 bool valid_nameref_value (const char *, int);
 bool check_selfref (const char *, const char *, int);
 bool legal_alias_name (const char *, int);
-bool line_isblank (const char *);
 int assignment (const char *, int);
 
 int sh_unset_nodelay_mode (int);

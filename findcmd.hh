@@ -26,20 +26,22 @@
 #define CMDSRCH_STDPATH 0x02
 #define CMDSRCH_TEMPENV 0x04
 
-extern int file_status (const char *);
-extern bool executable_file (const char *);
-extern bool is_directory (const char *);
-extern bool executable_or_directory (const char *);
-extern char *find_user_command (const char *);
-extern char *find_in_path (const char *, char *, int);
-extern char *find_path_file (const char *);
-extern char *search_for_command (const char *, int);
-extern char *user_command_matches (const char *, int, int);
+extern int file_status (const std::string &);
+extern bool executable_file (const std::string &);
+extern bool is_directory (const std::string &);
+extern bool executable_or_directory (const std::string &);
+extern std::string find_user_command (const std::string &);
+extern std::string find_in_path (const std::string &, const std::string &,
+                                 int);
+extern std::string find_path_file (const std::string &);
+extern std::string search_for_command (const std::string &, int);
+extern std::string user_command_matches (const std::string &, int, int);
 extern void setup_exec_ignore ();
 
+#if 0
 extern bool dot_found_in_search;
-
 /* variables managed via shopt */
 extern bool check_hashed_filenames;
+#endif
 
 #endif /* _FINDCMD_H_ */

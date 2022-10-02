@@ -247,6 +247,7 @@ struct WORD_DESC_PTR
 {
   WORD_DESC_PTR () : value (nullptr) {}
   WORD_DESC_PTR (const WORD_DESC_PTR &other) : value (other.value) {}
+  WORD_DESC_PTR (WORD_DESC *value_) : value (value_) {}
 
   WORD_DESC *value;
 };

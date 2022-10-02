@@ -560,8 +560,9 @@ out:
    command substitutions during parsing to obey Posix rules about finding
    the end of the command and balancing parens. */
 size_t
-Shell::parse_string (char *string, const char *from_file, parse_flags flags,
-                     COMMAND **cmdp, char **endp)
+Shell::parse_string (const std::string &string, const std::string &from_file,
+                     parse_flags flags, COMMAND **cmdp,
+                     std::string::const_iterator *ep)
 {
   bool should_jump_to_top_level;
   COMMAND *command, *oglobal;

@@ -903,16 +903,14 @@ Shell::subshell_exit (int s)
 */
 
 void
-Shell::execute_env_file (char *env_file)
+Shell::execute_env_file (const std::string &env_file)
 {
-  char *fn;
-
-  if (env_file && *env_file)
+  if (!env_file.empty ())
     {
-      fn = expand_string_unsplit_to_string (env_file, Q_DOUBLE_QUOTES);
-      if (fn && *fn)
-        maybe_execute_file (fn, 1);
-      delete[] fn;
+      std::string fn (
+          expand_string_unsplit_to_string (env_file, Q_DOUBLE_QUOTES));
+      if (!fn.empty ())
+        maybe_execute_file (fn, true);
     }
 }
 
@@ -1240,12 +1238,11 @@ run_wordexp (char *words)
 /* Run one command, given as the argument to the -c option.  Tell
    parse_and_execute not to fork for a simple command. */
 int
-Shell::run_one_command (const char *command)
+Shell::run_one_command (const std::string &command)
 {
   try
     {
-      return parse_and_execute (savestring (command), "-c",
-                                SEVAL_NOHIST | SEVAL_RESETLINE);
+      return parse_and_execute (command, "-c", SEVAL_NOHIST | SEVAL_RESETLINE);
     }
   catch (const bash_exception &e)
     {
@@ -1350,10 +1347,12 @@ Shell::start_debugger ()
 }
 
 int
-Shell::open_shell_script (const char *script_name)
+Shell::open_shell_script (const std::string &script_name)
 {
+#if 0
   int fd, e, fd_is_tty;
   char *filename, *path_filename, *t;
+#endif
   char sample[80];
   int sample_len;
   struct stat sb;
@@ -1362,20 +1361,19 @@ Shell::open_shell_script (const char *script_name)
   ARRAY *funcname_a, *bash_source_a, *bash_lineno_a;
 #endif
 
-  filename = savestring (script_name);
+  std::string filename (script_name);
 
-  fd = open (filename, O_RDONLY);
-  if ((fd < 0) && (errno == ENOENT) && (!absolute_program (filename)))
+  int fd = open (filename.c_str (), O_RDONLY);
+  if ((fd < 0) && (errno == ENOENT) && (!absolute_program (filename.c_str ())))
     {
-      e = errno;
+      int e = errno;
       /* If it's not in the current directory, try looking through PATH
          for it. */
-      path_filename = find_path_file (script_name);
-      if (path_filename)
+      std::string path_filename (find_path_file (script_name));
+      if (!path_filename.empty ())
         {
-          delete[] filename;
           filename = path_filename;
-          fd = open (filename, O_RDONLY);
+          fd = open (filename.c_str (), O_RDONLY);
         }
       else
         errno = e;
@@ -1383,7 +1381,7 @@ Shell::open_shell_script (const char *script_name)
 
   if (fd < 0)
     {
-      e = errno;
+      int e = errno;
       file_error (filename);
 #if defined(JOB_CONTROL)
       end_job_control (); /* just in case we were run as bash -i script */
@@ -1400,7 +1398,7 @@ Shell::open_shell_script (const char *script_name)
       exec_argv0 = nullptr;
     }
 
-  if (file_isdir (filename))
+  if (file_isdir (filename.c_str ()))
     {
 #if defined(EISDIR)
       errno = EISDIR;
@@ -1419,10 +1417,10 @@ Shell::open_shell_script (const char *script_name)
   GET_ARRAY_FROM_VAR ("BASH_SOURCE", bash_source_v, bash_source_a);
   GET_ARRAY_FROM_VAR ("BASH_LINENO", bash_lineno_v, bash_lineno_a);
 
-  array_push (bash_source_a, filename);
+  array_push (bash_source_a, filename.c_str ());
   if (bash_lineno_a)
     {
-      t = itos (executing_line_number ());
+      char *t = itos (executing_line_number ());
       array_push (bash_lineno_a, t);
       delete[] t;
     }
@@ -1430,13 +1428,13 @@ Shell::open_shell_script (const char *script_name)
 #endif
 
 #ifdef HAVE_DEV_FD
-  fd_is_tty = isatty (fd);
+  bool fd_is_tty = isatty (fd);
 #else
-  fd_is_tty = 0;
+  bool fd_is_tty = false;
 #endif
 
   /* Only do this with non-tty file descriptors we can seek on. */
-  if (fd_is_tty == 0 && (::lseek (fd, 0L, 1) != -1))
+  if (!fd_is_tty && (::lseek (fd, 0L, 1) != -1))
     {
       /* Check to see if the `file' in `bash file' is a binary file
          according to the same tests done by execute_simple_command (),
@@ -1444,7 +1442,7 @@ Shell::open_shell_script (const char *script_name)
       sample_len = static_cast<int> (::read (fd, sample, sizeof (sample)));
       if (sample_len < 0)
         {
-          e = errno;
+          int e = errno;
           if ((::fstat (fd, &sb) == 0) && S_ISDIR (sb.st_mode))
             {
 #if defined(EISDIR)
@@ -1466,7 +1464,8 @@ Shell::open_shell_script (const char *script_name)
         }
       else if (sample_len > 0 && (check_binary_file (sample, sample_len)))
         {
-          internal_error (_ ("%s: cannot execute binary file"), filename);
+          internal_error (_ ("%s: cannot execute binary file"),
+                          filename.c_str ());
 #if defined(JOB_CONTROL)
           end_job_control (); /* just in case we were run as bash -i script */
 #endif
@@ -1517,8 +1516,6 @@ Shell::open_shell_script (const char *script_name)
        we need to do a non-interactive setup here, since we didn't do it
        before. */
     init_interactive_script ();
-
-  delete[] filename;
 
   reading_shell_script = true;
   return fd;

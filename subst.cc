@@ -3279,7 +3279,7 @@ expand_string_assignment (const char *string, int quoted)
    passed string when an error occurs.  Might want to trap other calls
    to jump_to_top_level here so we don't endlessly loop. */
 WORD_LIST *
-expand_prompt_string (const char *string, int quoted, int wflags)
+expand_prompt_string (const std::string &string, int quoted, word_desc_flags wflags)
 {
   WORD_LIST *value;
   WORD_DESC td;

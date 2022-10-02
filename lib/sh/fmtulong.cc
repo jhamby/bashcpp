@@ -52,11 +52,11 @@ static const char *X_digs = "0123456789ABCDEF";
 /* XXX -- assumes uppercase letters, lowercase letters, and digits are
    contiguous */
 #define FMTCHAR(x)                                                            \
-  ((x) < 10)                                                                  \
+  (static_cast<char> (((x) < 10)                                              \
       ? (x) + '0'                                                             \
       : (((x) < 36)                                                           \
              ? (x)-10 + 'a'                                                   \
-             : (((x) < 62) ? (x)-36 + 'A' : (((x) == 62) ? '@' : '_')))
+             : (((x) < 62) ? (x)-36 + 'A' : (((x) == 62) ? '@' : '_')))))
 
 #ifndef LONG
 #define LONG long
@@ -87,7 +87,7 @@ fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
     }
 
   sign = 0;
-  if ((flags & FL_UNSIGNED) == 0 && (LONG)ui < 0)
+  if ((flags & FL_UNSIGNED) == 0 && static_cast<LONG> (ui) < 0)
     {
       ui = -ui;
       sign = '-';
@@ -104,13 +104,13 @@ fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
         }
       /* Favor signed arithmetic over unsigned arithmetic; it is faster on
          many machines. */
-      if ((LONG)ui < 0)
+      if (static_cast<LONG> (ui) < 0)
         {
           buf.insert (0, 1, static_cast<char> (ui % 10));
           si = ui / 10;
         }
       else
-        si = ui;
+        si = static_cast<LONG> (ui);
       do
         buf.insert (0, 1, static_cast<char> (si % 10));
       while (si /= 10);
@@ -137,8 +137,8 @@ fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
 
     default:
       do
-        buf.insert (0, 1, FMTCHAR (ui % base));
-      while (ui /= base);
+        buf.insert (0, 1, FMTCHAR (ui % static_cast<unsigned int> (base)));
+      while (ui /= static_cast<unsigned int> (base));
       break;
     }
 
