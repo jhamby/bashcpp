@@ -91,7 +91,7 @@ Shell::caller_builtin (WORD_LIST *list)
   list = loptend; /* skip over possible `--' */
 
   /* If there is no argument list, then give short form: line filename. */
-  if (list == 0)
+  if (list == nullptr)
     {
       lineno_s = array_reference (bash_lineno_a, 0);
       source_s = array_reference (bash_source_a, 1);

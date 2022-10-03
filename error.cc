@@ -20,8 +20,6 @@
 
 #include "config.hh"
 
-#include "bashtypes.hh"
-
 #include <fcntl.h>
 
 #if defined(HAVE_UNISTD_H)
@@ -30,10 +28,6 @@
 
 #include <cstdarg>
 
-#include "bashintl.hh"
-
-#include "flags.hh"
-#include "input.hh"
 #include "shell.hh"
 
 namespace bash
@@ -46,8 +40,7 @@ Shell::error_prolog (int print_lineno)
   int line;
 
   ename = get_name_for_error ();
-  line = (print_lineno && interactive_shell == 0) ? executing_line_number ()
-                                                  : -1;
+  line = (print_lineno && !interactive_shell) ? executing_line_number () : -1;
 
   if (line > 0)
     std::fprintf (stderr, "%s:%s%d: ", ename,

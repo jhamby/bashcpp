@@ -2409,12 +2409,12 @@ Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
 
   std::string::const_iterator ep;
   bash_exception_t exception = NOEXCEPTION;
-  size_t nc = 0;
   std::string string (base, *indp);
 
   try
     {
-      nc = parse_string (string, "command substitution", sflags, nullptr, &ep);
+      (void)parse_string (string, "command substitution", sflags, nullptr,
+                          &ep);
     }
   catch (const bash_exception &e)
     {
@@ -2459,7 +2459,7 @@ Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
         ep--;
     }
 
-  nc = static_cast<size_t> (ep - string.begin ());
+  size_t nc = static_cast<size_t> (ep - string.begin ());
   *indp += (nc - 1);
 
   /*((*/
@@ -4730,7 +4730,7 @@ Shell::set_line_mbstate ()
   mbstate_t mbs, prevs;
   size_t mbclen;
 
-  shell_input_line_property.resize (len);
+  shell_input_line_property.assign (len, false);
 
   /* XXX - use whether or not we are in a UTF-8 locale to avoid calls to
      mbrlen */

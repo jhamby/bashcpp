@@ -51,6 +51,7 @@ namespace bash
 /* Flag values for parse_and_execute () */
 enum parse_flags
 {
+  SEVAL_NOFLAGS = 0,
   SEVAL_NONINT = 0x001,
   SEVAL_INTERACT = 0x002,
   SEVAL_NOHIST = 0x004,
@@ -76,6 +77,13 @@ operator| (const parse_flags &a, const parse_flags &b)
 {
   return static_cast<parse_flags> (static_cast<uint32_t> (a)
                                    | static_cast<uint32_t> (b));
+}
+
+static inline parse_flags
+operator& (const parse_flags &a, const parse_flags &b)
+{
+  return static_cast<parse_flags> (static_cast<uint32_t> (a)
+                                   & static_cast<uint32_t> (b));
 }
 
 /* Flags for describe_command, shared between type.def and command.def */

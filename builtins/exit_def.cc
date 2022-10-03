@@ -150,8 +150,7 @@ Shell::exit_or_logout (WORD_LIST *list)
   last_command_exit_value = exit_value;
 
   /* Exit the program. */
-  jump_to_top_level (EXITPROG);
-  /*NOTREACHED*/
+  throw bash_exception (EXITPROG);
 }
 
 void

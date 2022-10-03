@@ -37,7 +37,7 @@ namespace bash
 // int sourcelevel = 0;
 
 int
-Shell::_evalfile (const char *filename, evalfile_flags_t flags)
+Shell::_evalfile (const std::string &filename, evalfile_flags_t flags)
 {
   //   volatile int old_interactive;
   //   procenv_t old_return_catch;
@@ -68,7 +68,7 @@ Shell::_evalfile (const char *filename, evalfile_flags_t flags)
 #endif
 #endif
 
-  fd = open (filename, O_RDONLY);
+  fd = open (filename.c_str (), O_RDONLY);
 
   if (fd < 0 || (fstat (fd, &finfo) == -1))
     {
@@ -109,7 +109,7 @@ Shell::_evalfile (const char *filename, evalfile_flags_t flags)
       return (flags & FEVAL_BUILTIN) ? EXECUTION_FAILURE : -1;
     }
 
-  file_size = (size_t)finfo.st_size;
+  file_size = static_cast<size_t> (finfo.st_size);
   /* Check for overflow with large files. */
   if (file_size != finfo.st_size || file_size + 1 < file_size)
     {
@@ -133,21 +133,14 @@ Shell::_evalfile (const char *filename, evalfile_flags_t flags)
   errno = return_val;
 
   if (nr < 0) /* XXX was != file_size, not < 0 */
-    {
-      delete[] filename;
-      goto file_error_and_exit;
-    }
+    goto file_error_and_exit;
 
   if (nr == 0)
-    {
-      delete[] filename;
-      return (flags & FEVAL_BUILTIN) ? EXECUTION_SUCCESS : 1;
-    }
+    return (flags & FEVAL_BUILTIN) ? EXECUTION_SUCCESS : 1;
 
   if ((flags & FEVAL_CHECKBINARY)
       && check_binary_file (string, (nr > 80) ? 80 : nr))
     {
-      delete[] filename;
       ((*this).*errfunc) (_ ("%s: cannot execute binary file"), filename);
       return (flags & FEVAL_BUILTIN) ? EX_BINARY_FILE : -1;
     }
@@ -197,11 +190,11 @@ Shell::_evalfile (const char *filename, evalfile_flags_t flags)
   sourcelevel++;
 
 #if defined(ARRAY_VARS)
-  array_push (bash_source_a, (char *)filename);
+  array_push (bash_source_a, filename);
   t = itos (executing_line_number ());
   array_push (bash_lineno_a, t);
   delete[] t;
-  array_push (funcname_a, (char *)"source"); /* not exactly right */
+  array_push (funcname_a, "source"); /* not exactly right */
 
   fa = new func_array_state ();
   fa->source_a = bash_source_a;
@@ -220,7 +213,7 @@ Shell::_evalfile (const char *filename, evalfile_flags_t flags)
     {
       if (shell_compatibility_level <= 44)
         init_bash_argv ();
-      array_push (bash_argv_a, (char *)filename); /* XXX - unconditionally? */
+      array_push (bash_argv_a, filename); /* XXX - unconditionally? */
       tt[0] = '1';
       tt[1] = '\0';
       array_push (bash_argc_a, tt);
@@ -232,7 +225,8 @@ Shell::_evalfile (const char *filename, evalfile_flags_t flags)
 
   /* set the flags to be passed to parse_and_execute */
   parse_flags pflags = SEVAL_RESETLINE;
-  pflags |= (flags & FEVAL_HISTORY) ? 0 : SEVAL_NOHIST;
+  if ((flags & FEVAL_HISTORY) == 0)
+    pflags |= SEVAL_NOHIST;
 
   if (flags & FEVAL_BUILTIN)
     result = EXECUTION_SUCCESS;
@@ -281,7 +275,7 @@ Shell::_evalfile (const char *filename, evalfile_flags_t flags)
 }
 
 int
-Shell::maybe_execute_file (const char *fname, bool force_noninteractive)
+Shell::maybe_execute_file (const std::string &fname, bool force_noninteractive)
 {
   char *filename = bash_tilde_expand (fname, 0);
 
@@ -296,7 +290,7 @@ Shell::maybe_execute_file (const char *fname, bool force_noninteractive)
 }
 
 int
-Shell::force_execute_file (const char *fname, bool force_noninteractive)
+Shell::force_execute_file (const std::string &fname, bool force_noninteractive)
 {
   char *filename = bash_tilde_expand (fname, 0);
 
@@ -312,7 +306,7 @@ Shell::force_execute_file (const char *fname, bool force_noninteractive)
 
 #if defined(HISTORY)
 int
-Shell::fc_execute_file (const char *filename)
+Shell::fc_execute_file (const std::string &filename)
 {
   evalfile_flags_t flags;
 
@@ -325,7 +319,7 @@ Shell::fc_execute_file (const char *filename)
 #endif /* HISTORY */
 
 int
-Shell::source_file (const char *filename, int sflags)
+Shell::source_file (const std::string &filename, int sflags)
 {
   evalfile_flags_t flags = FEVAL_BUILTIN | FEVAL_UNWINDPROT | FEVAL_NONINT;
 

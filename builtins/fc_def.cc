@@ -135,6 +135,7 @@ typedef struct repl
 #define histline(i) (hlist[(i)]->line)
 #define histdata(i) (hlist[(i)]->data)
 
+#if 0
 #define FREE_RLIST()                                                          \
   do                                                                          \
     {                                                                         \
@@ -157,8 +158,9 @@ static char *fc_gethist (char *, HIST_ENTRY **, int);
 static int fc_gethnum (char *, HIST_ENTRY **, int);
 static int fc_number (WORD_LIST *);
 static void fc_replhist (char *);
+#endif
 
-static void
+void
 Shell::set_verbose_flag ()
 {
   echo_input_at_read = verbose_flag;

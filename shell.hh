@@ -1828,6 +1828,8 @@ public:
 
   /* Functions from builtins/common.cc */
 
+  void builtin_error_prolog ();
+
   void builtin_error (const char *, ...)
       __attribute__ ((__format__ (printf, 2, 3)));
   void builtin_warning (const char *, ...)
@@ -1892,7 +1894,7 @@ public:
   size_t parse_string (const std::string &, const std::string &, parse_flags,
                        COMMAND **, std::string::const_iterator *);
 
-  int evalstring (std::string &, const std::string &, parse_flags);
+  int evalstring (const std::string &, const std::string &, parse_flags);
 
   int open_redir_file (REDIRECT *, char **);
   int cat_file (REDIRECT *);
@@ -2478,7 +2480,7 @@ protected:
   const char *get_name_for_error ();
 
   /* Report an error having to do with FILENAME. */
-  void file_error (const std::string &);
+  void file_error (const char *);
 
   // Report a programmer's error, and abort.  Pass REASON, and ARG1 ... ARG5.
   void programming_error (const char *, ...) __attribute__ ((__noreturn__))
@@ -5273,7 +5275,7 @@ protected:
   HASH_TABLE<SHELL_VAR *> *last_table_searched; /* hash_lookup sets this */
   VAR_CONTEXT *last_context_searched;
 
-  /* variables from common.c */
+  /* variables from common.cc */
 
   sh_builtin_func_t this_shell_builtin;
   sh_builtin_func_t last_shell_builtin;

@@ -264,8 +264,8 @@ private:
         (flags & SEVAL_NOHISTEXP) -> history_expansion_inhibited -> 1
 */
 int
-Shell::parse_and_execute (char *string, const char *from_file,
-                          parse_flags flags)
+Shell::parse_and_execute (const std::string &string,
+                          const std::string &from_file, parse_flags flags)
 {
   //   int code, lreset;
   //   volatile int should_jump_to_top_level, last_result;
@@ -276,7 +276,7 @@ Shell::parse_and_execute (char *string, const char *from_file,
 
   parse_and_execute_level++;
 
-  lreset = flags & SEVAL_RESETLINE;
+  parse_flags lreset = flags & SEVAL_RESETLINE;
 
 #if defined(HAVE_POSIX_SIGNALS)
   /* If we throw and are going to go on, use this to restore signal mask */

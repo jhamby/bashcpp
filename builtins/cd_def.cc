@@ -462,7 +462,7 @@ Shell::cd_builtin (WORD_LIST *list)
 
 /* Non-zero means that pwd always prints the physical directory, without
    symbolic links. */
-static int verbatim_pwd;
+// static int verbatim_pwd;
 
 /* Print the name of the current working directory. */
 int
@@ -535,7 +535,7 @@ Shell::change_to_directory (const char *newdir, bool nolinks, bool xattr)
 {
   char *t;
 
-  if (the_current_working_directory == 0)
+  if (the_current_working_directory == nullptr)
     {
       t = get_working_directory ("chdir");
       delete[] t;
@@ -546,7 +546,7 @@ Shell::change_to_directory (const char *newdir, bool nolinks, bool xattr)
   /* TDIR is either the canonicalized absolute pathname of NEWDIR
      (nolinks == 0) or the absolute physical pathname of NEWDIR
      (nolinks != 0). */
-  char *tdir = nolinks ? sh_physpath (t, 0)
+  char *tdir = nolinks ? sh_physpath (t)
                        : sh_canonpath (t, PATH_CHECKDOTDOT | PATH_CHECKEXISTS);
 
   int ndlen = strlen (newdir);

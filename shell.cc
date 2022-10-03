@@ -1346,6 +1346,7 @@ Shell::start_debugger ()
 #endif
 }
 
+// XXX refactor this to use string_view.
 int
 Shell::open_shell_script (const std::string &script_name)
 {
@@ -1382,7 +1383,7 @@ Shell::open_shell_script (const std::string &script_name)
   if (fd < 0)
     {
       int e = errno;
-      file_error (filename);
+      file_error (filename.c_str ());
 #if defined(JOB_CONTROL)
       end_job_control (); /* just in case we were run as bash -i script */
 #endif
@@ -1405,7 +1406,7 @@ Shell::open_shell_script (const std::string &script_name)
 #else
       errno = EINVAL;
 #endif
-      file_error (filename);
+      file_error (filename.c_str ());
 #if defined(JOB_CONTROL)
       end_job_control (); /* just in case we were run as bash -i script */
 #endif
@@ -1444,7 +1445,7 @@ Shell::open_shell_script (const std::string &script_name)
             {
 #if defined(EISDIR)
               errno = EISDIR;
-              file_error (filename);
+              file_error (filename.c_str ());
 #else
               internal_error (_ ("%s: Is a directory"), filename);
 #endif
@@ -1452,7 +1453,7 @@ Shell::open_shell_script (const std::string &script_name)
           else
             {
               errno = e;
-              file_error (filename);
+              file_error (filename.c_str ());
             }
 #if defined(JOB_CONTROL)
           end_job_control (); /* just in case we were run as bash -i script */

@@ -246,7 +246,7 @@ Shell::exec_builtin (WORD_LIST *list)
     file_error (command);
 
 failed_exec:
-  FREE (command);
+  delete[] command;
 
   if (subshell_environment
       || (interactive == 0 && no_exit_on_failed_exec == 0))
