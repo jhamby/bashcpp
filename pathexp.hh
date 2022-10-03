@@ -26,11 +26,6 @@ namespace bash
 
 #define GLOB_FAILED(glist) (glist) == (char **)&glob_error_return
 
-#if 0
-extern bool noglob_dot_filenames;
-extern char *glob_error_return;
-#endif
-
 /* Flag values for quote_string_for_globbing */
 #define QGLOB_CVTNULL 0x01  /* convert QUOTED_NULL strings to '\0' */
 #define QGLOB_FILENAME 0x02 /* do correct quoting for matching filenames */
@@ -48,13 +43,6 @@ extern char *glob_error_return;
 
 #define FNMATCH_IGNCASE (match_ignore_case ? FNM_CASEFOLD : 0)
 #define FNMATCH_NOCASEGLOB (glob_ignore_case ? FNM_CASEFOLD : 0)
-
-#if 0
-extern bool glob_dot_filenames;
-extern bool extended_glob;
-extern bool glob_star;
-extern bool match_ignore_case;	/* doesn't really belong here */
-#endif
 
 extern bool unquoted_glob_pattern_p (const char *);
 

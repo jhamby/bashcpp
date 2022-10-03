@@ -28,8 +28,6 @@
 
 #include "chartypes.hh"
 
-#include <sstream>
-
 #include "pathexp.hh"
 #include "shell.hh"
 
@@ -51,7 +49,7 @@ namespace bash
 /* Find STRING in ALIST, a list of string key/int value pairs.  If FLAGS
    is 1, STRING is treated as a pattern and matched using strmatch. */
 int
-find_string_in_alist (char *string, StringIntAlist *alist, int flags)
+find_string_in_alist (char *string, STRING_INT_ALIST *alist, int flags)
 {
   int i;
   int r;
@@ -71,24 +69,8 @@ find_string_in_alist (char *string, StringIntAlist *alist, int flags)
   return -1;
 }
 
-/* Find TOKEN in ALIST, a list of string/int value pairs.  Return the
-   corresponding string.  Allocates memory for the returned
-   string.  FLAGS is currently ignored, but reserved. */
-char *
-find_token_in_alist (int token, StringIntAlist *alist, int flags)
-{
-  int i;
-
-  for (i = 0; alist[i].word; i++)
-    {
-      if (alist[i].token == token)
-        return savestring (alist[i].word);
-    }
-  return NULL;
-}
-
 int
-find_index_in_alist (char *string, StringIntAlist *alist, int flags)
+find_index_in_alist (char *string, STRING_INT_ALIST *alist, int flags)
 {
   int i;
   int r;

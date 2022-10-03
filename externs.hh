@@ -146,15 +146,15 @@ enum fmt_flags
   FL_UNSIGNED = 0x08  /* don't add any sign */
 };
 
-char *fmtulong (unsigned long, int, fmt_flags);
+std::string fmtulong (unsigned long, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fmtulong.c */
 
-char *fmtullong (unsigned long long, int, fmt_flags);
+std::string fmtullong (unsigned long long, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fmtumax.c */
 
-char *fmtumax (uint64_t, int, fmt_flags);
+std::string fmtumax (uint64_t, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fnxform.c */
 
@@ -181,36 +181,35 @@ int input_avail (int);
 
 /* Inline declarations of functions previously defined in lib/sh/itos.c */
 
-static inline char *
+static inline std::string
 inttostr (int64_t i)
 {
   return fmtumax (static_cast<uint64_t> (i), 10, FL_NOFLAGS);
 }
 
-/* Integer to string conversion. */
-static inline char *
+// Integer to C++ string conversion.
+static inline std::string
 itos (int64_t i)
 {
   return fmtumax (static_cast<uint64_t> (i), 10, FL_NOFLAGS);
 }
 
-/* Integer to string conversion.  This conses the string using savestring;
-   caller should delete it and be prepared to catch alloc exceptions. */
-static inline char *
+// Integer to C++ string conversion.
+static inline std::string
 mitos (int64_t i)
 {
   return fmtumax (static_cast<uint64_t> (i), 10, FL_NOFLAGS);
 }
 
-static inline char *
+// Unsigned integer to C++ string conversion.
+static inline std::string
 uinttostr (uint64_t i)
 {
   return fmtumax (i, 10, FL_UNSIGNED);
 }
 
-/* Integer to string conversion.  This conses the string; the
-   caller should delete it. */
-static inline char *
+// Integer to C++ string conversion.
+static inline std::string
 uitos (uint64_t i)
 {
   return fmtumax (i, 10, FL_UNSIGNED);

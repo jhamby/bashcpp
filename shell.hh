@@ -588,6 +588,12 @@ class EvalStringUnwindHandler;
 // Data type for token lookup.
 typedef std::map<std::string, parser::token_kind_type> STRING_TOKEN_MAP;
 
+// Parser subclass to implement error printing.
+class BashParser : public bash::parser
+{
+  virtual void error (const std::string &) override;
+};
+
 // This char array size is assumed by subst.cc and elsewhere.
 #define SYNSIZE 256
 
@@ -1517,6 +1523,7 @@ public:
   };
 
 protected:
+  // Easier to give the unwind handler direct access to our state.
   friend class EvalStringUnwindHandler;
 
   // typedefs moved from general.h so they can become method pointers to Shell.
@@ -1910,6 +1917,9 @@ public:
   // lexer called from Bison parser
   parser::symbol_type yylex ();
 
+  // Report a syntax error and restart the parser. Call here for fatal errors.
+  void yyerror (const std::string &msg);
+
   /* Functions from make_cmd.cc */
 
   WORD_DESC *
@@ -2165,8 +2175,11 @@ public:
 protected:
   // Functions from parser.cc (previously in parse.y).
 
+  std::string error_token_from_text ();
+  void print_offending_line ();
+
   // Report parser syntax error.
-  void report_syntax_error (const char *);
+  void report_syntax_error (const std::string &);
 
   sh_parser_state_t *save_parser_state (sh_parser_state_t *);
   void restore_parser_state (sh_parser_state_t *);
@@ -2202,7 +2215,7 @@ protected:
   int yy_string_get ();
   int yy_string_unget (int);
 
-  void with_input_from_string (char *, const char *);
+  void with_input_from_string (const std::string &, const std::string &);
 
   int yy_stream_get ();
   int yy_stream_unget (int);
@@ -2235,8 +2248,9 @@ protected:
     current_token = ts[3];
   }
 
-  // Get error string for this symbol, as a C++ string.
-  std::string error_string_from_symbol (const parser::symbol_type &);
+  // Get error string for this token and symbol, as a C++ string.
+  std::string error_string_from_token (parser::token_kind_type,
+                                       const parser::symbol_type *);
 
   // Functions provided by various builtins.
 
@@ -3399,6 +3413,7 @@ protected:
 
 #if defined(HISTORY)
   void maybe_add_history (const std::string &);
+  void bash_history_disable ();
 #endif
 
   char *pre_process_line (const std::string &, bool, bool);
@@ -4094,17 +4109,17 @@ protected:
 
   /* Return a single string of all the words present in LIST, separating
      each word with SEP. */
-  char *string_list_internal (const WORD_LIST *, const char *);
+  std::string string_list_internal (const WORD_LIST *, const std::string &);
 
   /* Return a single string of all the words present in LIST, separating
      each word with a space. */
-  char *string_list (const WORD_LIST *);
+  std::string string_list (const WORD_LIST *);
 
   /* Turn $* into a single string, obeying POSIX rules. */
-  char *string_list_dollar_star (const WORD_LIST *, int, int);
+  std::string string_list_dollar_star (const WORD_LIST *, int, int);
 
   /* Expand $@ into a single string, obeying POSIX rules. */
-  char *string_list_dollar_at (WORD_LIST *, int, int);
+  std::string string_list_dollar_at (WORD_LIST *, int, int);
 
   /* Turn the positional parameters into a string, understanding quoting and
      the various subtleties of using the first character of $IFS as the
@@ -4279,7 +4294,7 @@ protected:
 #if defined(COND_COMMAND)
   char *remove_backslashes (const std::string &);
   char *cond_expand_word (WORD_DESC *, int);
-  void cond_error (const parser::symbol_type &);
+  void cond_error (parser::token_kind_type, const parser::symbol_type &);
 #endif
 
   size_t skip_to_delim (const std::string &, size_t, const std::string &,
@@ -4773,8 +4788,8 @@ protected:
 
   void initialize_group_array ();
 
-  char **get_group_list (int *);
-  int *get_group_array (int *);
+  STRINGLIST *get_group_list ();
+  std::vector<gid_t> *get_group_array ();
 
   int default_columns ();
 
@@ -4917,6 +4932,11 @@ protected:
                && reserved_word_acceptable (token));
   }
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
+
   /* Return true if TOKSYM is a token that after being read would allow
      a reserved word to be seen, else false. */
   bool
@@ -4924,18 +4944,21 @@ protected:
   {
     switch (static_cast<int> (toksym))
       {
-      case '\n':
-      case ';':
-      case '(':
-      case ')':
-      case '|':
-      case '&':
-      case '{':
-      case '}': /* XXX */
+      case static_cast<parser::token_kind_type> ('\n'):
+      case static_cast<parser::token_kind_type> (';'):
+      case static_cast<parser::token_kind_type> ('('):
+      case static_cast<parser::token_kind_type> (')'):
+      case static_cast<parser::token_kind_type> ('|'):
+      case static_cast<parser::token_kind_type> ('&'):
+      case static_cast<parser::token_kind_type> ('{'):
+      case static_cast<parser::token_kind_type> ('}'): /* XXX */
       case parser::token::AND_AND:
+      case parser::token::ARITH_CMD:
       case parser::token::BANG:
       case parser::token::BAR_AND:
+      case parser::token::COND_END:
       case parser::token::DO:
+      case parser::token::DOLPAREN:
       case parser::token::DONE:
       case parser::token::ELIF:
       case parser::token::ELSE:
@@ -4953,8 +4976,9 @@ protected:
       case parser::token::COPROC:
       case parser::token::UNTIL:
       case parser::token::WHILE:
-      case 0:
+      case parser::token::YYEOF:
         return true;
+
       default:
 #if defined(COPROCESS_SUPPORT)
         if (last_read_token == parser::token::WORD
@@ -4968,6 +4992,10 @@ protected:
         return false;
       }
   }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
   int
   get_current_prompt_level ()
@@ -5170,6 +5198,24 @@ protected:
 
   // initialized at startup by init method in generated builtins.cc.
   std::map<std::string, Builtin> shell_builtins;
+
+  // Moved from stringlib.cc for inlining purposes.
+
+  /* Find TOKEN in MAP, a map of string/token_kind_type pairs. Returns the
+     corresponding string, or an empty string if not found. */
+  static std::string
+  find_token_in_map (parser::token_kind_type token,
+                     const STRING_TOKEN_MAP &tmap)
+  {
+    STRING_TOKEN_MAP::const_iterator it;
+
+    for (it = tmap.begin (); it != tmap.end (); ++it)
+      {
+        if ((*it).second == token)
+          return (*it).first;
+      }
+    return std::string ();
+  }
 
   jobstats js;
 
@@ -5408,7 +5454,7 @@ protected:
   };
 
   // The generated Bison parser.
-  parser parser_;
+  BashParser parser_;
 
   STREAM_SAVER *stream_list;
 
@@ -5483,8 +5529,8 @@ protected:
   char **bash_tilde_suffixes;
   char **bash_tilde_suffixes2;
 
-  char **group_vector;
-  int *group_iarray;
+  STRINGLIST *group_vector;
+  std::vector<gid_t> *group_iarray;
 
   /* These are used by read_token_word, in parser.cc. */
 
@@ -5529,13 +5575,10 @@ protected:
 
 struct sh_input_line_state_t
 {
-  char *input_line;
+  std::string input_line;
   size_t input_line_index;
-  size_t input_line_size;
-  size_t input_line_len;
 #if defined(HANDLE_MULTIBYTE)
-  char *input_property;
-  size_t input_propsize;
+  std::vector<bool> input_property;
 #endif
 };
 
@@ -5545,10 +5588,10 @@ struct sh_parser_state_t
 {
   // pointer types first
 
-  int *token_state; // array of 4 ints; free with delete[]
+  parser::token_kind_type *token_state; // new[] array of 4 tokens
   std::string token_buffer;
 
-  const char **prompt_string_pointer;
+  const std::string *prompt_string_pointer;
 
   /* parsing state */
   pstate_flags parser_state;
@@ -5563,6 +5606,8 @@ struct sh_parser_state_t
   /* structures affecting the parser */
   REDIRECT *redir_stack[HEREDOC_MAX];
 
+  STRING_SAVER *pushed_strings;
+
   // 32-bit int types next
 
   int eof_token;
@@ -5573,11 +5618,8 @@ struct sh_parser_state_t
   int eol_lookahead;
 
   /* history state affecting or modified by the parser */
+
   int current_command_line_count;
-#if defined(HISTORY)
-  int remember_on_history;
-  int history_expansion_inhibited;
-#endif
 
   /* execution state possibly modified by the parser */
   int last_command_exit_value;
@@ -5593,6 +5635,11 @@ struct sh_parser_state_t
   /* flags state affecting the parser */
   char expand_aliases;
   char echo_input_at_read;
+
+#if defined(HISTORY)
+  bool remember_on_history;
+  bool history_expansion_inhibited;
+#endif
 };
 
 } // namespace bash

@@ -20,13 +20,10 @@
 
 #include "config.hh"
 
-#include <csignal>
-#include <cstdio>
-
-#include <typeinfo>
-
 #include "bashtypes.hh"
 #include "chartypes.hh"
+
+#include <typeinfo>
 
 #if defined(HAVE_SYS_FILE_H)
 #include <sys/file.h>
@@ -53,18 +50,7 @@
 #include <sys/times.h>
 #endif
 
-#include "bashintl.hh"
-
-#include "builtins.hh"
-#include "findcmd.hh"
-#include "flags.hh"
-#include "hashcmd.hh"
-#include "hashlib.hh"
-#include "jobs.hh"
-#include "parser.hh"
-#include "pathexp.hh"
 #include "shell.hh"
-#include "trap.hh"
 
 #if defined(COND_COMMAND)
 #include "test.hh"

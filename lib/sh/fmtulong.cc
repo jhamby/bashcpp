@@ -65,7 +65,7 @@ static const char *X_digs = "0123456789ABCDEF";
 
 /* `unsigned long' (or unsigned long long) to string conversion for a given
    base. */
-char *
+std::string
 fmtulong (UNSIGNED_LONG ui, int base, fmt_flags flags)
 {
   std::string buf;

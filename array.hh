@@ -64,7 +64,7 @@ ARRAY *array_slice (ARRAY *, ARRAY_ELEMENT *, ARRAY_ELEMENT *);
 void array_walk (ARRAY *, sh_ae_map_func_t *, void *);
 
 ARRAY_ELEMENT *array_shift (ARRAY *, int, int);
-int array_rshift (ARRAY *, int, const char *);
+int array_rshift (ARRAY *, int, const std::string &);
 ARRAY_ELEMENT *array_unshift_element (ARRAY *);
 int array_shift_element (ARRAY *, char *);
 
@@ -79,11 +79,11 @@ char *array_patsub (ARRAY *, char *, char *, int);
 char *array_modcase (ARRAY *, char *, int, int);
 
 /* Basic operations on array elements. */
-ARRAY_ELEMENT *array_create_element (arrayind_t, const char *);
+ARRAY_ELEMENT *array_create_element (arrayind_t, const std::string &);
 ARRAY_ELEMENT *array_copy_element (ARRAY_ELEMENT *);
 void array_dispose_element (ARRAY_ELEMENT *);
 
-int array_insert (ARRAY *, arrayind_t, const char *);
+int array_insert (ARRAY *, arrayind_t, const std::string &);
 ARRAY_ELEMENT *array_remove (ARRAY *, arrayind_t);
 char *array_reference (ARRAY *, arrayind_t);
 
@@ -98,7 +98,7 @@ std::vector<char *> *array_to_argv (ARRAY *);
 
 char *array_to_kvpair (ARRAY *, int);
 char *array_to_assign (ARRAY *, int);
-char *array_to_string (ARRAY *, const char *, int);
+char *array_to_string (ARRAY *, const std::string &, int);
 ARRAY *array_from_string (char *, char *);
 
 /* Flags for array_shift */

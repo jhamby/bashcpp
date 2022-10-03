@@ -1032,63 +1032,43 @@ Shell::group_member (gid_t gid)
 }
 #endif /* !HAVE_GROUP_MEMBER */
 
-char **
-Shell::get_group_list (int *ngp)
+STRINGLIST *
+Shell::get_group_list ()
 {
   if (group_vector)
-    {
-      if (ngp)
-        *ngp = ngroups;
-      return group_vector;
-    }
+    return group_vector;
 
   if (ngroups == 0)
     initialize_group_array ();
 
   if (ngroups <= 0)
-    {
-      if (ngp)
-        *ngp = 0;
-      return nullptr;
-    }
+    return nullptr;
 
-  group_vector = new char *[static_cast<size_t> (ngroups)];
+  group_vector = new STRINGLIST ();
+
   for (int i = 0; i < ngroups; i++)
-    group_vector[i] = itos (group_array[i]);
+    group_vector->push_back (savestring (itos (group_array[i])));
 
-  if (ngp)
-    *ngp = ngroups;
   return group_vector;
 }
 
-int *
-Shell::get_group_array (int *ngp)
+std::vector<gid_t> *
+Shell::get_group_array ()
 {
-  int i;
-
   if (group_iarray)
-    {
-      if (ngp)
-        *ngp = ngroups;
-      return group_iarray;
-    }
+    return group_iarray;
 
   if (ngroups == 0)
     initialize_group_array ();
 
   if (ngroups <= 0)
-    {
-      if (ngp)
-        *ngp = 0;
-      return nullptr;
-    }
+    return nullptr;
 
-  group_iarray = new int[static_cast<size_t> (ngroups)];
-  for (i = 0; i < ngroups; i++)
-    group_iarray[i] = static_cast<int> (group_array[i]);
+  group_iarray = new std::vector<gid_t> ();
 
-  if (ngp)
-    *ngp = ngroups;
+  for (int i = 0; i < ngroups; i++)
+    group_iarray->push_back (group_array[i]);
+
   return group_iarray;
 }
 

@@ -1419,11 +1419,8 @@ Shell::open_shell_script (const std::string &script_name)
 
   array_push (bash_source_a, filename.c_str ());
   if (bash_lineno_a)
-    {
-      char *t = itos (executing_line_number ());
-      array_push (bash_lineno_a, t);
-      delete[] t;
-    }
+    array_push (bash_lineno_a, itos (executing_line_number ()));
+
   array_push (funcname_a, "main");
 #endif
 
