@@ -34,10 +34,21 @@
 // Use C++17 std::string_view or our own lite version.
 #if __cplusplus >= 201703L
 #include <string_view>
+#include <nonstd/string_view.hpp>
+namespace bash
+{
 using std::string_view;
+using nonstd::to_string;
+using nonstd::to_string_view;
+}
 #else
 #include <nonstd/string_view.hpp>
+namespace bash
+{
 using nonstd::string_view;
+using nonstd::to_string;
+using nonstd::to_string_view;
+}
 #endif
 
 // Fake C++11 keywords for older C++ compilers.

@@ -2542,13 +2542,13 @@ private:
   char *_rl_init_locale ();
   void _rl_init_eightbit ();
 
-  inline const char *
+  inline string_view
   _rl_get_locale_var (const std::string &v)
   {
-    const char *lspec = sh_get_env_value ("LC_ALL");
-    if (lspec == nullptr || *lspec == '\0')
+    string_view lspec = sh_get_env_value ("LC_ALL");
+    if (lspec.empty ())
       lspec = sh_get_env_value (v.c_str ());
-    if (lspec == nullptr || *lspec == '\0')
+    if (lspec.empty ())
       lspec = sh_get_env_value ("LANG");
 
     return lspec;

@@ -94,8 +94,7 @@ Shell::initialize_bash_input ()
    GET, UNGET, TYPE, NAME, and LOCATION. */
 void
 Shell::init_yy_io (sh_cget_func_t get, sh_cunget_func_t unget,
-                   stream_type type, const std::string &name,
-                   INPUT_STREAM location)
+                   stream_type type, string_view name, INPUT_STREAM location)
 {
   bash_input.type = type;
   bash_input.name = name;
@@ -222,8 +221,7 @@ Shell::yy_string_unget (int c)
 }
 
 void
-Shell::with_input_from_string (const std::string &string,
-                               const std::string &name)
+Shell::with_input_from_string (string_view string, string_view name)
 {
   INPUT_STREAM location;
 
@@ -293,7 +291,7 @@ Shell::yy_stream_unget (int c)
 }
 
 void
-Shell::with_input_from_stream (FILE *stream, const std::string &name)
+Shell::with_input_from_stream (FILE *stream, string_view name)
 {
   INPUT_STREAM location;
 
@@ -492,7 +490,7 @@ Shell::clear_string_list_expander (alias_t *ap)
    If there is no more input, then we return nullptr.  If REMOVE_QUOTED_NEWLINE
    is non-zero, we remove unquoted \<newline> pairs.  This is used by
    read_secondary_line to read here documents. */
-const char *
+string_view
 Shell::read_a_line (bool remove_quoted_newline)
 {
   int c, peekc;
@@ -568,7 +566,7 @@ Shell::read_a_line (bool remove_quoted_newline)
         }
 
       if (c == '\n')
-        return read_a_line_buffer.c_str ();
+        return to_string_view (read_a_line_buffer);
     }
 }
 
@@ -577,19 +575,17 @@ Shell::read_a_line (bool remove_quoted_newline)
    document.  REMOVE_QUOTED_NEWLINE is non-zero if we should remove
    newlines quoted with backslashes while reading the line.  It is
    non-zero unless the delimiter of the here document was quoted. */
-const char *
+string_view
 Shell::read_secondary_line (bool remove_quoted_newline)
 {
-  const char *ret;
-
   prompt_string_pointer = &ps2_prompt;
   if (SHOULD_PROMPT ())
     prompt_again ();
 
-  ret = read_a_line (remove_quoted_newline);
+  string_view ret (read_a_line (remove_quoted_newline));
 
 #if defined(HISTORY)
-  if (ret && remember_on_history && (parser_state & PST_HEREDOC))
+  if (!ret.empty () && remember_on_history && (parser_state & PST_HEREDOC))
     {
       /* To make adding the here-document body right, we need to rely on
          history_delimiting_chars() returning \n for the first line of the
@@ -1111,7 +1107,7 @@ Shell::shell_ungetc (int c)
 
 /* Push S back into shell_input_line; updating shell_input_line_index */
 void
-Shell::shell_ungets (const std::string &s)
+Shell::shell_ungets (string_view s)
 {
   size_t slen = s.size ();
 
@@ -1151,17 +1147,18 @@ Shell::shell_ungets (const std::string &s)
 #endif
 }
 
-const char *
+string_view
 Shell::parser_remaining_input ()
 {
   if (shell_input_line.empty ())
-    return nullptr;
+    return string_view ();
 
   if (static_cast<int> (shell_input_line_index) < 0
       || shell_input_line_index >= shell_input_line.size ())
-    return ""; /* XXX */
+    return string_view (); /* XXX */
 
-  return &shell_input_line[shell_input_line_index];
+  return string_view (shell_input_line.begin () + shell_input_line_index,
+                      shell_input_line.end ());
 }
 
 /* Discard input until CHARACTER is seen, then push that character back
@@ -1269,7 +1266,7 @@ Shell::gather_here_documents ()
    Special cases that disqualify:
      In a pattern list in a case statement (parser_state & PST_CASEPAT). */
 Shell::alias_expand_token_result
-Shell::alias_expand_token (const std::string &tokstr)
+Shell::alias_expand_token (string_view tokstr)
 {
   char *expanded;
   alias_t *ap;
@@ -1386,7 +1383,7 @@ Shell::time_command_acceptable ()
         preceded by one of `;', `\n', `||', `&&', or `&'.
 */
 parser::symbol_type
-Shell::special_case_tokens (const std::string &tokstr)
+Shell::special_case_tokens (string_view tokstr)
 {
   /* Posix grammar rule 6 */
   if ((last_read_token == parser::token::WORD) &&
@@ -2363,7 +2360,7 @@ Shell::parse_comsub (int qc, int open, int close)
    called by the word expansion code and so does not have to reset as much
    parser state before calling yyparse(). */
 std::string
-Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
+Shell::xparse_dolparen (string_view base, size_t *indp, sx_flags flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
@@ -2493,7 +2490,7 @@ Shell::xparse_dolparen (const std::string &base, size_t *indp, sx_flags flags)
    substitution to a COMMAND *. This is called from command_substitute () and
    has the same parser state constraints as xparse_dolparen(). */
 COMMAND *
-Shell::parse_string_to_command (const std::string &string, sx_flags flags)
+Shell::parse_string_to_command (string_view string, sx_flags flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
@@ -3410,7 +3407,7 @@ got_token:
 
   if (command_token_position (last_read_token))
     {
-      std::map<std::string, Builtin>::iterator it
+      std::map<string_view, Builtin>::iterator it
           = shell_builtins.find (token_buffer);
 
       if (it != shell_builtins.end ()
@@ -3484,7 +3481,7 @@ got_token:
    history entry.  LINE is the line we're about to add; it helps
    make some more intelligent decisions in certain cases. */
 const char *
-Shell::history_delimiting_chars (const std::string &line)
+Shell::history_delimiting_chars (string_view line)
 {
   if ((parser_state & PST_HEREDOC) == 0)
     last_was_heredoc = false;
@@ -3620,7 +3617,7 @@ Shell::prompt_again ()
    the first line of a potentially multi-line command, so we compensate
    here by returning one fewer when appropriate. */
 size_t
-Shell::prompt_history_number (const std::string &pmt)
+Shell::prompt_history_number (string_view pmt)
 {
   size_t ret = history_number ();
   if (ret == 1)
@@ -3671,7 +3668,7 @@ Shell::prompt_history_number (const std::string &pmt)
 */
 #define PROMPT_GROWTH 48
 std::string
-Shell::decode_prompt_string (const std::string &string)
+Shell::decode_prompt_string (string_view string)
 {
 #if defined(PROMPT_STRING_DECODE)
   size_t size;
@@ -4076,14 +4073,14 @@ Shell::decode_prompt_string (const std::string &string)
 
 // Report a syntax error and restart the parser (called by Bison).
 void
-BashParser::error (const std::string &msg)
+BashParser::error (string_view msg)
 {
   the_shell->yyerror (msg);
 }
 
 // Report a syntax error and restart the parser. Call here for fatal errors.
 void
-Shell::yyerror (const std::string &msg)
+Shell::yyerror (string_view msg)
 {
   if ((the_shell->parser_state & PST_NOERROR) == 0)
     the_shell->report_syntax_error (msg);
@@ -4150,7 +4147,7 @@ Shell::error_string_from_token (parser::token_kind_type token,
 std::string
 Shell::error_token_from_text ()
 {
-  const std::string &t = shell_input_line;
+  string_view t = shell_input_line;
   size_t i = shell_input_line_index;
   size_t token_end = 0;
 
@@ -4193,7 +4190,7 @@ Shell::print_offending_line ()
 /* Report a syntax error with line numbers, etc.
    Call here for recoverable errors, with a message to print. */
 void
-Shell::report_syntax_error (const std::string &message)
+Shell::report_syntax_error (string_view message)
 {
   if (!message.empty ())
     {
@@ -4338,8 +4335,7 @@ Shell::handle_eof_input_unit ()
 /* Take a string and run it through the shell parser, returning the
    resultant word list. Used by compound array assignment. */
 WORD_LIST *
-Shell::parse_string_to_word_list (const std::string &s, int flags,
-                                  const std::string &whom)
+Shell::parse_string_to_word_list (string_view s, int flags, string_view whom)
 {
   sh_parser_state_t ps;
   pstate_flags orig_parser_state = PST_NOFLAGS;

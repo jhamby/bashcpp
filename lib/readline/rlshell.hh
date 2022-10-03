@@ -41,6 +41,7 @@ savestring (const std::string &s)
   return std::strcpy (new char[1 + s.size ()], s.c_str ());
 }
 
+#if 0
 // Compare two strings for equality.
 static inline bool
 STREQ (const char *a, const char *b)
@@ -54,6 +55,7 @@ STREQN (const char *a, const char *b, size_t n)
 {
   return std::strncmp (a, b, n) == 0;
 }
+#endif
 
 // This can't be an abstract class because we need to cast pointers to it.
 
@@ -62,10 +64,10 @@ class ReadlineShell
 public:
   virtual ~ReadlineShell ();
 
-  virtual std::string sh_single_quote (const std::string &);
+  virtual std::string sh_single_quote (string_view);
   virtual void sh_set_lines_and_columns (unsigned int, unsigned int);
   virtual const char *sh_get_env_value (const char *);
-  virtual std::string sh_get_home_dir ();
+  virtual string_view sh_get_home_dir ();
   virtual int sh_unset_nodelay_mode (int);
 };
 

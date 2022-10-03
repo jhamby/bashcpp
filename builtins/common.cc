@@ -528,8 +528,8 @@ Shell::read_octal (const char *string)
    FOR_WHOM is the name of the caller for error printing.  */
 // char *the_current_working_directory = (char *)NULL;
 
-std::string
-Shell::get_working_directory (const std::string &for_whom)
+const std::string *
+Shell::get_working_directory (string_view for_whom)
 {
   if (no_symbolic_links)
     {

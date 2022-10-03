@@ -586,7 +586,7 @@ operator| (const evalfile_flags_t &a, const evalfile_flags_t &b)
 class EvalStringUnwindHandler;
 
 // Data type for token lookup.
-typedef std::map<std::string, parser::token_kind_type> STRING_TOKEN_MAP;
+typedef std::map<string_view, parser::token_kind_type> STRING_TOKEN_MAP;
 
 // Parser subclass to implement error printing.
 class BashParser : public bash::parser
@@ -1471,7 +1471,7 @@ public:
   typedef int (Shell::*sh_builtin_func_t) (WORD_LIST *); /* sh_wlist_func_t */
   typedef void (Shell::*sh_vptrfunc_t) (void *);
 
-  typedef char *(Shell::*tilde_hook_func_t) (char *);
+  typedef std::string *(Shell::*tilde_hook_func_t) (string_view);
 
   struct JOB
   {
@@ -1877,6 +1877,11 @@ public:
 #endif
   int display_signal_list (WORD_LIST *, int);
 
+  /* Keeps track of the current working directory. */
+
+  const std::string *get_working_directory (string_view);
+  void set_working_directory (string_view);
+
   // Functions from builtins/evalstring.cc
 
   bool should_optimize_fork (const COMMAND *, bool);
@@ -1888,25 +1893,24 @@ public:
   void optimize_shell_function (COMMAND *);
   bool can_optimize_cat_file (const COMMAND *);
 
-  int parse_and_execute (const std::string &, const std::string &,
-                         parse_flags);
+  int parse_and_execute (string_view, string_view, parse_flags);
 
-  size_t parse_string (const std::string &, const std::string &, parse_flags,
-                       COMMAND **, std::string::const_iterator *);
+  size_t parse_string (string_view, string_view, parse_flags, COMMAND **,
+                       std::string::const_iterator *);
 
-  int evalstring (const std::string &, const std::string &, parse_flags);
+  int evalstring (string_view, string_view, parse_flags);
 
   int open_redir_file (REDIRECT *, char **);
   int cat_file (REDIRECT *);
 
   // Functions from builtins/evalfile.cc
 
-  int maybe_execute_file (const std::string &, bool);
-  int force_execute_file (const std::string &, bool);
-  int source_file (const std::string &, int);
-  int fc_execute_file (const std::string &);
+  int maybe_execute_file (string_view, bool);
+  int force_execute_file (string_view, bool);
+  int source_file (string_view, int);
+  int fc_execute_file (string_view);
 
-  int _evalfile (const std::string &, evalfile_flags_t);
+  int _evalfile (string_view, evalfile_flags_t);
 
   /* Functions from flags.cc */
 
@@ -1920,16 +1924,16 @@ public:
   parser::symbol_type yylex ();
 
   // Report a syntax error and restart the parser. Call here for fatal errors.
-  void yyerror (const std::string &msg);
+  void yyerror (string_view msg);
 
   /* Functions from make_cmd.cc */
 
   WORD_DESC *
-  make_word_flags (WORD_DESC *w, const std::string &string)
+  make_word_flags (WORD_DESC *w, string_view string)
   {
     DECLARE_MBSTATE;
 
-    std::string::const_iterator it = string.begin ();
+    string_view::const_iterator it = string.begin ();
     while (it != string.end ())
       {
         switch (*it)
@@ -1954,7 +1958,7 @@ public:
   }
 
   WORD_DESC *
-  make_word (const std::string &string)
+  make_word (string_view string)
   {
     WORD_DESC *temp = new WORD_DESC (string);
     return make_word_flags (temp, string);
@@ -1972,7 +1976,7 @@ public:
   }
 
   WORD_LIST *
-  make_arith_for_expr (const std::string &s)
+  make_arith_for_expr (string_view s)
   {
     if (s.empty ())
       return nullptr;
@@ -2181,7 +2185,7 @@ protected:
   void print_offending_line ();
 
   // Report parser syntax error.
-  void report_syntax_error (const std::string &);
+  void report_syntax_error (string_view);
 
   sh_parser_state_t *save_parser_state (sh_parser_state_t *);
   void restore_parser_state (sh_parser_state_t *);
@@ -2217,7 +2221,7 @@ protected:
   int yy_string_get ();
   int yy_string_unget (int);
 
-  void with_input_from_string (const std::string &, const std::string &);
+  void with_input_from_string (string_view, string_view);
 
   int yy_stream_get ();
   int yy_stream_unget (int);
@@ -2302,8 +2306,8 @@ protected:
     EXP_EXPANDED = 0x01
   };
 
-  int64_t evalexp (const std::string &, eval_flags, bool *);
-  int64_t subexpr (const std::string &);
+  int64_t evalexp (string_view, eval_flags, bool *);
+  int64_t subexpr (string_view);
   int64_t expcomma ();
   int64_t expassign ();
   int64_t expcond ();
@@ -2330,12 +2334,11 @@ protected:
   void pushexp ();
   void popexp ();
   void expr_unwind ();
-  void expr_bind_variable (const std::string &, const std::string &);
+  void expr_bind_variable (string_view, string_view);
 
 #if defined(ARRAY_VARS)
   int expr_skipsubscript (const char *, char *);
-  void expr_bind_array_element (const std::string &, arrayind_t,
-                                const std::string &);
+  void expr_bind_array_element (string_view, arrayind_t, string_view);
 #endif
 
   /* set -x support */
@@ -2345,8 +2348,7 @@ protected:
 
   void xtrace_reset ();
   const char *indirection_level_string ();
-  void xtrace_print_assignment (const std::string &, const std::string &, bool,
-                                int);
+  void xtrace_print_assignment (string_view, string_view, bool, int);
   void xtrace_print_word_list (WORD_LIST *, int);
   void xtrace_print_for_command_head (FOR_SELECT_COM *);
 
@@ -2363,8 +2365,8 @@ protected:
   }
 
 #if defined(RESTRICTED_SHELL)
-  bool shell_is_restricted (const char *);
-  bool maybe_make_restricted (const char *);
+  bool shell_is_restricted (string_view);
+  bool maybe_make_restricted (string_view);
 #endif
 
   void unset_bash_input (int);
@@ -2378,7 +2380,7 @@ protected:
   void send_pwd_to_eterm ();
 
 #if defined(ARRAY_VARS)
-  void execute_array_command (ARRAY *, const char *);
+  void execute_array_command (ARRAY *, string_view);
 #endif
 
   void execute_prompt_command ();
@@ -2442,13 +2444,13 @@ protected:
     shell_input_line.clear ();
   }
 
-  std::string decode_prompt_string (const std::string &);
+  std::string decode_prompt_string (string_view);
 
 #if defined(HISTORY)
   void bash_initialize_history ();
   void load_history ();
-  const char *history_delimiting_chars (const std::string &);
-  size_t prompt_history_number (const std::string &);
+  const char *history_delimiting_chars (string_view);
+  size_t prompt_history_number (string_view);
 
   size_t
   history_number ()
@@ -2464,12 +2466,12 @@ protected:
   /* Declarations for functions defined in locale.cc */
   void set_default_locale ();
   void set_default_locale_vars ();
-  bool set_locale_var (const char *, const char *);
-  int set_lang (const char *, const char *);
+  bool set_locale_var (string_view, string_view);
+  int set_lang (string_view, string_view);
   void set_default_lang ();
-  const char *get_locale_var (const char *);
-  std::string localetrans (const std::string &);
-  std::string locale_expand (const std::string &, int);
+  string_view get_locale_var (string_view);
+  std::string localetrans (string_view);
+  std::string locale_expand (string_view, int);
 
   void locale_setblanks ();
   int reset_locale_vars ();
@@ -2477,10 +2479,10 @@ protected:
   /* Functions from errors.cc */
 
   /* Get the name of the shell or shell script for an error message. */
-  const char *get_name_for_error ();
+  string_view get_name_for_error ();
 
   /* Report an error having to do with FILENAME. */
-  void file_error (const char *);
+  void file_error (string_view);
 
   // Report a programmer's error, and abort.  Pass REASON, and ARG1 ... ARG5.
   void programming_error (const char *, ...) __attribute__ ((__noreturn__))
@@ -2534,17 +2536,17 @@ protected:
   void trace (const char *, ...) __attribute__ ((__format__ (printf, 2, 3)));
 
   /* Report an error having to do with command parsing or execution. */
-  void command_error (const char *, cmd_err_type, bash_exception_t)
+  void command_error (string_view, cmd_err_type, bash_exception_t)
       __attribute__ ((__noreturn__));
 
-  const char *command_errstr (int);
+  string_view command_errstr (int);
 
   /* Specific error message functions that eventually call report_error or
      internal_error. */
 
-  void err_badarraysub (const char *);
-  void err_unboundvar (const char *);
-  void err_readonly (const char *);
+  void err_badarraysub (string_view);
+  void err_unboundvar (string_view);
+  void err_readonly (string_view);
 
   void error_prolog (int);
 
@@ -2667,7 +2669,7 @@ protected:
   int sync_buffered_stream (int);
   int buffered_getchar ();
   int buffered_ungetchar (int);
-  void with_input_from_buffered_stream (int, const char *);
+  void with_input_from_buffered_stream (int, string_view);
 
   /* Push C back onto buffered stream BP. */
   static int
@@ -2819,10 +2821,10 @@ protected:
   PROCESS *find_pipeline (pid_t, int, int *);
   PROCESS *find_process (pid_t, int, int *);
 
-  const char *current_working_directory ();
+  string_view current_working_directory ();
   char *job_working_directory ();
   char *j_strsignal (int);
-  const char *printable_job_status (int, PROCESS *, int);
+  string_view printable_job_status (int, PROCESS *, int);
 
   PROCESS *find_last_proc (int, int);
   pid_t find_last_pid (int, int);
@@ -2881,15 +2883,15 @@ protected:
 
   /* from lib/sh/casemod.cc */
 
-  char *sh_modcase (const char *, const char *, sh_modcase_flags);
+  std::string sh_modcase (string_view, string_view, sh_modcase_flags);
 
   /* from lib/sh/eaccess.cc */
 
-  int sh_stataccess (const char *, int);
+  int sh_stataccess (string_view, int);
 
   /* from lib/sh/makepath.cc */
 
-  char *sh_makepath (const char *, const char *, mp_flags);
+  char *sh_makepath (string_view, string_view, mp_flags);
 
   /* from lib/sh/mbschr.cc */
 
@@ -2898,12 +2900,12 @@ protected:
   /* from lib/sh/netopen.cc */
 
 #ifndef HAVE_GETADDRINFO
-  int _netopen4 (const char *, const char *, int);
+  int _netopen4 (string_view , string_view , int);
 #else /* HAVE_GETADDRINFO */
-  int _netopen6 (const char *, const char *, int);
+  int _netopen6 (string_view , string_view , int);
 #endif
 
-  int netopen (const char *);
+  int netopen (string_view );
 
   /*
    * Open a TCP or UDP connection to HOST on port SERV.  Uses getaddrinfo(3)
@@ -2911,7 +2913,7 @@ protected:
    * Returns the connected socket or -1 on error.
    */
   int
-  _netopen (const char *host, const char *serv, int typ)
+  _netopen (string_view host, string_view serv, int typ)
   {
 #ifdef HAVE_GETADDRINFO
     return _netopen6 (host, serv, typ);
@@ -2921,7 +2923,7 @@ protected:
   }
 
   /* from lib/sh/pathphys.cc */
-  char *sh_realpath (const char *, char *);
+  char *sh_realpath (string_view , char *);
 
   /* from lib/sh/random.c */
   uint32_t genseed ();
@@ -2966,9 +2968,9 @@ protected:
 
   /* from lib/sh/shmatch.cc */
 
-  int sh_regmatch (const char *, const char *, int);
-  int sh_eaccess (const char *, int);
-  int sh_euidaccess (const char *, int);
+  int sh_regmatch (string_view , string_view , int);
+  int sh_eaccess (string_view , int);
+  int sh_euidaccess (string_view , int);
 
   /* from lib/sh/shmbchar.cc */
 
@@ -2976,11 +2978,11 @@ protected:
 
   /* from lib/sh/shquote.cc */
 
-  std::string sh_double_quote (const std::string &);
-  std::string sh_mkdoublequoted (const std::string &, int);
-  std::string sh_un_double_quote (const std::string &);
-  std::string sh_backslash_quote (const std::string &, const char *, int);
-  std::string sh_backslash_quote_for_double_quotes (const std::string &);
+  std::string sh_double_quote (string_view);
+  std::string sh_mkdoublequoted (string_view, int);
+  std::string sh_un_double_quote (string_view);
+  std::string sh_backslash_quote (string_view, string_view , int);
+  std::string sh_backslash_quote_for_double_quotes (string_view);
 
   /* include all functions from lib/sh/shtty.cc here: they're very small. */
 
@@ -3250,18 +3252,18 @@ protected:
 
   /* from lib/sh/strtrans.cc */
 
-  std::string ansicstr (const std::string &, int, bool *);
+  std::string ansicstr (string_view, int, bool *);
 
   std::string ansiexpand (std::string::const_iterator,
                           std::string::const_iterator);
 
   /* from lib/sh/strvis.cc */
 
-  std::string sh_strvis (const std::string &);
+  std::string sh_strvis (string_view);
 
   /* from lib/sh/tmpfile.cc */
 
-  const char *get_tmpdir (int);
+  string_view get_tmpdir (int);
 
   /* from lib/sh/unicode.cc */
 
@@ -3276,7 +3278,7 @@ protected:
 
   /* from lib/sh/zcatfd.cc */
 
-  ssize_t zcatfd (int, int, const char *);
+  ssize_t zcatfd (int, int, string_view);
 
   /* from lib/sh/zread.cc */
 
@@ -3307,7 +3309,7 @@ protected:
 
   /* from lib/sh/zmapfd.cc */
 
-  int zmapfd (int, char **, const char *);
+  int zmapfd (int, char **, string_view);
 
   /* Read LEN bytes from FD into BUF.  Retry the read on EINTR, up to three
      interrupts.  Any other error causes the loop to break. */
@@ -3404,7 +3406,7 @@ protected:
   /* from bashhist.cc */
 
 #if defined(BANG_HISTORY)
-  bool bash_history_inhibit_expansion (const std::string &, int);
+  bool bash_history_inhibit_expansion (string_view, int);
 #endif
 
   char *last_history_line ();
@@ -3414,11 +3416,11 @@ protected:
   void bash_history_reinit (bool);
 
 #if defined(HISTORY)
-  void maybe_add_history (const std::string &);
+  void maybe_add_history (string_view);
   void bash_history_disable ();
 #endif
 
-  char *pre_process_line (const std::string &, bool, bool);
+  char *pre_process_line (string_view, bool, bool);
 
   /* Functions declared in execute_cmd.c, used by many other files */
 
@@ -3451,7 +3453,7 @@ protected:
   int execute_shell_function (SHELL_VAR *, WORD_LIST *);
 
   Coproc *getcoprocbypid (pid_t);
-  Coproc *getcoprocbyname (const char *);
+  Coproc *getcoprocbyname (string_view);
 
   void coproc_init (Coproc *);
   Coproc *coproc_alloc (char *, pid_t);
@@ -3511,7 +3513,7 @@ protected:
     RX_SAVEFD = 0x40     /* fd used to save another even if < SHELL_FD_BASE */
   };
 
-  void redirection_error (REDIRECT *, int, const char *);
+  void redirection_error (REDIRECT *, int, string_view);
   int do_redirections (REDIRECT *, redir_flags);
   char *redirection_expand (WORD_DESC *);
   int stdin_redirects (REDIRECT *);
@@ -3532,14 +3534,14 @@ protected:
 
   void run_shopt_alist ();
 
-  void execute_env_file (const std::string &);
+  void execute_env_file (string_view);
   void run_startup_files ();
-  int open_shell_script (const std::string &);
+  int open_shell_script (string_view);
   void set_bash_input ();
-  int run_one_command (const std::string &);
+  int run_one_command (string_view);
 
 #if defined(WORDEXP_OPTION)
-  int run_wordexp (const std::string &);
+  int run_wordexp (string_view);
 #endif
 
   bool uidget ();
@@ -3572,7 +3574,7 @@ protected:
   void show_shell_usage (FILE *, bool);
 
   void init_long_args ();
-  void set_shell_name (const char *);
+  void set_shell_name (const std::string &);
   void shell_initialize ();
   void shell_reinitialize ();
 
@@ -3653,12 +3655,12 @@ protected:
   void run_pending_traps ();
   void initialize_traps ();
 #ifdef DEBUG
-  const char *trap_handler_string (int);
+  string_view trap_handler_string (int);
 #endif
   int run_exit_trap ();
   void set_trap_state (int);
-  int _run_trap_internal (int, const char *);
-  void set_signal (int, const char *);
+  int _run_trap_internal (int, string_view);
+  void set_signal (int, string_view);
   void ignore_signal (int);
 
   bool
@@ -4082,13 +4084,13 @@ protected:
      Start extracting at (SINDEX) as if we had just seen "$(".
      Make (SINDEX) get the position of the matching ")".
      XFLAGS is additional flags to pass to other extraction functions, */
-  std::string extract_command_subst (const std::string &, size_t *, sx_flags);
+  std::string extract_command_subst (string_view, size_t *, sx_flags);
 
   /* Extract the $[ construct in STRING, and return a new string.
      Start extracting at (SINDEX) as if we had just seen "$[".
      Make (SINDEX) get the position of the matching "]". */
   std::string
-  extract_arithmetic_subst (const std::string &string, size_t *sindex)
+  extract_arithmetic_subst (string_view string, size_t *sindex)
   {
     return extract_delimited_string (string, sindex, "$[", "[", "]",
                                      SX_NOFLAGS); /*]*/
@@ -4099,8 +4101,7 @@ protected:
      Start extracting at (SINDEX) as if we had just seen "<(".
      Make (SINDEX) get the position of the matching ")". */
   std::string
-  extract_process_subst (const std::string &string, size_t *sindex,
-                         sx_flags xflags)
+  extract_process_subst (string_view string, size_t *sindex, sx_flags xflags)
   {
     if (no_throw_on_fatal_error)
       xflags |= SX_NOTHROW;
@@ -4111,7 +4112,7 @@ protected:
 
   /* Return a single string of all the words present in LIST, separating
      each word with SEP. */
-  std::string string_list_internal (const WORD_LIST *, const std::string &);
+  std::string string_list_internal (const WORD_LIST *, string_view);
 
   /* Return a single string of all the words present in LIST, separating
      each word with a space. */
@@ -4164,36 +4165,36 @@ protected:
      returning it, but do not perform word splitting.  The call to
      remove_quoted_nulls () is made here because word splitting normally
      takes care of quote removal. */
-  WORD_LIST *expand_string_unsplit (const std::string &, int);
+  WORD_LIST *expand_string_unsplit (string_view, int);
 
   /* Expand the rhs of an assignment statement. */
-  WORD_LIST *expand_string_assignment (const std::string &, int);
+  WORD_LIST *expand_string_assignment (string_view, int);
 
   /* Expand a prompt string. */
-  WORD_LIST *expand_prompt_string (const std::string &, int, int);
+  WORD_LIST *expand_prompt_string (string_view, int, int);
 
   /* Expand STRING just as if you were expanding a word.  This also returns
      a list of words.  Note that filename globbing is *NOT* done for word
      or string expansion, just when the shell is expanding a command.  This
      does parameter expansion, command substitution, arithmetic expansion,
      and word splitting.  Dequote the resultant WORD_LIST before returning. */
-  WORD_LIST *expand_string (const std::string &, int);
+  WORD_LIST *expand_string (string_view, int);
 
   /* Convenience functions that expand strings to strings, taking care of
      converting the WORD_LIST * returned by the expand_string* functions
      to a string and deallocating the WORD_LIST *. */
-  std::string expand_string_to_string (const std::string &, int);
-  std::string expand_string_unsplit_to_string (const std::string &, int);
-  std::string expand_assignment_string_to_string (const std::string &, int);
+  std::string expand_string_to_string (string_view, int);
+  std::string expand_string_unsplit_to_string (string_view, int);
+  std::string expand_assignment_string_to_string (string_view, int);
 
   /* Expand an arithmetic expression string */
-  std::string expand_arith_string (const std::string &, int);
+  std::string expand_arith_string (string_view, int);
 
   /* De-quote quoted characters in STRING. */
-  std::string dequote_string (const std::string &);
+  std::string dequote_string (string_view);
 
   /* De-quote CTLESC-escaped CTLESC or CTLNUL characters in STRING. */
-  std::string dequote_escapes (const std::string &);
+  std::string dequote_escapes (string_view);
 
   WORD_DESC *dequote_word (WORD_DESC *);
 
@@ -4215,21 +4216,21 @@ protected:
   std::string get_dollar_var_value (int64_t);
 
   /* Quote a string to protect it from word splitting. */
-  std::string quote_string (const std::string &);
+  std::string quote_string (string_view);
 
   /* Quote escape characters (characters special to internals of expansion)
      in a string. */
-  std::string quote_escapes (const std::string &);
+  std::string quote_escapes (string_view);
 
   /* And remove such quoted special characters. */
-  std::string remove_quoted_escapes (const std::string &);
+  std::string remove_quoted_escapes (string_view);
 
   // Remove CTLNUL characters from STRING unless they are quoted with CTLESC.
-  std::string remove_quoted_nulls (const std::string &);
+  std::string remove_quoted_nulls (string_view);
 
   /* Perform quote removal on STRING.  If QUOTED > 0, assume we are obeying the
      backslash quoting rules for within double quotes. */
-  std::string string_quote_removal (const std::string &, int);
+  std::string string_quote_removal (string_view, int);
 
   /* Perform quote removal on word WORD.  This allocates and returns a new
      WORD_DESC *. */
@@ -4249,7 +4250,7 @@ protected:
   /* This splits a single word into a WORD LIST on $IFS, but only if the word
      is not quoted.  list_string () performs quote removal for us, even if we
      don't do any splitting. */
-  WORD_LIST *word_split (WORD_DESC *, const std::string &);
+  WORD_LIST *word_split (WORD_DESC *, string_view);
 
   /* Take the list of words in LIST and do the various substitutions.  Return
      a new list of words which is the expanded list, and without things like
@@ -4265,10 +4266,9 @@ protected:
      command substitution, arithmetic expansion, and word splitting. */
   WORD_LIST *expand_words_shellexp (WORD_LIST *);
 
-  WORD_DESC *command_substitute (const std::string &, int, int);
+  WORD_DESC *command_substitute (string_view, int, int);
 
-  std::string pat_subst (const std::string &, const std::string &,
-                         const std::string &, int);
+  std::string pat_subst (string_view, string_view, string_view, int);
 
 #if defined(PROCESS_SUBSTITUTION)
   int fifos_pending ();
@@ -4290,68 +4290,61 @@ protected:
 #endif
 
 #if defined(ARRAY_VARS)
-  char *extract_array_assignment_list (const std::string &, int *);
+  char *extract_array_assignment_list (string_view, int *);
 #endif
 
 #if defined(COND_COMMAND)
-  char *remove_backslashes (const std::string &);
+  char *remove_backslashes (string_view);
   char *cond_expand_word (WORD_DESC *, int);
   void cond_error (parser::token_kind_type, const parser::symbol_type &);
 #endif
 
-  size_t skip_to_delim (const std::string &, size_t, const std::string &,
-                        sd_flags);
+  size_t skip_to_delim (string_view, size_t, string_view, sd_flags);
 
 #if defined(BANG_HISTORY)
-  size_t skip_to_histexp (const std::string &, size_t, const std::string &,
-                          sd_flags);
+  size_t skip_to_histexp (string_view, size_t, string_view, sd_flags);
 #endif
 
 #if defined(READLINE)
-  unsigned int char_is_quoted (const std::string &,
-                               int); /* rl_linebuf_func_t */
-  bool unclosed_pair (const std::string &, int, const std::string &);
-  WORD_LIST *split_at_delims (const std::string &, int, const std::string &,
-                              int, sd_flags, int *, int *);
+  unsigned int char_is_quoted (string_view, int); /* rl_linebuf_func_t */
+  bool unclosed_pair (string_view, int, string_view);
+  WORD_LIST *split_at_delims (string_view, int, string_view, int, sd_flags,
+                              int *, int *);
 #endif
 
   void invalidate_cached_quoted_dollar_at ();
 
   // private methods from subst.c
 
-  std::string string_extract (const std::string &, size_t *,
-                              const std::string &, sx_flags);
+  std::string string_extract (string_view, size_t *, string_view, sx_flags);
 
-  std::string string_extract_double_quoted (const std::string &, size_t *,
-                                            sx_flags);
+  std::string string_extract_double_quoted (string_view, size_t *, sx_flags);
 
-  size_t skip_double_quoted (const std::string &, size_t, size_t, sx_flags);
+  size_t skip_double_quoted (string_view, size_t, size_t, sx_flags);
 
-  std::string string_extract_single_quoted (const std::string &, size_t *);
+  std::string string_extract_single_quoted (string_view, size_t *);
 
-  size_t skip_single_quoted (const std::string &, size_t, size_t, sx_flags);
+  size_t skip_single_quoted (string_view, size_t, size_t, sx_flags);
 
-  std::string string_extract_verbatim (const std::string &, size_t, size_t *,
-                                       const std::string &, sx_flags);
+  std::string string_extract_verbatim (string_view, size_t, size_t *,
+                                       string_view, sx_flags);
 
-  std::string extract_delimited_string (const std::string &, size_t *,
-                                        const std::string &,
-                                        const std::string &,
-                                        const std::string &, sx_flags);
+  std::string extract_delimited_string (string_view, size_t *, string_view,
+                                        string_view, string_view, sx_flags);
 
-  std::string extract_dollar_brace_string (const std::string &, size_t *,
-                                           quoted_flags, sx_flags);
+  std::string extract_dollar_brace_string (string_view, size_t *, quoted_flags,
+                                           sx_flags);
 
   void exp_throw_to_top_level (const std::exception &);
 
 #if defined(ARRAY_VARS)
-  size_t skip_matched_pair (const std::string &, size_t, char, char, int);
+  size_t skip_matched_pair (string_view, size_t, char, char, int);
 
   /* Flags has 1 as a reserved value, since skip_matched_pair uses it for
      skipping over quoted strings and taking the first instance of the
      closing character. */
   size_t
-  skipsubscript (const std::string &string, size_t start, int flags)
+  skipsubscript (string_view string, size_t start, int flags)
   {
     return skip_matched_pair (string, start, '[', ']', flags);
   }
@@ -4364,14 +4357,13 @@ protected:
     return ifs_cmap[static_cast<unsigned char> (c)];
   }
 
-  SHELL_VAR *do_compound_assignment (const std::string &, const std::string &,
-                                     assign_flags);
+  SHELL_VAR *do_compound_assignment (string_view, string_view, assign_flags);
 
   // from variables.cc
 
   void validate_inherited_value (SHELL_VAR *, int);
 
-  SHELL_VAR *set_if_not (const std::string &, const std::string &);
+  SHELL_VAR *set_if_not (string_view, string_view);
 
   void set_pwd ();
   void set_ppid ();
@@ -4383,33 +4375,33 @@ protected:
 
   void reinit_special_variables ();
 
-  SHELL_VAR *var_lookup (const std::string &, VAR_CONTEXT *);
+  SHELL_VAR *var_lookup (string_view, VAR_CONTEXT *);
 
-  SHELL_VAR *find_function_var (const std::string &);
-  FUNCTION_DEF *find_function_def (const std::string &);
-  SHELL_VAR *find_variable (const std::string &);
-  SHELL_VAR *find_variable_noref (const std::string &);
-  SHELL_VAR *find_var_last_nameref (const std::string &, int);
-  SHELL_VAR *find_global_var_last_nameref (const std::string &, int);
+  SHELL_VAR *find_function_var (string_view);
+  FUNCTION_DEF *find_function_def (string_view);
+  SHELL_VAR *find_variable (string_view);
+  SHELL_VAR *find_variable_noref (string_view);
+  SHELL_VAR *find_var_last_nameref (string_view, int);
+  SHELL_VAR *find_global_var_last_nameref (string_view, int);
   SHELL_VAR *find_var_nameref (SHELL_VAR *);
-  SHELL_VAR *find_var_nameref_for_create (const std::string &, int);
-  SHELL_VAR *find_var_nameref_for_assignment (const std::string &, int);
-  /* SHELL_VAR *find_internal (const std::string &, int); */
-  SHELL_VAR *find_tempenv (const std::string &);
-  SHELL_VAR *find_no_tempenv (const std::string &);
-  SHELL_VAR *find_global (const std::string &);
-  SHELL_VAR *find_global_noref (const std::string &);
-  SHELL_VAR *find_shell (const std::string &);
-  SHELL_VAR *find_no_invisible (const std::string &);
-  SHELL_VAR *find_for_assignment (const std::string &);
-  char *nameref_transform_name (const std::string &, int);
+  SHELL_VAR *find_var_nameref_for_create (string_view, int);
+  SHELL_VAR *find_var_nameref_for_assignment (string_view, int);
+  /* SHELL_VAR *find_internal (string_view, int); */
+  SHELL_VAR *find_tempenv (string_view);
+  SHELL_VAR *find_no_tempenv (string_view);
+  SHELL_VAR *find_global (string_view);
+  SHELL_VAR *find_global_noref (string_view);
+  SHELL_VAR *find_shell (string_view);
+  SHELL_VAR *find_no_invisible (string_view);
+  SHELL_VAR *find_for_assignment (string_view);
+  char *nameref_transform_name (string_view, int);
   //   SHELL_VAR *copy_variable (SHELL_VAR *);
-  SHELL_VAR *make_local (const std::string &, int);
-  SHELL_VAR *bind_variable (const std::string &, const std::string &, int);
-  SHELL_VAR *bind_global (const std::string &, const std::string &, int);
-  SHELL_VAR *bind_function (const std::string &, COMMAND *);
+  SHELL_VAR *make_local (string_view, int);
+  SHELL_VAR *bind_variable (string_view, string_view, int);
+  SHELL_VAR *bind_global (string_view, string_view, int);
+  SHELL_VAR *bind_function (string_view, COMMAND *);
 
-  void bind_function_def (const std::string &, FUNCTION_DEF *, int);
+  void bind_function_def (string_view, FUNCTION_DEF *, int);
 
   SHELL_VAR **map_over (sh_var_map_func_t *, VAR_CONTEXT *);
   SHELL_VAR **map_over_funcs (sh_var_map_func_t *);
@@ -4424,20 +4416,20 @@ protected:
 #if defined(ARRAY_VARS)
   SHELL_VAR **all_array ();
 #endif
-  char **all_matching_prefix (const std::string &);
+  char **all_matching_prefix (string_view);
 
-  char **add_or_supercede_exported_var (const std::string &, int);
+  char **add_or_supercede_exported_var (string_view, int);
 
-  char *get_variable_value (SHELL_VAR *);
-  char *get_string_value (const std::string &);
-  char *make_variable_value (SHELL_VAR *, const std::string &, int);
+  const std::string *get_variable_value (SHELL_VAR *);
+  const std::string *get_string_value (string_view);
+  const std::string *make_variable_value (SHELL_VAR *, string_view, int);
 
   /* These five are virtual callbacks when Readline is used. */
 
   void sh_set_lines_and_columns (unsigned int, unsigned int) RL_OVERRIDE;
   const char *sh_get_env_value (const char *) RL_OVERRIDE;
-  std::string sh_single_quote (const std::string &) RL_OVERRIDE;
-  std::string sh_get_home_dir () RL_OVERRIDE;
+  std::string sh_single_quote (string_view) RL_OVERRIDE;
+  string_view sh_get_home_dir () RL_OVERRIDE;
   int sh_unset_nodelay_mode (int) RL_OVERRIDE;
 
   SHELL_VAR *bind_variable_value (SHELL_VAR *, const char *, int);
@@ -4489,18 +4481,18 @@ protected:
   void merge_builtin_env ();
   void kill_all_local_variables ();
 
-  void set_var_read_only (const char *);
-  void set_func_read_only (const char *);
-  void set_var_auto_export (const char *);
-  void set_func_auto_export (const char *);
+  void set_var_read_only (string_view);
+  void set_func_read_only (string_view);
+  void set_var_auto_export (string_view);
+  void set_func_auto_export (string_view);
 
   void sort_variables (SHELL_VAR **);
 
-  int chkexport (const char *);
+  int chkexport (string_view);
   void maybe_make_export_env ();
-  void update_export_env_inplace (const char *, int, const char *);
-  void put_command_name_into_env (const char *);
-  void put_gnu_argv_flags_into_env (int64_t, const char *);
+  void update_export_env_inplace (string_view, int, string_view);
+  void put_command_name_into_env (string_view);
+  void put_gnu_argv_flags_into_env (int64_t, string_view);
 
   void print_var_list (SHELL_VAR **);
   void print_func_list (SHELL_VAR **);
@@ -4509,11 +4501,11 @@ protected:
   void print_var_function (SHELL_VAR *);
 
 #if defined(ARRAY_VARS)
-  SHELL_VAR *make_new_array_variable (const char *);
-  SHELL_VAR *make_local_array_variable (const char *, int);
+  SHELL_VAR *make_new_array_variable (string_view);
+  SHELL_VAR *make_local_array_variable (string_view, int);
 
-  SHELL_VAR *make_new_assoc_variable (const char *);
-  SHELL_VAR *make_local_assoc_variable (const char *, int);
+  SHELL_VAR *make_new_assoc_variable (string_view);
+  SHELL_VAR *make_local_assoc_variable (string_view, int);
 
   void set_pipestatus_array (int *, int);
   ARRAY *save_pipestatus_array ();
@@ -4524,7 +4516,7 @@ protected:
 
   /* The variable in NAME has just had its state changed.  Check to see if it
      is one of the special ones where something special happens. */
-  void stupidly_hack_special_vars (const char *);
+  void stupidly_hack_special_vars (string_view);
 
   /* Reinitialize some special variables that have external effects upon unset
      when the shell reinitializes itself. */
@@ -4534,47 +4526,47 @@ protected:
 
   /* The `special variable' functions that get called when a particular
      variable is set. */
-  void sv_ifs (const char *);
-  void sv_path (const char *);
-  void sv_mail (const char *);
-  void sv_funcnest (const char *);
-  void sv_execignore (const char *);
-  void sv_globignore (const char *);
-  void sv_ignoreeof (const char *);
-  void sv_strict_posix (const char *);
-  void sv_optind (const char *);
-  void sv_opterr (const char *);
-  void sv_locale (const char *);
-  void sv_xtracefd (const char *);
-  void sv_shcompat (const char *);
+  void sv_ifs (string_view);
+  void sv_path (string_view);
+  void sv_mail (string_view);
+  void sv_funcnest (string_view);
+  void sv_execignore (string_view);
+  void sv_globignore (string_view);
+  void sv_ignoreeof (string_view);
+  void sv_strict_posix (string_view);
+  void sv_optind (string_view);
+  void sv_opterr (string_view);
+  void sv_locale (string_view);
+  void sv_xtracefd (string_view);
+  void sv_shcompat (string_view);
 
 #if defined(READLINE)
-  void sv_comp_wordbreaks (const char *);
-  void sv_terminal (const char *);
-  void sv_hostfile (const char *);
-  void sv_winsize (const char *);
+  void sv_comp_wordbreaks (string_view);
+  void sv_terminal (string_view);
+  void sv_hostfile (string_view);
+  void sv_winsize (string_view);
 #endif
 
 #if defined(__CYGWIN__)
-  void sv_home (const char *);
+  void sv_home (string_view);
 #endif
 
 #if defined(HISTORY)
-  void sv_histsize (const char *);
-  void sv_histignore (const char *);
-  void sv_history_control (const char *);
+  void sv_histsize (string_view);
+  void sv_histignore (string_view);
+  void sv_history_control (string_view);
 #if defined(BANG_HISTORY)
-  void sv_histchars (const char *);
+  void sv_histchars (string_view);
 #endif
-  void sv_histtimefmt (const char *);
+  void sv_histtimefmt (string_view);
 #endif /* HISTORY */
 
 #if defined(HAVE_TZSET)
-  void sv_tz (const char *);
+  void sv_tz (string_view);
 #endif
 
 #if defined(JOB_CONTROL)
-  void sv_childmax (const char *);
+  void sv_childmax (string_view);
 #endif
 
   // Methods implemented in variables.cc.
@@ -4583,7 +4575,7 @@ protected:
 
   /* The variable in NAME has just had its state changed.  Check to see if it
      is one of the special ones where something special happens. */
-  void stupidly_hack_special_variables (const std::string &);
+  void stupidly_hack_special_variables (string_view);
 
   // Methods implemented in parse.yy.
 
@@ -4593,7 +4585,7 @@ protected:
 
   void init_token_lists ();
 
-  std::string xparse_dolparen (const std::string &, size_t *, sx_flags);
+  std::string xparse_dolparen (string_view, size_t *, sx_flags);
 
   int return_EOF ();
 
@@ -4607,14 +4599,13 @@ protected:
   }
 
   void reset_parser ();
-  WORD_LIST *parse_string_to_word_list (const std::string &, int,
-                                        const std::string &);
-  void init_yy_io (sh_cget_func_t, sh_cunget_func_t, stream_type,
-                   const std::string &, INPUT_STREAM);
+  WORD_LIST *parse_string_to_word_list (string_view, int, string_view);
+  void init_yy_io (sh_cget_func_t, sh_cunget_func_t, stream_type, string_view,
+                   INPUT_STREAM);
   void with_input_from_stdin ();
-  void with_input_from_stream (FILE *, const std::string &);
+  void with_input_from_stream (FILE *, string_view);
   void initialize_bash_input ();
-  void execute_variable_command (char *, const char *);
+  void execute_variable_command (string_view, string_view);
   std::string parse_comsub (int, int, int);
   int parse_arith_cmd (char **, bool);
 
@@ -4623,7 +4614,7 @@ protected:
 
   /* XXX - possible changes here for `+=' */
   static bool
-  token_is_ident (const std::string &t)
+  token_is_ident (string_view t)
   {
     return legal_identifier (t);
   }
@@ -4669,7 +4660,7 @@ protected:
   // Check if TOKEN is a reserved word and return a parser symbol if so.
   // Otherwise, returns YYerror.
   parser::symbol_type
-  check_for_reserved_word (const std::string &tok)
+  check_for_reserved_word (string_view tok)
   {
     STRING_TOKEN_MAP::iterator it (word_token_map.find (tok));
     if (it != word_token_map.end ())
@@ -4706,14 +4697,14 @@ protected:
 
   // Methods in lib/tilde/tilde.cc.
 
-  size_t tilde_find_prefix (const char *, size_t *);
-  char *tilde_expand_word (const char *);
-  size_t tilde_find_suffix (const char *);
-  char *tilde_expand (const char *);
+  size_t tilde_find_prefix (string_view, size_t *);
+  char *tilde_expand_word (string_view);
+  size_t tilde_find_suffix (string_view);
+  char *tilde_expand (string_view);
 
   // Methods in arrayfunc.cc.
 
-  bool valid_array_reference (const std::string &, valid_array_flags);
+  bool valid_array_reference (string_view, valid_array_flags);
 
   // Methods in general.cc.
 
@@ -4744,8 +4735,8 @@ protected:
       *(posix_vars[i]) = bitmap[i];
   }
 
-  bool valid_nameref_value (const char *, valid_array_flags);
-  bool check_selfref (const char *, const char *);
+  bool valid_nameref_value (string_view, valid_array_flags);
+  bool check_selfref (string_view, string_view);
   bool check_identifier (WORD_DESC *, bool);
 
 #if !defined(HAVE_GROUP_MEMBER)
@@ -4764,10 +4755,10 @@ protected:
     return true;
   }
 
-  bool legal_alias_name (const char *);
-  size_t assignment (const std::string &, int);
+  bool legal_alias_name (string_view);
+  size_t assignment (string_view, int);
 
-  char *make_absolute (const char *, const char *);
+  char *make_absolute (string_view, string_view);
   char *full_pathname (char *);
 
   /* Return 1 if STRING is an absolute program name; it is absolute if it
@@ -4779,14 +4770,14 @@ protected:
     return mbschr (string, '/') != nullptr;
   }
 
-  const char *polite_directory_format (const char *);
-  char *trim_pathname (char *);
+  std::string polite_directory_format (string_view);
+  std::string trim_pathname (string_view);
 
-  char *bash_special_tilde_expansions (char *);
+  std::string *bash_special_tilde_expansions (string_view);
 
   void tilde_initialize ();
 
-  char *bash_tilde_expand (const char *, int);
+  std::string bash_tilde_expand (string_view, int);
 
   void initialize_group_array ();
 
@@ -4805,15 +4796,15 @@ protected:
   void clear_string_list_expander (alias_t *);
 #endif
 
-  const char *read_a_line (bool);
-  const char *read_secondary_line (bool);
+  string_view read_a_line (bool);
+  string_view read_secondary_line (bool);
   void prompt_again ();
 
   int shell_getc (bool);
   void shell_ungetc (int);
-  void shell_ungets (const std::string &);
+  void shell_ungets (string_view);
 
-  const char *parser_remaining_input ();
+  string_view parser_remaining_input ();
   void discard_until (int);
 
   // Command to read_token () explaining what we want it to do.
@@ -4829,13 +4820,13 @@ protected:
 #if defined(ALIAS)
 
   enum alias_expand_token_result{ RE_READ_TOKEN = -99, NO_EXPANSION = -100 };
-  alias_expand_token_result alias_expand_token (const std::string &);
+  alias_expand_token_result alias_expand_token (string_view);
 
 #endif
 
   bool time_command_acceptable ();
 
-  parser::symbol_type special_case_tokens (const std::string &);
+  parser::symbol_type special_case_tokens (string_view);
 
   void
   reset_readahead_token ()
@@ -5021,7 +5012,7 @@ protected:
 
   std::string parse_compound_assignment ();
 
-  COMMAND *parse_string_to_command (const std::string &, sx_flags);
+  COMMAND *parse_string_to_command (string_view, sx_flags);
 
   // methods from alias.cc
 
@@ -5029,18 +5020,18 @@ protected:
 
   // Scan the list of aliases looking for one with NAME. Return nullptr
   // if the alias doesn't exist, else a pointer to the alias.
-  alias_t *find_alias (const std::string &);
+  alias_t *find_alias (string_view);
 
   // Return the value of the alias for NAME, or nullptr if there is none.
-  char *get_alias_value (const std::string &);
+  char *get_alias_value (string_view);
 
   // Make a new alias from NAME and VALUE.  If NAME can be found, then
   // replace its value.
-  void add_alias (const std::string &, const std::string &);
+  void add_alias (string_view, string_view);
 
   // Remove the alias with name NAME from the alias list. Returns
   // the index of the removed alias, or -1 if the alias didn't exist.
-  int remove_alias (const std::string &);
+  int remove_alias (string_view);
 
   // Remove all aliases.
   void delete_all_aliases ();
@@ -5049,10 +5040,10 @@ protected:
   alias_t **all_aliases ();
 
   // Expand a single word for aliases.
-  std::string alias_expand_word (const std::string &);
+  std::string alias_expand_word (string_view);
 
   // Return a new line, with any aliases expanded.
-  std::string alias_expand (const std::string &);
+  std::string alias_expand (string_view);
 
   // Helper definition for the parser.
   void clear_string_list_expander (alias_t &);
@@ -5061,7 +5052,7 @@ protected:
 
   // Return true if OP is one of the test command's unary operators.
   bool
-  test_unop (const std::string &op)
+  test_unop (string_view op)
   {
     if (op.size () != 2 || op[0] != '-')
       return false;
@@ -5100,7 +5091,7 @@ protected:
     return false;
   }
 
-  bool test_binop (const std::string &op);
+  bool test_binop (string_view op);
 
   /* ************************************************************** */
   /*		Private Shell Variables (ptr types)		    */
@@ -5152,16 +5143,16 @@ protected:
   UserInfo current_user;
 
   /* The current host's name. */
-  const char *current_host_name;
+  std::string current_host_name;
 
   /* The environment that the shell passes to other commands. */
   char **shell_environment;
 
   /* The name of this shell, as taken from argv[0]. */
-  const char *shell_name;
+  std::string shell_name;
 
   /* The name of the .(shell)rc file. */
-  const char *bashrc_file;
+  std::string bashrc_file;
 
   /* These are extern so execute_simple_command can set them, and then
      throw back to main to execute a shell script, instead of calling
@@ -5173,8 +5164,8 @@ protected:
 
   char *exec_argv0;
 
-  const char *command_execution_string; /* argument to -c option */
-  const char *shell_script_filename;    /* shell script */
+  std::string command_execution_string; /* argument to -c option */
+  std::string shell_script_filename;    /* shell script */
 
   FILE *default_input;
 
@@ -5199,13 +5190,13 @@ protected:
   };
 
   // initialized at startup by init method in generated builtins.cc.
-  std::map<std::string, Builtin> shell_builtins;
+  std::map<string_view, Builtin> shell_builtins;
 
   // Moved from stringlib.cc for inlining purposes.
 
   /* Find TOKEN in MAP, a map of string/token_kind_type pairs. Returns the
      corresponding string, or an empty string if not found. */
-  static std::string
+  static string_view
   find_token_in_map (parser::token_kind_type token,
                      const STRING_TOKEN_MAP &tmap)
   {
@@ -5216,7 +5207,7 @@ protected:
         if ((*it).second == token)
           return (*it).first;
       }
-    return std::string ();
+    return string_view ();
   }
 
   jobstats js;
@@ -5298,7 +5289,7 @@ protected:
 
   /* The name of the command that is currently being executed.
      `test' needs this, for example. */
-  const char *this_command_name;
+  std::string this_command_name;
 
   SHELL_VAR *this_shell_function;
 
@@ -5362,14 +5353,14 @@ protected:
 
   /* If non-null, this contains the address of a function that the application
      wants called before trying the standard tilde expansions.  The function
-     is called with the text sans tilde, and returns a malloc()'ed string
-     which is the expansion, or a NULL pointer if the expansion fails. */
+     is called with the text sans tilde, and returns a new C++ string
+     which is the expansion, or nullptr if the expansion fails. */
   tilde_hook_func_t tilde_expansion_preexpansion_hook;
 
   /* If non-null, this contains the address of a function to call if the
      standard meaning for expanding a tilde fails.  The function is called
-     with the text (sans tilde, as in "foo"), and returns a malloc()'ed string
-     which is the expansion, or a NULL pointer if there is no expansion. */
+     with the text (sans tilde, as in "foo"), and returns a new C++ string
+     which is the expansion, or nullptr if there is no expansion. */
   tilde_hook_func_t tilde_expansion_failure_hook;
 
   /* When non-null, this is a nullptr-terminated array of strings which
@@ -5491,30 +5482,30 @@ protected:
 
   struct LongArg
   {
-    const char *name;
+    string_view name;
     arg_type type;
     union
     {
       bool *bool_ptr;
       char *flag_ptr;
-      const char **charp_ptr;
+      std::string *str_ptr;
     } value;
 
-    LongArg () : name (nullptr), type (Bool) { value.bool_ptr = nullptr; }
+    LongArg () : type (Bool) { value.bool_ptr = nullptr; }
 
-    LongArg (const char *n, bool *bp) : name (n), type (Bool)
+    LongArg (string_view n, bool *bp) : name (n), type (Bool)
     {
       value.bool_ptr = bp;
     }
 
-    LongArg (const char *n, char *fp) : name (n), type (Flag)
+    LongArg (string_view n, char *fp) : name (n), type (Flag)
     {
       value.flag_ptr = fp;
     }
 
-    LongArg (const char *n, const char **cpp) : name (n), type (Charp)
+    LongArg (string_view n, std::string *strp) : name (n), type (Charp)
     {
-      value.charp_ptr = cpp;
+      value.str_ptr = strp;
     }
   };
 

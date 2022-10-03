@@ -21,21 +21,23 @@
 #if !defined(_FINDCMD_H_)
 #define _FINDCMD_H_
 
+namespace bash
+{
+
 /* Flags for search_for_command */
 #define CMDSRCH_HASH 0x01
 #define CMDSRCH_STDPATH 0x02
 #define CMDSRCH_TEMPENV 0x04
 
-extern int file_status (const std::string &);
-extern bool executable_file (const std::string &);
-extern bool is_directory (const std::string &);
-extern bool executable_or_directory (const std::string &);
-extern std::string find_user_command (const std::string &);
-extern std::string find_in_path (const std::string &, const std::string &,
-                                 int);
-extern std::string find_path_file (const std::string &);
-extern std::string search_for_command (const std::string &, int);
-extern std::string user_command_matches (const std::string &, int, int);
+extern int file_status (string_view);
+extern bool executable_file (string_view);
+extern bool is_directory (string_view);
+extern bool executable_or_directory (string_view);
+extern std::string find_user_command (string_view);
+extern std::string find_in_path (string_view, string_view, int);
+extern std::string find_path_file (string_view);
+extern std::string search_for_command (string_view, int);
+extern std::string user_command_matches (string_view, int, int);
 extern void setup_exec_ignore ();
 
 #if 0
@@ -43,5 +45,7 @@ extern bool dot_found_in_search;
 /* variables managed via shopt */
 extern bool check_hashed_filenames;
 #endif
+
+} // namespace bash
 
 #endif /* _FINDCMD_H_ */

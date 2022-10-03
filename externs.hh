@@ -24,6 +24,8 @@
 #if !defined(_EXTERNS_H_)
 #define _EXTERNS_H_
 
+#include <cerrno>
+#include <cstdio>
 #include <cstring>
 #include <ctime>
 
@@ -81,10 +83,6 @@ std::string shell_version_string ();
 void show_shell_version (int);
 
 // functions from builtins/common.hh
-
-/* Keeps track of the current working directory. */
-char *get_working_directory (const char *);
-void set_working_directory (const char *);
 
 /* Functions from the bash library, lib/sh/libsh.a.  These should really
    go into a separate include file. */
@@ -351,7 +349,7 @@ strlist_print (const STRINGLIST *sl, const char *prefix)
 
   STRINGLIST::const_iterator it;
   for (it = sl->begin (); it != sl->end (); ++it)
-    printf ("%s%s\n", prefix ? prefix : "", *it);
+    std::printf ("%s%s\n", prefix ? prefix : "", *it);
 }
 
 // Custom comparison function for sorting string pointer vectors.
@@ -450,14 +448,14 @@ strlist_dispose (STRINGLIST *sl)
 // Search for and remove the first occurrence of the specified name. Returns
 // true if an item was found; false otherwise.
 static inline bool
-strlist_remove (STRINGLIST *sl, const char *name)
+strlist_remove (STRINGLIST *sl, string_view name)
 {
   if (sl == nullptr)
     return false;
 
   STRINGLIST::iterator it;
   for (it = sl->begin (); it != sl->end (); ++it)
-    if (STREQ (name, *it))
+    if (name == *it)
       {
         delete[](*it);
         return true;
@@ -467,12 +465,12 @@ strlist_remove (STRINGLIST *sl, const char *name)
 
 // Find NAME in STRINGLIST.  Return the index of NAME, or -1 if not present.
 static inline int
-strlist_search (const STRINGLIST *array, const char *name)
+strlist_search (const STRINGLIST *array, string_view name)
 {
   STRINGLIST::const_iterator it;
 
   for (it = array->begin (); it != array->end (); ++it)
-    if (STREQ (name, *it))
+    if (name == *it)
       return static_cast<int> (it - array->begin ());
 
   return -1;
@@ -506,8 +504,8 @@ enum mktmp_flags
 };
 
 char *sh_mktmpname (char *, int);
-int sh_mktmpfd (const char *, int, char **);
-/* extern FILE *sh_mktmpfp (const char *, int, char **); */
+int sh_mktmpfd (string_view, int, char **);
+/* extern FILE *sh_mktmpfp (string_view, int, char **); */
 char *sh_mktmpdir (char *, int);
 
 /* declarations for functions defined in lib/sh/uconvert.c */
@@ -540,12 +538,12 @@ ssize_t zgetline (int, char **, size_t *, int, bool);
 
 /* declarations for functions defined in lib/sh/zmapfd.c */
 
-int zmapfd (int, char **, const char *);
+int zmapfd (int, char **, string_view);
 
 /* declarations for functions defined in lib/glob/gmisc.c */
 
-bool match_pattern_char (const char *, const char *, int);
-int umatchlen (const char *, size_t);
+bool match_pattern_char (string_view, string_view, int);
+int umatchlen (string_view, size_t);
 
 #if defined(HANDLE_MULTIBYTE)
 bool match_pattern_wchar (const wchar_t *, const wchar_t *, int);
@@ -659,11 +657,11 @@ uint64_t strtoumax (const char *, char **, int);
    check up to the first newline, or SAMPLE_LEN, whichever comes first.
    All of the characters must be printable or whitespace. */
 static inline bool
-check_binary_file (const char *sample, int sample_len)
+check_binary_file (string_view sample, size_t sample_len)
 {
   unsigned char c;
 
-  for (int i = 0; i < sample_len; i++)
+  for (size_t i = 0; i < sample_len; i++)
     {
       c = static_cast<unsigned char> (sample[i]);
       if (c == '\n')
@@ -764,9 +762,9 @@ file_iswdir (const char *fn)
 /* Return 1 if STRING is "." or "..", optionally followed by a directory
    separator */
 static inline bool
-path_dot_or_dotdot (const char *string)
+path_dot_or_dotdot (string_view string)
 {
-  if (string == nullptr || *string == '\0' || *string != '.')
+  if (string.empty () || string[0] != '.')
     return false;
 
   /* string[0] == '.' */
@@ -779,9 +777,9 @@ path_dot_or_dotdot (const char *string)
 /* Return true if STRING contains an absolute pathname.  Used by `cd'
    to decide whether or not to look up a directory name in $CDPATH. */
 static inline bool
-absolute_pathname (const char *string)
+absolute_pathname (string_view string)
 {
-  if (string == nullptr || *string == '\0')
+  if (string.empty ())
     return false;
 
   if (ABSPATH (string))
@@ -799,19 +797,19 @@ absolute_pathname (const char *string)
 
 /* Return the `basename' of the pathname in STRING (the stuff after the
    last '/').  If STRING is `/', just return it. */
-static inline const char *
-base_pathname (const char *string)
+static inline std::string
+base_pathname (const std::string &string)
 {
-  const char *p;
-
-  if (string[0] == '/' && string[1] == 0)
+  if (string.size () == 1 && string[0] == '/')
     return string;
 
-  p = std::strrchr (string, '/');
-  return p ? ++p : string;
+  size_t lastslash = string.rfind ('/');
+
+  return (lastslash == string_view::npos) ? string
+                                          : string.substr (lastslash + 1);
 }
 
-char *make_absolute (const char *, const char *);
+char *make_absolute (string_view, string_view);
 char *full_pathname (char *);
 
 /* Return a printable representation of FN without special characters.  The
@@ -829,11 +827,11 @@ printable_filename (const std::string &fn, int flags)
     return fn;
 }
 
-char *extract_colon_unit (const char *, size_t *);
+char *extract_colon_unit (string_view, size_t *);
 
 void tilde_initialize ();
-char *bash_tilde_find_word (const char *, int, size_t *);
-char *bash_tilde_expand (const char *, int);
+std::string bash_tilde_find_word (string_view, int);
+std::string bash_tilde_expand (string_view, int);
 
 #if !defined(HAVE_GROUP_MEMBER)
 int group_member (gid_t);

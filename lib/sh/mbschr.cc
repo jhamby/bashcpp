@@ -32,7 +32,6 @@ namespace bash
 /* In some locales, the non-first byte of some multibyte characters have
    the same value as some ascii character.  Faced with these strings, a
    legacy strchr() might return the wrong value. */
-
 const char *
 Shell::mbschr (const char *s, int c)
 {

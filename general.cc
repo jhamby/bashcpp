@@ -275,33 +275,17 @@ print_rlimtype (RLIMTYPE n, int addnl)
 /*								    */
 /* **************************************************************** */
 
-/* Return non-zero if all of the characters in STRING are digits. */
-bool
-all_digits (const char *string)
-{
-  const char *s;
-
-  for (s = string; *s; s++)
-    if (std::isdigit (*s) == 0)
-      return false;
-
-  return true;
-}
-
 /* Return non-zero if the characters pointed to by STRING constitute a
    valid number.  Stuff the converted number into RESULT if RESULT is
    not null. */
 bool
-legal_number (const char *string, int64_t *result)
+legal_number (string_view string, int64_t *result)
 {
   int64_t value;
   char *ep;
 
   if (result)
     *result = 0;
-
-  if (string == nullptr)
-    return false;
 
   errno = 0;
   value = strtoimax (string, &ep, 10);
@@ -333,7 +317,7 @@ legal_number (const char *string, int64_t *result)
    be used to allow values to be stored and indirectly referenced, but
    not used in assignments. */
 bool
-Shell::valid_nameref_value (const char *name, valid_array_flags flags)
+Shell::valid_nameref_value (string_view name, valid_array_flags flags)
 {
   if (name == nullptr || *name == '\0')
     return false;
@@ -351,7 +335,7 @@ Shell::valid_nameref_value (const char *name, valid_array_flags flags)
 }
 
 bool
-Shell::check_selfref (const char *name, const char *value)
+Shell::check_selfref (string_view name, string_view value)
 {
   if (STREQ (name, value))
     return true;
@@ -400,7 +384,7 @@ Shell::check_identifier (WORD_DESC *word, bool check_word)
    essentially all characters except those which must be quoted to the
    parser (which disqualifies them from alias expansion anyway) and `/'. */
 bool
-Shell::legal_alias_name (const char *string)
+Shell::legal_alias_name (string_view string)
 {
   const char *s;
 
@@ -415,7 +399,7 @@ Shell::legal_alias_name (const char *string)
    assignment and require an array subscript before the `=' to denote an
    assignment statement. */
 size_t
-Shell::assignment (const std::string &string, int flags)
+Shell::assignment (string_view string, int flags)
 {
   if (string.empty ())
     return 0;
@@ -598,7 +582,7 @@ move_to_high_fd (int fd, int check_new, int maxfd)
    returns a new string, even if STRING was an absolute pathname to
    begin with. */
 char *
-Shell::make_absolute (const char *string, const char *dot_path)
+Shell::make_absolute (string_view string, string_view dot_path)
 {
   char *result;
 
@@ -645,10 +629,10 @@ Shell::full_pathname (char *file)
 
 /* Return a pretty pathname.  If the first part of the pathname is
    the same as $HOME, then replace that with `~'.  */
-const char *
-Shell::polite_directory_format (const char *name)
+std::string
+Shell::polite_directory_format (string_view name)
 {
-  char *home = get_string_value ("HOME");
+  const char *home = get_string_value ("HOME");
   size_t l = home ? std::strlen (home) : 0;
 
   if (l > 1 && std::strncmp (home, name, l) == 0
@@ -734,7 +718,7 @@ Shell::trim_pathname (char *name)
    return the next one pointed to by (P_INDEX), or nullptr if there are no
    more. Advance (P_INDEX) to the character after the colon. */
 char *
-extract_colon_unit (const char *string, size_t *p_index)
+extract_colon_unit (string_view string, size_t *p_index)
 {
   size_t i, start, len;
   char *value;
@@ -793,12 +777,10 @@ extern char *get_dirstack_from_string (char *);
    tilde_expansion_preexpansion_hook.  It knows how to expand ~- and ~+.
    If PUSHD_AND_POPD is defined, ~[+-]N expands to directories from the
    directory stack. */
-char *
-Shell::bash_special_tilde_expansions (char *text)
+std::string *
+Shell::bash_special_tilde_expansions (string_view text)
 {
-  char *result;
-
-  result = nullptr;
+  const std::string *result = nullptr;
 
   if (text[0] == '+' && text[1] == '\0')
     result = get_string_value ("PWD");
@@ -862,8 +844,8 @@ Shell::tilde_initialize ()
 
 #define TILDE_END(c) ((c) == '\0' || (c) == '/' || (c) == ':')
 
-static int
-unquoted_tilde_word (const char *s)
+static bool
+unquoted_tilde_word (string_view s)
 {
   const char *r;
 
@@ -881,11 +863,11 @@ unquoted_tilde_word (const char *s)
 }
 
 /* Find the end of the tilde-prefix starting at S, and return the tilde
-   prefix in newly-allocated memory.  Return the length of the string in
-   *LENP.  FLAGS tells whether or not we're in an assignment context --
-   if so, `:' delimits the end of the tilde prefix as well. */
-char *
-bash_tilde_find_word (const char *s, int flags, size_t *lenp)
+   prefix in newly-allocated memory. FLAGS tells whether or not we're in an
+   assignment context -- if so, `:' delimits the end of the tilde prefix as
+   well. */
+std::string
+bash_tilde_find_word (string_view s, int flags)
 {
   const char *r;
   char *ret;
@@ -920,8 +902,8 @@ bash_tilde_find_word (const char *s, int flags, size_t *lenp)
    tilde prefixes should be enabled (`=~' and `:~', see above).  If
    ASSIGN_P is 2, we are expanding the rhs of an assignment statement,
    so `=~' is not valid. */
-char *
-Shell::bash_tilde_expand (const char *s, int assign_p)
+std::string
+Shell::bash_tilde_expand (string_view s, int assign_p)
 {
   int r;
   char *ret;
@@ -1110,11 +1092,8 @@ conf_standard_path ()
 int
 Shell::default_columns ()
 {
-  char *v;
-  int c;
-
-  c = -1;
-  v = get_string_value ("COLUMNS");
+  int c = -1;
+  const char *v = get_string_value ("COLUMNS");
   if (v && *v)
     {
       c = atoi (v);

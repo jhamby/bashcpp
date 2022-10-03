@@ -223,8 +223,8 @@ enum subshell_flags
 class WORD_DESC
 {
 public:
-  WORD_DESC (const std::string &w, word_desc_flags f = W_NOFLAGS)
-      : word (w), flags (f)
+  WORD_DESC (string_view w, word_desc_flags f = W_NOFLAGS)
+      : word (to_string (w)), flags (f)
   {
   }
   WORD_DESC (const char *w, word_desc_flags f = W_NOFLAGS)

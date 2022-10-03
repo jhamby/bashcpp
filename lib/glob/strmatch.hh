@@ -57,7 +57,7 @@
 namespace bash
 {
 
-extern int xstrmatch (const char *, const char *, int);
+extern int xstrmatch (string_view, string_view, int);
 #if defined(HANDLE_MULTIBYTE)
 extern int internal_wstrmatch (const wchar_t *, const wchar_t *, int);
 #endif
@@ -65,9 +65,9 @@ extern int internal_wstrmatch (const wchar_t *, const wchar_t *, int);
 /* Match STRING against the filename pattern PATTERN,
    returning zero if it matches, FNM_NOMATCH if not.  */
 static inline int
-strmatch (const char *pattern, const char *string, int flags)
+strmatch (string_view pattern, string_view string, int flags)
 {
-  if (string == nullptr || pattern == nullptr)
+  if (string.empty () || pattern.empty ())
     return FNM_NOMATCH;
 
   return xstrmatch (pattern, string, flags);
@@ -84,9 +84,9 @@ wcsmatch (const wchar_t *wpattern, const wchar_t *wstring, int flags)
 }
 #endif
 
-char *mbsmbchar (const char *);
+char *mbsmbchar (string_view );
 
-size_t xdupmbstowcs (wchar_t **destp, char ***indicesp, const char *src);
+size_t xdupmbstowcs (wchar_t **destp, char ***indicesp, string_view src);
 
 } // namespace bash
 

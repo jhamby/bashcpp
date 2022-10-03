@@ -253,18 +253,18 @@ alrm_catcher (int)
 void
 Shell::send_pwd_to_eterm ()
 {
-  char *f = nullptr;
-  char *pwd = get_string_value ("PWD");
-  if (pwd == nullptr)
-    f = pwd = get_working_directory ("eterm");
-  std::fprintf (stderr, "\032/%s\n", pwd);
-  delete[] f;
+  const std::string *pwd = get_string_value ("PWD");
+  if (!pwd)
+    pwd = get_working_directory ("eterm");
+
+  if (pwd)
+    std::fprintf (stderr, "\032/%s\n", pwd->c_str ());
 }
 
 #if defined(ARRAY_VARS)
 /* Caller ensures that A has a non-zero number of elements */
 void
-Shell::execute_array_command (ARRAY *a, const char *tag)
+Shell::execute_array_command (ARRAY *a, string_view tag)
 {
   STRINGLIST *argv = array_to_argv (a);
 

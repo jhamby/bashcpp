@@ -79,7 +79,7 @@ TOGGLE (wchar_t x)
 
 #if defined(HANDLE_MULTIBYTE)
 static inline wchar_t
-cval (const char *s, size_t i, size_t l)
+cval (string_view s, size_t i, size_t l)
 {
   size_t tmp;
   wchar_t wc;
@@ -92,7 +92,7 @@ cval (const char *s, size_t i, size_t l)
     return static_cast<wchar_t> (s[i]);
 
   memset (&mps, 0, sizeof (mbstate_t));
-  tmp = mbrtowc (&wc, s + i, l - i, &mps);
+  tmp = mbrtowc (&wc, &s[i], l - i, &mps);
 
   if (MB_INVALIDCH (tmp) || MB_NULLWCH (tmp))
     return static_cast<wchar_t> (s[i]);
@@ -103,27 +103,23 @@ cval (const char *s, size_t i, size_t l)
 
 // Modify the case of characters in STRING matching PAT based on the value of
 // FLAGS. If PAT is null, modify the case of each character.
-char *
-Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
+std::string
+Shell::sh_modcase (string_view string, string_view pat, sh_modcase_flags flags)
 {
 #if defined(HANDLE_MULTIBYTE)
   char mb[MB_LEN_MAX + 1];
   mbstate_t state;
 #endif
 
-  if (string == nullptr || *string == '\0')
-    {
-      char *ret = new char[1];
-      ret[0] = '\0';
-      return ret;
-    }
+  if (string.empty ())
+    return std::string ();
 
 #if defined(HANDLE_MULTIBYTE)
   std::memset (&state, 0, sizeof (mbstate_t));
 #endif
 
   size_t start = 0;
-  size_t end = strlen (string);
+  size_t end = string.size ();
   size_t mb_cur_max = MB_CUR_MAX;
 
   std::string ret;
@@ -141,19 +137,19 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
       if (std::iswalnum (static_cast<wint_t> (wc)) == 0)
         inword = false;
 
-      if (pat)
+      if (!pat.empty ())
         {
           size_t next = start;
           ADVANCE_CHAR (string, end, next);
 
-          char *s = substring (string, start, next);
-          bool match = (strmatch (pat, s, FNM_EXTMATCH) != FNM_NOMATCH);
-          delete[] s;
+          bool match = (strmatch (pat, string.substr (start, next - start),
+                                  FNM_EXTMATCH)
+                        != FNM_NOMATCH);
 
           if (!match)
             {
               /* copy unmatched portion */
-              ret.append (string + start, next - start);
+              ret.append (&string[start], next - start);
               start = next;
               inword = true;
               continue;
@@ -238,7 +234,7 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
 #if defined(HANDLE_MULTIBYTE)
       else
         {
-          size_t m = std::mbrtowc (&wc, string + start, end - start, &state);
+          size_t m = std::mbrtowc (&wc, &string[start], end - start, &state);
           /* Have to go through wide case conversion even for single-byte
              chars, to accommodate single-byte characters where the
              corresponding upper or lower case equivalent is multibyte. */
@@ -293,7 +289,7 @@ Shell::sh_modcase (const char *string, const char *pat, sh_modcase_flags flags)
       ADVANCE_CHAR (string, end, start);
     }
 
-  return savestring (ret);
+  return ret;
 }
 
 } // namespace bash

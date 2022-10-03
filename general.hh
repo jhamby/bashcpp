@@ -174,6 +174,15 @@ savestring (const std::string &s)
   return std::strcpy (new char[1 + s.size ()], s.c_str ());
 }
 
+// Create a new copy of C++ string_view s. Free with delete[].
+static inline char *
+savestring (string_view s)
+{
+  char *result = std::strcpy (new char[1 + s.size ()], s.data ());
+  result[s.size ()] = '\0';
+  return result;
+}
+
 /* Nonzero if the integer type T is signed.  */
 #define TYPE_SIGNED(t) (!(static_cast<t> (0) < static_cast<t> (-1)))
 
@@ -270,6 +279,7 @@ public:
   }
 };
 
+#if 0
 // Compare two strings for equality.
 static inline bool
 STREQ (const char *a, const char *b)
@@ -283,6 +293,7 @@ STREQN (const char *a, const char *b, size_t n)
 {
   return (std::strncmp (a, b, n) == 0);
 }
+#endif
 
 static inline bool
 whitespace (char c)
@@ -329,16 +340,16 @@ utf8_mbsmbchar (char *str)
 
 /* Adapted from GNU gnulib. Handles UTF-8 characters up to 4 bytes long */
 static inline size_t
-utf8_mblen (const char *s, size_t n)
+utf8_mblen (string_view s, size_t n)
 {
   unsigned char c, c1, c2, c3;
 
-  if (s == nullptr)
+  if (s.empty ())
     return 0; /* no shift states */
   if (n <= 0)
     return static_cast<size_t> (-1);
 
-  c = static_cast<unsigned char> (*s);
+  c = static_cast<unsigned char> (s[0]);
   if (c < 0x80)
     return c != 0;
   if (c >= 0xc2)
@@ -491,12 +502,12 @@ class WORD_DESC;
 // Return true if this token is a legal shell `identifier', i.e. it consists
 // solely of letters, digits, and underscores, and does not begin with a digit.
 static inline bool
-legal_identifier (const std::string &name)
+legal_identifier (string_view name)
 {
   if (name.empty () || (legal_variable_starter (name[0]) == 0))
     return false;
 
-  std::string::const_iterator it;
+  string_view::const_iterator it;
   for (it = name.begin () + 1; it != name.end (); ++it)
     {
       if (!legal_variable_char (*it))
@@ -506,9 +517,9 @@ legal_identifier (const std::string &name)
 }
 
 static inline bool
-line_isblank (const std::string &line)
+line_isblank (string_view line)
 {
-  std::string::const_iterator it;
+  string_view::const_iterator it;
   for (it = line.begin (); it != line.end (); ++it)
     {
       if (!isblank (static_cast<unsigned char> (*it)))
@@ -518,13 +529,24 @@ line_isblank (const std::string &line)
   return true;
 }
 
-bool all_digits (const char *);
+/* Return non-zero if all of the characters in STRING are digits. */
+static inline bool
+all_digits (string_view string)
+{
+  string_view::const_iterator it;
+  for (it = string.begin (); it != string.end (); ++it)
+    if (std::isdigit (*it) == 0)
+      return false;
+
+  return true;
+}
+
 bool legal_number (const char *, int64_t *);
 bool check_identifier (WORD_DESC *, int);
-bool valid_nameref_value (const char *, int);
-bool check_selfref (const char *, const char *, int);
-bool legal_alias_name (const char *, int);
-int assignment (const char *, int);
+bool valid_nameref_value (string_view, int);
+bool check_selfref (string_view, string_view, int);
+bool legal_alias_name (string_view, int);
+int assignment (string_view, int);
 
 int sh_unset_nodelay_mode (int);
 int move_to_high_fd (int, int, int);
