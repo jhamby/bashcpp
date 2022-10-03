@@ -31,6 +31,15 @@
 #include <stdint.h>
 #endif
 
+// Use C++17 std::string_view or our own lite version.
+#if __cplusplus >= 201703L
+#include <string_view>
+using std::string_view;
+#else
+#include <nonstd/string_view.hpp>
+using nonstd::string_view;
+#endif
+
 // Fake C++11 keywords for older C++ compilers.
 #if !defined(nullptr) && __cplusplus < 201103L
 #define noexcept throw ()

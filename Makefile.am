@@ -49,7 +49,8 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
 	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
-	include/unionwait.hh include/timer.hh pathnames.hh
+	include/unionwait.hh include/timer.hh pathnames.hh \
+	include/nonstd/string_view.hpp
 
 if JOB_CONTROL
 bash_SOURCES += jobs.cc
