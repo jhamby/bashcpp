@@ -253,12 +253,12 @@ alrm_catcher (int)
 void
 Shell::send_pwd_to_eterm ()
 {
-  const std::string *pwd = get_string_value ("PWD");
+  const char *pwd = get_string_value ("PWD");
   if (!pwd)
     pwd = get_working_directory ("eterm");
 
   if (pwd)
-    std::fprintf (stderr, "\032/%s\n", pwd->c_str ());
+    std::fprintf (stderr, "\032/%s\n", pwd);
 }
 
 #if defined(ARRAY_VARS)

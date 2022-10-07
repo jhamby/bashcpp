@@ -297,11 +297,11 @@ Shell::run_shell (int argc, char **argv, char **env)
 
   /* If this shell has already been run, then reinitialize it to a
      vanilla state. */
-  if (shell_initialized || !shell_name.empty ())
+  if (shell_initialized || shell_name)
     {
       /* Make sure that we do not infinitely recurse as a login shell. */
-      if (shell_name[0] == '-')
-        shell_name = shell_name.substr (1);
+      if (*shell_name == '-')
+        shell_name++;
 
       shell_reinitialize ();
     }
@@ -367,7 +367,7 @@ Shell::run_shell (int argc, char **argv, char **env)
         }
       arg_index++;
     }
-  this_command_name.clear ();
+  this_command_name = nullptr;
 
   /* First, let the outside world know about our interactive status.
      A shell is interactive if the `-i' flag was given, or if all of
@@ -424,20 +424,20 @@ Shell::run_shell (int argc, char **argv, char **env)
     {
       bool emacs_term, in_emacs;
 
-      const std::string *term = get_string_value ("TERM");
-      const std::string *emacs = get_string_value ("EMACS");
-      const std::string *inside_emacs = get_string_value ("INSIDE_EMACS");
+      const char *term = get_string_value ("TERM");
+      const char *emacs = get_string_value ("EMACS");
+      const char *inside_emacs = get_string_value ("INSIDE_EMACS");
 
       if (inside_emacs)
         {
-          emacs_term = inside_emacs->find (",term:") != string_view::npos;
+          emacs_term = strstr (inside_emacs, ",term:") != nullptr;
           in_emacs = true;
         }
       else if (emacs)
         {
           /* Infer whether we are in an older Emacs. */
-          emacs_term = emacs->find (" (term:") != string_view::npos;
-          in_emacs = emacs_term || *emacs == "t";
+          emacs_term = strstr (emacs, " (term:") != nullptr;
+          in_emacs = emacs_term || STREQ (emacs, "t");
         }
       else
         in_emacs = emacs_term = false;
@@ -445,14 +445,12 @@ Shell::run_shell (int argc, char **argv, char **env)
       /* Not sure any emacs terminal emulator sets TERM=emacs any more */
       if (term)
         {
-          no_line_editing |= (*term == "emacs");
-          no_line_editing |= in_emacs && (*term == "dumb");
+          no_line_editing |= STREQ (term, "emacs");
+          no_line_editing |= in_emacs && STREQ (term, "dumb");
 
           /* running_under_emacs == 2 for `eterm' */
-          running_under_emacs
-              = in_emacs || (term->compare (0, 5, "emacs") == 0);
-          running_under_emacs
-              += emacs_term && (term->compare (0, 5, "eterm") == 0);
+          running_under_emacs = in_emacs || STREQN (term, "emacs", 5);
+          running_under_emacs += emacs_term && STREQN (term, "eterm", 5);
         }
 
       if (running_under_emacs)
@@ -575,7 +573,7 @@ Shell::run_shell (int argc, char **argv, char **env)
           /* Get possible input filename and set up default_buffered_input or
              default_input as appropriate. */
           if (!shell_script_filename.empty ())
-            open_shell_script (shell_script_filename);
+            open_shell_script (shell_script_filename.c_str ());
           else if (!interactive)
             {
               /* In this mode, bash is reading a script from stdin, which is a
@@ -911,11 +909,10 @@ Shell::subshell_exit (int s)
          login			NO
          bash			YES
 */
-
 void
-Shell::execute_env_file (string_view env_file)
+Shell::execute_env_file (const char *env_file)
 {
-  if (!env_file.empty ())
+  if (env_file && *env_file)
     {
       std::string fn (
           expand_string_unsplit_to_string (env_file, Q_DOUBLE_QUOTES));
@@ -1001,9 +998,9 @@ Shell::run_startup_files ()
       if (!posixly_correct && !act_like_sh && !privileged_mode && !sourced_env)
         {
           sourced_env = true;
-          const std::string *bash_env = get_string_value ("BASH_ENV");
+          const char *bash_env = get_string_value ("BASH_ENV");
           if (bash_env)
-            execute_env_file (*bash_env);
+            execute_env_file (bash_env);
         }
       return;
     }
@@ -1045,9 +1042,9 @@ Shell::run_startup_files ()
       else if (act_like_sh && !privileged_mode && !sourced_env)
         {
           sourced_env = true;
-          const std::string *env = get_string_value ("ENV");
+          const char *env = get_string_value ("ENV");
           if (env)
-            execute_env_file (*env);
+            execute_env_file (env);
         }
     }
   else /* bash --posix, sh --posix */
@@ -1056,9 +1053,9 @@ Shell::run_startup_files ()
       if (interactive_shell && !privileged_mode && !sourced_env)
         {
           sourced_env = true;
-          const std::string *env = get_string_value ("ENV");
+          const char *env = get_string_value ("ENV");
           if (env)
-            execute_env_file (*env);
+            execute_env_file (env);
         }
     }
 
@@ -1072,18 +1069,17 @@ Shell::run_startup_files ()
    value of `restricted'.  Don't actually do anything, just return a
    boolean value. */
 bool
-Shell::shell_is_restricted (string_view name)
+Shell::shell_is_restricted (const char *name)
 {
   if (restricted)
     return true;
 
-  std::string temp (to_string (name));
-  temp = base_pathname (temp);
+  const char *temp = base_pathname (name);
 
-  if (!temp.empty () && temp[0] == '-')
-    temp = temp.substr (1);
+  if (*temp == '-')
+    temp++;
 
-  return temp == RESTRICTED_SHELL_NAME;
+  return STREQ (temp, RESTRICTED_SHELL_NAME);
 }
 
 /* Perhaps make this shell a `restricted' one, based on NAME.  If the
@@ -1094,15 +1090,14 @@ Shell::shell_is_restricted (string_view name)
    Do this also if `restricted' is already set to 1; maybe the shell was
    started with -r. */
 bool
-Shell::maybe_make_restricted (string_view name)
+Shell::maybe_make_restricted (const char *name)
 {
-  std::string temp (to_string (name));
-  temp = base_pathname (temp);
+  const char *temp = base_pathname (name);
 
-  if (!temp.empty () && temp[0] == '-')
-    temp = temp.substr (1);
+  if (*temp == '-')
+    temp++;
 
-  if (restricted || temp == RESTRICTED_SHELL_NAME)
+  if (restricted || STREQ (temp, RESTRICTED_SHELL_NAME))
     {
 #if defined(RBASH_STATIC_PATH_VALUE)
       bind_variable ("PATH" sv, RBASH_STATIC_PATH_VALUE, 0);
@@ -1366,12 +1361,8 @@ Shell::start_debugger ()
 }
 
 int
-Shell::open_shell_script (string_view script_name)
+Shell::open_shell_script (const char *script_name)
 {
-#if 0
-  int fd, e, fd_is_tty;
-  char *filename, *path_filename, *t;
-#endif
   char sample[80];
   int sample_len;
   struct stat sb;
@@ -1380,7 +1371,7 @@ Shell::open_shell_script (string_view script_name)
   ARRAY *funcname_a, *bash_source_a, *bash_lineno_a;
 #endif
 
-  std::string filename (to_string (script_name));
+  std::string filename (script_name);
 
   int fd = open (filename.c_str (), O_RDONLY);
   if ((fd < 0) && (errno == ENOENT) && (!absolute_program (filename.c_str ())))
@@ -1592,32 +1583,33 @@ Shell::unset_bash_input (int check_zero)
 #endif
 
 void
-Shell::set_shell_name (const std::string &argv0)
+Shell::set_shell_name (const char *argv0)
 {
   /* Here's a hack.  If the name of this shell is "sh", then don't do
      any startup files; just try to be more like /bin/sh. */
-  shell_name = !argv0.empty () ? base_pathname (argv0) : PROGRAM;
+  shell_name = argv0 ? base_pathname (argv0) : PROGRAM;
 
-  if (!argv0.empty () && argv0[0] == '-')
+  if (argv0 && *argv0 == '-')
     {
-      if (shell_name[0] == '-')
-        shell_name = shell_name.substr (1);
-      login_shell = true;
+      if (*shell_name == '-')
+        shell_name++;
+      login_shell = 1;
     }
 
-  if (shell_name == "sh")
+  if (shell_name[0] == 's' && shell_name[1] == 'h' && shell_name[2] == '\0')
     act_like_sh = true;
-  if (shell_name == "su")
+
+  if (shell_name[0] == 's' && shell_name[1] == 'u' && shell_name[2] == '\0')
     su_shell = true;
 
-  shell_name = !argv0.empty () ? std::string (argv0) : PROGRAM;
+  shell_name = argv0 ? argv0 : PROGRAM;
   delete[] dollar_vars[0];
   dollar_vars[0] = savestring (shell_name);
 
   /* A program may start an interactive shell with
-          "execl ("/bin/bash", "-", nullptr)".
+          "execl ("/bin/bash", "-", NULL)".
      If so, default the name of this shell to our name. */
-  if (shell_name.empty () || shell_name == "-")
+  if (!shell_name || !*shell_name || (shell_name[0] == '-' && !shell_name[1]))
     shell_name = PROGRAM;
 }
 
@@ -1730,13 +1722,13 @@ Shell::shell_initialize ()
   initialize_signals (false);
 
   /* It's highly unlikely that this will change. */
-  if (current_host_name.empty ())
+  if (current_host_name == nullptr)
     {
       /* Initialize current_host_name. */
       if (::gethostname (hostname, 255) < 0)
         current_host_name = "??host??";
       else
-        current_host_name = hostname;
+        current_host_name = savestring (hostname);
     }
 
   /* Initialize the stuff in current_user that comes from the password
@@ -1854,7 +1846,7 @@ Shell::show_shell_usage (FILE *fp, bool extra)
   std::fprintf (fp,
                 _ ("Usage:\t%s [GNU long option] [option] ...\n\t%s [GNU long "
                    "option] [option] script-file ...\n"),
-                shell_name.c_str (), shell_name.c_str ());
+                shell_name, shell_name);
   std::fputs (_ ("GNU long options:\n"), fp);
   for (std::vector<LongArg>::iterator it = long_args.begin ();
        it != long_args.end (); ++it)
@@ -1892,11 +1884,11 @@ Shell::show_shell_usage (FILE *fp, bool extra)
       std::fprintf (fp,
                     _ ("Type `%s -c \"help set\"' for more information about "
                        "shell options.\n"),
-                    shell_name.c_str ());
+                    shell_name);
       std::fprintf (fp,
                     _ ("Type `%s -c help' for more information about shell "
                        "builtin commands.\n"),
-                    shell_name.c_str ());
+                    shell_name);
       std::fprintf (fp, _ ("Use the `bashbug' command to report bugs.\n"));
       std::fprintf (fp, "\n");
       std::fprintf (

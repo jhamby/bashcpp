@@ -31,6 +31,10 @@
 namespace bash
 {
 
+/* A standard error message to use when getcwd() returns nullptr. */
+const char *const bash_getcwd_errstr
+    = N_ ("getcwd: cannot access parent directories");
+
 /* Used by some builtins and the mainline code. */
 // sh_builtin_func_t *last_shell_builtin = (sh_builtin_func_t *)NULL;
 // sh_builtin_func_t *this_shell_builtin = (sh_builtin_func_t *)NULL;
@@ -51,7 +55,7 @@ Shell::builtin_error_prolog ()
   name = get_name_for_error ();
   fprintf (stderr, "%s: ", name);
 
-  if (interactive_shell == 0)
+  if (!interactive_shell)
     fprintf (stderr, _ ("line %d: "), executing_line_number ());
 
   if (this_command_name && *this_command_name)
@@ -526,43 +530,36 @@ Shell::read_octal (const char *string)
 
 /* Return a consed string which is the current working directory.
    FOR_WHOM is the name of the caller for error printing.  */
-// char *the_current_working_directory = (char *)NULL;
-
 const std::string *
 Shell::get_working_directory (string_view for_whom)
 {
   if (no_symbolic_links)
-    {
-      FREE (the_current_working_directory);
-      the_current_working_directory = (char *)NULL;
-    }
+    the_current_working_directory = nullptr;
 
-  if (the_current_working_directory == 0)
+  if (the_current_working_directory == nullptr)
     {
-#if defined(GETCWD_BROKEN)
-      the_current_working_directory = getcwd (0, PATH_MAX);
-#else
-      the_current_working_directory = getcwd (0, 0);
-#endif
-      if (the_current_working_directory == 0)
+      char current_dir_buf[PATH_MAX];
+      if (getcwd (current_dir_buf, PATH_MAX) == nullptr)
         {
           fprintf (stderr,
                    _ ("%s: error retrieving current directory: %s: %s\n"),
-                   (for_whom && *for_whom) ? for_whom : get_name_for_error (),
+                   !for_whom.empty () ? to_string (for_whom).c_str ()
+                                      : get_name_for_error (),
                    _ (bash_getcwd_errstr), strerror (errno));
-          return (char *)NULL;
+          return nullptr;
         }
-    }
 
-  return savestring (the_current_working_directory);
+      the_current_working_directory = new std::string (current_dir_buf);
+      return the_current_working_directory;
+    }
 }
 
 /* Make NAME our internal idea of the current working directory. */
 void
-Shell::set_working_directory (const std::string &name)
+Shell::set_working_directory (string_view name)
 {
-  FREE (the_current_working_directory);
-  the_current_working_directory = savestring (name);
+  delete the_current_working_directory;
+  the_current_working_directory = new std::string (name);
 }
 
 /* **************************************************************** */
@@ -573,7 +570,7 @@ Shell::set_working_directory (const std::string &name)
 
 #if defined(JOB_CONTROL)
 int
-Shell::get_job_by_name (const std::string &name, int flags)
+Shell::get_job_by_name (string_view name, int flags)
 {
   int job = NO_JOB;
   int wl = strlen (name);

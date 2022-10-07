@@ -279,7 +279,7 @@ print_rlimtype (RLIMTYPE n, int addnl)
    valid number.  Stuff the converted number into RESULT if RESULT is
    not null. */
 bool
-legal_number (string_view string, int64_t *result)
+legal_number (const char *string, int64_t *result)
 {
   int64_t value;
   char *ep;
@@ -319,7 +319,7 @@ legal_number (string_view string, int64_t *result)
 bool
 Shell::valid_nameref_value (string_view name, valid_array_flags flags)
 {
-  if (name == nullptr || *name == '\0')
+  if (name.empty ())
     return false;
 
     /* valid identifier */
@@ -337,19 +337,15 @@ Shell::valid_nameref_value (string_view name, valid_array_flags flags)
 bool
 Shell::check_selfref (string_view name, string_view value)
 {
-  if (STREQ (name, value))
+  if (name == value)
     return true;
 
 #if defined(ARRAY_VARS)
   if (valid_array_reference (value, VA_NOFLAGS))
     {
-      char *t = array_variable_name (value, 0, nullptr, nullptr);
-      if (t && STREQ (name, t))
-        {
-          delete[] t;
-          return true;
-        }
-      delete[] t;
+      std::string t = array_variable_name (value, 0, nullptr);
+      if (name == t)
+        return true;
     }
 #endif
 
@@ -386,10 +382,10 @@ Shell::check_identifier (WORD_DESC *word, bool check_word)
 bool
 Shell::legal_alias_name (string_view string)
 {
-  const char *s;
-
-  for (s = string; *s; s++)
-    if (shellbreak (*s) || shellxquote (*s) || shellexp (*s) || (*s == '/'))
+  string_view::iterator it;
+  for (it = string.begin (); it != string.end (); ++it)
+    if (shellbreak (*it) || shellxquote (*it) || shellexp (*it)
+        || (*it == '/'))
       return false;
   return true;
 }
@@ -417,45 +413,49 @@ Shell::assignment (string_view string, int flags)
      statement otherwise, we don't want to treat it as one. */
   if ((flags & 1) && c != '[') /* ] */
     return 0;
-  else if ((flags & 1) == 0 && legal_variable_starter (c) == 0)
+  else if ((flags & 1) == 0 && !legal_variable_starter (c))
 #else
-  if (legal_variable_starter (c) == 0)
+  if (!legal_variable_starter (c))
 #endif
     return 0;
 
-  size_t indx = 0;
-  const char *cstring = string.c_str ();
-  while ((c = static_cast<unsigned char> (cstring[indx])))
+  string_view::iterator it;
+  for (it = string.begin (); it != string.end (); ++it)
     {
+      c = static_cast<unsigned char> (*it);
+
       /* The following is safe.  Note that '=' at the start of a word
          is not an assignment statement. */
       if (c == '=')
-        return indx;
+        return static_cast<size_t> (it - string.begin ());
 
 #if defined(ARRAY_VARS)
       if (c == '[')
         {
-          size_t newi = skipsubscript (cstring, indx, (flags & 2) ? 1 : 0);
+          string_view::iterator newit
+              = skipsubscript (string, it, (flags & 2) ? 1 : 0);
           /* XXX - why not check for blank subscripts here, if we do in
              valid_array_reference? */
-          if (string[newi++] != ']')
+          if (newit == string.end () || *(newit++) != ']')
             return 0;
-          if (string[newi] == '+' && string[newi + 1] == '=')
-            return newi + 1;
-          return (string[newi] == '=') ? newi : 0;
+          if (*newit == '+' && (newit + 1 != string.end ())
+              && *(newit + 1) == '=')
+            return static_cast<size_t> (newit + 1 - string.begin ());
+
+          return (*newit == '=')
+                     ? static_cast<size_t> (newit - string.begin ())
+                     : 0;
         }
 #endif /* ARRAY_VARS */
 
       /* Check for `+=' */
-      if (c == '+' && string[indx + 1] == '=')
-        return indx + 1;
+      if (c == '+' && (it + 1 != string.end ()) && *(it + 1) == '=')
+        return static_cast<size_t> (it + 1 - string.begin ());
 
       /* Variable names in assignment statements may contain only letters,
          digits, and `_'. */
-      if (legal_variable_char (c) == 0)
+      if (!legal_variable_char (c))
         return 0;
-
-      indx++;
     }
   return 0;
 }
@@ -582,7 +582,7 @@ move_to_high_fd (int fd, int check_new, int maxfd)
    returns a new string, even if STRING was an absolute pathname to
    begin with. */
 char *
-Shell::make_absolute (string_view string, string_view dot_path)
+Shell::make_absolute (const char *string, const char *dot_path)
 {
   char *result;
 
@@ -609,19 +609,19 @@ Shell::make_absolute (string_view string, string_view dot_path)
    the current working directory prepended.  A new string is
    returned in either case. */
 char *
-Shell::full_pathname (char *file)
+Shell::full_pathname (const char *file)
 {
   char *ret;
 
-  file = (*file == '~') ? bash_tilde_expand (file, 0) : savestring (file);
+  ret = (*file == '~') ? bash_tilde_expand (file, 0) : savestring (file);
 
-  if (ABSPATH (file))
-    return file;
+  if (ABSPATH (ret))
+    return ret;
 
-  ret = sh_makepath (nullptr, file, (MP_DOCWD | MP_RMDOT));
-  delete[] file;
+  char *ret2 = sh_makepath (nullptr, ret, (MP_DOCWD | MP_RMDOT));
+  delete[] ret;
 
-  return ret;
+  return ret2;
 }
 
 /* A slightly related function.  Get the prettiest name of this
@@ -633,92 +633,26 @@ std::string
 Shell::polite_directory_format (string_view name)
 {
   const char *home = get_string_value ("HOME");
-  size_t l = home ? std::strlen (home) : 0;
+  size_t l = home ? strlen (home) : 0;
 
-  if (l > 1 && std::strncmp (home, name, l) == 0
-      && (!name[l] || name[l] == '/'))
+  if (l > 1 && name.compare (0, l, home) == 0
+      && (name.size () == l || name[l] == '/'))
     {
-      std::strncpy (tdir_buf + 1, name + l, sizeof (tdir_buf) - 2);
-      tdir_buf[0] = '~';
-      tdir_buf[sizeof (tdir_buf) - 1] = '\0';
+      std::string tdir_buf;
+      tdir_buf.reserve (name.size () - l + 1);
+      tdir_buf.push_back ('~');
+      tdir_buf.append (name.substr (l));
       return tdir_buf;
     }
   else
-    return name;
-}
-
-/* Trim NAME.  If NAME begins with `~/', skip over tilde prefix.  Trim to
-   keep any tilde prefix and PROMPT_DIRTRIM trailing directory components
-   and replace the intervening characters with `...' */
-char *
-Shell::trim_pathname (char *name)
-{
-  int ndirs;
-  size_t nlen;
-  int64_t nskip;
-  char *nbeg, *nend, *ntail, *v;
-
-  if (name == nullptr || (nlen = std::strlen (name)) == 0)
-    return name;
-  nend = name + nlen;
-
-  v = get_string_value ("PROMPT_DIRTRIM");
-  if (v == nullptr || *v == 0)
-    return name;
-
-  if (legal_number (v, &nskip) == 0 || nskip <= 0)
-    return name;
-
-  /* Skip over tilde prefix */
-  nbeg = name;
-  if (name[0] == '~')
-    for (nbeg = name; *nbeg; nbeg++)
-      if (*nbeg == '/')
-        {
-          nbeg++;
-          break;
-        }
-  if (*nbeg == 0)
-    return name;
-
-  for (ndirs = 0, ntail = nbeg; *ntail; ntail++)
-    if (*ntail == '/')
-      ndirs++;
-  if (ndirs < nskip)
-    return name;
-
-  for (ntail = (*nend == '/') ? nend : nend - 1; ntail > nbeg; ntail--)
-    {
-      if (*ntail == '/')
-        nskip--;
-      if (nskip == 0)
-        break;
-    }
-  if (ntail == nbeg)
-    return name;
-
-  /* Now we want to return name[0..nbeg]+"..."+ntail, modifying name in place
-   */
-  nlen = static_cast<size_t> (ntail - nbeg);
-  if (nlen <= 3)
-    return name;
-
-  *nbeg++ = '.';
-  *nbeg++ = '.';
-  *nbeg++ = '.';
-
-  nlen = static_cast<size_t> (nend - ntail);
-  std::memmove (nbeg, ntail, nlen);
-  nbeg[nlen] = '\0';
-
-  return name;
+    return to_string (name);
 }
 
 /* Given a string containing units of information separated by colons,
    return the next one pointed to by (P_INDEX), or nullptr if there are no
    more. Advance (P_INDEX) to the character after the colon. */
 char *
-extract_colon_unit (string_view string, size_t *p_index)
+extract_colon_unit (const char *string, size_t *p_index)
 {
   size_t i, start, len;
   char *value;
@@ -765,22 +699,15 @@ extract_colon_unit (string_view string, size_t *p_index)
 /*								    */
 /* **************************************************************** */
 
-#if 0
-#if defined(PUSHD_AND_POPD)
-extern char *get_dirstack_from_string (char *);
-#endif
-
-#endif
-
 /* If tilde_expand hasn't been able to expand the text, perhaps it
    is a special shell expansion.  This function is installed as the
    tilde_expansion_preexpansion_hook.  It knows how to expand ~- and ~+.
    If PUSHD_AND_POPD is defined, ~[+-]N expands to directories from the
    directory stack. */
-std::string *
-Shell::bash_special_tilde_expansions (string_view text)
+char *
+Shell::bash_special_tilde_expansions (const char *text)
 {
-  const std::string *result = nullptr;
+  const char *result = nullptr;
 
   if (text[0] == '+' && text[1] == '\0')
     result = get_string_value ("PWD");
@@ -792,7 +719,7 @@ Shell::bash_special_tilde_expansions (string_view text)
     result = get_dirstack_from_string (text);
 #endif
 
-  return result;
+  return result ? savestring (result) : nullptr;
 }
 
 /* Initialize the tilde expander.  In Bash, we handle `~-' and `~+', as
@@ -845,7 +772,7 @@ Shell::tilde_initialize ()
 #define TILDE_END(c) ((c) == '\0' || (c) == '/' || (c) == ':')
 
 static bool
-unquoted_tilde_word (string_view s)
+unquoted_tilde_word (const char *s)
 {
   const char *r;
 
@@ -866,8 +793,8 @@ unquoted_tilde_word (string_view s)
    prefix in newly-allocated memory. FLAGS tells whether or not we're in an
    assignment context -- if so, `:' delimits the end of the tilde prefix as
    well. */
-std::string
-bash_tilde_find_word (string_view s, int flags)
+char *
+bash_tilde_find_word (const char *s, int flags, size_t *lenp)
 {
   const char *r;
   char *ret;
@@ -902,8 +829,8 @@ bash_tilde_find_word (string_view s, int flags)
    tilde prefixes should be enabled (`=~' and `:~', see above).  If
    ASSIGN_P is 2, we are expanding the rhs of an assignment statement,
    so `=~' is not valid. */
-std::string
-Shell::bash_tilde_expand (string_view s, int assign_p)
+char *
+Shell::bash_tilde_expand (const char *s, int assign_p)
 {
   int r;
   char *ret;
@@ -1063,7 +990,7 @@ Shell::get_group_array ()
 /* Return a value for PATH that is guaranteed to find all of the standard
    utilities.  This uses Posix.2 configuration variables, if present.  It
    uses a value defined in config.h as a last resort. */
-char *
+std::string
 conf_standard_path ()
 {
 #if defined(_CS_PATH) && defined(HAVE_CONFSTR)

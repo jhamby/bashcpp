@@ -279,7 +279,6 @@ public:
   }
 };
 
-#if 0
 // Compare two strings for equality.
 static inline bool
 STREQ (const char *a, const char *b)
@@ -293,7 +292,6 @@ STREQN (const char *a, const char *b, size_t n)
 {
   return (std::strncmp (a, b, n) == 0);
 }
-#endif
 
 static inline bool
 whitespace (char c)

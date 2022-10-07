@@ -490,7 +490,7 @@ Shell::clear_string_list_expander (alias_t *ap)
    If there is no more input, then we return nullptr.  If REMOVE_QUOTED_NEWLINE
    is non-zero, we remove unquoted \<newline> pairs.  This is used by
    read_secondary_line to read here documents. */
-string_view
+const std::string *
 Shell::read_a_line (bool remove_quoted_newline)
 {
   int c, peekc;
@@ -566,7 +566,7 @@ Shell::read_a_line (bool remove_quoted_newline)
         }
 
       if (c == '\n')
-        return to_string_view (read_a_line_buffer);
+        return &read_a_line_buffer;
     }
 }
 
@@ -575,17 +575,18 @@ Shell::read_a_line (bool remove_quoted_newline)
    document.  REMOVE_QUOTED_NEWLINE is non-zero if we should remove
    newlines quoted with backslashes while reading the line.  It is
    non-zero unless the delimiter of the here document was quoted. */
-string_view
+const std::string *
 Shell::read_secondary_line (bool remove_quoted_newline)
 {
   prompt_string_pointer = &ps2_prompt;
   if (SHOULD_PROMPT ())
     prompt_again ();
 
-  string_view ret (read_a_line (remove_quoted_newline));
+  const std::string *ret = read_a_line (remove_quoted_newline);
 
 #if defined(HISTORY)
-  if (!ret.empty () && remember_on_history && (parser_state & PST_HEREDOC))
+  if (ret && !ret->empty () && remember_on_history
+      && (parser_state & PST_HEREDOC))
     {
       /* To make adding the here-document body right, we need to rely on
          history_delimiting_chars() returning \n for the first line of the
@@ -594,7 +595,7 @@ Shell::read_secondary_line (bool remove_quoted_newline)
          current_command_line_count == 2 for the first line of the body. */
 
       current_command_line_count++;
-      maybe_add_history (ret);
+      maybe_add_history (*ret);
     }
 #endif /* HISTORY */
 
@@ -1150,14 +1151,12 @@ Shell::shell_ungets (string_view s)
 string_view
 Shell::parser_remaining_input ()
 {
-  if (shell_input_line.empty ())
+  if (shell_input_line.empty ()
+      || shell_input_line_index >= shell_input_line.size ())
     return string_view ();
 
-  if (static_cast<int> (shell_input_line_index) < 0
-      || shell_input_line_index >= shell_input_line.size ())
-    return string_view (); /* XXX */
-
-  return string_view (shell_input_line.begin () + shell_input_line_index,
+  return string_view (shell_input_line.begin ()
+                          + static_cast<ssize_t> (shell_input_line_index),
                       shell_input_line.end ());
 }
 
@@ -1176,21 +1175,17 @@ Shell::discard_until (int character)
 }
 
 void
-Shell::execute_variable_command (char *command, const char *vname)
+Shell::execute_variable_command (string_view command, string_view vname)
 {
-  char *last_lastarg;
   sh_parser_state_t ps;
 
   save_parser_state (&ps);
-  last_lastarg = get_string_value ("_");
-  if (last_lastarg)
-    last_lastarg = savestring (last_lastarg);
+  const char *last_lastarg = get_string_value ("_");
 
   parse_and_execute (command, vname, (SEVAL_NONINT | SEVAL_NOHIST));
 
   restore_parser_state (&ps);
   bind_variable ("_", last_lastarg, 0);
-  delete[] last_lastarg;
 
   if (token_to_read == '\n') /* reset_parser was called */
     token_to_read = parser::token::YYEOF;
@@ -2360,7 +2355,7 @@ Shell::parse_comsub (int qc, int open, int close)
    called by the word expansion code and so does not have to reset as much
    parser state before calling yyparse(). */
 std::string
-Shell::xparse_dolparen (string_view base, size_t *indp, sx_flags flags)
+Shell::xparse_dolparen (string_view string, size_t *indp, sx_flags flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
@@ -2368,11 +2363,9 @@ Shell::xparse_dolparen (string_view base, size_t *indp, sx_flags flags)
   // debug_parser (1);
   int start_lineno = line_number;
 
-  if (*indp >= base.size ())
-    return std::string ();
-
   // itrace ("xparse_dolparen: size = %d shell_input_line = `%s' string=`%s'",
-  //         shell_input_line_size, shell_input_line, string);
+  //         shell_input_line.size (), shell_input_line.c_str (),
+  //         to_string (string).c_str ());
 
   parse_flags sflags = SEVAL_NONINT | SEVAL_NOHIST;
   if (flags & SX_NOTHROW)
@@ -2404,9 +2397,8 @@ Shell::xparse_dolparen (string_view base, size_t *indp, sx_flags flags)
 
   token_to_read = parser::token::DOLPAREN; /* let's trick the parser */
 
-  std::string::const_iterator ep;
+  string_view::iterator ep;
   bash_exception_t exception = NOEXCEPTION;
-  std::string string (base, *indp);
 
   try
     {
@@ -2470,7 +2462,7 @@ Shell::xparse_dolparen (string_view base, size_t *indp, sx_flags flags)
         line_number, *indp, orig_ind, ostring);
 #endif
 
-  if (base[*indp] != ')' && (flags & SX_NOTHROW) == 0)
+  if (string[*indp] != ')' && (flags & SX_NOTHROW) == 0)
     {
       /*(*/
       if ((flags & SX_NOERROR) == 0)
@@ -2483,7 +2475,7 @@ Shell::xparse_dolparen (string_view base, size_t *indp, sx_flags flags)
   if (nc == 0 || flags & SX_NOALLOC)
     return std::string ();
   else
-    return string.substr (0, nc);
+    return to_string (string.substr (0, nc));
 }
 
 /* Recursively call the parser to parse the string from a $(...) command
@@ -3677,12 +3669,12 @@ Shell::decode_prompt_string (string_view string)
   time_t the_time;
   char octal_string[4];
   char timebuf[128];
-  char *temp;
+  const char *temp;
 
   std::string result;
   result.reserve (PROMPT_GROWTH);
 
-  std::string::const_iterator it;
+  string_view::const_iterator it;
   for (it = string.begin (); it != string.end (); ++it)
     {
       if (posixly_correct && *it == '!')
@@ -3875,10 +3867,12 @@ Shell::decode_prompt_string (string_view string)
                   strcpy (t_string, temp);
 #endif
 
+                const char *t;
+                std::string dir_string;
+
 #define ROOT_PATH(x) ((x)[0] == '/' && (x)[1] == 0)
 #define DOUBLE_SLASH_ROOT(x) ((x)[0] == '/' && (x)[1] == '/' && (x)[2] == 0)
                 /* Abbreviate \W as ~ if $PWD == $HOME */
-                char *t;
                 if (c == 'W'
                     && (((t = get_string_value ("HOME")) == nullptr)
                         || !STREQ (t, t_string)))
@@ -3887,19 +3881,15 @@ Shell::decode_prompt_string (string_view string)
                       {
                         t = strrchr (t_string, '/');
                         if (t)
-                          memmove (t_string, t + 1,
-                                   strlen (t)); /* strlen(t) to copy nullptr */
+                          memmove (t_string, t + 1, strlen (t)); // copy NULL
                       }
+                    dir_string = t_string;
                   }
 #undef ROOT_PATH
 #undef DOUBLE_SLASH_ROOT
                 else
                   {
-                    /* polite_directory_format is guaranteed to return a
-                       string no longer than PATH_MAX - 1 characters. */
-                    const char *t2 = polite_directory_format (t_string);
-                    if (t2 != t_string)
-                      strcpy (t_string, t2);
+                    dir_string = polite_directory_format (t_string);
                   }
 
                 /* If we're going to be expanding the prompt string later,
@@ -3909,9 +3899,9 @@ Shell::decode_prompt_string (string_view string)
                      second argument of Q_DOUBLE_QUOTES if we use this
                      function here. */
                   result += sh_backslash_quote_for_double_quotes (
-                      sh_strvis (t_string));
+                      sh_strvis (dir_string));
                 else
-                  result += sh_strvis (t_string);
+                  result += sh_strvis (dir_string);
 
                 break;
               }
@@ -4073,17 +4063,17 @@ Shell::decode_prompt_string (string_view string)
 
 // Report a syntax error and restart the parser (called by Bison).
 void
-BashParser::error (string_view msg)
+BashParser::error (const std::string &msg)
 {
   the_shell->yyerror (msg);
 }
 
 // Report a syntax error and restart the parser. Call here for fatal errors.
 void
-Shell::yyerror (string_view msg)
+Shell::yyerror (const std::string &msg)
 {
   if ((the_shell->parser_state & PST_NOERROR) == 0)
-    the_shell->report_syntax_error (msg);
+    the_shell->report_syntax_error (msg.c_str ());
   the_shell->reset_parser ();
 }
 
@@ -4147,7 +4137,7 @@ Shell::error_string_from_token (parser::token_kind_type token,
 std::string
 Shell::error_token_from_text ()
 {
-  string_view t = shell_input_line;
+  const std::string &t = shell_input_line;
   size_t i = shell_input_line_index;
   size_t token_end = 0;
 
@@ -4190,11 +4180,11 @@ Shell::print_offending_line ()
 /* Report a syntax error with line numbers, etc.
    Call here for recoverable errors, with a message to print. */
 void
-Shell::report_syntax_error (string_view message)
+Shell::report_syntax_error (const char *message)
 {
-  if (!message.empty ())
+  if (message && message[0])
     {
-      parser_error (line_number, "%s", message.c_str ());
+      parser_error (line_number, "%s", message);
       if (interactive && EOF_Reached)
         EOF_Reached = false;
       last_command_exit_value = (executing_builtin && parse_and_execute_level)

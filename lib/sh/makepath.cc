@@ -32,15 +32,6 @@ namespace bash
 
 static const char *nullpath = "";
 
-/* Take PATH, an element from, e.g., $CDPATH, and DIR, a directory name,
-   and paste them together into PATH/DIR.  Tilde expansion is performed on
-   PATH if (flags & MP_DOTILDE) is non-zero.  If PATH is the empty
-   string, it is converted to the current directory.  A full pathname is
-   used if (flags & MP_DOCWD) is non-zero, otherwise `./' is used.  If
-   (flags & MP_RMDOT) is non-zero, any `./' is removed from the beginning
-   of DIR.  If (flags & MP_IGNDOT) is non-zero, a PATH that is "." or "./"
-   is ignored. */
-
 #define MAKEDOT()                                                             \
   do                                                                          \
     {                                                                         \
@@ -51,6 +42,14 @@ static const char *nullpath = "";
     }                                                                         \
   while (0)
 
+/* Take PATH, an element from, e.g., $CDPATH, and DIR, a directory name,
+   and paste them together into PATH/DIR.  Tilde expansion is performed on
+   PATH if (flags & MP_DOTILDE) is non-zero.  If PATH is the empty
+   string, it is converted to the current directory.  A full pathname is
+   used if (flags & MP_DOCWD) is non-zero, otherwise `./' is used.  If
+   (flags & MP_RMDOT) is non-zero, any `./' is removed from the beginning
+   of DIR.  If (flags & MP_IGNDOT) is non-zero, a PATH that is "." or "./"
+   is ignored. */
 char *
 Shell::sh_makepath (const char *path, const char *dir, mp_flags flags)
 {
@@ -65,9 +64,9 @@ Shell::sh_makepath (const char *path, const char *dir, mp_flags flags)
           xpath = get_working_directory ("sh_makepath");
           if (xpath == nullptr)
             {
-              ret = get_string_value ("PWD");
-              if (ret)
-                xpath = savestring (ret);
+              const char *pwd = get_string_value ("PWD");
+              if (pwd)
+                xpath = savestring (pwd);
             }
           if (xpath == nullptr)
             MAKEDOT ();

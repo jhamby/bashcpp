@@ -286,20 +286,20 @@ size_t mbstrlen (const char *);
 
 /* declarations for functions defined in lib/sh/shquote.c */
 
-std::string sh_single_quote (const std::string &);
-std::string sh_double_quote (const std::string &);
-std::string sh_mkdoublequoted (const std::string &, int, int);
-std::string sh_un_double_quote (const std::string &);
-std::string sh_backslash_quote (const std::string &, const std::string &, int);
-std::string sh_backslash_quote_for_double_quotes (const std::string &);
-std::string sh_quote_reusable (const std::string &, int);
-bool sh_contains_shell_metas (const std::string &);
+std::string sh_single_quote (string_view);
+std::string sh_double_quote (string_view);
+std::string sh_mkdoublequoted (string_view, int, int);
+std::string sh_un_double_quote (string_view);
+std::string sh_backslash_quote (string_view, string_view, int);
+std::string sh_backslash_quote_for_double_quotes (string_view);
+std::string sh_quote_reusable (string_view, int);
+bool sh_contains_shell_metas (string_view);
 
 static inline bool
-sh_contains_quotes (const std::string &string)
+sh_contains_quotes (string_view string)
 {
-  for (std::string::const_iterator it = string.begin (); it != string.end ();
-       ++it)
+  string_view::iterator it;
+  for (it = string.begin (); it != string.end (); ++it)
     {
       if (*it == '\'' || *it == '"' || *it == '\\')
         return true;
@@ -483,9 +483,9 @@ WORD_LIST *strlist_to_word_list (const STRINGLIST *, size_t);
 
 /* declarations for functions defined in lib/sh/strtrans.c */
 
-std::string ansic_quote (const std::string &);
-bool ansic_shouldquote (const std::string &);
-std::string ansiexpand (const std::string &, size_t, size_t);
+std::string ansic_quote (string_view);
+bool ansic_shouldquote (string_view);
+std::string ansiexpand (string_view, size_t, size_t);
 
 /* declarations for functions defined in lib/sh/timeval.c */
 
@@ -797,16 +797,15 @@ absolute_pathname (string_view string)
 
 /* Return the `basename' of the pathname in STRING (the stuff after the
    last '/').  If STRING is `/', just return it. */
-static inline std::string
-base_pathname (const std::string &string)
+static inline const char *
+base_pathname (const char *string) noexcept
 {
-  if (string.size () == 1 && string[0] == '/')
+  if (string[0] == '/' && string[1] == '\0')
     return string;
 
-  size_t lastslash = string.rfind ('/');
+  const char *p = strrchr (string, '/');
 
-  return (lastslash == string_view::npos) ? string
-                                          : string.substr (lastslash + 1);
+  return p ? ++p : string;
 }
 
 char *make_absolute (string_view, string_view);
@@ -817,27 +816,27 @@ char *full_pathname (char *);
    than its argument.  If FLAGS is non-zero, we are printing for portable
    re-input and should single-quote filenames appropriately. */
 static inline std::string
-printable_filename (const std::string &fn, int flags)
+printable_filename (string_view fn, int flags)
 {
   if (ansic_shouldquote (fn))
     return ansic_quote (fn);
   else if (flags && sh_contains_shell_metas (fn))
     return sh_single_quote (fn);
   else
-    return fn;
+    return to_string (fn);
 }
 
-char *extract_colon_unit (string_view, size_t *);
+char *extract_colon_unit (const char *, size_t *);
 
 void tilde_initialize ();
-std::string bash_tilde_find_word (string_view, int);
-std::string bash_tilde_expand (string_view, int);
+char *bash_tilde_find_word (const char *s, int, size_t *);
+char *bash_tilde_expand (const char *s, int);
 
 #if !defined(HAVE_GROUP_MEMBER)
 int group_member (gid_t);
 #endif
 
-char *conf_standard_path ();
+std::string conf_standard_path ();
 
 } // namespace bash
 

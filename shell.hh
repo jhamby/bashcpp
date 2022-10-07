@@ -1471,7 +1471,9 @@ public:
   typedef int (Shell::*sh_builtin_func_t) (WORD_LIST *); /* sh_wlist_func_t */
   typedef void (Shell::*sh_vptrfunc_t) (void *);
 
-  typedef std::string *(Shell::*tilde_hook_func_t) (string_view);
+  // Hook function called with a filename to perform an optional
+  // tilde expansion. Returns a new C string, or nullptr.
+  typedef char *(Shell::*tilde_hook_func_t) (const char *);
 
   struct JOB
   {
@@ -1699,7 +1701,7 @@ public:
   int pushd_builtin (WORD_LIST *);
   int popd_builtin (WORD_LIST *);
   int dirs_builtin (WORD_LIST *);
-  char *get_dirstack_from_string (char *);
+  const char *get_dirstack_from_string (const char *);
 #endif /* PUSHD_AND_POPD */
 
   int shopt_builtin (WORD_LIST *);
@@ -1872,15 +1874,15 @@ public:
   int read_octal (const char *);
 
 #if defined(JOB_CONTROL)
-  int get_job_by_name (const char *, int);
+  int get_job_by_name (string_view, int);
   int get_job_spec (WORD_LIST *);
 #endif
   int display_signal_list (WORD_LIST *, int);
 
   /* Keeps track of the current working directory. */
 
-  const std::string *get_working_directory (string_view);
-  void set_working_directory (string_view);
+  char *get_working_directory (const char *);
+  void set_working_directory (const char *);
 
   // Functions from builtins/evalstring.cc
 
@@ -1896,7 +1898,7 @@ public:
   int parse_and_execute (string_view, string_view, parse_flags);
 
   size_t parse_string (string_view, string_view, parse_flags, COMMAND **,
-                       std::string::const_iterator *);
+                       string_view::iterator *);
 
   int evalstring (string_view, string_view, parse_flags);
 
@@ -1924,7 +1926,7 @@ public:
   parser::symbol_type yylex ();
 
   // Report a syntax error and restart the parser. Call here for fatal errors.
-  void yyerror (string_view msg);
+  void yyerror (const std::string &msg);
 
   /* Functions from make_cmd.cc */
 
@@ -2185,7 +2187,7 @@ protected:
   void print_offending_line ();
 
   // Report parser syntax error.
-  void report_syntax_error (string_view);
+  void report_syntax_error (const char *);
 
   sh_parser_state_t *save_parser_state (sh_parser_state_t *);
   void restore_parser_state (sh_parser_state_t *);
@@ -2296,7 +2298,7 @@ protected:
 
   /* Functions from arrayfunc.cc */
 
-  char *array_variable_name (const char *, int, char **, int *);
+  std::string array_variable_name (string_view, int, size_t *);
 
   /* Functions from expr.cc */
 
@@ -2365,8 +2367,8 @@ protected:
   }
 
 #if defined(RESTRICTED_SHELL)
-  bool shell_is_restricted (string_view);
-  bool maybe_make_restricted (string_view);
+  bool shell_is_restricted (const char *);
+  bool maybe_make_restricted (const char *);
 #endif
 
   void unset_bash_input (int);
@@ -2479,7 +2481,7 @@ protected:
   /* Functions from errors.cc */
 
   /* Get the name of the shell or shell script for an error message. */
-  string_view get_name_for_error ();
+  const char *get_name_for_error ();
 
   /* Report an error having to do with FILENAME. */
   void file_error (string_view);
@@ -2887,11 +2889,12 @@ protected:
 
   /* from lib/sh/eaccess.cc */
 
-  int sh_stataccess (string_view, int);
+  int sh_stataccess (const char *, int);
+  int sh_eaccess (const char *, int);
 
   /* from lib/sh/makepath.cc */
 
-  char *sh_makepath (string_view, string_view, mp_flags);
+  char *sh_makepath (const char *, const char *, mp_flags);
 
   /* from lib/sh/mbschr.cc */
 
@@ -2900,12 +2903,12 @@ protected:
   /* from lib/sh/netopen.cc */
 
 #ifndef HAVE_GETADDRINFO
-  int _netopen4 (string_view , string_view , int);
+  int _netopen4 (string_view, string_view, int);
 #else /* HAVE_GETADDRINFO */
-  int _netopen6 (string_view , string_view , int);
+  int _netopen6 (string_view, string_view, int);
 #endif
 
-  int netopen (string_view );
+  int netopen (string_view);
 
   /*
    * Open a TCP or UDP connection to HOST on port SERV.  Uses getaddrinfo(3)
@@ -2923,7 +2926,7 @@ protected:
   }
 
   /* from lib/sh/pathphys.cc */
-  char *sh_realpath (string_view , char *);
+  char *sh_realpath (string_view, char *);
 
   /* from lib/sh/random.c */
   uint32_t genseed ();
@@ -2968,9 +2971,8 @@ protected:
 
   /* from lib/sh/shmatch.cc */
 
-  int sh_regmatch (string_view , string_view , int);
-  int sh_eaccess (string_view , int);
-  int sh_euidaccess (string_view , int);
+  int sh_regmatch (string_view, string_view, int);
+  int sh_euidaccess (string_view, int);
 
   /* from lib/sh/shmbchar.cc */
 
@@ -2981,7 +2983,7 @@ protected:
   std::string sh_double_quote (string_view);
   std::string sh_mkdoublequoted (string_view, int);
   std::string sh_un_double_quote (string_view);
-  std::string sh_backslash_quote (string_view, string_view , int);
+  std::string sh_backslash_quote (string_view, string_view, int);
   std::string sh_backslash_quote_for_double_quotes (string_view);
 
   /* include all functions from lib/sh/shtty.cc here: they're very small. */
@@ -3534,9 +3536,9 @@ protected:
 
   void run_shopt_alist ();
 
-  void execute_env_file (string_view);
+  void execute_env_file (const char *);
   void run_startup_files ();
-  int open_shell_script (string_view);
+  int open_shell_script (const char *);
   void set_bash_input ();
   int run_one_command (string_view);
 
@@ -3574,7 +3576,7 @@ protected:
   void show_shell_usage (FILE *, bool);
 
   void init_long_args ();
-  void set_shell_name (const std::string &);
+  void set_shell_name (const char *);
   void shell_initialize ();
   void shell_reinitialize ();
 
@@ -4338,13 +4340,14 @@ protected:
   void exp_throw_to_top_level (const std::exception &);
 
 #if defined(ARRAY_VARS)
-  size_t skip_matched_pair (string_view, size_t, char, char, int);
+  string_view::iterator skip_matched_pair (string_view, string_view::iterator,
+                                           char, char, int);
 
   /* Flags has 1 as a reserved value, since skip_matched_pair uses it for
      skipping over quoted strings and taking the first instance of the
      closing character. */
-  size_t
-  skipsubscript (string_view string, size_t start, int flags)
+  string_view::iterator
+  skipsubscript (string_view string, string_view::iterator start, int flags)
   {
     return skip_matched_pair (string, start, '[', ']', flags);
   }
@@ -4420,9 +4423,9 @@ protected:
 
   char **add_or_supercede_exported_var (string_view, int);
 
-  const std::string *get_variable_value (SHELL_VAR *);
-  const std::string *get_string_value (string_view);
-  const std::string *make_variable_value (SHELL_VAR *, string_view, int);
+  const char *get_variable_value (SHELL_VAR *);
+  const char *get_string_value (const char *);
+  const char *make_variable_value (SHELL_VAR *, const char *, int);
 
   /* These five are virtual callbacks when Readline is used. */
 
@@ -4481,10 +4484,10 @@ protected:
   void merge_builtin_env ();
   void kill_all_local_variables ();
 
-  void set_var_read_only (string_view);
-  void set_func_read_only (string_view);
-  void set_var_auto_export (string_view);
-  void set_func_auto_export (string_view);
+  void set_var_read_only (const char *);
+  void set_func_read_only (const char *);
+  void set_var_auto_export (const char *);
+  void set_func_auto_export (const char *);
 
   void sort_variables (SHELL_VAR **);
 
@@ -4758,8 +4761,8 @@ protected:
   bool legal_alias_name (string_view);
   size_t assignment (string_view, int);
 
-  char *make_absolute (string_view, string_view);
-  char *full_pathname (char *);
+  char *make_absolute (const char *, const char *);
+  char *full_pathname (const char *);
 
   /* Return 1 if STRING is an absolute program name; it is absolute if it
      contains any slashes.  This is used to decide whether or not to look
@@ -4771,13 +4774,12 @@ protected:
   }
 
   std::string polite_directory_format (string_view);
-  std::string trim_pathname (string_view);
 
-  std::string *bash_special_tilde_expansions (string_view);
+  char *bash_special_tilde_expansions (const char *);
 
   void tilde_initialize ();
 
-  std::string bash_tilde_expand (string_view, int);
+  char *bash_tilde_expand (const char *, int);
 
   void initialize_group_array ();
 
@@ -4796,8 +4798,8 @@ protected:
   void clear_string_list_expander (alias_t *);
 #endif
 
-  string_view read_a_line (bool);
-  string_view read_secondary_line (bool);
+  const std::string *read_a_line (bool);
+  const std::string *read_secondary_line (bool);
   void prompt_again ();
 
   int shell_getc (bool);
@@ -5143,13 +5145,13 @@ protected:
   UserInfo current_user;
 
   /* The current host's name. */
-  std::string current_host_name;
+  const char *current_host_name;
 
   /* The environment that the shell passes to other commands. */
   char **shell_environment;
 
   /* The name of this shell, as taken from argv[0]. */
-  std::string shell_name;
+  const char *shell_name;
 
   /* The name of the .(shell)rc file. */
   std::string bashrc_file;
@@ -5271,7 +5273,9 @@ protected:
   sh_builtin_func_t this_shell_builtin;
   sh_builtin_func_t last_shell_builtin;
 
-  char *the_current_working_directory;
+  Builtin *current_builtin;
+
+  std::string *the_current_working_directory;
 
   // The buffer used by print_cmd.cc. */
   std::string the_printed_command;
@@ -5289,7 +5293,7 @@ protected:
 
   /* The name of the command that is currently being executed.
      `test' needs this, for example. */
-  std::string this_command_name;
+  const char *this_command_name;
 
   SHELL_VAR *this_shell_function;
 
@@ -5353,13 +5357,13 @@ protected:
 
   /* If non-null, this contains the address of a function that the application
      wants called before trying the standard tilde expansions.  The function
-     is called with the text sans tilde, and returns a new C++ string
+     is called with the text sans tilde, and returns a new C string
      which is the expansion, or nullptr if the expansion fails. */
   tilde_hook_func_t tilde_expansion_preexpansion_hook;
 
   /* If non-null, this contains the address of a function to call if the
      standard meaning for expanding a tilde fails.  The function is called
-     with the text (sans tilde, as in "foo"), and returns a new C++ string
+     with the text (sans tilde, as in "foo"), and returns a new C string
      which is the expansion, or nullptr if there is no expansion. */
   tilde_hook_func_t tilde_expansion_failure_hook;
 
@@ -5561,9 +5565,6 @@ protected:
   char localbuf[1024];
   int local_index;
   int local_bufused;
-
-  // Temporary directory name buffer.
-  char tdir_buf[PATH_MAX];
 };
 
 struct sh_input_line_state_t
