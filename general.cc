@@ -641,7 +641,7 @@ Shell::polite_directory_format (string_view name)
       std::string tdir_buf;
       tdir_buf.reserve (name.size () - l + 1);
       tdir_buf.push_back ('~');
-      tdir_buf.append (name.substr (l));
+      tdir_buf.append (name.begin() + l, name.end ());
       return tdir_buf;
     }
   else

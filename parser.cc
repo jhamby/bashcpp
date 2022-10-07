@@ -97,7 +97,7 @@ Shell::init_yy_io (sh_cget_func_t get, sh_cunget_func_t unget,
                    stream_type type, string_view name, INPUT_STREAM location)
 {
   bash_input.type = type;
-  bash_input.name = name;
+  bash_input.name = to_string (name);
 
   /* XXX */
   bash_input.location = location;
@@ -1116,7 +1116,7 @@ Shell::shell_ungets (string_view s)
     {
       /* Easy, just overwrite shell_input_line. This is preferred because it
         saves on set_line_mbstate () and other overhead like push_string */
-      shell_input_line = s;
+      shell_input_line = to_string (s);
       shell_input_line_index = 0;
       shell_input_line_terminator = 0;
     }
@@ -1139,25 +1139,13 @@ Shell::shell_ungets (string_view s)
       /* Harder case: pushing back input string that's longer than what we've
         consumed from shell_input_line so far. */
       internal_debug ("shell_ungets: not at end of shell_input_line");
-      shell_input_line.replace (0, shell_input_line_index, s);
+      shell_input_line.replace (0, shell_input_line_index, to_string (s));
       shell_input_line_index = 0;
     }
 
 #if defined(HANDLE_MULTIBYTE)
   set_line_mbstate (); /* XXX */
 #endif
-}
-
-string_view
-Shell::parser_remaining_input ()
-{
-  if (shell_input_line.empty ()
-      || shell_input_line_index >= shell_input_line.size ())
-    return string_view ();
-
-  return string_view (shell_input_line.begin ()
-                          + static_cast<ssize_t> (shell_input_line_index),
-                      shell_input_line.end ());
 }
 
 /* Discard input until CHARACTER is seen, then push that character back
@@ -3780,8 +3768,8 @@ Shell::decode_prompt_string (string_view string)
                 it = (string.begin ()
                       + static_cast<ptrdiff_t> (close_bracket));
 
-                std::string timefmt (
-                    string.substr (start_pos, (close_bracket - start_pos)));
+                std::string timefmt (to_string (
+                    string.substr (start_pos, (close_bracket - start_pos))));
                 if (timefmt.empty ())
                   timefmt = "%X"; // locale-specific current time
 

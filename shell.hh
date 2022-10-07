@@ -4806,7 +4806,16 @@ protected:
   void shell_ungetc (int);
   void shell_ungets (string_view);
 
-  string_view parser_remaining_input ();
+  std::string
+  parser_remaining_input ()
+  {
+    if (shell_input_line.empty ()
+        || shell_input_line_index >= shell_input_line.size ())
+      return std::string ();
+
+    return shell_input_line.substr (shell_input_line_index);
+  }
+
   void discard_until (int);
 
   // Command to read_token () explaining what we want it to do.
@@ -5198,7 +5207,7 @@ protected:
 
   /* Find TOKEN in MAP, a map of string/token_kind_type pairs. Returns the
      corresponding string, or an empty string if not found. */
-  static string_view
+  static std::string
   find_token_in_map (parser::token_kind_type token,
                      const STRING_TOKEN_MAP &tmap)
   {
@@ -5207,9 +5216,9 @@ protected:
     for (it = tmap.begin (); it != tmap.end (); ++it)
       {
         if ((*it).second == token)
-          return (*it).first;
+          return to_string ((*it).first);
       }
-    return string_view ();
+    return std::string ();
   }
 
   jobstats js;
