@@ -324,7 +324,7 @@ static const char *const cmd_error_table[]
         nullptr };
 
 void
-Shell::command_error (const char *func, cmd_err_type code, bash_exception_t e)
+Shell::command_error (const char *func, cmd_err_type code, int e)
 {
   if (code > CMDERR_LAST)
     code = CMDERR_DEFAULT;

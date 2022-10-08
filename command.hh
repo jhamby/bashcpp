@@ -560,13 +560,34 @@ operator~(const cmd_flags &a)
 
 class Shell;
 
+/* Command Types: */
+enum command_type
+{
+  cm_for,
+  cm_case,
+  cm_while,
+  cm_if,
+  cm_simple,
+  cm_select,
+  cm_connection,
+  cm_function_def,
+  cm_until,
+  cm_group,
+  cm_arith,
+  cm_cond,
+  cm_arith_for,
+  cm_subshell,
+  cm_coproc
+};
+
 /* What a command looks like (virtual base class). */
 class COMMAND
 {
-public:
-  COMMAND (int line_)
-      : line (line_) {} // requires a line number to be specified
+protected:
+  COMMAND (command_type type_, int line_)
+      : type (type_), line (line_) {} // type and line number required
 
+public:
   virtual ~COMMAND () noexcept; /* virtual base class destructor */
 
   virtual COMMAND *clone (); // return a copy of the command
@@ -577,6 +598,7 @@ public:
 
   REDIRECT *redirects; /* List of special redirects for FOR CASE, etc. */
 
+  command_type type;
   cmd_flags flags; /* Flags controlling execution environment. */
   int line;        /* line number the command starts on */
 
@@ -609,7 +631,8 @@ class CONNECTION : public COMMAND
 public:
   // Constructor that uses the first
   CONNECTION (COMMAND *com1, COMMAND *com2, int con_)
-      : COMMAND (com1->line), first (com1), second (com2), connector (con_)
+      : COMMAND (cm_connection, com1->line), first (com1), second (com2),
+        connector (con_)
   {
   }
 
@@ -718,7 +741,7 @@ class CASE_COM : public COMMAND
 {
 public:
   CASE_COM (WORD_DESC *word_, PATTERN_LIST *clauses_, int line_)
-      : COMMAND (line_), word (word_), clauses (clauses_)
+      : COMMAND (cm_case, line_), word (word_), clauses (clauses_)
   {
   }
 
@@ -733,20 +756,14 @@ private:
   void print_clauses (Shell *);
 };
 
-enum for_loop_type
-{ // is this a for or a select loop?
-  FOR_LOOP,
-  SELECT_LOOP
-};
-
 /* FOR or KSH SELECT command. */
 class FOR_SELECT_COM : public COMMAND
 {
 public:
-  FOR_SELECT_COM (for_loop_type type_, WORD_DESC *name_, WORD_LIST *map_list_,
+  FOR_SELECT_COM (command_type type_, WORD_DESC *name_, WORD_LIST *map_list_,
                   COMMAND *action_, int line_)
-      : COMMAND (line_), name (name_), map_list (map_list_), action (action_),
-        loop_type (type_)
+      : COMMAND (type_, line_), name (name_), map_list (map_list_),
+        action (action_)
   {
   }
 
@@ -759,8 +776,6 @@ public:
   COMMAND *action;     /* The action to execute.
                           During execution, NAME is bound to successive
                           members of MAP_LIST. */
-
-  for_loop_type loop_type; // Whether this is a FOR or a SELECT loop. */
 };
 
 class ARITH_FOR_COM : public COMMAND
@@ -768,8 +783,8 @@ class ARITH_FOR_COM : public COMMAND
 public:
   ARITH_FOR_COM (WORD_LIST *init_, WORD_LIST *test_, WORD_LIST *step_,
                  COMMAND *action_, int line_)
-      : COMMAND (line_), init (init_), test (test_), step (step_),
-        action (action_)
+      : COMMAND (cm_arith_for, line_), init (init_), test (test_),
+        step (step_), action (action_)
   {
   }
 
@@ -791,7 +806,7 @@ public:
   // argument. In the C version of bash, the line number isn't initialized for
   // this struct.
   IF_COM (COMMAND *test_, COMMAND *true_case_, COMMAND *false_case_)
-      : COMMAND (test_->line), test (test_), true_case (true_case_),
+      : COMMAND (cm_if, test_->line), test (test_), true_case (true_case_),
         false_case (false_case_)
   {
   }
@@ -805,12 +820,6 @@ public:
   COMMAND *false_case; /* What to do if the test returned zero. */
 };
 
-enum loop_t
-{ // is this an until or a while loop?
-  LOOP_UNTIL,
-  LOOP_WHILE
-};
-
 /* UNTIL_WHILE command. */
 class UNTIL_WHILE_COM : public COMMAND
 {
@@ -818,9 +827,8 @@ public:
   // Constructor called by parser that uses the line number of the 'test'
   // argument. In the C version of bash, the line number isn't initialized for
   // this struct.
-  UNTIL_WHILE_COM (loop_t type_, COMMAND *test_, COMMAND *action_)
-      : COMMAND (test_->line), test (test_), action (action_),
-        loop_type (type_)
+  UNTIL_WHILE_COM (command_type type_, COMMAND *test_, COMMAND *action_)
+      : COMMAND (type_, test_->line), test (test_), action (action_)
   {
   }
 
@@ -828,9 +836,8 @@ public:
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
 
-  COMMAND *test;    // Thing to test.
-  COMMAND *action;  // Thing to do while test is non-zero.
-  loop_t loop_type; // Whether this is an UNTIL or WHILE loop.
+  COMMAND *test;   // Thing to test.
+  COMMAND *action; // Thing to do while test is non-zero.
 };
 
 /* The arithmetic evaluation command, ((...)).  Just a set of flags and
@@ -840,7 +847,7 @@ class ARITH_COM : public COMMAND
 {
 public:
   // Contruct a new ARITH_COM, wrapping the specified WORD_LIST.
-  ARITH_COM (WORD_LIST *exp_) : COMMAND (0), exp (exp_) {}
+  ARITH_COM (WORD_LIST *exp_) : COMMAND (cm_arith, 0), exp (exp_) {}
 
   virtual ~ARITH_COM () noexcept override;
   virtual COMMAND *clone () override;
@@ -867,7 +874,8 @@ class COND_COM : public COMMAND
 public:
   COND_COM (int line_, cond_com_type type_, WORD_DESC *op_, COND_COM *left_,
             COND_COM *right_)
-      : COMMAND (line_), op (op_), left (left_), right (right_), type (type_)
+      : COMMAND (cm_cond, line_), op (op_), left (left_), right (right_),
+        cond_type (type_)
   {
   }
 
@@ -877,7 +885,7 @@ public:
 
   WORD_DESC *op;
   COND_COM *left, *right;
-  cond_com_type type;
+  cond_com_type cond_type;
 };
 #endif
 
@@ -917,7 +925,8 @@ class GROUP_COM : public COMMAND
 {
 public:
   // Contruct a new GROUP_COM, wrapping the specified command.
-  GROUP_COM (COMMAND *command_) : COMMAND (command_->line), command (command_)
+  GROUP_COM (COMMAND *command_)
+      : COMMAND (cm_group, command_->line), command (command_)
   {
   }
 
@@ -933,7 +942,7 @@ class SUBSHELL_COM : public COMMAND
 {
 public:
   SUBSHELL_COM (COMMAND *command_)
-      : COMMAND (command_->line), command (command_)
+      : COMMAND (cm_subshell, command_->line), command (command_)
   {
     flags |= CMD_WANT_SUBSHELL; // set the appropriate flags
   }
@@ -970,14 +979,9 @@ struct Coproc
 class COPROC_COM : public COMMAND
 {
 public:
-  COPROC_COM (const char *name_, COMMAND *command_)
-      : COMMAND (command_->line), name (name_), command (command_)
-  {
-    flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
-  }
-
-  COPROC_COM (const std::string &name_, COMMAND *command_)
-      : COMMAND (command_->line), name (name_), command (command_)
+  COPROC_COM (string_view name_, COMMAND *command_)
+      : COMMAND (cm_coproc, command_->line), name (to_string (name_)),
+        command (command_)
   {
     flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
   }

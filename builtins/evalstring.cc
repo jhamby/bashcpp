@@ -82,7 +82,7 @@ Shell::can_optimize_connection (const CONNECTION *connection)
          && (connection->connector == parser::token::AND_AND
              || connection->connector == parser::token::OR_OR
              || connection->connector == ';')
-         && typeid (*connection->second) == typeid (SIMPLE_COM);
+         && connection->second->type == cm_simple;
 }
 
 void
@@ -112,7 +112,7 @@ Shell::optimize_subshell_command (COMMAND *command)
           && (connection->connector == parser::token::AND_AND
               || connection->connector == parser::token::OR_OR
               || connection->connector == ';')
-          && typeid (*connection->second) == typeid (SIMPLE_COM)
+          && connection->second->type == cm_simple
           && !parser_expanding_alias ())
         {
           connection->second->flags |= CMD_TRY_OPTIMIZING;
@@ -126,7 +126,7 @@ Shell::optimize_shell_function (COMMAND *command)
   GROUP_COM *gcm = dynamic_cast<GROUP_COM *> (command);
   COMMAND *fc = gcm ? gcm->command : command;
 
-  if (typeid (*fc) == typeid (SIMPLE_COM) && should_suppress_fork (fc))
+  if (fc->type == cm_simple && should_suppress_fork (fc))
     fc->flags |= CMD_NO_FORK;
   else
     {

@@ -1561,7 +1561,7 @@ namespace bash {
 #line 576 "../bashcpp/parse.yy"
                 {
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new UNTIL_WHILE_COM (
-                      LOOP_WHILE, yystack_[3].value.as < COMMAND_PTR > ().value, yystack_[1].value.as < COMMAND_PTR > ().value));
+                      cm_while, yystack_[3].value.as < COMMAND_PTR > ().value, yystack_[1].value.as < COMMAND_PTR > ().value));
                 }
 #line 1567 "../bashcpp/parse.cc"
     break;
@@ -1570,7 +1570,7 @@ namespace bash {
 #line 581 "../bashcpp/parse.yy"
                 {
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new UNTIL_WHILE_COM (
-                      LOOP_UNTIL, yystack_[3].value.as < COMMAND_PTR > ().value, yystack_[1].value.as < COMMAND_PTR > ().value));
+                      cm_until, yystack_[3].value.as < COMMAND_PTR > ().value, yystack_[1].value.as < COMMAND_PTR > ().value));
                 }
 #line 1576 "../bashcpp/parse.cc"
     break;
@@ -1636,7 +1636,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, yystack_[4].value.as < WORD_DESC_PTR > ().value,
+                      cm_for, yystack_[4].value.as < WORD_DESC_PTR > ().value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1651,7 +1651,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, yystack_[4].value.as < WORD_DESC_PTR > ().value,
+                      cm_for, yystack_[4].value.as < WORD_DESC_PTR > ().value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1666,7 +1666,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, yystack_[5].value.as < WORD_DESC_PTR > ().value,
+                      cm_for, yystack_[5].value.as < WORD_DESC_PTR > ().value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1681,7 +1681,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, yystack_[5].value.as < WORD_DESC_PTR > ().value,
+                      cm_for, yystack_[5].value.as < WORD_DESC_PTR > ().value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1696,7 +1696,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, yystack_[8].value.as < WORD_DESC_PTR > ().value,
+                      cm_for, yystack_[8].value.as < WORD_DESC_PTR > ().value,
                       yystack_[5].value.as < WORD_LIST_PTR > ().value->reverse (),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1711,7 +1711,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, yystack_[8].value.as < WORD_DESC_PTR > ().value,
+                      cm_for, yystack_[8].value.as < WORD_DESC_PTR > ().value,
                       yystack_[5].value.as < WORD_LIST_PTR > ().value->reverse (),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1726,7 +1726,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, yystack_[7].value.as < WORD_DESC_PTR > ().value, nullptr,
+                      cm_for, yystack_[7].value.as < WORD_DESC_PTR > ().value, nullptr,
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
@@ -1740,7 +1740,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, yystack_[7].value.as < WORD_DESC_PTR > ().value, nullptr,
+                      cm_for, yystack_[7].value.as < WORD_DESC_PTR > ().value, nullptr,
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
@@ -1814,7 +1814,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, yystack_[4].value.as < WORD_DESC_PTR > ().value,
+                      cm_select, yystack_[4].value.as < WORD_DESC_PTR > ().value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1829,7 +1829,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, yystack_[4].value.as < WORD_DESC_PTR > ().value,
+                      cm_select, yystack_[4].value.as < WORD_DESC_PTR > ().value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1844,7 +1844,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, yystack_[5].value.as < WORD_DESC_PTR > ().value,
+                      cm_select, yystack_[5].value.as < WORD_DESC_PTR > ().value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1859,7 +1859,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, yystack_[5].value.as < WORD_DESC_PTR > ().value,
+                      cm_select, yystack_[5].value.as < WORD_DESC_PTR > ().value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1874,7 +1874,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, yystack_[8].value.as < WORD_DESC_PTR > ().value,
+                      cm_select, yystack_[8].value.as < WORD_DESC_PTR > ().value,
                       yystack_[5].value.as < WORD_LIST_PTR > ().value->reverse (),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1889,7 +1889,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, yystack_[8].value.as < WORD_DESC_PTR > ().value,
+                      cm_select, yystack_[8].value.as < WORD_DESC_PTR > ().value,
                       yystack_[5].value.as < WORD_LIST_PTR > ().value->reverse (),
                       yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
@@ -1904,7 +1904,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, yystack_[7].value.as < WORD_DESC_PTR > ().value,
+                      cm_select, yystack_[7].value.as < WORD_DESC_PTR > ().value,
                       nullptr, yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
@@ -1918,7 +1918,7 @@ namespace bash {
                 {
                   Shell &sh = *the_shell;
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, yystack_[7].value.as < WORD_DESC_PTR > ().value,
+                      cm_select, yystack_[7].value.as < WORD_DESC_PTR > ().value,
                       nullptr, yystack_[1].value.as < COMMAND_PTR > ().value,
                       sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
@@ -2344,7 +2344,7 @@ namespace bash {
 #line 1115 "../bashcpp/parse.yy"
                 {
                   COMMAND *cmd = yystack_[2].value.as < COMMAND_PTR > ().value;
-                  if (typeid (*cmd) == typeid (CONNECTION))
+                  if (cmd->type == cm_connection)
                     yylhs.value.as < COMMAND_PTR > () = connect_async_list (cmd, nullptr, '&');
                   else
                     yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new CONNECTION (cmd, nullptr, '&'));
@@ -2380,7 +2380,7 @@ namespace bash {
 #line 1136 "../bashcpp/parse.yy"
                 {
                   COMMAND *cmd = yystack_[3].value.as < COMMAND_PTR > ().value;
-                  if (typeid (*cmd) == typeid (CONNECTION))
+                  if (cmd->type == cm_connection)
                     yylhs.value.as < COMMAND_PTR > () = connect_async_list (cmd, yystack_[0].value.as < COMMAND_PTR > ().value, '&');
                   else
                     yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new CONNECTION (cmd, yystack_[0].value.as < COMMAND_PTR > ().value, '&'));
@@ -2458,7 +2458,7 @@ namespace bash {
 #line 1200 "../bashcpp/parse.yy"
                 {
                   COMMAND *cmd = yystack_[1].value.as < COMMAND_PTR > ().value;
-                  if (typeid (*cmd) == typeid (CONNECTION))
+                  if (cmd->type == cm_connection)
                     yylhs.value.as < COMMAND_PTR > () = connect_async_list (cmd, nullptr, '&');
                   else
                     yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new CONNECTION (cmd, nullptr, '&'));
@@ -2522,7 +2522,7 @@ namespace bash {
 #line 1250 "../bashcpp/parse.yy"
                 {
                   COMMAND *cmd = yystack_[2].value.as < COMMAND_PTR > ().value;
-                  if (typeid (*cmd) == typeid (CONNECTION))
+                  if (cmd->type == cm_connection)
                     yylhs.value.as < COMMAND_PTR > () = connect_async_list (cmd, yystack_[0].value.as < COMMAND_PTR > ().value, '&');
                   else
                     yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new CONNECTION (cmd, yystack_[0].value.as < COMMAND_PTR > ().value, '&'));

@@ -582,6 +582,26 @@ operator| (const evalfile_flags_t &a, const evalfile_flags_t &b)
                                         | static_cast<uint32_t> (b));
 }
 
+/* Values for flags argument to do_redirections */
+enum do_redir_flags
+{
+  RX_ACTIVE = 0x01,   /* do it; don't just go through the motions */
+  RX_UNDOABLE = 0x02, /* make a list to undo these redirections */
+  RX_CLEXEC = 0x04,   /* set close-on-exec for opened fds > 2 */
+  RX_INTERNAL = 0x08,
+  RX_USER = 0x10,
+  RX_SAVCLEXEC = 0x20, /* set close-on-exec off in restored fd even though
+                          saved on has it on */
+  RX_SAVEFD = 0x40     /* fd used to save another even if < SHELL_FD_BASE */
+};
+
+static inline do_redir_flags
+operator| (const do_redir_flags &a, const do_redir_flags &b)
+{
+  return static_cast<do_redir_flags> (static_cast<uint32_t> (a)
+                                      | static_cast<uint32_t> (b));
+}
+
 // Friend class used to save/restore parser state.
 class EvalStringUnwindHandler;
 
@@ -706,7 +726,7 @@ protected:
 
   int sourcelevel;
 
-  /* Variables declared in execute_cmd.c, used by many other files */
+  /* Variables declared in execute_cmd.cc, used by many other files */
 
   int return_catch_flag;
   int return_catch_value;
@@ -726,6 +746,11 @@ protected:
   int sourcenest;
   int sourcenest_max;
   int line_number_for_err_trap;
+
+  /* Set to true if we're running the DEBUG trap and we want to show the line
+     number containing the function name. Used by executing_line_number to
+     report the correct line number. Kind of a hack. */
+  bool showing_function_line;
 
   /* variables from break.def/continue.def */
   int breaking;
@@ -1033,7 +1058,7 @@ protected:
 #endif
   bool hostname_list_initialized;
 
-  /* variables from execute_cmd.h */
+  /* variables from execute_cmd.cc */
 
   /* Are we currently ignoring the -e option for the duration of a builtin's
      execution? */
@@ -1041,6 +1066,8 @@ protected:
 
   char match_ignore_case;
   bool executing_command_builtin;
+
+  bool special_builtin_failed;
 
   /* Set to 1 if fd 0 was the subject of redirection to a subshell.  Global
      so that reader_loop can set it to zero before executing a command. */
@@ -2484,7 +2511,7 @@ protected:
   const char *get_name_for_error ();
 
   /* Report an error having to do with FILENAME. */
-  void file_error (string_view);
+  void file_error (const char *);
 
   // Report a programmer's error, and abort.  Pass REASON, and ARG1 ... ARG5.
   void programming_error (const char *, ...) __attribute__ ((__noreturn__))
@@ -2538,17 +2565,17 @@ protected:
   void trace (const char *, ...) __attribute__ ((__format__ (printf, 2, 3)));
 
   /* Report an error having to do with command parsing or execution. */
-  void command_error (string_view, cmd_err_type, bash_exception_t)
+  void command_error (const char *, cmd_err_type, int)
       __attribute__ ((__noreturn__));
 
-  string_view command_errstr (int);
+  const char *command_errstr (int);
 
   /* Specific error message functions that eventually call report_error or
      internal_error. */
 
-  void err_badarraysub (string_view);
-  void err_unboundvar (string_view);
-  void err_readonly (string_view);
+  void err_badarraysub (const char *);
+  void err_unboundvar (const char *);
+  void err_readonly (const char *);
 
   void error_prolog (int);
 
@@ -2761,7 +2788,7 @@ protected:
   void list_stopped_jobs (int);
   void list_running_jobs (int);
 
-  pid_t make_child (char *, int);
+  pid_t make_child (string_view, make_child_flags);
 
   int get_tty_state ();
   int set_tty_state ();
@@ -3426,8 +3453,10 @@ protected:
 
   /* Functions declared in execute_cmd.c, used by many other files */
 
+  typedef std::vector<bool> fd_bitmap;
+
   void
-  close_fd_bitmap (std::vector<bool> *fdbp)
+  close_fd_bitmap (fd_bitmap *fdbp)
   {
     if (fdbp)
       {
@@ -3443,7 +3472,7 @@ protected:
 
   int executing_line_number ();
   int execute_command (COMMAND *);
-  int execute_command_internal (COMMAND *, bool, int, int, struct fd_bitmap *);
+  int execute_command_internal (COMMAND *, bool, int, int, fd_bitmap *);
   int shell_execve (char *, char **, char **);
   void setup_async_signals ();
   void async_redirect_stdin ();
@@ -3453,6 +3482,76 @@ protected:
   void dispose_exec_redirects ();
 
   int execute_shell_function (SHELL_VAR *, WORD_LIST *);
+
+  int execute_in_subshell (COMMAND *, bool, int, int, fd_bitmap *);
+
+  int execute_coproc (COPROC_COM *, int, int, fd_bitmap *);
+
+  int time_command (COMMAND *, bool, int, int, fd_bitmap *);
+
+  int execute_for_command (FOR_SELECT_COM *);
+
+#if defined(SELECT_COMMAND)
+  int displen (const char *);
+  int print_index_and_element (int, int, WORD_LIST *);
+  void indent (int, int);
+  void print_select_list (WORD_LIST *, int, int, int);
+  const char *select_query (WORD_LIST *, int, const char *, bool);
+  int execute_select_command (FOR_SELECT_COM *);
+#endif
+#if defined(DPAREN_ARITHMETIC)
+  int execute_arith_command (ARITH_COM *);
+#endif
+#if defined(COND_COMMAND)
+  int execute_cond_node (COND_COM *);
+  int execute_cond_command (COND_COM *);
+#endif
+#if defined(ARITH_FOR_COMMAND)
+  int64_t eval_arith_for_expr (WORD_LIST *, bool *);
+  int execute_arith_for_command (ARITH_FOR_COM *);
+#endif
+  int execute_case_command (CASE_COM *);
+  int execute_while_command (UNTIL_WHILE_COM *);
+  int execute_until_command (UNTIL_WHILE_COM *);
+  int execute_while_or_until (UNTIL_WHILE_COM *, int);
+  int execute_if_command (IF_COM *);
+  int execute_null_command (REDIRECT *, int, int, bool);
+  void fix_assignment_words (WORD_LIST *);
+  int execute_simple_command (SIMPLE_COM *, int, int, bool, fd_bitmap *);
+  int execute_builtin (sh_builtin_func_t *, WORD_LIST *, int, bool);
+  int execute_function (SHELL_VAR *, WORD_LIST *, int, fd_bitmap *, bool,
+                        bool);
+
+  int execute_builtin_or_function (WORD_LIST *, sh_builtin_func_t *,
+                                   SHELL_VAR *, REDIRECT *, fd_bitmap *, int);
+
+  void execute_subshell_builtin_or_function (WORD_LIST *, REDIRECT *,
+                                             sh_builtin_func_t *, SHELL_VAR *,
+                                             int, int, bool, fd_bitmap *, int);
+
+  int execute_disk_command (WORD_LIST *, REDIRECT *, const char *, int, int,
+                            bool, fd_bitmap *, int);
+
+  void initialize_subshell ();
+
+  /* Undo redirections and delete the list. */
+  void
+  cleanup_redirects (REDIRECT *list)
+  {
+    do_redirections (list, RX_ACTIVE);
+    delete list;
+  }
+
+#if defined(COPROCESS_SUPPORT)
+  void coproc_setstatus (struct coproc *, int);
+  int execute_coproc (COMMAND *, int, int, fd_bitmap *);
+#endif
+
+  int execute_pipeline (COMMAND *, bool, int, int, fd_bitmap *);
+
+  int execute_connection (CONNECTION *, bool, int, int, fd_bitmap *);
+
+  int execute_intern_function (WORD_DESC *, FUNCTION_DEF *);
 
   Coproc *getcoprocbypid (pid_t);
   Coproc *getcoprocbyname (string_view);
@@ -3502,21 +3601,8 @@ protected:
 
   /* Functions from redir.cc */
 
-  /* Values for flags argument to do_redirections */
-  enum redir_flags
-  {
-    RX_ACTIVE = 0x01,   /* do it; don't just go through the motions */
-    RX_UNDOABLE = 0x02, /* make a list to undo these redirections */
-    RX_CLEXEC = 0x04,   /* set close-on-exec for opened fds > 2 */
-    RX_INTERNAL = 0x08,
-    RX_USER = 0x10,
-    RX_SAVCLEXEC = 0x20, /* set close-on-exec off in restored fd even though
-                            saved on has it on */
-    RX_SAVEFD = 0x40     /* fd used to save another even if < SHELL_FD_BASE */
-  };
-
   void redirection_error (REDIRECT *, int, string_view);
-  int do_redirections (REDIRECT *, redir_flags);
+  int do_redirections (REDIRECT *, do_redir_flags);
   char *redirection_expand (WORD_DESC *);
   int stdin_redirects (REDIRECT *);
 
@@ -4273,22 +4359,215 @@ protected:
   std::string pat_subst (string_view, string_view, string_view, int);
 
 #if defined(PROCESS_SUBSTITUTION)
-  int fifos_pending ();
-  int num_fifos ();
-  void unlink_fifo_list ();
+
+  void reap_some_procsubs ();
+
+#if !defined(HAVE_DEV_FD)
+
+  /* PROC value of -1 means the process has been reaped and the FIFO needs to
+     be removed. PROC value of 0 means the slot is unused. */
+  struct temp_fifo
+  {
+    temp_fifo (string_view pathname) : file (to_string (pathname)) {}
+    std::string file;
+    pid_t proc;
+  };
+
+  typedef std::vector<temp_fifo> fifo_vector;
+
+  void
+  clear_fifo_list ()
+  {
+    fifo_list.clear ();
+  }
+
+  fifo_vector
+  copy_fifo_list ()
+  {
+    return fifo_list;
+  }
+
+  void
+  add_fifo_list (string_view pathname)
+  {
+    fifo_list.push_back (temp_fifo (pathname));
+  }
+
+  void
+  unlink_fifo (int i)
+  {
+    fifo_vector::iterator it = fifo_list.begin () + i;
+
+    if (it < fifo_list.end ()
+        && (it->proc == static_cast<pid_t> (-1)
+            || (it->proc > 0 && (kill (it->proc, 0) == -1))))
+      {
+        (void)unlink (it->file.c_str ());
+        it->file.clear ();
+        it->proc = 0;
+      }
+  }
+
   void unlink_all_fifos ();
-  void unlink_fifo (int);
 
-  void *copy_fifo_list (int *);
-  void close_new_fifos (void *, int);
+  int
+  find_procsub_child (pid_t pid)
+  {
+    fifo_vector::iterator it;
+    for (it = fifo_list.begin (); it != fifo_list.end (); ++it)
+      if (it->proc == pid)
+        return static_cast<int> (it - fifo_list.begin ());
 
-  void clear_fifo_list ();
+    return -1;
+  }
 
-  int find_procsub_child (pid_t);
-  void set_procsub_status (int, pid_t, int);
+  void
+  set_procsub_status (int i)
+  {
+    size_t ind = static_cast<size_t> (i);
+    if (ind < fifo_list.size ())
+      fifo_list[ind].proc = static_cast<pid_t> (-1); /* sentinel */
+  }
 
-  void wait_procsubs ();
-  void reap_procsubs ();
+  /* If we've marked the process for this procsub as dead, close the
+     associated file descriptor and delete the FIFO. */
+  void
+  reap_procsubs ()
+  {
+    fifo_vector::iterator it;
+    for (it = fifo_list.begin (); it != fifo_list.end (); ++it)
+      if (it->proc == static_cast<pid_t> (-1)) /* reaped */
+        unlink_fifo (static_cast<int> (it - fifo_list.begin ()));
+  }
+
+  int
+  fifos_pending ()
+  {
+    return static_cast<int> (fifo_list.size ());
+  }
+
+  int
+  num_fifos ()
+  {
+    return static_cast<int> (fifo_list.size ());
+  }
+
+  string_view make_named_pipe ();
+
+#else /* HAVE_DEV_FD */
+
+  /* DEV_FD_LIST is a bitmap of file descriptors attached to pipes the shell
+     has open to children.  NFDS is a count of the number of bits currently
+     set in DEV_FD_LIST.  TOTFDS is a count of the highest possible number
+     of open files. */
+  /* dev_fd_list[I] value of -1 means the process has been reaped and file
+     descriptor I needs to be closed. Value of 0 means the slot is unused. */
+
+  typedef std::vector<pid_t> fifo_vector;
+
+  void
+  clear_fifo (int i)
+  {
+    size_t ind = static_cast<size_t> (i);
+    if (dev_fd_list[ind])
+      {
+        dev_fd_list[ind] = 0;
+        nfds--;
+      }
+  }
+
+  void
+  clear_fifo_list ()
+  {
+    if (nfds == 0)
+      return;
+
+    dev_fd_list.clear ();
+    nfds = 0;
+  }
+
+  fifo_vector
+  copy_fifo_list ()
+  {
+    return dev_fd_list;
+  }
+
+  void
+  add_fifo_list (int fd)
+  {
+    size_t sfd = static_cast<size_t> (fd);
+    if (sfd >= dev_fd_list.size ())
+      dev_fd_list.resize (sfd + 1, 0);
+
+    dev_fd_list[sfd] = true;
+    nfds++;
+  }
+
+  int
+  fifos_pending ()
+  {
+    return 0; // used for cleanup; not needed with /dev/fd
+  }
+
+  int
+  num_fifos ()
+  {
+    return nfds;
+  }
+
+  void
+  unlink_fifo (int fd)
+  {
+    size_t sfd = static_cast<size_t> (fd);
+    if (dev_fd_list[sfd])
+      {
+        close (fd);
+        dev_fd_list[sfd] = 0;
+        nfds--;
+      }
+  }
+
+  void
+  unlink_all_fifos ()
+  {
+    unlink_fifo_list ();
+  }
+
+  int
+  find_procsub_child (pid_t pid)
+  {
+    fifo_vector::iterator it;
+    for (it = dev_fd_list.begin (); it != dev_fd_list.end (); ++it)
+      if (*it == pid)
+        return static_cast<int> (it - dev_fd_list.begin ());
+
+    return -1;
+  }
+
+  void
+  set_procsub_status (int i)
+  {
+    size_t ind = static_cast<size_t> (i);
+    if (ind < dev_fd_list.size ())
+      dev_fd_list[ind] = static_cast<pid_t> (-1); /* sentinel */
+  }
+
+  /* If we've marked the process for this procsub as dead, close the
+     associated file descriptor and delete the FIFO. */
+  void
+  reap_procsubs ()
+  {
+    fifo_vector::iterator it;
+    for (it = dev_fd_list.begin (); it != dev_fd_list.end (); ++it)
+      if (*it == static_cast<pid_t> (-1)) /* reaped */
+        unlink_fifo (static_cast<int> (it - dev_fd_list.begin ()));
+  }
+
+#endif
+
+  void unlink_fifo_list ();
+  void close_new_fifos (const fifo_vector &);
+
 #endif
 
 #if defined(ARRAY_VARS)
@@ -5569,6 +5848,30 @@ protected:
   std::set<parser::token_kind_type> no_semi_successors;
 
 #endif
+
+  // Variables for execute_cmd.cc
+
+  COMMAND *currently_executing_command;
+
+  fd_bitmap *current_fds_to_close;
+
+#if defined(PROCESS_SUBSTITUTION)
+#if !defined(HAVE_DEV_FD)
+  std::vector<temp_fifo> fifo_list;
+#else /* HAVE_DEV_FD */
+  std::vector<pid_t> dev_fd_list;
+  int nfds;
+#endif
+#endif
+
+  /* The list of redirections to perform which will undo the redirections
+     that I made in the shell. */
+  REDIRECT *redirection_undo_list;
+
+  /* The list of redirections to perform which will undo the internal
+     redirections performed by the `exec' builtin.  These are redirections
+     that must be undone even when exec discards redirection_undo_list. */
+  REDIRECT *exec_redirection_undo_list;
 
   // Buffer for buffered input.
   char localbuf[1024];

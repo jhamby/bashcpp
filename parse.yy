@@ -575,12 +575,12 @@ shell_command: for_command
         | WHILE compound_list DO compound_list DONE
                 {
                   $$ = COMMAND_PTR (new UNTIL_WHILE_COM (
-                      LOOP_WHILE, $2.value, $4.value));
+                      cm_while, $2.value, $4.value));
                 }
         | UNTIL compound_list DO compound_list DONE
                 {
                   $$ = COMMAND_PTR (new UNTIL_WHILE_COM (
-                      LOOP_UNTIL, $2.value, $4.value));
+                      cm_until, $2.value, $4.value));
                 }
         | select_command
                 {
@@ -616,7 +616,7 @@ for_command: FOR WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, $2.value,
+                      cm_for, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       $5.value,
                       sh.word_lineno[sh.word_top]));
@@ -627,7 +627,7 @@ for_command: FOR WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, $2.value,
+                      cm_for, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       $5.value,
                       sh.word_lineno[sh.word_top]));
@@ -638,7 +638,7 @@ for_command: FOR WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, $2.value,
+                      cm_for, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       $6.value,
                       sh.word_lineno[sh.word_top]));
@@ -649,7 +649,7 @@ for_command: FOR WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, $2.value,
+                      cm_for, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       $6.value,
                       sh.word_lineno[sh.word_top]));
@@ -660,7 +660,7 @@ for_command: FOR WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, $2.value,
+                      cm_for, $2.value,
                       $5.value->reverse (),
                       $9.value,
                       sh.word_lineno[sh.word_top]));
@@ -671,7 +671,7 @@ for_command: FOR WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, $2.value,
+                      cm_for, $2.value,
                       $5.value->reverse (),
                       $9.value,
                       sh.word_lineno[sh.word_top]));
@@ -682,7 +682,7 @@ for_command: FOR WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, $2.value, nullptr,
+                      cm_for, $2.value, nullptr,
                       $8.value,
                       sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
@@ -692,7 +692,7 @@ for_command: FOR WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      FOR_LOOP, $2.value, nullptr,
+                      cm_for, $2.value, nullptr,
                       $8.value,
                       sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
@@ -750,7 +750,7 @@ select_command:	SELECT WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, $2.value,
+                      cm_select, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       $5.value,
                       sh.word_lineno[sh.word_top]));
@@ -761,7 +761,7 @@ select_command:	SELECT WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, $2.value,
+                      cm_select, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       $5.value,
                       sh.word_lineno[sh.word_top]));
@@ -772,7 +772,7 @@ select_command:	SELECT WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, $2.value,
+                      cm_select, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       $6.value,
                       sh.word_lineno[sh.word_top]));
@@ -783,7 +783,7 @@ select_command:	SELECT WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, $2.value,
+                      cm_select, $2.value,
                       new WORD_LIST (new WORD_DESC ("\"$@\"")),
                       $6.value,
                       sh.word_lineno[sh.word_top]));
@@ -794,7 +794,7 @@ select_command:	SELECT WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, $2.value,
+                      cm_select, $2.value,
                       $5.value->reverse (),
                       $9.value,
                       sh.word_lineno[sh.word_top]));
@@ -805,7 +805,7 @@ select_command:	SELECT WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, $2.value,
+                      cm_select, $2.value,
                       $5.value->reverse (),
                       $9.value,
                       sh.word_lineno[sh.word_top]));
@@ -816,7 +816,7 @@ select_command:	SELECT WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, $2.value,
+                      cm_select, $2.value,
                       nullptr, $8.value,
                       sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
@@ -826,7 +826,7 @@ select_command:	SELECT WORD newline_list DO compound_list DONE
                 {
                   Shell &sh = *the_shell;
                   $$ = COMMAND_PTR (new FOR_SELECT_COM (
-                      SELECT_LOOP, $2.value,
+                      cm_select, $2.value,
                       nullptr, $8.value,
                       sh.word_lineno[sh.word_top]));
                   if (sh.word_top > 0)
@@ -1114,7 +1114,7 @@ list0: list1 '\n' newline_list
         | list1 '&' newline_list
                 {
                   COMMAND *cmd = $1.value;
-                  if (typeid (*cmd) == typeid (CONNECTION))
+                  if (cmd->type == cm_connection)
                     $$ = connect_async_list (cmd, nullptr, '&');
                   else
                     $$ = COMMAND_PTR (new CONNECTION (cmd, nullptr, '&'));
@@ -1135,7 +1135,7 @@ list1: list1 AND_AND newline_list list1
         | list1 '&' newline_list list1
                 {
                   COMMAND *cmd = $1.value;
-                  if (typeid (*cmd) == typeid (CONNECTION))
+                  if (cmd->type == cm_connection)
                     $$ = connect_async_list (cmd, $4.value, '&');
                   else
                     $$ = COMMAND_PTR (new CONNECTION (cmd, $4.value, '&'));
@@ -1199,7 +1199,7 @@ simple_list: simple_list1
         | simple_list1 '&'
                 {
                   COMMAND *cmd = $1.value;
-                  if (typeid (*cmd) == typeid (CONNECTION))
+                  if (cmd->type == cm_connection)
                     $$ = connect_async_list (cmd, nullptr, '&');
                   else
                     $$ = COMMAND_PTR (new CONNECTION (cmd, nullptr, '&'));
@@ -1249,7 +1249,7 @@ simple_list1: simple_list1 AND_AND newline_list simple_list1
         | simple_list1 '&' simple_list1
                 {
                   COMMAND *cmd = $1.value;
-                  if (typeid (*cmd) == typeid (CONNECTION))
+                  if (cmd->type == cm_connection)
                     $$ = connect_async_list (cmd, $3.value, '&');
                   else
                     $$ = COMMAND_PTR (new CONNECTION (cmd, $3.value, '&'));
