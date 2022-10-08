@@ -79,22 +79,12 @@
 namespace bash
 {
 
-// extern int command_string_index;
-// extern char *the_printed_command;
-// extern time_t shell_start_time;
-// #if defined (HAVE_GETTIMEOFDAY)
-// extern struct timeval shellstart;
-// #endif
-// #if 0
-// extern char *glob_argv_flags;
-// #endif
-
 /* Static functions defined and used in this file. */
 
 static void close_pipes (int, int);
 
 #if defined(COMMAND_TIMING)
-static int mkfmt (char *, int, int, time_t, int);
+static void mkfmt (char *, int, bool, time_t, int);
 static void print_formatted_time (FILE *, const char *, time_t, int, time_t,
                                   int, time_t, int, int);
 #endif
@@ -153,10 +143,6 @@ static int special_builtin_failed;
 static int function_line_number;
 
 static int connection_count;
-
-/* $LINENO ($BASH_LINENO) for use by an ERR trap.  Global so parse_and_execute
-   can save and restore it. */
-int line_number_for_err_trap;
 
 /* A sort of function nesting level counter */
 int funcnest = 0;
@@ -317,7 +303,7 @@ restore_signal_mask (void *set)
 #endif
 #endif /* JOB_CONTROL */
 
-#ifdef DEBUG
+#if defined(DEBUG) && 0
 /* A debugging function that can be called from gdb, for instance. */
 void
 open_files ()
@@ -653,7 +639,8 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
               command->flags |= CMD_IGNORE_RETURN;
 
             SIMPLE_COM *simple_com = static_cast<SIMPLE_COM *> (command);
-            line_number_for_err_trap = line_number = command->line;
+
+            SET_LINE_NUMBER (command->line);
             exec_result = execute_simple_command (
                 simple_com, pipe_in, pipe_out, asynchronous, fds_to_close);
             line_number = save_line_number;
@@ -854,7 +841,7 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
             command->flags |= CMD_IGNORE_RETURN;
 #endif
 
-          line_number_for_err_trap = save_line_number = line_number;
+          line_number_for_err_trap = save_line_number = line_number; // XXX
 #if defined(DPAREN_ARITHMETIC)
           if (command->type == cm_arith)
             exec_result
@@ -895,11 +882,13 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
 
           break;
 
+        case cm_subshell:
+        case cm_coproc:
         default:
           command_error ("execute_command", CMDERR_BADTYPE, command->type);
         }
     }
-  catch (const bash_exception &e)
+  catch (const bash_exception &)
     {
       if (my_undo_list)
         cleanup_redirects (my_undo_list);
@@ -927,6 +916,12 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
                                                      : EXECUTION_SUCCESS;
 
 #if defined(DPAREN_ARITHMETIC) || defined(COND_COMMAND)
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
+
   /* This is where we set PIPESTATUS from the exit status of the appropriate
      compound commands (the ones that look enough like simple commands to
      cause confusion).  We might be able to optimize by not doing this if
@@ -944,6 +939,11 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
     default:
       break;
     }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
 #endif
 
   last_command_exit_value = exec_result;
@@ -970,8 +970,8 @@ extern int timeval_to_cpu (struct timeval *, struct timeval *,
 static const int precs[] = { 0, 100, 10, 1 };
 
 /* Expand one `%'-prefixed escape sequence from a time format string. */
-static int
-mkfmt (char *buf, int prec, int lng, time_t sec, int sec_fraction)
+static void
+mkfmt (char *buf, int prec, bool lng, time_t sec, int sec_fraction)
 {
   time_t min;
   char abuf[INT_STRLEN_BOUND (time_t) + 1];
@@ -1012,7 +1012,7 @@ mkfmt (char *buf, int prec, int lng, time_t sec, int sec_fraction)
       buf[ind++] = locale_decpoint ();
       for (aind = 1; aind <= prec; aind++)
         {
-          buf[ind++] = (sec_fraction / precs[aind]) + '0';
+          buf[ind++] = static_cast<char> (sec_fraction / precs[aind]) + '0';
           sec_fraction %= precs[aind];
         }
     }
@@ -1020,8 +1020,6 @@ mkfmt (char *buf, int prec, int lng, time_t sec, int sec_fraction)
   if (lng)
     buf[ind++] = 's';
   buf[ind] = '\0';
-
-  return ind;
 }
 
 /* Interpret the format string FORMAT, interpolating the following escape
@@ -1041,11 +1039,10 @@ mkfmt (char *buf, int prec, int lng, time_t sec, int sec_fraction)
    result is printed to FP, a pointer to a FILE.  The other variables are
    the seconds and thousandths of a second of real, user, and system time,
    resectively. */
-static void
-print_formatted_time (FILE *fp, const char *format, time_t rs, int rsf,
-                      time_t us, int usf, time_t ss, int ssf, int cpu)
+void
+Shell::print_formatted_time (FILE *fp, const char *format, time_t rs, int rsf,
+                             time_t us, int usf, time_t ss, int ssf, int cpu)
 {
-//   int prec, lng, len;
   char ts[INT_STRLEN_BOUND (time_t) + sizeof ("mSS.FFFF")];
   time_t sum;
   int sum_frac;
@@ -1075,15 +1072,13 @@ print_formatted_time (FILE *fp, const char *format, time_t rs, int rsf,
 #endif
           sum = cpu / 100;
           sum_frac = (cpu % 100) * 10;
-          len = mkfmt (ts, 2, 0, sum, sum_frac);
-          RESIZE_MALLOCED_BUFFER (str, sindex, len, ssize, 64);
-          strcpy (str + sindex, ts);
-          sindex += len;
+          mkfmt (ts, 2, 0, sum, sum_frac);
+          str += ts;
         }
       else
         {
-          prec = 3; /* default is three places past the decimal point. */
-          lng = 0;  /* default is to not use minutes or append `s' */
+          int prec = 3;     // default is three places past the decimal point.
+          bool lng = false; // default is to not use minutes or append `s'
           s++;
           if (isdigit (*s)) /* `precision' */
             {
@@ -1093,30 +1088,27 @@ print_formatted_time (FILE *fp, const char *format, time_t rs, int rsf,
             }
           if (*s == 'l') /* `length extender' */
             {
-              lng = 1;
+              lng = true;
               s++;
             }
           if (*s == 'R' || *s == 'E')
-            len = mkfmt (ts, prec, lng, rs, rsf);
+            mkfmt (ts, prec, lng, rs, rsf);
           else if (*s == 'U')
-            len = mkfmt (ts, prec, lng, us, usf);
+            mkfmt (ts, prec, lng, us, usf);
           else if (*s == 'S')
-            len = mkfmt (ts, prec, lng, ss, ssf);
+            mkfmt (ts, prec, lng, ss, ssf);
           else
             {
               internal_error (_ ("TIMEFORMAT: `%c': invalid format character"),
                               *s);
-              free (str);
               return;
             }
-          RESIZE_MALLOCED_BUFFER (str, sindex, len, ssize, 64);
-          strcpy (str + sindex, ts);
-          sindex += len;
+          str += ts;
         }
     }
 
-  fprintf (fp, "%s\n", str.c_str ());
-  fflush (fp);
+  std::fprintf (fp, "%s\n", str.c_str ());
+  std::fflush (fp);
 }
 
 int
@@ -1151,12 +1143,16 @@ Shell::time_command (COMMAND *command, bool asynchronous, int pipe_in,
 #endif
 #endif
 
+  int old_subshell = subshell_environment;
   bool posix_time = command && (command->flags & CMD_TIME_POSIX);
 
-  bool nullcmd
-      = (command == 0)
-        || (command->type == cm_simple && command->value.Simple->words == 0
-            && command->value.Simple->redirects == 0);
+  bool nullcmd = (command == nullptr);
+  if (!nullcmd && command->type == cm_simple)
+    {
+      SIMPLE_COM *simple_com = static_cast<SIMPLE_COM *> (command);
+      if (simple_com->words == nullptr && simple_com->redirects == nullptr)
+        nullcmd = true;
+    }
 
   if (posixly_correct && nullcmd)
     {
@@ -1173,22 +1169,29 @@ Shell::time_command (COMMAND *command, bool asynchronous, int pipe_in,
 #endif
     }
 
-  volatile procenv_t save_top_level;
-  int old_flags = command->flags;
-
-  COPY_PROCENV (top_level, save_top_level);
+  cmd_flags old_flags = command->flags;
   command->flags &= ~(CMD_TIME_PIPELINE | CMD_TIME_POSIX);
 
   int rv;
-
-  int code = setjmp_nosigs (top_level);
-  if (code == NOT_JUMPED)
+  bash_exception_t exc_type = NOEXCEPTION;
+  try
     {
       rv = execute_command_internal (command, asynchronous, pipe_in, pipe_out,
                                      fds_to_close);
-      command->flags = old_flags;
     }
-  COPY_PROCENV (save_top_level, top_level);
+  catch (const bash_exception &e)
+    {
+      exc_type = e.type;
+    }
+
+  command->flags = old_flags;
+
+  /* If we're jumping in a different subshell environment than we started,
+     don't bother printing timing stats, just keep longjmping back to the
+     original top level. */
+  if (exc_type != NOEXCEPTION && subshell_environment
+      && subshell_environment != old_subshell)
+    throw bash_exception (exc_type);
 
   time_t rs = 0, us = 0, ss = 0;
   int rsf = 0, usf = 0, ssf = 0, cpu = 0;
@@ -1237,10 +1240,10 @@ Shell::time_command (COMMAND *command, bool asynchronous, int pipe_in,
 #endif
 #endif
 
-  const char *time_format = NULL;
+  const char *time_format = nullptr;
   if (posix_time)
     time_format = POSIX_TIMEFORMAT;
-  else if ((time_format = get_string_value ("TIMEFORMAT")) == 0)
+  else if ((time_format = get_string_value ("TIMEFORMAT")) == nullptr)
     {
       if (posixly_correct && nullcmd)
         time_format = "user\t%2lU\nsys\t%2lS";
@@ -1251,8 +1254,8 @@ Shell::time_command (COMMAND *command, bool asynchronous, int pipe_in,
   if (time_format && *time_format)
     print_formatted_time (stderr, time_format, rs, rsf, us, usf, ss, ssf, cpu);
 
-  if (code)
-    sh_longjmp (top_level, code);
+  if (exc_type)
+    throw bash_exception (exc_type);
 
   return rv;
 }
@@ -1341,7 +1344,6 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
     }
 
   QUIT;
-  CHECK_TERMSIG;
 
   reset_terminating_signals (); /* in sig.c */
 
@@ -1359,6 +1361,8 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
 
   /* We are in a subshell, so forget that we are running a trap handler or
      that the signal handler has changed (we haven't changed it!) */
+  /* XXX - maybe do this for `real' signals and not ERR/DEBUG/RETURN/EXIT
+     traps? */
   if (running_trap > 0)
     {
       run_trap_cleanup (running_trap - 1);
@@ -1410,7 +1414,7 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
       stdin_redir
           = (stdin_redirects (command->redirects) || pipe_in != NO_PIPE);
 #if 0
-      restore_default_signal (EXIT_TRAP);	/* XXX - reset_signal_handlers above */
+      restore_default_signal (EXIT_TRAP); // XXX - reset_signal_handlers above
 #endif
     }
   else if (command->control_structure () && pipe_in != NO_PIPE)
@@ -1427,10 +1431,12 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
   default_buffered_input = -1;
 #endif
 
-#if 0 /* TAG: bash-5.2 */
+  /* We can't optimize away forks if one of the commands executed by the
+     subshell sets an exit trap, so we set CMD_NO_FORK for simple commands
+     and set CMD_TRY_OPTIMIZING for simple commands on the right side of an
+     and-or or `;' list to test for optimizing forks when they are executed. */
   if (user_subshell && command->type == cm_subshell)
-    optimize_subshell_command (command->value.Subshell->command);
-#endif
+    optimize_subshell_command (static_cast<SUBSHELL_COM *> (command)->command);
 
   /* Do redirections, then dispose of them before recursive call. */
   if (command->redirects)
@@ -1444,9 +1450,9 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
 
   COMMAND *tcom;
   if (command->type == cm_subshell)
-    tcom = command->value.Subshell->command;
+    tcom = static_cast<SUBSHELL_COM *> (command)->command;
   else if (user_coproc)
-    tcom = command->value.Coproc->command;
+    tcom = static_cast<COPROC_COM *> (command)->command;
   else
     tcom = command;
 
@@ -1469,36 +1475,32 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
       && ((tcom->flags & (CMD_TIME_PIPELINE | CMD_INVERT_RETURN)) == 0))
     {
       tcom->flags |= CMD_NO_FORK;
-      if (tcom->type == cm_simple)
-        tcom->value.Simple->flags |= CMD_NO_FORK;
     }
 
   invert = (tcom->flags & CMD_INVERT_RETURN) != 0;
   tcom->flags &= ~CMD_INVERT_RETURN;
 
-  int result = setjmp_nosigs (top_level);
-
-  /* If we're inside a function while executing this subshell, we
-     need to handle a possible `return'. */
-  int function_value = 0;
-  if (return_catch_flag)
-    function_value = setjmp_nosigs (return_catch);
-
   int return_code;
 
-  /* If we're going to exit the shell, we don't want to invert the return
-     status. */
-  if (result == EXITPROG)
-    invert = false, return_code = last_command_exit_value;
-  else if (result)
-    return_code = (last_command_exit_value == EXECUTION_SUCCESS)
-                      ? EXECUTION_FAILURE
-                      : last_command_exit_value;
-  else if (function_value)
-    return_code = return_catch_value;
-  else
-    return_code = execute_command_internal ((COMMAND *)tcom, asynchronous,
-                                            NO_PIPE, NO_PIPE, fds_to_close);
+  try
+    {
+      return_code = execute_command_internal (tcom, asynchronous, NO_PIPE,
+                                              NO_PIPE, fds_to_close);
+    }
+  catch (const bash_exception &e)
+    {
+      /* If we're going to exit the shell, we don't want to invert the return
+         status. */
+      if (e.type == EXITPROG || e.type == EXITBLTIN)
+        {
+          invert = false;
+          return_code = last_command_exit_value;
+        }
+      else if (e.type)
+        return_code = (last_command_exit_value == EXECUTION_SUCCESS)
+                          ? EXECUTION_FAILURE
+                          : last_command_exit_value;
+    }
 
   /* If we are asked to, invert the return value. */
   if (invert)
@@ -1517,122 +1519,19 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
   subshell_level--;		/* don't bother, caller will just exit */
 #endif
   return return_code;
-  /* NOTREACHED */
 }
 
 #if defined(COPROCESS_SUPPORT)
-#define COPROC_MAX 16
 
-typedef struct cpelement
+struct cplist_t
 {
-  struct cpelement *next;
-  struct coproc *coproc;
-} cpelement_t;
-
-typedef struct cplist
-{
-  struct cpelement *head;
-  struct cpelement *tail;
-  int ncoproc;
+  std::vector<Coproc *> list;
   int lock;
-} cplist_t;
-
-static struct cpelement *cpe_alloc (Coproc *);
-static void cpe_dispose (struct cpelement *);
-static struct cpelement *cpl_add (Coproc *);
-static struct cpelement *cpl_delete (pid_t);
-static void cpl_reap ();
-static void cpl_flush ();
-static void cpl_closeall ();
-static struct cpelement *cpl_search (pid_t);
-static struct cpelement *cpl_searchbyname (const char *);
-static void cpl_prune ();
-
-static void coproc_free (struct coproc *);
-
-#if 0
-/* Will go away when there is fully-implemented support for multiple coprocs.
- */
-Coproc sh_coproc = { 0, NO_PID, -1, -1, 0, 0, 0, 0, 0 };
-
-cplist_t coproc_list = { 0, 0, 0 };
-#endif
+};
 
 /* Functions to manage the list of coprocs */
 
-static struct cpelement *
-cpe_alloc (Coproc *cp)
-{
-  struct cpelement *cpe;
-
-  cpe = (struct cpelement *)xmalloc (sizeof (struct cpelement));
-  cpe->coproc = cp;
-  cpe->next = (struct cpelement *)0;
-  return cpe;
-}
-
-static void
-cpe_dispose (struct cpelement *cpe)
-{
-  free (cpe);
-}
-
-static struct cpelement *
-cpl_add (Coproc *cp)
-{
-  struct cpelement *cpe;
-
-  cpe = cpe_alloc (cp);
-
-  if (coproc_list.head == 0)
-    {
-      coproc_list.head = coproc_list.tail = cpe;
-      coproc_list.ncoproc = 0; /* just to make sure */
-    }
-  else
-    {
-      coproc_list.tail->next = cpe;
-      coproc_list.tail = cpe;
-    }
-  coproc_list.ncoproc++;
-
-  return cpe;
-}
-
-static struct cpelement *
-cpl_delete (pid_t pid)
-{
-  struct cpelement *prev, *p;
-
-  for (prev = p = coproc_list.head; p; prev = p, p = p->next)
-    if (p->coproc->c_pid == pid)
-      {
-        prev->next = p->next; /* remove from list */
-        break;
-      }
-
-  if (p == 0)
-    return 0; /* not found */
-
-#if defined(DEBUG)
-  itrace ("cpl_delete: deleting %d", pid);
-#endif
-
-  /* Housekeeping in the border cases. */
-  if (p == coproc_list.head)
-    coproc_list.head = coproc_list.head->next;
-  else if (p == coproc_list.tail)
-    coproc_list.tail = prev;
-
-  coproc_list.ncoproc--;
-  if (coproc_list.ncoproc == 0)
-    coproc_list.head = coproc_list.tail = 0;
-  else if (coproc_list.ncoproc == 1)
-    coproc_list.tail = coproc_list.head; /* just to make sure */
-
-  return p;
-}
-
+#if MULTIPLE_COPROCS
 static void
 cpl_reap ()
 {
@@ -1649,9 +1548,7 @@ cpl_reap ()
           coproc_list
               .ncoproc--; /* keep running count, fix up pointers later */
 
-#if defined(DEBUG)
-          itrace ("cpl_reap: deleting %d", p->coproc->c_pid);
-#endif
+          internal_debug ("cpl_reap: deleting %d", p->coproc->c_pid);
 
           coproc_dispose (p->coproc);
           cpe_dispose (p);
@@ -1716,7 +1613,7 @@ cpl_fdchk (int fd)
 }
 
 /* Search for PID in the list of coprocs; return the cpelement struct if
-   found.  If not found, return NULL. */
+   found.  If not found, return nullptr. */
 static struct cpelement *
 cpl_search (pid_t pid)
 {
@@ -1725,7 +1622,7 @@ cpl_search (pid_t pid)
   for (cpe = coproc_list.head; cpe; cpe = cpe->next)
     if (cpe->coproc->c_pid == pid)
       return cpe;
-  return (struct cpelement *)NULL;
+  return nullptr;
 }
 
 /* Search for the coproc named NAME in the list of coprocs; return the
@@ -1738,7 +1635,7 @@ cpl_searchbyname (const char *name)
   for (cp = coproc_list.head; cp; cp = cp->next)
     if (STREQ (cp->coproc->c_name, name))
       return cp;
-  return (struct cpelement *)NULL;
+  return nullptr;
 }
 
 static pid_t
@@ -1751,71 +1648,50 @@ cpl_firstactive ()
       return cpe->coproc->c_pid;
   return (pid_t)NO_PID;
 }
-
-#if 0
-static void
-cpl_prune ()
-{
-  struct cpelement *cp;
-
-  while (coproc_list.head && coproc_list.ncoproc > COPROC_MAX)
-    {
-      cp = coproc_list.head;
-      coproc_list.head = coproc_list.head->next;
-      coproc_dispose (cp->coproc);
-      cpe_dispose (cp);
-      coproc_list.ncoproc--;
-    }
-}
 #endif
 
 /* These currently use a single global "shell coproc" but are written in a
-   way to not preclude additional coprocs later (using the list management
-   package above). */
+   way to not preclude additional coprocs later. */
 
-struct coproc *
-getcoprocbypid (pid_t pid)
+Coproc *
+Shell::getcoprocbypid (pid_t pid)
 {
 #if MULTIPLE_COPROCS
-  struct cpelement *p;
-
-  p = cpl_search (pid);
-  return p ? p->coproc : 0;
+  return cpl_search (pid);
 #else
-  return pid == sh_coproc.c_pid ? &sh_coproc : 0;
+  return pid == sh_coproc.c_pid ? &sh_coproc : nullptr;
 #endif
 }
 
-struct coproc *
-getcoprocbyname (const char *name)
+Coproc *
+Shell::getcoprocbyname (string_view name)
 {
 #if MULTIPLE_COPROCS
-  struct cpelement *p;
-
-  p = cpl_searchbyname (name);
-  return p ? p->coproc : 0;
+  return cpl_searchbyname (name);
 #else
-  return (sh_coproc.c_name && STREQ (sh_coproc.c_name, name)) ? &sh_coproc : 0;
+  return (sh_coproc.c_name == name) ? &sh_coproc : nullptr;
 #endif
 }
 
-void
-coproc_init (struct coproc *cp)
+static inline void
+coproc_init (Coproc *cp)
 {
-  cp->c_name = 0;
+  cp->c_name.clear ();
   cp->c_pid = NO_PID;
   cp->c_rfd = cp->c_wfd = -1;
   cp->c_rsave = cp->c_wsave = -1;
-  cp->c_flags = cp->c_status = cp->c_lock = 0;
+  cp->c_flags = COPROC_UNSET;
+  cp->c_status = COPROC_UNSET;
+  cp->c_lock = 0;
 }
 
-struct coproc *
-coproc_alloc (char *name, pid_t pid)
+Coproc *
+Shell::coproc_alloc (string_view name, pid_t pid)
 {
-  struct coproc *cp;
+  Coproc *cp;
 
 #if MULTIPLE_COPROCS
-  cp = (struct coproc *)xmalloc (sizeof (struct coproc));
+  cp = new Coproc;
 #else
   cp = &sh_coproc;
 #endif
@@ -1823,7 +1699,7 @@ coproc_alloc (char *name, pid_t pid)
   cp->c_lock = 2;
 
   cp->c_pid = pid;
-  cp->c_name = savestring (name);
+  cp->c_name = to_string (name);
 #if MULTIPLE_COPROCS
   cpl_add (cp);
 #endif
@@ -1831,24 +1707,18 @@ coproc_alloc (char *name, pid_t pid)
   return cp;
 }
 
-static void
-coproc_free (struct coproc *cp)
-{
-  free (cp);
-}
-
 void
-coproc_dispose (struct coproc *cp)
+Shell::coproc_dispose (Coproc *cp)
 {
   sigset_t set, oset;
 
-  if (cp == 0)
+  if (cp == nullptr)
     return;
 
   BLOCK_SIGNAL (SIGCHLD, set, oset);
   cp->c_lock = 3;
   coproc_unsetvars (cp);
-  FREE (cp->c_name);
+  cp->c_name.clear ();
   coproc_close (cp);
 #if MULTIPLE_COPROCS
   coproc_free (cp);
@@ -1861,7 +1731,7 @@ coproc_dispose (struct coproc *cp)
 
 /* Placeholder for now.  Will require changes for multiple coprocs */
 void
-coproc_flush ()
+Shell::coproc_flush ()
 {
 #if MULTIPLE_COPROCS
   cpl_flush ();
@@ -1870,8 +1740,8 @@ coproc_flush ()
 #endif
 }
 
-void
-coproc_close (struct coproc *cp)
+static inline void
+coproc_close (Coproc *cp)
 {
   if (cp->c_rfd >= 0)
     {
@@ -1887,23 +1757,23 @@ coproc_close (struct coproc *cp)
 }
 
 void
-coproc_closeall ()
+Shell::coproc_closeall ()
 {
 #if MULTIPLE_COPROCS
   cpl_closeall ();
 #else
-  coproc_close (
-      &sh_coproc); /* XXX - will require changes for multiple coprocs */
+  /* XXX - will require changes for multiple coprocs */
+  coproc_close (&sh_coproc);
 #endif
 }
 
 void
-coproc_reap ()
+Shell::coproc_reap ()
 {
 #if MULTIPLE_COPROCS
   cpl_reap ();
 #else
-  struct coproc *cp;
+  Coproc *cp;
 
   cp = &sh_coproc; /* XXX - will require changes for multiple coprocs */
   if (cp && (cp->c_flags & COPROC_DEAD))
@@ -1912,41 +1782,26 @@ coproc_reap ()
 }
 
 void
-coproc_rclose (struct coproc *cp, int fd)
+Shell::coproc_checkfd (Coproc *cp, int fd)
 {
+  bool update = false;
+
   if (cp->c_rfd >= 0 && cp->c_rfd == fd)
     {
-      close (cp->c_rfd);
       cp->c_rfd = -1;
+      update = true;
     }
-}
-
-void
-coproc_wclose (struct coproc *cp, int fd)
-{
   if (cp->c_wfd >= 0 && cp->c_wfd == fd)
     {
-      close (cp->c_wfd);
       cp->c_wfd = -1;
+      update = true;
     }
-}
-
-void
-coproc_checkfd (struct coproc *cp, int fd)
-{
-  int update;
-
-  update = 0;
-  if (cp->c_rfd >= 0 && cp->c_rfd == fd)
-    update = cp->c_rfd = -1;
-  if (cp->c_wfd >= 0 && cp->c_wfd == fd)
-    update = cp->c_wfd = -1;
   if (update)
     coproc_setvars (cp);
 }
 
 void
-coproc_fdchk (int fd)
+Shell::coproc_fdchk (int fd)
 {
 #if MULTIPLE_COPROCS
   cpl_fdchk (fd);
@@ -1955,35 +1810,12 @@ coproc_fdchk (int fd)
 #endif
 }
 
-void
-coproc_fdclose (struct coproc *cp, int fd)
-{
-  coproc_rclose (cp, fd);
-  coproc_wclose (cp, fd);
-  coproc_setvars (cp);
-}
-
-void
-coproc_fdsave (struct coproc *cp)
-{
-  cp->c_rsave = cp->c_rfd;
-  cp->c_wsave = cp->c_wfd;
-}
-
-void
-coproc_fdrestore (struct coproc *cp)
-{
-  cp->c_rfd = cp->c_rsave;
-  cp->c_wfd = cp->c_wsave;
-}
-
 static void
-coproc_setstatus (struct coproc *cp, int status)
+coproc_setstatus (Coproc *cp, coproc_status status)
 {
   cp->c_lock = 4;
   cp->c_status = status;
-  cp->c_flags |= COPROC_DEAD;
-  cp->c_flags &= ~COPROC_RUNNING;
+  cp->c_flags = COPROC_DEAD;
   /* Don't dispose the coproc or unset the COPROC_XXX variables because
      this is executed in a signal handler context.  Wait until coproc_reap
      takes care of it. */
@@ -1991,9 +1823,9 @@ coproc_setstatus (struct coproc *cp, int status)
 }
 
 void
-coproc_pidchk (pid_t pid, int status)
+Shell::coproc_pidchk (pid_t pid, int status)
 {
-  struct coproc *cp;
+  Coproc *cp;
 
 #if MULTIPLE_COPROCS
   struct cpelement *cpe;
@@ -2010,7 +1842,7 @@ coproc_pidchk (pid_t pid, int status)
 }
 
 pid_t
-coproc_active ()
+Shell::coproc_active ()
 {
 #if MULTIPLE_COPROCS
   return cpl_firstactive ();
@@ -2018,93 +1850,92 @@ coproc_active ()
   return (sh_coproc.c_flags & COPROC_DEAD) ? NO_PID : sh_coproc.c_pid;
 #endif
 }
+
 void
-coproc_setvars (struct coproc *cp)
+Shell::coproc_setvars (Coproc *cp)
 {
   SHELL_VAR *v;
-  char *namevar, *t;
-  int l;
-  WORD_DESC w;
 #if defined(ARRAY_VARS)
   arrayind_t ind;
 #endif
 
-  if (cp->c_name == 0)
+  if (cp->c_name.empty ())
     return;
 
   /* We could do more here but right now we only check the name, warn if it's
      not a valid identifier, and refuse to create variables with invalid names
      if a coproc with such a name is supplied. */
-  w.word = cp->c_name;
-  w.flags = 0;
-  if (check_identifier (&w, 1) == 0)
+
+  WORD_DESC w (cp->c_name);
+
+  if (!check_identifier (&w, true))
     return;
 
-  l = strlen (cp->c_name);
-  namevar = (char *)xmalloc (l + 16);
+  std::string t, namevar;
 
 #if defined(ARRAY_VARS)
   v = find_variable (cp->c_name);
 
   /* This is the same code as in find_or_make_array_variable */
-  if (v == 0)
+  if (v == nullptr)
     {
-      v = find_variable_nameref_for_create (cp->c_name, 1);
-      if (v == INVALID_NAMEREF_VALUE)
+      try
         {
-          free (namevar);
+          v = find_var_nameref_for_create (cp->c_name, 1);
+        }
+      catch (const invalid_nameref_value &)
+        {
           return;
         }
-      if (v && nameref_p (v))
+
+      if (v && v->nameref ())
         {
-          free (cp->c_name);
-          cp->c_name = savestring (nameref_cell (v));
+          cp->c_name = v->name_value ();
           v = make_new_array_variable (cp->c_name);
         }
     }
 
-  if (v && (readonly_p (v) || noassign_p (v)))
+  if (v && (v->readonly () || v->noassign ()))
     {
-      if (readonly_p (v))
+      if (v->readonly ())
         err_readonly (cp->c_name);
-      free (namevar);
       return;
     }
-  if (v == 0)
+
+  if (v == nullptr)
     v = make_new_array_variable (cp->c_name);
-  if (array_p (v) == 0)
+
+  if (!v->array ())
     v = convert_var_to_array (v);
 
   t = itos (cp->c_rfd);
   ind = 0;
   v = bind_array_variable (cp->c_name, ind, t, 0);
-  free (t);
 
   t = itos (cp->c_wfd);
   ind = 1;
   v = bind_array_variable (cp->c_name, ind, t, 0);
-  free (t);
 #else
-  sprintf (namevar, "%s_READ", cp->c_name);
+  namevar = cp->c_name;
+  namevar += "_READ";
   t = itos (cp->c_rfd);
   bind_variable (namevar, t, 0);
   free (t);
-  sprintf (namevar, "%s_WRITE", cp->c_name);
+  namevar = cp->c_name;
+  namevar += "_WRITE";
   t = itos (cp->c_wfd);
   bind_variable (namevar, t, 0);
   free (t);
 #endif
 
-  sprintf (namevar, "%s_PID", cp->c_name);
+  namevar = cp->c_name;
+  namevar += "_PID";
   t = itos (cp->c_pid);
   v = bind_variable (namevar, t, 0);
-  free (t);
-
-  free (namevar);
 }
 
 void
-coproc_unsetvars (struct coproc *cp)
+Shell::coproc_unsetvars (Coproc *cp)
 {
   int l;
   char *namevar;
@@ -2145,10 +1976,10 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
 
   bool invert = (command->flags & CMD_INVERT_RETURN);
 
-  /* expand name without splitting - could make this dependent on a shopt
-   * option */
-  char *name
-      = expand_string_unsplit_to_string (command->value.Coproc->name, 0);
+  // expand name without splitting - could make this dependent on a shopt
+  // option
+  std::string name (expand_string_unsplit_to_string (command->name, 0));
+
   /* Optional check -- could be relaxed */
   if (legal_identifier (name) == 0)
     {
@@ -2156,17 +1987,14 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
       return invert ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
     }
   else
-    {
-      free (command->value.Coproc->name);
-      command->value.Coproc->name = name;
-    }
+    command->name = name;
 
   command_string_index = 0;
   char *tcmd = make_command_string (command);
 
   int rpipe[2], wpipe[2];
-  sh_openpipe ((int *)&rpipe); /* 0 = parent read, 1 = child write */
-  sh_openpipe ((int *)&wpipe); /* 0 = child read, 1 = parent write */
+  sh_openpipe (rpipe); /* 0 = parent read, 1 = child write */
+  sh_openpipe (wpipe); /* 0 = child read, 1 = parent write */
 
   sigset_t set, oset;
   BLOCK_SIGNAL (SIGCHLD, set, oset);
@@ -2190,17 +2018,17 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
       fflush (stdout);
       fflush (stderr);
 
-      exit (estat);
+      std::exit (estat);
     }
 
   close (rpipe[1]);
   close (wpipe[0]);
 
-  coproc *cp = coproc_alloc (command->value.Coproc->name, coproc_pid);
+  Coproc *cp = coproc_alloc (command->name, coproc_pid);
   cp->c_rfd = rpipe[0];
   cp->c_wfd = wpipe[1];
 
-  cp->c_flags |= COPROC_RUNNING;
+  cp->c_flags = COPROC_RUNNING;
 
   SET_CLOSE_ON_EXEC (cp->c_rfd);
   SET_CLOSE_ON_EXEC (cp->c_wfd);
@@ -2225,12 +2053,17 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
 }
 #endif
 
-static int
+/* If S == -1, it's a special value saying to close stdin */
+static void
 restore_stdin (int s)
 {
-  dup2 (s, 0);
-  close (s);
-  return 0; // unused
+  if (s == -1)
+    close (0);
+  else
+    {
+      dup2 (s, 0);
+      close (s);
+    }
 }
 
 /* Catch-all cleanup function for lastpipe code for unwind-protects */
@@ -2241,9 +2074,9 @@ lastpipe_cleanup (int s)
   return 0; // unused
 }
 
-static int
-execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
-                  int pipe_out, struct fd_bitmap *fds_to_close)
+int
+Shell::execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
+                         int pipe_out, fd_bitmap *fds_to_close)
 {
 #if defined(JOB_CONTROL)
   sigset_t set, oset;
@@ -2251,6 +2084,8 @@ execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
 #endif /* JOB_CONTROL */
 
   bool ignore_return = (command->flags & CMD_IGNORE_RETURN) != 0;
+
+  bool stdin_valid = sh_validfd (0);
 
   int prev = pipe_in;
   COMMAND *cmd = command;
@@ -2289,15 +2124,15 @@ execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
       /* We need fd_bitmap to be at least as big as fildes[0].
          If fildes[0] is less than fds_to_close->size, then
          use fds_to_close->size. */
-      int new_bitmap_size = (fildes[0] < fds_to_close->size)
-                                ? fds_to_close->size
+      int new_bitmap_size = (fildes[0] < fds_to_close->size ())
+                                ? fds_to_close->size ()
                                 : fildes[0] + 8;
 
       fd_bitmap *fd_bitmap = new_fd_bitmap (new_bitmap_size);
 
       /* Now copy the old information into the new bitmap. */
       xbcopy ((char *)fds_to_close->bitmap, (char *)fd_bitmap->bitmap,
-              fds_to_close->size);
+              fds_to_close->size ());
 
       /* And mark the pipe file descriptors to be closed. */
       fd_bitmap->bitmap[fildes[0]] = 1;
@@ -2343,17 +2178,21 @@ execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
   bool lastpipe_flag = false;
 
   begin_unwind_frame ("lastpipe-exec");
-  int lstdin = -1;
+  int lstdin = -2; /* -1 is special, meaning fd 0 is closed */
   int lastpipe_jid, old_frozen;
 
   /* If the `lastpipe' option is set with shopt, and job control is not
      enabled, execute the last element of non-async pipelines in the
      current shell environment. */
+  /* prev can be 0 if fd 0 was closed when this function was executed. prev
+     will never be 0 at this point if fd 0 was valid when this function was
+     executed (though we check above). */
   if (lastpipe_opt && job_control == 0 && asynchronous == 0
-      && pipe_out == NO_PIPE && prev > 0)
+      && pipe_out == NO_PIPE && prev >= 0)
     {
-      lstdin = move_to_high_fd (0, 1, -1);
-      if (lstdin > 0)
+      /* -1 is a special value meaning to close stdin */
+      lstdin = (prev > 0 && stdin_valid) ? move_to_high_fd (0, 1, -1) : -1;
+      if (lstdin > 0 || lstdin == -1)
         {
           do_piping (prev, pipe_out);
           prev = NO_PIPE;
@@ -2375,11 +2214,11 @@ execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
   int exec_result = execute_command_internal (cmd, asynchronous, prev,
                                               pipe_out, fds_to_close);
 
-  if (lstdin > 0)
-    restore_stdin (lstdin);
-
   if (prev >= 0)
     close (prev);
+
+  if (lstdin > 0 || lstdin == -1)
+    restore_stdin (lstdin);
 
 #if defined(JOB_CONTROL)
   UNBLOCK_CHILD (oset);
@@ -2398,7 +2237,11 @@ execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
           lstdin = wait_for (lastpid, 0);
         }
       else
-        lstdin = wait_for_single_pid (lastpid, 0); /* checks bgpids list */
+        {
+          lstdin = wait_for_single_pid (lastpid, 0); /* checks bgpids list */
+          if (lstdin > 256)                          // error sentinel
+            lstdin = 127;
+        }
 #else
       lstdin = wait_for (lastpid, 0);
 #endif
@@ -2424,8 +2267,8 @@ execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
 }
 
 int
-Shell::execute_connection (COMMAND *command, bool asynchronous, int pipe_in,
-                           int pipe_out, struct fd_bitmap *fds_to_close)
+Shell::execute_connection (CONNECTION *command, bool asynchronous, int pipe_in,
+                           int pipe_out, fd_bitmap *fds_to_close)
 {
   COMMAND *tc, *second;
   int exec_result;
@@ -2433,11 +2276,11 @@ Shell::execute_connection (COMMAND *command, bool asynchronous, int pipe_in,
 
   bool ignore_return = (command->flags & CMD_IGNORE_RETURN) != 0;
 
-  switch (command->value.Connection->connector)
+  switch (command->connector)
     {
     /* Do the first command asynchronously. */
     case '&':
-      tc = command->value.Connection->first;
+      tc = command->first;
       if (tc == 0)
         return EXECUTION_SUCCESS;
 
@@ -2463,7 +2306,7 @@ Shell::execute_connection (COMMAND *command, bool asynchronous, int pipe_in,
       if (tc->flags & CMD_STDIN_REDIR)
         tc->flags &= ~CMD_STDIN_REDIR;
 
-      second = command->value.Connection->second;
+      second = command->second;
       if (second)
         {
           if (ignore_return)
@@ -2477,28 +2320,28 @@ Shell::execute_connection (COMMAND *command, bool asynchronous, int pipe_in,
 
     /* Just call execute command on both sides. */
     case ';':
+    case '\n': /* special case, happens in command substitutions */
       if (ignore_return)
         {
-          if (command->value.Connection->first)
-            command->value.Connection->first->flags |= CMD_IGNORE_RETURN;
-          if (command->value.Connection->second)
-            command->value.Connection->second->flags |= CMD_IGNORE_RETURN;
+          if (command->first)
+            command->first->flags |= CMD_IGNORE_RETURN;
+          if (command->second)
+            command->second->flags |= CMD_IGNORE_RETURN;
         }
       executing_list++;
       QUIT;
 
 #if 1
-      execute_command (command->value.Connection->first);
+      execute_command (command->first);
 #else
-      execute_command_internal (command->value.Connection->first, asynchronous,
-                                pipe_in, pipe_out, fds_to_close);
+      execute_command_internal (command->first, asynchronous, pipe_in,
+                                pipe_out, fds_to_close);
 #endif
 
       QUIT;
-      optimize_fork (command); /* XXX */
-      exec_result = execute_command_internal (
-          command->value.Connection->second, asynchronous, pipe_in, pipe_out,
-          fds_to_close);
+      optimize_connection_fork (command); /* XXX */
+      exec_result = execute_command_internal (command->second, asynchronous,
+                                              pipe_in, pipe_out, fds_to_close);
       executing_list--;
       break;
 
@@ -2509,7 +2352,7 @@ Shell::execute_connection (COMMAND *command, bool asynchronous, int pipe_in,
         bool invert = (command->flags & CMD_INVERT_RETURN);
         ignore_return = (command->flags & CMD_IGNORE_RETURN);
 
-        line_number_for_err_trap = line_number; /* XXX - save value? */
+        SET_LINE_NUMBER (line_number); /* XXX - save value? */
         exec_result = execute_pipeline (command, asynchronous, pipe_in,
                                         pipe_out, fds_to_close);
 
@@ -2534,14 +2377,14 @@ Shell::execute_connection (COMMAND *command, bool asynchronous, int pipe_in,
           {
             last_command_exit_value = exec_result;
             run_pending_traps ();
-            jump_to_top_level (ERREXIT);
+            throw bash_exception (ERREXIT);
           }
 
         break;
       }
 
-    case AND_AND:
-    case OR_OR:
+    case parser::token::AND_AND:
+    case parser::token::OR_OR:
       if (asynchronous)
         {
           /* If we have something like `a && b &' or `a || b &', run the
@@ -2561,24 +2404,24 @@ Shell::execute_connection (COMMAND *command, bool asynchronous, int pipe_in,
          otherwise return. */
 
       executing_list++;
-      if (command->value.Connection->first)
-        command->value.Connection->first->flags |= CMD_IGNORE_RETURN;
+      if (command->first)
+        command->first->flags |= CMD_IGNORE_RETURN;
 
 #if 1
-      exec_result = execute_command (command->value.Connection->first);
+      exec_result = execute_command (command->first);
 #else
-      exec_result = execute_command_internal (
-          command->value.Connection->first, 0, NO_PIPE, NO_PIPE, fds_to_close);
+      exec_result = execute_command_internal (command->first, 0, NO_PIPE,
+                                              NO_PIPE, fds_to_close);
 #endif
       QUIT;
-      if (((command->value.Connection->connector == AND_AND)
+      if (((command->connector == parser::token::AND_AND)
            && (exec_result == EXECUTION_SUCCESS))
-          || ((command->value.Connection->connector == OR_OR)
+          || ((command->connector == parser::token::OR_OR)
               && (exec_result != EXECUTION_SUCCESS)))
         {
-          optimize_fork (command);
+          optimize_connection_fork (command);
 
-          second = command->value.Connection->second;
+          second = command->second;
           if (ignore_return && second)
             second->flags |= CMD_IGNORE_RETURN;
 
@@ -2588,9 +2431,8 @@ Shell::execute_connection (COMMAND *command, bool asynchronous, int pipe_in,
       break;
 
     default:
-      command_error ("execute_connection", CMDERR_BADCONN,
-                     command->value.Connection->connector, 0);
-      jump_to_top_level (DISCARD);
+      command_error ("execute_connection", CMDERR_BADCONN, command->connector);
+      throw bash_exception (DISCARD);
       exec_result = EXECUTION_FAILURE;
     }
 
@@ -2611,7 +2453,7 @@ Shell::execute_connection (COMMAND *command, bool asynchronous, int pipe_in,
 /* Execute a FOR command.  The syntax is: FOR word_desc IN word_list;
    DO command; DONE */
 int
-Shell::execute_for_command (FOR_COM *for_command)
+Shell::execute_for_command (FOR_SELECT_COM *for_command)
 {
   int save_line_number = line_number;
   if (check_identifier (for_command->name, 1) == 0)
@@ -2619,7 +2461,7 @@ Shell::execute_for_command (FOR_COM *for_command)
       if (posixly_correct && interactive_shell == 0)
         {
           last_command_exit_value = EX_BADUSAGE;
-          jump_to_top_level (ERREXIT);
+          throw bash_exception (ERREXIT);
         }
       return EXECUTION_FAILURE;
     }
@@ -2820,8 +2662,8 @@ eval_arith_for_expr (WORD_LIST *l, bool *okp)
   return expresult;
 }
 
-static int
-execute_arith_for_command (ARITH_FOR_COM *arith_for_command)
+int
+Shell::execute_arith_for_command (ARITH_FOR_COM *arith_for_command)
 {
   int body_status = EXECUTION_SUCCESS;
   loop_level++;
@@ -3046,7 +2888,7 @@ select_query (WORD_LIST *list, int list_len, const char *prompt,
 #endif
 
   int max_elem_len = 0;
-  for (WORD_LIST *l = list; l; l = (WORD_LIST *)(l->next))
+  for (WORD_LIST *l = list; l; l = l->next ())
     {
       int len = displen (l->word->word);
       if (len > max_elem_len)
@@ -3065,7 +2907,7 @@ select_query (WORD_LIST *list, int list_len, const char *prompt,
 
       int oe = executing_builtin;
       executing_builtin = 1;
-      int r = read_builtin ((WORD_LIST *)NULL);
+      int r = read_builtin (nullptr);
       executing_builtin = oe;
       if (r != EXECUTION_SUCCESS)
         {
@@ -3087,7 +2929,7 @@ select_query (WORD_LIST *list, int list_len, const char *prompt,
         return "";
 
       WORD_LIST *l;
-      for (l = list; l && --reply; l = (WORD_LIST *)(l->next))
+      for (l = list; l && --reply; l = l->next ())
         ;
       return l->word->word; /* XXX - can't be null? */
     }
@@ -3756,9 +3598,9 @@ bind_lastarg (const char *arg)
 /* Execute a null command.  Fork a subshell if the command uses pipes or is
    to be run asynchronously.  This handles all the side effects that are
    supposed to take place. */
-static int
-execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out,
-                      bool async)
+int
+Shell::execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out,
+                             bool async)
 {
   bool forcefork;
   REDIRECT *rd;
@@ -5764,25 +5606,10 @@ execute_intern_function (WORD_DESC *name, FUNCTION_DEF *funcdef)
   return EXECUTION_SUCCESS;
 }
 
-static inline void
-close_pipes (int in, int out)
-{
-  if (in >= 0)
-    close (in);
-  if (out >= 0)
-    close (out);
-}
-
-static void
-dup_error (int oldd, int newd)
-{
-  sys_error (_ ("cannot duplicate fd %d to fd %d"), oldd, newd);
-}
-
 /* Redirect input and output to be from and to the specified pipes.
    NO_PIPE and REDIRECT_BOTH are handled correctly. */
-static void
-do_piping (int pipe_in, int pipe_out)
+void
+Shell::do_piping (int pipe_in, int pipe_out)
 {
   if (pipe_in != NO_PIPE)
     {
@@ -5792,7 +5619,7 @@ do_piping (int pipe_in, int pipe_out)
         close (pipe_in);
 #ifdef __CYGWIN__
       /* Let stdio know the fd may have changed from text to binary mode. */
-      freopen (NULL, "r", stdin);
+      freopen (nullptr, "r", stdin);
 #endif /* __CYGWIN__ */
     }
   if (pipe_out != NO_PIPE)
@@ -5812,7 +5639,7 @@ do_piping (int pipe_in, int pipe_out)
 #ifdef __CYGWIN__
       /* Let stdio know the fd may have changed from text to binary mode, and
          make sure to preserve stdout line buffering. */
-      freopen (NULL, "w", stdout);
+      freopen (nullptr, "w", stdout);
       sh_setlinebuf (stdout);
 #endif /* __CYGWIN__ */
     }

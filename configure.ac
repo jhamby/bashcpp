@@ -147,6 +147,7 @@ if test $opt_minimal_config = yes; then
 fi
 
 AC_ARG_ENABLE(alias, AS_HELP_STRING([--enable-alias],[enable shell aliases]), opt_alias=$enableval)
+AC_ARG_ENABLE(alt-array-implementation, AS_HELP_STRING([--enable-alt-array-implementation], [enable an alternate array implementation that optimizes speed at the cost of space]), opt_alt_array_impl=$enableval)
 AC_ARG_ENABLE(arith-for-command, AS_HELP_STRING([--enable-arith-for-command],[enable arithmetic for command]), opt_arith_for_command=$enableval)
 AC_ARG_ENABLE(array-variables, AS_HELP_STRING([--enable-array-variables],[include shell array variables]), opt_array_variables=$enableval)
 AC_ARG_ENABLE(bang-history, AS_HELP_STRING([--enable-bang-history],[turn on csh-style history substitution]), opt_bang_history=$enableval)
@@ -298,7 +299,9 @@ fi
 if test $opt_dev_fd_stat_broken = yes; then
 AC_DEFINE([DEV_FD_STAT_BROKEN], [1], [Define if stat on /dev/fd/N and fstat on file descriptor N don't return the same results.])
 fi
-
+if test $opt_alt_array_impl = yes; then
+AC_DEFINE(ALT_ARRAY_IMPLEMENTATION, [1], [An array implementation that prioritizes speed (O(1) access) over space, in array2.cc.])
+fi
 if test $opt_translatable_strings = yes; then
 AC_DEFINE([TRANSLATABLE_STRINGS], [1], [Support for $"..." translatable strings.])
 fi
@@ -672,12 +675,11 @@ if test "$opt_job_control" = yes; then
 AC_DEFINE([JOB_CONTROL], [1], [Define if your operating system supports BSD-like job control.])
 fi
 
-if test "$opt_job_control" = yes; then
-AC_DEFINE([JOB_CONTROL], [1], [Define if your operating system supports BSD-like job control.])
-fi
-
 # compile either jobs.cc or nojobs.cc, depending on this setting.
 AM_CONDITIONAL([JOB_CONTROL], [test x$opt_job_control = xyes])
+
+# compile either array.cc or array2.cc, depending on this setting.
+AM_CONDITIONAL([ALT_ARRAY_IMPL], [test x$opt_alt_array_impl = xyes])
 
 AC_DEFINE_UNQUOTED([PROGRAM], ["bash"], [The hardcoded program name.])
 AC_DEFINE_UNQUOTED([CONF_CPUTYPE], ["$build_cpu"], [The build target CPU name.])

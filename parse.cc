@@ -2646,11 +2646,7 @@ namespace bash {
                   REDIRECT **rp; // pointer to "redirects" to update
 
                   tc = yystack_[3].value.as < COMMAND_PTR > ().value;
-                  SIMPLE_COM *scp = dynamic_cast<SIMPLE_COM *> (tc);
-                  if (scp)
-                    rp = &(scp->simple_redirects);
-                  else
-                    rp = &(tc->redirects);
+                  rp = &(tc->redirects);
 
                   REDIRECTEE sd (2);
                   REDIRECTEE rd (1);
@@ -2663,51 +2659,51 @@ namespace bash {
 
                   yylhs.value.as < COMMAND_PTR > () = COMMAND_PTR (new CONNECTION (yystack_[3].value.as < COMMAND_PTR > ().value, yystack_[0].value.as < COMMAND_PTR > ().value, '|'));
                 }
-#line 2667 "../bashcpp/parse.cc"
+#line 2663 "../bashcpp/parse.cc"
     break;
 
   case 170: // pipeline: command
-#line 1362 "../bashcpp/parse.yy"
+#line 1358 "../bashcpp/parse.yy"
                 {
                   yylhs.value.as < COMMAND_PTR > () = yystack_[0].value.as < COMMAND_PTR > ();
                 }
-#line 2675 "../bashcpp/parse.cc"
+#line 2671 "../bashcpp/parse.cc"
     break;
 
   case 171: // timespec: TIME
-#line 1368 "../bashcpp/parse.yy"
+#line 1364 "../bashcpp/parse.yy"
                 {
                   yylhs.value.as < int64_t > () = CMD_TIME_PIPELINE;
                 }
-#line 2683 "../bashcpp/parse.cc"
+#line 2679 "../bashcpp/parse.cc"
     break;
 
   case 172: // timespec: TIME TIMEOPT
+#line 1368 "../bashcpp/parse.yy"
+                {
+                  yylhs.value.as < int64_t > () = (CMD_TIME_PIPELINE | CMD_TIME_POSIX);
+                }
+#line 2687 "../bashcpp/parse.cc"
+    break;
+
+  case 173: // timespec: TIME TIMEIGN
 #line 1372 "../bashcpp/parse.yy"
                 {
                   yylhs.value.as < int64_t > () = (CMD_TIME_PIPELINE | CMD_TIME_POSIX);
                 }
-#line 2691 "../bashcpp/parse.cc"
+#line 2695 "../bashcpp/parse.cc"
     break;
 
-  case 173: // timespec: TIME TIMEIGN
+  case 174: // timespec: TIME TIMEOPT TIMEIGN
 #line 1376 "../bashcpp/parse.yy"
                 {
                   yylhs.value.as < int64_t > () = (CMD_TIME_PIPELINE | CMD_TIME_POSIX);
                 }
-#line 2699 "../bashcpp/parse.cc"
+#line 2703 "../bashcpp/parse.cc"
     break;
 
-  case 174: // timespec: TIME TIMEOPT TIMEIGN
-#line 1380 "../bashcpp/parse.yy"
-                {
-                  yylhs.value.as < int64_t > () = (CMD_TIME_PIPELINE | CMD_TIME_POSIX);
-                }
+
 #line 2707 "../bashcpp/parse.cc"
-    break;
-
-
-#line 2711 "../bashcpp/parse.cc"
 
             default:
               break;
@@ -3296,7 +3292,7 @@ namespace bash {
     1114,  1122,  1125,  1130,  1135,  1143,  1147,  1154,  1160,  1161,
     1164,  1166,  1168,  1172,  1173,  1182,  1199,  1220,  1239,  1244,
     1249,  1257,  1261,  1267,  1271,  1277,  1284,  1307,  1332,  1336,
-    1361,  1367,  1371,  1375,  1379
+    1357,  1363,  1367,  1371,  1375
   };
 
   void
@@ -3329,9 +3325,9 @@ namespace bash {
 
 #line 26 "../bashcpp/parse.yy"
 } // bash
-#line 3333 "../bashcpp/parse.cc"
+#line 3329 "../bashcpp/parse.cc"
 
-#line 1384 "../bashcpp/parse.yy"
+#line 1380 "../bashcpp/parse.yy"
 
 
 #if defined(__clang__)

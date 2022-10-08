@@ -133,6 +133,28 @@ enum var_att_flags
   attmask_scope = 0x0f00000
 };
 
+static inline var_att_flags &
+operator|= (var_att_flags &a, const var_att_flags &b)
+{
+  a = static_cast<var_att_flags> (static_cast<uint32_t> (a)
+                                  | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline var_att_flags &
+operator&= (var_att_flags &a, const var_att_flags &b)
+{
+  a = static_cast<var_att_flags> (static_cast<uint32_t> (a)
+                                  & static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline var_att_flags
+operator~(const var_att_flags &a)
+{
+  return static_cast<var_att_flags> (~static_cast<uint32_t> (a));
+}
+
 /* Union of supported types for a shell variable. */
 union Value
 {
@@ -152,10 +174,8 @@ public:
   SHELL_VAR ();
 
   typedef SHELL_VAR *(Shell::*sh_var_value_func_t) (SHELL_VAR *);
-  typedef SHELL_VAR *(Shell::*sh_var_assign_func_t) (SHELL_VAR *,
-                                                     const std::string &,
-                                                     arrayind_t,
-                                                     const std::string &);
+  typedef SHELL_VAR *(Shell::*sh_var_assign_func_t) (SHELL_VAR *, string_view,
+                                                     arrayind_t, string_view);
 
   std::string
   name ()
@@ -164,9 +184,9 @@ public:
   }
 
   void
-  set_name (const std::string &new_name)
+  set_name (string_view new_name)
   {
-    name_ = new_name;
+    name_ = to_string (new_name);
   }
 
   char *
@@ -175,10 +195,22 @@ public:
     return value_.s;
   }
 
+  void
+  set_str_value (char *s)
+  {
+    value_.s = s;
+  }
+
   COMMAND *
   cmd_value ()
   {
     return value_.cmd;
+  }
+
+  void
+  set_cmd_value (COMMAND *cmd)
+  {
+    value_.cmd = cmd;
   }
 
   ARRAY *
@@ -187,14 +219,26 @@ public:
     return value_.a;
   }
 
+  void
+  set_array_value (ARRAY *a)
+  {
+    value_.a = a;
+  }
+
   HASH_TABLE<std::string> *
   hash_value ()
   {
     return value_.h;
   }
 
-  std::string
-  name_ref ()
+  void
+  set_hash_value (HASH_TABLE<std::string> *h)
+  {
+    value_.h = h;
+  }
+
+  char *
+  name_value ()
   {
     return value_.s;
   } /* so it can change later */
@@ -261,7 +305,6 @@ public:
   {
     return (attributes & att_nameref);
   }
-
   bool
   invisible ()
   {
@@ -297,7 +340,6 @@ public:
   {
     return (attributes & att_regenerate);
   }
-
   bool
   tempvar ()
   {
@@ -308,7 +350,6 @@ public:
   {
     return (attributes & att_propagate);
   }
-
   bool
   is_set ()
   {
@@ -325,7 +366,18 @@ public:
     return value_.s && value_.s[0] == '\0';
   }
 
-private:
+  void
+  set_attr (var_att_flags flags)
+  {
+    attributes |= flags;
+  }
+
+  void
+  unset_attr (var_att_flags flags)
+  {
+    attributes &= ~flags;
+  }
+
   std::string name_;                 // Symbol that the user types.
   Value value_;                      // Value that is returned.
   std::string exportstr;             // String for the environment.

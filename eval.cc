@@ -266,15 +266,15 @@ Shell::send_pwd_to_eterm ()
 void
 Shell::execute_array_command (ARRAY *a, string_view tag)
 {
-  STRINGLIST *argv = array_to_argv (a);
+  int argc = 0;
+  char **argv = array_to_argv (a, &argc);
 
-  STRINGLIST::iterator it;
-  for (it = argv->begin (); it != argv->end (); ++it)
+  for (int i = 0; i < argc; i++)
     {
-      if (*it && (*it)[0])
-        execute_variable_command (*it, tag);
+      if (argv[i] && argv[i][0])
+        execute_variable_command (argv[i], tag);
     }
-  strlist_dispose (argv);
+  strvec_dispose (argv);
 }
 #endif
 
@@ -293,7 +293,7 @@ Shell::execute_prompt_command ()
 #if defined(ARRAY_VARS)
   if (pcv->array ())
     {
-      if ((pcmds = pcv->array_value ()) && array_num_elements (pcmds) > 0)
+      if ((pcmds = pcv->array_value ()) && pcmds->num_elements > 0)
         execute_array_command (pcmds, "PROMPT_COMMAND");
       return;
     }

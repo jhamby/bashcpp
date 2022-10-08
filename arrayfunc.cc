@@ -1,5 +1,4 @@
-/* arrayfunc.c -- High-level array functions used by other parts of the shell.
- */
+// arrayfunc.cc -- High-level array functions used by other parts of the shell.
 
 /* Copyright (C) 2001-2020 Free Software Foundation, Inc.
 
@@ -72,8 +71,7 @@ static char *array_value_internal (const char *, int, int, int *,
                                    arrayind_t *);
 #endif
 
-/* Standard error message to use when encountering an invalid array subscript
- */
+// Standard error message to use when encountering an invalid array subscript
 const char *bash_badsub_errmsg = N_ ("bad array subscript");
 
 /* **************************************************************** */
@@ -85,36 +83,34 @@ const char *bash_badsub_errmsg = N_ ("bad array subscript");
 /* Convert a shell variable to an array variable.  The original value is
    saved as array[0]. */
 SHELL_VAR *
-convert_var_to_array (SHELL_VAR *var)
+Shell::convert_var_to_array (SHELL_VAR *var)
 {
-  char *oldval;
-  Array *array;
+  char *oldval = var->str_value ();
 
-  oldval = value_cell (var);
-  array = array_create ();
+  ARRAY *array = new ARRAY ();
   if (oldval)
-    array_insert (array, 0, oldval);
+    array->insert (0, oldval);
 
-  FREE (value_cell (var));
-  var_setarray (var, array);
+  delete[] var->str_value ();
+  var->set_array_value (array);
 
   /* these aren't valid anymore */
-  var->dynamic_value = (sh_var_value_func_t *)NULL;
-  var->assign_func = (sh_var_assign_func_t *)NULL;
+  var->dynamic_value = nullptr;
+  var->assign_func = nullptr;
 
-  INVALIDATE_EXPORTSTR (var);
-  if (exported_p (var))
+  var->exportstr.clear ();
+  if (var->exported ())
     array_needs_making = true;
 
-  VSETATTR (var, att_array);
+  var->set_attr (att_array);
   if (oldval)
-    VUNSETATTR (var, att_invisible);
+    var->unset_attr (att_invisible);
 
   /* Make sure it's not marked as an associative array any more */
-  VUNSETATTR (var, att_assoc);
+  var->unset_attr (att_assoc);
 
   /* Since namerefs can't be array variables, turn off nameref attribute */
-  VUNSETATTR (var, att_nameref);
+  var->unset_attr (att_nameref);
 
   return var;
 }
@@ -122,10 +118,10 @@ convert_var_to_array (SHELL_VAR *var)
 /* Convert a shell variable to an array variable.  The original value is
    saved as array[0]. */
 SHELL_VAR *
-convert_var_to_assoc (SHELL_VAR *var)
+Shell::convert_var_to_assoc (SHELL_VAR *var)
 {
   char *oldval;
-  HashTable *hash;
+  HASH_TABLE *hash;
 
   oldval = value_cell (var);
   hash = assoc_create (0);
@@ -136,29 +132,30 @@ convert_var_to_assoc (SHELL_VAR *var)
   var_setassoc (var, hash);
 
   /* these aren't valid anymore */
-  var->dynamic_value = (sh_var_value_func_t *)NULL;
-  var->assign_func = (sh_var_assign_func_t *)NULL;
+  var->dynamic_value = nullptr;
+  var->assign_func = nullptr;
 
-  INVALIDATE_EXPORTSTR (var);
-  if (exported_p (var))
+  var->exportstr.clear ();
+
+  if (var->exported ())
     array_needs_making = true;
 
-  VSETATTR (var, att_assoc);
+  var->set_attr (att_assoc);
   if (oldval)
-    VUNSETATTR (var, att_invisible);
+    var->unset_attr (att_invisible);
 
   /* Make sure it's not marked as an indexed array any more */
-  VUNSETATTR (var, att_array);
+  var->unset_attr (att_array);
 
   /* Since namerefs can't be array variables, turn off nameref attribute */
-  VUNSETATTR (var, att_nameref);
+  var->unset_attr (att_nameref);
 
   return var;
 }
 
 char *
 make_array_variable_value (SHELL_VAR *entry, arrayind_t ind, const char *key,
-                           const char *value, int flags)
+                           const char *value, assign_flags flags)
 {
   SHELL_VAR *dentry;
   char *newval;
@@ -201,7 +198,7 @@ make_array_variable_value (SHELL_VAR *entry, arrayind_t ind, const char *key,
    XXX - make sure that any dynamic associative array variables recreate the
    hash table on each assignment. BASH_CMDS and BASH_ALIASES already do this */
 static SHELL_VAR *
-bind_assoc_var_internal (SHELL_VAR *entry, HashTable *hash, const char *key,
+bind_assoc_var_internal (SHELL_VAR *entry, HASH_TABLE *hash, const char *key,
                          const char *value, int flags)
 {
   char *newval;
@@ -402,7 +399,7 @@ find_or_make_array_variable (const char *name, int flags)
       if (var && nameref_p (var) && invisible_p (var))
         {
           internal_warning (_ ("%s: removing nameref attribute"), name);
-          VUNSETATTR (var, att_nameref);
+          var->unset_attr (att_nameref);
         }
       if (var && nameref_p (var))
         {
@@ -460,20 +457,20 @@ assign_array_from_string (const char *name, const char *value, int flags)
 /* Sequentially assign the indices of indexed array variable VAR from the
    words in LIST. */
 SHELL_VAR *
-assign_array_var_from_word_list (SHELL_VAR *var, WordList *list, int flags)
+assign_array_var_from_word_list (SHELL_VAR *var, WORD_LIST *list, int flags)
 {
-  Array *a = array_cell (var);
+  ARRAY *a = array_cell (var);
   arrayind_t i = (flags & ASS_APPEND) ? array_max_index (a) + 1 : 0;
 
   for (WORD_LIST *l = list; l; l = (WORD_LIST *)l->next, i++)
     bind_array_var_internal (var, i, 0, l->word->word, flags & ~ASS_APPEND);
 
-  VUNSETATTR (var, att_invisible); /* no longer invisible */
+  var->unset_attr (att_invisible); /* no longer invisible */
 
   return var;
 }
 
-WordList *
+WORD_LIST *
 expand_compound_array_assignment (SHELL_VAR *var, const char *value, int flags)
 {
   char *val;
@@ -486,7 +483,7 @@ expand_compound_array_assignment (SHELL_VAR *var, const char *value, int flags)
       int ni = 1;
       val = extract_array_assignment_list (value, &ni);
       if (val == 0)
-        return (WordList *)NULL;
+        return (WORD_LIST *)NULL;
     }
   else
     val = (char *)value;
@@ -495,7 +492,7 @@ expand_compound_array_assignment (SHELL_VAR *var, const char *value, int flags)
      shell expansions including pathname generation and word splitting. */
   /* First we split the string on whitespace, using the shell parser
      (ksh93 seems to do this). */
-  WordList *list = parse_string_to_word_list (val, 1, "array assign");
+  WORD_LIST *list = parse_string_to_word_list (val, 1, "array assign");
 
   /* Note that we defer expansion of the assignment statements for associative
      arrays here, so we don't have to scan the subscript and find the ending
@@ -516,7 +513,7 @@ expand_compound_array_assignment (SHELL_VAR *var, const char *value, int flags)
 
   /* Now that we've split it, perform the shell expansions on each
      word in the list. */
-  WordList *nlist = list ? expand_words_no_vars (list) : (WordList *)NULL;
+  WORD_LIST *nlist = list ? expand_words_no_vars (list) : (WORD_LIST *)NULL;
 
   dispose_words (list);
 
@@ -528,16 +525,16 @@ expand_compound_array_assignment (SHELL_VAR *var, const char *value, int flags)
 
 #if ASSOC_KVPAIR_ASSIGNMENT
 static void
-assign_assoc_from_kvlist (SHELL_VAR *var, WordList *nlist, HASH_TABLE *h,
+assign_assoc_from_kvlist (SHELL_VAR *var, WORD_LIST *nlist, HASH_TABLE *h,
                           int flags)
 {
-  for (WordList *list = nlist; list; list = (WordList *)list->next)
+  for (WORD_LIST *list = nlist; list; list = (WORD_LIST *)list->next)
     {
       char *k = list->word->word;
-      char *v = list->next ? ((WordList *)list->next)->word->word : 0;
+      char *v = list->next ? ((WORD_LIST *)list->next)->word->word : 0;
 
       if (list->next)
-        list = (WordList *)list->next;
+        list = (WORD_LIST *)list->next;
 
       char *akey = expand_assignment_string_to_string (k, 0);
       if (akey == 0 || *akey == 0)
@@ -750,7 +747,7 @@ assign_compound_array_list (SHELL_VAR *var, WORD_LIST *nlist, int flags)
 
       const char *savecmd = this_command_name;
       if (integer_p (var))
-        this_command_name = (char *)NULL; /* no command name for errors */
+        this_command_name = nullptr; /* no command name for errors */
       if (assoc_p (var))
         bind_assoc_var_internal (var, nhash, akey, val, iflags);
       else
@@ -787,7 +784,7 @@ assign_array_var_from_string (SHELL_VAR *var, const char *value, int flags)
     dispose_words (nlist);
 
   if (var)
-    VUNSETATTR (var, att_invisible); /* no longer invisible */
+    var->unset_attr (att_invisible); /* no longer invisible */
 
   return var;
 }
@@ -1150,7 +1147,7 @@ array_expand_index (SHELL_VAR *var, const char *s, int len, int flags)
       exp, Q_DOUBLE_QUOTES | Q_ARITH
                | Q_ARRAYSUB); /* XXX - Q_ARRAYSUB for future use */
   const char *savecmd = this_command_name;
-  this_command_name = (char *)NULL;
+  this_command_name = nullptr;
 
   bool expok;
   arrayind_t val = evalexp (
@@ -1188,7 +1185,7 @@ array_variable_name (const char *s, int flags, char **subp, int *lenp)
         *subp = t;
       if (lenp)
         *lenp = 0;
-      return (char *)NULL;
+      return nullptr;
     }
   ind = t - s;
   ni = skipsubscript (s, ind, flags); /* XXX - was 0 not flags */
@@ -1199,7 +1196,7 @@ array_variable_name (const char *s, int flags, char **subp, int *lenp)
         *subp = t;
       if (lenp)
         *lenp = 0;
-      return (char *)NULL;
+      return nullptr;
     }
 
   *t = '\0';
@@ -1243,7 +1240,7 @@ array_variable_part (const char *s, int flags, char **subp, int *lenp)
           err_badarraysub (s);                                                \
           t[-1] = '['; /* ] */                                                \
         }                                                                     \
-      return (char *)NULL;                                                    \
+      return nullptr;                                                    \
     }                                                                         \
   while (0)
 
@@ -1270,11 +1267,11 @@ array_value_internal (const char *s, int quoted, int flags, int *rtype,
      effects are needed, like ${w[i++]} where w is unset. */
 #if 0
   if (var == 0)
-    return (char *)NULL;
+    return nullptr;
 #endif
 
   if (len == 0)
-    return (char *)NULL; /* error message already printed */
+    return nullptr; /* error message already printed */
 
   /* [ */
   akey = 0;
@@ -1285,27 +1282,27 @@ array_value_internal (const char *s, int quoted, int flags, int *rtype,
       if ((flags & AV_ALLOWALL) == 0)
         {
           err_badarraysub (s);
-          return (char *)NULL;
+          return nullptr;
         }
       else if (var == 0
                || value_cell (var)
                       == 0) /* XXX - check for invisible_p(var) ? */
-        return (char *)NULL;
+        return nullptr;
       else if (invisible_p (var))
-        return (char *)NULL;
+        return nullptr;
       else if (array_p (var) == 0 && assoc_p (var) == 0)
         l = add_string_to_list (value_cell (var), (WORD_LIST *)NULL);
       else if (assoc_p (var))
         {
           l = assoc_to_word_list (assoc_cell (var));
           if (l == (WORD_LIST *)NULL)
-            return (char *)NULL;
+            return nullptr;
         }
       else
         {
           l = array_to_word_list (array_cell (var));
           if (l == (WORD_LIST *)NULL)
-            return (char *)NULL;
+            return nullptr;
         }
 
       /* Caller of array_value takes care of inspecting rtype and duplicating
@@ -1366,15 +1363,15 @@ array_value_internal (const char *s, int quoted, int flags, int *rtype,
           || value_cell (var) == 0) /* XXX - check invisible_p(var) ? */
         {
           FREE (akey);
-          return (char *)NULL;
+          return nullptr;
         }
       else if (invisible_p (var))
         {
           FREE (akey);
-          return (char *)NULL;
+          return nullptr;
         }
       if (array_p (var) == 0 && assoc_p (var) == 0)
-        return ind == 0 ? value_cell (var) : (char *)NULL;
+        return ind == 0 ? value_cell (var) : nullptr;
       else if (assoc_p (var))
         {
           retval = assoc_reference (assoc_cell (var), akey);
@@ -1416,10 +1413,10 @@ array_keys (const char *s, int quoted, int pflags)
 
   /* [ */
   if (var == 0 || ALL_ELEMENT_SUB (t[0]) == 0 || t[1] != ']')
-    return (char *)NULL;
+    return nullptr;
 
   if (var_isset (var) == 0 || invisible_p (var))
-    return (char *)NULL;
+    return nullptr;
 
   WORD_LIST *l;
   if (array_p (var) == 0 && assoc_p (var) == 0)
@@ -1429,7 +1426,7 @@ array_keys (const char *s, int quoted, int pflags)
   else
     l = array_keys_to_word_list (array_cell (var));
   if (l == (WORD_LIST *)NULL)
-    return (char *)NULL;
+    return nullptr;
 
   char *retval = string_list_pos_params (t[0], l, quoted, pflags);
 

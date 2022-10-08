@@ -2213,7 +2213,7 @@ Shell::string_list_dollar_at (WORD_LIST *list, int quoted, int flags)
    string_list as appropriate. */
 /* This needs to fully understand the additional contexts where word
    splitting does not occur (W_ASSIGNRHS, etc.) */
-char *
+std::string
 Shell::string_list_pos_params (char pchar, WORD_LIST *list,
                                quoted_flags quoted, param_flags pflags)
 {

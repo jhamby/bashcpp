@@ -728,9 +728,6 @@ protected:
 
   /* Variables declared in execute_cmd.cc, used by many other files */
 
-  int return_catch_flag;
-  int return_catch_value;
-
   /* Whether or not the last command (corresponding to last_command_exit_value)
      was terminated by a signal, and, if so, which one. */
   int last_command_exit_signal;
@@ -745,12 +742,13 @@ protected:
   int evalnest_max;
   int sourcenest;
   int sourcenest_max;
+
+  /* $LINENO ($BASH_LINENO) for use by an ERR trap. */
   int line_number_for_err_trap;
 
-  /* Set to true if we're running the DEBUG trap and we want to show the line
-     number containing the function name. Used by executing_line_number to
-     report the correct line number. Kind of a hack. */
-  bool showing_function_line;
+#if defined(PROCESS_SUBSTITUTION) && defined(HAVE_DEV_FD)
+  int nfds;
+#endif
 
   /* variables from break.def/continue.def */
   int breaking;
@@ -1114,6 +1112,11 @@ protected:
 
   // We're waiting for a child.
   bool waiting_for_child;
+
+  /* Set to true if we're running the DEBUG trap and we want to show the line
+     number containing the function name. Used by executing_line_number to
+     report the correct line number. Kind of a hack. */
+  bool showing_function_line;
 
   /* ************************************************************** */
   /*								    */
@@ -2323,6 +2326,105 @@ protected:
   char **bash_directory_completion_matches (const char *);
   char *bash_dequote_text (const char *);
 
+  /* Functions from array.cc */
+
+  std::string array_subrange (ARRAY *, arrayind_t, arrayind_t, int,
+                              quoted_flags, param_flags);
+
+  std::string array_patsub (ARRAY *, string_view, string_view, match_flags);
+
+  std::string array_modcase (ARRAY *, string_view, sh_modcase_flags,
+                             match_flags);
+
+#ifdef ALT_ARRAY_IMPLEMENTATION
+
+  /*
+   * Return a string that is the concatenation of the elements in A from START
+   * to END, separated by SEP.
+   */
+  std::string
+  array_to_string_internal (ARRAY *a, arrayind_t start, arrayind_t end,
+                            string_view sep, bool quoted)
+  {
+    arrayind_t i;
+    ARRAY_ELEMENT *ae;
+
+    std::string result;
+
+    for (i = start; i <= end; i++)
+      {
+        if ((ae = a->elements[static_cast<size_t> (i)]) == nullptr)
+          continue;
+
+        if (!ae->value.empty ())
+          {
+            result += (quoted ? quote_string (ae->value) : ae->value);
+
+            /*
+             * Add a separator only after non-null elements.
+             */
+            if (i + 1 <= end)
+              result += to_string (sep);
+          }
+      }
+
+    return result;
+  }
+
+  std::string
+  array_to_string (ARRAY *a, string_view sep, bool quoted)
+  {
+    if (a == nullptr || a->empty ())
+      return std::string ();
+
+    return array_to_string_internal (a, a->first_index_, a->max_index, sep,
+                                     quoted);
+  }
+
+#else
+
+  /*
+   * Return a string that is the concatenation of the elements in A from START
+   * to END, separated by SEP.
+   */
+  std::string
+  array_to_string_internal (ARRAY_ELEMENT *start, ARRAY_ELEMENT *end,
+                            string_view sep, bool quoted)
+  {
+    ARRAY_ELEMENT *ae;
+
+    if (start == end) /* XXX - should not happen */
+      return nullptr;
+
+    std::string result;
+
+    for (ae = start; ae != end; ae = ae->next)
+      {
+        if (!ae->value.empty ())
+          {
+            result += (quoted ? quote_string (ae->value) : ae->value);
+            /*
+             * Add a separator only after non-null elements.
+             */
+            if (ae->next != end)
+              result += to_string (sep);
+          }
+      }
+
+    return result;
+  }
+
+  std::string
+  array_to_string (ARRAY *a, string_view sep, bool quoted)
+  {
+    if (a == nullptr || a->empty ())
+      return std::string ();
+
+    return array_to_string_internal (a->head->next, a->head, sep, quoted);
+  }
+
+#endif
+
   /* Functions from arrayfunc.cc */
 
   std::string array_variable_name (string_view, int, size_t *);
@@ -2560,6 +2662,7 @@ protected:
       __attribute__ ((__format__ (printf, 2, 3)));
 
   /* Debugging functions, not enabled in released version. */
+
   char *strescape (const char *);
   void itrace (const char *, ...) __attribute__ ((__format__ (printf, 2, 3)));
   void trace (const char *, ...) __attribute__ ((__format__ (printf, 2, 3)));
@@ -2573,9 +2676,9 @@ protected:
   /* Specific error message functions that eventually call report_error or
      internal_error. */
 
-  void err_badarraysub (const char *);
-  void err_unboundvar (const char *);
-  void err_readonly (const char *);
+  void err_badarraysub (string_view);
+  void err_unboundvar (string_view);
+  void err_readonly (string_view);
 
   void error_prolog (int);
 
@@ -3451,7 +3554,7 @@ protected:
 
   char *pre_process_line (string_view, bool, bool);
 
-  /* Functions declared in execute_cmd.c, used by many other files */
+  /* Functions declared in execute_cmd.cc, used by many other files */
 
   typedef std::vector<bool> fd_bitmap;
 
@@ -3473,6 +3576,10 @@ protected:
   int executing_line_number ();
   int execute_command (COMMAND *);
   int execute_command_internal (COMMAND *, bool, int, int, fd_bitmap *);
+
+  void print_formatted_time (FILE *, const char *, time_t, int, time_t, int,
+                             time_t, int, int);
+
   int shell_execve (char *, char **, char **);
   void setup_async_signals ();
   void async_redirect_stdin ();
@@ -3543,7 +3650,7 @@ protected:
   }
 
 #if defined(COPROCESS_SUPPORT)
-  void coproc_setstatus (struct coproc *, int);
+  void coproc_setstatus (Coproc *, int);
   int execute_coproc (COMMAND *, int, int, fd_bitmap *);
 #endif
 
@@ -3557,7 +3664,7 @@ protected:
   Coproc *getcoprocbyname (string_view);
 
   void coproc_init (Coproc *);
-  Coproc *coproc_alloc (char *, pid_t);
+  Coproc *coproc_alloc (string_view, pid_t);
   void coproc_dispose (Coproc *);
   void coproc_flush ();
   void coproc_close (Coproc *);
@@ -3565,17 +3672,10 @@ protected:
   void coproc_reap ();
   pid_t coproc_active ();
 
-  void coproc_rclose (Coproc *, int);
-  void coproc_wclose (Coproc *, int);
-  void coproc_fdclose (Coproc *, int);
-
   void coproc_checkfd (Coproc *, int);
   void coproc_fdchk (int);
 
   void coproc_pidchk (pid_t, int);
-
-  void coproc_fdsave (Coproc *);
-  void coproc_fdrestore (Coproc *);
 
   void coproc_setvars (Coproc *);
   void coproc_unsetvars (Coproc *);
@@ -3587,6 +3687,23 @@ protected:
 #if defined(ARRAY_VARS)
   void restore_funcarray_state (void *);
 #endif
+
+  static void
+  close_pipes (int in, int out)
+  {
+    if (in >= 0)
+      close (in);
+    if (out >= 0)
+      close (out);
+  }
+
+  void
+  dup_error (int oldd, int newd)
+  {
+    sys_error (_ ("cannot duplicate fd %d to fd %d"), oldd, newd);
+  }
+
+  void do_piping (int, int);
 
   /* Functions from mailcheck.cc */
 
@@ -4216,7 +4333,8 @@ protected:
      the various subtleties of using the first character of $IFS as the
      separator.  Calls string_list_dollar_at, string_list_dollar_star, and
      string_list as appropriate. */
-  char *string_list_pos_params (char, WORD_LIST *, quoted_flags, param_flags);
+  std::string string_list_pos_params (char, WORD_LIST *, quoted_flags,
+                                      param_flags);
 
   /* Perform quoted null character removal on each element of LIST.
      This modifies LIST. */
@@ -4987,6 +5105,7 @@ protected:
   // Methods in arrayfunc.cc.
 
   bool valid_array_reference (string_view, valid_array_flags);
+  SHELL_VAR *convert_var_to_array (SHELL_VAR *);
 
   // Methods in general.cc.
 
@@ -5417,11 +5536,11 @@ public:
   // Structure to hold all of our information about an input stream.
   struct BASH_INPUT
   {
-    stream_type type;
     std::string name;
     INPUT_STREAM location;
     sh_cget_func_t getter;
     sh_cunget_func_t ungetter;
+    stream_type type;
   };
 
   BASH_INPUT bash_input;
@@ -5730,12 +5849,12 @@ protected:
       return static_cast<STREAM_SAVER *> (next_);
     }
 
-    BASH_INPUT bash_input;
-    int line;
-
 #if defined(BUFFERED_INPUT)
     BUFFERED_STREAM *bstream;
 #endif /* BUFFERED_INPUT */
+
+    BASH_INPUT bash_input;
+    int line;
   };
 
   // The generated Bison parser.
@@ -5860,7 +5979,6 @@ protected:
   std::vector<temp_fifo> fifo_list;
 #else /* HAVE_DEV_FD */
   std::vector<pid_t> dev_fd_list;
-  int nfds;
 #endif
 #endif
 
@@ -5872,6 +5990,11 @@ protected:
      redirections performed by the `exec' builtin.  These are redirections
      that must be undone even when exec discards redirection_undo_list. */
   REDIRECT *exec_redirection_undo_list;
+
+#if defined(COPROCESS_SUPPORT)
+  // Will go away when there is fully-implemented support for multiple coprocs.
+  Coproc sh_coproc;
+#endif
 
   // Buffer for buffered input.
   char localbuf[1024];

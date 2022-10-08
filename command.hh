@@ -23,6 +23,7 @@
 #define _COMMAND_H_
 
 #include "general.hh"
+#include "jobs.hh"
 #include "shmbutil.hh"
 
 #include <string>
@@ -901,9 +902,8 @@ public:
 
   virtual bool control_structure () override; // not a control structure
 
-  WORD_LIST *words;           /* The program name, the arguments,
-                                 variable assignments, etc. */
-  REDIRECT *simple_redirects; /* This class has its own separate redirects. */
+  WORD_LIST *words; /* The program name, the arguments,
+                       variable assignments, etc. */
 };
 
 /* The "function definition" command. */
@@ -958,19 +958,22 @@ public:
 
 enum coproc_status
 {
+  COPROC_UNSET = 0,
   COPROC_RUNNING = 0x01,
   COPROC_DEAD = 0x02
 };
 
 struct Coproc
 {
+  Coproc () : c_pid (NO_PID), c_rfd (-1), c_wfd (-1) {}
+
   std::string c_name;
   pid_t c_pid;
   int c_rfd;
   int c_wfd;
   int c_rsave;
   int c_wsave;
-  int c_flags;
+  coproc_status c_flags;
   coproc_status c_status;
   int c_lock;
 };

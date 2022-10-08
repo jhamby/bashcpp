@@ -158,6 +158,11 @@ class read_again_exception : public std::exception
 };
 #endif
 
+class invalid_nameref_value : public std::exception
+{
+  virtual const char *what () const noexcept override;
+};
+
 /* Global inline functions, previously C preprocessor macros. */
 
 // Create a new copy of null-terminated string s. Free with delete[].

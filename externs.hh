@@ -481,18 +481,32 @@ class WORD_LIST;
 STRINGLIST *strlist_from_word_list (const WORD_LIST *, size_t);
 WORD_LIST *strlist_to_word_list (const STRINGLIST *, size_t);
 
-/* declarations for functions defined in lib/sh/strtrans.c */
+/* declarations for functions defined in lib/sh/strtrans.cc */
 
 std::string ansic_quote (string_view);
 bool ansic_shouldquote (string_view);
 std::string ansiexpand (string_view, size_t, size_t);
 
-/* declarations for functions defined in lib/sh/timeval.c */
+/* declarations for functions defined in lib/sh/strvec.cc */
+
+static inline void
+strvec_dispose (char **array)
+{
+  if (array == nullptr)
+    return;
+
+  for (int i = 0; array[i]; i++)
+    delete[] array[i];
+
+  delete[] array;
+}
+
+/* declarations for functions defined in lib/sh/timeval.cc */
 
 void timeval_to_secs (struct timeval *tvp, time_t *sp, int *sfp);
 void print_timeval (FILE *fp, struct timeval *tvp);
 
-/* declarations for functions defined in lib/sh/tmpfile.c */
+/* declarations for functions defined in lib/sh/tmpfile.cc */
 
 enum mktmp_flags
 {

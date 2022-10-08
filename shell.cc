@@ -1402,6 +1402,7 @@ Shell::open_shell_script (const char *script_name)
   delete[] dollar_vars[0];
   dollar_vars[0]
       = exec_argv0 ? savestring (exec_argv0) : savestring (script_name);
+
   if (exec_argv0)
     {
       delete[] exec_argv0;
@@ -1427,11 +1428,11 @@ Shell::open_shell_script (const char *script_name)
   GET_ARRAY_FROM_VAR ("BASH_SOURCE", bash_source_v, bash_source_a);
   GET_ARRAY_FROM_VAR ("BASH_LINENO", bash_lineno_v, bash_lineno_a);
 
-  array_push (bash_source_a, filename.c_str ());
+  bash_source_a->shift_element (filename);
   if (bash_lineno_a)
-    array_push (bash_lineno_a, itos (executing_line_number ()));
+    bash_lineno_a->shift_element (itos (executing_line_number ()));
 
-  array_push (funcname_a, "main");
+  funcname_a->shift_element ("main");
 #endif
 
 #ifdef HAVE_DEV_FD

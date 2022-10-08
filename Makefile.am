@@ -35,7 +35,7 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	dispose_cmd.cc execute_cmd.cc variables.cc version.cc \
 	expr.cc copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc mailcheck.cc \
 	test.cc trap.cc alias.cc braces.cc make_cmd.cc syntax.cc \
-	input.cc bashhist.cc array.cc arrayfunc.cc assoc.cc sig.cc pathexp.cc \
+	input.cc bashhist.cc arrayfunc.cc assoc.cc sig.cc pathexp.cc \
 	siglist.cc bashline.cc bracecomp.cc error.cc \
 	stringlib.cc locale.cc findcmd.cc redir.cc \
 	pcomplete.cc pcomplib.cc alias.hh array.hh assoc.hh bashintl.hh \
@@ -51,6 +51,12 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
 	include/unionwait.hh include/timer.hh pathnames.hh \
 	include/nonstd/string_view.hpp
+
+if ALT_ARRAY_IMPL
+bash_SOURCES += array2.cc
+else
+bash_SOURCES += array.cc
+endif
 
 if JOB_CONTROL
 bash_SOURCES += jobs.cc

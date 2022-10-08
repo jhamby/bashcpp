@@ -42,17 +42,6 @@
 #include <pwd.h>
 #endif
 
-#include "bashintl.hh"
-#include "filecntl.hh"
-
-#include "alias.hh"
-#include "findcmd.hh"
-#include "flags.hh"
-#include "hashcmd.hh"
-#include "input.hh"
-#include "jobs.hh"
-#include "parser.hh"
-#include "pathexp.hh"
 #include "shell.hh"
 
 #include "version.hh"
@@ -2133,7 +2122,7 @@ find_variable_last_nameref_context (SHELL_VAR *v, VAR_CONTEXT *vc,
 }
 
 SHELL_VAR *
-find_variable_nameref_for_create (const char *name, int flags)
+Shell::find_var_nameref_for_create (string_view name, int flags)
 {
   SHELL_VAR *var;
 
@@ -2157,7 +2146,7 @@ find_variable_nameref_for_create (const char *name, int flags)
 }
 
 SHELL_VAR *
-find_variable_nameref_for_assignment (const char *name, int flags)
+Shell::find_var_nameref_for_assignment (string_view name, int flags)
 {
   SHELL_VAR *var;
 

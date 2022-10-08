@@ -5,6 +5,10 @@
 /* Define if you want the alias feature. */
 #undef ALIAS
 
+/* An array implementation that prioritizes speed (O(1) access) over space, in
+   array2.cc. */
+#undef ALT_ARRAY_IMPLEMENTATION
+
 /* Define if you want the ksh93-style for (( init; test; step )) do list; done
    arithmetic for command. */
 #undef ARITH_FOR_COMMAND

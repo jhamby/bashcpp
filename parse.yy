@@ -1341,11 +1341,7 @@ pipeline: pipeline '|' newline_list pipeline
                   REDIRECT **rp; // pointer to "redirects" to update
 
                   tc = $1.value;
-                  SIMPLE_COM *scp = dynamic_cast<SIMPLE_COM *> (tc);
-                  if (scp)
-                    rp = &(scp->simple_redirects);
-                  else
-                    rp = &(tc->redirects);
+                  rp = &(tc->redirects);
 
                   REDIRECTEE sd (2);
                   REDIRECTEE rd (1);

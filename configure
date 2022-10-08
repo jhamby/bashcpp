@@ -669,6 +669,8 @@ am__EXEEXT_TRUE
 LTLIBOBJS
 RELSTATUS
 BASHVERS
+ALT_ARRAY_IMPL_FALSE
+ALT_ARRAY_IMPL_TRUE
 JOB_CONTROL_FALSE
 JOB_CONTROL_TRUE
 TERMCAP_DEP
@@ -872,6 +874,7 @@ enable_silent_rules
 with_curses
 enable_minimal_config
 enable_alias
+enable_alt_array_implementation
 enable_arith_for_command
 enable_array_variables
 enable_bang_history
@@ -1582,6 +1585,9 @@ Optional Features:
   --disable-silent-rules  verbose build output (undo: "make V=0")
   --enable-minimal-config a minimal sh-like configuration
   --enable-alias          enable shell aliases
+  --enable-alt-array-implementation
+                          enable an alternate array implementation that
+                          optimizes speed at the cost of space
   --enable-arith-for-command
                           enable arithmetic for command
   --enable-array-variables
@@ -4436,6 +4442,12 @@ then :
   enableval=$enable_alias; opt_alias=$enableval
 fi
 
+# Check whether --enable-alt-array-implementation was given.
+if test ${enable_alt_array_implementation+y}
+then :
+  enableval=$enable_alt_array_implementation; opt_alt_array_impl=$enableval
+fi
+
 # Check whether --enable-arith-for-command was given.
 if test ${enable_arith_for_command+y}
 then :
@@ -4844,7 +4856,11 @@ if test $opt_dev_fd_stat_broken = yes; then
 printf "%s\n" "#define DEV_FD_STAT_BROKEN 1" >>confdefs.h
 
 fi
+if test $opt_alt_array_impl = yes; then
 
+printf "%s\n" "#define ALT_ARRAY_IMPLEMENTATION 1" >>confdefs.h
+
+fi
 if test $opt_translatable_strings = yes; then
 
 printf "%s\n" "#define TRANSLATABLE_STRINGS 1" >>confdefs.h
@@ -32679,12 +32695,6 @@ printf "%s\n" "#define JOB_CONTROL 1" >>confdefs.h
 
 fi
 
-if test "$opt_job_control" = yes; then
-
-printf "%s\n" "#define JOB_CONTROL 1" >>confdefs.h
-
-fi
-
 # compile either jobs.cc or nojobs.cc, depending on this setting.
  if test x$opt_job_control = xyes; then
   JOB_CONTROL_TRUE=
@@ -32692,6 +32702,16 @@ fi
 else
   JOB_CONTROL_TRUE='#'
   JOB_CONTROL_FALSE=
+fi
+
+
+# compile either array.cc or array2.cc, depending on this setting.
+ if test x$opt_alt_array_impl = xyes; then
+  ALT_ARRAY_IMPL_TRUE=
+  ALT_ARRAY_IMPL_FALSE='#'
+else
+  ALT_ARRAY_IMPL_TRUE='#'
+  ALT_ARRAY_IMPL_FALSE=
 fi
 
 
@@ -32863,6 +32883,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${JOB_CONTROL_TRUE}" && test -z "${JOB_CONTROL_FALSE}"; then
   as_fn_error $? "conditional \"JOB_CONTROL\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${ALT_ARRAY_IMPL_TRUE}" && test -z "${ALT_ARRAY_IMPL_FALSE}"; then
+  as_fn_error $? "conditional \"ALT_ARRAY_IMPL\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 

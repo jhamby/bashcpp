@@ -158,6 +158,13 @@ read_again_exception::what () const noexcept
 }
 #endif
 
+// Return the type of the parse_error exception.
+const char *
+invalid_nameref_value::what () const noexcept
+{
+  return "invalid_nameref_value";
+}
+
 /* Do whatever is necessary to initialize `Posix mode'.  This currently
    modifies the following variables which are controlled via shopt:
       interactive_comments

@@ -127,6 +127,7 @@ QUOTED_NULL (const char *str)
   return (str[0] == CTLNUL && str[1] == '\0');
 }
 
+#if 0
 /* Return a single string of all the words present in LIST, separating
    each word with SEP. */
 extern char *string_list_internal (WORD_LIST *, const char *);
@@ -158,6 +159,7 @@ extern void word_list_remove_quoted_nulls (WORD_LIST *);
 /* This performs word splitting and quoted null character removal on
    STRING. */
 extern WORD_LIST *list_string (const char *, const char *, int);
+#endif
 
 } // namespace bash
 
