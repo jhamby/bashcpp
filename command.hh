@@ -902,8 +902,9 @@ public:
 
   virtual bool control_structure () override; // not a control structure
 
-  WORD_LIST *words; /* The program name, the arguments,
-                       variable assignments, etc. */
+  WORD_LIST *words;           /* The program name, the arguments,
+                                 variable assignments, etc. */
+  REDIRECT *simple_redirects; // Redirections to perform.
 };
 
 /* The "function definition" command. */

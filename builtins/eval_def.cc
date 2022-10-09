@@ -50,7 +50,8 @@ Shell::eval_builtin (WORD_LIST *list)
     return EX_USAGE;
   list = loptend; /* skip over possible `--' */
 
-  return list ? evalstring (string_list (list), "eval", SEVAL_NOHIST)
+  return list ? evalstring (savestring (string_list (list)), "eval",
+                            SEVAL_NOHIST)
               : EXECUTION_SUCCESS;
 }
 

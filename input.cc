@@ -400,7 +400,7 @@ Shell::buffered_ungetchar (int c)
 
 /* Make input come from file descriptor BFD through a buffered stream. */
 void
-Shell::with_input_from_buffered_stream (int bfd, const char *name)
+Shell::with_input_from_buffered_stream (int bfd, string_view name)
 {
   INPUT_STREAM location;
   BUFFERED_STREAM *bp;

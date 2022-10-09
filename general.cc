@@ -67,15 +67,12 @@ bash_exception::what () const noexcept
     case ERREXIT:
       return "ERREXIT";
 
-    case SIGEXIT:
-      return "SIGEXIT";
-
     case EXITBLTIN:
       return "EXITBLTIN";
 
     case NOEXCEPTION:
     default:
-      return "NOEXCEPTION";
+      return "UNKNOWN";
     }
 }
 

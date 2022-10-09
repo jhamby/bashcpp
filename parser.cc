@@ -221,11 +221,11 @@ Shell::yy_string_unget (int c)
 }
 
 void
-Shell::with_input_from_string (string_view string, string_view name)
+Shell::with_input_from_string (char *string, string_view name)
 {
   INPUT_STREAM location;
 
-  location.string = savestring (string);
+  location.string = string;
   init_yy_io (&Shell::yy_string_get, &Shell::yy_string_unget, st_string, name,
               location);
 }
@@ -1170,7 +1170,8 @@ Shell::execute_variable_command (string_view command, string_view vname)
   save_parser_state (&ps);
   const char *last_lastarg = get_string_value ("_");
 
-  parse_and_execute (command, vname, (SEVAL_NONINT | SEVAL_NOHIST));
+  parse_and_execute (savestring (command), vname,
+                     (SEVAL_NONINT | SEVAL_NOHIST));
 
   restore_parser_state (&ps);
   bind_variable ("_", last_lastarg, 0);
@@ -2342,20 +2343,32 @@ Shell::parse_comsub (int qc, int open, int close)
 /* Recursively call the parser to parse a $(...) command substitution. This is
    called by the word expansion code and so does not have to reset as much
    parser state before calling yyparse(). */
-std::string
-Shell::xparse_dolparen (string_view string, size_t *indp, sx_flags flags)
+char *
+Shell::xparse_dolparen (char *base, char *string, size_t *indp, sx_flags flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
 
   // debug_parser (1);
+
+  char *ostring = string;
   int start_lineno = line_number;
 
   // itrace ("xparse_dolparen: size = %d shell_input_line = `%s' string=`%s'",
   //         shell_input_line.size (), shell_input_line.c_str (),
   //         to_string (string).c_str ());
 
-  parse_flags sflags = SEVAL_NONINT | SEVAL_NOHIST;
+  if (*string == '\0')
+    {
+      if (flags & SX_NOALLOC)
+        return nullptr;
+
+      char *ret = new char[1];
+      ret[0] = '\0';
+      return ret;
+    }
+
+  parse_flags sflags = SEVAL_NONINT | SEVAL_NOHIST | SEVAL_NOFREE;
   if (flags & SX_NOTHROW)
     sflags |= SEVAL_NOTHROW;
 
@@ -2385,13 +2398,14 @@ Shell::xparse_dolparen (string_view string, size_t *indp, sx_flags flags)
 
   token_to_read = parser::token::DOLPAREN; /* let's trick the parser */
 
-  string_view::iterator ep;
   bash_exception_t exception = NOEXCEPTION;
+  char *ep = nullptr;
 
   try
     {
-      (void)parse_string (string, "command substitution", sflags, nullptr,
-                          &ep);
+      // const_cast<> is safe because we set SEVAL_NOFREE above.
+      (void)parse_string (const_cast<char *> (string), "command substitution",
+                          sflags, nullptr, &ep);
     }
   catch (const bash_exception &e)
     {
@@ -2432,12 +2446,12 @@ Shell::xparse_dolparen (string_view string, size_t *indp, sx_flags flags)
                 line_number, ep[-1], ep);
 #endif
 
-      while (ep > string.begin () && ep[-1] == '\n')
+      while (ep > ostring && ep[-1] == '\n')
         ep--;
     }
 
-  size_t nc = static_cast<size_t> (ep - string.begin ());
-  *indp += (nc - 1);
+  size_t nc = static_cast<size_t> (ep - ostring);
+  *indp = static_cast<size_t> (ep - base - 1);
 
   /*((*/
 #if 0
@@ -2450,7 +2464,7 @@ Shell::xparse_dolparen (string_view string, size_t *indp, sx_flags flags)
         line_number, *indp, orig_ind, ostring);
 #endif
 
-  if (string[*indp] != ')' && (flags & SX_NOTHROW) == 0)
+  if (base[*indp] != ')' && (flags & SX_NOTHROW) == 0)
     {
       /*(*/
       if ((flags & SX_NOERROR) == 0)
@@ -2460,22 +2474,31 @@ Shell::xparse_dolparen (string_view string, size_t *indp, sx_flags flags)
       throw bash_exception (DISCARD);
     }
 
-  if (nc == 0 || flags & SX_NOALLOC)
-    return std::string ();
+  if (flags & SX_NOALLOC)
+    return nullptr;
+
+  if (nc == 0)
+    {
+      char *ret = new char[1];
+      ret[0] = '\0';
+      return ret;
+    }
   else
-    return to_string (string.substr (0, nc));
+    return substring (ostring, 0, nc - 1);
 }
 
 /* Recursively call the parser to parse the string from a $(...) command
    substitution to a COMMAND *. This is called from command_substitute () and
    has the same parser state constraints as xparse_dolparen(). */
 COMMAND *
-Shell::parse_string_to_command (string_view string, sx_flags flags)
+Shell::parse_string_to_command (const char *string, sx_flags flags)
 {
   sh_parser_state_t ps;
   sh_input_line_state_t ls;
 
-  if (string.empty ())
+  size_t slen = strlen (string);
+
+  if (!string || *string == '\0')
     return nullptr;
 
   /*itrace("parse_string_to_command: size = %d shell_input_line = `%s'
@@ -2503,8 +2526,9 @@ Shell::parse_string_to_command (string_view string, sx_flags flags)
   COMMAND *cmd = nullptr;
   try
     {
-      nc = parse_string (string, "command substitution", sflags, &cmd,
-                         nullptr);
+      // const_cast<> is safe because we set SEVAL_NOFREE above.
+      nc = parse_string (const_cast<char *> (string), "command substitution",
+                         sflags, &cmd, nullptr);
     }
   catch (const bash_exception &e)
     {
@@ -2529,7 +2553,7 @@ Shell::parse_string_to_command (string_view string, sx_flags flags)
 
   /* Need to check how many characters parse_string() consumed, make sure it's
      the entire string. */
-  if (nc < string.size ())
+  if (nc < slen)
     {
       delete cmd;
       return nullptr;
@@ -4338,7 +4362,7 @@ Shell::parse_string_to_word_list (string_view s, int flags, string_view whom)
   current_command_line_count = 0;
   echo_input_at_read = expand_aliases = 0;
 
-  with_input_from_string (s, whom);
+  with_input_from_string (savestring (s), whom);
 
   if (flags & 1)
     {

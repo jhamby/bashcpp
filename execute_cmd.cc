@@ -1150,7 +1150,8 @@ Shell::time_command (COMMAND *command, bool asynchronous, int pipe_in,
   if (!nullcmd && command->type == cm_simple)
     {
       SIMPLE_COM *simple_com = static_cast<SIMPLE_COM *> (command);
-      if (simple_com->words == nullptr && simple_com->redirects == nullptr)
+      if (simple_com->words == nullptr
+          && simple_com->simple_redirects == nullptr)
         nullcmd = true;
     }
 
@@ -1906,15 +1907,15 @@ Shell::coproc_setvars (Coproc *cp)
     v = make_new_array_variable (cp->c_name);
 
   if (!v->array ())
-    v = convert_var_to_array (v);
+    (void)convert_var_to_array (v);
 
   t = itos (cp->c_rfd);
   ind = 0;
-  v = bind_array_variable (cp->c_name, ind, t, 0);
+  (void)bind_array_variable (cp->c_name, ind, t, 0);
 
   t = itos (cp->c_wfd);
   ind = 1;
-  v = bind_array_variable (cp->c_name, ind, t, 0);
+  (void)bind_array_variable (cp->c_name, ind, t, 0);
 #else
   namevar = cp->c_name;
   namevar += "_READ";
@@ -1931,34 +1932,30 @@ Shell::coproc_setvars (Coproc *cp)
   namevar = cp->c_name;
   namevar += "_PID";
   t = itos (cp->c_pid);
-  v = bind_variable (namevar, t, 0);
+  (void)bind_variable (namevar, t, 0);
 }
 
 void
 Shell::coproc_unsetvars (Coproc *cp)
 {
-  int l;
-  char *namevar;
-
-  if (cp->c_name == 0)
+  if (cp->c_name.empty ())
     return;
 
-  l = strlen (cp->c_name);
-  namevar = (char *)xmalloc (l + 16);
+  std::string namevar (cp->c_name);
+  namevar += "_PID";
 
-  sprintf (namevar, "%s_PID", cp->c_name);
   unbind_variable_noref (namevar);
 
 #if defined(ARRAY_VARS)
   check_unbind_variable (cp->c_name);
 #else
-  sprintf (namevar, "%s_READ", cp->c_name);
+  namevar = cp->c_name;
+  namevar += "_READ";
   unbind_variable (namevar);
-  sprintf (namevar, "%s_WRITE", cp->c_name);
+  namevar = cp->c_name;
+  namevar += "_WRITE";
   unbind_variable (namevar);
 #endif
-
-  free (namevar);
 }
 
 int
@@ -1966,7 +1963,7 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
                        fd_bitmap *fds_to_close)
 {
   /* XXX -- can be removed after changes to handle multiple coprocs */
-#if !MULTIPLE_COPROCS
+#if !defined(MULTIPLE_COPROCS)
   if (sh_coproc.c_pid != NO_PID
       && (sh_coproc.c_rfd >= 0 || sh_coproc.c_wfd >= 0))
     internal_warning (_ ("execute_coproc: coproc [%d:%s] still exists"),
@@ -1983,7 +1980,7 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
   /* Optional check -- could be relaxed */
   if (legal_identifier (name) == 0)
     {
-      internal_error (_ ("`%s': not a valid identifier"), name);
+      internal_error (_ ("`%s': not a valid identifier"), name.c_str ());
       return invert ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
     }
   else
@@ -2038,7 +2035,8 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
   UNBLOCK_SIGNAL (oset);
 
 #if 0
-  itrace ("execute_coproc (%s): [%d] %s", command->value.Coproc->name, coproc_pid, the_printed_command);
+  itrace ("execute_coproc (%s): [%d] %s", command->name.c_str (), coproc_pid,
+          the_printed_command.c_str ());
 #endif
 
   close_pipes (pipe_in, pipe_out);
@@ -2066,6 +2064,7 @@ restore_stdin (int s)
     }
 }
 
+#if 0
 /* Catch-all cleanup function for lastpipe code for unwind-protects */
 static int
 lastpipe_cleanup (int s)
@@ -2073,6 +2072,7 @@ lastpipe_cleanup (int s)
   set_jobs_list_frozen (s);
   return 0; // unused
 }
+#endif
 
 int
 Shell::execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
@@ -2208,6 +2208,7 @@ Shell::execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
       if (cmd)
         cmd->flags |= CMD_LASTPIPE;
     }
+
   if (prev >= 0)
     add_unwind_protect_int (close, prev);
 
@@ -2445,7 +2446,7 @@ Shell::execute_connection (CONNECTION *command, bool asynchronous, int pipe_in,
 #define REAP()                                                                \
   do                                                                          \
     {                                                                         \
-      if (job_control == 0 || interactive_shell == 0)                         \
+      if (!job_control || !interactive_shell)                                 \
         reap_dead_jobs ();                                                    \
     }                                                                         \
   while (0)
@@ -2542,7 +2543,7 @@ Shell::execute_for_command (FOR_SELECT_COM *for_command)
           if (v && readonly_p (v) && interactive_shell == 0 && posixly_correct)
             {
               last_command_exit_value = EXECUTION_FAILURE;
-              jump_to_top_level (FORCE_EOF);
+              throw bash_exception (FORCE_EOF);
             }
           else
             {
@@ -3402,8 +3403,6 @@ execute_arith_command (ARITH_COM *arith_command)
 #endif /* DPAREN_ARITHMETIC */
 
 #if defined(COND_COMMAND)
-
-static const char *const nullstr = "";
 
 /* XXX - can COND ever be NULL when this is called? */
 static int

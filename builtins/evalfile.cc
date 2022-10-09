@@ -33,15 +33,213 @@
 namespace bash
 {
 
-/* How many `levels' of sourced files we have. */
-// int sourcelevel = 0;
+// Unwind handler class for _evalfile () to restore shell state before
+// return or during a throw.
+class EvalFileUnwindHandler
+{
+public:
+  // The constructor stores the state to be restored on exit or throw.
+  EvalFileUnwindHandler (Shell &s, char *string, evalfile_flags_t flags_)
+      : shell (s), the_printed_command_except_trap (
+                       shell.the_printed_command_except_trap),
+        flags (flags_)
+  {
+    parse_and_execute_level = shell.parse_and_execute_level;
+    indirection_level = shell.indirection_level;
+    line_number = shell.line_number;
+    line_number_for_err_trap = shell.line_number_for_err_trap;
+    loop_level = shell.loop_level;
+    executing_list = shell.executing_list;
+    comsub_ignore_return = shell.comsub_ignore_return;
+
+    if (flags & (SEVAL_NONINT | SEVAL_INTERACT))
+      {
+        interactive = shell.interactive;
+        shell.interactive = (flags & SEVAL_INTERACT);
+      }
+
+#if defined(HISTORY)
+    remember_on_history = shell.remember_on_history;
+#if defined(BANG_HISTORY)
+    history_expansion_inhibited = shell.history_expansion_inhibited;
+#endif /* BANG_HISTORY */
+#endif /* HISTORY */
+
+    interactive_shell = shell.interactive_shell;
+    if (interactive_shell)
+      current_prompt_level = shell.get_current_prompt_level ();
+
+    if (shell.parser_expanding_alias ())
+      parser_expanding_alias = true;
+
+    if (string && ((flags & SEVAL_NOFREE) == 0))
+      orig_string_to_free = string;
+
+#if defined(HISTORY)
+    if (flags & SEVAL_NOHIST)
+      shell.bash_history_disable ();
+
+#if defined(BANG_HISTORY)
+    if (flags & SEVAL_NOHISTEXP)
+      shell.history_expansion_inhibited = true;
+#endif /* BANG_HISTORY */
+#endif /* HISTORY */
+
+#if 0
+  if (flags & FEVAL_UNWINDPROT)
+    {
+      begin_unwind_frame ("_evalfile");
+
+      unwind_protect_var (return_catch_flag);
+      unwind_protect_var (return_catch);
+      if (flags & FEVAL_NONINT)
+        unwind_protect_var (interactive);
+      unwind_protect_var (sourcelevel);
+    }
+  else
+    {
+      COPY_PROCENV (return_catch, old_return_catch);
+      if (flags & FEVAL_NONINT)
+        old_interactive = interactive;
+    }
+
+  if (flags & FEVAL_NONINT)
+    interactive = 0;
+
+  return_catch_flag++;
+  sourcelevel++;
+
+#if defined(ARRAY_VARS)
+  array_push (bash_source_a, filename);
+  t = itos (executing_line_number ());
+  array_push (bash_lineno_a, t);
+  delete[] t;
+  array_push (funcname_a, "source"); /* not exactly right */
+
+  fa = new func_array_state ();
+  fa->source_a = bash_source_a;
+  fa->source_v = bash_source_v;
+  fa->lineno_a = bash_lineno_a;
+  fa->lineno_v = bash_lineno_v;
+  fa->funcname_a = funcname_a;
+  fa->funcname_v = funcname_v;
+
+  if (flags & FEVAL_UNWINDPROT)
+    add_unwind_protect_ptr (restore_funcarray_state, fa);
+
+#if defined(DEBUGGER)
+  /* Have to figure out a better way to do this when `source' is supplied
+     arguments */
+  if ((flags & FEVAL_NOPUSHARGS) == 0)
+    {
+      if (shell_compatibility_level <= 44)
+        init_bash_argv ();
+      array_push (bash_argv_a, filename); /* XXX - unconditionally? */
+      tt[0] = '1';
+      tt[1] = '\0';
+      array_push (bash_argc_a, tt);
+
+      if (flags & FEVAL_UNWINDPROT)
+        add_unwind_protect (pop_args);
+    }
+#endif
+#endif
+
+  return_val = setjmp_nosigs (return_catch);
+#endif
+  }
+
+  // Unwind all values stored in this object on object destruction.
+  ~EvalFileUnwindHandler ()
+  {
+    if (unwound)
+      return;
+
+    // Delete the original string if this is non-nullptr.
+    delete[] orig_string_to_free;
+
+    if (parser_expanding_alias)
+      shell.parser_restore_alias ();
+
+    // Note: this call doesn't have a corresponding push in the constructor.
+    shell.pop_stream ();
+
+#if defined(HISTORY)
+#if defined(BANG_HISTORY)
+    shell.history_expansion_inhibited = history_expansion_inhibited;
+#endif /* BANG_HISTORY */
+    if (parse_and_execute_level == 0)
+      shell.remember_on_history = shell.enable_history_list;
+    else
+      shell.remember_on_history = remember_on_history;
+#endif /* HISTORY */
+
+    if (flags & (SEVAL_NONINT | SEVAL_INTERACT))
+      shell.interactive = interactive;
+
+    if (!the_printed_command_except_trap.empty ())
+      shell.the_printed_command_except_trap = the_printed_command_except_trap;
+
+    shell.comsub_ignore_return = comsub_ignore_return;
+    shell.executing_list = executing_list;
+    shell.loop_level = loop_level;
+    shell.line_number_for_err_trap = line_number_for_err_trap;
+    shell.line_number = line_number;
+    shell.indirection_level = indirection_level;
+    shell.parse_and_execute_level = parse_and_execute_level;
+    unwound = true;
+
+#if 0
+  if (flags & FEVAL_UNWINDPROT)
+    run_unwind_frame ("_evalfile");
+  else
+    {
+      if (flags & FEVAL_NONINT)
+        interactive = old_interactive;
+#if defined(ARRAY_VARS)
+      restore_funcarray_state (fa);
+#if defined(DEBUGGER)
+      if ((flags & FEVAL_NOPUSHARGS) == 0)
+        {
+          /* Don't need to call pop_args here until we do something better
+             when source is passed arguments (see above). */
+          array_pop (bash_argc_a);
+          array_pop (bash_argv_a);
+        }
+#endif
+#endif
+      return_catch_flag--;
+      sourcelevel--;
+      COPY_PROCENV (old_return_catch, return_catch);
+    }
+#endif
+  }
+
+private:
+  Shell &shell;
+  std::string the_printed_command_except_trap;
+  char *orig_string_to_free;
+  evalfile_flags_t flags;
+  int parse_and_execute_level;
+  int indirection_level;
+  int line_number;
+  int line_number_for_err_trap;
+  int loop_level;
+  int executing_list;
+  int current_prompt_level;
+  bool unwound;
+  bool comsub_ignore_return;
+  bool interactive;
+  char remember_on_history;
+  bool history_expansion_inhibited;
+  bool interactive_shell;
+  bool parser_expanding_alias;
+};
 
 int
-Shell::_evalfile (const std::string &filename, evalfile_flags_t flags)
+Shell::_evalfile (const char *filename, evalfile_flags_t flags)
 {
-  //   volatile int old_interactive;
-  //   procenv_t old_return_catch;
-  int return_val, fd, result, i, nnull;
+  int return_val, result, i, nnull;
   ssize_t nr; /* return value from read(2) */
   char *string;
   struct stat finfo;
@@ -50,12 +248,10 @@ Shell::_evalfile (const std::string &filename, evalfile_flags_t flags)
 #if defined(ARRAY_VARS)
   SHELL_VAR *funcname_v, *bash_source_v, *bash_lineno_v;
   ARRAY *funcname_a, *bash_source_a, *bash_lineno_a;
-  struct func_array_state *fa;
 #if defined(DEBUGGER)
   SHELL_VAR *bash_argv_v, *bash_argc_v;
   ARRAY *bash_argv_a, *bash_argc_a;
 #endif
-  char *t, tt[2];
 #endif
 
 #if defined(ARRAY_VARS)
@@ -68,13 +264,14 @@ Shell::_evalfile (const std::string &filename, evalfile_flags_t flags)
 #endif
 #endif
 
-  fd = open (filename.c_str (), O_RDONLY);
+  int fd = open (filename, O_RDONLY);
 
   if (fd < 0 || (fstat (fd, &finfo) == -1))
     {
       i = errno;
       if (fd >= 0)
         close (fd);
+
       errno = i;
 
     file_error_and_exit:
@@ -126,7 +323,7 @@ Shell::_evalfile (const std::string &filename, evalfile_flags_t flags)
         string[nr] = '\0';
     }
   else
-    nr = zmapfd (fd, &string, 0);
+    nr = zmapfd (fd, &string);
 
   return_val = errno;
   close (fd);
@@ -166,73 +363,7 @@ Shell::_evalfile (const std::string &filename, evalfile_flags_t flags)
           }
     }
 
-  if (flags & FEVAL_UNWINDPROT)
-    {
-      begin_unwind_frame ("_evalfile");
-
-      unwind_protect_var (return_catch_flag);
-      unwind_protect_var (return_catch);
-      if (flags & FEVAL_NONINT)
-        unwind_protect_var (interactive);
-      unwind_protect_var (sourcelevel);
-    }
-  else
-    {
-      COPY_PROCENV (return_catch, old_return_catch);
-      if (flags & FEVAL_NONINT)
-        old_interactive = interactive;
-    }
-
-  if (flags & FEVAL_NONINT)
-    interactive = 0;
-
-  return_catch_flag++;
-  sourcelevel++;
-
-#if defined(ARRAY_VARS)
-  array_push (bash_source_a, filename);
-  t = itos (executing_line_number ());
-  array_push (bash_lineno_a, t);
-  delete[] t;
-  array_push (funcname_a, "source"); /* not exactly right */
-
-  fa = new func_array_state ();
-  fa->source_a = bash_source_a;
-  fa->source_v = bash_source_v;
-  fa->lineno_a = bash_lineno_a;
-  fa->lineno_v = bash_lineno_v;
-  fa->funcname_a = funcname_a;
-  fa->funcname_v = funcname_v;
-  if (flags & FEVAL_UNWINDPROT)
-    add_unwind_protect_ptr (restore_funcarray_state, fa);
-
-#if defined(DEBUGGER)
-  /* Have to figure out a better way to do this when `source' is supplied
-     arguments */
-  if ((flags & FEVAL_NOPUSHARGS) == 0)
-    {
-      if (shell_compatibility_level <= 44)
-        init_bash_argv ();
-      array_push (bash_argv_a, filename); /* XXX - unconditionally? */
-      tt[0] = '1';
-      tt[1] = '\0';
-      array_push (bash_argc_a, tt);
-      if (flags & FEVAL_UNWINDPROT)
-        add_unwind_protect (pop_args);
-    }
-#endif
-#endif
-
-  /* set the flags to be passed to parse_and_execute */
-  parse_flags pflags = SEVAL_RESETLINE;
-  if ((flags & FEVAL_HISTORY) == 0)
-    pflags |= SEVAL_NOHIST;
-
-  if (flags & FEVAL_BUILTIN)
-    result = EXECUTION_SUCCESS;
-
-  return_val = setjmp_nosigs (return_catch);
-
+#if 0
   /* If `return' was seen outside of a function, but in the script, then
      force parse_and_execute () to clean up. */
   if (return_val)
@@ -241,30 +372,17 @@ Shell::_evalfile (const std::string &filename, evalfile_flags_t flags)
       result = return_catch_value;
     }
   else
-    result = parse_and_execute (string, filename, pflags);
+#endif
 
-  if (flags & FEVAL_UNWINDPROT)
-    run_unwind_frame ("_evalfile");
-  else
-    {
-      if (flags & FEVAL_NONINT)
-        interactive = old_interactive;
-#if defined(ARRAY_VARS)
-      restore_funcarray_state (fa);
-#if defined(DEBUGGER)
-      if ((flags & FEVAL_NOPUSHARGS) == 0)
-        {
-          /* Don't need to call pop_args here until we do something better
-             when source is passed arguments (see above). */
-          array_pop (bash_argc_a);
-          array_pop (bash_argv_a);
-        }
-#endif
-#endif
-      return_catch_flag--;
-      sourcelevel--;
-      COPY_PROCENV (old_return_catch, return_catch);
-    }
+  // Construct an unwind handler to restore the state on return or throw.
+  EvalFileUnwindHandler unwind_handler (*this, string, flags);
+
+  /* set the flags to be passed to parse_and_execute */
+  parse_flags pflags = SEVAL_RESETLINE;
+  if ((flags & FEVAL_HISTORY) == 0)
+    pflags |= SEVAL_NOHIST;
+
+  result = parse_and_execute (string, filename, pflags);
 
   /* If we end up with EOF after sourcing a file, which can happen when the
      file doesn't end with a newline, pretend that it did. */
@@ -275,7 +393,7 @@ Shell::_evalfile (const std::string &filename, evalfile_flags_t flags)
 }
 
 int
-Shell::maybe_execute_file (const std::string &fname, bool force_noninteractive)
+Shell::maybe_execute_file (const char *fname, bool force_noninteractive)
 {
   char *filename = bash_tilde_expand (fname, 0);
 
@@ -283,14 +401,21 @@ Shell::maybe_execute_file (const std::string &fname, bool force_noninteractive)
   if (force_noninteractive)
     flags |= FEVAL_NONINT;
 
-  int result = _evalfile (filename, flags);
-
-  delete[] filename;
-  return result;
+  try
+  {
+    int result = _evalfile (filename, flags);
+    delete[] filename;
+    return result;
+  }
+  catch (const bash_exception &)
+  {
+    delete[] filename;
+    throw;
+  }
 }
 
 int
-Shell::force_execute_file (const std::string &fname, bool force_noninteractive)
+Shell::force_execute_file (const char *fname, bool force_noninteractive)
 {
   char *filename = bash_tilde_expand (fname, 0);
 
@@ -298,15 +423,22 @@ Shell::force_execute_file (const std::string &fname, bool force_noninteractive)
   if (force_noninteractive)
     flags |= FEVAL_NONINT;
 
-  int result = _evalfile (filename, flags);
-
-  delete[] filename;
-  return result;
+  try
+  {
+    int result = _evalfile (filename, flags);
+    delete[] filename;
+    return result;
+  }
+  catch (const bash_exception &)
+  {
+    delete[] filename;
+    throw;
+  }
 }
 
 #if defined(HISTORY)
 int
-Shell::fc_execute_file (const std::string &filename)
+Shell::fc_execute_file (const char *filename)
 {
   evalfile_flags_t flags;
 
@@ -319,7 +451,7 @@ Shell::fc_execute_file (const std::string &filename)
 #endif /* HISTORY */
 
 int
-Shell::source_file (const std::string &filename, int sflags)
+Shell::source_file (const char *filename, int sflags)
 {
   evalfile_flags_t flags = FEVAL_BUILTIN | FEVAL_UNWINDPROT | FEVAL_NONINT;
 

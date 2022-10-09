@@ -467,6 +467,24 @@ enum mkloc_var_flags
 
 // Definitions previously in arrayfunc.hh.
 
+/* values for `type' field */
+enum av_type
+{
+  ARRAY_INVALID = -1,
+  ARRAY_SCALAR = 0,
+  ARRAY_INDEXED = 1,
+  ARRAY_ASSOC = 2
+};
+
+struct array_eltstate_t
+{
+  av_type type; // assoc or indexed, says which fields are valid
+  arrayind_t ind;
+  std::string key; // can be allocated memory
+  std::string value;
+  short subtype; // `*', `@', or something else
+};
+
 /* Flags for array_value_internal and callers array_value/get_array_value */
 enum av_flags
 {

@@ -130,7 +130,6 @@ Shell::reader_loop ()
             case FORCE_EOF:
             case EXITPROG:
             case ERREXIT:
-            case SIGEXIT:
             case EXITBLTIN:
               current_command = nullptr;
               if (exit_immediately_on_error)

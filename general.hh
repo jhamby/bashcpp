@@ -77,8 +77,7 @@ enum bash_exception_t
   DISCARD = 2,     // Discard current command.
   EXITPROG = 3,    // Unconditionally exit the program now.
   ERREXIT = 4,     // Exit due to error condition.
-  SIGEXIT = 5,     // Exit due to fatal terminating signal.
-  EXITBLTIN = 6    // Exit due to the exit builtin.
+  EXITBLTIN = 5    // Exit due to the exit builtin.
 };
 
 /* General shell exception, including an exception type enum. */

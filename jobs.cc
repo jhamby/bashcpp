@@ -110,7 +110,7 @@ enum delete_job_flags
    feel free to add back the alternative macro definition. */
 #if defined(_POSIX_VERSION) || defined(HAVE_WAITPID)
 #define WAITPID(pid, statusp, options)                                        \
-  ::waitpid (static_cast<pid_t> (pid), statusp, options)
+  waitpid (static_cast<pid_t> (pid), statusp, options)
 #else
 #error You must define an alternative WAITPID() macro, e.g. using wait3().
 #endif /* !_POSIX_VERSION && !HAVE_WAITPID*/

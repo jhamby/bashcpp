@@ -750,6 +750,8 @@ protected:
   int nfds;
 #endif
 
+  int return_catch_value;
+
   /* variables from break.def/continue.def */
   int breaking;
   int continuing;
@@ -1555,7 +1557,9 @@ public:
   };
 
 protected:
-  // Easier to give the unwind handler direct access to our state.
+  // Easier to give the unwind handlers direct access to our state.
+
+  friend class EvalFileUnwindHandler;
   friend class EvalStringUnwindHandler;
 
   // typedefs moved from general.h so they can become method pointers to Shell.
@@ -1925,24 +1929,30 @@ public:
   void optimize_shell_function (COMMAND *);
   bool can_optimize_cat_file (const COMMAND *);
 
-  int parse_and_execute (string_view, string_view, parse_flags);
+  int parse_and_execute (char *, string_view, parse_flags);
 
-  size_t parse_string (string_view, string_view, parse_flags, COMMAND **,
-                       string_view::iterator *);
+  int try_execute_command ();
 
-  int evalstring (string_view, string_view, parse_flags);
+  size_t parse_string (char *, string_view, parse_flags, COMMAND **, char **);
+
+  int
+  evalstring (char *string, string_view from_file, parse_flags flags)
+  {
+    /* Note that parse_and_execute () frees the string it is passed. */
+    return parse_and_execute (string, from_file, flags);
+  }
 
   int open_redir_file (REDIRECT *, char **);
   int cat_file (REDIRECT *);
 
   // Functions from builtins/evalfile.cc
 
-  int maybe_execute_file (string_view, bool);
-  int force_execute_file (string_view, bool);
-  int source_file (string_view, int);
-  int fc_execute_file (string_view);
+  int maybe_execute_file (const char *, bool);
+  int force_execute_file (const char *, bool);
+  int source_file (const char *, int);
+  int fc_execute_file (const char *);
 
-  int _evalfile (string_view, evalfile_flags_t);
+  int _evalfile (const char *, evalfile_flags_t);
 
   /* Functions from flags.cc */
 
@@ -2253,7 +2263,7 @@ protected:
   int yy_string_get ();
   int yy_string_unget (int);
 
-  void with_input_from_string (string_view, string_view);
+  void with_input_from_string (char *, string_view);
 
   int yy_stream_get ();
   int yy_stream_unget (int);
@@ -2427,7 +2437,83 @@ protected:
 
   /* Functions from arrayfunc.cc */
 
+#if defined(ARRAY_VARS)
+
+  SHELL_VAR *convert_var_to_array (SHELL_VAR *);
+  SHELL_VAR *convert_var_to_assoc (SHELL_VAR *);
+
+  std::string make_array_variable_value (SHELL_VAR *, arrayind_t, string_view,
+                                         string_view, int);
+
+  SHELL_VAR *bind_array_variable (string_view, arrayind_t, string_view, int);
+  SHELL_VAR *bind_array_element (SHELL_VAR *, arrayind_t, string_view, int);
+  SHELL_VAR *assign_array_element (string_view, string_view, int,
+                                   array_eltstate_t *);
+
+  SHELL_VAR *bind_assoc_variable (SHELL_VAR *, string_view, string_view,
+                                  string_view, int);
+
+  SHELL_VAR *find_or_make_array_variable (string_view, int);
+
+  SHELL_VAR *assign_array_from_string (string_view, string_view, int);
+  SHELL_VAR *assign_array_var_from_word_list (SHELL_VAR *, WORD_LIST *, int);
+
+  WORD_LIST *expand_compound_array_assignment (SHELL_VAR *, string_view, int);
+  void assign_compound_array_list (SHELL_VAR *, WORD_LIST *, int);
+  SHELL_VAR *assign_array_var_from_string (SHELL_VAR *, string_view, int);
+
+  std::string expand_and_quote_assoc_word (string_view, int);
+  void quote_compound_array_list (WORD_LIST *, int);
+
+  int kvpair_assignment_p (WORD_LIST *);
+  std::string expand_and_quote_kvpair_word (string_view);
+
+  int unbind_array_element (SHELL_VAR *, string_view, int);
+  int skipsubscript (string_view, int, int);
+
+  void print_array_assignment (SHELL_VAR *, int);
+  void print_assoc_assignment (SHELL_VAR *, int);
+
+  arrayind_t array_expand_index (SHELL_VAR *, string_view, int, int);
+  int valid_array_reference (string_view, int);
+  int tokenize_array_reference (string_view, int, char **);
+
+  std::string array_value (string_view, int, int, array_eltstate_t *);
+  std::string get_array_value (string_view, int, array_eltstate_t *);
+
+  std::string array_keys (char *, int, int);
+
+  std::string array_variable_name (string_view, int, char **, int *);
+  SHELL_VAR *array_variable_part (string_view, int, char **, int *);
+
+  void init_eltstate (array_eltstate_t *);
+  void flush_eltstate (array_eltstate_t *);
+
   std::string array_variable_name (string_view, int, size_t *);
+
+  SHELL_VAR *bind_array_var_internal (SHELL_VAR *, arrayind_t, string_view,
+                                      string_view, int);
+
+  SHELL_VAR *assign_array_element_internal (SHELL_VAR *, string_view,
+                                            string_view, string_view, int,
+                                            string_view, int);
+
+  // void assign_assoc_from_kvlist (SHELL_VAR *, WORD_LIST *, HASH_TABLE *,
+  // int);
+
+  std::string quote_assign (string_view);
+  void quote_array_assignment_chars (WORD_LIST *);
+  std::string quote_compound_array_word (string_view, int);
+  std::string array_value_internal (string_view, int, int, int *,
+                                    arrayind_t *);
+
+#endif
+
+  /* Functions from braces.cc. */
+
+#if defined(BRACE_EXPANSION)
+  char **brace_expand (char *);
+#endif
 
   /* Functions from expr.cc */
 
@@ -2455,12 +2541,12 @@ protected:
   int64_t exppower ();
   int64_t exp1 ();
   int64_t exp0 ();
-  int64_t expr_streval (const char *, int, struct lvalue *);
+  int64_t expr_streval (string_view, int, struct lvalue *);
 
   void readtok ();
 
-  void evalerror (const char *);
-  int64_t strlong (const char *);
+  void evalerror (string_view);
+  int64_t strlong (string_view);
 
   void pushexp ();
   void popexp ();
@@ -2468,7 +2554,7 @@ protected:
   void expr_bind_variable (string_view, string_view);
 
 #if defined(ARRAY_VARS)
-  int expr_skipsubscript (const char *, char *);
+  int expr_skipsubscript (string_view, string_view);
   void expr_bind_array_element (string_view, arrayind_t, string_view);
 #endif
 
@@ -2478,7 +2564,7 @@ protected:
 #endif
 
   void xtrace_reset ();
-  const char *indirection_level_string ();
+  std::string indirection_level_string ();
   void xtrace_print_assignment (string_view, string_view, bool, int);
   void xtrace_print_word_list (WORD_LIST *, int);
   void xtrace_print_for_command_head (FOR_SELECT_COM *);
@@ -2504,6 +2590,7 @@ protected:
   void get_current_user_info ();
 
   /* Functions from eval.cc. */
+
   int reader_loop ();
   int pretty_print_loop ();
   int parse_command ();
@@ -2515,11 +2602,6 @@ protected:
 #endif
 
   void execute_prompt_command ();
-
-  /* Functions from braces.c. */
-#if defined(BRACE_EXPANSION)
-  char **brace_expand (char *);
-#endif
 
   /* An interface to let the rest of the shell (primarily the completion
      system) know what the parser is expecting. */
@@ -3441,7 +3523,7 @@ protected:
 
   /* from lib/sh/zmapfd.cc */
 
-  int zmapfd (int, char **, string_view);
+  int zmapfd (int, char **);
 
   /* Read LEN bytes from FD into BUF.  Retry the read on EINTR, up to three
      interrupts.  Any other error causes the loop to break. */
@@ -3739,9 +3821,9 @@ protected:
 
   void run_shopt_alist ();
 
-  void execute_env_file (const char *);
+  void execute_env_file (string_view);
   void run_startup_files ();
-  int open_shell_script (const char *);
+  int open_shell_script (string_view);
   void set_bash_input ();
   int run_one_command (string_view);
 
@@ -4306,12 +4388,12 @@ protected:
      Start extracting at (SINDEX) as if we had just seen "<(".
      Make (SINDEX) get the position of the matching ")". */
   std::string
-  extract_process_subst (string_view string, size_t *sindex, sx_flags xflags)
+  extract_process_subst (char *string, size_t *sindex, sx_flags xflags)
   {
     if (no_throw_on_fatal_error)
       xflags |= SX_NOTHROW;
 
-    return xparse_dolparen (string, sindex, xflags);
+    return xparse_dolparen (string, string + *sindex, sindex, xflags);
   }
 #endif /* PROCESS_SUBSTITUTION */
 
@@ -4832,34 +4914,35 @@ protected:
   string_view sh_get_home_dir () RL_OVERRIDE;
   int sh_unset_nodelay_mode (int) RL_OVERRIDE;
 
-  SHELL_VAR *bind_variable_value (SHELL_VAR *, const char *, int);
-  SHELL_VAR *bind_int_variable (const char *, const char *, assign_flags);
-  SHELL_VAR *bind_var_to_int (const char *, int64_t);
+  SHELL_VAR *bind_variable_value (SHELL_VAR *, string_view, int);
+  SHELL_VAR *bind_int_variable (string_view, string_view, assign_flags);
+  SHELL_VAR *bind_var_to_int (string_view, int64_t);
 
   int assign_in_env (WORD_DESC *, int);
 
-  int unbind_variable (const char *);
-  int check_unbind_variable (const char *);
-  int unbind_nameref (const char *);
-  int unbind_variable_noref (const char *);
-  int unbind_func (const char *);
-  int unbind_function_def (const char *);
-  int delete_var (const char *, VAR_CONTEXT *);
-  int makunbound (const char *, VAR_CONTEXT *);
-  int kill_local_var (const char *);
+  int unbind_variable (string_view);
+  int check_unbind_variable (string_view);
+  int unbind_nameref (string_view);
+  int unbind_variable_noref (string_view);
+  int unbind_func (string_view);
+  int unbind_function_def (string_view);
+  int delete_var (string_view, VAR_CONTEXT *);
+  int makunbound (string_view, VAR_CONTEXT *);
+  int kill_local_var (string_view);
   // void delete_all_vars (HASH_TABLE *);
   void delete_all_contexts (VAR_CONTEXT *);
+  void reset_local_contexts ();
 
-  VAR_CONTEXT *new_var_context (const char *, int);
+  VAR_CONTEXT *new_var_context (string_view, int);
   void dispose_var_context (VAR_CONTEXT *);
-  // VAR_CONTEXT *push_var_context (const char *, int, HASH_TABLE *);
+  // VAR_CONTEXT *push_var_context (string_view, int, HASH_TABLE *);
   void pop_var_context ();
   // VAR_CONTEXT *push_scope (int, HASH_TABLE *);
   int pop_scope (int);
 
   void clear_dollar_vars ();
 
-  // void push_context (const char *, bool, HASH_TABLE *);
+  // void push_context (string_view, bool, HASH_TABLE *);
   void pop_context ();
   void push_dollar_vars ();
   void pop_dollar_vars ();
@@ -4871,7 +4954,7 @@ protected:
   void pop_args ();
 
   void adjust_shell_level (int);
-  void non_unsettable (const char *);
+  void non_unsettable (string_view);
   void dispose_variable (void *);
   void dispose_used_env_vars ();
   void dispose_function_env ();
@@ -4881,10 +4964,10 @@ protected:
   void merge_builtin_env ();
   void kill_all_local_variables ();
 
-  void set_var_read_only (const char *);
-  void set_func_read_only (const char *);
-  void set_var_auto_export (const char *);
-  void set_func_auto_export (const char *);
+  void set_var_read_only (string_view);
+  void set_func_read_only (string_view);
+  void set_var_auto_export (string_view);
+  void set_func_auto_export (string_view);
 
   void sort_variables (SHELL_VAR **);
 
@@ -4985,7 +5068,7 @@ protected:
 
   void init_token_lists ();
 
-  std::string xparse_dolparen (string_view, size_t *, sx_flags);
+  char *xparse_dolparen (char *, char *, size_t *, sx_flags);
 
   int return_EOF ();
 
@@ -5105,7 +5188,6 @@ protected:
   // Methods in arrayfunc.cc.
 
   bool valid_array_reference (string_view, valid_array_flags);
-  SHELL_VAR *convert_var_to_array (SHELL_VAR *);
 
   // Methods in general.cc.
 
@@ -5204,14 +5286,14 @@ protected:
   void shell_ungetc (int);
   void shell_ungets (string_view);
 
-  std::string
+  std::string::iterator
   parser_remaining_input ()
   {
-    if (shell_input_line.empty ()
-        || shell_input_line_index >= shell_input_line.size ())
-      return std::string ();
+    std::string::iterator it = shell_input_line.begin ()
+                               + static_cast<ssize_t> (shell_input_line_index);
 
-    return shell_input_line.substr (shell_input_line_index);
+    // the index shouldn't be past the end, but the original checks here.
+    return (it > shell_input_line.end ()) ? shell_input_line.end () : it;
   }
 
   void discard_until (int);
@@ -5421,7 +5503,7 @@ protected:
 
   std::string parse_compound_assignment ();
 
-  COMMAND *parse_string_to_command (string_view, sx_flags);
+  COMMAND *parse_string_to_command (const char *, sx_flags);
 
   // methods from alias.cc
 

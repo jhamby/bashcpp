@@ -562,7 +562,7 @@ Shell::run_shell (int argc, char **argv, char **env)
 
 #if defined(ONESHOT)
               executing = true;
-              run_one_command (command_execution_string);
+              run_one_command (command_execution_string.c_str ());
               exit_shell (last_command_exit_value);
 #else  /* ONESHOT */
               with_input_from_string (command_execution_string, "-c");
@@ -910,14 +910,14 @@ Shell::subshell_exit (int s)
          bash			YES
 */
 void
-Shell::execute_env_file (const char *env_file)
+Shell::execute_env_file (string_view env_file)
 {
-  if (env_file && *env_file)
+  if (!env_file.empty ())
     {
       std::string fn (
           expand_string_unsplit_to_string (env_file, Q_DOUBLE_QUOTES));
       if (!fn.empty ())
-        maybe_execute_file (fn, true);
+        maybe_execute_file (fn.c_str (), true);
     }
 }
 
@@ -947,7 +947,7 @@ Shell::run_startup_files ()
 #ifdef SYS_BASHRC
           maybe_execute_file (SYS_BASHRC, 1);
 #endif
-          maybe_execute_file (bashrc_file, 1);
+          maybe_execute_file (bashrc_file.c_str (), 1);
           return;
         }
     }
@@ -1036,7 +1036,7 @@ Shell::run_startup_files ()
 #ifdef SYS_BASHRC
           maybe_execute_file (SYS_BASHRC, true);
 #endif
-          maybe_execute_file (bashrc_file, true);
+          maybe_execute_file (bashrc_file.c_str (), true);
         }
       /* sh */
       else if (act_like_sh && !privileged_mode && !sourced_env)
@@ -1191,7 +1191,6 @@ run_wordexp (char *words)
           return last_command_exit_value = 127;
         case EXITPROG:
         case ERREXIT:
-        case SIGEXIT:
         case EXITBLTIN:
           return last_command_exit_value;
         case DISCARD:
@@ -1256,7 +1255,8 @@ Shell::run_one_command (string_view command)
 {
   try
     {
-      return parse_and_execute (command, "-c", SEVAL_NOHIST | SEVAL_RESETLINE);
+      return parse_and_execute (savestring (command), "-c",
+                                SEVAL_NOHIST | SEVAL_RESETLINE);
     }
   catch (const bash_exception &e)
     {
@@ -1270,7 +1270,6 @@ Shell::run_one_command (string_view command)
           return last_command_exit_value = 127;
         case EXITPROG:
         case ERREXIT:
-        case SIGEXIT:
         case EXITBLTIN:
           return last_command_exit_value;
         case DISCARD:
@@ -1361,7 +1360,7 @@ Shell::start_debugger ()
 }
 
 int
-Shell::open_shell_script (const char *script_name)
+Shell::open_shell_script (string_view script_name)
 {
   char sample[80];
   int sample_len;
@@ -1371,7 +1370,7 @@ Shell::open_shell_script (const char *script_name)
   ARRAY *funcname_a, *bash_source_a, *bash_lineno_a;
 #endif
 
-  std::string filename (script_name);
+  std::string filename (to_string (script_name));
 
   int fd = open (filename.c_str (), O_RDONLY);
   if ((fd < 0) && (errno == ENOENT) && (!absolute_program (filename.c_str ())))
