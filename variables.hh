@@ -454,8 +454,23 @@ constexpr int NAMEREF_MAX = 8; /* only 8 levels of nameref indirection */
   while (0)
 #endif
 
-#define ifsname(s)                                                            \
-  ((s)[0] == 'I' && (s)[1] == 'F' && (s)[2] == 'S' && (s)[3] == '\0')
+static inline bool
+ifsname (const std::string &s)
+{
+  return s == "IFS";
+}
+
+static inline bool
+ifsname (string_view s)
+{
+  return s == "IFS";
+}
+
+static inline bool
+ifsname (const char *s)
+{
+  return s[0] == 'I' && s[1] == 'F' && s[2] == 'S' && s[3] == '\0';
+}
 
 /* Flag values for make_local_variable and its array counterparts */
 enum mkloc_var_flags

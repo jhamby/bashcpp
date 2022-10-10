@@ -79,7 +79,7 @@ static int test_error_return;
     }                                                                         \
   while (0)
 
-extern int sh_stat PARAMS((const char *, struct stat *));
+extern int sh_stat PARAMS((string_view , struct stat *));
 
 static int pos;		/* The offset of the current argument in ARGV. */
 static int argc;	/* The number of arguments present in ARGV. */
@@ -107,7 +107,7 @@ static int patcomp PARAMS((char *, char *, int));
 #endif
 
 void
-Shell::test_syntax_error (const char *format, const char *arg)
+Shell::test_syntax_error (string_view format, string_view arg)
 {
   builtin_error (format, arg);
   test_exit (TEST_ERREXIT_STATUS);
@@ -126,7 +126,7 @@ Shell::test_beyond ()
 /* Syntax error for when an integer argument was expected, but
    something else was found. */
 void
-Shell::integer_expected_error (const char *pch)
+Shell::integer_expected_error (string_view pch)
 {
   test_syntax_error (_ ("%s: integer expression expected"), pch);
 }
@@ -248,13 +248,13 @@ Shell::term ()
     }
 
   /* A paren-bracketed argument. */
-  if (argv[pos][0] == '(' && argv[pos][1] == '\0') /* ) */
+  if (argv[pos][0] == '(' && argv[pos][1] == '\0')
     {
       advance (1);
       value = expr ();
-      if (argv[pos] == 0) /* ( */
+      if (argv[pos] == 0)
         test_syntax_error (_ ("`)' expected"), (char *)NULL);
-      else if (argv[pos][0] != ')' || argv[pos][1]) /* ( */
+      else if (argv[pos][0] != ')' || argv[pos][1])
         test_syntax_error (_ ("`)' expected, found %s"), argv[pos]);
       advance (0);
       return value;
@@ -279,7 +279,7 @@ Shell::term ()
 }
 
 int
-Shell::stat_mtime (const char *fn, struct stat *st, struct timespec *ts)
+Shell::stat_mtime (string_view fn, struct stat *st, struct timespec *ts)
 {
   int r;
 
@@ -291,7 +291,7 @@ Shell::stat_mtime (const char *fn, struct stat *st, struct timespec *ts)
 }
 
 int
-Shell::filecomp (const char *s, const char *t, int op)
+Shell::filecomp (string_view s, string_view t, int op)
 {
   struct stat st1, st2;
   struct timespec ts1, ts2;
@@ -321,7 +321,7 @@ Shell::filecomp (const char *s, const char *t, int op)
 }
 
 int
-Shell::arithcomp (const char *s, const char *t, int op, int flags)
+Shell::arithcomp (string_view s, string_view t, int op, int flags)
 {
   intmax_t l, r;
   int expok;
@@ -366,7 +366,7 @@ Shell::arithcomp (const char *s, const char *t, int op, int flags)
 }
 
 int
-Shell::patcomp (const char *string, const char *pat, int op)
+Shell::patcomp (string_view string, string_view pat, int op)
 {
   int m;
 
@@ -375,7 +375,7 @@ Shell::patcomp (const char *string, const char *pat, int op)
 }
 
 int
-binary_test (const char *op, const char *arg1, const char *arg2, int flags)
+binary_test (string_view op, string_view arg1, string_view arg2, int flags)
 {
   int patmatch;
 
@@ -512,7 +512,7 @@ Shell::unary_operator ()
 }
 
 int
-Shell::unary_test (const char *op, const char *arg, int flags)
+Shell::unary_test (string_view op, string_view arg, int flags)
 {
   intmax_t r;
   struct stat stat_buf;
@@ -684,10 +684,10 @@ Shell::unary_test (const char *op, const char *arg, int flags)
 
 /* Return TRUE if OP is one of the test command's binary operators. */
 bool
-Shell::test_binop (const std::string &op)
+Shell::test_binop (string_view op)
 {
   if (op == "=")
-    return true; /* '=' */
+    return true;                   /* '=' */
   else if (op == "<" || op == ">") /* string <, > */
     return true;
   else if (op == "==" || op == "!=")
@@ -707,18 +707,18 @@ Shell::test_binop (const std::string &op)
           case 'o': /* -ot */
           case 'l': /* -lt */
           case 'g': /* -gt */
-            return 1;
+            return true;
           default:
-            return 0;
+            return false;
           }
       else if (op[1] == 'e')
         switch (op[2])
           {
           case 'q': /* -eq */
           case 'f': /* -ef */
-            return 1;
+            return true;
           default:
-            return 0;
+            return false;
           }
       else if (op[2] == 'e')
         switch (op[1])
@@ -726,12 +726,12 @@ Shell::test_binop (const std::string &op)
           case 'n': /* -ne */
           case 'g': /* -ge */
           case 'l': /* -le */
-            return 1;
+            return true;
           default:
-            return 0;
+            return false;
           }
       else
-        return 0;
+        return false;
     }
 }
 

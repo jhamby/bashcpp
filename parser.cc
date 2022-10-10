@@ -1493,7 +1493,7 @@ Shell::special_case_tokens (string_view tokstr)
     return parser::make_TIMEIGN ();
 #endif
 
-#if defined(COND_COMMAND) /* [[ */
+#if defined(COND_COMMAND)
   if ((parser_state & PST_CONDEXPR) && tokstr == "]]")
     return parser::make_COND_END ();
 #endif
@@ -1719,7 +1719,7 @@ re_read_token:
               return parser::make_OR_OR ();
 
 #if defined(DPAREN_ARITHMETIC) || defined(ARITH_FOR_COMMAND)
-            case '(': /* ) */
+            case '(':
               try
                 {
                   return parse_dparen (character);
@@ -1779,12 +1779,10 @@ re_read_token:
       /* case pattern lists may be preceded by an optional left paren.  If
          we're not trying to parse a case pattern list, the left paren
          indicates a subshell. */
-      if MBTEST (character == '(' && (parser_state & PST_CASEPAT) == 0) /* ) */
+      if MBTEST (character == '(' && (parser_state & PST_CASEPAT) == 0)
         parser_state |= PST_SUBSHELL;
-      /*(*/
       else if MBTEST ((parser_state & PST_CASEPAT) && character == ')')
         parser_state &= ~PST_CASEPAT;
-      /*(*/
       else if MBTEST ((parser_state & PST_SUBSHELL) && character == ')')
         parser_state &= ~PST_SUBSHELL;
 
@@ -1792,7 +1790,7 @@ re_read_token:
       /* Check for the constructs which introduce process substitution.
          Shells running in `posix mode' don't do process substitution. */
       if MBTEST ((character != '>' && character != '<')
-                 || peek_char != '(') /*)*/
+                 || peek_char != '(')
 #endif                                /* PROCESS_SUBSTITUTION */
         return parser::symbol_type (character);
     }
@@ -1932,7 +1930,7 @@ Shell::parse_matched_pair (
         count--;
       /* handle nested ${...} specially. */
       else if MBTEST (open != close && (tflags & LEX_WASDOL) && open == '{'
-                      && ch == open) /* } */
+                      && ch == open)
         count++;
       else if MBTEST (((flags & P_FIRSTCLOSE) == 0)
                       && ch == open) /* nested begin */
@@ -2119,7 +2117,7 @@ Shell::parse_matched_pair (
           /* XXX - technically this should only be recognized at the start of
              a word */
           else if ((flags & (P_ARRAYSUB | P_DOLBRACE)) && (tflags & LEX_GTLT)
-                   && (ch == '(')) /* ) */
+                   && (ch == '('))
             goto parse_dollar_word;
 #endif
         }
@@ -2141,13 +2139,13 @@ Shell::parse_matched_pair (
           std::string nestret;
           if (open == ch) /* undo previous increment */
             count--;
-          if (ch == '(') /* ) */
+          if (ch == '(')
             nestret = parse_comsub (0, '(', ')');
-          else if (ch == '{') /* } */
+          else if (ch == '{')
             // this call may throw matched_pair_error
             nestret = parse_matched_pair (
                 0, '{', '}', (P_FIRSTCLOSE | P_DOLBRACE | rflags));
-          else if (ch == '[') /* ] */
+          else if (ch == '[')
             // this call may throw matched_pair_error
             nestret = parse_matched_pair (0, '[', ']', rflags);
 
@@ -2182,11 +2180,11 @@ Shell::parse_comsub (int qc, int open, int close)
 
   /* Posix interp 217 says arithmetic expressions have precedence, so
      assume $(( introduces arithmetic expansion and parse accordingly. */
-  if (open == '(') /*)*/
+  if (open == '(')
     {
       int peekc = shell_getc (1);
       shell_ungetc (peekc);
-      if (peekc == '(') /*)*/
+      if (peekc == '(')
         return parse_matched_pair (qc, open, close, P_NOFLAGS);
     }
 
@@ -2323,7 +2321,7 @@ Shell::parse_comsub (int qc, int open, int close)
   std::string ret;
   ret.reserve (retlen + 1);
 
-  if (tcmd[0] == '(') /* ) */
+  if (tcmd[0] == '(')
     {
       ret.push_back (' ');
       ret += tcmd;
@@ -2379,7 +2377,6 @@ Shell::xparse_dolparen (char *base, char *string, size_t *indp, sx_flags flags)
   pushed_string_list = nullptr;
 #endif
 
-  /*(*/
   parser_state |= (PST_CMDSUBST | PST_EOFTOKEN); /* allow instant ')' */
   shell_eof_token = ')';
   if (flags & SX_COMPLETE)
@@ -2437,7 +2434,6 @@ Shell::xparse_dolparen (char *base, char *string, size_t *indp, sx_flags flags)
      *indp, if flags != 0, copy the portion of the string parsed into RET
      and return it.  If flags & 1 (SX_NOALLOC) we can return nullptr. */
 
-  /*(*/
   if (ep[-1] != ')')
     {
 #if 0
@@ -2453,7 +2449,6 @@ Shell::xparse_dolparen (char *base, char *string, size_t *indp, sx_flags flags)
   size_t nc = static_cast<size_t> (ep - ostring);
   *indp = static_cast<size_t> (ep - base - 1);
 
-  /*((*/
 #if 0
   if (base[*indp] != ')')
     itrace ("xparse_dolparen:%d: base[%d] != RPAREN (%d), base = `%s'",
@@ -2466,7 +2461,6 @@ Shell::xparse_dolparen (char *base, char *string, size_t *indp, sx_flags flags)
 
   if (base[*indp] != ')' && (flags & SX_NOTHROW) == 0)
     {
-      /*(*/
       if ((flags & SX_NOERROR) == 0)
         parser_error (start_lineno,
                       _ ("unexpected EOF while looking for matching `%c'"),
@@ -2677,7 +2671,6 @@ void
 Shell::cond_error (parser::token_kind_type token,
                    const parser::symbol_type &cond_symbol)
 {
-  /* [[ */
   if (EOF_Reached && cond_symbol.kind () != parser::symbol_kind::S_COND_ERROR)
     parser_error (cond_lineno, _ ("unexpected EOF while looking for `]]'"));
   else if (cond_symbol.kind () != parser::symbol_kind::S_COND_ERROR)
@@ -2745,7 +2738,7 @@ Shell::cond_term ()
       if (cond_token != static_cast<parser::token_kind_type> (')'))
         {
           if (term)
-            delete term; /* ( */
+            delete term;
 
           std::string etext (error_string_from_token (cond_token, &symbol));
           if (!etext.empty ())
@@ -2830,7 +2823,7 @@ Shell::cond_term ()
             }
 #endif
           else if (current_token == '<' || current_token == '>')
-            op = new WORD_DESC (static_cast<char> (current_token)); /* ( */
+            op = new WORD_DESC (static_cast<char> (current_token));
           /* There should be a check before blindly accepting the `)' that we
              have seen the opening `('. */
           else if (cond_token == parser::token::COND_END
@@ -3067,9 +3060,9 @@ Shell::read_token_word (int character)
 #ifdef COND_REGEXP
       /* When parsing a regexp as a single word inside a conditional command,
          we need to special-case characters special to both the shell and
-         regular expressions.  Right now, that is only '(' and '|'. */ /*)*/
+         regular expressions.  Right now, that is only '(' and '|'. */
       if MBTEST ((parser_state & PST_REGEXP)
-                 && (character == '(' || character == '|')) /*)*/
+                 && (character == '(' || character == '|'))
         {
           if (character == '|')
             goto got_character;
@@ -3100,7 +3093,7 @@ Shell::read_token_word (int character)
         {
           char peek_char = static_cast<char> (shell_getc (true));
 
-          if MBTEST (peek_char == '(') /* ) */
+          if MBTEST (peek_char == '(')
             {
               dstack.push_back (peek_char);
               std::string ttok;
@@ -3139,10 +3132,10 @@ Shell::read_token_word (int character)
               std::string ttok;
               try
                 {
-                  if (peek_char == '{') /* } */
+                  if (peek_char == '{')
                     ttok = parse_matched_pair (cd, '{', '}',
                                                P_FIRSTCLOSE | P_DOLBRACE);
-                  else if (peek_char == '(') /* ) */
+                  else if (peek_char == '(')
                     {
                       /* XXX - push and pop the `(' as a delimiter for use by
                          the command-oriented-history code.  This way newlines
@@ -3244,7 +3237,7 @@ Shell::read_token_word (int character)
       /* Identify possible array subscript assignment; match [...].  If
          parser_state & PST_COMPASSIGN, we need to parse [sub]=words treating
          `sub' as if it were enclosed in double quotes. */
-      else if MBTEST (character == '[' && /* ] */
+      else if MBTEST (character == '[' &&
                       ((!token_buffer.empty ()
                         && assignment_acceptable (last_read_token)
                         && token_is_ident (token_buffer))
@@ -3273,7 +3266,7 @@ Shell::read_token_word (int character)
                       && token_is_assignment (token_buffer))
         {
           char peek_char = static_cast<char> (shell_getc (true));
-          if MBTEST (peek_char == '(') /* ) */
+          if MBTEST (peek_char == '(')
             {
               std::string ttok = parse_compound_assignment ();
               token_buffer.push_back ('=');
@@ -3389,7 +3382,7 @@ got_token:
   if (dollar_present)
     the_word->flags |= W_HASDOLLAR;
   if (quoted)
-    the_word->flags |= W_QUOTED; /*(*/
+    the_word->flags |= W_QUOTED;
   if (compound_assignment && token_buffer[token_buffer.size () - 1] == ')')
     the_word->flags |= W_COMPASSIGN;
 
@@ -3512,15 +3505,13 @@ Shell::history_delimiting_chars (string_view line)
     return " ";
 
   /* First, handle some special cases. */
-  /*(*/
   /* If we just read `()', assume it's a function definition, and don't
      add a semicolon.  If the token before the `)' was not `(', and we're
      not in the midst of parsing a case statement, assume it's a
      parenthesized command and add the semicolon. */
-  /*)(*/
   if (token_before_that == ')')
     {
-      if (two_tokens_ago == '(') /*)*/ /* function def */
+      if (two_tokens_ago == '(') /* function def */
         return " ";
       /* This does not work for subshells inside case statement
          command lists.  It's a suboptimal solution. */
@@ -3778,7 +3769,7 @@ Shell::decode_prompt_string (string_view string)
               break;
 
             case 'D':               /* strftime format */
-              if (*(it + 1) != '{') /* } */
+              if (*(it + 1) != '{')
                 goto not_escape;
 
               it += 2; /* skip { */
@@ -4443,7 +4434,7 @@ Shell::parse_compound_assignment ()
   token_buffer.shrink_to_fit ();
 #endif
 
-  WORD_LIST *wl = nullptr; /* ( */
+  WORD_LIST *wl = nullptr;
 
   bool assignok = parser_state & PST_ASSIGNOK; /* XXX */
 
@@ -4474,7 +4465,7 @@ Shell::parse_compound_assignment ()
 
       if (tok != parser::token::WORD && tok != parser::token::ASSIGNMENT_WORD)
         {
-          if (tok == parser::token::yacc_EOF) /* ( */
+          if (tok == parser::token::yacc_EOF)
             parser_error (orig_line_number,
                           _ ("unexpected EOF while looking for matching `)'"));
           else

@@ -162,6 +162,15 @@ class invalid_nameref_value : public std::exception
   virtual const char *what () const noexcept override;
 };
 
+class return_catch_exception : public std::exception
+{
+public:
+  return_catch_exception (int value) : return_catch_value (value) {}
+  virtual const char *what () const noexcept override;
+
+  int return_catch_value;
+};
+
 /* Global inline functions, previously C preprocessor macros. */
 
 // Create a new copy of null-terminated string s. Free with delete[].

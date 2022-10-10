@@ -118,9 +118,7 @@
 
 #include "bashintl.hh"
 
-#include "common.hh"
 #include "shell.hh"
-#include "test.hh"
 
 namespace bash
 {
@@ -135,7 +133,7 @@ Shell::test_builtin (WORD_LIST *list)
   /* We let Matthew Bradburn and Kevin Braunsdorf's code do the
      actual test command.  So turn the list of args into an array
      of strings, since that is what their code wants. */
-  if (list == 0)
+  if (list == nullptr)
     {
       if (this_command_name[0] == '[' && !this_command_name[1])
         {
@@ -148,7 +146,7 @@ Shell::test_builtin (WORD_LIST *list)
 
   argv = make_builtin_argv (list, &argc);
   result = test_command (argc, argv);
-  xfree ((char *)argv);
+  delete[] argv;
 
   return result;
 }

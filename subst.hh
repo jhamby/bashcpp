@@ -127,39 +127,36 @@ QUOTED_NULL (const char *str)
   return (str[0] == CTLNUL && str[1] == '\0');
 }
 
-#if 0
 /* Return a single string of all the words present in LIST, separating
    each word with SEP. */
-extern char *string_list_internal (WORD_LIST *, const char *);
+extern std::string string_list_internal (WORD_LIST *, const char *);
 
 /* Return a single string of all the words present in LIST, separating
    each word with a space. */
-static inline char *
+static inline std::string
 string_list (WORD_LIST *list)
 {
   return string_list_internal (list, " ");
 }
 
 /* Turn $* into a single string, obeying POSIX rules. */
-extern char *string_list_dollar_star (WORD_LIST *, int, int);
+extern std::string string_list_dollar_star (WORD_LIST *, int, int);
 
 /* Expand $@ into a single string, obeying POSIX rules. */
-extern char *string_list_dollar_at (WORD_LIST *, int, int);
+extern std::string string_list_dollar_at (WORD_LIST *, int, int);
 
 /* Turn the positional parameters into a string, understanding quoting and
    the various subtleties of using the first character of $IFS as the
    separator.  Calls string_list_dollar_at, string_list_dollar_star, and
    string_list as appropriate. */
-extern char *string_list_pos_params (char, WORD_LIST *, int, int);
+extern std::string string_list_pos_params (char, WORD_LIST *, int, int);
 
 /* Perform quoted null character removal on each element of LIST.
    This modifies LIST. */
 extern void word_list_remove_quoted_nulls (WORD_LIST *);
 
-/* This performs word splitting and quoted null character removal on
-   STRING. */
+// This performs word splitting and quoted null character removal on STRING.
 extern WORD_LIST *list_string (const char *, const char *, int);
-#endif
 
 } // namespace bash
 

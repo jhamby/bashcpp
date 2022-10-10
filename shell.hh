@@ -602,8 +602,22 @@ operator| (const do_redir_flags &a, const do_redir_flags &b)
                                       | static_cast<uint32_t> (b));
 }
 
-// Friend class used to save/restore parser state.
-class EvalStringUnwindHandler;
+/* Values for the flags argument to binary_test */
+enum binary_test_flags
+{
+  TEST_NOFLAGS = 0,
+  TEST_PATMATCH = 0x01,
+  TEST_ARITHEXP = 0x02,
+  TEST_LOCALE = 0x04,
+  TEST_ARRAYEXP = 0x08 // array subscript expansion
+};
+
+static inline binary_test_flags
+operator| (const binary_test_flags &a, const binary_test_flags &b)
+{
+  return static_cast<binary_test_flags> (static_cast<uint32_t> (a)
+                                         | static_cast<uint32_t> (b));
+}
 
 // Data type for token lookup.
 typedef std::map<string_view, parser::token_kind_type> STRING_TOKEN_MAP;
@@ -750,7 +764,9 @@ protected:
   int nfds;
 #endif
 
-  int return_catch_value;
+  /* For catching RETURN in a function. */
+
+  int return_catch_flag;
 
   /* variables from break.def/continue.def */
   int breaking;
@@ -821,14 +837,16 @@ protected:
 
   int trapped_signal_received;
 
+#if defined(SELECT_COMMAND)
+  int select_lines;
+  int select_cols;
+#endif
+
 public:
   // The following are accessed by the parser.
 
   /* The token that currently denotes the end of parse. */
   int shell_eof_token;
-
-  /* The token currently being read. */
-  parser::token_kind_type current_token;
 
   /* variables from evalstring.c */
 
@@ -923,17 +941,23 @@ public:
   // The last read token, or 0. read_token () uses this for context checking.
   parser::token_kind_type last_read_token;
 
-protected:
-  // Back to protected access.
-
-  /* Either zero or EOF. */
-  int shell_input_line_terminator;
-
   /* The token read prior to last_read_token. */
   parser::token_kind_type token_before_that;
 
   /* The token read prior to token_before_that. */
   parser::token_kind_type two_tokens_ago;
+
+  /* The token currently being read. */
+  parser::token_kind_type current_token;
+
+protected:
+  // Back to protected access.
+
+  /* The line number that the currently executing function starts on. */
+  int function_line_number;
+
+  /* Either zero or EOF. */
+  int shell_input_line_terminator;
 
   /* When non-zero, we have read the required tokens
      which allow ESAC to be the next one read. */
@@ -1547,10 +1571,11 @@ public:
     int c_totforked; /* total number of children this shell has forked */
     int c_totreaped; /* total number of children this shell has reaped */
     /* job counters and indices */
-    int j_lastj;  /* last (newest) job allocated */
-    int j_firstj; /* first (oldest) job allocated */
-    int j_njobs;  /* number of non-NULL jobs in jobs array */
-    int j_ndead;  /* number of JDEAD jobs in jobs array */
+    int j_jobslots; /* total size of jobs array */
+    int j_lastj;    /* last (newest) job allocated */
+    int j_firstj;   /* first (oldest) job allocated */
+    int j_njobs;    /* number of non-NULL jobs in jobs array */
+    int j_ndead;    /* number of JDEAD jobs in jobs array */
     /* */
     int j_current;  /* current job */
     int j_previous; /* previous job */
@@ -1935,24 +1960,92 @@ public:
 
   size_t parse_string (char *, string_view, parse_flags, COMMAND **, char **);
 
-  int
-  evalstring (char *string, string_view from_file, parse_flags flags)
-  {
-    /* Note that parse_and_execute () frees the string it is passed. */
-    return parse_and_execute (string, from_file, flags);
-  }
+  int evalstring (char *, string_view, parse_flags);
 
   int open_redir_file (REDIRECT *, char **);
   int cat_file (REDIRECT *);
 
   // Functions from builtins/evalfile.cc
 
-  int maybe_execute_file (const char *, bool);
-  int force_execute_file (const char *, bool);
-  int source_file (const char *, int);
-  int fc_execute_file (const char *);
+  int
+  maybe_execute_file (const char *fname, bool force_noninteractive)
+  {
+    char *filename = bash_tilde_expand (fname, 0);
+
+    evalfile_flags_t flags = FEVAL_ENOENTOK;
+
+    if (force_noninteractive)
+      flags |= FEVAL_NONINT;
+
+    try
+      {
+        int result = _evalfile (filename, flags);
+        delete[] filename;
+        return result;
+      }
+    catch (const std::exception &)
+      {
+        delete[] filename;
+        throw;
+      }
+  }
+
+  int
+  force_execute_file (const char *fname, bool force_noninteractive)
+  {
+    char *filename = bash_tilde_expand (fname, 0);
+
+    evalfile_flags_t flags = FEVAL_NOFLAGS;
+
+    if (force_noninteractive)
+      flags |= FEVAL_NONINT;
+
+    try
+      {
+        int result = _evalfile (filename, flags);
+        delete[] filename;
+        return result;
+      }
+    catch (const std::exception &)
+      {
+        delete[] filename;
+        throw;
+      }
+  }
 
   int _evalfile (const char *, evalfile_flags_t);
+
+#if defined(HISTORY)
+  int
+  fc_execute_file (const char *filename)
+  {
+    evalfile_flags_t flags;
+
+    /* We want these commands to show up in the history list if
+       remember_on_history is set.  We use FEVAL_BUILTIN to return
+       the result of parse_and_execute. */
+    flags = FEVAL_ENOENTOK | FEVAL_HISTORY | FEVAL_REGFILE | FEVAL_BUILTIN;
+    return _evalfile (filename, flags);
+  }
+#endif /* HISTORY */
+
+  int
+  source_file (const char *filename, int sflags)
+  {
+    evalfile_flags_t flags = FEVAL_BUILTIN | FEVAL_UNWINDPROT | FEVAL_NONINT;
+
+    if (sflags)
+      flags |= FEVAL_NOPUSHARGS;
+
+    /* POSIX shells exit if non-interactive and file error. */
+    if (posixly_correct && !interactive_shell && !executing_command_builtin)
+      flags |= FEVAL_THROW;
+
+    int rval = _evalfile (filename, flags);
+
+    run_return_trap ();
+    return rval;
+  }
 
   /* Functions from flags.cc */
 
@@ -2085,6 +2178,7 @@ public:
   void xtrace_print_case_command_head (CASE_COM *);
 
 #if defined(DPAREN_ARITHMETIC) || defined(ARITH_FOR_COMMAND)
+  void print_arith_command (WORD_LIST *);
   void xtrace_print_arith_cmd (WORD_LIST *);
 #endif
 
@@ -2215,7 +2309,7 @@ public:
 
   void print_function_def (FUNCTION_DEF *);
 
-  char *named_function_string (const char *, COMMAND *, print_flags);
+  std::string named_function_string (string_view, COMMAND *, print_flags);
 
   void print_deferred_heredocs (const char *);
 
@@ -2519,7 +2613,7 @@ protected:
 
   enum eval_flags
   {
-    EXP_NONE = 0,
+    EXP_NOFLAGS = 0,
     EXP_EXPANDED = 0x01
   };
 
@@ -2565,7 +2659,7 @@ protected:
 
   void xtrace_reset ();
   std::string indirection_level_string ();
-  void xtrace_print_assignment (string_view, string_view, bool, int);
+  void xtrace_print_assignment (const char *, const char *, bool, int);
   void xtrace_print_word_list (WORD_LIST *, int);
   void xtrace_print_for_command_head (FOR_SELECT_COM *);
 
@@ -3641,18 +3735,16 @@ protected:
   typedef std::vector<bool> fd_bitmap;
 
   void
-  close_fd_bitmap (fd_bitmap *fdbp)
+  close_fd_bitmap (fd_bitmap &fdb)
   {
-    if (fdbp)
+    std::vector<bool>::iterator it = fdb.begin ();
+
+    while ((it = std::find (it, fdb.end (), true)) != fdb.end ())
       {
-        std::vector<bool>::iterator it = fdbp->begin ();
-        while ((it = std::find (it, fdbp->end (), true)) != fdbp->end ())
-          {
-            int i = static_cast<int> (it - fdbp->begin ());
-            ::close (i);
-          }
-        fdbp->clear ();
+        int i = static_cast<int> (it - fdb.begin ());
+        close (i);
       }
+    fdb.clear ();
   }
 
   int executing_line_number ();
@@ -3674,8 +3766,6 @@ protected:
 
   int execute_in_subshell (COMMAND *, bool, int, int, fd_bitmap *);
 
-  int execute_coproc (COPROC_COM *, int, int, fd_bitmap *);
-
   int time_command (COMMAND *, bool, int, int, fd_bitmap *);
 
   int execute_for_command (FOR_SELECT_COM *);
@@ -3684,8 +3774,8 @@ protected:
   int displen (const char *);
   int print_index_and_element (int, int, WORD_LIST *);
   void indent (int, int);
-  void print_select_list (WORD_LIST *, int, int, int);
-  const char *select_query (WORD_LIST *, int, const char *, bool);
+  void print_select_list (WORD_LIST *, int, int);
+  string_view select_query (WORD_LIST *, const char *, bool);
   int execute_select_command (FOR_SELECT_COM *);
 #endif
 #if defined(DPAREN_ARITHMETIC)
@@ -3700,22 +3790,20 @@ protected:
   int execute_arith_for_command (ARITH_FOR_COM *);
 #endif
   int execute_case_command (CASE_COM *);
-  int execute_while_command (UNTIL_WHILE_COM *);
-  int execute_until_command (UNTIL_WHILE_COM *);
-  int execute_while_or_until (UNTIL_WHILE_COM *, int);
+  int execute_while_or_until (UNTIL_WHILE_COM *);
   int execute_if_command (IF_COM *);
   int execute_null_command (REDIRECT *, int, int, bool);
   void fix_assignment_words (WORD_LIST *);
   int execute_simple_command (SIMPLE_COM *, int, int, bool, fd_bitmap *);
-  int execute_builtin (sh_builtin_func_t *, WORD_LIST *, int, bool);
+  int execute_builtin (sh_builtin_func_t, WORD_LIST *, int, bool);
   int execute_function (SHELL_VAR *, WORD_LIST *, int, fd_bitmap *, bool,
                         bool);
 
-  int execute_builtin_or_function (WORD_LIST *, sh_builtin_func_t *,
-                                   SHELL_VAR *, REDIRECT *, fd_bitmap *, int);
+  int execute_builtin_or_function (WORD_LIST *, sh_builtin_func_t, SHELL_VAR *,
+                                   REDIRECT *, fd_bitmap *, int);
 
   void execute_subshell_builtin_or_function (WORD_LIST *, REDIRECT *,
-                                             sh_builtin_func_t *, SHELL_VAR *,
+                                             sh_builtin_func_t, SHELL_VAR *,
                                              int, int, bool, fd_bitmap *, int);
 
   int execute_disk_command (WORD_LIST *, REDIRECT *, const char *, int, int,
@@ -3733,10 +3821,10 @@ protected:
 
 #if defined(COPROCESS_SUPPORT)
   void coproc_setstatus (Coproc *, int);
-  int execute_coproc (COMMAND *, int, int, fd_bitmap *);
+  int execute_coproc (COPROC_COM *, int, int, fd_bitmap *);
 #endif
 
-  int execute_pipeline (COMMAND *, bool, int, int, fd_bitmap *);
+  int execute_pipeline (CONNECTION *, bool, int, int, fd_bitmap *);
 
   int execute_connection (CONNECTION *, bool, int, int, fd_bitmap *);
 
@@ -3767,7 +3855,7 @@ protected:
 #endif
 
 #if defined(ARRAY_VARS)
-  void restore_funcarray_state (void *);
+  void restore_funcarray_state (func_array_state *);
 #endif
 
   static void
@@ -4358,11 +4446,10 @@ protected:
     return ret;
   }
 
-  // definitions from subst.h
+  // definitions moved from subst.hh
 
-  /* Remove backslashes which are quoting backquotes from STRING.  Modifies
-   STRING. */
-  void de_backslash (std::string &);
+  // Remove backslashes which are quoting backquotes from STRING (in place).
+  void de_backslash (char *);
 
   /* Replace instances of \! in a string with !. */
   void unquote_bang (std::string &);
@@ -4476,7 +4563,7 @@ protected:
   std::string expand_assignment_string_to_string (string_view, int);
 
   /* Expand an arithmetic expression string */
-  std::string expand_arith_string (string_view, int);
+  std::string expand_arith_string (string_view, quoted_flags);
 
   /* De-quote quoted characters in STRING. */
   std::string dequote_string (string_view);
@@ -4795,11 +4882,11 @@ protected:
 
   void invalidate_cached_quoted_dollar_at ();
 
-  // private methods from subst.c
+  // private methods from subst.cc
 
-  std::string string_extract (string_view, size_t *, string_view, sx_flags);
+  char *string_extract (const char *, size_t *, const char *, sx_flags);
 
-  std::string string_extract_double_quoted (string_view, size_t *, sx_flags);
+  char *string_extract_double_quoted (const char *, size_t *, sx_flags);
 
   size_t skip_double_quoted (string_view, size_t, size_t, sx_flags);
 
@@ -5541,6 +5628,13 @@ protected:
 
   // Methods from test.cc.
 
+  bool test_binop (string_view);
+
+  bool unary_test (string_view, string_view);
+  bool binary_test (string_view, string_view, string_view, binary_test_flags);
+
+  int test_command (int, char **);
+
   // Return true if OP is one of the test command's unary operators.
   bool
   test_unop (string_view op)
@@ -5581,8 +5675,6 @@ protected:
 
     return false;
   }
-
-  bool test_binop (string_view op);
 
   /* ************************************************************** */
   /*		Private Shell Variables (ptr types)		    */
@@ -5643,7 +5735,7 @@ protected:
   const char *shell_name;
 
   /* The name of the .(shell)rc file. */
-  std::string bashrc_file;
+  char *bashrc_file;
 
   /* These are extern so execute_simple_command can set them, and then
      throw back to main to execute a shell script, instead of calling
@@ -5655,8 +5747,8 @@ protected:
 
   char *exec_argv0;
 
-  std::string command_execution_string; /* argument to -c option */
-  std::string shell_script_filename;    /* shell script */
+  char *command_execution_string; /* argument to -c option */
+  char *shell_script_filename;    /* shell script */
 
   FILE *default_input;
 
@@ -5764,7 +5856,7 @@ protected:
 
   Builtin *current_builtin;
 
-  std::string *the_current_working_directory;
+  char *the_current_working_directory;
 
   // The buffer used by print_cmd.cc. */
   std::string the_printed_command;
@@ -5981,7 +6073,7 @@ protected:
     {
       bool *bool_ptr;
       char *flag_ptr;
-      std::string *str_ptr;
+      char **char_ptr;
     } value;
 
     LongArg () : type (Bool) { value.bool_ptr = nullptr; }
@@ -5996,9 +6088,9 @@ protected:
       value.flag_ptr = fp;
     }
 
-    LongArg (string_view n, std::string *strp) : name (n), type (Charp)
+    LongArg (string_view n, char **charp) : name (n), type (Charp)
     {
-      value.str_ptr = strp;
+      value.char_ptr = charp;
     }
   };
 

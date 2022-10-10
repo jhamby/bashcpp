@@ -202,8 +202,9 @@ SimpleState::SimpleState ()
 }
 
 Shell::Shell ()
-    : SimpleState (), bashrc_file (DEFAULT_BASHRC), primary_prompt (PPROMPT),
-      secondary_prompt (SPROMPT), source (0), redir (0), old_winch (SIG_DFL)
+    : SimpleState (), bashrc_file (const_cast<char *> (DEFAULT_BASHRC)),
+      primary_prompt (PPROMPT), secondary_prompt (SPROMPT), source (0),
+      redir (0), old_winch (SIG_DFL)
 {
   // alloc this 4K read buffer from the heap to keep the class size small
   zread_lbuf = new char[ZBUFSIZ];
@@ -282,8 +283,8 @@ Shell::run_shell (int argc, char **argv, char **env)
   if (arg_index > argc)
     arg_index = argc;
 
-  command_execution_string.clear ();
-  shell_script_filename.clear ();
+  command_execution_string = nullptr;
+  shell_script_filename = nullptr;
   want_pending_command = locally_skip_execution = read_from_stdin = false;
   default_input = stdin;
 
@@ -360,13 +361,14 @@ Shell::run_shell (int argc, char **argv, char **env)
   if (want_pending_command)
     {
       command_execution_string = argv[arg_index];
-      if (command_execution_string.empty ())
+      if (command_execution_string == nullptr)
         {
           report_error (_ ("%s: option requires an argument"), "-c");
           std::exit (EX_BADUSAGE);
         }
       arg_index++;
     }
+
   this_command_name = nullptr;
 
   /* First, let the outside world know about our interactive status.
@@ -378,14 +380,14 @@ Shell::run_shell (int argc, char **argv, char **env)
         standard error is a terminal
      Refer to Posix.2, the description of the `sh' utility. */
 
-  if (forced_interactive ||                 /* -i flag */
-      (command_execution_string.empty () && /* No -c command and ... */
-       !wordexp_only &&                     /* No --wordexp and ... */
-       ((arg_index == argc) ||              /*   no remaining args or... */
+  if (forced_interactive ||         // -i flag or
+      (!command_execution_string && // No -c command and ...
+       !wordexp_only &&             // No --wordexp and ...
+       ((arg_index == argc) ||      //   no remaining args or...
         read_from_stdin)
-       &&                         /*   -s flag with args, and */
-       isatty (fileno (stdin)) && /* Input is a terminal and */
-       isatty (fileno (stderr)))) /* error output is a terminal. */
+       &&                         //   -s flag with args, and
+       isatty (fileno (stdin)) && // Input is a terminal and
+       isatty (fileno (stderr)))) // error output is a terminal.
     init_interactive ();
   else
     init_noninteractive ();
@@ -507,7 +509,7 @@ Shell::run_shell (int argc, char **argv, char **env)
              startup files won't affect later option processing. */
           if (wordexp_only)
             ; /* nothing yet */
-          else if (!command_execution_string.empty ())
+          else if (command_execution_string)
             (void)bind_args (argv, arg_index, argc, 0); /* $0 ... $n */
           else if (arg_index != argc && read_from_stdin == 0)
             {
@@ -553,7 +555,7 @@ Shell::run_shell (int argc, char **argv, char **env)
             }
 #endif
 
-          if (!command_execution_string.empty ())
+          if (command_execution_string)
             {
               startup_state = 2;
 
@@ -562,7 +564,7 @@ Shell::run_shell (int argc, char **argv, char **env)
 
 #if defined(ONESHOT)
               executing = true;
-              run_one_command (command_execution_string.c_str ());
+              run_one_command (command_execution_string);
               exit_shell (last_command_exit_value);
 #else  /* ONESHOT */
               with_input_from_string (command_execution_string, "-c");
@@ -572,8 +574,8 @@ Shell::run_shell (int argc, char **argv, char **env)
 
           /* Get possible input filename and set up default_buffered_input or
              default_input as appropriate. */
-          if (!shell_script_filename.empty ())
-            open_shell_script (shell_script_filename.c_str ());
+          if (shell_script_filename)
+            open_shell_script (shell_script_filename);
           else if (!interactive)
             {
               /* In this mode, bash is reading a script from stdin, which is a
@@ -697,7 +699,7 @@ Shell::parse_long_options (char **argv, int arg_start, int arg_end)
                   exit (EX_BADUSAGE);
                 }
               else
-                *(*it).value.str_ptr = argv[arg_index];
+                *(*it).value.char_ptr = argv[arg_index];
 
               found = true;
               break;
@@ -931,7 +933,7 @@ Shell::run_startup_files ()
 
   /* get the rshd/sshd case out of the way first. */
   if (!interactive_shell && !no_rc && (login_shell == 0) && !act_like_sh
-      && !command_execution_string.empty ())
+      && command_execution_string)
     {
 #ifdef SSH_SOURCE_BASHRC
       run_by_ssh = (find_variable ("SSH_CLIENT") != (SHELL_VAR *)0)
@@ -947,7 +949,7 @@ Shell::run_startup_files ()
 #ifdef SYS_BASHRC
           maybe_execute_file (SYS_BASHRC, 1);
 #endif
-          maybe_execute_file (bashrc_file.c_str (), 1);
+          maybe_execute_file (bashrc_file, 1);
           return;
         }
     }
@@ -1036,7 +1038,7 @@ Shell::run_startup_files ()
 #ifdef SYS_BASHRC
           maybe_execute_file (SYS_BASHRC, true);
 #endif
-          maybe_execute_file (bashrc_file.c_str (), true);
+          maybe_execute_file (bashrc_file, true);
         }
       /* sh */
       else if (act_like_sh && !privileged_mode && !sourced_env)
@@ -1344,7 +1346,7 @@ Shell::start_debugger ()
   old_errexit = exit_immediately_on_error;
   exit_immediately_on_error = 0;
 
-  r = force_execute_file (DEBUGGER_START_FILE, 1);
+  r = force_execute_file (DEBUGGER_START_FILE, true);
   if (r < 0)
     {
       internal_warning (_ ("cannot start debugger; debugging mode disabled"));
@@ -1818,8 +1820,8 @@ Shell::shell_reinitialize ()
 #endif /* RESTRICTED_SHELL */
 
   /* Ensure that the default startup file is used.  (Except that we don't
-     execute this file for reinitialized shells). */
-  bashrc_file = DEFAULT_BASHRC;
+     execute this file for reinitialized shells). Don't attempt to free. */
+  bashrc_file = const_cast<char *> (DEFAULT_BASHRC);
 
   /* Delete all variables and functions.  They will be reinitialized when
      the environment is parsed. */

@@ -750,6 +750,8 @@ public:
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
 
+  void print_head (Shell *);
+
   WORD_DESC *word;       /* The thing to test. */
   PATTERN_LIST *clauses; /* The clauses to test against, or nullptr. */
 
@@ -771,6 +773,8 @@ public:
   virtual ~FOR_SELECT_COM () noexcept override;
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
+
+  void print_head (Shell *);
 
   WORD_DESC *name;     /* The variable name to get mapped over. */
   WORD_LIST *map_list; /* The things to map over.  This is never nullptr. */

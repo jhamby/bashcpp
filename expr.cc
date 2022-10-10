@@ -146,7 +146,7 @@ Shell::expr_unwind ()
 }
 
 void
-Shell::expr_bind_variable (const std::string &lhs, const std::string &rhs)
+Shell::expr_bind_variable (string_view lhs, string_view rhs)
 {
   SHELL_VAR *v;
   assign_flags aflags;
@@ -160,11 +160,11 @@ Shell::expr_bind_variable (const std::string &lhs, const std::string &rhs)
 #else
   aflags = ASS_NOFLAGS;
 #endif
-  v = bind_int_variable (lhs.c_str (), rhs.c_str (), aflags);
+  v = bind_int_variable (lhs, rhs, aflags);
   if (v && v->readonly () || v->noassign ())
     throw bash_exception (FORCE_EOF); /* variable assignment error */
 
-  stupidly_hack_special_variables (lhs.c_str ());
+  stupidly_hack_special_variables (lhs);
 }
 
 #if defined(ARRAY_VARS)
@@ -180,19 +180,20 @@ Shell::expr_skipsubscript (const char *vp, char *cp)
       *cp = '\0';
       isassoc = legal_identifier (vp) && (entry = find_variable (vp))
                 && entry->assoc ();
-      *cp = '['; /* ] */
+      *cp = '[';
     }
   valid_array_flags flags = (isassoc && assoc_expand_once && already_expanded)
                                 ? VA_NOEXPAND
                                 : VA_NOFLAGS;
+
   return skipsubscript (cp, 0, flags);
 }
 
 /* Rewrite tok, which is of the form vname[expression], to vname[ind], where
    IND is the already-calculated value of expression. */
 void
-Shell::expr_bind_array_element (const std::string &tok, arrayind_t ind,
-                                const std::string &rhs)
+Shell::expr_bind_array_element (string_view tok, arrayind_t ind,
+                                string_view rhs)
 {
   std::string istr = fmtumax (ind, 10, FL_NOFLAGS);
   char *vname = array_variable_name (tok.c_str (), 0, nullptr, nullptr);
@@ -223,7 +224,7 @@ Shell::expr_bind_array_element (const std::string &tok, arrayind_t ind,
    safe to let the loop terminate when expr_depth == 0, without freeing up
    any of the expr_depth[0] stuff. */
 int64_t
-Shell::evalexp (const std::string &expr, eval_flags flags, bool *validp)
+Shell::evalexp (string_view expr, eval_flags flags, bool *validp)
 {
   try
     {
@@ -255,7 +256,7 @@ Shell::evalexp (const std::string &expr, eval_flags flags, bool *validp)
 }
 
 int64_t
-Shell::subexpr (const std::string &expr)
+Shell::subexpr (string_view expr)
 {
   int64_t val;
   const char *p;
@@ -847,7 +848,7 @@ Shell::exp0 ()
       readtok ();
       val = EXP_HIGHEST ();
 
-      if (expr_current.curtok != RPAR) /* ( */
+      if (expr_current.curtok != RPAR)
         evalerror (_ ("missing `)'"));
 
       /* Skip over closing paren. */
@@ -1268,7 +1269,7 @@ Shell::readtok ()
 }
 
 void
-Shell::evalerror (const std::string &msg)
+Shell::evalerror (string_view msg)
 {
   const std::string &name, *t;
 
@@ -1295,7 +1296,7 @@ Shell::evalerror (const std::string &msg)
 #define VALID_NUMCHAR(c) (ISALNUM (c) || ((c) == '_') || ((c) == '@'))
 
 int64_t
-Shell::strlong (const std::string &num)
+Shell::strlong (string_view num)
 {
   const std::string &s;
   unsigned char c;

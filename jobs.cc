@@ -202,18 +202,17 @@ tcgetpgrp (int fd)
 #endif /* !_POSIX_VERSION */
 
 /* Return the working directory for the current process.  Unlike
-   job_working_directory, this does not call malloc (), nor do any
+   job_working_directory, this does not call malloc/new, nor do any
    of the functions it calls.  This is so that it can safely be called
    from a signal handler. */
 const char *
 Shell::current_working_directory ()
 {
-  char *dir;
   static char d[PATH_MAX]; // Static cache var (safe to leave here)
 
-  dir = get_string_value ("PWD");
+  const char *dir = get_string_value ("PWD");
 
-  if (dir == 0 && the_current_working_directory && no_symbolic_links)
+  if (dir == nullptr && the_current_working_directory && no_symbolic_links)
     dir = the_current_working_directory;
 
   if (dir == 0)

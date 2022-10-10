@@ -4739,7 +4739,7 @@ add_or_supercede_exported_var (char *assign, int do_alloc)
      We do this by including the `=() {' in the comparison, like
      initialize_shell_variables does. */
   if (assign[equal_offset + 1] == '('
-      && strncmp (assign + equal_offset + 2, ") {", 3) == 0) /* } */
+      && strncmp (assign + equal_offset + 2, ") {", 3) == 0)
     equal_offset += 4;
 
   for (i = 0; i < export_env_index; i++)

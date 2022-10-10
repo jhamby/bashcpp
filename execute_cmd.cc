@@ -30,6 +30,7 @@
 #endif
 
 #include "filecntl.hh"
+#include "pathexp.hh"
 #include "posixstat.hh"
 
 #if defined(HAVE_SYS_PARAM_H)
@@ -51,10 +52,6 @@
 #endif
 
 #include "shell.hh"
-
-#if defined(COND_COMMAND)
-#include "test.hh"
-#endif
 
 #include "builtext.hh" /* list of builtins */
 #include "builtins/common.hh"
@@ -751,16 +748,10 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
           break;
 
         case cm_while:
-          if (ignore_return)
-            command->flags |= CMD_IGNORE_RETURN;
-          exec_result = execute_while_command (
-              static_cast<UNTIL_WHILE_COM *> (command));
-          break;
-
         case cm_until:
           if (ignore_return)
             command->flags |= CMD_IGNORE_RETURN;
-          exec_result = execute_until_command (
+          exec_result = execute_while_or_until (
               static_cast<UNTIL_WHILE_COM *> (command));
           break;
 
@@ -888,7 +879,7 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
           command_error ("execute_command", CMDERR_BADTYPE, command->type);
         }
     }
-  catch (const bash_exception &)
+  catch (const std::exception &)
     {
       if (my_undo_list)
         cleanup_redirects (my_undo_list);
@@ -1391,7 +1382,7 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
   without_job_control ();
 
   if (fds_to_close)
-    close_fd_bitmap (fds_to_close);
+    close_fd_bitmap (*fds_to_close);
 
   do_piping (pipe_in, pipe_out);
 
@@ -1963,11 +1954,11 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
                        fd_bitmap *fds_to_close)
 {
   /* XXX -- can be removed after changes to handle multiple coprocs */
-#if !defined(MULTIPLE_COPROCS)
+#if !MULTIPLE_COPROCS
   if (sh_coproc.c_pid != NO_PID
       && (sh_coproc.c_rfd >= 0 || sh_coproc.c_wfd >= 0))
     internal_warning (_ ("execute_coproc: coproc [%d:%s] still exists"),
-                      sh_coproc.c_pid, sh_coproc.c_name);
+                      sh_coproc.c_pid, sh_coproc.c_name.c_str ());
   coproc_init (&sh_coproc);
 #endif
 
@@ -1978,7 +1969,7 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
   std::string name (expand_string_unsplit_to_string (command->name, 0));
 
   /* Optional check -- could be relaxed */
-  if (legal_identifier (name) == 0)
+  if (!legal_identifier (name))
     {
       internal_error (_ ("`%s': not a valid identifier"), name.c_str ());
       return invert ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
@@ -1986,8 +1977,8 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
   else
     command->name = name;
 
-  command_string_index = 0;
-  char *tcmd = make_command_string (command);
+  the_printed_command.clear ();
+  std::string tcmd (make_command_string (command));
 
   int rpipe[2], wpipe[2];
   sh_openpipe (rpipe); /* 0 = parent read, 1 = child write */
@@ -1995,22 +1986,17 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
 
   sigset_t set, oset;
   BLOCK_SIGNAL (SIGCHLD, set, oset);
-  char *p;
 
-  pid_t coproc_pid = make_child (p = savestring (tcmd), FORK_ASYNC);
+  pid_t coproc_pid = make_child (tcmd, FORK_ASYNC);
 
   if (coproc_pid == 0)
     {
       close (rpipe[0]);
       close (wpipe[1]);
 
-#if defined(JOB_CONTROL)
-      FREE (p);
-#endif
-
       UNBLOCK_SIGNAL (oset);
-      int estat
-          = execute_in_subshell (command, 1, wpipe[0], rpipe[1], fds_to_close);
+      int estat = execute_in_subshell (command, true, wpipe[0], rpipe[1],
+                                       fds_to_close);
 
       fflush (stdout);
       fflush (stderr);
@@ -2075,7 +2061,7 @@ lastpipe_cleanup (int s)
 #endif
 
 int
-Shell::execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
+Shell::execute_pipeline (CONNECTION *command, bool asynchronous, int pipe_in,
                          int pipe_out, fd_bitmap *fds_to_close)
 {
 #if defined(JOB_CONTROL)
@@ -2088,10 +2074,9 @@ Shell::execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
   bool stdin_valid = sh_validfd (0);
 
   int prev = pipe_in;
-  COMMAND *cmd = command;
+  CONNECTION *cmd = command;
 
-  while (cmd && cmd->type == cm_connection && cmd->value.Connection
-         && cmd->value.Connection->connector == '|')
+  while (cmd && cmd->connector == '|')
     {
       /* Make a pipeline between the two commands. */
       int fildes[2];
@@ -2121,52 +2106,56 @@ Shell::execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
          around a bitmap of file descriptors that must be
          closed after making a child process in execute_simple_command. */
 
-      /* We need fd_bitmap to be at least as big as fildes[0].
-         If fildes[0] is less than fds_to_close->size, then
-         use fds_to_close->size. */
-      int new_bitmap_size = (fildes[0] < fds_to_close->size ())
-                                ? fds_to_close->size ()
-                                : fildes[0] + 8;
-
-      fd_bitmap *fd_bitmap = new_fd_bitmap (new_bitmap_size);
-
       /* Now copy the old information into the new bitmap. */
-      xbcopy ((char *)fds_to_close->bitmap, (char *)fd_bitmap->bitmap,
-              fds_to_close->size ());
+      fd_bitmap saved_bitmap (*fds_to_close);
+
+      /* Resize to fit the new pipe file descriptor, if necessary. */
+      size_t new_size = static_cast<size_t> (fildes[0] + 1);
+      if (saved_bitmap.size () < new_size)
+        saved_bitmap.resize (new_size);
 
       /* And mark the pipe file descriptors to be closed. */
-      fd_bitmap->bitmap[fildes[0]] = 1;
+      saved_bitmap[new_size - 1] = true;
 
-      /* In case there are pipe or out-of-processes errors, we
-         want all these file descriptors to be closed when
-         unwind-protects are run, and the storage used for the
-         bitmaps freed up. */
-      begin_unwind_frame ("pipe-file-descriptors");
-      add_unwind_protect_ptr (dispose_fd_bitmap, fd_bitmap);
-      add_unwind_protect_ptr (close_fd_bitmap, fd_bitmap);
-      if (prev >= 0)
-        add_unwind_protect_int (close, prev);
-      add_unwind_protect_int (close, fildes[1]);
+      try
+        {
+          if (ignore_return && cmd->first)
+            cmd->first->flags |= CMD_IGNORE_RETURN;
 
+          execute_command_internal (cmd->first, asynchronous, prev, fildes[1],
+                                    &saved_bitmap);
+
+          if (prev >= 0)
+            close (prev);
+
+          prev = fildes[0];
+          close (fildes[1]);
+        }
+      catch (const std::exception &)
+        {
 #if defined(JOB_CONTROL)
-      add_unwind_protect_ptr (restore_signal_mask, &oset);
-#endif /* JOB_CONTROL */
+          sigprocmask (SIG_SETMASK, &oset, nullptr);
+#endif
 
-      if (ignore_return && cmd->value.Connection->first)
-        cmd->value.Connection->first->flags |= CMD_IGNORE_RETURN;
-      execute_command_internal (cmd->value.Connection->first, asynchronous,
-                                prev, fildes[1], fd_bitmap);
+          if (prev >= 0)
+            close (prev);
 
-      if (prev >= 0)
-        close (prev);
+          prev = fildes[0];
+          close (fildes[1]);
 
-      prev = fildes[0];
-      close (fildes[1]);
+          /* In case there are pipe or out-of-processes errors, we
+             want all these file descriptors to be closed when
+             exceptions are thrown. */
+          close_fd_bitmap (saved_bitmap);
 
-      dispose_fd_bitmap (fd_bitmap);
-      discard_unwind_frame ("pipe-file-descriptors");
+          throw;
+        }
 
-      cmd = cmd->value.Connection->second;
+      // Continue to the next connection, if any.
+      if (cmd->second && cmd->second->type == cm_connection)
+        cmd = static_cast<CONNECTION *> (cmd->second);
+      else
+        break;
     }
 
   pid_t lastpid = last_made_pid;
@@ -2177,18 +2166,19 @@ Shell::execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
 
   bool lastpipe_flag = false;
 
-  begin_unwind_frame ("lastpipe-exec");
   int lstdin = -2; /* -1 is special, meaning fd 0 is closed */
-  int lastpipe_jid, old_frozen;
+
+  int lastpipe_jid = 0, old_frozen = 0;
 
   /* If the `lastpipe' option is set with shopt, and job control is not
      enabled, execute the last element of non-async pipelines in the
      current shell environment. */
+
   /* prev can be 0 if fd 0 was closed when this function was executed. prev
      will never be 0 at this point if fd 0 was valid when this function was
      executed (though we check above). */
-  if (lastpipe_opt && job_control == 0 && asynchronous == 0
-      && pipe_out == NO_PIPE && prev >= 0)
+  if (lastpipe_opt && !job_control && !asynchronous && pipe_out == NO_PIPE
+      && prev >= 0)
     {
       /* -1 is a special value meaning to close stdin */
       lstdin = (prev > 0 && stdin_valid) ? move_to_high_fd (0, 1, -1) : -1;
@@ -2196,11 +2186,9 @@ Shell::execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
         {
           do_piping (prev, pipe_out);
           prev = NO_PIPE;
-          add_unwind_protect_int (restore_stdin, lstdin);
           lastpipe_flag = true;
           old_frozen = freeze_jobs_list ();
           lastpipe_jid = stop_pipeline (0, nullptr); /* XXX */
-          add_unwind_protect_int (lastpipe_cleanup, old_frozen);
 #if defined(JOB_CONTROL)
           UNBLOCK_CHILD (oset); /* XXX */
 #endif
@@ -2209,11 +2197,24 @@ Shell::execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
         cmd->flags |= CMD_LASTPIPE;
     }
 
-  if (prev >= 0)
-    add_unwind_protect_int (close, prev);
-
-  int exec_result = execute_command_internal (cmd, asynchronous, prev,
+  int exec_result;
+  try
+    {
+      exec_result = execute_command_internal (cmd, asynchronous, prev,
                                               pipe_out, fds_to_close);
+    }
+  catch (const std::exception &)
+    {
+      if (prev >= 0)
+        close (prev);
+
+      set_jobs_list_frozen (old_frozen);
+
+      if (lstdin > 0 || lstdin == -1)
+        restore_stdin (lstdin);
+
+      throw;
+    }
 
   if (prev >= 0)
     close (prev);
@@ -2262,8 +2263,6 @@ Shell::execute_pipeline (COMMAND *command, bool asynchronous, int pipe_in,
       set_jobs_list_frozen (old_frozen);
     }
 
-  discard_unwind_frame ("lastpipe-exec");
-
   return exec_result;
 }
 
@@ -2273,7 +2272,7 @@ Shell::execute_connection (CONNECTION *command, bool asynchronous, int pipe_in,
 {
   COMMAND *tc, *second;
   int exec_result;
-  volatile int save_line_number;
+  int save_line_number;
 
   bool ignore_return = (command->flags & CMD_IGNORE_RETURN) != 0;
 
@@ -2282,7 +2281,7 @@ Shell::execute_connection (CONNECTION *command, bool asynchronous, int pipe_in,
     /* Do the first command asynchronously. */
     case '&':
       tc = command->first;
-      if (tc == 0)
+      if (tc == nullptr)
         return EXECUTION_SUCCESS;
 
       if (ignore_return)
@@ -2300,8 +2299,9 @@ Shell::execute_connection (CONNECTION *command, bool asynchronous, int pipe_in,
 #endif /* JOB_CONTROL */
         tc->flags |= CMD_STDIN_REDIR;
 
-      exec_result
-          = execute_command_internal (tc, 1, pipe_in, pipe_out, fds_to_close);
+      exec_result = execute_command_internal (tc, true, pipe_in, pipe_out,
+                                              fds_to_close);
+
       QUIT;
 
       if (tc->flags & CMD_STDIN_REDIR)
@@ -2349,7 +2349,8 @@ Shell::execute_connection (CONNECTION *command, bool asynchronous, int pipe_in,
     case '|':
       {
         bool was_error_trap = signal_is_trapped (ERROR_TRAP)
-                              && (signal_is_ignored (ERROR_TRAP) == 0);
+                              && !signal_is_ignored (ERROR_TRAP);
+
         bool invert = (command->flags & CMD_INVERT_RETURN);
         ignore_return = (command->flags & CMD_IGNORE_RETURN);
 
@@ -2433,8 +2434,7 @@ Shell::execute_connection (CONNECTION *command, bool asynchronous, int pipe_in,
 
     default:
       command_error ("execute_connection", CMDERR_BADCONN, command->connector);
-      throw bash_exception (DISCARD);
-      exec_result = EXECUTION_FAILURE;
+      /* NOTREACHED */
     }
 
   return exec_result;
@@ -2457,9 +2457,9 @@ int
 Shell::execute_for_command (FOR_SELECT_COM *for_command)
 {
   int save_line_number = line_number;
-  if (check_identifier (for_command->name, 1) == 0)
+  if (!check_identifier (for_command->name, 1))
     {
-      if (posixly_correct && interactive_shell == 0)
+      if (posixly_correct && !interactive_shell)
         {
           last_command_exit_value = EX_BADUSAGE;
           throw bash_exception (ERREXIT);
@@ -2468,136 +2468,118 @@ Shell::execute_for_command (FOR_SELECT_COM *for_command)
     }
 
   loop_level++;
-  char *identifier = for_command->name->word;
 
-  line_number = for_command->line; /* for expansion error messages */
+  std::string &identifier = for_command->name->word;
+  line_number = for_command->line; // for expansion error messages
+
   WORD_LIST *list = expand_words_no_vars (for_command->map_list);
   WORD_LIST *releaser = list;
 
-  begin_unwind_frame ("for");
-  add_unwind_protect_ptr (dispose_words, releaser);
+  int retval = EXECUTION_SUCCESS;
 
-#if 0
-  if (lexical_scoping)
+  try
     {
-      old_value = copy_variable (find_variable (identifier));
-      if (old_value)
-	add_unwind_protect_ptr (dispose_variable, old_value);
-    }
-#endif
+      if (for_command->flags & CMD_IGNORE_RETURN)
+        for_command->action->flags |= CMD_IGNORE_RETURN;
 
-  if (for_command->flags & CMD_IGNORE_RETURN)
-    for_command->action->flags |= CMD_IGNORE_RETURN;
-
-  int retval;
-  for (retval = EXECUTION_SUCCESS; list; list = (WORD_LIST *)(list->next))
-    {
-      QUIT;
-
-      line_number = for_command->line;
-
-      /* Remember what this command looks like, for debugger. */
-      command_string_index = 0;
-      print_for_command_head (for_command);
-
-      if (echo_command_at_execute)
-        xtrace_print_for_command_head (for_command);
-
-      /* Save this command unless it's a trap command and we're not running
-         a debug trap. */
-      if (signal_in_progress (DEBUG_TRAP) == 0 && running_trap == 0)
+      for (; list; list = list->next ())
         {
-          FREE (the_printed_command_except_trap);
-          the_printed_command_except_trap = savestring (the_printed_command);
-        }
+          QUIT;
 
-      retval = run_debug_trap ();
+          line_number = for_command->line;
+
+          /* Remember what this command looks like, for debugger. */
+          the_printed_command.clear ();
+          for_command->print_head (this);
+
+          if (echo_command_at_execute)
+            xtrace_print_for_command_head (for_command);
+
+          /* Save this command unless it's a trap command and we're not running
+             a debug trap. */
+          if (!signal_in_progress (DEBUG_TRAP) && running_trap == 0)
+            the_printed_command_except_trap = the_printed_command;
+
+          retval = run_debug_trap ();
+
 #if defined(DEBUGGER)
-      /* In debugging mode, if the DEBUG trap returns a non-zero status, we
-         skip the command. */
-      if (debugging_mode && retval != EXECUTION_SUCCESS)
-        continue;
+          /* In debugging mode, if the DEBUG trap returns a non-zero status, we
+             skip the command. */
+          if (debugging_mode && retval != EXECUTION_SUCCESS)
+            continue;
 #endif
 
-      this_command_name = nullptr;
-      /* XXX - special ksh93 for command index variable handling */
-      SHELL_VAR *v = find_variable_last_nameref (identifier, 1);
-      if (v && nameref_p (v))
-        {
-          if (valid_nameref_value (list->word->word, 1) == 0)
-            {
-              sh_invalidid (list->word->word);
-              v = 0;
-            }
-          else if (readonly_p (v))
-            err_readonly (name_cell (v));
-          else
-            v = bind_variable_value (v, list->word->word, ASS_NAMEREF);
-        }
-      else
-        v = bind_variable (identifier, list->word->word, 0);
+          this_command_name = nullptr;
 
-      if (v == 0 || readonly_p (v) || noassign_p (v))
-        {
-          line_number = save_line_number;
-          if (v && readonly_p (v) && interactive_shell == 0 && posixly_correct)
+          /* XXX - special ksh93 for command index variable handling */
+          SHELL_VAR *v = find_var_last_nameref (identifier, 1);
+
+          if (v && v->nameref ())
             {
-              last_command_exit_value = EXECUTION_FAILURE;
-              throw bash_exception (FORCE_EOF);
+              if (valid_nameref_value (list->word->word, VA_NOEXPAND) == 0)
+                {
+                  sh_invalidid (list->word->word.c_str ());
+                  v = nullptr;
+                }
+              else if (v->readonly ())
+                err_readonly (v->name ());
+              else
+                v = bind_variable_value (v, list->word->word, ASS_NAMEREF);
             }
           else
+            v = bind_variable (identifier, list->word->word, 0);
+
+          if (v == nullptr || v->readonly () || v->noassign ())
             {
-              dispose_words (releaser);
-              discard_unwind_frame ("for");
-              loop_level--;
-              return EXECUTION_FAILURE;
+              line_number = save_line_number;
+              if (v && v->readonly () && !interactive_shell && posixly_correct)
+                {
+                  last_command_exit_value = EXECUTION_FAILURE;
+                  throw bash_exception (FORCE_EOF);
+                }
+              else
+                {
+                  delete releaser;
+                  loop_level--;
+                  return EXECUTION_FAILURE;
+                }
             }
-        }
 
-      if (ifsname (identifier))
-        setifs (v);
-      else
-        stupidly_hack_special_variables (identifier);
+          if (ifsname (identifier))
+            setifs (v);
+          else
+            stupidly_hack_special_variables (identifier);
 
-      retval = execute_command (for_command->action);
-      REAP ();
-      QUIT;
+          retval = execute_command (for_command->action);
 
-      if (breaking)
-        {
-          breaking--;
-          break;
-        }
+          REAP ();
+          QUIT;
 
-      if (continuing)
-        {
-          continuing--;
+          if (breaking)
+            {
+              breaking--;
+              break;
+            }
+
           if (continuing)
-            break;
+            {
+              continuing--;
+              if (continuing)
+                break;
+            }
         }
+
+      loop_level--;
+      line_number = save_line_number;
     }
-
-  loop_level--;
-  line_number = save_line_number;
-
-#if 0
-  if (lexical_scoping)
+  catch (const std::exception &)
     {
-      if (!old_value)
-        unbind_variable (identifier);
-      else
-	{
-	  SHELL_VAR *new_value;
-
-	  new_value = bind_variable (identifier, value_cell (old_value), 0);
-	  new_value->attributes = old_value->attributes;
-	  dispose_variable (old_value);
-	}
+      loop_level--;
+      delete releaser;
+      throw;
     }
-#endif
 
-  dispose_words (releaser);
-  discard_unwind_frame ("for");
+  delete releaser;
   return retval;
 }
 
@@ -2617,8 +2599,8 @@ Shell::execute_for_command (FOR_SELECT_COM *for_command)
                 eval \(\( step \)\)
         done
 */
-static int64_t
-eval_arith_for_expr (WORD_LIST *l, bool *okp)
+int64_t
+Shell::eval_arith_for_expr (WORD_LIST *l, bool *okp)
 {
   int64_t expresult;
 
@@ -2627,22 +2609,27 @@ eval_arith_for_expr (WORD_LIST *l, bool *okp)
     {
       if (echo_command_at_execute)
         xtrace_print_arith_cmd (new_list);
-      this_command_name = "(("; /* )) for expression error messages */
 
-      command_string_index = 0;
+      this_command_name = "(("; // for expression error messages
+
+      the_printed_command.clear ();
       print_arith_command (new_list);
-      if (signal_in_progress (DEBUG_TRAP) == 0 && running_trap == 0)
-        {
-          FREE (the_printed_command_except_trap);
-          the_printed_command_except_trap = savestring (the_printed_command);
-        }
+
+      if (!signal_in_progress (DEBUG_TRAP) && running_trap == 0)
+        the_printed_command_except_trap = the_printed_command;
 
       int r = run_debug_trap ();
+
       /* In debugging mode, if the DEBUG trap returns a non-zero status, we
          skip the command. */
+      eval_flags eflag
+          = (shell_compatibility_level > 51) ? EXP_NOFLAGS : EXP_EXPANDED;
+
+      this_command_name = "(("; // for expression error messages
+
 #if defined(DEBUGGER)
       if (!debugging_mode || r == EXECUTION_SUCCESS)
-        expresult = evalexp (new_list->word->word, EXP_EXPANDED, okp);
+        expresult = evalexp (new_list->word->word, eflag, okp);
       else
         {
           expresult = 0;
@@ -2650,9 +2637,9 @@ eval_arith_for_expr (WORD_LIST *l, bool *okp)
             *okp = true;
         }
 #else
-      expresult = evalexp (new_list->word->word, EXP_EXPANDED, okp);
+      expresult = evalexp (new_list->word->word, eflag, okp);
 #endif
-      dispose_words (new_list);
+      delete new_list;
     }
   else
     {
@@ -2673,13 +2660,15 @@ Shell::execute_arith_for_command (ARITH_FOR_COM *arith_for_command)
   if (arith_for_command->flags & CMD_IGNORE_RETURN)
     arith_for_command->action->flags |= CMD_IGNORE_RETURN;
 
-  this_command_name = "(("; /* )) for expression error messages */
+  this_command_name = "(("; // for expression error messages
 
   /* save the starting line number of the command so we can reset
      line_number before executing each expression -- for $LINENO
      and the DEBUG trap. */
+
   int arith_lineno = arith_for_command->line;
   line_number = arith_lineno;
+
   if (variable_context && interactive_shell && sourcelevel == 0)
     {
       /* line numbers in a function start at 1 */
@@ -2689,6 +2678,7 @@ Shell::execute_arith_for_command (ARITH_FOR_COM *arith_for_command)
     }
 
   /* Evaluate the initialization expression. */
+
   bool expok;
   int64_t expresult = eval_arith_for_expr (arith_for_command->init, &expok);
   if (!expok)
@@ -2709,7 +2699,9 @@ Shell::execute_arith_for_command (ARITH_FOR_COM *arith_for_command)
           body_status = EXECUTION_FAILURE;
           break;
         }
+
       REAP ();
+
       if (expresult == 0)
         break;
 
@@ -2752,7 +2744,8 @@ Shell::execute_arith_for_command (ARITH_FOR_COM *arith_for_command)
 #endif
 
 #if defined(SELECT_COMMAND)
-static int LINES, COLS, tabsize;
+
+#define tabsize 8
 
 #define RP_SPACE ") "
 #define RP_SPACE_LEN 2
@@ -2770,41 +2763,44 @@ static int
 displen (const char *s)
 {
 #if defined(HANDLE_MULTIBYTE)
-  wchar_t *wcstr;
-  size_t slen;
-  int wclen;
-
-  wcstr = 0;
-  slen = mbstowcs (wcstr, s, 0);
-  if (slen == (size_t)-1)
+  wchar_t *wcstr = nullptr;
+  size_t slen = mbstowcs (wcstr, s, 0);
+  if (slen == static_cast<size_t> (-1))
     slen = 0;
-  wcstr = (wchar_t *)xmalloc (sizeof (wchar_t) * (slen + 1));
+
+  wcstr = new wchar_t[slen + 1];
   mbstowcs (wcstr, s, slen + 1);
-  wclen = wcswidth (wcstr, slen);
-  free (wcstr);
-  return wclen < 0 ? STRLEN (s) : wclen;
+  int wclen = wcswidth (wcstr, slen);
+  delete[] wcstr;
+
+  return wclen < 0 ? static_cast<int> (strlen (s)) : wclen;
 #else
-  return STRLEN (s);
+  return static_cast<int> (strlen (s));
 #endif
 }
 
-static int
+static inline int
 print_index_and_element (int len, int ind, WORD_LIST *list)
 {
   WORD_LIST *l;
   int i;
 
-  if (list == 0)
+  if (list == nullptr)
     return 0;
-  for (i = ind, l = list; l && --i; l = (WORD_LIST *)(l->next))
+
+  for (i = ind, l = list; l && --i; l = l->next ())
     ;
-  if (l == 0) /* don't think this can happen */
+
+  if (l == nullptr) /* don't think this can happen */
     return 0;
-  fprintf (stderr, "%*d%s%s", len, ind, RP_SPACE, l->word->word);
-  return displen (l->word->word);
+
+  const char *word = l->word->word.c_str ();
+
+  fprintf (stderr, "%*d%s%s", len, ind, RP_SPACE, word);
+  return displen (word);
 }
 
-static void
+static inline void
 indent (int from, int to)
 {
   while (from < to)
@@ -2822,19 +2818,20 @@ indent (int from, int to)
     }
 }
 
-static void
-print_select_list (WORD_LIST *list, int list_len, int max_elem_len,
-                   int indices_len)
+void
+Shell::print_select_list (WORD_LIST *list, int max_elem_len, int indices_len)
 {
-  if (list == 0)
+  if (list == nullptr)
     {
       putc ('\n', stderr);
       return;
     }
 
-  int cols = max_elem_len ? COLS / max_elem_len : 1;
+  int cols = max_elem_len ? select_cols / max_elem_len : 1;
   if (cols == 0)
     cols = 1;
+
+  int list_len = static_cast<int> (list->size ());
 
   int rows = list_len ? list_len / cols + (list_len % cols != 0) : 1;
   cols = list_len ? list_len / rows + (list_len % rows != 0) : 1;
@@ -2873,35 +2870,27 @@ print_select_list (WORD_LIST *list, int list_len, int max_elem_len,
    If the number is between 1 and LIST_LEN, return that selection.  If EOF
    is read, return a null string.  If a blank line is entered, or an invalid
    number is entered, the loop is executed again. */
-static const char *
-select_query (WORD_LIST *list, int list_len, const char *prompt,
-              bool print_menu)
+string_view
+Shell::select_query (WORD_LIST *list, const char *prompt, bool print_menu)
 {
-  COLS = default_columns ();
-
-#if 0
-  t = get_string_value ("TABSIZE");
-  tabsize = (t && *t) ? atoi (t) : 8;
-  if (tabsize <= 0)
-    tabsize = 8;
-#else
-  tabsize = 8;
-#endif
+  select_cols = default_columns ();
 
   int max_elem_len = 0;
   for (WORD_LIST *l = list; l; l = l->next ())
     {
-      int len = displen (l->word->word);
+      int len = displen (l->word->word.c_str ());
       if (len > max_elem_len)
         max_elem_len = len;
     }
-  int indices_len = NUMBER_LEN (list_len);
+
+  int indices_len = NUMBER_LEN (list->size ());
   max_elem_len += indices_len + RP_SPACE_LEN + 2;
 
   while (1)
     {
       if (print_menu)
-        print_select_list (list, list_len, max_elem_len, indices_len);
+        print_select_list (list, max_elem_len, indices_len);
+
       fprintf (stderr, "%s", prompt);
       fflush (stderr);
       QUIT;
@@ -2910,29 +2899,36 @@ select_query (WORD_LIST *list, int list_len, const char *prompt,
       executing_builtin = 1;
       int r = read_builtin (nullptr);
       executing_builtin = oe;
+
       if (r != EXECUTION_SUCCESS)
         {
           putchar ('\n');
-          return nullptr;
+          return string_view ();
         }
-      char *repl_string = get_string_value ("REPLY");
-      if (repl_string == 0)
-        return nullptr;
-      if (*repl_string == 0)
+
+      const char *repl_string = get_string_value ("REPLY");
+
+      if (repl_string == nullptr)
+        return string_view ();
+
+      if (*repl_string == '\0')
         {
           print_menu = true;
           continue;
         }
+
       int64_t reply;
       if (!legal_number (repl_string, &reply))
-        return "";
-      if (reply < 1 || reply > list_len)
-        return "";
+        return string_view ();
+
+      if (reply < 1 || reply > static_cast<int64_t> (list->size ()))
+        return string_view ();
 
       WORD_LIST *l;
       for (l = list; l && --reply; l = l->next ())
         ;
-      return l->word->word; /* XXX - can't be null? */
+
+      return to_string_view (l->word->word); /* XXX - can't be null? */
     }
 }
 
@@ -2940,32 +2936,33 @@ select_query (WORD_LIST *list, int list_len, const char *prompt,
    SELECT word IN list DO command_list DONE
    Only `break' or `return' in command_list will terminate
    the command. */
-static int
-execute_select_command (SELECT_COM *select_command)
+int
+Shell::execute_select_command (FOR_SELECT_COM *select_command)
 {
-  if (check_identifier (select_command->name, 1) == 0)
+  if (!check_identifier (select_command->name, true))
     return EXECUTION_FAILURE;
 
   int save_line_number = line_number;
   line_number = select_command->line;
 
-  command_string_index = 0;
-  print_select_command_head (select_command);
+  the_printed_command.clear ();
+  select_command->print_head (this);
 
   if (echo_command_at_execute)
     xtrace_print_select_command_head (select_command);
 
 #if 0
-  if (signal_in_progress (DEBUG_TRAP) == 0 && (this_command_name == 0 || (STREQ (this_command_name, "trap") == 0)))
+  if (!signal_in_progress (DEBUG_TRAP)
+      && (this_command_name == 0 || (STREQ (this_command_name, "trap") == 0)))
 #else
-  if (signal_in_progress (DEBUG_TRAP) == 0 && running_trap == 0)
+  if (!signal_in_progress (DEBUG_TRAP) && running_trap == 0)
 #endif
   {
-    FREE (the_printed_command_except_trap);
-    the_printed_command_except_trap = savestring (the_printed_command);
+    the_printed_command_except_trap = the_printed_command;
   }
 
   int retval = run_debug_trap ();
+
 #if defined(DEBUGGER)
   /* In debugging mode, if the DEBUG trap returns a non-zero status, we
      skip the command. */
@@ -2973,24 +2970,22 @@ execute_select_command (SELECT_COM *select_command)
     return EXECUTION_SUCCESS;
 #endif
 
+  this_command_name = nullptr;
+
   loop_level++;
-  char *identifier = select_command->name->word;
+  const std::string &identifier = select_command->name->word;
 
   /* command and arithmetic substitution, parameter and variable expansion,
      word splitting, pathname expansion, and quote removal. */
+
   WORD_LIST *releaser, *list;
   list = releaser = expand_words_no_vars (select_command->map_list);
-  int list_len = list_length (list);
-  if (list == 0 || list_len == 0)
+  if (list == nullptr || list->size () == 0)
     {
-      if (list)
-        dispose_words (list);
+      delete list;
       line_number = save_line_number;
       return EXECUTION_SUCCESS;
     }
-
-  begin_unwind_frame ("select");
-  add_unwind_protect_ptr (dispose_words, releaser);
 
   if (select_command->flags & CMD_IGNORE_RETURN)
     select_command->action->flags |= CMD_IGNORE_RETURN;
@@ -2998,76 +2993,84 @@ execute_select_command (SELECT_COM *select_command)
   retval = EXECUTION_SUCCESS;
   bool show_menu = true;
 
-  while (1)
+  try
     {
-      line_number = select_command->line;
-      const char *ps3_prompt = get_string_value ("PS3");
-      if (ps3_prompt == 0)
-        ps3_prompt = "#? ";
-
-      QUIT;
-      const char *selection
-          = select_query (list, list_len, ps3_prompt, show_menu);
-      QUIT;
-      if (selection == 0)
+      while (1)
         {
-          /* select_query returns EXECUTION_FAILURE if the read builtin
-             fails, so we want to return failure in this case. */
-          retval = EXECUTION_FAILURE;
-          break;
-        }
+          line_number = select_command->line;
+          const char *ps3_prompt = get_string_value ("PS3");
+          if (ps3_prompt == nullptr)
+            ps3_prompt = "#? ";
 
-      SHELL_VAR *v = bind_variable (identifier, selection, 0);
-      if (v == 0 || readonly_p (v) || noassign_p (v))
-        {
-          if (v && readonly_p (v) && interactive_shell == 0 && posixly_correct)
+          QUIT;
+          string_view selection = select_query (list, ps3_prompt, show_menu);
+          QUIT;
+
+          if (selection.empty ())
             {
-              last_command_exit_value = EXECUTION_FAILURE;
-              jump_to_top_level (FORCE_EOF);
+              /* select_query returns EXECUTION_FAILURE if the read builtin
+                 fails, so we want to return failure in this case. */
+              retval = EXECUTION_FAILURE;
+              break;
             }
-          else
+
+          SHELL_VAR *v = bind_variable (identifier, selection, 0);
+          if (v == nullptr || v->readonly () || v->noassign ())
             {
-              dispose_words (releaser);
-              discard_unwind_frame ("select");
-              loop_level--;
-              line_number = save_line_number;
-              return EXECUTION_FAILURE;
+              if (v && v->readonly () && !interactive_shell && posixly_correct)
+                {
+                  last_command_exit_value = EXECUTION_FAILURE;
+                  throw bash_exception (FORCE_EOF);
+                }
+              else
+                {
+                  delete releaser;
+                  loop_level--;
+                  line_number = save_line_number;
+                  return EXECUTION_FAILURE;
+                }
             }
-        }
 
-      stupidly_hack_special_variables (identifier);
+          stupidly_hack_special_variables (identifier);
 
-      retval = execute_command (select_command->action);
+          retval = execute_command (select_command->action);
 
-      REAP ();
-      QUIT;
+          REAP ();
+          QUIT;
 
-      if (breaking)
-        {
-          breaking--;
-          break;
-        }
+          if (breaking)
+            {
+              breaking--;
+              break;
+            }
 
-      if (continuing)
-        {
-          continuing--;
           if (continuing)
-            break;
-        }
+            {
+              continuing--;
+              if (continuing)
+                break;
+            }
 
 #if defined(KSH_COMPATIBLE_SELECT)
-      show_menu = 0;
-      selection = get_string_value ("REPLY");
-      if (selection && *selection == '\0')
-        show_menu = 1;
+          show_menu = false;
+          const char *reply_string = get_string_value ("REPLY");
+          if (reply_string && *reply_string == '\0')
+            show_menu = true;
 #endif
+        }
+    }
+  catch (const std::exception &)
+    {
+      loop_level--;
+      line_number = save_line_number;
+      delete releaser;
+      throw;
     }
 
   loop_level--;
   line_number = save_line_number;
 
-  dispose_words (releaser);
-  discard_unwind_frame ("select");
+  delete releaser;
   return retval;
 }
 #endif /* SELECT_COMMAND */
@@ -3076,29 +3079,31 @@ execute_select_command (SELECT_COM *select_command)
    The pattern_list is a linked list of pattern clauses; each clause contains
    some patterns to compare word_desc against, and an associated command to
    execute. */
-static int
-execute_case_command (CASE_COM *case_command)
+int
+Shell::execute_case_command (CASE_COM *case_command)
 {
   int save_line_number = line_number;
   line_number = case_command->line;
 
-  command_string_index = 0;
-  print_case_command_head (case_command);
+  the_printed_command.clear ();
+  case_command->print_head (this);
 
   if (echo_command_at_execute)
     xtrace_print_case_command_head (case_command);
 
 #if 0
-  if (signal_in_progress (DEBUG_TRAP) == 0 && (this_command_name == 0 || (STREQ (this_command_name, "trap") == 0)))
+  if (!signal_in_progress (DEBUG_TRAP)
+      && (this_command_name == nullptr
+          || (STREQ (this_command_name, "trap") == 0)))
 #else
-  if (signal_in_progress (DEBUG_TRAP) == 0 && !running_trap)
+  if (!signal_in_progress (DEBUG_TRAP) && running_trap == 0)
 #endif
   {
-    FREE (the_printed_command_except_trap);
-    the_printed_command_except_trap = savestring (the_printed_command);
+    the_printed_command_except_trap = the_printed_command;
   }
 
   int retval = run_debug_trap ();
+
 #if defined(DEBUGGER)
   /* In debugging mode, if the DEBUG trap returns a non-zero status, we
      skip the command. */
@@ -3114,37 +3119,28 @@ execute_case_command (CASE_COM *case_command)
      patterns are handled specially below. We have to do it in this order
      because we're not supposed to perform word splitting. */
   WORD_LIST *wlist = expand_word_leave_quoted (case_command->word, 0);
-  char *word;
+
+  std::string word;
   if (wlist)
-    {
-      char *t;
-      t = string_list (wlist);
-      word = dequote_string (t);
-      free (t);
-    }
-  else
-    word = savestring ("");
-  dispose_words (wlist);
+    word = dequote_string (string_list (wlist));
+
+  delete wlist;
 
   retval = EXECUTION_SUCCESS;
-  bool ignore_return = case_command->flags & CMD_IGNORE_RETURN;
-
-  begin_unwind_frame ("case");
-  add_unwind_protect_ptr (xfree, word);
+  bool ignore_return = (case_command->flags & CMD_IGNORE_RETURN);
 
 #define EXIT_CASE() goto exit_case_command
 
   PATTERN_LIST *clauses;
-  for (clauses = case_command->clauses; clauses; clauses = clauses->next)
+  for (clauses = case_command->clauses; clauses; clauses = clauses->next ())
     {
       QUIT;
-      for (WORD_LIST *list = clauses->patterns; list;
-           list = (WORD_LIST *)(list->next))
+      for (WORD_LIST *list = clauses->patterns; list; list = list->next ())
         {
           WORD_LIST *es = expand_word_leave_quoted (list->word, 0);
 
           char *pattern;
-          if (es && es->word && es->word->word && *(es->word->word))
+          if (es && es->word && !es->word->word.empty ())
             {
               /* Convert quoted null strings into empty strings. */
               int qflags = QGLOB_CVTNULL;
@@ -3155,11 +3151,12 @@ execute_case_command (CASE_COM *case_command)
                  both unquoted portions of the word (which call quote_escapes)
                  and quoted portions (which call quote_string). */
               qflags |= QGLOB_CTLESC;
-              pattern = quote_string_for_globbing (es->word->word, qflags);
+              pattern = quote_string_for_globbing (es->word->word.c_str (),
+                                                   qflags);
             }
           else
             {
-              pattern = (char *)xmalloc (1);
+              pattern = new char[1];
               pattern[0] = '\0';
             }
 
@@ -3169,9 +3166,9 @@ execute_case_command (CASE_COM *case_command)
           bool match
               = (strmatch (pattern, word, FNMATCH_EXTFLAG | FNMATCH_IGNCASE)
                  != FNM_NOMATCH);
-          free (pattern);
 
-          dispose_words (es);
+          delete[] pattern;
+          delete es;
 
           if (match)
             {
@@ -3182,8 +3179,9 @@ execute_case_command (CASE_COM *case_command)
                   retval = execute_command (clauses->action);
                 }
               while ((clauses->flags & CASEPAT_FALLTHROUGH)
-                     && (clauses = clauses->next));
-              if (clauses == 0 || (clauses->flags & CASEPAT_TESTNEXT) == 0)
+                     && (clauses = clauses->next ()));
+              if (clauses == nullptr
+                  || (clauses->flags & CASEPAT_TESTNEXT) == 0)
                 EXIT_CASE ();
               else
                 break;
@@ -3194,38 +3192,17 @@ execute_case_command (CASE_COM *case_command)
     }
 
 exit_case_command:
-  free (word);
-  discard_unwind_frame ("case");
   line_number = save_line_number;
   return retval;
 }
 
-#define CMD_WHILE 0
-#define CMD_UNTIL 1
-
-/* The WHILE command.  Syntax: WHILE test DO action; DONE.
-   Repeatedly execute action while executing test produces
-   EXECUTION_SUCCESS. */
-static int
-execute_while_command (WHILE_COM *while_command)
-{
-  return execute_while_or_until (while_command, CMD_WHILE);
-}
-
-/* UNTIL is just like WHILE except that the test result is negated. */
-static int
-execute_until_command (WHILE_COM *while_command)
-{
-  return execute_while_or_until (while_command, CMD_UNTIL);
-}
-
-/* The body for both while and until.  The only difference between the
-   two is that the test value is treated differently.  TYPE is
-   CMD_WHILE or CMD_UNTIL.  The return value for both commands should
-   be EXECUTION_SUCCESS if no commands in the body are executed, and
-   the status of the last command executed in the body otherwise. */
-static int
-execute_while_or_until (WHILE_COM *while_command, int type)
+/* The body for both while and until. The only difference between the
+   two is that the test value is treated differently. The return value for both
+   commands should be EXECUTION_SUCCESS if no commands in the body are
+   executed, and the status of the last command executed in the body otherwise.
+ */
+int
+Shell::execute_while_or_until (UNTIL_WHILE_COM *while_command)
 {
   int return_value, body_status;
 
@@ -3247,7 +3224,7 @@ execute_while_or_until (WHILE_COM *while_command, int type)
          is in the loop test, `breaking' will not be reset unless we do
          this, and the shell will cease to execute commands.  The same holds
          true for `continue'. */
-      if (type == CMD_WHILE && return_value != EXECUTION_SUCCESS)
+      if (while_command->type == cm_while && return_value != EXECUTION_SUCCESS)
         {
           if (breaking)
             breaking--;
@@ -3255,7 +3232,7 @@ execute_while_or_until (WHILE_COM *while_command, int type)
             continuing--;
           break;
         }
-      if (type == CMD_UNTIL && return_value == EXECUTION_SUCCESS)
+      if (while_command->type == cm_until && return_value == EXECUTION_SUCCESS)
         {
           if (breaking)
             breaking--;
@@ -3289,8 +3266,8 @@ execute_while_or_until (WHILE_COM *while_command, int type)
 /* IF test THEN command [ELSE command].
    IF also allows ELIF in the place of ELSE IF, but
    the parser makes *that* stupidity transparent. */
-static int
-execute_if_command (IF_COM *if_command)
+int
+Shell::execute_if_command (IF_COM *if_command)
 {
   int return_value, save_line_number;
 
@@ -3320,14 +3297,16 @@ execute_if_command (IF_COM *if_command)
 }
 
 #if defined(DPAREN_ARITHMETIC)
-static int
-execute_arith_command (ARITH_COM *arith_command)
+int
+Shell::execute_arith_command (ARITH_COM *arith_command)
 {
   int64_t expresult = 0;
 
   int save_line_number = line_number;
-  this_command_name = "(("; /* )) */
-  line_number_for_err_trap = line_number = arith_command->line;
+  this_command_name = "((";
+
+  SET_LINE_NUMBER (arith_command->line);
+
   /* If we're in a function, update the line number information. */
   if (variable_context && interactive_shell && sourcelevel == 0)
     {
@@ -3337,19 +3316,17 @@ execute_arith_command (ARITH_COM *arith_command)
         line_number = 1;
     }
 
-  command_string_index = 0;
+  the_printed_command.clear ();
   print_arith_command (arith_command->exp);
 
-  if (signal_in_progress (DEBUG_TRAP) == 0 && running_trap == 0)
-    {
-      FREE (the_printed_command_except_trap);
-      the_printed_command_except_trap = savestring (the_printed_command);
-    }
+  if (!signal_in_progress (DEBUG_TRAP) && running_trap == 0)
+    the_printed_command_except_trap = the_printed_command;
 
   /* Run the debug trap before each arithmetic command, but do it after we
      update the line number information and before we expand the various
      words in the expression. */
   int retval = run_debug_trap ();
+
 #if defined(DEBUGGER)
   /* In debugging mode, if the DEBUG trap returns a non-zero status, we
      skip the command. */
@@ -3363,7 +3340,7 @@ execute_arith_command (ARITH_COM *arith_command)
   char *t = nullptr;
   WORD_LIST *new_list = arith_command->exp;
   char *exp;
-  if (new_list->next)
+  if (new_list->next ())
     exp = t = string_list (new_list); /* just in case */
   else
     exp = new_list->word->word;
@@ -3376,7 +3353,7 @@ execute_arith_command (ARITH_COM *arith_command)
   if (echo_command_at_execute)
     {
       new_list
-          = make_word_list (make_word (exp ? exp : ""), (WORD_LIST *)NULL);
+          = make_word_list (make_word (exp ? exp : ""), nullptr);
       xtrace_print_arith_cmd (new_list);
       dispose_words (new_list);
     }
@@ -3405,8 +3382,8 @@ execute_arith_command (ARITH_COM *arith_command)
 #if defined(COND_COMMAND)
 
 /* XXX - can COND ever be NULL when this is called? */
-static int
-execute_cond_node (COND_COM *cond)
+int
+Shell::execute_cond_node (COND_COM *cond)
 {
   bool invert = (cond->flags & CMD_INVERT_RETURN);
   bool ignore = (cond->flags & CMD_IGNORE_RETURN);
@@ -3521,9 +3498,8 @@ execute_cond_node (COND_COM *cond)
     }
   else
     {
-      command_error ("execute_cond_node", CMDERR_BADTYPE, cond->type, 0);
-      jump_to_top_level (DISCARD);
-      result = EXECUTION_FAILURE;
+      command_error ("execute_cond_node", CMDERR_BADTYPE, cond->type);
+      /* NOT REACHED */
     }
 
   if (invert)
@@ -3533,8 +3509,8 @@ execute_cond_node (COND_COM *cond)
   return result;
 }
 
-static int
-execute_cond_command (COND_COM *cond_command)
+int
+Shell::execute_cond_command (COND_COM *cond_command)
 {
   int retval, save_line_number;
 
@@ -3550,18 +3526,17 @@ execute_cond_command (COND_COM *cond_command)
       if (line_number <= 0)
         line_number = 1;
     }
-  command_string_index = 0;
-  print_cond_command (cond_command);
 
-  if (signal_in_progress (DEBUG_TRAP) == 0 && running_trap == 0)
-    {
-      FREE (the_printed_command_except_trap);
-      the_printed_command_except_trap = savestring (the_printed_command);
-    }
+  the_printed_command.clear ();
+  cond_command->print (this);
+
+  if (!signal_in_progress (DEBUG_TRAP) && running_trap == 0)
+    the_printed_command_except_trap.clear ();
 
   /* Run the debug trap before each conditional command, but do it after we
      update the line number information. */
   retval = run_debug_trap ();
+
 #if defined(DEBUGGER)
   /* In debugging mode, if the DEBUG trap returns a non-zero status, we
      skip the command. */
@@ -3582,8 +3557,8 @@ execute_cond_command (COND_COM *cond_command)
 }
 #endif /* COND_COMMAND */
 
-static void
-bind_lastarg (const char *arg)
+void
+Shell::bind_lastarg (const char *arg)
 {
   SHELL_VAR *var;
 
@@ -3604,7 +3579,7 @@ Shell::execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out,
   bool forcefork;
   REDIRECT *rd;
 
-  for (forcefork = false, rd = redirects; rd; rd = rd->next)
+  for (forcefork = false, rd = redirects; rd; rd = rd->next ())
     {
       forcefork |= rd->rflags & REDIR_VARASSIGN;
       /* Safety */
@@ -3619,7 +3594,7 @@ Shell::execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out,
     {
       /* We have a null command, but we really want a subshell to take
          care of it.  Just fork, do piping and redirections, and exit. */
-      int fork_flags = async ? FORK_ASYNC : 0;
+      make_child_flags fork_flags = async ? FORK_ASYNC : FORK_SYNC;
       if (make_child (nullptr, fork_flags) == 0)
         {
           /* Cancel traps, in trap.c. */
@@ -3680,8 +3655,8 @@ Shell::execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out,
 
 /* This is a hack to suppress word splitting for assignment statements
    given as arguments to builtins with the ASSIGNMENT_BUILTIN flag set. */
-static void
-fix_assignment_words (WORD_LIST *words)
+void
+Shell::fix_assignment_words (WORD_LIST *words)
 {
   if (words == 0)
     return;
@@ -3691,7 +3666,7 @@ fix_assignment_words (WORD_LIST *words)
 
   /* Skip over assignment statements preceding a command name */
   WORD_LIST *wcmd;
-  for (wcmd = words; wcmd; wcmd = (WORD_LIST *)(wcmd->next))
+  for (wcmd = words; wcmd; wcmd = wcmd->next ())
     if ((wcmd->word->flags & W_ASSIGNMENT) == 0)
       break;
 
@@ -3700,11 +3675,11 @@ fix_assignment_words (WORD_LIST *words)
      though it removes other special builtin properties.  In Posix
      mode, we skip over one or more instances of `command' and
      deal with the next word as the assignment builtin. */
-  while (posixly_correct && wcmd && wcmd->word && wcmd->word->word
-         && STREQ (wcmd->word->word, "command"))
-    wcmd = (WORD_LIST *)(wcmd->next);
+  while (posixly_correct && wcmd && wcmd->word
+         && wcmd->word->word == "command")
+    wcmd = wcmd->next ();
 
-  for (WORD_LIST *w = wcmd; w; w = (WORD_LIST *)(w->next))
+  for (WORD_LIST *w = wcmd; w; w = w->next ())
     if (w->word->flags & W_ASSIGNMENT)
       {
         /* Lazy builtin lookup, only do it if we find an assignment */
@@ -3786,13 +3761,13 @@ fix_assignment_words (WORD_LIST *words)
    the command and options stripped and sets *TYPEP to a non-zero value. If
    any other options are supplied, or there is not a command_name, we punt
    and return a zero value in *TYPEP without updating WORDS. */
-static WORD_LIST *
-check_command_builtin (WORD_LIST *words, int *typep)
+WORD_LIST *
+Shell::check_command_builtin (WORD_LIST *words, int *typep)
 {
   int type;
   WORD_LIST *w;
 
-  w = (WORD_LIST *)(words->next);
+  w = w->next ();
   type = 1;
 
   if (w && ISOPTION (w->word->word, 'p')) /* command -p */
@@ -3801,12 +3776,12 @@ check_command_builtin (WORD_LIST *words, int *typep)
       if (restricted)
         RETURN_NOT_COMMAND ();
 #endif
-      w = (WORD_LIST *)(w->next);
+      w = w->next ();
       type = 2;
     }
 
   if (w && ISOPTION (w->word->word, '-')) /* command [-p] -- */
-    w = (WORD_LIST *)(w->next);
+    w = w->next ();
   else if (w && w->word->word[0] == '-') /* any other option */
     RETURN_NOT_COMMAND ();
 
@@ -3835,9 +3810,10 @@ is_dirname (const char *pathname)
 /* The meaty part of all the executions.  We have to start hacking the
    real execution of commands here.  Fork a process, set things up,
    execute the command. */
-static int
-execute_simple_command (SIMPLE_COM *simple_command, int pipe_in, int pipe_out,
-                        bool async, struct fd_bitmap *fds_to_close)
+int
+Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
+                               int pipe_out, bool async,
+                               fd_bitmap *fds_to_close)
 {
   QUIT;
 
@@ -4327,9 +4303,9 @@ builtin_status (int result)
   return r;
 }
 
-static int
-execute_builtin (sh_builtin_func_t *builtin, WORD_LIST *words, int flags,
-                 bool subshell)
+int
+Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
+                        bool subshell)
 {
   bool eval_unwind, ignexit_flag;
   char *error_trap = 0;
@@ -4368,12 +4344,13 @@ execute_builtin (sh_builtin_func_t *builtin, WORD_LIST *words, int flags,
      problem only with the `unset', `source' and `eval' builtins.
      `mapfile' is a special case because it uses evalstring (same as
      eval or source) to run its callbacks. */
-  /* SHOULD_KEEP is for the pop_scope call below; it only matters when
-     posixly_correct is set, but we should propagate the temporary environment
-     to the enclosing environment only for special builtins. */
   bool isbltinenv
       = (builtin == source_builtin || builtin == eval_builtin
          || builtin == unset_builtin || builtin == mapfile_builtin);
+
+  /* SHOULD_KEEP is for the pop_scope call below; it only matters when
+     posixly_correct is set, but we should propagate the temporary environment
+     to the enclosing environment only for special builtins. */
   bool should_keep = isbltinenv && builtin != mapfile_builtin;
 
 #if defined(HISTORY) && defined(READLINE)
@@ -4446,7 +4423,7 @@ execute_builtin (sh_builtin_func_t *builtin, WORD_LIST *words, int flags,
   executing_builtin++;
   executing_command_builtin |= (builtin == command_builtin);
 
-  int result = ((*builtin) ((WORD_LIST *)(words->next)));
+  int result = ((*builtin) (w->next ()));
 
   /* This shouldn't happen, but in case `return' comes back instead of
      longjmp'ing, we need to unwind. */
@@ -4506,9 +4483,9 @@ restore_funcarray_state (void *arg)
 }
 #endif
 
-static int
-execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
-                  struct fd_bitmap *fds_to_close, bool async, bool subshell)
+int
+Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
+                         fd_bitmap *fds_to_close, bool async, bool subshell)
 {
 #if defined(ARRAY_VARS)
   SHELL_VAR *funcname_v, *bash_source_v, *bash_lineno_v;
@@ -4661,12 +4638,12 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   if (debugging_mode || shell_compatibility_level <= 44)
     init_bash_argv ();
 
-  remember_args ((WORD_LIST *)(words->next), true);
+  remember_args (w->next (), true);
 
   /* Update BASH_ARGV and BASH_ARGC */
   if (debugging_mode)
     {
-      push_args ((WORD_LIST *)(words->next));
+      push_args (w->next ());
       if (!subshell)
         add_unwind_protect (pop_args);
     }
@@ -4763,7 +4740,7 @@ execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
 /* A convenience routine for use by other parts of the shell to execute
    a particular shell function. */
 int
-execute_shell_function (SHELL_VAR *var, WORD_LIST *words)
+Shell::execute_shell_function (SHELL_VAR *var, WORD_LIST *words)
 {
   struct fd_bitmap *bitmap;
 
@@ -4785,13 +4762,11 @@ execute_shell_function (SHELL_VAR *var, WORD_LIST *words)
    VAR points at the body of a function to execute.  WORDS is the arguments
    to the command, REDIRECTS specifies redirections to perform before the
    command is executed. */
-static void
-execute_subshell_builtin_or_function (WORD_LIST *words, REDIRECT *redirects,
-                                      sh_builtin_func_t *builtin,
-                                      SHELL_VAR *var, int pipe_in,
-                                      int pipe_out, bool async,
-                                      struct fd_bitmap *fds_to_close,
-                                      int flags)
+void
+Shell::execute_subshell_builtin_or_function (
+    WORD_LIST *words, REDIRECT *redirects, sh_builtin_func_t builtin,
+    SHELL_VAR *var, int pipe_in, int pipe_out, bool async,
+    fd_bitmap *fds_to_close, int flags)
 {
   int result, r, funcvalue;
 #if defined(JOB_CONTROL)
@@ -4898,10 +4873,11 @@ execute_subshell_builtin_or_function (WORD_LIST *words, REDIRECT *redirects,
 
    If BUILTIN is exec_builtin, the redirections specified in REDIRECTS are
    not undone before this function returns. */
-static int
-execute_builtin_or_function (WORD_LIST *words, sh_builtin_func_t *builtin,
-                             SHELL_VAR *var, REDIRECT *redirects,
-                             struct fd_bitmap *fds_to_close, int flags)
+int
+Shell::execute_builtin_or_function (WORD_LIST *words,
+                                    sh_builtin_func_t builtin, SHELL_VAR *var,
+                                    REDIRECT *redirects,
+                                    fd_bitmap *fds_to_close, int flags)
 {
   int result;
   REDIRECT *saved_undo_list;
@@ -5051,10 +5027,11 @@ setup_async_signals ()
 #define NOTFOUND_HOOK "command_not_found_handle"
 #endif
 
-static int
-execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
-                      const char *command_line, int pipe_in, int pipe_out,
-                      bool async, struct fd_bitmap *fds_to_close, int cmdflags)
+int
+Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
+                             const char *command_line, int pipe_in,
+                             int pipe_out, bool async, fd_bitmap *fds_to_close,
+                             int cmdflags)
 {
   int stdpath = (cmdflags & CMD_STDPATH); /* use command -p path */
   bool nofork
@@ -5274,9 +5251,9 @@ getinterp (char *sample, int sample_len, int *endp)
    The word immediately following the #! is the interpreter to execute.
    A single argument to the interpreter is allowed. */
 
-static int
-execute_shell_script (char *sample, int sample_len, char *command, char **args,
-                      char **env)
+int
+Shell::execute_shell_script (char *sample, int sample_len, char *command,
+                             char **args, char **env)
 {
   char *execname, *firstarg;
   int i, start, size_increment, larry;
@@ -5324,8 +5301,8 @@ execute_shell_script (char *sample, int sample_len, char *command, char **args,
 
 #endif /* !HAVE_HASH_BANG_EXEC */
 
-static void
-initialize_subshell ()
+void
+Shell::initialize_subshell ()
 {
 #if defined(ALIAS)
   /* Forget about any aliases that we knew of.  We are in a subshell. */
@@ -5400,7 +5377,7 @@ initialize_subshell ()
 /* Call execve (), handling interpreting shell scripts, and handling
    exec failures. */
 int
-shell_execve (char *command, char **args, char **env)
+Shell::shell_execve (char *command, char **args, char **env)
 {
   int larray, i, fd;
   char sample[HASH_BANG_BUFSIZ];
@@ -5558,8 +5535,8 @@ shell_execve (char *command, char **args, char **env)
   /*NOTREACHED*/
 }
 
-static int
-execute_intern_function (WORD_DESC *name, FUNCTION_DEF *funcdef)
+int
+Shell::execute_intern_function (WORD_DESC *name, FUNCTION_DEF *funcdef)
 {
   SHELL_VAR *var;
   char *t;

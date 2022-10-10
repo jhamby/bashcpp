@@ -228,16 +228,6 @@ public:
     // Note: this call doesn't have a corresponding push in the constructor.
     shell.pop_stream ();
 
-#if defined(HISTORY)
-#if defined(BANG_HISTORY)
-    shell.history_expansion_inhibited = history_expansion_inhibited;
-#endif /* BANG_HISTORY */
-    if (parse_and_execute_level == 0)
-      shell.remember_on_history = shell.enable_history_list;
-    else
-      shell.remember_on_history = remember_on_history;
-#endif /* HISTORY */
-
     if (flags & (SEVAL_NONINT | SEVAL_INTERACT))
       shell.interactive = interactive;
 
@@ -251,6 +241,17 @@ public:
     shell.line_number = line_number;
     shell.indirection_level = indirection_level;
     shell.parse_and_execute_level = parse_and_execute_level;
+
+#if defined(HISTORY)
+    if (parse_and_execute_level == 0)
+      shell.remember_on_history = shell.enable_history_list;
+    else
+      shell.remember_on_history = remember_on_history;
+#if defined(BANG_HISTORY)
+    shell.history_expansion_inhibited = history_expansion_inhibited;
+#endif /* BANG_HISTORY */
+#endif /* HISTORY */
+
     unwound = true;
   }
 
@@ -290,7 +291,8 @@ int
 Shell::parse_and_execute (char *string, string_view from_file,
                           parse_flags flags)
 {
-  // Construct an unwind handler to restore the state on return or throw.
+  // Make a local unwind handler to delete the string and restore variable and
+  // parser state on return or throw.
   EvalStringUnwindHandler unwind_handler (*this, string, flags);
 
   parse_and_execute_level++;
@@ -550,7 +552,7 @@ Shell::try_execute_command ()
       delete bitmap;
       return result;
     }
-  catch (const bash_exception &)
+  catch (const std::exception &)
     {
       delete command;
       delete bitmap;
@@ -700,7 +702,7 @@ Shell::open_redir_file (REDIRECT *r, char **fnp)
       return -1;
     }
 
-  fd = ::open (fn, O_RDONLY);
+  fd = open (fn, O_RDONLY);
   if (fd < 0)
     {
       file_error (fn);
@@ -733,6 +735,50 @@ Shell::cat_file (REDIRECT *r)
   close (fd);
 
   return rval;
+}
+
+int
+Shell::evalstring (char *string, string_view from_file, parse_flags flags)
+{
+  /* Are we running a trap when we execute this function? */
+  int was_trap = running_trap;
+
+  int rflag = return_catch_flag;
+
+  /* If we are in a place where `return' is valid, we have to catch
+     `eval "... return"' and make sure parse_and_execute cleans up. Then
+     we can trampoline to the previous saved return_catch location. */
+  if (rflag)
+    {
+      return_catch_flag++; /* increment so we have a counter */
+      try
+        {
+          /* Note that parse_and_execute () frees the string it is passed. */
+          int r = parse_and_execute (string, from_file, flags);
+          return_catch_flag = rflag;
+          return r;
+        }
+      catch (const return_catch_exception &)
+        {
+          /* We care about whether or not we are running the same trap we were
+             when we entered this function. */
+          if (running_trap > 0)
+            {
+              /* We assume if we have a different value for running_trap than
+                 when we started (the only caller that cares is evalstring()),
+                 the original caller will perform the cleanup, and we should
+                 not step on them. */
+              if (running_trap != was_trap)
+                run_trap_cleanup (running_trap - 1);
+              unfreeze_jobs_list ();
+            }
+
+          return_catch_flag = rflag;
+          throw;
+        }
+    }
+  else
+    return parse_and_execute (string, from_file, flags);
 }
 
 } // namespace bash

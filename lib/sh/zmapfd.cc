@@ -43,7 +43,7 @@ namespace bash
 /* Dump contents of file descriptor FD to *OSTR.  FN is the filename for
    error messages (not used right now). */
 int
-Shell::zmapfd (int fd, char **ostr, const char *fn)
+Shell::zmapfd (int fd, char **ostr)
 {
   ssize_t nr;
   char lbuf[ZBUFSIZ];

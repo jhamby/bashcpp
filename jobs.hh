@@ -87,7 +87,7 @@ struct PROCESS
 #endif
 #define PDEADPROC(p) (PEXITED (p) || PRECYCLED (p))
 
-#define get_job_by_jid(ind) (jobs[(ind)])
+#define get_job_by_jid(ind) (jobs[static_cast<size_t> (ind)])
 
 /* A description of a pipeline's state. */
 enum JOB_STATE
@@ -108,7 +108,7 @@ enum JOB_STATE
 #define DEADJOB(j) (jobs[(j)]->state == JDEAD)
 
 #define INVALID_JOB(j)                                                        \
-  ((j) < 0 || (j) >= js.j_jobslots || get_job_by_jid (j) == 0)
+  ((j) < 0 || (j) >= js.j_jobslots || get_job_by_jid (j) == nullptr)
 
 /* Values for the FLAGS field in the JOB struct below. */
 enum job_flags

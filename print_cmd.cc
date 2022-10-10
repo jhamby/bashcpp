@@ -116,39 +116,41 @@ Shell::xtrace_reset ()
 }
 
 /* Return a string denoting what our indirection level is. */
-const char *
+std::string
 Shell::indirection_level_string ()
 {
-  char *ps4;
+  const char *ps4;
   char ps4_firstc[MB_LEN_MAX + 1];
   int ps4_firstc_len;
 
   ps4 = get_string_value ("PS4");
 
   if (ps4 == nullptr || *ps4 == '\0')
-    return indirection_string.c_str ();
+    return indirection_string;
 
   int old = change_flag ('x', FLAG_OFF);
-  ps4 = decode_prompt_string (ps4);
+
+  std::string ps4_str (decode_prompt_string (ps4));
+
   if (old)
     change_flag ('x', FLAG_ON);
 
-  if (ps4 == nullptr || *ps4 == '\0')
-    return indirection_string.c_str ();
+  if (ps4_str.empty ())
+    return indirection_string;
 
 #if defined(HANDLE_MULTIBYTE)
-  size_t ps4_len = strnlen (ps4, MB_CUR_MAX);
-  ps4_firstc_len = std::mblen (ps4, ps4_len);
+  size_t ps4_len = ps4_str.size ();
+  ps4_firstc_len = std::mblen (ps4_str.c_str (), ps4_len);
   if (ps4_firstc_len == 1 || ps4_firstc_len == 0 || ps4_firstc_len < 0)
     {
-      ps4_firstc[0] = ps4[0];
+      ps4_firstc[0] = ps4_str[0];
       ps4_firstc[ps4_firstc_len = 1] = '\0';
     }
   else
-    std::memcpy (ps4_firstc, ps4,
+    std::memcpy (ps4_firstc, ps4_str.data (),
                  static_cast<size_t> (ps4_firstc_len + 1)); // include '\0'
 #else
-  ps4_firstc[0] = ps4[0];
+  ps4_firstc[0] = ps4_str[0];
   ps4_firstc[ps4_firstc_len = 1] = '\0';
 #endif
 
@@ -162,13 +164,12 @@ Shell::indirection_level_string ()
 
   indirection_string.append (ps4 + ps4_firstc_len);
   delete[] ps4;
-  return indirection_string.c_str ();
+  return indirection_string;
 }
 
 void
-Shell::xtrace_print_assignment (const std::string &name,
-                                const std::string &value, bool assign_list,
-                                int xflags)
+Shell::xtrace_print_assignment (const char *name, const char *value,
+                                bool assign_list, int xflags)
 {
   std::string nval;
 
@@ -178,7 +179,7 @@ Shell::xtrace_print_assignment (const std::string &name,
     std::fprintf (xtrace_fp, "%s", indirection_level_string ());
 
   /* VALUE should not be NULL when this is called. */
-  if (value.empty () || assign_list)
+  if (*value == '\0' || assign_list)
     nval = value;
   else if (sh_contains_shell_metas (value))
     nval = sh_single_quote (value);
@@ -188,9 +189,9 @@ Shell::xtrace_print_assignment (const std::string &name,
     nval = value;
 
   if (assign_list)
-    std::fprintf (xtrace_fp, "%s=(%s)\n", name.c_str (), nval.c_str ());
+    std::fprintf (xtrace_fp, "%s=(%s)\n", name, nval.c_str ());
   else
-    std::fprintf (xtrace_fp, "%s=%s\n", name.c_str (), nval.c_str ());
+    std::fprintf (xtrace_fp, "%s=%s\n", name, nval.c_str ());
 
   std::fflush (xtrace_fp);
 }
@@ -238,22 +239,29 @@ void
 Shell::xtrace_print_for_command_head (FOR_SELECT_COM *for_command)
 {
   CHECK_XTRACE_FP;
-  std::fprintf (xtrace_fp, "%s", indirection_level_string ());
+  std::fprintf (xtrace_fp, "%s", indirection_level_string ().c_str ());
   std::fprintf (xtrace_fp, "for %s in ", for_command->name->word.c_str ());
   xtrace_print_word_list (for_command->map_list, 2);
 }
 
+// This function is called from execute_for_command ().
 void
-FOR_SELECT_COM::print (Shell *shell)
+FOR_SELECT_COM::print_head (Shell *shell)
 {
 #if defined(SELECT_COMMAND)
-  if (loop_type == SELECT_LOOP)
+  if (type == cm_select)
     shell->cprintf ("select %s in ", name->word.c_str ());
   else
 #endif
     shell->cprintf ("for %s in ", name->word.c_str ());
 
   shell->command_print_word_list (map_list, " ");
+}
+
+void
+FOR_SELECT_COM::print (Shell *shell)
+{
+  print_head (shell);
   shell->cprintf (";");
   shell->newline ("do\n");
   shell->add_indentation ();
@@ -342,10 +350,17 @@ Shell::xtrace_print_case_command_head (CASE_COM *case_command)
   std::fprintf (xtrace_fp, "case %s in\n", case_command->word->word.c_str ());
 }
 
+// This function is called from execute_case_command ().
+void
+CASE_COM::print_head (Shell *shell)
+{
+  shell->cprintf ("case %s in ", word->word.c_str ());
+}
+
 void
 CASE_COM::print (Shell *shell)
 {
-  shell->cprintf ("case %s in ", word->word.c_str ());
+  print_head (shell);
 
   if (clauses)
     print_clauses (shell);
@@ -379,7 +394,7 @@ CASE_COM::print_clauses (Shell *shell)
 void
 UNTIL_WHILE_COM::print (Shell *shell)
 {
-  if (loop_type == LOOP_UNTIL)
+  if (type == cm_until)
     shell->cprintf ("%s ", "until");
   else
     shell->cprintf ("%s ", "while");
@@ -425,11 +440,17 @@ IF_COM::print (Shell *shell)
 
 #if defined(DPAREN_ARITHMETIC) || defined(ARITH_FOR_COMMAND)
 void
+Shell::print_arith_command (WORD_LIST *arith_cmd_list)
+{
+  cprintf ("((");
+  command_print_word_list (arith_cmd_list, " ");
+  cprintf ("))");
+}
+
+void
 ARITH_COM::print (Shell *shell)
 {
-  shell->cprintf ("((");
-  shell->command_print_word_list (exp, " ");
-  shell->cprintf ("))");
+  shell->print_arith_command (exp);
 }
 #endif
 
@@ -889,7 +910,7 @@ Shell::print_function_def (FUNCTION_DEF *func)
   inside_function_def--;
 
   if (func_redirects)
-    { /* { */
+    {
       newline ("} ");
       print_redirection_list (func_redirects);
       cmdcopy->redirects = func_redirects;
@@ -903,11 +924,11 @@ Shell::print_function_def (FUNCTION_DEF *func)
 /* Return the string representation of the named function.
    NAME is the name of the function.
    COMMAND is the function body.  It should be a GROUP_COM.
-   flags&FUNC_MULTILINE is non-zero to pretty-print, or zero for all on one
-   line. flags&FUNC_EXTERNAL means convert from internal to external form
+   flags & FUNC_MULTILINE is non-zero to pretty-print, or zero for all on one
+   line. flags & FUNC_EXTERNAL means convert from internal to external form.
   */
-char *
-Shell::named_function_string (const char *name, COMMAND *command,
+std::string
+Shell::named_function_string (string_view name, COMMAND *command,
                               print_flags flags)
 {
   char *result;
@@ -964,7 +985,7 @@ Shell::named_function_string (const char *name, COMMAND *command,
   inside_function_def--;
 
   if (func_redirects)
-    { /* { */
+    {
       newline ("} ");
       print_redirection_list (func_redirects);
       cmdcopy->redirects = func_redirects;
@@ -986,7 +1007,7 @@ Shell::named_function_string (const char *name, COMMAND *command,
 	  }
 #else
       if (result[2] == '\n') /* XXX -- experimental */
-        std::memmove (result + 2, result + 3, std::strlen (result) - 2);
+        memmove (result + 2, result + 3, strlen (result) - 2);
 #endif
     }
 
@@ -1099,25 +1120,22 @@ void
 Shell::cprintf (const char *control, ...)
 {
   const char *s;
-  char char_arg[2], *argp, intbuf[INT_STRLEN_BOUND (unsigned int) + 1];
+  char intbuf[INT_STRLEN_BOUND (unsigned int) + 1];
   int digit_arg;
   va_list args;
 
   va_start (args, control);
 
-  size_t arg_len = std::strlen (control);
-
-  char_arg[1] = '\0';
   s = control;
+  std::string argp;
   while (s && *s)
     {
       char c = *s++;
-      argp = nullptr;
+      argp.clear ();
+
       if (c != '%' || !*s)
         {
-          char_arg[0] = c;
-          argp = char_arg;
-          arg_len = 1;
+          argp = c;
         }
       else
         {
@@ -1125,14 +1143,11 @@ Shell::cprintf (const char *control, ...)
           switch (c)
             {
             case '%':
-              char_arg[0] = c;
-              argp = char_arg;
-              arg_len = 1;
+              argp = c;
               break;
 
             case 's':
               argp = va_arg (args, char *);
-              arg_len = std::strlen (argp);
               break;
 
             case 'd':
@@ -1148,13 +1163,10 @@ Shell::cprintf (const char *control, ...)
                 }
               else
                 argp = inttostr (digit_arg);
-              arg_len = std::strlen (argp);
               break;
 
             case 'c':
-              char_arg[0] = static_cast<char> (va_arg (args, int));
-              argp = char_arg;
-              arg_len = 1;
+              argp = static_cast<char> (va_arg (args, int));
               break;
 
             default:
@@ -1164,7 +1176,7 @@ Shell::cprintf (const char *control, ...)
             }
         }
 
-      if (argp && arg_len)
+      if (!argp.empty ())
         the_printed_command.append (argp);
     }
 

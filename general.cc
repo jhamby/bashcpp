@@ -162,6 +162,13 @@ invalid_nameref_value::what () const noexcept
   return "invalid_nameref_value";
 }
 
+// Return the type of the return_catch_exception exception.
+const char *
+return_catch_exception::what () const noexcept
+{
+  return "return_catch_exception";
+}
+
 /* Do whatever is necessary to initialize `Posix mode'.  This currently
    modifies the following variables which are controlled via shopt:
       interactive_comments
