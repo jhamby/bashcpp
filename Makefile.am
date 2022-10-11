@@ -25,6 +25,7 @@ GLBDIR = lib/glob
 BLTDIR = builtins
 
 DEFS += -DLOCALEDIR=\"$(localedir)\"
+LDADD = @LTLIBINTL@
 
 # TODO: add docs and tests subdirs
 SUBDIRS = po

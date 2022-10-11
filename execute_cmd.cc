@@ -1178,9 +1178,9 @@ Shell::time_command (COMMAND *command, bool asynchronous, int pipe_in,
 
   command->flags = old_flags;
 
-  /* If we're jumping in a different subshell environment than we started,
-     don't bother printing timing stats, just keep longjmping back to the
-     original top level. */
+  /* If we're catching from a different subshell environment than we started,
+     don't bother printing timing stats, just rethrow back to the original top
+     level. */
   if (exc_type != NOEXCEPTION && subshell_environment
       && subshell_environment != old_subshell)
     throw bash_exception (exc_type);
@@ -1311,7 +1311,8 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
     }
 
   /* Subshells are neither login nor interactive. */
-  login_shell = interactive = 0;
+  login_shell = 0;
+  interactive = false;
 
   /* And we're no longer in a loop. See Posix interp 842 (we are not in the
      "same execution environment"). */
@@ -1326,7 +1327,7 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
     }
   else
     {
-      subshell_environment = 0; /* XXX */
+      subshell_environment = SUBSHELL_NOFLAGS; /* XXX */
       if (asynchronous)
         subshell_environment |= SUBSHELL_ASYNC;
       if (pipe_in != NO_PIPE || pipe_out != NO_PIPE)
@@ -1337,7 +1338,7 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
 
   QUIT;
 
-  reset_terminating_signals (); /* in sig.c */
+  reset_terminating_signals (); /* in sig.cc */
 
   /* Cancel traps, in trap.cc. */
   /* Reset the signal handlers in the child, but don't free the
@@ -3440,9 +3441,6 @@ Shell::execute_cond_node (COND_COM *cond)
       if (ignore)
         comsub_ignore_return--;
 
-      if (arg1 == 0)
-        arg1 = nullptr;
-
       if (ignore)
         comsub_ignore_return++;
       char *arg2 = cond_expand_word (
@@ -3450,9 +3448,6 @@ Shell::execute_cond_node (COND_COM *cond)
           (rmatch && shell_compatibility_level > 31) ? 2 : (patmatch ? 1 : 0));
       if (ignore)
         comsub_ignore_return--;
-
-      if (arg2 == 0)
-        arg2 = nullptr;
 
       if (echo_command_at_execute)
         xtrace_print_cond_term (cond->cond_type, invert, cond->op, arg1, arg2);
@@ -3478,10 +3473,8 @@ Shell::execute_cond_node (COND_COM *cond)
                        : EXECUTION_FAILURE;
           extended_glob = oe;
         }
-      if (arg1 != nullstr)
-        free (arg1);
-      if (arg2 != nullstr)
-        free (arg2);
+      delete[] arg1;
+      delete[] arg2;
     }
   else
     {
@@ -3539,18 +3532,6 @@ Shell::execute_cond_command (COND_COM *cond_command)
 }
 #endif /* COND_COMMAND */
 
-void
-Shell::bind_lastarg (const char *arg)
-{
-  SHELL_VAR *var;
-
-  if (arg == 0)
-    arg = "";
-  var = bind_variable ("_", arg, 0);
-  if (var)
-    VUNSETATTR (var, att_exported);
-}
-
 /* Execute a null command.  Fork a subshell if the command uses pipes or is
    to be run asynchronously.  This handles all the side effects that are
    supposed to take place. */
@@ -3565,8 +3546,8 @@ Shell::execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out,
     {
       forcefork |= rd->rflags & REDIR_VARASSIGN;
       /* Safety */
-      forcefork |= (rd->redirector.dest == 0
-                    || fd_is_bash_input (rd->redirector.dest))
+      forcefork |= (rd->redirector.r.dest == 0
+                    || fd_is_bash_input (rd->redirector.r.dest))
                    && (INPUT_REDIRECT (rd->instruction)
                        || TRANSLATE_REDIRECT (rd->instruction)
                        || rd->instruction == r_close_this);
@@ -3590,7 +3571,7 @@ Shell::execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out,
 
           interactive = false; /* XXX */
 
-          subshell_environment = 0;
+          subshell_environment = SUBSHELL_NOFLAGS;
 
           if (async)
             subshell_environment |= SUBSHELL_ASYNC;
@@ -3777,8 +3758,8 @@ Shell::check_command_builtin (WORD_LIST *words, int *typep)
 
 /* Return 1 if the file found by searching $PATH for PATHNAME, defaulting
    to PATHNAME, is a directory.  Used by the autocd code below. */
-static bool
-is_dirname (const char *pathname)
+bool
+Shell::is_dirname (const char *pathname)
 {
   char *temp;
   int ret;
@@ -3812,16 +3793,10 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
   command_string_index = 0;
   print_simple_command (simple_command);
 
-#if 0
-  if (signal_in_progress (DEBUG_TRAP) == 0 && (this_command_name == 0 || (STREQ (this_command_name, "trap") == 0)))
-#else
-  if (signal_in_progress (DEBUG_TRAP) == 0 && running_trap == 0)
-#endif
-  {
-    FREE (the_printed_command_except_trap);
-    the_printed_command_except_trap
-        = the_printed_command ? savestring (the_printed_command) : (char *)0;
-  }
+  if (!signal_in_progress (DEBUG_TRAP) && running_trap == 0)
+    {
+      the_printed_command_except_trap = the_printed_command;
+    }
 
   /* Run the debug trap before each simple command, but do it after we
      update the line number information. */
@@ -3854,9 +3829,9 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
      the shell to fork here. */
   if (dofork && pipe_in == NO_PIPE && pipe_out == NO_PIPE
       && simple_command->words && simple_command->words->word
-      && simple_command->words->word->word
+      && !simple_command->words->word->word.empty ()
       && (simple_command->words->word->word[0] == '%'))
-    dofork = 0;
+    dofork = false;
 
   if (dofork)
     {
@@ -3868,10 +3843,8 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
 
       /* Don't let a DEBUG trap overwrite the command string to be saved with
          the process/job associated with this child. */
-      int fork_flags = async ? FORK_ASYNC : 0;
-      if (make_child (p = savestring (the_printed_command_except_trap),
-                      fork_flags)
-          == 0)
+      make_child_flags fork_flags = async ? FORK_ASYNC : FORK_SYNC;
+      if (make_child (the_printed_command_except_trap, fork_flags) == 0)
         {
           already_forked = true;
           cmdflags |= CMD_NO_FORK;
@@ -3889,7 +3862,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
              pathological cases where one of the pipe file descriptors
              is < 2. */
           if (fds_to_close)
-            close_fd_bitmap (fds_to_close);
+            close_fd_bitmap (*fds_to_close);
 
           /* If we fork because of an input pipe, note input pipe for later to
              inhibit async commands from redirecting stdin from /dev/null */
@@ -3905,10 +3878,6 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
 
           if (async)
             subshell_level++; /* not for pipes yet */
-
-#if defined(JOB_CONTROL)
-          FREE (p); /* child doesn't use pointer */
-#endif
         }
       else
         {
@@ -3941,7 +3910,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
       if (cmdflags & CMD_IGNORE_RETURN)
         comsub_ignore_return--;
 
-      current_fds_to_close = (struct fd_bitmap *)NULL;
+      current_fds_to_close = nullptr;
     }
   else
     words = copy_word_list (simple_command->words);
@@ -3949,9 +3918,9 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
   /* It is possible for WORDS not to have anything left in it.
      Perhaps all the words consisted of `$foo', and there was
      no variable `$foo'. */
-  if (words == 0)
+  if (words == nullptr)
     {
-      this_command_name = 0;
+      this_command_name = nullptr;
       result = execute_null_command (simple_command->redirects, pipe_in,
                                      pipe_out, already_forked ? 0 : async);
       if (already_forked)
@@ -3996,15 +3965,10 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
         func = find_function (words->word->word);
     }
 
-    /* In POSIX mode, assignment errors in the temporary environment cause a
-       non-interactive shell to exit. */
-#if 1
+  /* In POSIX mode, assignment errors in the temporary environment cause a
+     non-interactive shell to exit. */
   if (posixly_correct && builtin_is_special && !interactive_shell
       && tempenv_assign_error)
-#else
-  /* This is for strict posix conformance. */
-  if (posixly_correct && interactive_shell == 0 && tempenv_assign_error)
-#endif
     {
       last_command_exit_value = EXECUTION_FAILURE;
       throw bash_exception (ERREXIT);
@@ -4116,7 +4080,7 @@ run_builtin:
      set builtin_is_special.  If this is a function or builtin, and we
      have pipes, then fork a subshell in here.  Otherwise, just execute
      the command directly. */
-  if (func == 0 && builtin == 0)
+  if (func == nullptr && builtin == nullptr)
     builtin = find_shell_builtin (this_command_name);
 
   last_shell_builtin = this_shell_builtin;
@@ -4188,7 +4152,7 @@ run_builtin:
                       /* XXX - experimental */
                       executing_builtin = old_builtin;
                       executing_command_builtin = old_command_builtin;
-                      builtin = 0;
+                      builtin = nullptr;
                       /* XXX - redirections will have to be performed again */
                       goto execute_from_filesystem;
                     }
@@ -4230,16 +4194,14 @@ run_builtin:
 
 execute_from_filesystem:
 
-  if (command_line == 0)
-    command_line = savestring (the_printed_command_except_trap
-                                   ? the_printed_command_except_trap
-                                   : "");
+  if (command_line == nullptr)
+    command_line = savestring (the_printed_command_except_trap);
 
 #if defined(PROCESS_SUBSTITUTION)
   /* The old code did not test already_forked and only did this if
-     subshell_environment&SUBSHELL_COMSUB != 0 (comsubs and procsubs). Other
+     subshell_environment & SUBSHELL_COMSUB != 0 (comsubs and procsubs). Other
      uses of the no-fork optimization left FIFOs in $TMPDIR */
-  if (already_forked == 0 && (cmdflags & CMD_NO_FORK) && fifos_pending () > 0)
+  if (!already_forked && (cmdflags & CMD_NO_FORK) && fifos_pending () > 0)
     cmdflags &= ~CMD_NO_FORK;
 #endif
   result = execute_disk_command (words, simple_command->redirects,
@@ -4291,7 +4253,7 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
                         bool subshell)
 {
   bool eval_unwind, ignexit_flag;
-  char *error_trap = 0;
+  char *error_trap = nullptr;
 
   /* The eval builtin calls parse_and_execute, which does not know about
      the setting of flags, and always calls the execution functions with
@@ -4392,7 +4354,7 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
       sourcenest++; /* execute_subshell_builtin_or_function sets this to 0 */
     }
 
-  /* `return' does a longjmp() back to a saved environment in execute_function.
+  /* `return' does a throw to a saved environment in execute_function.
      If a variable assignment list preceded the command, and the shell is
      running in POSIX mode, we need to merge that into the shell_variables
      table, since `return' is a POSIX special builtin. We don't do this if
@@ -4412,7 +4374,7 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
 
   /* This shouldn't happen, but in case `return' comes back instead of
      longjmp'ing, we need to unwind. */
-  if (posixly_correct && !subshell && builtin == return_builtin
+  if (posixly_correct && !subshell && builtin == &Shell::return_builtin
       && temporary_env)
     discard_unwind_frame ("return_temp_env");
 
@@ -4426,7 +4388,7 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
       if (error_trap)
         {
           set_error_trap (error_trap);
-          free (error_trap);
+          delete[] error_trap;
         }
       discard_unwind_frame ("eval_builtin");
     }
@@ -4434,6 +4396,7 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
   return result;
 }
 
+#if 0
 void
 Shell::maybe_restore_getopt_state (void *arg)
 {
@@ -4467,6 +4430,7 @@ restore_funcarray_state (void *arg)
   free (fa);
 }
 #endif
+#endif
 
 int
 Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
@@ -4482,7 +4446,7 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   if (funcnest_max > 0 && funcnest >= funcnest_max)
     {
       internal_error (_ ("%s: maximum function nesting level exceeded (%d)"),
-                      var->name, funcnest);
+                      var->name ().c_str (), funcnest);
       funcnest = 0; /* XXX - should we reset it somewhere else? */
       throw bash_exception (DISCARD);
     }
@@ -4552,7 +4516,7 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
 
   /* function_trace_mode != 0 means that all functions inherit the DEBUG trap.
      if the function has the trace attribute set, it inherits the DEBUG trap */
-  if (debug_trap && ((trace_p (var) == 0) && function_trace_mode == 0))
+  if (debug_trap && (!var->trace () && function_trace_mode == 0))
     {
       if (!subshell)
         {
@@ -4795,7 +4759,7 @@ Shell::execute_subshell_builtin_or_function (
   set_sigint_handler ();
 
   if (fds_to_close)
-    close_fd_bitmap (fds_to_close);
+    close_fd_bitmap (*fds_to_close);
 
   do_piping (pipe_in, pipe_out);
 
@@ -4988,6 +4952,11 @@ setup_async_signals ()
     }
 }
 
+/* Name of a shell function to call when a command name is not found. */
+#ifndef NOTFOUND_HOOK
+#define NOTFOUND_HOOK "command_not_found_handle"
+#endif
+
 /* Execute a simple command that is hopefully defined in a disk file
    somewhere.
 
@@ -5006,15 +4975,9 @@ setup_async_signals ()
    this gnarly hair, for no good reason.
 
    NOTE: callers expect this to fork or exit(). */
-
-/* Name of a shell function to call when a command name is not found. */
-#ifndef NOTFOUND_HOOK
-#define NOTFOUND_HOOK "command_not_found_handle"
-#endif
-
 int
 Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
-                             const char *command_line, int pipe_in,
+                             string_view command_line, int pipe_in,
                              int pipe_out, bool async, fd_bitmap *fds_to_close,
                              int cmdflags)
 {
@@ -5191,7 +5154,7 @@ Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
 /* CPP defines to decide whether a particular index into the #! line
    corresponds to a valid interpreter name or argument character, or
    whitespace.  The MSDOS define is to allow \r to be treated the same
-   as \n. */
+   as \n. This is also useful for OpenVMS. */
 
 #if !defined(MSDOS) && !defined(__VMS)
 #define STRINGCHAR(ind)                                                       \
@@ -5321,8 +5284,6 @@ Shell::initialize_subshell ()
   if (vc_isbltnenv (shell_variables))
     shell_variables = shell_variables->down;
 
-  clear_unwind_protect_list (true); /* fix memory leak? */
-
   /* XXX -- are there other things we should be resetting here? */
   parse_and_execute_level = 0; /* nothing left to restore it */
 
@@ -5336,12 +5297,6 @@ Shell::initialize_subshell ()
   if (!interactive_shell)
     unset_bash_input (0);
 }
-
-#if defined(HAVE_SETOSTYPE) && defined(_POSIX_SOURCE)
-#define SETOSTYPE(x) __setostype (x)
-#else
-#define SETOSTYPE(x)
-#endif
 
 #define HASH_BANG_BUFSIZ 128
 
@@ -5368,11 +5323,9 @@ Shell::shell_execve (char *command, char **args, char **env)
   char sample[HASH_BANG_BUFSIZ];
   int sample_len;
 
-  SETOSTYPE (0); /* Some systems use for USG/POSIX semantics */
   execve (command, args, env);
   i = errno; /* error from execve() */
   CHECK_TERMSIG;
-  SETOSTYPE (1);
 
   /* If we get to this point, then start checking out the file.
      Maybe it is something we can hack ourselves. */
@@ -5503,7 +5456,7 @@ Shell::shell_execve (char *command, char **args, char **env)
       free (subshell_argv);
     }
 
-  dispose_command (currently_executing_command); /* XXX */
+  delete currently_executing_command; /* XXX */
   currently_executing_command = nullptr;
 
   subshell_argc = larray;
@@ -5516,7 +5469,7 @@ Shell::shell_execve (char *command, char **args, char **env)
   clear_fifo_list (); /* pipe fds are what they are now */
 #endif
 
-  sh_longjmp (subshell_top_level, 1);
+  throw bash_exception (FORCE_EOF);
   /*NOTREACHED*/
 }
 

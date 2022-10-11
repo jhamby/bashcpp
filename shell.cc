@@ -1864,7 +1864,7 @@ Shell::show_shell_usage (FILE *fp, bool extra)
       fp);
 
   char *set_opts = nullptr;
-  std::map<string_view, Builtin>::iterator it = shell_builtins.find ("set");
+  std::map<string_view, builtin>::iterator it = shell_builtins.find ("set");
   if (it != shell_builtins.end ())
     set_opts = savestring ((*it).second.short_doc);
 

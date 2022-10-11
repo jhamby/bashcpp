@@ -46,7 +46,7 @@ operator| (const builtin_flags &a, const builtin_flags &b)
                                      | static_cast<uint32_t> (b));
 }
 
-const int BASE_INDENT = 4;
+constexpr int BASE_INDENT = 4;
 
 } // namespace bash
 

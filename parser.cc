@@ -3404,7 +3404,7 @@ got_token:
 
   if (command_token_position (last_read_token))
     {
-      std::map<string_view, Builtin>::iterator it
+      std::map<string_view, builtin>::iterator it
           = shell_builtins.find (token_buffer);
 
       if (it != shell_builtins.end ()

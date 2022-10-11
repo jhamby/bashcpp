@@ -3729,7 +3729,7 @@ protected:
 
   char *pre_process_line (string_view, bool, bool);
 
-  /* Functions declared in execute_cmd.cc, used by many other files */
+  /* Functions declared in execute_cmd.cc */
 
   typedef std::vector<bool> fd_bitmap;
 
@@ -3805,10 +3805,20 @@ protected:
                                              sh_builtin_func_t, SHELL_VAR *,
                                              int, int, bool, fd_bitmap *, int);
 
-  int execute_disk_command (WORD_LIST *, REDIRECT *, const char *, int, int,
+  int execute_disk_command (WORD_LIST *, REDIRECT *, string_view, int, int,
                             bool, fd_bitmap *, int);
 
   void initialize_subshell ();
+
+  void
+  bind_lastarg (string_view arg)
+  {
+    SHELL_VAR *var;
+
+    var = bind_variable ("_", arg, 0);
+    if (var)
+      var->unset_attr (att_exported);
+  }
 
   /* Undo redirections and delete the list. */
   void
@@ -5755,9 +5765,9 @@ protected:
   std::vector<STRING_INT_ALIST> shopt_alist;
 
   /* The thing that we build the map of builtins out of. */
-  struct Builtin
+  struct builtin
   {
-    Builtin (sh_builtin_func_t func_, const char *const *ldoc_,
+    builtin (sh_builtin_func_t func_, const char *const *ldoc_,
              const char *sdoc_, void *h_, builtin_flags flags_)
         : function (func_), long_doc (ldoc_), short_doc (sdoc_), handle (h_),
           flags (flags_)
@@ -5772,7 +5782,7 @@ protected:
   };
 
   // initialized at startup by init method in generated builtins.cc.
-  std::map<string_view, Builtin> shell_builtins;
+  std::map<string_view, builtin> shell_builtins;
 
   // Moved from stringlib.cc for inlining purposes.
 
@@ -5853,7 +5863,7 @@ protected:
   sh_builtin_func_t this_shell_builtin;
   sh_builtin_func_t last_shell_builtin;
 
-  Builtin *current_builtin;
+  builtin *current_builtin;
 
   char *the_current_working_directory;
 

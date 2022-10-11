@@ -60,10 +60,6 @@ dnl
 dnl AM_PATH_LISPDIR
 AC_ARG_VAR(DEBUGGER_START_FILE, [location of bash debugger initialization file])
 
-dnl autoheader support
-AH_TOP([#include "config-top.hh"])
-AH_BOTTOM([#include "config-bot.hh"])
-
 dnl arguments to configure
 dnl packages
 

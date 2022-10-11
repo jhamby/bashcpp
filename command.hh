@@ -220,6 +220,35 @@ enum subshell_flags
   = 0x100 /* subshell should reset trapped signals from trap_handler */
 };
 
+static inline subshell_flags &
+operator|= (subshell_flags &a, const subshell_flags &b)
+{
+  a = static_cast<subshell_flags> (static_cast<uint32_t> (a)
+                                   | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline subshell_flags
+operator| (const subshell_flags &a, const subshell_flags &b)
+{
+  return static_cast<subshell_flags> (static_cast<uint32_t> (a)
+                                      | static_cast<uint32_t> (b));
+}
+
+static inline subshell_flags &
+operator&= (subshell_flags &a, const subshell_flags &b)
+{
+  a = static_cast<subshell_flags> (static_cast<uint32_t> (a)
+                                   & static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline subshell_flags
+operator~(const subshell_flags &a)
+{
+  return static_cast<subshell_flags> (~static_cast<uint32_t> (a));
+}
+
 /* A structure which represents a word. */
 class WORD_DESC
 {

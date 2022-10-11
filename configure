@@ -4351,9 +4351,6 @@ opt_with_posix_spawn=no
 
 
 
-
-
-
 # Check whether --with-curses was given.
 if test ${with_curses+y}
 then :

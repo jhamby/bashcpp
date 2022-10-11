@@ -26,6 +26,9 @@
 
 #include "config.h"
 
+#include "config-top.hh"
+#include "config-bot.hh"
+
 // First, include common C++ wrappers for standard C headers.
 #include <cctype>
 #include <cerrno>

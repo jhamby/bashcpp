@@ -21,6 +21,9 @@
 #if !defined(_BASHTYPES_H_)
 #define _BASHTYPES_H_
 
+#include "config-top.hh"
+#include "config-bot.hh"
+
 #include <sys/types.h>
 
 #if defined(HAVE_INTTYPES_H)

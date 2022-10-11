@@ -110,8 +110,7 @@ Shell::reader_loop ()
             }
           else
             {
-              /* Parse error, maybe discard rest of stream if not interactive.
-               */
+              // Parse error; maybe discard rest of stream if not interactive.
               if (!interactive)
                 EOF_Reached = true;
             }

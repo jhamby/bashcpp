@@ -1,7 +1,5 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include "config-top.hh"
-
 /* Define if you want the alias feature. */
 #undef ALIAS
 
@@ -1389,8 +1387,6 @@
 
 /* Define as `fork' if `vfork' does not work. */
 #undef vfork
-
-#include "config-bot.hh"
 
 
 #define __libc_lock_t                   gl_lock_t
