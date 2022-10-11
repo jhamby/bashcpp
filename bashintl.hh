@@ -21,13 +21,19 @@
 #if !defined(_BASHINTL_H_)
 #define _BASHINTL_H_
 
-#if defined(BUILDTOOL)
-#undef ENABLE_NLS
-#define ENABLE_NLS 0
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+#pragma clang diagnostic ignored "-Wvla-extension"
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
 #endif
 
 /* Include this *after* config.h */
-#include "gettext.hh"
+#include "gettext.h"
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 #include <clocale>
 

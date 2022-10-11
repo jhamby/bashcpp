@@ -391,44 +391,6 @@ m4_include([m4/bash-rules.m4])
 m4_include([m4/stat-time.m4])
 m4_include([m4/timespec.m4])
 
-m4_include([m4/strtoimax.m4])
-
-dnl include files for gettext
-
-m4_include([m4/codeset.m4])
-m4_include([m4/extern-inline.m4])
-m4_include([m4/fcntl-o.m4])
-m4_include([m4/glibc2.m4])
-m4_include([m4/glibc21.m4])
-m4_include([m4/host-cpu-c-abi.m4])
-m4_include([m4/intdiv0.m4])
-m4_include([m4/intl.m4])
-m4_include([m4/intlmacosx.m4])
-m4_include([m4/intldir.m4])
-m4_include([m4/intmax.m4])
-m4_include([m4/inttypes-pri.m4])
-m4_include([m4/inttypes.m4])
-m4_include([m4/inttypes_h.m4])
-m4_include([m4/lcmessage.m4])
-m4_include([m4/lib-ld.m4])
-m4_include([m4/lib-link.m4])
-m4_include([m4/lib-prefix.m4])
-m4_include([m4/lock.m4])
-m4_include([m4/nls.m4])
-m4_include([m4/po.m4])
-m4_include([m4/printf-posix.m4])
-m4_include([m4/progtest.m4])
-m4_include([m4/pthread_rwlock_rdlock.m4])
-m4_include([m4/size_max.m4])
-m4_include([m4/stdint_h.m4])
-m4_include([m4/threadlib.m4])
-m4_include([m4/uintmax_t.m4])
-m4_include([m4/ulonglong.m4])
-m4_include([m4/visibility.m4])
-m4_include([m4/wchar_t.m4])
-m4_include([m4/wint_t.m4])
-m4_include([m4/xsize.m4])
-
 dnl Turn on any extensions available in the GNU C library.
 AC_DEFINE([_GNU_SOURCE], [1], [Enable any available GNU C library extensions.])
 
@@ -480,7 +442,10 @@ AC_CHECK_MEMBERS([struct stat.st_rdev])
 AC_CHECK_DECLS([sys_siglist])
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
+AC_TYPE_INT32_T
+AC_TYPE_INT64_T
 AC_CHECK_TYPES([ptrdiff_t])
 
 # Checks for library functions.
@@ -494,12 +459,12 @@ AC_FUNC_MMAP
 AC_FUNC_REALLOC
 AC_FUNC_STRCOLL
 AC_FUNC_STRNLEN
-AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf eaccess getaddrinfo \
-		getcwd getdtablesize fnmatch getentropy getgroups gethostbyname \
+AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf eaccess fchdir ftruncate \
+		getaddrinfo getcwd getdtablesize fnmatch getentropy getgroups gethostbyname \
 		gethostname getpeername getpwent getpwnam getpwuid \
 		getrandom getrlimit getrusage getservbyname getservent \
 		gettimeofday group_member imaxdiv inet_aton isascii kill killpg \
-		localeconv localtime_r lstat mbschr mbsnrtowcs mkdir mkdtemp \
+		localeconv localtime_r lstat mblen mbrlen mbschr mbsnrtowcs mkdir mkdtemp \
 		mkfifo mkstemp mmap nl_langinfo pathconf posix_spawn \
 		posix_spawn_file_actions_init posix_spawnattr_init pselect putenv random \
 		readlink regcomp regexec rename select setdtablesize setenv setitimer \
@@ -690,6 +655,6 @@ AC_SUBST(build_cpu)
 AC_SUBST(build_vendor)
 AC_SUBST(build_os)
 
-AC_CONFIG_FILES([Makefile intl/Makefile doc/Makefile po/Makefile.in \
+AC_CONFIG_FILES([Makefile doc/Makefile po/Makefile.in \
 		 pathnames.hh support/bash.pc support/bashbug.sh])
 AC_OUTPUT
