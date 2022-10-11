@@ -1,4 +1,4 @@
-/* util.c -- readline utility functions */
+/* util.cc -- readline utility functions */
 
 /* Copyright (C) 1987-2017 Free Software Foundation, Inc.
 

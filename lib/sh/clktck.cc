@@ -1,4 +1,4 @@
-/* clktck.c - get the value of CLK_TCK. */
+/* clktck.cc - get the value of CLK_TCK. */
 
 /* Copyright (C) 1997 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "externs.hh"

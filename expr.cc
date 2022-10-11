@@ -1,4 +1,4 @@
-/* expr.c -- arithmetic expression evaluation. */
+/* expr.cc -- arithmetic expression evaluation. */
 
 /* Copyright (C) 1990-2020 Free Software Foundation, Inc.
 
@@ -66,7 +66,7 @@
  chet@po.cwru.edu
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

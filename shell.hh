@@ -1,4 +1,4 @@
-/* shell.h -- The data structures used by the shell */
+/* shell.hh -- The data structures used by the shell */
 
 /* Copyright (C) 1993-2020 Free Software Foundation, Inc.
 
@@ -20,8 +20,6 @@
 
 #if !defined(_SHELL_H_)
 #define _SHELL_H_
-
-#include "config.hh"
 
 #include "bashtypes.hh"
 #include "chartypes.hh"
@@ -712,7 +710,8 @@ protected:
   /* The number of shift states for this locale. */
   int locale_shiftstates;
 
-  int subshell_environment;
+  subshell_flags subshell_environment;
+
   int shell_compatibility_level;
 
   /* The number of commands executed so far. */
@@ -3076,10 +3075,10 @@ protected:
   int job_exit_signal (int);
 
   int wait_for_single_pid (pid_t, int);
-  void wait_for_background_pids (procstat *);
+  void wait_for_background_pids (procstat_t *);
   int wait_for (pid_t, int);
-  int wait_for_job (int, int, procstat *);
-  int wait_for_any_job (int, procstat *);
+  int wait_for_job (int, int, procstat_t *);
+  int wait_for_any_job (int, procstat_t *);
 
   void wait_sigint_cleanup ();
 
@@ -3129,7 +3128,7 @@ protected:
   PROCESS *find_pipeline (pid_t, int, int *);
   PROCESS *find_process (pid_t, int, int *);
 
-  string_view current_working_directory ();
+  const char *current_working_directory ();
   char *job_working_directory ();
   char *j_strsignal (int);
   string_view printable_job_status (int, PROCESS *, int);
@@ -3179,12 +3178,12 @@ protected:
   void pshash_delindex (ps_index_t);
 
   /* Saved background process status management */
-  struct pidstat *bgp_add (pid_t, int);
+  pidstat_t *bgp_add (pid_t, int);
   int bgp_delete (pid_t);
   void bgp_clear ();
   int bgp_search (pid_t);
 
-  struct pipeline_saver *alloc_pipeline_saver ();
+  pipeline_saver *alloc_pipeline_saver ();
 
   ps_index_t bgp_getindex ();
   void bgp_resize (); /* XXX */
@@ -5799,7 +5798,7 @@ protected:
 
   //  ps_index_t *pidstat_table;	// FIXME: what type is this
 
-  bgpids bgpids_;
+  bgpids_t bgpids;
 
   procchain procsubs;
 

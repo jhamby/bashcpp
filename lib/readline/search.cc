@@ -1,4 +1,4 @@
-/* search.c - code for non-incremental searching in emacs and vi modes. */
+/* search.cc - code for non-incremental searching in emacs and vi modes. */
 
 /* Copyright (C) 1992-2022 Free Software Foundation, Inc.
 

@@ -1,4 +1,4 @@
-/* pcomplete.c - functions to generate lists of matches for programmable
+/* pcomplete.cc - functions to generate lists of matches for programmable
  * completion. */
 
 /* Copyright (C) 1999-2021 Free Software Foundation, Inc.
@@ -19,7 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(PROGRAMMABLE_COMPLETION)
 

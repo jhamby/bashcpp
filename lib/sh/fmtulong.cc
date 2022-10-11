@@ -1,4 +1,4 @@
-/* fmtulong.c -- Convert unsigned long int to string. */
+/* fmtulong.cc -- Convert unsigned long int to string. */
 
 /* Copyright (C) 1998-2011 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

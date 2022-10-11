@@ -1,4 +1,4 @@
-/* nls.c -- skeletal internationalization code. */
+/* nls.cc -- skeletal internationalization code. */
 
 /* Copyright (C) 1996-2022 Free Software Foundation, Inc.
 

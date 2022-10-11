@@ -24,7 +24,7 @@
    binary operators. */
 /* #define PATTERN_MATCHING */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

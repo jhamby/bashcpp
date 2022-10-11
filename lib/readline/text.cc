@@ -1,4 +1,4 @@
-/* text.c -- text handling commands for readline. */
+/* text.cc -- text handling commands for readline. */
 
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 

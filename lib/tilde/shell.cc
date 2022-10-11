@@ -1,4 +1,4 @@
-/* shell.c -- tilde utility functions that are normally provided by
+/* lib/tilde/shell.cc -- tilde utility functions that are normally provided by
               bash when readline is linked as part of the shell. */
 
 /* Copyright (C) 1998-2017 Free Software Foundation, Inc.
@@ -20,7 +20,8 @@
    <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
+
 #include "general.hh"
 
 #if defined(HAVE_UNISTD_H)

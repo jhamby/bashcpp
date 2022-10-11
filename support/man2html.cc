@@ -63,7 +63,7 @@
  *    time to look through all the available manpages.)
  */
 
-#include "config.hh"
+#include "config.h"
 
 #define NROFF 0
 

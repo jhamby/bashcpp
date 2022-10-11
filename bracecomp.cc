@@ -1,4 +1,4 @@
-/* bracecomp.c -- Complete a filename with the possible completions enclosed
+/* bracecomp.cc -- Complete a filename with the possible completions enclosed
    in csh-style braces such that the list of completions is available to the
    shell. */
 
@@ -22,7 +22,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(BRACE_EXPANSION) && defined(READLINE)
 

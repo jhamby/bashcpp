@@ -39,7 +39,7 @@
 // defined.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(ALIAS)
 

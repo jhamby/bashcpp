@@ -1,4 +1,4 @@
-/* oslib.c - functions present only in some unix versions. */
+/* oslib.cc - functions present only in some unix versions. */
 
 /* Copyright (C) 1995,2010 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

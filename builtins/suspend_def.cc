@@ -34,7 +34,7 @@
 // Returns success unless job control is not enabled or an error occurs.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(JOB_CONTROL)
 

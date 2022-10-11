@@ -1,4 +1,4 @@
-/* casemod.c -- functions to change case of strings */
+/* casemod.cc -- functions to change case of strings */
 
 /* Copyright (C) 2008-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

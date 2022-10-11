@@ -1,4 +1,4 @@
-/* winsize.c - handle window size changes and information. */
+/* winsize.cc - handle window size changes and information. */
 
 /* Copyright (C) 2005-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

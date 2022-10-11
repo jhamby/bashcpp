@@ -1,4 +1,4 @@
-/* input.c -- character input functions for readline. */
+/* input.cc -- character input functions for readline. */
 
 /* Copyright (C) 1994-2017 Free Software Foundation, Inc.
 

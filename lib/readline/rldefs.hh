@@ -24,7 +24,7 @@
 #if !defined(_RLDEFS_H_)
 #define _RLDEFS_H_
 
-#include "config.hh"
+#include "config.h"
 
 // First, include common C++ wrappers for standard C headers.
 #include <cctype>

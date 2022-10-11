@@ -1,7 +1,7 @@
 /*
  * perl builtin
  */
-#include "config.hh"
+#include "config.h"
 
 #include <fcntl.h>
 

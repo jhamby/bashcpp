@@ -1,4 +1,4 @@
-/* eval.c -- reading and evaluating commands. */
+/* eval.cc -- reading and evaluating commands. */
 
 /* Copyright (C) 1996-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

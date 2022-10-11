@@ -1,4 +1,4 @@
-/* fpurge - Flushing buffers of a FILE stream. */
+/* fpurge.cc - Flushing buffers of a FILE stream. */
 
 /* Copyright (C) 2007-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include <cstdio>
 

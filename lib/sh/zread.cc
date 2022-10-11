@@ -1,4 +1,4 @@
-/* zread - read data from file descriptor into buffer with retries */
+/* zread.cc - read data from file descriptor into buffer with retries */
 
 /* Copyright (C) 1999-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include <sys/types.h>
 

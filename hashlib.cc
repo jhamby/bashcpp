@@ -1,4 +1,4 @@
-/* hashlib.c -- functions to manage and access hash tables for bash. */
+/* hashlib.cc -- functions to manage and access hash tables for bash. */
 
 /* Copyright (C) 1987,1989,1991,1995,1998,2001,2003,2005,2006,2008,2009 Free
    Software Foundation, Inc.
@@ -19,7 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

@@ -1,4 +1,4 @@
-/* signames.c -- Create an array of signal names. */
+/* signames.cc -- Create an array of signal names. */
 
 /* Copyright (C) 2006-2021 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh" // for nullptr in C++03
 

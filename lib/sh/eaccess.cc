@@ -1,5 +1,4 @@
-/* eaccess.c - eaccess replacement for the shell, plus other access functions.
- */
+// eaccess.cc - eaccess replacement for the shell, plus other access functions.
 
 /* Copyright (C) 2006-2020 Free Software Foundation, Inc.
 
@@ -19,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include <cstdio>
 #include <cstring>

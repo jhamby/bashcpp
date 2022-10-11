@@ -41,7 +41,7 @@
 // Returns success unless PATTERN is not found or an invalid option is given.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HELP_BUILTIN)
 

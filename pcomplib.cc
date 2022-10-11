@@ -1,4 +1,4 @@
-/* pcomplib.c - library functions for programmable completion. */
+/* pcomplib.cc - library functions for programmable completion. */
 
 /* Copyright (C) 1999-2021 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(PROGRAMMABLE_COMPLETION)
 

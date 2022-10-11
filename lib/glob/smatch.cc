@@ -1,4 +1,4 @@
-/* strmatch.c -- ksh-like extended pattern matching for the shell and filename
+/* smatch.cc -- ksh-like extended pattern matching for the shell and filename
                 globbing. */
 
 /* Copyright (C) 1991-2020 Free Software Foundation, Inc.
@@ -19,7 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include <cstdio> /* for debugging */
 #include <cstdlib>

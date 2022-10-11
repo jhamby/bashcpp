@@ -26,7 +26,7 @@
 %define api.namespace {bash}
 
 %{
-#include "config.hh"
+#include "config.h"
 #include "shell.hh"
 
 static inline bash::parser::symbol_type

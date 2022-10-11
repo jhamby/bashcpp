@@ -1,4 +1,4 @@
-/* complete.c -- filename completion for readline. */
+/* complete.cc -- filename completion for readline. */
 
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 

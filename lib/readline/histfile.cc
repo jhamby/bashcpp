@@ -1,4 +1,4 @@
-/* histfile.c - functions to manipulate the history file. */
+/* histfile.cc - functions to manipulate the history file. */
 
 /* Copyright (C) 1989-2019 Free Software Foundation, Inc.
 

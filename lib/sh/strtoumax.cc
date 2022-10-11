@@ -1,5 +1,5 @@
-/* strtoumax - convert string representation of a number into an uint64_t
- * value. */
+// strtoumax - convert string representation of a number into an uint64_t
+// value.
 
 /* Copyright 1999-2020 Free Software Foundation, Inc.
 
@@ -21,7 +21,7 @@
 
 /* Written by Paul Eggert.  Modified by Chet Ramey for Bash. */
 
-#include "config.hh"
+#include "config.h"
 
 #if !defined(HAVE_STRTOUMAX)
 

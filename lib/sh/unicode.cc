@@ -1,4 +1,4 @@
-/* unicode.c - functions to convert unicode characters */
+/* unicode.cc - functions to convert unicode characters */
 
 /* Copyright (C) 2010-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HANDLE_MULTIBYTE)
 

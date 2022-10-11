@@ -1,6 +1,4 @@
-/*
- * shmatch.c -- shell interface to posix regular expression matching.
- */
+// shmatch.cc -- shell interface to posix regular expression matching.
 
 /* Copyright (C) 2003-2022 Free Software Foundation, Inc.
 
@@ -20,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_POSIX_REGEXP)
 

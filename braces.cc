@@ -1,4 +1,4 @@
-/* braces.c -- code for doing word expansion in curly braces. */
+/* braces.cc -- code for doing word expansion in curly braces. */
 
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
@@ -20,7 +20,7 @@
 
 /* Stuff in curly braces gets expanded before all other shell expansions. */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(BRACE_EXPANSION)
 

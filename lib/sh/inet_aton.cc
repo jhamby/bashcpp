@@ -1,4 +1,4 @@
-/* inet_aton - convert string to numeric IP address */
+/* inet_aton.cc - convert string to numeric IP address */
 
 /* Snagged from GNU C library, version 2.0.3. */
 
@@ -63,7 +63,7 @@ static char rcsid[]
     = "$Id: inet_addr.c,v 1.5 1996/08/14 03:48:37 drepper Exp $";
 #endif /* LIBC_SCCS and not lint */
 
-#include "config.hh"
+#include "config.h"
 
 #if !defined(HAVE_INET_ATON) && defined(HAVE_NETWORK)                         \
     && defined(HAVE_NETINET_IN_H) && defined(HAVE_ARPA_INET_H)

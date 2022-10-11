@@ -1,5 +1,5 @@
 /*
- * mksyntax.c - construct shell syntax table for fast char attribute lookup.
+ * mksyntax.cc - construct shell syntax table for fast char attribute lookup.
  */
 
 /* Copyright (C) 2000-2009 Free Software Foundation, Inc.
@@ -20,7 +20,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include <cerrno>
 #include <cstdio>
@@ -74,7 +74,7 @@ static const char preamble[] = "\
 \n";
 
 static const char includes[] = "\
-#include \"config.hh\"\n\
+#include \"config.h\"\n\
 #include \"syntax.hh\"\n\
 #include \"shell.hh\"\n\n\
 namespace bash {\n\n";

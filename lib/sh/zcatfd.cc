@@ -1,4 +1,4 @@
-/* zcatfd - copy contents of file descriptor to another */
+/* zcatfd.cc - copy contents of file descriptor to another */
 
 /* Copyright (C) 2002-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include <sys/types.h>
 

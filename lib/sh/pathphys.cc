@@ -1,4 +1,4 @@
-/* pathphys.c -- return pathname with all symlinks expanded. */
+/* pathphys.cc -- return pathname with all symlinks expanded. */
 
 /* Copyright (C) 2000-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "chartypes.hh"

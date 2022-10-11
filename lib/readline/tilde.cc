@@ -1,4 +1,4 @@
-/* tilde.c -- Tilde expansion code (~/foo := $HOME/foo). */
+/* tilde.cc -- Tilde expansion code (~/foo := $HOME/foo). */
 
 /* Copyright (C) 1988-2020 Free Software Foundation, Inc.
 

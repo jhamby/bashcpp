@@ -1,4 +1,4 @@
-/* kill.c -- kill ring management. */
+/* kill.cc -- kill ring management. */
 
 /* Copyright (C) 1994-2020 Free Software Foundation, Inc.
 

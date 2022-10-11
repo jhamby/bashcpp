@@ -49,7 +49,7 @@
 // FILENAME cannot be read.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "filecntl.hh"

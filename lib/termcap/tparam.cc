@@ -1,4 +1,4 @@
-/* tparam.c - merge parameters into a termcap entry string. */
+/* tparam.cc - merge parameters into a termcap entry string. */
 
 /* Copyright (C) 1985, 1986, 1993,1994, 1995, 1998,
    2001,2003,2005,2006,2008,2009 Free Software Foundation, Inc.
@@ -20,7 +20,7 @@
 */
 
 /* Emacs config.h may rename various library functions such as malloc.  */
-#include "config.hh"
+#include "config.h"
 
 #ifdef HAVE_STDLIB_H
 #include <cstdlib>

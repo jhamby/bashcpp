@@ -1,4 +1,4 @@
-/* version.c - termcap library version information. */
+/* version.cc - termcap library version information. */
 
 /* Copyright (C) 1985-2009 Free Software Foundation, Inc.
 

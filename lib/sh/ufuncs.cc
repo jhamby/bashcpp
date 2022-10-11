@@ -1,4 +1,4 @@
-/* ufuncs - sleep and alarm functions that understand fractional values */
+/* ufuncs.cc - sleep and alarm functions that understand fractional values */
 
 /* Copyright (C) 2008,2009-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

@@ -1,4 +1,4 @@
-/* config.hh.in.  Generated from configure.ac by autoheader.  */
+/* config.h.in.  Generated from configure.ac by autoheader.  */
 
 #include "config-top.hh"
 

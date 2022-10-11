@@ -39,7 +39,7 @@
 // Returns success unless COMMAND is not found or a redirection error occurs.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "posixstat.hh"

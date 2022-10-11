@@ -1,4 +1,4 @@
-/* zmapfd - read contents of file descriptor into a newly-allocated buffer */
+/* zmapfd.cc - read contents of file descriptor into a newly-allocated buffer */
 
 /* Copyright (C) 2006-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include <sys/types.h>
 

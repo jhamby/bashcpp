@@ -39,7 +39,7 @@
 // given or OPTNAME is disabled.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

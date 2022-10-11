@@ -23,7 +23,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include <sys/types.h>
 #ifdef MAJOR_IN_MKDEV

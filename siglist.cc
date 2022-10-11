@@ -1,4 +1,4 @@
-/* siglist.c -- signal list for those machines that don't have one. */
+/* siglist.cc -- signal list for those machines that don't have one. */
 
 /* Copyright (C) 1989-2009 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if !defined(HAVE_SYS_SIGLIST) && !defined(HAVE_UNDER_SYS_SIGLIST)            \
     && !defined(HAVE_STRSIGNAL)

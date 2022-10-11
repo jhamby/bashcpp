@@ -1,4 +1,4 @@
-/* makepath.c - glue PATH and DIR together into a full pathname. */
+/* makepath.cc - glue PATH and DIR together into a full pathname. */
 
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

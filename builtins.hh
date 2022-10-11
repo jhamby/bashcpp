@@ -1,4 +1,4 @@
-/* builtins.h -- What a builtin looks like, and where to find them. */
+/* builtins.hh -- What a builtin looks like, and where to find them. */
 
 /* Copyright (C) 1987-2009 Free Software Foundation, Inc.
 
@@ -20,8 +20,6 @@
 
 #ifndef BUILTINS_H
 #define BUILTINS_H
-
-#include "config.hh"
 
 #include "bashtypes.hh"
 

@@ -1,4 +1,4 @@
-/* shquote - functions to quote and dequote strings */
+/* shquote.cc - functions to quote and dequote strings */
 
 /* Copyright (C) 1999-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

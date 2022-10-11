@@ -32,7 +32,7 @@
 // Status of command placed in foreground, or failure if an error occurs.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

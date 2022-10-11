@@ -1,4 +1,4 @@
-/* alias.c -- Not a full alias, but just the kind that we use in the
+/* alias.cc -- Not a full alias, but just the kind that we use in the
    shell.  Csh style alias is somewhere else (`over there, in a box'). */
 
 /* Copyright (C) 1987-2021 Free Software Foundation, Inc.
@@ -19,7 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(ALIAS)
 

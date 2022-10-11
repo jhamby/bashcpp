@@ -42,7 +42,7 @@
 // Returns success unless an invalid option is given or an error occurs.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include <cerrno>
 #include <cstdio>

@@ -1,4 +1,4 @@
-/* hashcmd.c - functions for managing a hash table mapping command names to
+/* hashcmd.cc - functions for managing a hash table mapping command names to
                full pathnames. */
 
 /* Copyright (C) 1997-2021 Free Software Foundation, Inc.
@@ -19,14 +19,14 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
-
-#include "bashtypes.hh"
-#include "posixstat.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
+
+#include "bashtypes.hh"
+#include "posixstat.hh"
 
 #include "findcmd.hh"
 #include "flags.hh"

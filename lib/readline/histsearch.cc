@@ -1,4 +1,4 @@
-/* histsearch.c -- searching the history list. */
+/* histsearch.cc -- searching the history list. */
 
 /* Copyright (C) 1989, 1992-2009,2017 Free Software Foundation, Inc.
 
@@ -18,8 +18,6 @@
    You should have received a copy of the GNU General Public License
    along with History.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#include "config.hh"
 
 #include "history.hh"
 

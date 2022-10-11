@@ -146,7 +146,7 @@ DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(SHELL) $(top_srcdir)/support/mkinstalldirs
-CONFIG_HEADER = config.hh
+CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = intl/Makefile doc/Makefile pathnames.hh \
 	support/bash.pc support/bashbug.sh
 CONFIG_CLEAN_VPATH_FILES =
@@ -556,7 +556,7 @@ am__recursive_targets = \
 AM_RECURSIVE_TARGETS = $(am__recursive_targets:-recursive=) TAGS CTAGS \
 	cscope distdir distdir-am dist dist-all distcheck
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP) \
-	config.hh.in
+	config.h.in
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
 # *not* preserved.
@@ -574,7 +574,7 @@ am__define_uniq_tagged_files = \
     if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
   done | $(am__uniquify_input)`
 DIST_SUBDIRS = $(SUBDIRS)
-am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.hh.in \
+am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/pathnames.hh.in $(top_srcdir)/doc/Makefile.in \
 	$(top_srcdir)/intl/Makefile.in \
 	$(top_srcdir)/support/bash.pc.in \
@@ -831,7 +831,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ACLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = --install -I m4
 RLDIR = lib/readline
 SHDIR = lib/sh
 TLDIR = lib/tilde
@@ -944,7 +944,7 @@ DIRECTDEFINE = -D $(srcdir)
 CLEANFILES = builtins.cc builtext.hh pipesize.hh psize.aux version.hh signames.hh
 Program = bash$(EXEEXT)
 Version = @BASHVERS@
-all: config.hh
+all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
@@ -983,20 +983,20 @@ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
 
-config.hh: stamp-h1
+config.h: stamp-h1
 	@test -f $@ || rm -f stamp-h1
 	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) stamp-h1
 
-stamp-h1: $(srcdir)/config.hh.in $(top_builddir)/config.status
+stamp-h1: $(srcdir)/config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h1
-	cd $(top_builddir) && $(SHELL) ./config.status config.hh
-$(srcdir)/config.hh.in:  $(am__configure_deps) 
+	cd $(top_builddir) && $(SHELL) ./config.status config.h
+$(srcdir)/config.h.in:  $(am__configure_deps) 
 	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
 	rm -f stamp-h1
 	touch $@
 
 distclean-hdr:
-	-rm -f config.hh stamp-h1
+	-rm -f config.h stamp-h1
 intl/Makefile: $(top_builddir)/config.status $(top_srcdir)/intl/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 doc/Makefile: $(top_builddir)/config.status $(top_srcdir)/doc/Makefile.in
@@ -1962,7 +1962,7 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(PROGRAMS) config.hh
+all-am: Makefile $(PROGRAMS) config.h
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(bindir)"; do \
@@ -2521,11 +2521,11 @@ builtins/common.$(OBJEXT): builtext.hh
 builtins/declare_def.$(OBJEXT): builtext.hh
 builtins/evalstring.$(OBJEXT): builtext.hh
 builtins/exit_def.$(OBJEXT): builtext.hh
-builtins/mkbuiltins.$(OBJEXT): config.hh
+builtins/mkbuiltins.$(OBJEXT): config.h
 builtins/pushd_def.$(OBJEXT): builtext.hh
 builtins/shopt_def.$(OBJEXT): version.hh
 builtins/ulimit_def.$(OBJEXT): pipesize.hh
-builtins/psize.$(OBJEXT): config.hh
+builtins/psize.$(OBJEXT): config.h
 bashline.$(OBJEXT): builtext.hh
 execute_cmd.$(OBJEXT): builtext.hh
 jobs.$(OBJEXT): builtext.hh
@@ -2538,8 +2538,8 @@ $(srcdir)/shell.hh: parse.hh
 sig.$(OBJEXT): builtext.hh
 signames.hh: support/signames.cc support/mksignames.cc $(MKSIGNAMES)
 subst.$(OBJEXT): builtext.hh
-support/mksignames.$(OBJEXT): config.hh
-support/signames.$(OBJEXT): config.hh
+support/mksignames.$(OBJEXT): config.h
+support/signames.$(OBJEXT): config.h
 trap.$(OBJEXT): builtext.hh signames.hh
 variables.$(OBJEXT): builtext.hh version.hh
 version.$(OBJEXT): version.hh

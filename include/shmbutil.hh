@@ -21,9 +21,6 @@
 #if !defined(_SH_MBUTIL_H_)
 #define _SH_MBUTIL_H_
 
-/* Include config.h for HANDLE_MULTIBYTE */
-#include "config.hh"
-
 #include <cstring>
 #include <cwchar>
 

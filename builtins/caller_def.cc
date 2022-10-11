@@ -37,7 +37,7 @@
 // is invalid.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include <cstdio>
 

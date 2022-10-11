@@ -1,4 +1,4 @@
-/* display.c -- readline redisplay facility. */
+/* display.cc -- readline redisplay facility. */
 
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
 

@@ -1,4 +1,4 @@
-/* mbutil.c -- readline multibyte character utility functions */
+/* mbutil.cc -- readline multibyte character utility functions */
 
 /* Copyright (C) 2001-2020 Free Software Foundation, Inc.
 

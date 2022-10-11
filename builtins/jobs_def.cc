@@ -44,7 +44,7 @@
 // If -x is used, returns the exit status of COMMAND.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(JOB_CONTROL)
 

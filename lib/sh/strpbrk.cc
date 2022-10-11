@@ -1,4 +1,4 @@
-/* strpbrk.c - locate multiple characters in a string */
+/* strpbrk.cc - locate multiple characters in a string */
 
 /* Copyright (C) 1993-2021 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if !defined(HAVE_STRPBRK)
 

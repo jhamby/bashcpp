@@ -54,7 +54,7 @@
 // Returns success unless a SIGSPEC is invalid or an invalid option is given.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

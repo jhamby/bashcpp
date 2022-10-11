@@ -34,7 +34,7 @@ AC_CONFIG_SRCDIR(siglist.cc)
 
 dnl where to find install.sh, config.sub, and config.guess
 AC_CONFIG_AUX_DIR(support)
-AC_CONFIG_HEADERS(config.hh)
+AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_MACRO_DIRS([m4])
 
 AC_INIT([bash],[bashvers-relstatus],[jake.hamby@gmail.com])

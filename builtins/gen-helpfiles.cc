@@ -22,7 +22,7 @@
    the long_doc members of each struct builtin element and writes those to
    the file named by the `handle' member of the struct builtin element. */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

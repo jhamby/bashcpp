@@ -1,4 +1,4 @@
-/* strerror.c - string corresponding to a particular value of errno. */
+/* strerror.cc - string corresponding to a particular value of errno. */
 
 /* Copyright (C) 1995 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if !defined(HAVE_STRERROR)
 

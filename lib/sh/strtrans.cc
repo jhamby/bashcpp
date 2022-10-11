@@ -1,5 +1,4 @@
-/* strtrans.c - Translate and untranslate strings with ANSI-C escape sequences.
- */
+// strtrans.cc - Translate and untranslate strings with ANSI-C escape sequences.
 
 /* Copyright (C) 2000-2015 Free Software Foundation, Inc.
 
@@ -19,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

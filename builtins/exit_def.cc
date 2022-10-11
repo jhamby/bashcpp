@@ -27,7 +27,7 @@
 // is that of the last command executed.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

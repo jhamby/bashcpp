@@ -1,4 +1,4 @@
-/* sig.c - interface for shell signal handlers and signal initialization. */
+/* sig.cc - interface for shell signal handlers and signal initialization. */
 
 /* Copyright (C) 1994-2021 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

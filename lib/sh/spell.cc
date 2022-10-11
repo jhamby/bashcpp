@@ -1,4 +1,4 @@
-/* spell.c -- spelling correction for pathnames. */
+/* spell.cc -- spelling correction for pathnames. */
 
 /* Copyright (C) 2000-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

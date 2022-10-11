@@ -42,7 +42,7 @@
 // Returns success unless NAME is not found or an invalid option is given.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

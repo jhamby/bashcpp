@@ -68,7 +68,7 @@
 // Returns success unless an invalid option is supplied or an error occurs.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

@@ -1,4 +1,4 @@
-/* mktime - convert struct tm to a time_t value */
+/* mktime.cc - convert struct tm to a time_t value */
 
 /* Copyright (C) 1993-2020 Free Software Foundation, Inc.
 
@@ -22,7 +22,7 @@
    mktime.  */
 /* #define DEBUG 1 */
 
-#include "config.hh"
+#include "config.h"
 
 /* Assume that leap seconds are possible, unless told otherwise.
    If the host has a `zic' command with a `-L leapsecondfilename' option,

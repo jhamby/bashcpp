@@ -65,7 +65,7 @@
 // or an invalid file descriptor is supplied as the argument to -u.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "posixstat.hh"

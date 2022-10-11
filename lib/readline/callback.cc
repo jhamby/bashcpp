@@ -1,4 +1,4 @@
-/* callback.c -- functions to use readline as an X `callback' mechanism. */
+/* callback.cc -- functions to use readline as an X `callback' mechanism. */
 
 /* Copyright (C) 1987-2017 Free Software Foundation, Inc.
 

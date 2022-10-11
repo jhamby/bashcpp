@@ -1,4 +1,4 @@
-/* strcasestr.c - Find if one string appears as a substring of another string,
+/* strcasestr.cc - Find if one string appears as a substring of another string,
                   without regard to case. */
 
 /* Copyright (C) 2000 Free Software Foundation, Inc.
@@ -19,8 +19,9 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "config.h"
+
 #include "chartypes.hh"
-#include "config.hh"
 
 #if !defined(HAVE_STRCASESTR)
 

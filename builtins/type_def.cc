@@ -48,7 +48,7 @@
 // Returns success if all of the NAMEs are found; fails if any are not found.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "posixstat.hh"

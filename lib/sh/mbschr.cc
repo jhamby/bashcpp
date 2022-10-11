@@ -1,4 +1,4 @@
-/* mbschr.c - strchr(3) that handles multibyte characters. */
+/* mbschr.cc - strchr(3) that handles multibyte characters. */
 
 /* Copyright (C) 2002 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include <cstdlib>
 

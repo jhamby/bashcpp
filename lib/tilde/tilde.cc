@@ -1,4 +1,4 @@
-/* tilde.c -- Tilde expansion code (~/foo := $HOME/foo). */
+/* tilde.cc -- Tilde expansion code (~/foo := $HOME/foo). */
 
 /* Copyright (C) 1988-2020 Free Software Foundation, Inc.
 
@@ -19,7 +19,7 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

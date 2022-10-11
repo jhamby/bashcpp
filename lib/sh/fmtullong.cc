@@ -1,4 +1,4 @@
-/* fmtullong.c - convert `long long int' to string */
+/* fmtullong.cc - convert `long long int' to string */
 
 /* Copyright (C) 2001-2002 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #ifdef HAVE_LONG_LONG_INT
 

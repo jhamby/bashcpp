@@ -1,4 +1,4 @@
-/* trap.c -- Not the trap command, but useful functions for manipulating
+/* trap.cc -- Not the trap command, but useful functions for manipulating
    those objects.  The trap command is in builtins/trap.def. */
 
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.
@@ -19,7 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

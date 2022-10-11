@@ -1,5 +1,5 @@
-/* zgetline - read a line of input from a specified file descriptor and return
-              a pointer to a newly-allocated buffer containing the data. */
+// zgetline.cc - read a line of input from a specified file descriptor and
+// return a pointer to a newly-allocated buffer containing the data.
 
 /* Copyright (C) 2008-2020 Free Software Foundation, Inc.
 
@@ -19,7 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include <sys/types.h>
 

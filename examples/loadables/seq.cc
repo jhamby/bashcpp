@@ -17,7 +17,7 @@
 /* Written as bash builtin by Chet Ramey. Portions from seq.c by Ulrich
  * Drepper. */
 
-#include "config.hh"
+#include "config.h"
 
 #include <sys/types.h>
 

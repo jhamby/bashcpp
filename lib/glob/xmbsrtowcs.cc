@@ -1,4 +1,4 @@
-/* xmbsrtowcs.c -- replacement function for mbsrtowcs */
+/* xmbsrtowcs.cc -- replacement function for mbsrtowcs */
 
 /* Copyright (C) 2002-2020 Free Software Foundation, Inc.
 
@@ -18,13 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* Ask for GNU extensions to get extern declaration for mbsnrtowcs if
-   available via glibc. */
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE 1
-#endif
-
-#include "config.hh"
+#include "config.h"
 
 /* <wchar.h>, <wctype.h> and <stdlib.h> are included in "shmbutil.h".
    If <wchar.h>, <wctype.h>, mbsrtowcs(), exist, HANDLE_MULTIBYTE

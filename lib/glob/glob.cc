@@ -1,4 +1,4 @@
-/* glob.c -- file-name wildcard pattern matching for Bash.
+/* glob.cc -- file-name wildcard pattern matching for Bash.
 
    Copyright (C) 1985-2020 Free Software Foundation, Inc.
 
@@ -22,7 +22,7 @@
    Unix programs use to perform this function.  I wrote this from scratch
    based on specifications for the pattern matching.  --RMS.  */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

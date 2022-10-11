@@ -47,7 +47,7 @@
 // Returns success or status of executed command; non-zero if an error occurs.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HISTORY)
 

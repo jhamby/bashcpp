@@ -21,10 +21,6 @@
 #if !defined(TIMER_HH_)
 #define TIMER_HH_
 
-#include "config.hh"
-
-#include "sig.hh"
-
 namespace bash
 {
 

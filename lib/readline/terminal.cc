@@ -1,4 +1,4 @@
-/* terminal.c -- controlling the terminal with termcap. */
+/* terminal.cc -- controlling the terminal with termcap. */
 
 /* Copyright (C) 1996-2017 Free Software Foundation, Inc.
 

@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "chartypes.hh"
@@ -3337,11 +3337,11 @@ Shell::execute_arith_command (ARITH_COM *arith_command)
     }
 #endif
 
-  char *t = nullptr;
   WORD_LIST *new_list = arith_command->exp;
-  char *exp;
+
+  std::string exp;
   if (new_list->next ())
-    exp = t = string_list (new_list); /* just in case */
+    exp = string_list (new_list); /* just in case */
   else
     exp = new_list->word->word;
 
@@ -3352,25 +3352,22 @@ Shell::execute_arith_command (ARITH_COM *arith_command)
      when I change eval_arith_for_expr to use expand_arith_string(). */
   if (echo_command_at_execute)
     {
-      new_list
-          = make_word_list (make_word (exp ? exp : ""), nullptr);
+      new_list = new WORD_LIST (make_word (exp), nullptr);
       xtrace_print_arith_cmd (new_list);
-      dispose_words (new_list);
+      delete new_list;
     }
 
   bool expok = false;
-  if (exp)
+  if (!exp.empty ())
     {
       expresult = evalexp (exp, EXP_EXPANDED, &expok);
       line_number = save_line_number;
-      free (exp);
     }
   else
     {
       expresult = 0;
       expok = true;
     }
-  FREE (t);
 
   if (!expok)
     return EXECUTION_FAILURE;
@@ -3396,37 +3393,35 @@ Shell::execute_cond_node (COND_COM *cond)
     }
 
   int result;
-  if (cond->type == COND_EXPR)
+  if (cond->cond_type == COND_EXPR)
     result = execute_cond_node (cond->left);
-  else if (cond->type == COND_OR)
+  else if (cond->cond_type == COND_OR)
     {
       result = execute_cond_node (cond->left);
       if (result != EXECUTION_SUCCESS)
         result = execute_cond_node (cond->right);
     }
-  else if (cond->type == COND_AND)
+  else if (cond->cond_type == COND_AND)
     {
       result = execute_cond_node (cond->left);
       if (result == EXECUTION_SUCCESS)
         result = execute_cond_node (cond->right);
     }
-  else if (cond->type == COND_UNARY)
+  else if (cond->cond_type == COND_UNARY)
     {
       if (ignore)
         comsub_ignore_return++;
       char *arg1 = cond_expand_word (cond->left->op, 0);
       if (ignore)
         comsub_ignore_return--;
-      if (arg1 == 0)
-        arg1 = (char *)nullstr;
       if (echo_command_at_execute)
-        xtrace_print_cond_term (cond->type, invert, cond->op, arg1, nullptr);
+        xtrace_print_cond_term (cond->cond_type, invert, cond->op, arg1,
+                                nullptr);
       result = unary_test (cond->op->word, arg1) ? EXECUTION_SUCCESS
                                                  : EXECUTION_FAILURE;
-      if (arg1 != nullstr)
-        free (arg1);
+      delete[] arg1;
     }
-  else if (cond->type == COND_BINARY)
+  else if (cond->cond_type == COND_BINARY)
     {
       bool rmatch = false;
       bool patmatch
@@ -3446,7 +3441,7 @@ Shell::execute_cond_node (COND_COM *cond)
         comsub_ignore_return--;
 
       if (arg1 == 0)
-        arg1 = (char *)nullstr;
+        arg1 = nullptr;
 
       if (ignore)
         comsub_ignore_return++;
@@ -3457,10 +3452,10 @@ Shell::execute_cond_node (COND_COM *cond)
         comsub_ignore_return--;
 
       if (arg2 == 0)
-        arg2 = (char *)nullstr;
+        arg2 = nullptr;
 
       if (echo_command_at_execute)
-        xtrace_print_cond_term (cond->type, invert, cond->op, arg1, arg2);
+        xtrace_print_cond_term (cond->cond_type, invert, cond->op, arg1, arg2);
 
 #if defined(COND_REGEXP)
       if (rmatch)
@@ -3468,14 +3463,6 @@ Shell::execute_cond_node (COND_COM *cond)
           int mflags = SHMAT_PWARN;
 #if defined(ARRAY_VARS)
           mflags |= SHMAT_SUBEXP;
-#endif
-
-#if 0
-	  t1 = strescape(arg1);
-	  t2 = strescape(arg2);
-	  itrace("execute_cond_node: sh_regmatch on `%s' and `%s'", t1, t2);
-	  free(t1);
-	  free(t2);
 #endif
 
           result = sh_regmatch (arg1, arg2, mflags);
@@ -3512,12 +3499,11 @@ Shell::execute_cond_node (COND_COM *cond)
 int
 Shell::execute_cond_command (COND_COM *cond_command)
 {
-  int retval, save_line_number;
-
-  save_line_number = line_number;
+  int save_line_number = line_number;
 
   this_command_name = "[[";
   line_number_for_err_trap = line_number = cond_command->line;
+
   /* If we're in a function, update the line number information. */
   if (variable_context && interactive_shell && sourcelevel == 0)
     {
@@ -3535,7 +3521,7 @@ Shell::execute_cond_command (COND_COM *cond_command)
 
   /* Run the debug trap before each conditional command, but do it after we
      update the line number information. */
-  retval = run_debug_trap ();
+  int retval = run_debug_trap ();
 
 #if defined(DEBUGGER)
   /* In debugging mode, if the DEBUG trap returns a non-zero status, we
@@ -3545,10 +3531,6 @@ Shell::execute_cond_command (COND_COM *cond_command)
       line_number = save_line_number;
       return EXECUTION_SUCCESS;
     }
-#endif
-
-#if 0
-  debug_print_cond_command (cond_command);
 #endif
 
   last_command_exit_value = retval = execute_cond_node (cond_command);
@@ -3989,8 +3971,8 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
   if (echo_command_at_execute && (cmdflags & CMD_COMMAND_BUILTIN) == 0)
     xtrace_print_word_list (words, 1);
 
-  sh_builtin_func_t *builtin = (sh_builtin_func_t *)NULL;
-  SHELL_VAR *func = (SHELL_VAR *)NULL;
+  sh_builtin_func_t builtin = nullptr;
+  SHELL_VAR *func = nullptr;
   bool builtin_is_special = false;
 
   /* This test is still here in case we want to change the command builtin
@@ -4025,13 +4007,13 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
 #endif
     {
       last_command_exit_value = EXECUTION_FAILURE;
-      jump_to_top_level (ERREXIT);
+      throw bash_exception (ERREXIT);
     }
   tempenv_assign_error = false; /* don't care about this any more */
 
   /* This is where we handle the command builtin as a pseudo-reserved word
      prefix. This allows us to optimize away forks if we can. */
-  volatile int old_command_builtin = -1;
+  int old_command_builtin = -1;
   if (builtin == 0 && func == 0)
     {
       WORD_LIST *disposer, *l;
@@ -4071,15 +4053,15 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
 
   /* Bind the last word in this command to "$_" after execution. */
   WORD_LIST *lastword;
-  for (lastword = words; lastword->next;
-       lastword = (WORD_LIST *)(lastword->next))
+  for (lastword = words; lastword->next (); lastword = lastword->next ())
     ;
+
   lastarg = lastword->word->word;
 
   /* Initialize variables here so goto doesn't skip over construction. */
   char *command_line = 0;
   char *temp;
-  volatile int old_builtin;
+  int old_builtin;
 
 #if defined(JOB_CONTROL)
   /* Is this command a job control related thing? */
@@ -4199,7 +4181,7 @@ run_builtin:
                           && !interactive_shell)
                         {
                           last_command_exit_value = EXECUTION_FAILURE;
-                          jump_to_top_level (ERREXIT);
+                          throw bash_exception (ERREXIT);
                         }
                       break;
                     case EX_DISKFALLBACK:
@@ -4236,7 +4218,8 @@ run_builtin:
         }
     }
 
-  if (autocd && interactive && words->word && is_dirname (words->word->word))
+  if (autocd && interactive && words->word
+      && is_dirname (words->word->word.c_str ()))
     {
       words = make_word_list (make_word ("--"), words);
       words = make_word_list (make_word ("cd"), words);
@@ -4279,7 +4262,7 @@ return_result:
 
 /* Translate the special builtin exit statuses.  We don't really need a
    function for this; it's a placeholder for future work. */
-static int
+static inline int
 builtin_status (int result)
 {
   int r;
@@ -4317,8 +4300,9 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
      value of the command, we turn the -e flag off ourselves and disable
      the ERR trap, then restore them when the command completes.  This is
      also a problem (as below) for the command and source/. builtins. */
-  if ((!subshell && (flags & CMD_IGNORE_RETURN) && builtin == eval_builtin)
-      || (flags & CMD_COMMAND_BUILTIN) || builtin == source_builtin)
+  if ((!subshell && (flags & CMD_IGNORE_RETURN)
+       && builtin == &Shell::eval_builtin)
+      || (flags & CMD_COMMAND_BUILTIN) || builtin == &Shell::source_builtin)
     {
       begin_unwind_frame ("eval_builtin");
       unwind_protect_var (exit_immediately_on_error);
@@ -4345,16 +4329,17 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
      `mapfile' is a special case because it uses evalstring (same as
      eval or source) to run its callbacks. */
   bool isbltinenv
-      = (builtin == source_builtin || builtin == eval_builtin
-         || builtin == unset_builtin || builtin == mapfile_builtin);
+      = (builtin == &Shell::source_builtin || builtin == &Shell::eval_builtin
+         || builtin == &Shell::unset_builtin
+         || builtin == &Shell::mapfile_builtin);
 
   /* SHOULD_KEEP is for the pop_scope call below; it only matters when
      posixly_correct is set, but we should propagate the temporary environment
      to the enclosing environment only for special builtins. */
-  bool should_keep = isbltinenv && builtin != mapfile_builtin;
+  bool should_keep = isbltinenv && builtin != &Shell::mapfile_builtin;
 
 #if defined(HISTORY) && defined(READLINE)
-  if (builtin == fc_builtin || builtin == read_builtin)
+  if (builtin == &Shell::fc_builtin || builtin == &Shell::read_builtin)
     {
       isbltinenv = true;
       should_keep = false;
@@ -4380,27 +4365,27 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
         }
     }
 
-  if (!subshell && builtin == eval_builtin)
+  if (!subshell && builtin == &Shell::eval_builtin)
     {
       if (evalnest_max > 0 && evalnest >= evalnest_max)
         {
           internal_error (_ ("eval: maximum eval nesting level exceeded (%d)"),
                           evalnest);
           evalnest = 0;
-          jump_to_top_level (DISCARD);
+          throw bash_exception (DISCARD);
         }
       unwind_protect_var (evalnest);
       /* The test for subshell == 0 above doesn't make a difference */
       evalnest++; /* execute_subshell_builtin_or_function sets this to 0 */
     }
-  else if (!subshell && builtin == source_builtin)
+  else if (!subshell && builtin == &Shell::source_builtin)
     {
       if (sourcenest_max > 0 && sourcenest >= sourcenest_max)
         {
           internal_error (_ ("%s: maximum source nesting level exceeded (%d)"),
                           this_command_name, sourcenest);
           sourcenest = 0;
-          jump_to_top_level (DISCARD);
+          throw bash_exception (DISCARD);
         }
       unwind_protect_var (sourcenest);
       /* The test for subshell == 0 above doesn't make a difference */
@@ -4413,7 +4398,7 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
      table, since `return' is a POSIX special builtin. We don't do this if
      it's being run by the `command' builtin, since that's supposed to inhibit
      the special builtin properties. */
-  if (posixly_correct && !subshell && builtin == return_builtin
+  if (posixly_correct && !subshell && builtin == &Shell::return_builtin
       && (flags & CMD_COMMAND_BUILTIN) == 0 && temporary_env)
     {
       begin_unwind_frame ("return_temp_env");
@@ -4423,7 +4408,7 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
   executing_builtin++;
   executing_command_builtin |= (builtin == command_builtin);
 
-  int result = ((*builtin) (w->next ()));
+  int result = (((*this).*builtin) (w->next ()));
 
   /* This shouldn't happen, but in case `return' comes back instead of
      longjmp'ing, we need to unwind. */
@@ -4449,8 +4434,8 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
   return result;
 }
 
-static void
-maybe_restore_getopt_state (void *arg)
+void
+Shell::maybe_restore_getopt_state (void *arg)
 {
   sh_getopt_state_t *gs = (sh_getopt_state_t *)arg;
 
@@ -4490,8 +4475,8 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
 #if defined(ARRAY_VARS)
   SHELL_VAR *funcname_v, *bash_source_v, *bash_lineno_v;
   ARRAY *funcname_a;
-  volatile ARRAY *bash_source_a;
-  volatile ARRAY *bash_lineno_a;
+  ARRAY *bash_source_a;
+  ARRAY *bash_lineno_a;
 #endif
 
   if (funcnest_max > 0 && funcnest >= funcnest_max)
@@ -4499,7 +4484,7 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
       internal_error (_ ("%s: maximum function nesting level exceeded (%d)"),
                       var->name, funcnest);
       funcnest = 0; /* XXX - should we reset it somewhere else? */
-      jump_to_top_level (DISCARD);
+      throw bash_exception (DISCARD);
     }
 
 #if defined(ARRAY_VARS)
@@ -4548,7 +4533,7 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
     push_context (var->name, subshell,
                   temporary_env); /* don't unwind-protect for subshells */
 
-  temporary_env = (HASH_TABLE *)NULL;
+  temporary_env = nullptr;
 
   this_shell_function = var;
   make_funcname_visible (1);
@@ -4606,25 +4591,25 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
     }
 
   funcnest++;
+
 #if defined(ARRAY_VARS)
-  /* This is quite similar to the code in shell.c and elsewhere. */
+  /* This is quite similar to the code in shell.cc and elsewhere. */
   FUNCTION_DEF *shell_fn = find_function_def (this_shell_function->name);
   const char *sfile = shell_fn ? shell_fn->source_file : (char *)"";
-  array_push ((ARRAY *)funcname_a, this_shell_function->name);
+  array_push (funcname_a, this_shell_function->name);
 
-  array_push ((ARRAY *)bash_source_a, sfile);
+  array_push (bash_source_a, sfile);
   char *t = itos (executing_line_number ());
-  array_push ((ARRAY *)bash_lineno_a, t);
+  array_push (bash_lineno_a, t);
   free (t);
 
-  /* restore_funcarray_state() will free this. */
-  struct func_array_state *fa
-      = (struct func_array_state *)xmalloc (sizeof (struct func_array_state));
-  fa->source_a = (ARRAY *)bash_source_a;
+  /* restore_funcarray_state() will delete this. */
+  func_array_state *fa = new func_array_state ();
+  fa->source_a = bash_source_a;
   fa->source_v = bash_source_v;
-  fa->lineno_a = (ARRAY *)bash_lineno_a;
+  fa->lineno_a = bash_lineno_a;
   fa->lineno_v = bash_lineno_v;
-  fa->funcname_a = (ARRAY *)funcname_a;
+  fa->funcname_a = funcname_a;
   fa->funcname_v = funcname_v;
   if (!subshell)
     add_unwind_protect_ptr (restore_funcarray_state, fa);
@@ -4726,7 +4711,7 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
       dispose_command (tc);
     }
 
-  if (variable_context == 0 || this_shell_function == 0)
+  if (variable_context == 0 || this_shell_function == nullptr)
     {
       make_funcname_visible (false);
 #if defined(PROCESS_SUBSTITUTION)
@@ -4742,7 +4727,7 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
 int
 Shell::execute_shell_function (SHELL_VAR *var, WORD_LIST *words)
 {
-  struct fd_bitmap *bitmap;
+  fd_bitmap *bitmap;
 
   bitmap = new_fd_bitmap (FD_BITMAP_DEFAULT_SIZE);
   begin_unwind_frame ("execute-shell-function");
@@ -4772,16 +4757,16 @@ Shell::execute_subshell_builtin_or_function (
 #if defined(JOB_CONTROL)
   int jobs_hack;
 
-  jobs_hack = (builtin == jobs_builtin)
+  jobs_hack = (builtin == &Shell::jobs_builtin)
               && ((subshell_environment & SUBSHELL_ASYNC) == 0
                   || pipe_out != NO_PIPE);
 #endif
 
   /* A subshell is neither a login shell nor interactive. */
   login_shell = interactive = 0;
-  if (builtin == eval_builtin)
+  if (builtin == &Shell::eval_builtin)
     evalnest = 0;
-  else if (builtin == source_builtin)
+  else if (builtin == &Shell::source_builtin)
     sourcenest = 0;
 
   if (async)
@@ -5208,18 +5193,18 @@ Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
    whitespace.  The MSDOS define is to allow \r to be treated the same
    as \n. */
 
-#if !defined(MSDOS)
+#if !defined(MSDOS) && !defined(__VMS)
 #define STRINGCHAR(ind)                                                       \
   (ind < sample_len && !whitespace (sample[ind]) && sample[ind] != '\n')
 #define WHITECHAR(ind) (ind < sample_len && whitespace (sample[ind]))
-#else /* MSDOS */
+#else /* MSDOS || __VMS */
 #define STRINGCHAR(ind)                                                       \
   (ind < sample_len && !whitespace (sample[ind]) && sample[ind] != '\n'       \
    && sample[ind] != '\r')
 #define WHITECHAR(ind) (ind < sample_len && whitespace (sample[ind]))
-#endif /* MSDOS */
+#endif /* !MSDOS && !__VMS */
 
-static char *
+static inline char *
 getinterp (char *sample, int sample_len, int *endp)
 {
   int i;
@@ -5546,7 +5531,7 @@ Shell::execute_intern_function (WORD_DESC *name, FUNCTION_DEF *funcdef)
       if (posixly_correct && interactive_shell == 0)
         {
           last_command_exit_value = EX_BADUSAGE;
-          jump_to_top_level (ERREXIT);
+          throw bash_exception (ERREXIT);
         }
       return EXECUTION_FAILURE;
     }
@@ -5563,14 +5548,14 @@ Shell::execute_intern_function (WORD_DESC *name, FUNCTION_DEF *funcdef)
     {
       internal_error (_ ("`%s': is a special builtin"), name->word);
       last_command_exit_value = EX_BADUSAGE;
-      jump_to_top_level (interactive_shell ? DISCARD : ERREXIT);
+      throw bash_exception (interactive_shell ? DISCARD : ERREXIT);
     }
 
   var = find_function (name->word);
-  if (var && (readonly_p (var) || noassign_p (var)))
+  if (var && (var->readonly () || var->noassign ()))
     {
-      if (readonly_p (var))
-        internal_error (_ ("%s: readonly function"), var->name);
+      if (var->readonly ())
+        internal_error (_ ("%s: readonly function"), var->name ().c_str ());
       return EXECUTION_FAILURE;
     }
 

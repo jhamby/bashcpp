@@ -16,7 +16,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-ACLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = --install -I m4
 
 RLDIR = lib/readline
 SHDIR = lib/sh
@@ -144,11 +144,11 @@ builtins/common.$(OBJEXT): builtext.hh
 builtins/declare_def.$(OBJEXT): builtext.hh
 builtins/evalstring.$(OBJEXT): builtext.hh
 builtins/exit_def.$(OBJEXT): builtext.hh
-builtins/mkbuiltins.$(OBJEXT): config.hh
+builtins/mkbuiltins.$(OBJEXT): config.h
 builtins/pushd_def.$(OBJEXT): builtext.hh
 builtins/shopt_def.$(OBJEXT): version.hh
 builtins/ulimit_def.$(OBJEXT): pipesize.hh
-builtins/psize.$(OBJEXT): config.hh
+builtins/psize.$(OBJEXT): config.h
 bashline.$(OBJEXT): builtext.hh
 execute_cmd.$(OBJEXT): builtext.hh
 jobs.$(OBJEXT): builtext.hh
@@ -161,8 +161,8 @@ $(srcdir)/shell.hh: parse.hh
 sig.$(OBJEXT): builtext.hh
 signames.hh: support/signames.cc support/mksignames.cc $(MKSIGNAMES)
 subst.$(OBJEXT): builtext.hh
-support/mksignames.$(OBJEXT): config.hh
-support/signames.$(OBJEXT): config.hh
+support/mksignames.$(OBJEXT): config.h
+support/signames.$(OBJEXT): config.h
 trap.$(OBJEXT): builtext.hh signames.hh
 variables.$(OBJEXT): builtext.hh version.hh
 version.$(OBJEXT): version.hh

@@ -1,5 +1,4 @@
-/* strtoimax - convert string representation of a number into an int64_t value.
- */
+// strtoimax - convert string representation of a number into an int64_t value.
 
 /* Copyright 1999-2020 Free Software Foundation, Inc.
 
@@ -21,7 +20,7 @@
 
 /* Written by Paul Eggert.  Modified by Chet Ramey for Bash. */
 
-#include "config.hh"
+#include "config.h"
 
 #if !defined(HAVE_STRTOIMAX)
 

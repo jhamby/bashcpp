@@ -1,6 +1,4 @@
-/*
- * tmpfile.c - functions to create and safely open temp files for the shell.
- */
+// tmpfile.cc - functions to create and safely open temp files for the shell.
 
 /* Copyright (C) 2000-2020 Free Software Foundation, Inc.
 
@@ -20,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "filecntl.hh"

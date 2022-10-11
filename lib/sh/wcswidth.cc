@@ -1,4 +1,4 @@
-/* wcswidth.c - compute display width of wide character string */
+/* wcswidth.cc - compute display width of wide character string */
 
 /* Copyright (C) 2010 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HANDLE_MULTIBYTE) && !defined(HAVE_WCSWIDTH)
 

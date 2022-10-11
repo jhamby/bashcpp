@@ -46,7 +46,7 @@
 // Returns success unless NAME is not a shell builtin or an error occurs.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

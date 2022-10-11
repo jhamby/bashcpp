@@ -1,4 +1,4 @@
-/* stringlib.c - Miscellaneous string functions. */
+/* stringlib.cc - Miscellaneous string functions. */
 
 /* Copyright (C) 1996-2009 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

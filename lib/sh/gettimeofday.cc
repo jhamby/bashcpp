@@ -1,4 +1,4 @@
-/* gettimeofday.c - gettimeofday replacement using time() */
+/* gettimeofday.cc - gettimeofday replacement using time() */
 
 /* Copyright (C) 2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if !defined(HAVE_GETTIMEOFDAY)
 

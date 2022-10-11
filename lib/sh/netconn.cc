@@ -1,4 +1,4 @@
-/* netconn.c -- is a particular file descriptor a network connection?. */
+/* netconn.cc -- is a particular file descriptor a network connection?. */
 
 /* Copyright (C) 2002-2005 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

@@ -1,4 +1,4 @@
-/* readline.c -- a general facility for reading lines of input
+/* readline.cc -- a general facility for reading lines of input
    with emacs style editing and completion. */
 
 /* Copyright (C) 1987-2020 Free Software Foundation, Inc.

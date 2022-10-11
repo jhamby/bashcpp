@@ -1,4 +1,4 @@
-/* hashlib.h -- the data structures used in hashing in Bash. */
+/* hashlib.hh -- the data structures used in hashing in Bash. */
 
 /* Copyright (C) 1993-2020 Free Software Foundation, Inc.
 
@@ -21,7 +21,6 @@
 #if !defined(_HASHLIB_H_)
 #define _HASHLIB_H_
 
-#include "config.hh"
 #include "general.hh"
 
 #include <vector>

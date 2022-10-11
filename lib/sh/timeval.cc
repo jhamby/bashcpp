@@ -1,4 +1,4 @@
-/* timeval.c - functions to perform operations on struct timevals */
+/* timeval.cc - functions to perform operations on struct timevals */
 
 /* Copyright (C) 1999 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_TIMEVAL)
 

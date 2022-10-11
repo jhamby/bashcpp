@@ -1,4 +1,4 @@
-/* mksignames.c -- Create and write `signames.h', which contains an array of
+/* mksignames.cc -- Create and write `signames.h', which contains an array of
    signal names. */
 
 /* Copyright (C) 1992-2020 Free Software Foundation, Inc.
@@ -19,7 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include <csignal>
 #include <sys/types.h>

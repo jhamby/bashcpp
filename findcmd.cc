@@ -1,4 +1,4 @@
-/* findcmd.c -- Functions to search for commands by name. */
+/* findcmd.cc -- Functions to search for commands by name. */
 
 /* Copyright (C) 1997-2022 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "chartypes.hh"

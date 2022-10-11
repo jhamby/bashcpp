@@ -1,4 +1,4 @@
-/* input_avail.c -- check whether or not data is available for reading on a
+/* input_avail.cc -- check whether or not data is available for reading on a
                     specified file descriptor. */
 
 /* Copyright (C) 2008,2009-2019 Free Software Foundation, Inc.
@@ -19,11 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(__TANDEM)
-#include <floss.h>
-#endif
-
-#include "config.hh"
+#include "config.h"
 
 #include <fcntl.h>
 #include <sys/types.h>

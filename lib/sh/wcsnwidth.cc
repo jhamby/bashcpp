@@ -1,5 +1,5 @@
-/* wcsnwidth.c - compute display width of wide character string, up to max
-                 specified width, return length. */
+/* wcsnwidth.cc - compute display width of wide character string, up to max
+                  specified width, return length. */
 
 /* Copyright (C) 2012 Free Software Foundation, Inc.
 
@@ -19,7 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HANDLE_MULTIBYTE)
 

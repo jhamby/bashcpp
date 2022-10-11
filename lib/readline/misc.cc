@@ -1,4 +1,4 @@
-/* misc.c -- miscellaneous bindable readline functions. */
+/* misc.cc -- miscellaneous bindable readline functions. */
 
 /* Copyright (C) 1987-2019 Free Software Foundation, Inc.
 

@@ -22,7 +22,7 @@
     EPIPE.  Then report how many bytes we wrote.  We assume that this is the
     pipe size. */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

@@ -1,4 +1,4 @@
-/* history.c -- standalone history library */
+/* history.cc -- standalone history library */
 
 /* Copyright (C) 1989-2017 Free Software Foundation, Inc.
 

@@ -1,4 +1,4 @@
-/* dispose_command.c -- dispose of a COMMAND structure. */
+/* dispose_command.cc -- dispose of a COMMAND structure. */
 
 /* Copyright (C) 1987-2009 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

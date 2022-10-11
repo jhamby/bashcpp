@@ -1,4 +1,4 @@
-/* jobs.c - functions that make children, remember them, and handle their
+/* jobs.cc - functions that make children, remember them, and handle their
  * termination. */
 
 /* This file works with both POSIX and BSD systems.  It implements job
@@ -22,7 +22,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "trap.hh"
@@ -32,12 +32,6 @@
 #endif
 
 #include "posixtime.hh"
-
-#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_WAIT3)                       \
-    && !defined(_POSIX_VERSION) && !defined(RLIMTYPE)
-#include <sys/resource.h>
-#endif /* !_POSIX_VERSION && HAVE_SYS_RESOURCE_H && HAVE_WAIT3 && !RLIMTYPE   \
-        */
 
 #if defined(HAVE_SYS_FILE_H)
 #include <sys/file.h>
@@ -57,22 +51,12 @@
 /* Need to include this up here for *_TTY_DRIVER definitions. */
 #include "shtty.hh"
 
-/* Define this if your output is getting swallowed.  It's a no-op on
-   machines with the termio or termios tty drivers. */
-/* #define DRAIN_OUTPUT */
-
 /* For the TIOCGPGRP and TIOCSPGRP ioctl parameters on HP-UX */
 #if defined(hpux) && !defined(TERMIOS_TTY_DRIVER)
 #include <bsdtty.h>
 #endif /* hpux && !TERMIOS_TTY_DRIVER */
 
-#include "bashintl.hh"
-#include "flags.hh"
-#include "jobs.hh"
-#include "parser.hh"
 #include "shell.hh"
-
-#include "typemax.hh"
 
 #include "builtext.hh"
 #include "builtins/common.hh"
@@ -136,16 +120,10 @@ enum delete_job_flags
 #undef WCONTINUED
 #define WCONTINUED 0
 #endif
+
 #if !defined(WIFCONTINUED)
 #define WIFCONTINUED(s) (0)
 #endif
-
-/* Variables used here but defined in other files. */
-// extern WORD_LIST *subst_assign_varlist;
-
-// extern SigHandler *original_signals;
-
-// extern void set_original_signal (int, SigHandler);
 
 #define QUEUE_SIGCHLD(os) (os) = sigchld, queue_sigchld++
 
@@ -217,25 +195,24 @@ Shell::current_working_directory ()
 
   if (dir == 0)
     {
-      dir = ::getcwd (d, sizeof (d));
+      dir = getcwd (d, sizeof (d));
       if (dir)
         dir = d;
     }
 
-  return (dir == 0) ? "<unknown>" : dir;
+  return (dir == nullptr) ? "<unknown>" : dir;
 }
 
-/* Return the working directory for the current process. */
+// Return the working directory for the current process. This returns a new
+// string that the caller must delete.
 char *
 Shell::job_working_directory ()
 {
-  char *dir;
+  const char *pwd_dir = get_string_value ("PWD");
+  if (pwd_dir)
+    return savestring (pwd_dir);
 
-  dir = get_string_value ("PWD");
-  if (dir)
-    return savestring (dir);
-
-  dir = get_working_directory ("job-working-directory");
+  char *dir = get_working_directory ("job-working-directory");
   if (dir)
     return dir;
 
@@ -2161,45 +2138,6 @@ static struct tchars shell_tchars;
 static struct ltchars shell_ltchars;
 #endif /* NEW_TTY_DRIVER */
 
-#if defined(NEW_TTY_DRIVER) && defined(DRAIN_OUTPUT)
-/* Since the BSD tty driver does not allow us to change the tty modes
-   while simultaneously waiting for output to drain and preserving
-   typeahead, we have to drain the output ourselves before calling
-   ioctl.  We cheat by finding the length of the output queue, and
-   using select to wait for an appropriate length of time.  This is
-   a hack, and should be labeled as such (it's a hastily-adapted
-   mutation of a `usleep' implementation).  It's only reason for
-   existing is the flaw in the BSD tty driver. */
-
-static int ttspeeds[] = { 0,   50,   75,   110,  134,  150,  200,   300,
-                          600, 1200, 1800, 2400, 4800, 9600, 19200, 38400 };
-
-static void
-draino (int fd, int ospeed)
-{
-  int delay = ttspeeds[ospeed];
-  int n;
-
-  if (!delay)
-    return;
-
-  while ((ioctl (fd, TIOCOUTQ, &n) == 0) && n)
-    {
-      if (n > (delay / 100))
-        {
-          struct timeval tv;
-
-          n *= 10; /* 2 bits more for conservativeness. */
-          tv.tv_sec = n / delay;
-          tv.tv_usec = ((n % delay) * 1000000) / delay;
-          select (fd, (fd_set *)0, (fd_set *)0, (fd_set *)0, &tv);
-        }
-      else
-        break;
-    }
-}
-#endif /* NEW_TTY_DRIVER && DRAIN_OUTPUT */
-
 /* Return the fd from which we are actually getting input. */
 #define input_tty() (shell_tty != -1) ? shell_tty : fileno (stderr)
 
@@ -2250,9 +2188,6 @@ set_tty_state ()
   if (tty != -1)
     {
 #if defined(NEW_TTY_DRIVER)
-#if defined(DRAIN_OUTPUT)
-      draino (tty, shell_tty_info.sg_ospeed);
-#endif /* DRAIN_OUTPUT */
       ioctl (tty, TIOCSETN, &shell_tty_info);
       ioctl (tty, TIOCSETC, &shell_tchars);
       ioctl (tty, TIOCSLTC, &shell_ltchars);

@@ -1,4 +1,4 @@
-/* parens.c -- implementation of matching parentheses feature. */
+/* parens.cc -- implementation of matching parentheses feature. */
 
 /* Copyright (C) 1987, 1989, 1992-2015, 2017 Free Software Foundation, Inc.
 

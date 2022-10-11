@@ -1,5 +1,4 @@
-/* undo.c - manage list of changes to lines, offering opportunity to undo them
- */
+// undo.cc - manage list of changes to lines, offering opportunity to undo them
 
 /* Copyright (C) 1987-2017 Free Software Foundation, Inc.
 

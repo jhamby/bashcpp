@@ -1,4 +1,4 @@
-/* histexpand.c -- history expansion. */
+/* histexpand.cc -- history expansion. */
 
 /* Copyright (C) 1989-2018 Free Software Foundation, Inc.
 

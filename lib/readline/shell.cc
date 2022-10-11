@@ -1,5 +1,5 @@
-/* shell.c -- readline utility functions that are normally provided by
-              bash when readline is linked as part of the shell. */
+// lib/readline/shell.cc -- readline utility functions that are normally
+// provided by bash when readline is linked as part of the shell.
 
 /* Copyright (C) 1997-2009,2017 Free Software Foundation, Inc.
 
@@ -20,7 +20,7 @@
    along with Readline.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 /* System-specific feature definitions and include files. */
 #include "rldefs.hh"

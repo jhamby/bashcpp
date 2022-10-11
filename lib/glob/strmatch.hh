@@ -19,7 +19,7 @@
 #ifndef _STRMATCH_H
 #define _STRMATCH_H 1
 
-#include "config.hh"
+#include "config.h"
 
 /* We #undef these before defining them because some losing systems
    (HP-UX A.08.07 for example) define these in <unistd.h>.  */

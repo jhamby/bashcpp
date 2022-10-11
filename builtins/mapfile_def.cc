@@ -63,7 +63,7 @@
 // A synonym for `mapfile'.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "builtins.hh"
 #include "posixstat.hh"

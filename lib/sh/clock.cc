@@ -1,4 +1,4 @@
-/* clock.c - operations on struct tms and clock_t's */
+/* clock.cc - operations on struct tms and clock_t's */
 
 /* Copyright (C) 1999 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_TIMES)
 

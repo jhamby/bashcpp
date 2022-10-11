@@ -1,4 +1,4 @@
-/* uconvert - convert string representations of decimal numbers into whole
+/* uconvert.cc - convert string representations of decimal numbers into whole
               number/fractional value pairs. */
 
 /* Copyright (C) 2008,2009,2020 Free Software Foundation, Inc.
@@ -19,7 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

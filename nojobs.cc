@@ -1,4 +1,4 @@
-/* nojobs.c - functions that make children, remember them, and handle their
+/* nojobs.cc - functions that make children, remember them, and handle their
  * termination. */
 
 /* This file works under BSD, System V, minix, and Posix systems.  It does
@@ -22,7 +22,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "filecntl.hh"

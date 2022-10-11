@@ -48,7 +48,7 @@
 // Always fails.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "shell.hh"
 

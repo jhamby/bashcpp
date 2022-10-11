@@ -37,7 +37,7 @@
 // Returns success unless MODE is invalid or an invalid option is given.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 #include "filecntl.hh"

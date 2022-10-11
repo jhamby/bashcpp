@@ -1,4 +1,4 @@
-/* vprint.c -- v[fs]printf() for 4.[23] BSD systems. */
+/* vprint.cc -- v[fs]printf() for 4.[23] BSD systems. */
 
 /* Copyright (C) 1987,1989 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(USE_VFPRINTF_EMULATION)
 

@@ -63,7 +63,7 @@
 // If the last ARG evaluates to 0, let returns 1; let returns 0 otherwise.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

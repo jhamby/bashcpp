@@ -1,4 +1,4 @@
-/* pathexp.c -- The shell interface to the globbing library. */
+/* pathexp.cc -- The shell interface to the globbing library. */
 
 /* Copyright (C) 1995-2020 Free Software Foundation, Inc.
 
@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

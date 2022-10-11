@@ -39,7 +39,7 @@
 // First part of user prologue.
 #line 28 "../bashcpp/parse.yy"
 
-#include "config.hh"
+#include "config.h"
 #include "shell.hh"
 
 static inline bash::parser::symbol_type

@@ -30,7 +30,7 @@
 // The exit status is 0 unless N is not greater than or equal to 1.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

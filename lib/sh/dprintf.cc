@@ -1,4 +1,4 @@
-/* dprintf -- printf to a file descriptor */
+/* dprintf.cc -- printf to a file descriptor */
 
 /* Copyright (C) 2008-2010 Free Software Foundation, Inc.
 
@@ -18,9 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.hh"
-#endif
+#include "config.h"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>

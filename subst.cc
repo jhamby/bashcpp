@@ -1,4 +1,4 @@
-/* subst.c -- The part of the shell that does parameter, command, arithmetic,
+/* subst.cc -- The part of the shell that does parameter, command, arithmetic,
    and globbing substitutions. */
 
 /* ``Have a little faith, there's magic in the night.  You ain't a
@@ -22,16 +22,10 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "config.h"
+
 /* Include shell.h first for common defs. */
 #include "shell.hh"
-
-#include "filecntl.hh"
-#include "flags.hh"
-#include "jobs.hh"
-#include "parser.hh"
-#include "pathexp.hh"
-#include "subst.hh"
-#include "trap.hh"
 
 #include "shmbutil.hh"
 

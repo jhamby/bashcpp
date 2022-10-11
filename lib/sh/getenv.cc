@@ -1,4 +1,4 @@
-/* getenv.c - get environment variable value from the shell's variable
+/* getenv.cc - get environment variable value from the shell's variable
               list. */
 
 /* Copyright (C) 1997-2002 Free Software Foundation, Inc.
@@ -19,7 +19,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.hh"
+#include "config.h"
 
 #if defined(CAN_REDEFINE_GETENV)
 

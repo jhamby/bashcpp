@@ -1,4 +1,4 @@
-/* isearch.c - incremental searching */
+/* isearch.cc - incremental searching */
 
 /* **************************************************************** */
 /*								    */

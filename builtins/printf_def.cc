@@ -52,7 +52,7 @@
 // error occurs.
 // $END
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 

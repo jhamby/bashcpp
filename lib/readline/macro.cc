@@ -1,4 +1,4 @@
-/* macro.c -- keyboard macros for readline. */
+/* macro.cc -- keyboard macros for readline. */
 
 /* Copyright (C) 1994-2009,2017 Free Software Foundation, Inc.
 

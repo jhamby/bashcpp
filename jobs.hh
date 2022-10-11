@@ -64,7 +64,7 @@ namespace bash
 #define PS_STOPPED 2
 #define PS_RECYCLED 4
 
-/* Each child of the shell is remembered in a STRUCT PROCESS.  A circular
+/* Each child of the shell is remembered in a PROCESS. A circular
    chain of such structures is a pipeline. */
 struct PROCESS
 {
@@ -72,6 +72,12 @@ struct PROCESS
   pid_t pid;     /* Process ID. */
   WAIT status;   /* The status of this command as returned by wait. */
   int running;   /* Non-zero if this process is running. */
+};
+
+struct pipeline_saver
+{
+  PROCESS *pipeline;
+  pipeline_saver *next;
 };
 
 /* PALIVE really means `not exited' */
@@ -133,7 +139,7 @@ enum job_flags
 /* Revised to accommodate new hash table bgpids implementation. */
 typedef pid_t ps_index_t;
 
-struct pidstat
+struct pidstat_t
 {
   ps_index_t bucket_next;
   ps_index_t bucket_prev;
@@ -142,9 +148,9 @@ struct pidstat
   int status;
 };
 
-struct bgpids
+struct bgpids_t
 {
-  struct pidstat *storage; /* storage arena */
+  std::vector<pidstat_t> storage; /* storage arena */
 
   ps_index_t head;
   ps_index_t nalloc;
@@ -155,7 +161,7 @@ struct bgpids
 #define NO_PIDSTAT (static_cast<ps_index_t> (-1))
 
 /* standalone process status struct, without bgpids indexes */
-struct procstat
+struct procstat_t
 {
   pid_t pid;
   int status;

@@ -1,4 +1,4 @@
-/* shell.c -- GNU's idea of the POSIX shell specification. */
+/* shell.cc -- GNU's idea of the POSIX shell specification. */
 
 /* Copyright (C) 1987-2019 Free Software Foundation, Inc.
 
@@ -24,7 +24,7 @@
   Initial author: Brian Fox
 */
 
-#include "config.hh"
+#include "config.h"
 
 #include "bashtypes.hh"
 
@@ -1805,7 +1805,8 @@ Shell::shell_reinitialize ()
   debugging = do_version = false;
   line_number = last_command_exit_value = 0;
   forced_interactive = interactive_shell = 0;
-  subshell_environment = running_in_background = 0;
+  subshell_environment = SUBSHELL_NOFLAGS;
+  running_in_background = false;
   expand_aliases = 0;
   bash_argv_initialized = 0;
 

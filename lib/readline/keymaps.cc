@@ -1,4 +1,4 @@
-/* keymaps.c -- Functions and keymaps for the GNU Readline library. */
+/* keymaps.cc -- Functions and keymaps for the GNU Readline library. */
 
 /* Copyright (C) 1999-2021 Free Software Foundation, Inc.
 

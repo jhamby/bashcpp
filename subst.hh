@@ -50,6 +50,13 @@ enum quoted_flags
   Q_ARRAYSUB = 0x200 /* expanding indexed array subscript */
 };
 
+static inline quoted_flags
+operator| (const quoted_flags &a, const quoted_flags &b)
+{
+  return static_cast<quoted_flags> (static_cast<uint32_t> (a)
+                                    | static_cast<uint32_t> (b));
+}
+
 /* Flag values controlling how assignment statements are treated. */
 enum assign_flags
 {

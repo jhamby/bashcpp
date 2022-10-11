@@ -12,7 +12,7 @@
  * of this process's address space.
  */
 
-#include "config.hh"
+#include "config.h"
 
 #include "builtins.hh"
 #include "shell.hh"
