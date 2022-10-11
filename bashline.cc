@@ -274,10 +274,9 @@ char complete_fullquote = 1;
 
 static const char *bash_completer_word_break_characters = " \t\n\"'@><=;|&(:";
 static const char *bash_nohostname_word_break_characters = " \t\n\"'><=;|&(:";
-/* )) */
 
 static const char *default_filename_quote_characters
-    = " \t\n\\\"'@<>=;|&()#$`?*[!:{~"; /*}*/
+    = " \t\n\\\"'@<>=;|&()#$`?*[!:{~";
 static char *custom_filename_quote_characters = 0;
 static char filename_bstab[256];
 
@@ -533,8 +532,8 @@ initialize_readline ()
 
 #if defined(BRACE_COMPLETION)
   rl_bind_key_if_unbound_in_map ('{', bash_brace_completion,
-                                 emacs_meta_keymap); /*}*/
-#endif                                               /* BRACE_COMPLETION */
+                                 emacs_meta_keymap);
+#endif /* BRACE_COMPLETION */
 
 #if defined(SPECIFIC_COMPLETION_FUNCTIONS)
   rl_bind_key_if_unbound_in_map ('/', bash_complete_filename,
@@ -1386,9 +1385,8 @@ static int bash_spell_correct_shellword (count, key) int count, key;
 /* **************************************************************** */
 
 #define COMMAND_SEPARATORS ";|&{(`"
-/* )} */
+
 #define COMMAND_SEPARATORS_PLUS_WS ";|&{(` \t"
-/* )} */
 
 /* check for redirections and other character combinations that are not
    command separators */
@@ -1403,15 +1401,15 @@ check_redir (int ti)
   if ((this_char == '&' && (prev_char == '<' || prev_char == '>'))
       || (this_char == '|' && prev_char == '>'))
     return true;
-  else if (this_char == '{' && prev_char == '$') /*}*/
+  else if (this_char == '{' && prev_char == '$')
     return true;
 #if 0 /* Not yet */
-  else if (this_char == '(' && prev_char == '$') /*)*/
+  else if (this_char == '(' && prev_char == '$')
     return true;
-  else if (this_char == '(' && prev_char == '<') /*)*/
+  else if (this_char == '(' && prev_char == '<')
     return true;
 #if defined(EXTENDED_GLOB)
-  else if (extended_glob && this_char == '(' && prev_char == '!') /*)*/
+  else if (extended_glob && this_char == '(' && prev_char == '!')
     return true;
 #endif
 #endif
@@ -1466,7 +1464,7 @@ find_cmd_start (int start)
           if ((pc > os
                && (rl_line_buffer[s - 1] == '{'
                    || strchr (COMMAND_SEPARATORS, rl_line_buffer[pc]) == 0))
-              || (shellbreak (nc) == 0)) /* }} */
+              || (shellbreak (nc) == 0))
             {
               /* Not a reserved word, look for another delim */
               ns = skip_to_delim (rl_line_buffer, s + 1, COMMAND_SEPARATORS,
@@ -1537,19 +1535,19 @@ invalid_completion (const char *text, int ind)
   int pind;
 
   /* If we don't catch these here, the next clause will */
-  if (ind > 0 && rl_line_buffer[ind] == '(' && /*)*/
-      member (rl_line_buffer[ind - 1], "$<>"))
+  if (ind > 0 && rl_line_buffer[ind] == '('
+      && member (rl_line_buffer[ind - 1], "$<>"))
     return 0;
 
   pind = ind - 1;
   while (pind > 0 && whitespace (rl_line_buffer[pind]))
     pind--;
   /* If we have only whitespace preceding a paren, it's valid */
-  if (ind >= 0 && pind <= 0 && rl_line_buffer[ind] == '(') /*)*/
+  if (ind >= 0 && pind <= 0 && rl_line_buffer[ind] == '(')
     return 0;
   /* Flag the invalid completions, which are mostly syntax errors */
-  if (ind > 0 && rl_line_buffer[ind] == '(' && /*)*/
-      member (rl_line_buffer[pind], COMMAND_SEPARATORS) == 0)
+  if (ind > 0 && rl_line_buffer[ind] == '('
+      && member (rl_line_buffer[pind], COMMAND_SEPARATORS) == 0)
     return 1;
 
   return 0;
@@ -1809,7 +1807,7 @@ bash_default_completion (const char *text, int start, int end, int qc,
   /* New posix-style command substitution or variable name? */
   if (*text == '$')
     {
-      if (qc != '\'' && text[1] == '(') /* ) */
+      if (qc != '\'' && text[1] == '(')
         matches
             = rl_completion_matches (text, command_subst_completion_function);
       else
@@ -2424,7 +2422,7 @@ command_subst_completion_function (const char *text, int state)
       orig_start = text;
       if (*text == '`')
         text++;
-      else if (*text == '$' && text[1] == '(') /* ) */
+      else if (*text == '$' && text[1] == '(')
         text += 2;
       /* If the text was quoted, suppress any quote character that the
          readline completion code would insert. */

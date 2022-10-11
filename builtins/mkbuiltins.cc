@@ -1143,7 +1143,7 @@ write_documentation (ofstream &stream, const StrArray &documentation,
 
   if (string_array)
     {
-      stream << " {\n#if defined (HELP_BUILTIN)\n"; /* } */
+      stream << " {\n#if defined (HELP_BUILTIN)\n";
       if (single_longdoc_strings)
         {
           if (!filename_p)

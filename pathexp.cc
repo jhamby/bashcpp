@@ -46,7 +46,7 @@ namespace bash
 {
 
 static bool glob_name_is_acceptable (const char *);
-static void ignore_globbed_names (char **, sh_ignore_func_t *);
+static void ignore_globbed_names (char **, sh_ignore_func_t);
 static char *split_ignorespec (char *, int *);
 
 #if 0
@@ -100,7 +100,7 @@ unquoted_glob_pattern_p (const char *string)
         case '+':
         case '@':
         case '!':
-          if (*string == '(') /*)*/
+          if (*string == '(')
             return true;
           continue;
 
@@ -179,7 +179,7 @@ glob_char_p (const char *s)
     case '+':
     case '@':
     case '!':
-      if (s[1] == '(') /*(*/
+      if (s[1] == '(')
         return true;
       break;
     }
@@ -250,7 +250,7 @@ quote_string_for_globbing (const char *pathname, int qflags)
             break;
         }
       else if ((qflags & QGLOB_REGEXP) && (i == 0 || pathname[i - 1] != CTLESC)
-               && pathname[i] == '[') /*]*/
+               && pathname[i] == '[')
         {
           temp[j++] = pathname[i++]; /* open bracket */
           savej = j;

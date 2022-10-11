@@ -27,7 +27,7 @@ EXTGLOB_PATTERN_P (const CHAR *pat)
     case L ('!'):
     case L ('@'):
     case L ('?'):
-      return pat[1] == L ('('); /* ) */
+      return pat[1] == L ('(');
     default:
       return false;
     }

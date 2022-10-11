@@ -45,7 +45,7 @@ INTERNAL_GLOB_PATTERN_P (const GCHAR *pattern)
       case L ('+'): /* extended matching operators */
       case L ('@'):
       case L ('!'):
-        if (*p == L ('(')) /*) */
+        if (*p == L ('('))
           return true;
         continue;
 

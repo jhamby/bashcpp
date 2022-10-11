@@ -422,7 +422,7 @@ Shell::assignment (string_view string, int flags)
      the subscript is required to make the word an assignment statement. If
      we don't have a subscript, even if the word is a valid assignment
      statement otherwise, we don't want to treat it as one. */
-  if ((flags & 1) && c != '[') /* ] */
+  if ((flags & 1) && c != '[')
     return 0;
   else if ((flags & 1) == 0 && !legal_variable_starter (c))
 #else

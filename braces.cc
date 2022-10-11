@@ -101,19 +101,19 @@ brace_expand (char *text)
   tlen = strlen (text);
   i = 0;
 #if defined(CSH_BRACE_COMPAT)
-  c = brace_gobbler (text, tlen, &i, '{'); /* } */
+  c = brace_gobbler (text, tlen, &i, '{');
 #else
   /* Make sure that when we exit this loop, c == 0 or text[i] begins a
      valid brace expansion sequence. */
   do
     {
-      c = brace_gobbler (text, tlen, &i, '{'); /* } */
+      c = brace_gobbler (text, tlen, &i, '{');
       c1 = c;
       /* Verify that c begins a valid brace expansion word.  If it doesn't, we
          go on.  Loop stops when there are no more open braces in the word. */
       if (c)
         {
-          j = i + 1; /* { */
+          j = i + 1;
           c = brace_gobbler (text, tlen, &j, '}');
           if (c == 0) /* it's not */
             {
@@ -168,7 +168,7 @@ brace_expand (char *text)
             }
 
           if (text[j] == brace_arg_separator)
-            { /* { */
+            {
               strvec_dispose (result);
               set_exit_status (EXECUTION_FAILURE);
               report_error ("no closing `%c' in %s", '}', text);
@@ -615,7 +615,7 @@ brace_gobbler (char *text, size_t tlen, int *indx, int satisfy)
 
 #if defined(SHELL)
       /* If compiling for the shell, treat ${...} like \{...} */
-      if (c == '$' && text[i + 1] == '{' && quoted != '\'') /* } */
+      if (c == '$' && text[i + 1] == '{' && quoted != '\'')
         {
           pass_next = 1;
           i++;
@@ -631,7 +631,7 @@ brace_gobbler (char *text, size_t tlen, int *indx, int satisfy)
             quoted = 0;
 #if defined(SHELL)
           /* The shell allows quoted command substitutions */
-          if (quoted == '"' && c == '$' && text[i + 1] == '(') /*)*/
+          if (quoted == '"' && c == '$' && text[i + 1] == '(')
             goto comsub;
 #endif
 #if defined(SHELL)
@@ -651,7 +651,7 @@ brace_gobbler (char *text, size_t tlen, int *indx, int satisfy)
 
 #if defined(SHELL)
       /* Pass new-style command and process substitutions through unchanged. */
-      if ((c == '$' || c == '<' || c == '>') && text[i + 1] == '(') /* ) */
+      if ((c == '$' || c == '<' || c == '>') && text[i + 1] == '(')
         {
         comsub:
           si = i + 2;

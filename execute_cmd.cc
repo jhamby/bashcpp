@@ -1339,7 +1339,7 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
 
   reset_terminating_signals (); /* in sig.c */
 
-  /* Cancel traps, in trap.c. */
+  /* Cancel traps, in trap.cc. */
   /* Reset the signal handlers in the child, but don't free the
      trap strings.  Set a flag noting that we have to free the
      trap strings if we run trap to change a signal disposition. */

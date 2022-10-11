@@ -4466,7 +4466,7 @@ protected:
   extract_arithmetic_subst (string_view string, size_t *sindex)
   {
     return extract_delimited_string (string, sindex, "$[", "[", "]",
-                                     SX_NOFLAGS); /*]*/
+                                     SX_NOFLAGS);
   }
 
 #if defined(PROCESS_SUBSTITUTION)

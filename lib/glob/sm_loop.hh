@@ -82,7 +82,7 @@ GMATCH (const CHAR *string, const CHAR *se, const CHAR *pattern,
          just return what EXTMATCH() returns. */
       if ((flags & FNM_EXTMATCH) && *p == L ('(')
           && (c == L ('+') || c == L ('*') || c == L ('?') || c == L ('@')
-              || c == L ('!'))) /* ) */
+              || c == L ('!')))
         {
           int lflags;
           /* If we're not matching the start of the string, we're not
@@ -157,7 +157,7 @@ GMATCH (const CHAR *string, const CHAR *se, const CHAR *pattern,
                 return FNM_NOMATCH;
 #ifdef EXTENDED_GLOB
               else if ((flags & FNM_EXTMATCH) && c == L ('?')
-                       && *p == L ('(')) /* ) */
+                       && *p == L ('('))
                 {
                   const CHAR *newn;
 
@@ -188,7 +188,7 @@ GMATCH (const CHAR *string, const CHAR *se, const CHAR *pattern,
 #ifdef EXTENDED_GLOB
               /* Handle ******(patlist) */
               if ((flags & FNM_EXTMATCH) && c == L ('*')
-                  && *p == L ('(')) /*)*/
+                  && *p == L ('('))
                 {
                   const CHAR *newn;
                   /* We need to check whether or not the extended glob
@@ -282,15 +282,15 @@ GMATCH (const CHAR *string, const CHAR *se, const CHAR *pattern,
                    possible match.  We can check the first character if
                    we're not doing an extended glob match. */
                 if ((flags & FNM_EXTMATCH) == 0 && c != L ('[')
-                    && FOLD (*n) != c1) /*]*/
+                    && FOLD (*n) != c1)
                   continue;
 
                 /* If we're doing an extended glob match and the pattern is not
                    one of the extended glob patterns, we can check the first
                    character. */
-                if ((flags & FNM_EXTMATCH) && p[1] != L ('(') && /*)*/
+                if ((flags & FNM_EXTMATCH) && p[1] != L ('(') &&
                     STRCHR (L ("?*+@!"), *p) == 0 && c != L ('[')
-                    && FOLD (*n) != c1) /*]*/
+                    && FOLD (*n) != c1)
                   continue;
 
                 /* Otherwise, we just recurse. */
@@ -422,8 +422,8 @@ BRACKMATCH (const CHAR *p, U_CHAR test, int flags)
           p += 4;
           if (COLLEQUIV (test, pc))
             {
-              /*[*/ /* Move past the closing `]', since the first thing we do
-                       at the `matched:' label is back p up one. */
+              /* Move past the closing `]', since the first thing we do
+                 at the `matched:' label is back p up one. */
               p++;
               goto matched;
             }
@@ -431,7 +431,7 @@ BRACKMATCH (const CHAR *p, U_CHAR test, int flags)
             {
               c = *p++;
               if (c == L ('\0'))
-                return (test == L ('[')) ? savep : (CHAR *)0; /*]*/
+                return (test == L ('[')) ? savep : (CHAR *)0;
               c = FOLD (c);
               continue;
             }
@@ -477,8 +477,8 @@ BRACKMATCH (const CHAR *p, U_CHAR test, int flags)
 
           if (pc)
             {
-              /*[*/ /* Move past the closing `]', since the first thing we do
-                       at the `matched:' label is back p up one. */
+              /* Move past the closing `]', since the first thing we do
+                 at the `matched:' label is back p up one. */
               p++;
               goto matched;
             }
@@ -488,7 +488,7 @@ BRACKMATCH (const CHAR *p, U_CHAR test, int flags)
                  the first part of a range expression. */
               c = *p++;
               if (c == L ('\0'))
-                return (test == L ('[')) ? savep : (CHAR *)0;
+                return (test == L ('[')) ? savep : nullptr;
               else if (c == L (']'))
                 break;
               c = FOLD (c);
@@ -799,7 +799,7 @@ EXTMATCH (INT xc, const CHAR *s, const CHAR *se, const CHAR *p, const CHAR *pe,
   fprintf (stderr, "extmatch: flags = %d\n", flags);
 #endif
 
-  prest = PATSCAN (p + (*p == L ('(')), pe, 0); /* ) */
+  prest = PATSCAN (p + (*p == L ('(')), pe, 0);
   if (prest == 0)
     /* If PREST is 0, we failed to scan a valid pattern.  In this
        case, we just want to compare the two as strings. */

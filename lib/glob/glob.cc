@@ -186,7 +186,7 @@ extglob_skipname (const char *pat, const char *dname, glob_flags flags)
 #if defined(HANDLE_MULTIBYTE)
       r = mbskipname (pp, dname, flags);
 #else
-      r = skipname (pp, dname, flags); /*(*/
+      r = skipname (pp, dname, flags);
 #endif
       *pe = ')';
       if (wild && pe[1]) /* if we can match zero instances, check further */
@@ -204,7 +204,7 @@ extglob_skipname (const char *pat, const char *dname, glob_flags flags)
   while ((t = (char *)glob_patscan ((unsigned char *)pp, (unsigned char *)pe,
                                     '|')))
     {
-      int n = t[-1]; /* ( */
+      int n = t[-1];
       if (extglob_pattern_p (pp) && n == ')')
         t[-1] = n; /* no-op for now */
       else
@@ -218,7 +218,7 @@ extglob_skipname (const char *pat, const char *dname, glob_flags flags)
       if (r == 0) /* if any pattern says not skip, we don't skip */
         return r;
       pp = t;
-    } /*(*/
+    }
 
   /* glob_patscan might find end of string */
   if (pp == se)
@@ -290,13 +290,13 @@ wextglob_skipname (const wchar_t *pat, const wchar_t *dname, glob_flags flags)
   int negate = *pat == L'!';
   int wild = *pat == L'*' || *pat == L'?';
   const wchar_t *pp = pat + 2;
-  const wchar_t *se = pp + wcslen (pp) - 1; /*(*/
+  const wchar_t *se = pp + wcslen (pp) - 1;
   const wchar_t *pe = glob_patscan_wc (pp, se, 0);
 
   if (pe == se && *pe == ')' && wcschr (pp, L'|') == 0)
     {
       *(char *)pe = L'\0';
-      r = wskipname (pp, dname, flags); /*(*/
+      r = wskipname (pp, dname, flags);
       *(char *)pe = L')';
       if (wild && pe[1] != L'\0')
         return wskipname (pe + 1, dname, flags);
@@ -312,7 +312,7 @@ wextglob_skipname (const wchar_t *pat, const wchar_t *dname, glob_flags flags)
   wchar_t *t;
   while ((t = (wchar_t *)glob_patscan_wc (pp, pe, '|')))
     {
-      wchar_t n = t[-1]; /* ( */
+      wchar_t n = t[-1];
       if (wextglob_pattern_p (pp) && n == L')')
         t[-1] = n; /* no-op for now */
       else

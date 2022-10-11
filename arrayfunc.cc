@@ -349,7 +349,7 @@ assign_array_element_internal (
       sub[sublen - 1] = '\0';
       char *akey;
       if ((flags & ASS_NOEXPAND) == 0)
-        akey = expand_assignment_string_to_string (sub, 0); /* [ */
+        akey = expand_assignment_string_to_string (sub, 0);
       else
         akey = savestring (sub);
       sub[sublen - 1] = ']';
@@ -478,7 +478,7 @@ expand_compound_array_assignment (SHELL_VAR *var, const char *value, int flags)
   /* This condition is true when invoked from the declare builtin with a
      command like
         declare -a d='([1]="" [2]="bdef" [5]="hello world" "test")' */
-  if (*value == '(') /*)*/
+  if (*value == '(')
     {
       int ni = 1;
       val = extract_array_assignment_list (value, &ni);
@@ -561,8 +561,7 @@ assign_assoc_from_kvlist (SHELL_VAR *var, WORD_LIST *nlist, HASH_TABLE *h,
 bool
 kvpair_assignment_p (WORD_LIST *l)
 {
-  return l && (l->word->flags & W_ASSIGNMENT) == 0
-         && l->word->word[0] != '['; /*]*/
+  return l && (l->word->flags & W_ASSIGNMENT) == 0 && l->word->word[0] != '[';
 }
 
 char *
@@ -696,7 +695,7 @@ assign_compound_array_list (SHELL_VAR *var, WORD_LIST *nlist, int flags)
             {
               /* This is not performed above, see
                * expand_compound_array_assignment */
-              w[len] = '\0'; /*[*/
+              w[len] = '\0';
               akey = expand_assignment_string_to_string (w + 1, 0);
               w[len] = ']';
               /* And we need to expand the value also, see below */
@@ -953,7 +952,7 @@ quote_array_assignment_chars (WORD_LIST *list)
          doesn't look like [ind]=value */
       if ((l->word->flags & W_ASSIGNMENT) == 0)
         continue;
-      if (l->word->word[0] != '[' || mbschr (l->word->word, '=') == 0) /* ] */
+      if (l->word->word[0] != '[' || mbschr (l->word->word, '=') == 0)
         continue;
 
       char *nword = quote_assign (l->word->word);
@@ -1087,7 +1086,7 @@ print_assoc_assignment (SHELL_VAR *var, int quoted)
 bool
 Shell::valid_array_reference (const char *name, valid_array_flags flags)
 {
-  char *t = mbschr (name, '['); /* ] */
+  char *t = mbschr (name, '[');
   bool isassoc = false;
   if (t)
     {
@@ -1201,7 +1200,7 @@ array_variable_name (const char *s, int flags, char **subp, int *lenp)
 
   *t = '\0';
   ret = savestring (s);
-  *t++ = '['; /* ] */
+  *t++ = '[';
 
   if (subp)
     *subp = t;
@@ -1238,9 +1237,9 @@ array_variable_part (const char *s, int flags, char **subp, int *lenp)
         {                                                                     \
           t[-1] = '\0';                                                       \
           err_badarraysub (s);                                                \
-          t[-1] = '['; /* ] */                                                \
+          t[-1] = '[';                                                        \
         }                                                                     \
-      return nullptr;                                                    \
+      return nullptr;                                                         \
     }                                                                         \
   while (0)
 
@@ -1273,7 +1272,6 @@ array_value_internal (const char *s, int quoted, int flags, int *rtype,
   if (len == 0)
     return nullptr; /* error message already printed */
 
-  /* [ */
   akey = 0;
   if (ALL_ELEMENT_SUB (t[0]) && t[1] == ']')
     {
@@ -1348,7 +1346,7 @@ array_value_internal (const char *s, int quoted, int flags, int *rtype,
         {
           t[len - 1] = '\0';
           if ((flags & AV_NOEXPAND) == 0)
-            akey = expand_assignment_string_to_string (t, 0); /* [ */
+            akey = expand_assignment_string_to_string (t, 0);
           else
             akey = savestring (t);
           t[len - 1] = ']';
@@ -1411,7 +1409,6 @@ array_keys (const char *s, int quoted, int pflags)
 
   SHELL_VAR *var = array_variable_part (s, 0, &t, &len);
 
-  /* [ */
   if (var == 0 || ALL_ELEMENT_SUB (t[0]) == 0 || t[1] != ']')
     return nullptr;
 

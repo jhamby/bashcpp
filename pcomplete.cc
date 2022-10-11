@@ -272,7 +272,7 @@ filter_stringlist (STRINGLIST *sl, char *filterpat, const char *text)
                    : filterpat;
 
 #if defined(EXTENDED_GLOB)
-  bool isnot = (npat[0] == '!' && (!extended_glob || npat[1] != '(')); /*)*/
+  bool isnot = (npat[0] == '!' && (!extended_glob || npat[1] != '('));
 #else
   bool isnot = (npat[0] == '!');
 #endif

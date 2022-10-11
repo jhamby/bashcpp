@@ -168,7 +168,7 @@ declare_build_newname (const std::string &name,
   savelen = namelen = strlen (name);
   if (subscript_start)
     {
-      *subscript_start = '['; /* ] */
+      *subscript_start = '[';
       namelen += strlen (subscript_start);
     }
   ret = xmalloc (namelen + 2 + strlen (value) + 1);
@@ -553,7 +553,7 @@ declare_internal (WORD_LIST *list, int local_var)
       var_exists = array_exists = creating_array = 0;
       compound_array_assign = simple_array_assign = 0;
       array_subscript_assignment = 0;
-      if (t = strchr (name, '[')) /* ] */
+      if (t = strchr (name, '['))
         {
           /* If offset != 0 we have already validated any array reference
              because assignment() calls skipsubscript() */
@@ -980,7 +980,7 @@ declare_internal (WORD_LIST *list, int local_var)
           int local_aflags;
 
           /* declare [-aA] name[N]=value */
-          *subscript_start = '['; /* ] */
+          *subscript_start = '[';
           /* XXX - problem here with appending */
           local_aflags = aflags & ASS_APPEND;
           local_aflags |= assoc_noexpand ? ASS_NOEXPAND : 0;
