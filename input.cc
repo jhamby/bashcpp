@@ -22,7 +22,6 @@
 
 #include "bashtypes.hh"
 
-#include "filecntl.hh"
 #include "posixstat.hh"
 
 #include "bashintl.hh"

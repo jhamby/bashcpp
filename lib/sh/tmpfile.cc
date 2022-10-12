@@ -21,13 +21,10 @@
 #include "config.h"
 
 #include "bashtypes.hh"
-#include "filecntl.hh"
 #include "posixstat.hh"
 #include "posixtime.hh"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include <cerrno>
 #include <cstdio>

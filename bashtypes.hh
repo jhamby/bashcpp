@@ -26,9 +26,8 @@
 
 #include <sys/types.h>
 
-#if defined(HAVE_INTTYPES_H)
+// Include the gnulib or system header first.
 #include <inttypes.h>
-#endif
 
 #if defined(HAVE_STDINT_H)
 #include <stdint.h>

@@ -52,16 +52,13 @@
 #include "config.h"
 
 #include "bashtypes.hh"
-#include "filecntl.hh"
 #include "posixstat.hh"
 
 #if defined(HAVE_SYS_FILE_H)
 #include <sys/file.h>
 #endif
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "bashintl.hh"
 

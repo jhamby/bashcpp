@@ -26,14 +26,11 @@
 #include <sys/file.h>
 #endif
 
-#include "filecntl.hh"
 #include "posixstat.hh"
 
 #include <cerrno>
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 /* The second and subsequent conditions must match those used to decide
    whether or not to call getpeername() in isnetconn(). */

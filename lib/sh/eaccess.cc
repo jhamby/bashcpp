@@ -25,17 +25,13 @@
 
 #include "bashtypes.hh"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include <cerrno>
 
-#if !defined(_POSIX_VERSION) && defined(HAVE_SYS_FILE_H)
+#if defined(HAVE_SYS_FILE_H)
 #include <sys/file.h>
-#endif /* !_POSIX_VERSION */
-#include "filecntl.hh"
-#include "posixstat.hh"
+#endif
 
 #include "shell.hh"
 

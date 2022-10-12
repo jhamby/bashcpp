@@ -21,9 +21,7 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "bashtypes.hh"
 
@@ -31,7 +29,6 @@
 #include <sys/file.h>
 #endif
 
-#include "filecntl.hh"
 #include "posixstat.hh"
 
 #include <cstdlib>
@@ -964,8 +961,7 @@ write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
                             << "     \""
                             << (!builtin->shortdoc.empty () ? builtin->shortdoc
                                                             : builtin->name)
-                            << "\", \"" << document_name (*builtin)
-                            << "\",\n";
+                            << "\", \"" << document_name (*builtin) << "\",\n";
                       else
                         structfile
                             << "     \""
@@ -991,20 +987,20 @@ write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
                     }
                 }
 
-                // Moved flags to the end of the struct, to reduce padding.
-                structfile << "BUILTIN_ENABLED | STATIC_BUILTIN"
-                             << ((builtin->flags & BUILTIN_FLAG_SPECIAL)
-                                     ? " | SPECIAL_BUILTIN"
-                                     : "")
-                             << ((builtin->flags & BUILTIN_FLAG_ASSIGNMENT)
-                                     ? " | ASSIGNMENT_BUILTIN"
-                                     : "")
-                             << ((builtin->flags & BUILTIN_FLAG_LOCALVAR)
-                                     ? " | LOCALVAR_BUILTIN"
-                                     : "")
-                             << ((builtin->flags & BUILTIN_FLAG_POSIX_BUILTIN)
-                                     ? " | POSIX_BUILTIN"
-                                     : "");
+              // Moved flags to the end of the struct, to reduce padding.
+              structfile << "BUILTIN_ENABLED | STATIC_BUILTIN"
+                         << ((builtin->flags & BUILTIN_FLAG_SPECIAL)
+                                 ? " | SPECIAL_BUILTIN"
+                                 : "")
+                         << ((builtin->flags & BUILTIN_FLAG_ASSIGNMENT)
+                                 ? " | ASSIGNMENT_BUILTIN"
+                                 : "")
+                         << ((builtin->flags & BUILTIN_FLAG_LOCALVAR)
+                                 ? " | LOCALVAR_BUILTIN"
+                                 : "")
+                         << ((builtin->flags & BUILTIN_FLAG_POSIX_BUILTIN)
+                                 ? " | POSIX_BUILTIN"
+                                 : "");
 
               structfile << " )));\n";
 

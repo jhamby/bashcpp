@@ -20,12 +20,11 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
+
+#include "full-read.h"
 
 #include "bashtypes.hh"
-#include "filecntl.hh"
 #include "posixstat.hh"
 
 #include "shell.hh"
@@ -157,29 +156,12 @@ Shell::_evalfile (const char *filename, evalfile_flags_t flags)
     }
 
   char *string = nullptr;
-  ssize_t nr; /* return value from read(2) */
+  size_t nr; /* return value from full_read () */
 
   if (S_ISREG (finfo.st_mode) && file_size <= SSIZE_MAX)
     {
       string = new char[1 + static_cast<size_t> (file_size)];
-      nr = 0;
-      // XXX - loop for systems that require multiple reads for large files
-      while (nr < file_size)
-        {
-          ssize_t this_nr
-              = read (fd, &(string[nr]), static_cast<size_t> (file_size - nr));
-          if (this_nr <= 0)
-            {
-              if (this_nr < 0)
-                nr = this_nr; // propagate error return
-              break;
-            }
-          else
-            nr += this_nr;
-        }
-      if (nr > file_size)
-        nr = file_size;
-
+      nr = full_read (fd, string, static_cast<size_t> (file_size));
       string[nr] = '\0';
     }
   else
@@ -190,7 +172,7 @@ Shell::_evalfile (const char *filename, evalfile_flags_t flags)
   (void)close (fd);
   errno = result;
 
-  if (nr < 0)
+  if (errno)
     {
       delete[] string;
       goto file_error_and_exit;
@@ -203,7 +185,7 @@ Shell::_evalfile (const char *filename, evalfile_flags_t flags)
     }
 
   if ((flags & FEVAL_CHECKBINARY)
-      && check_binary_file (string, (nr > 80) ? 80 : static_cast<size_t> (nr)))
+      && check_binary_file (string, (nr > 80) ? 80 : nr))
     {
       delete[] string;
       ((*this).*errfunc) (_ ("%s: cannot execute binary file"), filename);
@@ -211,14 +193,13 @@ Shell::_evalfile (const char *filename, evalfile_flags_t flags)
     }
 
   size_t pos = strlen (string);
-  if (pos < static_cast<size_t> (nr))
+  if (pos < nr)
     {
       size_t nnull;
-      for (nnull = pos = 0; pos < static_cast<size_t> (nr); pos++)
+      for (nnull = pos = 0; pos < nr; pos++)
         if (string[pos] == '\0')
           {
-            memmove (string + pos, string + pos + 1,
-                     static_cast<size_t> (nr) - pos);
+            memmove (string + pos, string + pos + 1, nr - pos);
             nr--;
             /* Even if the `check binary' flag is not set, we want to avoid
                sourcing files with more than 256 null characters -- that

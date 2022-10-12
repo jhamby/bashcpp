@@ -35,15 +35,11 @@
 #include "posixstat.hh"
 #include "posixtime.hh"
 
-#include "filecntl.hh"
-
 #if defined(HAVE_PWD_H)
 #include <pwd.h>
 #endif
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "bashintl.hh"
 

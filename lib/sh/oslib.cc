@@ -26,13 +26,10 @@
 #include <sys/param.h>
 #endif
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include <climits>
 
-#include "filecntl.hh"
 #include "posixstat.hh"
 
 #if !defined(HAVE_KILLPG)

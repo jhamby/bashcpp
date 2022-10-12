@@ -23,12 +23,9 @@
 #include "config.h"
 
 #include "bashtypes.hh"
-#include "filecntl.hh"
 #include "posixstat.hh"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "chartypes.hh"
 

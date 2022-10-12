@@ -26,18 +26,11 @@
 
 #include "bashtypes.hh"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "posixdir.hh"
 #include "posixstat.hh"
 #include "shmbutil.hh"
-
-#include "filecntl.hh"
-#if !defined(F_OK)
-#define F_OK 0
-#endif
 
 #include <csignal>
 

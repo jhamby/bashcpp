@@ -27,17 +27,13 @@
 #include "bashtypes.hh"
 #include "trap.hh"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "posixtime.hh"
 
 #if defined(HAVE_SYS_FILE_H)
 #include <sys/file.h>
 #endif
-
-#include "filecntl.hh"
 
 #include <sys/ioctl.h>
 #if defined(HAVE_SYS_PARAM_H)

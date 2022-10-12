@@ -23,14 +23,10 @@
 #include "config.h"
 
 #include "bashtypes.hh"
-#include "filecntl.hh"
 #include "posixstat.hh"
 
 #include <signal.h>
-
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "bashgetopt.hh"
 #include "builtins.hh"

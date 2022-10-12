@@ -24,9 +24,7 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "bashtypes.hh"
 
@@ -34,7 +32,6 @@
 #include <sys/file.h>
 #endif
 
-#include "filecntl.hh"
 #include "posixstat.hh"
 
 #include <cerrno>

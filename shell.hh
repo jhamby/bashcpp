@@ -42,9 +42,8 @@
 #include <sys/file.h>
 #endif
 
-#if defined(HAVE_UNISTD_H)
+// Use gnulib or system version.
 #include <unistd.h>
-#endif
 
 #include "bashintl.hh"
 #include "general.hh"
@@ -3616,7 +3615,7 @@ protected:
 
   /* from lib/sh/zmapfd.cc */
 
-  int zmapfd (int, char **);
+  size_t zmapfd (int, char **);
 
   /* Read LEN bytes from FD into BUF.  Retry the read on EINTR, up to three
      interrupts.  Any other error causes the loop to break. */

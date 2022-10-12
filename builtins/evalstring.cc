@@ -20,16 +20,10 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
-
-#include <errno.h>
-
-#include "filecntl.hh"
+#include <unistd.h>
 
 #include "bashintl.hh"
 #include "builtins.hh"

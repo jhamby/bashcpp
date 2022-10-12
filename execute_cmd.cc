@@ -23,13 +23,12 @@
 #include "bashtypes.hh"
 #include "chartypes.hh"
 
-#include <typeinfo>
-
 #if defined(HAVE_SYS_FILE_H)
 #include <sys/file.h>
 #endif
 
-#include "filecntl.hh"
+#include <fcntl.h>
+
 #include "pathexp.hh"
 #include "posixstat.hh"
 
@@ -37,9 +36,7 @@
 #include <sys/param.h>
 #endif
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "posixtime.hh"
 

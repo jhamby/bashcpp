@@ -27,12 +27,9 @@
 #include <sys/file.h>
 #endif
 
-#include "filecntl.hh"
 #include "posixstat.hh"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "findcmd.hh" /* matching prototypes and declarations */
 #include "flags.hh"
@@ -488,8 +485,8 @@ find_absolute_program (const std::string &name, int flags)
 }
 
 static char *
-find_in_path_element (const std::string &name, char *path, int flags, int name_len,
-                      struct stat *dotinfop)
+find_in_path_element (const std::string &name, char *path, int flags,
+                      int name_len, struct stat *dotinfop)
 {
   int status;
   char *full_path, *xpath;

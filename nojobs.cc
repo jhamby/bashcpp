@@ -25,11 +25,8 @@
 #include "config.h"
 
 #include "bashtypes.hh"
-#include "filecntl.hh"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #if defined(BUFFERED_INPUT)
 #include "input.hh"

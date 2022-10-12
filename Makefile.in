@@ -287,39 +287,39 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
 	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
 	siglist.hh subst.hh syntax.hh trap.hh variables.hh \
-	include/chartypes.hh include/filecntl.hh include/maxpath.hh \
-	include/posixdir.hh include/posixselect.hh \
-	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
-	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
-	include/stat-time.hh include/systimes.hh include/typemax.hh \
-	include/unionwait.hh include/timer.hh pathnames.hh \
-	include/nonstd/string_view.hpp array2.cc array.cc jobs.cc \
-	nojobs.cc $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc \
-	$(BLTDIR)/break_def.cc $(BLTDIR)/builtin_def.cc \
-	$(BLTDIR)/caller_def.cc $(BLTDIR)/cd_def.cc \
-	$(BLTDIR)/colon_def.cc $(BLTDIR)/command_def.cc \
-	$(BLTDIR)/declare_def.cc $(BLTDIR)/echo_def.cc \
-	$(BLTDIR)/enable_def.cc $(BLTDIR)/eval_def.cc \
-	$(BLTDIR)/getopts_def.cc $(BLTDIR)/exec_def.cc \
-	$(BLTDIR)/exit_def.cc $(BLTDIR)/fc_def.cc \
-	$(BLTDIR)/fg_bg_def.cc $(BLTDIR)/hash_def.cc \
-	$(BLTDIR)/help_def.cc $(BLTDIR)/history_def.cc \
-	$(BLTDIR)/jobs_def.cc $(BLTDIR)/kill_def.cc \
-	$(BLTDIR)/let_def.cc $(BLTDIR)/read_def.cc \
-	$(BLTDIR)/return_def.cc $(BLTDIR)/set_def.cc \
-	$(BLTDIR)/setattr_def.cc $(BLTDIR)/shift_def.cc \
-	$(BLTDIR)/source_def.cc $(BLTDIR)/suspend_def.cc \
-	$(BLTDIR)/test_def.cc $(BLTDIR)/times_def.cc \
-	$(BLTDIR)/trap_def.cc $(BLTDIR)/type_def.cc \
-	$(BLTDIR)/ulimit_def.cc $(BLTDIR)/umask_def.cc \
-	$(BLTDIR)/wait_def.cc $(BLTDIR)/reserved_def.cc \
-	$(BLTDIR)/pushd_def.cc $(BLTDIR)/shopt_def.cc \
-	$(BLTDIR)/printf_def.cc $(BLTDIR)/complete_def.cc \
-	$(BLTDIR)/mapfile_def.cc $(BLTDIR)/builtins.cc \
-	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc \
-	$(BLTDIR)/evalfile.cc $(BLTDIR)/getopt.cc \
-	$(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh $(GLBDIR)/glob.cc \
-	$(GLBDIR)/smatch.cc $(GLBDIR)/gmisc.cc $(GLBDIR)/xmbsrtowcs.cc \
+	include/chartypes.hh include/maxpath.hh include/posixdir.hh \
+	include/posixselect.hh include/posixstat.hh \
+	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
+	include/shmbutil.hh include/shtty.hh include/stat-time.hh \
+	include/systimes.hh include/typemax.hh include/unionwait.hh \
+	include/timer.hh pathnames.hh include/nonstd/string_view.hpp \
+	array2.cc array.cc jobs.cc nojobs.cc $(BLTDIR)/alias_def.cc \
+	$(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
+	$(BLTDIR)/builtin_def.cc $(BLTDIR)/caller_def.cc \
+	$(BLTDIR)/cd_def.cc $(BLTDIR)/colon_def.cc \
+	$(BLTDIR)/command_def.cc $(BLTDIR)/declare_def.cc \
+	$(BLTDIR)/echo_def.cc $(BLTDIR)/enable_def.cc \
+	$(BLTDIR)/eval_def.cc $(BLTDIR)/getopts_def.cc \
+	$(BLTDIR)/exec_def.cc $(BLTDIR)/exit_def.cc \
+	$(BLTDIR)/fc_def.cc $(BLTDIR)/fg_bg_def.cc \
+	$(BLTDIR)/hash_def.cc $(BLTDIR)/help_def.cc \
+	$(BLTDIR)/history_def.cc $(BLTDIR)/jobs_def.cc \
+	$(BLTDIR)/kill_def.cc $(BLTDIR)/let_def.cc \
+	$(BLTDIR)/read_def.cc $(BLTDIR)/return_def.cc \
+	$(BLTDIR)/set_def.cc $(BLTDIR)/setattr_def.cc \
+	$(BLTDIR)/shift_def.cc $(BLTDIR)/source_def.cc \
+	$(BLTDIR)/suspend_def.cc $(BLTDIR)/test_def.cc \
+	$(BLTDIR)/times_def.cc $(BLTDIR)/trap_def.cc \
+	$(BLTDIR)/type_def.cc $(BLTDIR)/ulimit_def.cc \
+	$(BLTDIR)/umask_def.cc $(BLTDIR)/wait_def.cc \
+	$(BLTDIR)/reserved_def.cc $(BLTDIR)/pushd_def.cc \
+	$(BLTDIR)/shopt_def.cc $(BLTDIR)/printf_def.cc \
+	$(BLTDIR)/complete_def.cc $(BLTDIR)/mapfile_def.cc \
+	$(BLTDIR)/builtins.cc $(BLTDIR)/common.cc \
+	$(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
+	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc \
+	$(BLTDIR)/getopt.hh $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc \
+	$(GLBDIR)/gmisc.cc $(GLBDIR)/xmbsrtowcs.cc \
 	$(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh $(GLBDIR)/glob_loop.hh \
 	$(GLBDIR)/gm_loop.hh $(GLBDIR)/ndir.hh $(GLBDIR)/sm_loop.hh \
 	$(GLBDIR)/strmatch.hh $(RLDIR)/readline.cc $(RLDIR)/funmap.cc \
@@ -2274,19 +2274,18 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
 	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
 	siglist.hh subst.hh syntax.hh trap.hh variables.hh \
-	include/chartypes.hh include/filecntl.hh include/maxpath.hh \
-	include/posixdir.hh include/posixselect.hh \
-	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
-	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
-	include/stat-time.hh include/systimes.hh include/typemax.hh \
-	include/unionwait.hh include/timer.hh pathnames.hh \
-	include/nonstd/string_view.hpp $(am__append_1) $(am__append_2) \
-	$(am__append_3) $(am__append_4) $(DEFSRC) \
-	$(BLTDIR)/builtins.cc $(BLTDIR)/common.cc \
-	$(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
-	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc \
-	$(BLTDIR)/getopt.hh $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc \
-	$(GLBDIR)/gmisc.cc $(GLBDIR)/xmbsrtowcs.cc \
+	include/chartypes.hh include/maxpath.hh include/posixdir.hh \
+	include/posixselect.hh include/posixstat.hh \
+	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
+	include/shmbutil.hh include/shtty.hh include/stat-time.hh \
+	include/systimes.hh include/typemax.hh include/unionwait.hh \
+	include/timer.hh pathnames.hh include/nonstd/string_view.hpp \
+	$(am__append_1) $(am__append_2) $(am__append_3) \
+	$(am__append_4) $(DEFSRC) $(BLTDIR)/builtins.cc \
+	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc \
+	$(BLTDIR)/evalfile.cc $(BLTDIR)/getopt.cc \
+	$(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh $(GLBDIR)/glob.cc \
+	$(GLBDIR)/smatch.cc $(GLBDIR)/gmisc.cc $(GLBDIR)/xmbsrtowcs.cc \
 	$(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh $(GLBDIR)/glob_loop.hh \
 	$(GLBDIR)/gm_loop.hh $(GLBDIR)/ndir.hh $(GLBDIR)/sm_loop.hh \
 	$(GLBDIR)/strmatch.hh $(RLDIR)/readline.cc $(RLDIR)/funmap.cc \

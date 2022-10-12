@@ -26,11 +26,7 @@
 #include <sys/random.h>
 #endif
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
-
-#include "filecntl.hh"
 
 #include <cstdio>
 #include <sys/time.h>

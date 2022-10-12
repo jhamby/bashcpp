@@ -22,16 +22,13 @@
 
 #include "bashtypes.hh"
 #include "chartypes.hh"
-#include "filecntl.hh"
 #include "posixstat.hh"
 
 #if defined(HAVE_SYS_PARAM_H)
 #include <sys/param.h>
 #endif
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include <cerrno>
 #include <cstdio>
