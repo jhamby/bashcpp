@@ -42,131 +42,13 @@
 #include "chartypes.hh"
 #include "shell.hh"
 
-#if !defined(HAVE_DUP2) || defined(DUP2_BROKEN)
-/* Replacement for dup2 (), for those systems which either don't have it,
-   or supply one with broken behaviour. */
-int
-dup2 (int fd1, int fd2)
-{
-  int saved_errno, r;
-
-  /* If FD1 is not a valid file descriptor, then return immediately with
-     an error. */
-  if (::fcntl (fd1, F_GETFL, 0) == -1)
-    return -1;
-
-  if (fd2 < 0 || fd2 >= ::getdtablesize ())
-    {
-      errno = EBADF;
-      return -1;
-    }
-
-  if (fd1 == fd2)
-    return 0;
-
-  saved_errno = errno;
-
-  (void)::close (fd2);
-  r = ::fcntl (fd1, F_DUPFD, fd2);
-
-  if (r >= 0)
-    errno = saved_errno;
-  else if (errno == EINVAL)
-    errno = EBADF;
-
-  /* Force the new file descriptor to remain open across exec () calls. */
-  SET_OPEN_ON_EXEC (fd2);
-  return r;
-}
-#endif /* !HAVE_DUP2 */
-
-/*
- * Return the total number of available file descriptors.
- *
- * On some systems, like 4.2BSD and its descendants, there is a system call
- * that returns the size of the descriptor table: getdtablesize().  There are
- * lots of ways to emulate this on non-BSD systems.
- *
- * On System V.3, this can be obtained via a call to ulimit:
- *	return ulimit(4, 0L);
- *
- * On other System V systems, NOFILE is defined in /usr/include/sys/param.h
- * (this is what we assume below), so we can simply use it:
- *	return NOFILE;
- *
- * On POSIX systems, there are specific functions for retrieving various
- * configuration parameters:
- *	return sysconf(_SC_OPEN_MAX);
- *
- */
-
-#if !defined(HAVE_GETDTABLESIZE)
-int
-getdtablesize ()
-{
-#if defined(_POSIX_VERSION) && defined(HAVE_SYSCONF) && defined(_SC_OPEN_MAX)
-  return ::sysconf (_SC_OPEN_MAX); /* Posix systems use sysconf */
-#else /* ! (_POSIX_VERSION && HAVE_SYSCONF && _SC_OPEN_MAX) */
-#if defined(ULIMIT_MAXFDS)
-  return ::ulimit (4, 0L); /* System V.3 systems use ulimit(4, 0L) */
-#else               /* !ULIMIT_MAXFDS */
-#if defined(NOFILE) /* Other systems use NOFILE */
-  return NOFILE;
-#else               /* !NOFILE */
-  return 20; /* XXX - traditional value is 20 */
-#endif              /* !NOFILE */
-#endif              /* !ULIMIT_MAXFDS */
-#endif              /* ! (_POSIX_VERSION && _SC_OPEN_MAX) */
-}
-#endif /* !HAVE_GETDTABLESIZE */
-
-#if !defined(HAVE_GETHOSTNAME)
-#if defined(HAVE_UNAME)
-#include <sys/utsname.h>
-int
-gethostname (char *name, int namelen)
-{
-  int i;
-  struct utsname ut;
-
-  --namelen;
-
-  uname (&ut);
-  i = strlen (ut.nodename) + 1;
-  strncpy (name, ut.nodename, i < namelen ? i : namelen);
-  name[namelen] = '\0';
-  return 0;
-}
-#else  /* !HAVE_UNAME */
-int
-gethostname (char *name, int namelen)
-{
-  strncpy (name, "unknown", namelen);
-  name[namelen] = '\0';
-  return 0;
-}
-#endif /* !HAVE_UNAME */
-#endif /* !HAVE_GETHOSTNAME */
-
 #if !defined(HAVE_KILLPG)
 int
 killpg (pid_t pgrp, int sig)
 {
-  return ::kill (-pgrp, sig);
+  return kill (-pgrp, sig);
 }
 #endif /* !HAVE_KILLPG */
-
-#if !defined(HAVE_MKFIFO) && defined(PROCESS_SUBSTITUTION) && !defined(__VMS)
-int
-mkfifo (char *path, int mode)
-{
-#if defined(S_IFIFO)
-  return ::mknod (path, (mode | S_IFIFO), 0);
-#else  /* !S_IFIFO */
-  return -1;
-#endif /* !S_IFIFO */
-}
-#endif /* !HAVE_MKFIFO && PROCESS_SUBSTITUTION */
 
 namespace bash
 {

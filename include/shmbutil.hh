@@ -26,8 +26,17 @@
 
 #include <string>
 
-#if defined(HANDLE_MULTIBYTE)
-#include "shmbchar.hh"
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
+
+#include "c-ctype.h"
+#include "mbchar.h"
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif
 
 namespace bash
@@ -35,8 +44,8 @@ namespace bash
 
 #if defined(HANDLE_MULTIBYTE)
 
-size_t xwcsrtombs (char *, const wchar_t **, size_t, std::mbstate_t *);
-size_t xmbsrtowcs (wchar_t *, const char **, size_t, std::mbstate_t *);
+size_t xwcsrtombs (char *, const wchar_t **, size_t, mbstate_t *);
+size_t xmbsrtowcs (wchar_t *, const char **, size_t, mbstate_t *);
 size_t xdupmbstowcs (wchar_t **, char ***, const char *);
 
 size_t mbstrlen (const char *);
@@ -96,8 +105,8 @@ MB_INVALIDCH (size_t size)
    with `;'. */
 #if defined(HANDLE_MULTIBYTE)
 #define DECLARE_MBSTATE                                                       \
-  std::mbstate_t state;                                                       \
-  std::memset (&state, '\0', sizeof (std::mbstate_t))
+  mbstate_t state;                                                            \
+  memset (&state, '\0', sizeof (mbstate_t))
 #else
 #define DECLARE_MBSTATE
 #endif /* !HANDLE_MULTIBYTE */
@@ -105,7 +114,7 @@ MB_INVALIDCH (size_t size)
 /* Initialize or reinitialize a multibyte state named `state'.  Call must be
    terminated with `;'. */
 #if defined(HANDLE_MULTIBYTE)
-#define INITIALIZE_MBSTATE std::memset (&state, '\0', sizeof (std::mbstate_t))
+#define INITIALIZE_MBSTATE memset (&state, '\0', sizeof (mbstate_t))
 #else
 #define INITIALIZE_MBSTATE
 #endif /* !HANDLE_MULTIBYTE */
@@ -115,11 +124,11 @@ MB_INVALIDCH (size_t size)
 static inline void
 advance_char (string_view::const_iterator &it,
               const string_view::const_iterator end, size_t locale_mb_cur_max,
-              bool locale_utf8locale, std::mbstate_t &state)
+              bool locale_utf8locale, mbstate_t &state)
 {
   if (locale_mb_cur_max > 1)
     {
-      std::mbstate_t state_bak;
+      mbstate_t state_bak;
       size_t mblength;
       if (is_basic (*it))
         mblength = 1;
@@ -128,8 +137,7 @@ advance_char (string_view::const_iterator &it,
       else
         {
           state_bak = state;
-          mblength
-              = std::mbrlen (&(*it), static_cast<size_t> (end - it), &state);
+          mblength = mbrlen (&(*it), static_cast<size_t> (end - it), &state);
         }
 
       if (mblength == static_cast<size_t> (-2)
@@ -153,7 +161,7 @@ advance_char (string_view::const_iterator &it,
     {                                                                         \
       if (locale_mb_cur_max > 1)                                              \
         {                                                                     \
-          std::mbstate_t state_bak;                                           \
+          mbstate_t state_bak;                                                \
           size_t _mblength;                                                   \
           int _f;                                                             \
                                                                               \
@@ -165,8 +173,7 @@ advance_char (string_view::const_iterator &it,
           else                                                                \
             {                                                                 \
               state_bak = state;                                              \
-              _mblength                                                       \
-                  = std::mbrlen (&(_str)[(_i)], (_strsize) - (_i), &state);   \
+              _mblength = mbrlen (&(_str)[(_i)], (_strsize) - (_i), &state);  \
             }                                                                 \
                                                                               \
           if (_mblength == static_cast<size_t> (-2)                           \
@@ -201,11 +208,11 @@ static inline void
 advance_char_minus_one (std::string::const_iterator &it,
                         const std::string::const_iterator end,
                         int locale_mb_cur_max, bool locale_utf8locale,
-                        std::mbstate_t &state)
+                        mbstate_t &state)
 {
   if (locale_mb_cur_max > 1)
     {
-      std::mbstate_t state_bak;
+      mbstate_t state_bak;
       size_t mblength;
       if (is_basic (*it))
         mblength = 1;
@@ -214,8 +221,7 @@ advance_char_minus_one (std::string::const_iterator &it,
       else
         {
           state_bak = state;
-          mblength
-              = std::mbrlen (&(*it), static_cast<size_t> (end - it), &state);
+          mblength = mbrlen (&(*it), static_cast<size_t> (end - it), &state);
         }
 
       if (mblength == static_cast<size_t> (-2)
@@ -236,7 +242,7 @@ advance_char_minus_one (std::string::const_iterator &it,
     {                                                                         \
       if (locale_mb_cur_max > 1)                                              \
         {                                                                     \
-          std::mbstate_t state_bak;                                           \
+          mbstate_t state_bak;                                                \
           size_t mblength;                                                    \
           int _f;                                                             \
                                                                               \
@@ -248,7 +254,7 @@ advance_char_minus_one (std::string::const_iterator &it,
           else                                                                \
             {                                                                 \
               state_bak = state;                                              \
-              mblength = std::mbrlen ((_str), (_strsize), &state);            \
+              mblength = mbrlen ((_str), (_strsize), &state);                 \
             }                                                                 \
                                                                               \
           if (mblength == static_cast<size_t> (-2)                            \
@@ -274,7 +280,7 @@ advance_char_minus_one (std::string::const_iterator &it,
     {                                                                         \
       if (locale_mb_cur_max > 1)                                              \
         {                                                                     \
-          std::mbstate_t state_bak;                                           \
+          mbstate_t state_bak;                                                \
           size_t mblength;                                                    \
           int _x, _p; /* _x == temp index into string, _p == prev index */    \
                                                                               \
@@ -282,8 +288,7 @@ advance_char_minus_one (std::string::const_iterator &it,
           while (_x < (_i))                                                   \
             {                                                                 \
               state_bak = state;                                              \
-              mblength                                                        \
-                  = std::mbrlen ((_str) + (_x), (_strsize) - (_x), &state);   \
+              mblength = mbrlen ((_str) + (_x), (_strsize) - (_x), &state);   \
                                                                               \
               if (mblength == static_cast<size_t> (-2)                        \
                   || mblength == static_cast<size_t> (-1))                    \
@@ -319,7 +324,7 @@ advance_char_minus_one (std::string::const_iterator &it,
     {                                                                         \
       if (locale_mb_cur_max > 1)                                              \
         {                                                                     \
-          std::mbstate_t state_bak;                                           \
+          mbstate_t state_bak;                                                \
           size_t mblength;                                                    \
           char *_x,                                                           \
               _p; /* _x == temp pointer into string, _p == prev pointer */    \
@@ -328,7 +333,7 @@ advance_char_minus_one (std::string::const_iterator &it,
           while (_x < (_str))                                                 \
             {                                                                 \
               state_bak = state;                                              \
-              mblength = std::mbrlen (_x, (_strsize)-_x, &state);             \
+              mblength = mbrlen (_x, (_strsize)-_x, &state);                  \
                                                                               \
               if (mblength == static_cast<size_t> (-2)                        \
                   || mblength == static_cast<size_t> (-1))                    \
@@ -362,11 +367,11 @@ advance_char_minus_one (std::string::const_iterator &it,
 static inline void
 append_char (std::string &dst, std::string::const_iterator &it,
              const std::string::const_iterator end, size_t locale_mb_cur_max,
-             bool locale_utf8locale, std::mbstate_t &state)
+             bool locale_utf8locale, mbstate_t &state)
 {
   if (locale_mb_cur_max > 1)
     {
-      std::mbstate_t state_bak;
+      mbstate_t state_bak;
       size_t mblength;
       if (is_basic (*it))
         mblength = 1;
@@ -375,8 +380,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
       else
         {
           state_bak = state;
-          mblength
-              = std::mbrlen (&(*it), static_cast<size_t> (end - it), &state);
+          mblength = mbrlen (&(*it), static_cast<size_t> (end - it), &state);
         }
       if (mblength == static_cast<size_t> (-2)
           || mblength == static_cast<size_t> (-1))
@@ -401,7 +405,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
     {                                                                         \
       if (locale_mb_cur_max > 1)                                              \
         {                                                                     \
-          std::mbstate_t state_bak;                                           \
+          mbstate_t state_bak;                                                \
           size_t mblength;                                                    \
           int _k;                                                             \
                                                                               \
@@ -413,7 +417,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
           else                                                                \
             {                                                                 \
               state_bak = state;                                              \
-              mblength = std::mbrlen ((_src), (_srcend) - (_src), &state);    \
+              mblength = mbrlen ((_src), (_srcend) - (_src), &state);         \
             }                                                                 \
           if (mblength == (size_t)-2 || mblength == (size_t)-1)               \
             {                                                                 \
@@ -443,7 +447,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
     {                                                                         \
       if (locale_mb_cur_max > 1)                                              \
         {                                                                     \
-          std::mbstate_t state_bak;                                           \
+          mbstate_t state_bak;                                                \
           size_t mblength;                                                    \
           size_t _k;                                                          \
                                                                               \
@@ -453,7 +457,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
           else                                                                \
             {                                                                 \
               state_bak = state;                                              \
-              mblength = std::mbrlen (                                        \
+              mblength = mbrlen (                                             \
                   (_src) + (_si),                                             \
                   static_cast<size_t> ((_srcend) - ((_src) + (_si))),         \
                   &state);                                                    \
@@ -490,7 +494,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
     {                                                                         \
       if (locale_mb_cur_max > 1)                                              \
         {                                                                     \
-          std::mbstate_t state_bak;                                           \
+          mbstate_t state_bak;                                                \
           size_t mblength;                                                    \
           int _i;                                                             \
                                                                               \
@@ -500,8 +504,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
           else                                                                \
             {                                                                 \
               state_bak = state;                                              \
-              mblength                                                        \
-                  = std::mbrlen ((_src) + (_si), (_slen) - (_si), &state);    \
+              mblength = mbrlen ((_src) + (_si), (_slen) - (_si), &state);    \
             }                                                                 \
           if (mblength == static_cast<size_t> (-2)                            \
               || mblength == static_cast<size_t> (-1))                        \
@@ -539,7 +542,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
     {                                                                         \
       if (locale_mb_cur_max > 1)                                              \
         {                                                                     \
-          std::mbstate_t state_bak;                                           \
+          mbstate_t state_bak;                                                \
           size_t mblength;                                                    \
           int _i;                                                             \
                                                                               \
@@ -549,8 +552,8 @@ append_char (std::string &dst, std::string::const_iterator &it,
           else                                                                \
             {                                                                 \
               state_bak = state;                                              \
-              mblength = std::mbrlen ((_src) + (_si),                         \
-                                      (_srcend) - ((_src) + (_si)), &state);  \
+              mblength = mbrlen ((_src) + (_si),                              \
+                                 (_srcend) - ((_src) + (_si)), &state);       \
             }                                                                 \
           if (mblength == static_cast<size_t> (-2)                            \
               || mblength == static_cast<size_t> (-1))                        \
@@ -561,7 +564,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
           else                                                                \
             mblength = (mblength < 1) ? 1 : mblength;                         \
                                                                               \
-          std::memcpy ((_dst), ((_src) + (_si)), mblength);                   \
+          memcpy ((_dst), ((_src) + (_si)), mblength);                        \
                                                                               \
           (_dst) += mblength;                                                 \
           (_si) += mblength;                                                  \
@@ -587,7 +590,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
       if (locale_mb_cur_max > 1)                                              \
         {                                                                     \
           int i;                                                              \
-          std::mbstate_t state_bak;                                           \
+          mbstate_t state_bak;                                                \
           size_t mblength;                                                    \
                                                                               \
           i = is_basic (*((_src) + (_si)));                                   \
@@ -598,8 +601,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
           else                                                                \
             {                                                                 \
               state_bak = state;                                              \
-              mblength                                                        \
-                  = std::mbrlen ((_src) + (_si), (_srcsize) - (_si), &state); \
+              mblength = mbrlen ((_src) + (_si), (_srcsize) - (_si), &state); \
             }                                                                 \
           if (mblength == static_cast<size_t> (-2)                            \
               || mblength == static_cast<size_t> (-1))                        \
@@ -629,7 +631,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
 #define SADD_MBQCHAR_BODY(_dst, _src, _si, _srcsize)                          \
                                                                               \
   int i;                                                                      \
-  std::mbstate_t state_bak;                                                   \
+  mbstate_t state_bak;                                                        \
   size_t mblength;                                                            \
                                                                               \
   i = is_basic (*((_src) + (_si)));                                           \
@@ -640,7 +642,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
   else                                                                        \
     {                                                                         \
       state_bak = state;                                                      \
-      mblength = std::mbrlen ((_src) + (_si), (_srcsize) - (_si), &state);    \
+      mblength = mbrlen ((_src) + (_si), (_srcsize) - (_si), &state);         \
     }                                                                         \
   if (mblength == static_cast<size_t> (-2)                                    \
       || mblength == static_cast<size_t> (-1))                                \
@@ -662,7 +664,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
 #define SADD_MBCHAR_BODY(_dst, _src, _si, _srcsize)                           \
                                                                               \
   int i;                                                                      \
-  std::mbstate_t state_bak;                                                   \
+  mbstate_t state_bak;                                                        \
   size_t mblength;                                                            \
                                                                               \
   i = is_basic (*((_src) + (_si)));                                           \
@@ -671,7 +673,7 @@ append_char (std::string &dst, std::string::const_iterator &it,
   else                                                                        \
     {                                                                         \
       state_bak = state;                                                      \
-      mblength = std::mbrlen ((_src) + (_si), (_srcsize) - (_si), &state);    \
+      mblength = mbrlen ((_src) + (_si), (_srcsize) - (_si), &state);         \
     }                                                                         \
   if (mblength == static_cast<size_t> (-2)                                    \
       || mblength == static_cast<size_t> (-1))                                \

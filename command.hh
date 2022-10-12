@@ -24,7 +24,6 @@
 
 #include "general.hh"
 #include "jobs.hh"
-#include "shmbutil.hh"
 
 #include <string>
 #include <typeinfo>

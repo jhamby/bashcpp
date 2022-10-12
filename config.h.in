@@ -416,6 +416,9 @@
 /* Define to 1 when the gnulib module getgroups should be tested. */
 #undef GNULIB_TEST_GETGROUPS
 
+/* Define to 1 when the gnulib module gethostname should be tested. */
+#undef GNULIB_TEST_GETHOSTNAME
+
 /* Define to 1 when the gnulib module getlogin_r should be tested. */
 #undef GNULIB_TEST_GETLOGIN_R
 
@@ -487,6 +490,12 @@
 
 /* Define to 1 when the gnulib module mkdir should be tested. */
 #undef GNULIB_TEST_MKDIR
+
+/* Define to 1 when the gnulib module mkfifo should be tested. */
+#undef GNULIB_TEST_MKFIFO
+
+/* Define to 1 when the gnulib module mknod should be tested. */
+#undef GNULIB_TEST_MKNOD
 
 /* Define to 1 when the gnulib module mktime should be tested. */
 #undef GNULIB_TEST_MKTIME
@@ -654,6 +663,9 @@
 
 /* Define to 1 when the gnulib module strnlen should be tested. */
 #undef GNULIB_TEST_STRNLEN
+
+/* Define to 1 when the gnulib module strpbrk should be tested. */
+#undef GNULIB_TEST_STRPBRK
 
 /* Define to 1 when the gnulib module strsignal should be tested. */
 #undef GNULIB_TEST_STRSIGNAL
@@ -1028,6 +1040,9 @@
 /* Define to 1 if you have the `dprintf' function. */
 #undef HAVE_DPRINTF
 
+/* Define to 1 if you have the `dup2' function. */
+#undef HAVE_DUP2
+
 /* Define to 1 if you have the `duplocale' function. */
 #undef HAVE_DUPLOCALE
 
@@ -1389,6 +1404,9 @@
 /* Define to 1 if you have the `mkfifo' function. */
 #undef HAVE_MKFIFO
 
+/* Define to 1 if you have the `mknod' function. */
+#undef HAVE_MKNOD
+
 /* Define to 1 if you have the `mkstemp' function. */
 #undef HAVE_MKSTEMP
 
@@ -1525,6 +1543,9 @@
 /* Define to 1 if you have the `regexec' function. */
 #undef HAVE_REGEXEC
 
+/* Define to 1 if you have the <regex.h> header file. */
+#undef HAVE_REGEX_H
+
 /* Define to 1 if you have the `rename' function. */
 #undef HAVE_RENAME
 
@@ -1572,6 +1593,9 @@
 
 /* Define to 1 if you have the `setlocale' function. */
 #undef HAVE_SETLOCALE
+
+/* Define to 1 if you have the `setregid' function. */
+#undef HAVE_SETREGID
 
 /* Define to 1 if you have the `setresgid' function. */
 #undef HAVE_SETRESGID
@@ -1925,12 +1949,12 @@
 /* Define to 1 if you have the <vfork.h> header file. */
 #undef HAVE_VFORK_H
 
+/* Define to 1 if you have the `vfprintf' function. */
+#undef HAVE_VFPRINTF
+
 /* Define to 1 or 0, depending whether the compiler supports simple visibility
    declarations. */
 #undef HAVE_VISIBILITY
-
-/* Define to 1 if you have the `vprintf' function. */
-#undef HAVE_VPRINTF
 
 /* Define to 1 if you have the `waitid' function. */
 #undef HAVE_WAITID
@@ -2146,6 +2170,9 @@
    builtins are available. */
 #undef HISTORY
 
+/* Define HOST_NAME_MAX when <limits.h> does not define it. */
+#undef HOST_NAME_MAX
+
 /* Define as const if the declaration of iconv() needs const. */
 #undef ICONV_CONST
 
@@ -2222,6 +2249,12 @@
 # undef __USE_MINGW_ANSI_STDIO
 #endif
 
+
+/* Define to 1 if mkfifo does not reject trailing slash */
+#undef MKFIFO_TRAILING_SLASH_BUG
+
+/* Define to 1 if mknod cannot create a fifo without super-user privileges */
+#undef MKNOD_FIFO_BUG
 
 /* Define if signal handlers must be reinstalled after invoking. */
 #undef MUST_REINSTALL_SIGHANDLERS

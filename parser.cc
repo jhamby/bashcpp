@@ -2976,7 +2976,7 @@ Shell::read_token_word (int character)
   if (token_buffer.capacity () < TOKEN_DEFAULT_INITIAL_SIZE)
     token_buffer.reserve (TOKEN_DEFAULT_INITIAL_SIZE);
 
-  all_digit_token = std::isdigit (character);
+  all_digit_token = c_isdigit (character);
   dollar_present = quoted = pass_next_character = compound_assignment = 0;
 
   for (;;)
@@ -3303,7 +3303,7 @@ Shell::read_token_word (int character)
     got_escaped_character:
       token_buffer.push_back (static_cast<char> (character));
 
-      all_digit_token &= std::isdigit (character);
+      all_digit_token &= c_isdigit (character);
       dollar_present |= character == '$';
 
     next_character:

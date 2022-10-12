@@ -176,7 +176,7 @@ Shell::sh_invalidnum (const char *s)
 {
   const char *msg;
 
-  if (*s == '0' && isdigit ((unsigned char)s[1]))
+  if (*s == '0' && isdigit (static_cast<unsigned char> (s[1])))
     msg = _ ("invalid octal number");
   else if (*s == '0' && s[1] == 'x')
     msg = _ ("invalid hex number");
@@ -292,7 +292,7 @@ Shell::sh_chkwrite (int s)
    in the list in *IP, if IP is non-null.  A convenience function for
    loadable builtins; also used by `test'. */
 char **
-make_builtin_argv (WORD_LIST *list, int *ip)
+Shell::make_builtin_argv (WORD_LIST *list, int *ip)
 {
   char **argv;
 
@@ -388,33 +388,6 @@ Shell::number_of_args ()
 #endif
 
   return posparam_count;
-}
-
-// static int changed_dollar_vars;
-
-/* Have the dollar variables been reset to new values since we last
-   checked? */
-int
-Shell::dollar_vars_changed ()
-{
-  return changed_dollar_vars;
-}
-
-void
-Shell::set_dollar_vars_unchanged ()
-{
-  changed_dollar_vars = 0;
-}
-
-void
-Shell::set_dollar_vars_changed ()
-{
-  if (variable_context)
-    changed_dollar_vars |= ARGS_FUNC;
-  else if (this_shell_builtin == &Shell::set_builtin)
-    changed_dollar_vars |= ARGS_SETBLTIN;
-  else
-    changed_dollar_vars |= ARGS_INVOC;
 }
 
 /* **************************************************************** */

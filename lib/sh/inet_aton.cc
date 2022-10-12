@@ -65,6 +65,9 @@ static char rcsid[]
 
 #include "config.h"
 
+#include "config-top.hh"
+#include "config-bot.hh"
+
 #if !defined(HAVE_INET_ATON) && defined(HAVE_NETWORK)                         \
     && defined(HAVE_NETINET_IN_H) && defined(HAVE_ARPA_INET_H)
 

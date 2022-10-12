@@ -30,7 +30,6 @@
 #include "shell.hh"
 
 #include "chartypes.hh"
-#include "shmbchar.hh"
 #include "shmbutil.hh"
 #include "typemax.hh"
 
@@ -219,10 +218,10 @@ Shell::sh_modcase (string_view string, string_view pat, sh_modcase_flags flags)
               nc = wc;
               break;
             case CASE_UPPER:
-              nc = std::toupper (wc);
+              nc = c_toupper (wc);
               break;
             case CASE_LOWER:
-              nc = std::tolower (wc);
+              nc = c_tolower (wc);
               break;
             case CASE_TOGGLEALL:
             case CASE_TOGGLE:

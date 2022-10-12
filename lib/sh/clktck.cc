@@ -57,7 +57,7 @@ get_clk_tck ()
     return retval;
 
 #if defined(HAVE_SYSCONF) && defined(_SC_CLK_TCK)
-  retval = ::sysconf (_SC_CLK_TCK);
+  retval = sysconf (_SC_CLK_TCK);
 #else  /* !SYSCONF || !_SC_CLK_TCK */
   retval = CLK_TCK;
 #endif /* !SYSCONF || !_SC_CLK_TCK */

@@ -24,7 +24,6 @@
 
 #include "general.hh"
 #include "shell.hh"
-#include "shmbchar.hh"
 #include "shmbutil.hh"
 
 namespace bash

@@ -857,6 +857,7 @@ static const char *structfile_header[] = {
   "",
   "/* TRANSLATORS: Please do not translate command names in descriptions */",
   "",
+  "#include \"config.h\"",
   "#include \"builtins.hh\"",
   nullptr
 };
@@ -942,7 +943,7 @@ write_builtins (DefFile &defs, ofstream &structfile, ofstream &externfile)
               if (structfile.is_open ())
                 {
                   structfile << "shell_builtins.emplace (std::make_pair (\""
-                             << builtin->name << "\", Builtin (";
+                             << builtin->name << "\", builtin (";
 
                   if (!builtin->function.empty () && !inhibit_functions)
                     structfile << "&Shell::" << builtin->function << ", ";

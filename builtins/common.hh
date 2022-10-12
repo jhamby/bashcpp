@@ -113,11 +113,19 @@ enum get_job_flags
 /* Flags for remember_args and value of changed_dollar_vars */
 enum remember_args_flags
 {
-  ARGS_NONE = 0x0,
+  ARGS_NOFLAGS = 0x0,
   ARGS_INVOC = 0x01,
   ARGS_FUNC = 0x02,
   ARGS_SETBLTIN = 0x04
 };
+
+static inline remember_args_flags &
+operator|= (remember_args_flags &a, const remember_args_flags &b)
+{
+  a = static_cast<remember_args_flags> (static_cast<uint32_t> (a)
+                                        | static_cast<uint32_t> (b));
+  return a;
+}
 
 /* Maximum number of attribute letters */
 static constexpr int MAX_ATTRIBUTES = 16;

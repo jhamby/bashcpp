@@ -1068,7 +1068,7 @@ Shell::print_formatted_time (FILE *fp, const char *format, time_t rs, int rsf,
           int prec = 3;     // default is three places past the decimal point.
           bool lng = false; // default is to not use minutes or append `s'
           s++;
-          if (isdigit (*s)) /* `precision' */
+          if (c_isdigit (*s)) /* `precision' */
             {
               prec = *s++ - '0';
               if (prec > 3)
@@ -3543,11 +3543,12 @@ Shell::execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out,
     {
       forcefork |= rd->rflags & REDIR_VARASSIGN;
       /* Safety */
-      forcefork |= (rd->redirector.r.dest == 0
-                    || fd_is_bash_input (rd->redirector.r.dest))
-                   && (INPUT_REDIRECT (rd->instruction)
-                       || TRANSLATE_REDIRECT (rd->instruction)
-                       || rd->instruction == r_close_this);
+      forcefork
+          |= (rd->redirector.r.dest == 0
+              || fd_is_bash_input (static_cast<int> (rd->redirector.r.dest)))
+             && (INPUT_REDIRECT (rd->instruction)
+                 || TRANSLATE_REDIRECT (rd->instruction)
+                 || rd->instruction == r_close_this);
     }
 
   if (forcefork || pipe_in != NO_PIPE || pipe_out != NO_PIPE || async)
@@ -3555,7 +3556,7 @@ Shell::execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out,
       /* We have a null command, but we really want a subshell to take
          care of it.  Just fork, do piping and redirections, and exit. */
       make_child_flags fork_flags = async ? FORK_ASYNC : FORK_SYNC;
-      if (make_child (nullptr, fork_flags) == 0)
+      if (make_child (string_view (), fork_flags) == 0)
         {
           /* Cancel traps, in trap.c. */
           restore_original_signals (); /* XXX */
@@ -3618,10 +3619,10 @@ Shell::execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out,
 void
 Shell::fix_assignment_words (WORD_LIST *words)
 {
-  if (words == 0)
+  if (words == nullptr)
     return;
 
-  struct builtin *b = 0;
+  builtin *b = nullptr;
   bool assoc = false, global = false, array = false;
 
   /* Skip over assignment statements preceding a command name */
@@ -3643,10 +3644,10 @@ Shell::fix_assignment_words (WORD_LIST *words)
     if (w->word->flags & W_ASSIGNMENT)
       {
         /* Lazy builtin lookup, only do it if we find an assignment */
-        if (b == 0)
+        if (b == nullptr)
           {
-            b = builtin_address_internal (wcmd->word->word, 0);
-            if (b == 0 || (b->flags & ASSIGNMENT_BUILTIN) == 0)
+            b = builtin_address_internal (wcmd->word->word, false);
+            if (b == nullptr || (b->flags & ASSIGNMENT_BUILTIN) == 0)
               return;
             else if (b && (b->flags & ASSIGNMENT_BUILTIN))
               wcmd->word->flags |= W_ASSNBLTIN;
@@ -3678,27 +3679,28 @@ Shell::fix_assignment_words (WORD_LIST *words)
     /* Note that we saw an associative array option to a builtin that takes
        assignment statements.  This is a bit of a kludge. */
     else if (w->word->word[0] == '-'
-             && (strpbrk (w->word->word + 1, "Aag") != 0))
+             && (strpbrk (w->word->word.c_str () + 1, "Aag") != nullptr))
 #else
-    else if (w->word->word[0] == '-' && strchr (w->word->word + 1, 'g'))
+    else if (w->word->word[0] == '-'
+             && w->word->word.find ('g', 1) != std::string::npos)
 #endif
       {
-        if (b == 0)
+        if (b == nullptr)
           {
-            b = builtin_address_internal (wcmd->word->word, 0);
-            if (b == 0 || (b->flags & ASSIGNMENT_BUILTIN) == 0)
+            b = builtin_address_internal (wcmd->word->word, false);
+            if (b == nullptr || (b->flags & ASSIGNMENT_BUILTIN) == 0)
               return;
             else if (b && (b->flags & ASSIGNMENT_BUILTIN))
               wcmd->word->flags |= W_ASSNBLTIN;
           }
         if ((wcmd->word->flags & W_ASSNBLTIN)
-            && strchr (w->word->word + 1, 'A'))
+            && w->word->word.find ('A', 1) != std::string::npos)
           assoc = true;
         else if ((wcmd->word->flags & W_ASSNBLTIN)
-                 && strchr (w->word->word + 1, 'a'))
+                 && w->word->word.find ('a', 1) != std::string::npos)
           array = true;
         if ((wcmd->word->flags & W_ASSNBLTIN)
-            && strchr (w->word->word + 1, 'g'))
+            && w->word->word.find ('g', 1) != std::string::npos)
           global = true;
       }
 }
@@ -3750,21 +3752,8 @@ Shell::check_command_builtin (WORD_LIST *words, int *typep)
 
   if (typep)
     *typep = type;
+
   return w;
-}
-
-/* Return 1 if the file found by searching $PATH for PATHNAME, defaulting
-   to PATHNAME, is a directory.  Used by the autocd code below. */
-bool
-Shell::is_dirname (const char *pathname)
-{
-  char *temp;
-  int ret;
-
-  temp = search_for_command (pathname, 0);
-  ret = temp ? file_isdir (temp) : file_isdir (pathname);
-  free (temp);
-  return ret;
 }
 
 /* The meaty part of all the executions.  We have to start hacking the

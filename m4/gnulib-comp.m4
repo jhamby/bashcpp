@@ -55,6 +55,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module bitrotate:
   # Code from module btowc:
   # Code from module builtin-expect:
+  # Code from module c-ctype:
   # Code from module c99:
   # Code from module calloc-gnu:
   # Code from module calloc-posix:
@@ -120,6 +121,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module getcwd-lgpl:
   # Code from module getdtablesize:
   # Code from module getgroups:
+  # Code from module gethostname:
   # Code from module getlogin_r:
   # Code from module getprogname:
   # Code from module getrandom:
@@ -176,6 +178,8 @@ AC_DEFUN([gl_EARLY],
   # Code from module memrchr:
   # Code from module minmax:
   # Code from module mkdir:
+  # Code from module mkfifo:
+  # Code from module mknod:
   # Code from module mktime:
   # Code from module msvc-inval:
   # Code from module msvc-nothrow:
@@ -270,6 +274,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module strings:
   # Code from module strnlen:
   # Code from module strnlen1:
+  # Code from module strpbrk:
   # Code from module strsignal:
   # Code from module strtoimax:
   # Code from module strtoll:
@@ -563,6 +568,12 @@ AC_DEFUN([gl_INIT],
   gl_CONDITIONAL([GL_COND_OBJ_GETGROUPS],
                  [test $HAVE_GETGROUPS = 0 || test $REPLACE_GETGROUPS = 1])
   gl_UNISTD_MODULE_INDICATOR([getgroups])
+  gl_FUNC_GETHOSTNAME
+  gl_CONDITIONAL([GL_COND_OBJ_GETHOSTNAME], [test $HAVE_GETHOSTNAME = 0])
+  AM_COND_IF([GL_COND_OBJ_GETHOSTNAME], [
+    gl_PREREQ_GETHOSTNAME
+  ])
+  gl_UNISTD_MODULE_INDICATOR([gethostname])
   gl_FUNC_GETLOGIN_R
   gl_CONDITIONAL([GL_COND_OBJ_GETLOGIN_R],
                  [test $HAVE_GETLOGIN_R = 0 || test $REPLACE_GETLOGIN_R = 1])
@@ -769,6 +780,14 @@ AC_DEFUN([gl_INIT],
   gl_FUNC_MKDIR
   gl_CONDITIONAL([GL_COND_OBJ_MKDIR], [test $REPLACE_MKDIR = 1])
   gl_SYS_STAT_MODULE_INDICATOR([mkdir])
+  gl_FUNC_MKFIFO
+  gl_CONDITIONAL([GL_COND_OBJ_MKFIFO],
+                 [test $HAVE_MKFIFO = 0 || test $REPLACE_MKFIFO = 1])
+  gl_UNISTD_MODULE_INDICATOR([mkfifo])
+  gl_FUNC_MKNOD
+  gl_CONDITIONAL([GL_COND_OBJ_MKNOD],
+                 [test $HAVE_MKNOD = 0 || test $REPLACE_MKNOD = 1])
+  gl_UNISTD_MODULE_INDICATOR([mknod])
   gl_FUNC_MKTIME
   if test $REPLACE_MKTIME = 1; then
     AC_LIBOBJ([mktime])
@@ -1137,6 +1156,12 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_STRNLEN
   ])
   gl_STRING_MODULE_INDICATOR([strnlen])
+  gl_FUNC_STRPBRK
+  gl_CONDITIONAL([GL_COND_OBJ_STRPBRK], [test $HAVE_STRPBRK = 0])
+  AM_COND_IF([GL_COND_OBJ_STRPBRK], [
+    gl_PREREQ_STRPBRK
+  ])
+  gl_STRING_MODULE_INDICATOR([strpbrk])
   gl_FUNC_STRSIGNAL
   gl_CONDITIONAL([GL_COND_OBJ_STRSIGNAL],
                  [test $HAVE_STRSIGNAL = 0 || test $REPLACE_STRSIGNAL = 1])
@@ -1502,6 +1527,8 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/bitrotate.h
   lib/btowc.c
   lib/c++defs.h
+  lib/c-ctype.c
+  lib/c-ctype.h
   lib/calloc.c
   lib/canonicalize-lgpl.c
   lib/canonicalize.c
@@ -1578,6 +1605,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/getcwd.c
   lib/getdtablesize.c
   lib/getgroups.c
+  lib/gethostname.c
   lib/getlogin_r.c
   lib/getprogname.c
   lib/getprogname.h
@@ -1670,6 +1698,8 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/memrchr.c
   lib/minmax.h
   lib/mkdir.c
+  lib/mkfifo.c
+  lib/mknod.c
   lib/mktime-internal.h
   lib/mktime.c
   lib/msvc-inval.c
@@ -1787,6 +1817,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/strnlen.c
   lib/strnlen1.c
   lib/strnlen1.h
+  lib/strpbrk.c
   lib/strsignal.c
   lib/strtoimax.c
   lib/strtol.c
@@ -1931,6 +1962,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/getcwd.m4
   m4/getdtablesize.m4
   m4/getgroups.m4
+  m4/gethostname.m4
   m4/getlogin.m4
   m4/getlogin_r.m4
   m4/getpagesize.m4
@@ -1987,6 +2019,8 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/memrchr.m4
   m4/minmax.m4
   m4/mkdir.m4
+  m4/mkfifo.m4
+  m4/mknod.m4
   m4/mktime.m4
   m4/mmap-anon.m4
   m4/mode_t.m4
@@ -2066,6 +2100,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/string_h.m4
   m4/strings_h.m4
   m4/strnlen.m4
+  m4/strpbrk.m4
   m4/strsignal.m4
   m4/strtoimax.m4
   m4/strtoll.m4

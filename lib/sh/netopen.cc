@@ -25,30 +25,26 @@
 
 #include "config.h"
 
+#include "config-top.hh"
+#include "config-bot.hh"
+
 #if defined(HAVE_NETWORK)
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include <cstdio>
 #include <sys/types.h>
 
-#if defined(HAVE_SYS_SOCKET_H)
-#include <sys/socket.h>
-#endif
+#include <unistd.h>
 
-#if defined(HAVE_NETINET_IN_H)
+#include <cstdio>
+
+#include <sys/socket.h>
+
 #include <netinet/in.h>
-#endif
 
 #if defined(HAVE_NETDB_H)
 #include <netdb.h>
 #endif
 
-#if defined(HAVE_ARPA_INET_H)
 #include <arpa/inet.h>
-#endif
 
 #include "bashintl.hh"
 

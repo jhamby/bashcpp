@@ -28,11 +28,6 @@
 #pragma clang diagnostic ignored "-Wmacro-redefined"
 #endif
 
-#if !defined(HAVE_VPRINTF) && defined(HAVE_DOPRNT)
-#define USE_VFPRINTF_EMULATION
-#define HAVE_VPRINTF
-#endif
-
 #if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_GETRLIMIT)
 #define HAVE_RESOURCE
 #endif

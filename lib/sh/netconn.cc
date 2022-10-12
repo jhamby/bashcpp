@@ -32,11 +32,7 @@
 
 #include <unistd.h>
 
-/* The second and subsequent conditions must match those used to decide
-   whether or not to call getpeername() in isnetconn(). */
-#if defined(HAVE_SYS_SOCKET_H) && defined(HAVE_GETPEERNAME) && !defined(SVR4_2)
 #include <sys/socket.h>
-#endif
 
 namespace bash
 {

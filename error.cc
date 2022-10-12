@@ -43,10 +43,10 @@ Shell::error_prolog (int print_lineno)
   line = (print_lineno && !interactive_shell) ? executing_line_number () : -1;
 
   if (line > 0)
-    std::fprintf (stderr, "%s:%s%d: ", ename,
+    fprintf (stderr, "%s:%s%d: ", ename,
                   gnu_error_format ? "" : _ (" line "), line);
   else
-    std::fprintf (stderr, "%s: ", ename);
+    fprintf (stderr, "%s: ", ename);
 }
 
 /* Return the name of the shell or the shell script for error reporting. */
@@ -89,7 +89,7 @@ Shell::get_name_for_error ()
 void
 Shell::file_error (const char *filename)
 {
-  report_error ("%s: %s", filename, std::strerror (errno));
+  report_error ("%s: %s", filename, strerror (errno));
 }
 
 void
@@ -104,26 +104,26 @@ Shell::programming_error (const char *format, ...)
 
   va_start (args, format);
 
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
   va_end (args);
 
 #if defined(HISTORY)
   if (remember_on_history)
     {
       h = last_history_line ();
-      std::fprintf (stderr, _ ("last command: %s\n"), h ? h : "(null)");
+      fprintf (stderr, _ ("last command: %s\n"), h ? h : "(null)");
     }
 #endif
 
 #if 0
-  std::fprintf (stderr, "Report this to %s\n", the_current_maintainer);
+  fprintf (stderr, "Report this to %s\n", the_current_maintainer);
 #endif
 
-  std::fprintf (stderr, _ ("Aborting..."));
-  std::fflush (stderr);
+  fprintf (stderr, _ ("Aborting..."));
+  fflush (stderr);
 
-  std::abort ();
+  abort ();
 }
 
 /* Print an error message and, if `set -e' has been executed, exit the
@@ -139,8 +139,8 @@ Shell::report_error (const char *format, ...)
 
   va_start (args, format);
 
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
 
   va_end (args);
   if (exit_immediately_on_error)
@@ -160,8 +160,8 @@ Shell::fatal_error (const char *format, ...)
 
   va_start (args, format);
 
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
 
   va_end (args);
   sh_exit (2);
@@ -176,8 +176,8 @@ Shell::internal_error (const char *format, ...)
 
   va_start (args, format);
 
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
 
   va_end (args);
 }
@@ -188,12 +188,12 @@ Shell::internal_warning (const char *format, ...)
   va_list args;
 
   error_prolog (1);
-  std::fprintf (stderr, _ ("warning: "));
+  fprintf (stderr, _ ("warning: "));
 
   va_start (args, format);
 
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
 
   va_end (args);
 }
@@ -205,12 +205,12 @@ Shell::internal_inform (const char *format, ...)
 
   error_prolog (1);
   /* TRANSLATORS: this is a prefix for informational messages. */
-  std::fprintf (stderr, _ ("INFORM: "));
+  fprintf (stderr, _ ("INFORM: "));
 
   va_start (args, format);
 
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
 
   va_end (args);
 }
@@ -222,12 +222,12 @@ Shell::internal_debug (const char *format, ...)
   va_list args;
 
   error_prolog (1);
-  std::fprintf (stderr, _ ("DEBUG warning: "));
+  fprintf (stderr, _ ("DEBUG warning: "));
 
   va_start (args, format);
 
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
 
   va_end (args);
 }
@@ -244,8 +244,8 @@ Shell::sys_error (const char *format, ...)
 
   va_start (args, format);
 
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, ": %s\n", strerror (e));
+  vfprintf (stderr, format, args);
+  fprintf (stderr, ": %s\n", strerror (e));
 
   va_end (args);
 }
@@ -267,21 +267,21 @@ Shell::parser_error (int lineno, const char *format, ...)
   std::string iname = yy_input_name ();
 
   if (interactive)
-    std::fprintf (stderr, "%s: ", ename);
+    fprintf (stderr, "%s: ", ename);
   else if (interactive_shell)
-    std::fprintf (stderr, "%s: %s:%s%d: ", ename, iname.c_str (),
+    fprintf (stderr, "%s: %s:%s%d: ", ename, iname.c_str (),
                   gnu_error_format ? "" : _ (" line "), lineno);
   else if (STREQ (ename, iname.c_str ()))
-    std::fprintf (stderr, "%s:%s%d: ", ename,
+    fprintf (stderr, "%s:%s%d: ", ename,
                   gnu_error_format ? "" : _ (" line "), lineno);
   else
-    std::fprintf (stderr, "%s: %s:%s%d: ", ename, iname.c_str (),
+    fprintf (stderr, "%s: %s:%s%d: ", ename, iname.c_str (),
                   gnu_error_format ? "" : _ (" line "), lineno);
 
   va_start (args, format);
 
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
 
   va_end (args);
 
@@ -296,16 +296,16 @@ itrace (const char *format, ...)
 {
   va_list args;
 
-  std::fprintf (stderr, "TRACE: pid %ld: ", static_cast<long> (getpid ()));
+  fprintf (stderr, "TRACE: pid %ld: ", static_cast<long> (getpid ()));
 
   va_start (args, format);
 
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
 
   va_end (args);
 
-  std::fflush (stderr);
+  fflush (stderr);
 }
 
 #endif /* DEBUG */

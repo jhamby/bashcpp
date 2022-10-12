@@ -36,10 +36,6 @@
 
 #include "builtins/common.hh"
 
-#if defined(HAVE_MBSTR_H) && defined(HAVE_MBSCHR)
-#include <mbstr.h> /* mbschr */
-#endif
-
 #include "tilde.hh"
 
 #ifdef __CYGWIN__
@@ -232,7 +228,7 @@ string_to_rlimtype (char *s)
       neg = *s == '-';
       s++;
     }
-  for (; s && *s && std::isdigit (*s); s++)
+  for (; s && *s && c_isdigit (*s); s++)
     ret = (ret * 10) + static_cast<RLIMTYPE> (todigit (*s));
   return neg ? -ret : ret;
 }
@@ -376,15 +372,17 @@ Shell::check_identifier (WORD_DESC *word, bool check_word)
       internal_error (_ ("`%s': not a valid identifier"), word->word.c_str ());
       return false;
     }
-  else if (check_word
-           && (all_digits (word->word.c_str ())
-               || !legal_identifier (word->word.c_str ())))
+  else if (check_word)
     {
-      internal_error (_ ("`%s': not a valid identifier"), word->word.c_str ());
-      return false;
+      const char *word_str = word->word.c_str ();
+      if (all_digits (word_str) || !legal_identifier (word_str))
+        {
+          internal_error (_ ("`%s': not a valid identifier"),
+                          word->word.c_str ());
+          return false;
+        }
     }
-  else
-    return true;
+  return true;
 }
 
 /* Return true if STRING is a valid alias name.  The shell accepts
@@ -652,7 +650,7 @@ Shell::polite_directory_format (string_view name)
       std::string tdir_buf;
       tdir_buf.reserve (name.size () - l + 1);
       tdir_buf.push_back ('~');
-      tdir_buf.append (name.begin() + l, name.end ());
+      tdir_buf.append (name.begin () + l, name.end ());
       return tdir_buf;
     }
   else
@@ -725,8 +723,8 @@ Shell::bash_special_tilde_expansions (const char *text)
   else if (text[0] == '-' && text[1] == '\0')
     result = get_string_value ("OLDPWD");
 #if defined(PUSHD_AND_POPD)
-  else if (std::isdigit (*text)
-           || ((*text == '+' || *text == '-') && std::isdigit (text[1])))
+  else if (c_isdigit (*text)
+           || ((*text == '+' || *text == '-') && c_isdigit (text[1])))
     result = get_dirstack_from_string (text);
 #endif
 

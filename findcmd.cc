@@ -292,13 +292,13 @@ get_next_path_element (char *path_list, int *path_index_pointer)
 
 /* Look for PATHNAME in $PATH.  Returns either the hashed command
    corresponding to PATHNAME or the first instance of PATHNAME found
-   in $PATH.  If (FLAGS&CMDSRCH_HASH) is non-zero, insert the instance of
+   in $PATH.  If (FLAGS & CMDSRCH_HASH) is non-zero, insert the instance of
    PATHNAME found in $PATH into the command hash table.
-   If (FLAGS&CMDSRCH_STDPATH) is non-zero, we are running in a `command -p'
+   If (FLAGS & CMDSRCH_STDPATH) is non-zero, we are running in a `command -p'
    environment and should use the Posix standard path.
    Returns a newly-allocated string. */
-char *
-search_for_command (const std::string &pathname, int flags)
+std::string
+Shell::search_for_command (string_view pathname, int flags)
 {
   char *hashed_file, *command, *path_list;
   int temp_path, st;

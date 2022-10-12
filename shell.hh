@@ -993,6 +993,8 @@ protected:
 
   int xattrfd;
 
+  remember_args_flags changed_dollar_vars;
+
   /* ************************************************************** */
   /*		Bash Variables (8-bit bool/char types)		    */
   /* ************************************************************** */
@@ -1668,6 +1670,23 @@ public:
 
   // typedefs for builtins (public for access from builtins struct)
 
+  /* The thing that we build the map of builtins out of. */
+  struct builtin
+  {
+    builtin (sh_builtin_func_t func_, const char *const *ldoc_,
+             const char *sdoc_, void *h_, builtin_flags flags_)
+        : function (func_), long_doc (ldoc_), short_doc (sdoc_), handle (h_),
+          flags (flags_)
+    {
+    }
+
+    sh_builtin_func_t function;  /* The address of the invoked function. */
+    const char *const *long_doc; /* NULL terminated array of strings. */
+    const char *short_doc;       /* Short version of documentation. */
+    void *handle;                /* dlsym() handle */
+    builtin_flags flags;         /* One or more of the #defines above. */
+  };
+
 #if defined(ALIAS)
   int alias_builtin (WORD_LIST *);
   int unalias_builtin (WORD_LIST *);
@@ -1773,9 +1792,6 @@ public:
   int mapfile_builtin (WORD_LIST *);
 
   // other functions moved from builtins/common.hh
-
-  // This is now in the generated builtins.cc file.
-  void initialize_shell_builtins ();
 
   /* functions from cd_def.cc */
 
@@ -1922,9 +1938,29 @@ public:
   void shift_args (int);
   int number_of_args ();
 
-  int dollar_vars_changed ();
-  void set_dollar_vars_unchanged ();
-  void set_dollar_vars_changed ();
+  // Have the dollar variables been reset to new values since we last checked?
+  remember_args_flags
+  dollar_vars_changed ()
+  {
+    return changed_dollar_vars;
+  }
+
+  void
+  set_dollar_vars_unchanged ()
+  {
+    changed_dollar_vars = ARGS_NOFLAGS;
+  }
+
+  void
+  set_dollar_vars_changed ()
+  {
+    if (variable_context)
+      changed_dollar_vars |= ARGS_FUNC;
+    else if (this_shell_builtin == &Shell::set_builtin)
+      changed_dollar_vars |= ARGS_SETBLTIN;
+    else
+      changed_dollar_vars |= ARGS_INVOC;
+  }
 
   int get_numeric_arg (WORD_LIST *, int, int64_t *);
   int get_exitstat (WORD_LIST *);
@@ -1935,6 +1971,19 @@ public:
   int get_job_spec (WORD_LIST *);
 #endif
   int display_signal_list (WORD_LIST *, int);
+
+  builtin *builtin_address_internal (string_view, bool);
+
+  sh_builtin_func_t find_shell_builtin (char *);
+  sh_builtin_func_t builtin_address (char *);
+  sh_builtin_func_t find_special_builtin (char *);
+
+  // This function is now defined in the generated builtins.cc.
+  void initialize_shell_builtins ();
+
+#if defined(ARRAY_VARS)
+  int set_expand_once (int, int);
+#endif
 
   /* Keeps track of the current working directory. */
 
@@ -3191,28 +3240,27 @@ protected:
 
   std::string sh_modcase (string_view, string_view, sh_modcase_flags);
 
-  /* from lib/sh/eaccess.cc */
+  /* use faccessat () from gnulib or OS */
 
-  int sh_stataccess (const char *, int);
-  int sh_eaccess (const char *, int);
+  int
+  sh_eaccess (const char *path, int mode)
+  {
+    return faccessat (AT_FDCWD, path, mode, AT_EACCESS);
+  }
 
   /* from lib/sh/makepath.cc */
 
   char *sh_makepath (const char *, const char *, mp_flags);
 
-  /* from lib/sh/mbschr.cc */
-
-  const char *mbschr (const char *, int);
-
   /* from lib/sh/netopen.cc */
 
 #ifndef HAVE_GETADDRINFO
-  int _netopen4 (string_view, string_view, int);
+  int _netopen4 (const char *, const char *, int);
 #else /* HAVE_GETADDRINFO */
-  int _netopen6 (string_view, string_view, int);
+  int _netopen6 (const char *, const char *, int);
 #endif
 
-  int netopen (string_view);
+  int netopen (const char *);
 
   /*
    * Open a TCP or UDP connection to HOST on port SERV.  Uses getaddrinfo(3)
@@ -3220,7 +3268,7 @@ protected:
    * Returns the connected socket or -1 on error.
    */
   int
-  _netopen (string_view host, string_view serv, int typ)
+  _netopen (const char * host, const char * serv, int typ)
   {
 #ifdef HAVE_GETADDRINFO
     return _netopen6 (host, serv, typ);
@@ -3882,6 +3930,26 @@ protected:
   }
 
   void do_piping (int, int);
+
+  WORD_LIST *check_command_builtin (WORD_LIST *, int *);
+
+  /* Return 1 if the file found by searching $PATH for PATHNAME, defaulting
+     to PATHNAME, is a directory.  Used by the autocd code in execute_cmd.cc. */
+  bool
+  is_dirname (const char *pathname)
+  {
+    char *temp;
+    int ret;
+
+    temp = search_for_command (pathname, 0);
+    ret = temp ? file_isdir (temp) : file_isdir (pathname);
+    delete[] temp;
+    return ret;
+  }
+
+  /* Functions from findcmd.cc */
+
+  char *search_for_command (const char *, int);
 
   /* Functions from mailcheck.cc */
 
@@ -5763,23 +5831,6 @@ protected:
   // FIXME: change this to a std::map type.
   std::vector<STRING_INT_ALIST> shopt_alist;
 
-  /* The thing that we build the map of builtins out of. */
-  struct builtin
-  {
-    builtin (sh_builtin_func_t func_, const char *const *ldoc_,
-             const char *sdoc_, void *h_, builtin_flags flags_)
-        : function (func_), long_doc (ldoc_), short_doc (sdoc_), handle (h_),
-          flags (flags_)
-    {
-    }
-
-    sh_builtin_func_t function;  /* The address of the invoked function. */
-    const char *const *long_doc; /* NULL terminated array of strings. */
-    const char *short_doc;       /* Short version of documentation. */
-    void *handle;                /* dlsym() handle */
-    builtin_flags flags;         /* One or more of the #defines above. */
-  };
-
   // initialized at startup by init method in generated builtins.cc.
   std::map<string_view, builtin> shell_builtins;
 
@@ -6254,5 +6305,105 @@ struct sh_parser_state_t
 };
 
 } // namespace bash
+
+#ifdef malloc
+#undef malloc
+#endif
+#define malloc(x) Error - use C++ new instead !
+
+#ifdef free
+#undef free
+#endif
+#define free(x) Error - Use C++ delete instead !
+
+#ifdef calloc
+#undef calloc
+#endif
+#define calloc(x, y) Error - Use C++ vector instead !
+
+#ifdef realloc
+#undef realloc
+#endif
+#define realloc(x, y) Error - Use C++ vector instead !
+
+#ifdef strdup
+#undef strdup
+#endif
+#define strdup(x) Error - Use savestring () instead !
+
+#ifdef isalnum
+#undef isalnum
+#endif
+#define isalnum(x) Error - Use c_isalnum () instead !
+
+#ifdef isalpha
+#undef isalpha
+#endif
+#define isalpha(x) Error - Use c_isalpha () instead !
+
+#ifdef isascii
+#undef isascii
+#endif
+#define isascii(x) Error - Use c_isascii () instead !
+
+#ifdef isblank
+#undef isblank
+#endif
+#define isblank(x) Error - Use c_isblank () instead !
+
+#ifdef iscntrl
+#undef iscntrl
+#endif
+#define iscntrl(x) Error - Use c_iscntrl () instead !
+
+#ifdef isdigit
+#undef isdigit
+#endif
+#define isdigit(x) Error - Use c_isdigit () instead !
+
+#ifdef isgraph
+#undef isgraph
+#endif
+#define isgraph(x) Error - Use c_isgraph () instead !
+
+#ifdef islower
+#undef islower
+#endif
+#define islower(x) Error - Use c_islower () instead !
+
+#ifdef isprint
+#undef isprint
+#endif
+#define isprint(x) Error - Use c_isprint () instead !
+
+#ifdef ispunct
+#undef ispunct
+#endif
+#define ispunct(x) Error - Use c_ispunct () instead !
+
+#ifdef isspace
+#undef isspace
+#endif
+#define isspace(x) Error - Use c_isspace () instead !
+
+#ifdef isupper
+#undef isupper
+#endif
+#define isupper(x) Error - Use c_isupper () instead !
+
+#ifdef isxdigit
+#undef isxdigit
+#endif
+#define isxdigit(x) Error - Use c_isxdigit () instead !
+
+#ifdef tolower
+#undef tolower
+#endif
+#define tolower(x) Error - Use c_tolower () instead !
+
+#ifdef toupper
+#undef toupper
+#endif
+#define toupper(x) Error - Use c_toupper () instead !
 
 #endif /* _SHELL_H_ */

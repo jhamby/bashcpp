@@ -395,7 +395,7 @@ BASH_LIB_NSL
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_MAJOR
-AC_CHECK_HEADERS([grp.h netdb.h pwd.h sgtty.h \
+AC_CHECK_HEADERS([grp.h netdb.h pwd.h regex.h sgtty.h \
 		  sys/dir.h sys/file.h sys/ioctl.h sys/ndir.h sys/param.h \
 		  sys/resource.h syslog.h termio.h termios.h])
 
@@ -427,19 +427,18 @@ AC_FUNC_MMAP
 AC_FUNC_REALLOC
 AC_FUNC_STRCOLL
 AC_FUNC_STRNLEN
-AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf eaccess fchdir ftruncate \
+AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf dup2 faccessat fchdir ftruncate \
 		getaddrinfo getcwd getdtablesize fnmatch getentropy getgroups gethostbyname \
 		gethostname getpeername getpwent getpwnam getpwuid \
 		getrandom getrlimit getrusage getservbyname getservent \
 		gettimeofday group_member imaxdiv inet_aton isascii kill killpg \
 		localeconv localtime_r lstat mblen mbrlen mbschr mbsnrtowcs mkdir mkdtemp \
-		mkfifo mkstemp mmap nl_langinfo pathconf pselect putenv random \
+		mkfifo mknod mkstemp mmap nl_langinfo pathconf pselect putenv random \
 		readlink regcomp regexec rename select setdtablesize setenv setitimer \
-		setlocale setresgid setresuid setvbuf socket stpcpy strcasecmp \
+		setlocale setregid setresgid setresuid setvbuf socket stpcpy strcasecmp \
 		strcasestr strchrnul strerror strncasecmp strnlen strpbrk \
 		strsignal strtoimax strtoumax sysconf tcgetattr \
-		times ttyname tzset ulimit uname vprintf waitpid \
-		wcswidth wcwidth])
+		times ttyname tzset ulimit uname vfprintf waitpid wcswidth wcwidth])
 
 BASH_CHECK_MULTIBYTE
 

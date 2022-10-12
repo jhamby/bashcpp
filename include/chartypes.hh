@@ -23,20 +23,15 @@
 
 #include <cctype>
 
+#include "shmbutil.hh"
+
 namespace bash
 {
-
-// OpenVMS has C++03 except some C99 functions are in namespace std only.
-#if __cplusplus >= 201103L || defined(__VMS)
-using std::isblank;
-#else
-using ::isblank;
-#endif
 
 static inline bool
 isword (char c)
 {
-  return std::isalpha (c) || std::isdigit (c) || (c == '_');
+  return c_isalpha (c) || c_isdigit (c) || (c == '_');
 }
 
 static inline int
@@ -76,14 +71,14 @@ tochar (int i)
 static inline char
 toctrl (char c)
 {
-  return (c == '?') ? 0x7f : (std::toupper (c) & 0x1f);
+  return (c == '?') ? 0x7f : (c_toupper (c) & 0x1f);
 }
 
 /* control char to letter -- ASCII */
 static inline int
 unctrl (char c)
 {
-  return std::toupper (c) ^ 0x40;
+  return c_toupper (c) ^ 0x40;
 }
 
 }

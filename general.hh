@@ -44,31 +44,6 @@
 #include <exception>
 #include <string>
 
-#ifdef malloc
-#undef malloc
-#endif
-#define malloc(x) Error - use C++ new instead !
-
-#ifdef free
-#undef free
-#endif
-#define free(x) Error - Use C++ delete instead !
-
-#ifdef calloc
-#undef calloc
-#endif
-#define calloc(x, y) Error - Use C++ vector instead !
-
-#ifdef realloc
-#undef realloc
-#endif
-#define realloc(x, y) Error - Use C++ vector instead !
-
-#ifdef strdup
-#undef strdup
-#endif
-#define strdup(x) Error - Use savestring () instead !
-
 namespace bash
 {
 
@@ -225,8 +200,8 @@ savestring (string_view s)
 #define INT_BUFSIZE_BOUND(t) (INT_STRLEN_BOUND (t) + 1)
 
 /* Define exactly what a legal shell identifier consists of. */
-#define legal_variable_starter(c) (std::isalpha (c) || (c == '_'))
-#define legal_variable_char(c) (std::isalnum (c) || c == '_')
+#define legal_variable_starter(c) (c_isalpha (c) || (c == '_'))
+#define legal_variable_char(c) (c_isalnum (c) || c == '_')
 
 /* Definitions used in subst.c and by the `read' builtin for field
    splitting. */
@@ -537,7 +512,7 @@ line_isblank (string_view line)
   string_view::const_iterator it;
   for (it = line.begin (); it != line.end (); ++it)
     {
-      if (!isblank (static_cast<unsigned char> (*it)))
+      if (!c_isblank (*it))
         return false;
     }
 
@@ -550,7 +525,7 @@ all_digits (string_view string)
 {
   string_view::const_iterator it;
   for (it = string.begin (); it != string.end (); ++it)
-    if (std::isdigit (*it) == 0)
+    if (!c_isdigit (*it))
       return false;
 
   return true;

@@ -574,8 +574,8 @@ static STRING_INT_ALIST _redir_special_filenames[] = {
   { nullptr, -1 }
 };
 
-static int
-redir_special_open (int spec, char *filename, int flags, int mode,
+int
+Shell::redir_special_open (int spec, char *filename, int flags, int mode,
                     enum r_instruction ri)
 {
   int fd;

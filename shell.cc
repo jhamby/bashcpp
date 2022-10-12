@@ -46,11 +46,7 @@
 #include "builtins.hh"
 #include "builtins/common.hh"
 #include "flags.hh"
-#include "parser.hh"
 #include "shell.hh"
-#include "trap.hh"
-
-#include "jobs.hh"
 
 #include "findcmd.hh"
 #include "input.hh"

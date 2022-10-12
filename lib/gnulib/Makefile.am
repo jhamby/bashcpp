@@ -32,6 +32,7 @@
 #  --no-conditional-dependencies \
 #  --no-libtool \
 #  --macro-prefix=gl \
+#  c-ctype \
 #  copysign \
 #  dprintf \
 #  dup2 \
@@ -42,12 +43,15 @@
 #  full-read \
 #  full-write \
 #  getcwd \
+#  gethostname \
 #  gettimeofday \
 #  glob \
 #  inet_ntop \
 #  ldexpl \
 #  lstat \
 #  mbschr \
+#  mkfifo \
+#  mknod \
 #  mktime \
 #  nl_langinfo \
 #  posix_spawn \
@@ -63,12 +67,14 @@
 #  strchrnul \
 #  strerror_r-posix \
 #  strnlen \
+#  strpbrk \
 #  strsignal \
 #  strtoimax \
 #  strtoumax \
 #  times \
 #  timespec \
 #  tmpfile \
+#  vfprintf-posix \
 #  vprintf-posix \
 #  wcswidth
 
@@ -256,6 +262,12 @@ libgnu_a_SOURCES += btowc.c
 endif
 
 ## end   gnulib module btowc
+
+## begin gnulib module c-ctype
+
+libgnu_a_SOURCES += c-ctype.h c-ctype.c
+
+## end   gnulib module c-ctype
 
 ## begin gnulib module calloc-gnu
 
@@ -873,6 +885,16 @@ libgnu_a_SOURCES += getgroups.c
 endif
 
 ## end   gnulib module getgroups
+
+## begin gnulib module gethostname
+
+if GL_COND_OBJ_GETHOSTNAME
+libgnu_a_SOURCES += gethostname.c
+endif
+
+EXTRA_DIST += w32sock.h
+
+## end   gnulib module gethostname
 
 ## begin gnulib module getlogin_r
 
@@ -1733,6 +1755,22 @@ libgnu_a_SOURCES += mkdir.c
 endif
 
 ## end   gnulib module mkdir
+
+## begin gnulib module mkfifo
+
+if GL_COND_OBJ_MKFIFO
+libgnu_a_SOURCES += mkfifo.c
+endif
+
+## end   gnulib module mkfifo
+
+## begin gnulib module mknod
+
+if GL_COND_OBJ_MKNOD
+libgnu_a_SOURCES += mknod.c
+endif
+
+## end   gnulib module mknod
 
 ## begin gnulib module mktime
 
@@ -3098,6 +3136,14 @@ endif
 libgnu_a_SOURCES += strnlen1.h strnlen1.c
 
 ## end   gnulib module strnlen1
+
+## begin gnulib module strpbrk
+
+if GL_COND_OBJ_STRPBRK
+libgnu_a_SOURCES += strpbrk.c
+endif
+
+## end   gnulib module strpbrk
 
 ## begin gnulib module strsignal
 

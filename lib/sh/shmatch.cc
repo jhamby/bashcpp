@@ -20,6 +20,9 @@
 
 #include "config.h"
 
+#include "config-top.hh"
+#include "config-bot.hh"
+
 #if defined(HAVE_POSIX_REGEXP)
 
 #ifdef HAVE_UNISTD_H

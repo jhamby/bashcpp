@@ -205,19 +205,18 @@ bash_SOURCES += $(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
 	$(RLDIR)/rlshell.hh $(RLDIR)/rltty.hh $(RLDIR)/rlwinsize.hh \
 	$(RLDIR)/tcap.hh $(RLDIR)/tilde.hh
 
-# TODO: remove any source files now supplied by Gnulib.
-bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/oslib.cc \
+bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc \
 	$(SHDIR)/setlinebuf.cc $(SHDIR)/zread.cc \
 	$(SHDIR)/inet_aton.cc $(SHDIR)/netconn.cc $(SHDIR)/netopen.cc \
 	$(SHDIR)/timeval.cc $(SHDIR)/makepath.cc \
 	$(SHDIR)/pathcanon.cc $(SHDIR)/pathphys.cc \
 	$(SHDIR)/spell.cc $(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
-	$(SHDIR)/strcasestr.cc $(SHDIR)/mailstat.cc \
+	$(SHDIR)/mailstat.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
-	$(SHDIR)/shmatch.cc \
+	$(SHDIR)/shmatch.cc $(SHDIR)/oslib.cc \
 	$(SHDIR)/stringlist.cc $(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc \
-	$(SHDIR)/mbschr.cc $(SHDIR)/timers.cc $(SHDIR)/zcatfd.cc \
-	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
+	$(SHDIR)/timers.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc \
 	$(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
 	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc \
 	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \

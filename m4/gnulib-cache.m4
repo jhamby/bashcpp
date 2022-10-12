@@ -37,6 +37,7 @@
 #  --no-conditional-dependencies \
 #  --no-libtool \
 #  --macro-prefix=gl \
+#  c-ctype \
 #  copysign \
 #  dprintf \
 #  dup2 \
@@ -47,12 +48,15 @@
 #  full-read \
 #  full-write \
 #  getcwd \
+#  gethostname \
 #  gettimeofday \
 #  glob \
 #  inet_ntop \
 #  ldexpl \
 #  lstat \
 #  mbschr \
+#  mkfifo \
+#  mknod \
 #  mktime \
 #  nl_langinfo \
 #  posix_spawn \
@@ -68,18 +72,21 @@
 #  strchrnul \
 #  strerror_r-posix \
 #  strnlen \
+#  strpbrk \
 #  strsignal \
 #  strtoimax \
 #  strtoumax \
 #  times \
 #  timespec \
 #  tmpfile \
+#  vfprintf-posix \
 #  vprintf-posix \
 #  wcswidth
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
 gl_MODULES([
+  c-ctype
   copysign
   dprintf
   dup2
@@ -90,12 +97,15 @@ gl_MODULES([
   full-read
   full-write
   getcwd
+  gethostname
   gettimeofday
   glob
   inet_ntop
   ldexpl
   lstat
   mbschr
+  mkfifo
+  mknod
   mktime
   nl_langinfo
   posix_spawn
@@ -111,12 +121,14 @@ gl_MODULES([
   strchrnul
   strerror_r-posix
   strnlen
+  strpbrk
   strsignal
   strtoimax
   strtoumax
   times
   timespec
   tmpfile
+  vfprintf-posix
   vprintf-posix
   wcswidth
 ])
