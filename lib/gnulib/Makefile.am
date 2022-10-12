@@ -32,15 +32,22 @@
 #  --no-conditional-dependencies \
 #  --no-libtool \
 #  --macro-prefix=gl \
+#  copysign \
 #  dprintf \
+#  faccessat \
 #  fpurge \
 #  getcwd \
 #  gettimeofday \
 #  inet_ntop \
+#  ldexpl \
 #  mbschr \
 #  mktime \
+#  nl_langinfo \
 #  random_r \
 #  rename \
+#  setlocale \
+#  snprintf \
+#  sprintf-posix \
 #  stdio \
 #  strcase \
 #  strcasestr \
@@ -250,6 +257,14 @@ EXTRA_DIST += dirent-private.h
 
 ## end   gnulib module closedir
 
+## begin gnulib module copysign
+
+if GL_COND_OBJ_COPYSIGN
+libgnu_a_SOURCES += copysign.c
+endif
+
+## end   gnulib module copysign
+
 ## begin gnulib module dirent
 
 BUILT_SOURCES += dirent.h
@@ -386,6 +401,14 @@ EXTRA_DIST += error.h
 
 ## end   gnulib module error
 
+## begin gnulib module euidaccess
+
+if GL_COND_OBJ_EUIDACCESS
+libgnu_a_SOURCES += euidaccess.c
+endif
+
+## end   gnulib module euidaccess
+
 ## begin gnulib module exitfail
 
 libgnu_a_SOURCES += exitfail.c
@@ -393,6 +416,18 @@ libgnu_a_SOURCES += exitfail.c
 EXTRA_DIST += exitfail.h
 
 ## end   gnulib module exitfail
+
+## begin gnulib module faccessat
+
+if GL_COND_OBJ_FACCESSAT
+libgnu_a_SOURCES += faccessat.c
+endif
+
+EXTRA_DIST += at-func.c
+
+EXTRA_libgnu_a_SOURCES += at-func.c
+
+## end   gnulib module faccessat
 
 ## begin gnulib module fchdir
 
@@ -483,6 +518,13 @@ libgnu_a_SOURCES += filenamecat-lgpl.c
 EXTRA_DIST += filenamecat.h
 
 ## end   gnulib module filenamecat-lgpl
+
+## begin gnulib module flexmember
+
+
+EXTRA_DIST += flexmember.h
+
+## end   gnulib module flexmember
 
 ## begin gnulib module float
 
@@ -644,6 +686,14 @@ endif
 
 ## end   gnulib module getdtablesize
 
+## begin gnulib module getgroups
+
+if GL_COND_OBJ_GETGROUPS
+libgnu_a_SOURCES += getgroups.c
+endif
+
+## end   gnulib module getgroups
+
 ## begin gnulib module getprogname
 
 libgnu_a_SOURCES += getprogname.h getprogname.c
@@ -671,6 +721,14 @@ libgnu_a_SOURCES += gettimeofday.c
 endif
 
 ## end   gnulib module gettimeofday
+
+## begin gnulib module group-member
+
+if GL_COND_OBJ_GROUP_MEMBER
+libgnu_a_SOURCES += group-member.c
+endif
+
+## end   gnulib module group-member
 
 ## begin gnulib module hard-locale
 
@@ -760,6 +818,15 @@ EXTRA_libgnu_a_SOURCES += isnan.c isnanf.c
 
 ## end   gnulib module isnanf-nolibm
 
+## begin gnulib module isnanl
+
+
+EXTRA_DIST += float+.h isnan.c isnanl.c
+
+EXTRA_libgnu_a_SOURCES += isnan.c isnanl.c
+
+## end   gnulib module isnanl
+
 ## begin gnulib module isnanl-nolibm
 
 
@@ -792,6 +859,46 @@ libgnu_a_SOURCES += iswxdigit.c
 endif
 
 ## end   gnulib module iswxdigit
+
+## begin gnulib module langinfo
+
+BUILT_SOURCES += langinfo.h
+
+# We need the following in order to create an empty placeholder for
+# <langinfo.h> when the system doesn't have one.
+langinfo.h: langinfo.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(WARN_ON_USE_H)
+	$(gl_V_at)$(SED_HEADER_STDOUT) \
+	      -e 's|@''GUARD_PREFIX''@|GL|g' \
+	      -e 's|@''HAVE_LANGINFO_H''@|$(HAVE_LANGINFO_H)|g' \
+	      -e 's|@''INCLUDE_NEXT''@|$(INCLUDE_NEXT)|g' \
+	      -e 's|@''PRAGMA_SYSTEM_HEADER''@|@PRAGMA_SYSTEM_HEADER@|g' \
+	      -e 's|@''PRAGMA_COLUMNS''@|@PRAGMA_COLUMNS@|g' \
+	      -e 's|@''NEXT_LANGINFO_H''@|$(NEXT_LANGINFO_H)|g' \
+	      -e 's/@''GNULIB_NL_LANGINFO''@/$(GL_GNULIB_NL_LANGINFO)/g' \
+	      -e 's|@''HAVE_LANGINFO_CODESET''@|$(HAVE_LANGINFO_CODESET)|g' \
+	      -e 's|@''HAVE_LANGINFO_T_FMT_AMPM''@|$(HAVE_LANGINFO_T_FMT_AMPM)|g' \
+	      -e 's|@''HAVE_LANGINFO_ALTMON''@|$(HAVE_LANGINFO_ALTMON)|g' \
+	      -e 's|@''HAVE_LANGINFO_ERA''@|$(HAVE_LANGINFO_ERA)|g' \
+	      -e 's|@''HAVE_LANGINFO_YESEXPR''@|$(HAVE_LANGINFO_YESEXPR)|g' \
+	      -e 's|@''HAVE_NL_LANGINFO''@|$(HAVE_NL_LANGINFO)|g' \
+	      -e 's|@''REPLACE_NL_LANGINFO''@|$(REPLACE_NL_LANGINFO)|g' \
+	      -e '/definitions of _GL_FUNCDECL_RPL/r $(CXXDEFS_H)' \
+	      -e '/definition of _GL_WARN_ON_USE/r $(WARN_ON_USE_H)' \
+	      $(srcdir)/langinfo.in.h > $@-t
+	$(AM_V_at)mv $@-t $@
+MOSTLYCLEANFILES += langinfo.h langinfo.h-t
+
+EXTRA_DIST += langinfo.in.h
+
+## end   gnulib module langinfo
+
+## begin gnulib module ldexpl
+
+if GL_COND_OBJ_LDEXPL
+libgnu_a_SOURCES += ldexpl.c
+endif
+
+## end   gnulib module ldexpl
 
 ## begin gnulib module libc-config
 
@@ -874,6 +981,22 @@ EXTRA_DIST += locale.in.h
 
 ## end   gnulib module locale
 
+## begin gnulib module localeconv
+
+if GL_COND_OBJ_LOCALECONV
+libgnu_a_SOURCES += localeconv.c
+endif
+
+## end   gnulib module localeconv
+
+## begin gnulib module localename
+
+libgnu_a_SOURCES += localename.c localename-table.c
+
+EXTRA_DIST += localename-table.h localename.h
+
+## end   gnulib module localename
+
 ## begin gnulib module lock
 
 libgnu_a_SOURCES += glthread/lock.h glthread/lock.c
@@ -887,6 +1010,15 @@ libgnu_a_SOURCES += lstat.c
 endif
 
 ## end   gnulib module lstat
+
+## begin gnulib module malloc-gnu
+
+
+EXTRA_DIST += malloc.c
+
+EXTRA_libgnu_a_SOURCES += malloc.c
+
+## end   gnulib module malloc-gnu
 
 ## begin gnulib module malloc-posix
 
@@ -1348,6 +1480,19 @@ EXTRA_DIST += netinet_in.in.h
 
 ## end   gnulib module netinet_in
 
+## begin gnulib module nl_langinfo
+
+if GL_COND_OBJ_NL_LANGINFO
+libgnu_a_SOURCES += nl_langinfo.c
+endif
+if GL_COND_OBJ_NL_LANGINFO_LOCK
+libgnu_a_SOURCES += nl_langinfo-lock.c
+endif
+
+EXTRA_DIST += windows-initguard.h
+
+## end   gnulib module nl_langinfo
+
 ## begin gnulib module open
 
 if GL_COND_OBJ_OPEN
@@ -1464,6 +1609,15 @@ endif
 
 ## end   gnulib module readlink
 
+## begin gnulib module realloc-gnu
+
+
+EXTRA_DIST += realloc.c
+
+EXTRA_libgnu_a_SOURCES += realloc.c
+
+## end   gnulib module realloc-gnu
+
 ## begin gnulib module realloc-posix
 
 
@@ -1498,6 +1652,13 @@ libgnu_a_SOURCES += rmdir.c
 endif
 
 ## end   gnulib module rmdir
+
+## begin gnulib module root-uid
+
+
+EXTRA_DIST += root-uid.h
+
+## end   gnulib module root-uid
 
 ## begin gnulib module safe-write
 
@@ -1552,6 +1713,14 @@ libgnu_a_SOURCES += secure_getenv.c
 endif
 
 ## end   gnulib module secure_getenv
+
+## begin gnulib module setlocale
+
+if GL_COND_OBJ_SETLOCALE
+libgnu_a_SOURCES += setlocale.c
+endif
+
+## end   gnulib module setlocale
 
 ## begin gnulib module setlocale-null
 
@@ -1667,6 +1836,24 @@ WARN_ON_USE_H=$(srcdir)/warn-on-use.h
 EXTRA_DIST += warn-on-use.h
 
 ## end   gnulib module snippet/warn-on-use
+
+## begin gnulib module snprintf
+
+
+EXTRA_DIST += snprintf.c
+
+EXTRA_libgnu_a_SOURCES += snprintf.c
+
+## end   gnulib module snprintf
+
+## begin gnulib module sprintf-posix
+
+
+EXTRA_DIST += sprintf.c
+
+EXTRA_libgnu_a_SOURCES += sprintf.c
+
+## end   gnulib module sprintf-posix
 
 ## begin gnulib module stat
 
@@ -2646,6 +2833,13 @@ libgnu_a_SOURCES += tempname.c
 EXTRA_DIST += tempname.h
 
 ## end   gnulib module tempname
+
+## begin gnulib module thread-optim
+
+
+EXTRA_DIST += thread-optim.h
+
+## end   gnulib module thread-optim
 
 ## begin gnulib module threadlib
 

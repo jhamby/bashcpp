@@ -166,6 +166,13 @@
 /* Define if FIONREAD is defined in your sys/ioctl.h. */
 #undef FIONREAD_IN_SYS_IOCTL
 
+/* Define to nothing if C supports flexible array members, and to 1 if it does
+   not. That way, with a declaration like 'struct s { int n; short
+   d[FLEXIBLE_ARRAY_MEMBER]; };', the struct hack can be used with pre-C99
+   compilers. Use 'FLEXSIZEOF (struct s, d, N * sizeof (short))' to calculate
+   the size in bytes of such a struct containing an N-element array. */
+#undef FLEXIBLE_ARRAY_MEMBER
+
 /* Define as the bit index in the word where to find bit 0 of the exponent of
    'float'. */
 #undef FLT_EXPBIT0_BIT
@@ -189,6 +196,9 @@
    dot component. */
 #undef FUNC_MKDIR_DOT_BUG
 
+/* Define to 1 if nl_langinfo (YESEXPR) returns a non-empty string. */
+#undef FUNC_NL_LANGINFO_YESEXPR_WORKS
+
 /* Define to 1 if realpath() can malloc memory, always gives an absolute path,
    and handles a trailing slash correctly. */
 #undef FUNC_REALPATH_NEARLY_WORKS
@@ -200,6 +210,10 @@
 /* Define to the type of elements in the array set by `getgroups'. Usually
    this is either `int' or `gid_t'. */
 #undef GETGROUPS_T
+
+/* Define this to 1 if getgroups(0,NULL) does not return the number of groups.
+   */
+#undef GETGROUPS_ZERO_BUG
 
 /* Define to 1 if the `getpgrp' function requires zero arguments. */
 #undef GETPGRP_VOID
@@ -215,6 +229,10 @@
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module canonicalize-lgpl shall be considered present. */
 #undef GNULIB_CANONICALIZE_LGPL
+
+/* Define to a C preprocessor expression that evaluates to 1 or 0, depending
+   whether the gnulib module faccessat shall be considered present. */
+#undef GNULIB_FACCESSAT
 
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module fdopendir shall be considered present. */
@@ -253,6 +271,10 @@
 #undef GNULIB_SCANF
 
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
+   whether the gnulib module snprintf shall be considered present. */
+#undef GNULIB_SNPRINTF
+
+/* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module strerror shall be considered present. */
 #undef GNULIB_STRERROR
 
@@ -280,6 +302,9 @@
 /* Define to 1 when the gnulib module closedir should be tested. */
 #undef GNULIB_TEST_CLOSEDIR
 
+/* Define to 1 when the gnulib module copysign should be tested. */
+#undef GNULIB_TEST_COPYSIGN
+
 /* Define to 1 when the gnulib module dirfd should be tested. */
 #undef GNULIB_TEST_DIRFD
 
@@ -291,6 +316,12 @@
 
 /* Define to 1 when the gnulib module dup2 should be tested. */
 #undef GNULIB_TEST_DUP2
+
+/* Define to 1 when the gnulib module euidaccess should be tested. */
+#undef GNULIB_TEST_EUIDACCESS
+
+/* Define to 1 when the gnulib module faccessat should be tested. */
+#undef GNULIB_TEST_FACCESSAT
 
 /* Define to 1 when the gnulib module fchdir should be tested. */
 #undef GNULIB_TEST_FCHDIR
@@ -355,11 +386,20 @@
 /* Define to 1 when the gnulib module getdtablesize should be tested. */
 #undef GNULIB_TEST_GETDTABLESIZE
 
+/* Define to 1 when the gnulib module getgroups should be tested. */
+#undef GNULIB_TEST_GETGROUPS
+
 /* Define to 1 when the gnulib module getrandom should be tested. */
 #undef GNULIB_TEST_GETRANDOM
 
 /* Define to 1 when the gnulib module gettimeofday should be tested. */
 #undef GNULIB_TEST_GETTIMEOFDAY
+
+/* Define to 1 when the gnulib module group-member should be tested. */
+#undef GNULIB_TEST_GROUP_MEMBER
+
+/* Define to 1 when the gnulib module isnanl should be tested. */
+#undef GNULIB_TEST_ISNANL
 
 /* Define to 1 when the gnulib module iswblank should be tested. */
 #undef GNULIB_TEST_ISWBLANK
@@ -370,8 +410,20 @@
 /* Define to 1 when the gnulib module iswxdigit should be tested. */
 #undef GNULIB_TEST_ISWXDIGIT
 
+/* Define to 1 when the gnulib module ldexpl should be tested. */
+#undef GNULIB_TEST_LDEXPL
+
+/* Define to 1 when the gnulib module localeconv should be tested. */
+#undef GNULIB_TEST_LOCALECONV
+
+/* Define to 1 when the gnulib module localename should be tested. */
+#undef GNULIB_TEST_LOCALENAME
+
 /* Define to 1 when the gnulib module lstat should be tested. */
 #undef GNULIB_TEST_LSTAT
+
+/* Define to 1 when the gnulib module malloc-gnu should be tested. */
+#undef GNULIB_TEST_MALLOC_GNU
 
 /* Define to 1 when the gnulib module malloc-posix should be tested. */
 #undef GNULIB_TEST_MALLOC_POSIX
@@ -399,6 +451,9 @@
 
 /* Define to 1 when the gnulib module mktime should be tested. */
 #undef GNULIB_TEST_MKTIME
+
+/* Define to 1 when the gnulib module nl_langinfo should be tested. */
+#undef GNULIB_TEST_NL_LANGINFO
 
 /* Define to 1 when the gnulib module open should be tested. */
 #undef GNULIB_TEST_OPEN
@@ -439,6 +494,9 @@
 /* Define to 1 when the gnulib module readlink should be tested. */
 #undef GNULIB_TEST_READLINK
 
+/* Define to 1 when the gnulib module realloc-gnu should be tested. */
+#undef GNULIB_TEST_REALLOC_GNU
+
 /* Define to 1 when the gnulib module realloc-posix should be tested. */
 #undef GNULIB_TEST_REALLOC_POSIX
 
@@ -460,11 +518,20 @@
 /* Define to 1 when the gnulib module secure_getenv should be tested. */
 #undef GNULIB_TEST_SECURE_GETENV
 
+/* Define to 1 when the gnulib module setlocale should be tested. */
+#undef GNULIB_TEST_SETLOCALE
+
 /* Define to 1 when the gnulib module setlocale_null should be tested. */
 #undef GNULIB_TEST_SETLOCALE_NULL
 
 /* Define to 1 when the gnulib module signbit should be tested. */
 #undef GNULIB_TEST_SIGNBIT
+
+/* Define to 1 when the gnulib module snprintf should be tested. */
+#undef GNULIB_TEST_SNPRINTF
+
+/* Define to 1 when the gnulib module sprintf-posix should be tested. */
+#undef GNULIB_TEST_SPRINTF_POSIX
 
 /* Define to 1 when the gnulib module stat should be tested. */
 #undef GNULIB_TEST_STAT
@@ -534,6 +601,9 @@
 /* Define to compile in support for multibyte characters, or undefine to
    remove this support. */
 #undef HANDLE_MULTIBYTE
+
+/* Define to 1 if you have the `access' function. */
+#undef HAVE_ACCESS
 
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
@@ -724,6 +794,10 @@
    and to 0 if you don't. */
 #undef HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME
 
+/* Define to 1 if you have the declaration of `snprintf', and to 0 if you
+   don't. */
+#undef HAVE_DECL_SNPRINTF
+
 /* Define to 1 if you have the declaration of `strdup', and to 0 if you don't.
    */
 #undef HAVE_DECL_STRDUP
@@ -808,11 +882,21 @@
 /* Define to 1 if you have the `dprintf' function. */
 #undef HAVE_DPRINTF
 
+/* Define to 1 if you have the `duplocale' function. */
+#undef HAVE_DUPLOCALE
+
 /* Define to 1 if you have the `eaccess' function. */
 #undef HAVE_EACCESS
 
+/* Define to 1 if you have the `euidaccess' function. */
+#undef HAVE_EUIDACCESS
+
 /* Define to 1 if you have the `faccessat' function. */
 #undef HAVE_FACCESSAT
+
+/* Define if the locale_t type contains insufficient information, as on
+   OpenBSD. */
+#undef HAVE_FAKE_LOCALES
 
 /* Define to 1 if you have the `fchdir' function. */
 #undef HAVE_FCHDIR
@@ -837,6 +921,9 @@
 
 /* Define to 1 if you have the `fpurge' function. */
 #undef HAVE_FPURGE
+
+/* Define to 1 if you have the `freelocale' function. */
+#undef HAVE_FREELOCALE
 
 /* Define if the 'free' function is guaranteed to preserve errno. */
 #undef HAVE_FREE_POSIX
@@ -890,6 +977,9 @@
 /* Define to 1 if you have the `gethostname' function. */
 #undef HAVE_GETHOSTNAME
 
+/* Define to 1 if you have the `getlocalename_l' function. */
+#undef HAVE_GETLOCALENAME_L
+
 /* Define to 1 if you have the `getpagesize' function. */
 #undef HAVE_GETPAGESIZE
 
@@ -934,6 +1024,10 @@
 
 /* Define to 1 if you have the `getuid' function. */
 #undef HAVE_GETUID
+
+/* Define if the uselocale exists, may be safely called, and returns
+   sufficient information. */
+#undef HAVE_GOOD_USELOCALE
 
 /* Define to 1 if you have the `group_member' function. */
 #undef HAVE_GROUP_MEMBER
@@ -1014,6 +1108,12 @@
 /* Define to 1 if you have the <langinfo.h> header file. */
 #undef HAVE_LANGINFO_H
 
+/* Define if your <locale.h> file defines LC_MESSAGES. */
+#undef HAVE_LC_MESSAGES
+
+/* Define if the ldexpl() function is available. */
+#undef HAVE_LDEXPL
+
 /* Define if the ldexpl function is available in libc. */
 #undef HAVE_LDEXPL_IN_LIBC
 
@@ -1022,6 +1122,9 @@
 
 /* Define to 1 if you have the `dl' library (-ldl). */
 #undef HAVE_LIBDL
+
+/* Define to 1 if you have the <libgen.h> header file. */
+#undef HAVE_LIBGEN_H
 
 /* Define to 1 if you have the <libintl.h> header file. */
 #undef HAVE_LIBINTL_H
@@ -1129,6 +1232,10 @@
    concept. */
 #undef HAVE_MSVC_INVALID_PARAMETER_HANDLER
 
+/* Define if the locale_t type does not contain the name of each locale
+   category. */
+#undef HAVE_NAMELESS_LOCALES
+
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
 
@@ -1137,6 +1244,9 @@
 
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #undef HAVE_NETINET_IN_H
+
+/* Define to 1 if you have the `newlocale' function. */
+#undef HAVE_NEWLOCALE
 
 /* Define to 1 if you have the `nl_langinfo' function. */
 #undef HAVE_NL_LANGINFO
@@ -1315,6 +1425,9 @@
 /* Define to 1 if the system has the type `socklen_t'. */
 #undef HAVE_SOCKLEN_T
 
+/* Define if the locale_t type is as on Solaris 11.4. */
+#undef HAVE_SOLARIS114_LOCALES
+
 /* Define to 1 if you have the <spawn.h> header file. */
 #undef HAVE_SPAWN_H
 
@@ -1409,6 +1522,9 @@
 
 /* Define if your struct dirent has the d_namlen member. */
 #undef HAVE_STRUCT_DIRENT_D_NAMLEN
+
+/* Define to 1 if `decimal_point' is a member of `struct lconv'. */
+#undef HAVE_STRUCT_LCONV_DECIMAL_POINT
 
 /* Define to 1 if the system has the type `struct random_data'. */
 #undef HAVE_STRUCT_RANDOM_DATA
@@ -1509,6 +1625,9 @@
 /* Define if sys_siglist is present. */
 #undef HAVE_SYS_SIGLIST
 
+/* Define to 1 if you have the <sys/single_threaded.h> header file. */
+#undef HAVE_SYS_SINGLE_THREADED_H
+
 /* Define to 1 if you have the <sys/socket.h> header file. */
 #undef HAVE_SYS_SOCKET_H
 
@@ -1584,6 +1703,9 @@
 /* Define to 1 if the system has the type 'unsigned long long int'. */
 #undef HAVE_UNSIGNED_LONG_LONG_INT
 
+/* Define to 1 if you have the `uselocale' function. */
+#undef HAVE_USELOCALE
+
 /* Define if you have SVR3-style signal handling (sigset, sigrelse, sigpause).
    */
 #undef HAVE_USG_SIGHOLD
@@ -1657,6 +1779,9 @@
 /* Define to 1 if O_NOFOLLOW works. */
 #undef HAVE_WORKING_O_NOFOLLOW
 
+/* Define if the uselocale function exists and may safely be called. */
+#undef HAVE_WORKING_USELOCALE
+
 /* Define to 1 if `vfork' works. */
 #undef HAVE_WORKING_VFORK
 
@@ -1726,6 +1851,9 @@
 
 /* Define as the word index where to find the sign of 'long double'. */
 #undef LDBL_SIGNBIT_WORD
+
+/* Define if localename.c overrides newlocale(), duplocale(), freelocale(). */
+#undef LOCALENAME_ENHANCE_LOCALE_FUNCS
 
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
    slash. */
@@ -1840,9 +1968,18 @@
    large precisions without arbitrary bounds. */
 #undef NEED_PRINTF_UNBOUNDED_PRECISION
 
+/* Define to 1 to enable general improvements of setlocale. */
+#undef NEED_SETLOCALE_IMPROVED
+
+/* Define to 1 to enable a multithread-safety fix of setlocale. */
+#undef NEED_SETLOCALE_MTSAFE
+
 /* Define if you want /dev/(tcp|udp)/host/port to open socket connections when
    used in redirections. */
 #undef NETWORK_REDIRECTIONS
+
+/* Define to 1 if nl_langinfo is multithread-safe. */
+#undef NL_LANGINFO_MTSAFE
 
 /* Define if opendir() opens non-directories. */
 #undef OPENDIR_NOT_ROBUST
@@ -1945,6 +2082,9 @@
 /* Define to 1 if stat needs help when passed a file name with a trailing
    slash */
 #undef REPLACE_FUNC_STAT_FILE
+
+/* Define if nl_langinfo exists but is overridden by gnulib. */
+#undef REPLACE_NL_LANGINFO
 
 /* Define to 1 if open() should work around the inability to open a directory.
    */

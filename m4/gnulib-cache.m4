@@ -37,15 +37,22 @@
 #  --no-conditional-dependencies \
 #  --no-libtool \
 #  --macro-prefix=gl \
+#  copysign \
 #  dprintf \
+#  faccessat \
 #  fpurge \
 #  getcwd \
 #  gettimeofday \
 #  inet_ntop \
+#  ldexpl \
 #  mbschr \
 #  mktime \
+#  nl_langinfo \
 #  random_r \
 #  rename \
+#  setlocale \
+#  snprintf \
+#  sprintf-posix \
 #  stdio \
 #  strcase \
 #  strcasestr \
@@ -62,15 +69,22 @@
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
 gl_MODULES([
+  copysign
   dprintf
+  faccessat
   fpurge
   getcwd
   gettimeofday
   inet_ntop
+  ldexpl
   mbschr
   mktime
+  nl_langinfo
   random_r
   rename
+  setlocale
+  snprintf
+  sprintf-posix
   stdio
   strcase
   strcasestr

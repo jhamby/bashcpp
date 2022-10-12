@@ -70,8 +70,10 @@ endif
 
 AM_YFLAGS = -d
 
-AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/lib/readline -I$(srcdir)/lib/glob \
-	-I$(srcdir)/lib/tilde -I$(srcdir)/builtins
+AM_CPPFLAGS = -I$(srcdir)/lib/gnulib -I$(builddir)/lib/gnulib \
+	      -I$(srcdir)/include -I$(srcdir)/lib/glob -I$(srcdir)/lib/tilde
+
+AM_CPPFLAGS += -I$(srcdir)/lib/readline
 
 DEFSRC = $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
 	$(BLTDIR)/builtin_def.cc $(BLTDIR)/caller_def.cc $(BLTDIR)/cd_def.cc \
