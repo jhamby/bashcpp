@@ -1242,9 +1242,6 @@
 /* Define to 1 if <sys/socket.h> defines AF_INET6. */
 #undef HAVE_IPV6
 
-/* Define to 1 if you have the `isascii' function. */
-#undef HAVE_ISASCII
-
 /* Define to 1 if you have the `isblank' function. */
 #undef HAVE_ISBLANK
 
@@ -1721,9 +1718,6 @@
 
 /* Define to 1 if you have the `strnlen' function. */
 #undef HAVE_STRNLEN
-
-/* Define to 1 if you have the `strpbrk' function. */
-#undef HAVE_STRPBRK
 
 /* Define to 1 if you have the `strsignal' function. */
 #undef HAVE_STRSIGNAL

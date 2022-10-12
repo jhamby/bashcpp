@@ -431,12 +431,12 @@ AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf dup2 faccessat fchdir 
 		getaddrinfo getcwd getdtablesize fnmatch getentropy getgroups gethostbyname \
 		gethostname getpeername getpwent getpwnam getpwuid \
 		getrandom getrlimit getrusage getservbyname getservent \
-		gettimeofday group_member imaxdiv inet_aton isascii kill killpg \
+		gettimeofday group_member imaxdiv inet_aton kill killpg \
 		localeconv localtime_r lstat mblen mbrlen mbschr mbsnrtowcs mkdir mkdtemp \
 		mkfifo mknod mkstemp mmap nl_langinfo pathconf pselect putenv random \
 		readlink regcomp regexec rename select setdtablesize setenv setitimer \
 		setlocale setpgid setregid setresgid setresuid setvbuf socket stpcpy strcasecmp \
-		strcasestr strchrnul strerror strncasecmp strnlen strpbrk \
+		strcasestr strchrnul strerror strncasecmp strnlen \
 		strsignal strtoimax strtoumax sysconf tcgetattr \
 		times ttyname tzset ulimit uname vfprintf waitpid wcswidth wcwidth])
 

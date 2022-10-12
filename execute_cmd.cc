@@ -3729,7 +3729,7 @@ Shell::check_command_builtin (WORD_LIST *words, int *typep)
   int type;
   WORD_LIST *w;
 
-  w = w->next ();
+  w = words->next ();
   type = 1;
 
   if (w && ISOPTION (w->word->word, 'p')) /* command -p */
@@ -3747,7 +3747,7 @@ Shell::check_command_builtin (WORD_LIST *words, int *typep)
   else if (w && w->word->word[0] == '-') /* any other option */
     RETURN_NOT_COMMAND ();
 
-  if (w == 0 || w->word->word == 0) /* must have a command_name */
+  if (w == nullptr || w->word->word.empty ()) /* must have a command_name */
     RETURN_NOT_COMMAND ();
 
   if (typep)
@@ -3776,8 +3776,8 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
     }
 
   /* Remember what this command line looks like at invocation. */
-  command_string_index = 0;
-  print_simple_command (simple_command);
+  the_printed_command.clear ();
+  simple_command->print (this);
 
   if (!signal_in_progress (DEBUG_TRAP) && running_trap == 0)
     {
@@ -3899,7 +3899,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
       current_fds_to_close = nullptr;
     }
   else
-    words = copy_word_list (simple_command->words);
+    words = new WORD_LIST (*simple_command->words);
 
   /* It is possible for WORDS not to have anything left in it.
      Perhaps all the words consisted of `$foo', and there was
@@ -3921,7 +3921,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
 
   char *lastarg = nullptr;
 
-  begin_unwind_frame ("simple-command");
+  // begin_unwind_frame ("simple-command");
 
   if (echo_command_at_execute && (cmdflags & CMD_COMMAND_BUILTIN) == 0)
     xtrace_print_word_list (words, 1);
@@ -4032,9 +4032,9 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
       && pipe_in == NO_PIPE && pipe_out == NO_PIPE
       && (temp = get_string_value ("auto_resume")))
     {
-      int job, jflags, started_status;
+      int job, started_status;
 
-      jflags = JM_STOPPED | JM_FIRSTMATCH;
+      get_job_flags jflags = JM_STOPPED | JM_FIRSTMATCH;
       if (STREQ (temp, "exact"))
         jflags |= JM_EXACT;
       else if (STREQ (temp, "substring"))
