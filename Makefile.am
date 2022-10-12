@@ -48,7 +48,7 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
 	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
 	siglist.hh subst.hh syntax.hh trap.hh variables.hh \
-	include/chartypes.hh include/filecntl.hh include/gettext.h \
+	include/chartypes.hh include/filecntl.hh \
 	include/maxpath.hh include/posixdir.hh include/posixselect.hh \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
 	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \

@@ -351,7 +351,6 @@ AC_PROG_YACC
 
 dnl initialize libtool and Gnulib
 LT_INIT
-gl_INIT
 
 echo ""
 echo "Beginning configuration for bash-$BASHVERS-$RELSTATUS for ${build_cpu}-${build_vendor}-${build_os}"
@@ -389,22 +388,6 @@ AM_ICONV
 AM_GNU_GETTEXT([external], [need-ngettext], [intl])
 AM_GNU_GETTEXT_VERSION([0.19])
 
-dnl additional iconv checks
-AC_SEARCH_LIBS([locale_charset], [iconv])
-AC_CACHE_CHECK(
-  [for nl_langinfo (CODESET)], ac_cv_langinfo_codeset,
-  [AC_COMPILE_IFELSE(
-    [AC_LANG_PROGRAM(
-     [[#include <langinfo.h>]],
-     [[char *codeset = nl_langinfo (CODESET);]]
-   )],
-  [ac_cv_langinfo_codeset=yes],
-  [ac_cv_langinfo_codeset=no])]
-)
-if test x$ac_cv_langinfo_codeset = xyes; then
-  AC_DEFINE([HAVE_LANGINFO_CODESET], [1], [have nl_langinfo (CODESET)])
-fi
-
 # Check if we need to include TCP/IP libraries.
 BASH_LIB_SOCKET
 BASH_LIB_NSL
@@ -412,11 +395,11 @@ BASH_LIB_NSL
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_MAJOR
-AC_CHECK_HEADERS([arpa/inet.h dirent.h fcntl.h grp.h inttypes.h langinfo.h libintl.h \
-		  netdb.h netinet/in.h pwd.h regex.h sgtty.h spawn.h stdint.h stdio_ext.h \
+AC_CHECK_HEADERS([grp.h netdb.h pwd.h sgtty.h \
 		  sys/dir.h sys/file.h sys/ioctl.h sys/ndir.h sys/param.h \
-		  sys/random.h sys/resource.h sys/socket.h sys/time.h sys/wait.h syslog.h \
-		  termio.h termios.h unistd.h])
+		  sys/resource.h syslog.h termio.h termios.h])
+
+gl_INIT
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_UID_T
@@ -438,7 +421,6 @@ AC_TYPE_INT64_T
 AC_FUNC_CHOWN
 AC_FUNC_FORK
 AC_FUNC_GETGROUPS
-AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
 AC_FUNC_MALLOC
 AC_FUNC_MBRTOWC
 AC_FUNC_MMAP
@@ -451,18 +433,13 @@ AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf eaccess fchdir ftrunca
 		getrandom getrlimit getrusage getservbyname getservent \
 		gettimeofday group_member imaxdiv inet_aton isascii kill killpg \
 		localeconv localtime_r lstat mblen mbrlen mbschr mbsnrtowcs mkdir mkdtemp \
-		mkfifo mkstemp mmap nl_langinfo pathconf posix_spawn \
-		posix_spawn_file_actions_init posix_spawnattr_init pselect putenv random \
+		mkfifo mkstemp mmap nl_langinfo pathconf pselect putenv random \
 		readlink regcomp regexec rename select setdtablesize setenv setitimer \
 		setlocale setresgid setresuid setvbuf socket stpcpy strcasecmp \
 		strcasestr strchrnul strerror strncasecmp strnlen strpbrk \
 		strsignal strtoimax strtoumax sysconf tcgetattr \
 		times ttyname tzset ulimit uname vprintf waitpid \
 		wcswidth wcwidth])
-
-# checks for obsolete functions (flagged in red by VS Code).
-AC_FUNC_ERROR_AT_LINE
-AC_FUNC_MKTIME
 
 BASH_CHECK_MULTIBYTE
 
@@ -502,20 +479,9 @@ if test $ac_cv_sys_interpreter = yes; then
 AC_DEFINE([HAVE_HASH_BANG_EXEC], [1], [Define if the kernel can exec files beginning with #!.])
 fi
 
-dnl Miscellaneous Bash tests
-if test "$ac_cv_func_lstat" = "no"; then
-BASH_FUNC_LSTAT
-fi
-
 dnl behavior of system calls and library functions
-BASH_FUNC_DUP2_CLOEXEC_CHECK
 BASH_SYS_PGRP_SYNC
 BASH_SYS_SIGNAL_VINTAGE
-
-dnl checking for the presence of certain library symbols
-BASH_SYS_ERRLIST
-BASH_SYS_SIGLIST
-BASH_UNDER_SYS_SIGLIST
 
 dnl various system types
 AC_CHECK_TYPES([clock_t], [], [], [[#include <sys/times.h>]])
@@ -545,37 +511,12 @@ BASH_STRUCT_DIRENT_D_NAMLEN
 BASH_STRUCT_WINSIZE
 BASH_STRUCT_TIMEVAL
 BASH_STRUCT_TIMEZONE
-
 BASH_STRUCT_WEXITSTATUS_OFFSET
 
-BASH_CHECK_TYPE_STRUCT_TIMESPEC
-BASH_STAT_TIME
-
 dnl presence and behavior of C library functions
-BASH_FUNC_STRSIGNAL
-BASH_FUNC_OPENDIR_CHECK
 BASH_FUNC_ULIMIT_MAXFDS
-BASH_FUNC_FPURGE
 BASH_FUNC_GETENV
 BASH_FUNC_STRCOLL
-
-dnl If putenv or unsetenv is not present, set the right define so the
-dnl prototype and declaration in lib/sh/getenv.c will be standard-conformant
-
-if test "$ac_cv_func_putenv" = "yes"; then
-BASH_FUNC_STD_PUTENV
-else
-AC_DEFINE([HAVE_STD_PUTENV])
-fi
-if test "$ac_cv_func_unsetenv" = "yes"; then
-BASH_FUNC_STD_UNSETENV
-else
-AC_DEFINE([HAVE_STD_UNSETENV])
-fi
-
-BASH_FUNC_PRINTF_A_FORMAT
-
-BASH_FUNC_FNMATCH_EQUIV_FALLBACK
 
 dnl presence and behavior of OS functions
 BASH_SYS_REINSTALL_SIGHANDLERS
@@ -593,7 +534,6 @@ dnl miscellaneous
 BASH_CHECK_SPEED_T
 BASH_CHECK_GETPW_FUNCS
 BASH_CHECK_RTSIGS
-BASH_CHECK_SYS_SIGLIST
 
 dnl special checks
 case "$host_os" in

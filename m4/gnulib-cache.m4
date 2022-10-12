@@ -39,15 +39,24 @@
 #  --macro-prefix=gl \
 #  copysign \
 #  dprintf \
+#  dup2 \
+#  execute \
 #  faccessat \
+#  fnmatch \
 #  fpurge \
+#  full-read \
+#  full-write \
 #  getcwd \
 #  gettimeofday \
+#  glob \
 #  inet_ntop \
 #  ldexpl \
+#  lstat \
 #  mbschr \
 #  mktime \
 #  nl_langinfo \
+#  posix_spawn \
+#  pselect \
 #  random_r \
 #  rename \
 #  setlocale \
@@ -59,9 +68,11 @@
 #  strchrnul \
 #  strerror_r-posix \
 #  strnlen \
+#  strsignal \
 #  strtoimax \
 #  strtoumax \
 #  times \
+#  timespec \
 #  tmpfile \
 #  vprintf-posix \
 #  wcswidth
@@ -71,15 +82,24 @@ gl_LOCAL_DIR([])
 gl_MODULES([
   copysign
   dprintf
+  dup2
+  execute
   faccessat
+  fnmatch
   fpurge
+  full-read
+  full-write
   getcwd
   gettimeofday
+  glob
   inet_ntop
   ldexpl
+  lstat
   mbschr
   mktime
   nl_langinfo
+  posix_spawn
+  pselect
   random_r
   rename
   setlocale
@@ -91,9 +111,11 @@ gl_MODULES([
   strchrnul
   strerror_r-posix
   strnlen
+  strsignal
   strtoimax
   strtoumax
   times
+  timespec
   tmpfile
   vprintf-posix
   wcswidth

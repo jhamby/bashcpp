@@ -5,206 +5,6 @@ dnl Some derived from PDKSH 5.1.3 autoconf tests
 dnl
 
 dnl
-dnl Check for sys_siglist[] or _sys_siglist[]
-dnl
-AC_DEFUN([BASH_DECL_UNDER_SYS_SIGLIST],
-[AC_MSG_CHECKING([for _sys_siglist in signal.h or unistd.h])
-AC_CACHE_VAL(bash_cv_decl_under_sys_siglist,
-[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <sys/types.h>
-#include <signal.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif]], [[ char *msg = _sys_siglist[2]; ]])],[bash_cv_decl_under_sys_siglist=yes],[bash_cv_decl_under_sys_siglist=no])])dnl
-AC_MSG_RESULT($bash_cv_decl_under_sys_siglist)
-if test $bash_cv_decl_under_sys_siglist = yes; then
-AC_DEFINE([UNDER_SYS_SIGLIST_DECLARED], 1, [Define if `sys_siglist' is declared by <signal.h> or <unistd.h>.])
-fi
-])
-
-AC_DEFUN([BASH_UNDER_SYS_SIGLIST],
-[AC_REQUIRE([BASH_DECL_UNDER_SYS_SIGLIST])
-AC_MSG_CHECKING([for _sys_siglist in system C library])
-AC_CACHE_VAL(bash_cv_under_sys_siglist,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <sys/types.h>
-#include <signal.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <stdlib.h>
-#ifndef UNDER_SYS_SIGLIST_DECLARED
-extern char *_sys_siglist[];
-#endif
-int
-main()
-{
-char *msg = (char *)_sys_siglist[2];
-exit(msg == 0);
-}]])],[bash_cv_under_sys_siglist=yes],[bash_cv_under_sys_siglist=no],[AC_MSG_WARN(cannot check for _sys_siglist[] if cross compiling -- defaulting to no)
-	 bash_cv_under_sys_siglist=no])])
-AC_MSG_RESULT($bash_cv_under_sys_siglist)
-if test $bash_cv_under_sys_siglist = yes; then
-AC_DEFINE([HAVE_UNDER_SYS_SIGLIST], 1, [Define if `_sys_siglist' is declared by <signal.h> or <unistd.h>.])
-fi
-])
-
-AC_DEFUN([BASH_SYS_SIGLIST],
-[AC_MSG_CHECKING([for sys_siglist in system C library])
-AC_CACHE_VAL(bash_cv_sys_siglist,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <sys/types.h>
-#include <signal.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <stdlib.h>
-#if !HAVE_DECL_SYS_SIGLIST
-extern char *sys_siglist[];
-#endif
-int
-main()
-{
-char *msg = sys_siglist[2];
-exit(msg == 0);
-}]])],[bash_cv_sys_siglist=yes],[bash_cv_sys_siglist=no],[AC_MSG_WARN(cannot check for sys_siglist if cross compiling -- defaulting to no)
-	 bash_cv_sys_siglist=no])])
-AC_MSG_RESULT($bash_cv_sys_siglist)
-if test $bash_cv_sys_siglist = yes; then
-AC_DEFINE([HAVE_SYS_SIGLIST], 1, [Define if sys_siglist is present.])
-fi
-])
-
-dnl Check for the various permutations of sys_siglist and make sure we
-dnl compile in siglist.o if they're not defined
-AC_DEFUN([BASH_CHECK_SYS_SIGLIST],
-[AC_REQUIRE([BASH_SYS_SIGLIST])
-AC_REQUIRE([BASH_DECL_UNDER_SYS_SIGLIST])
-AC_REQUIRE([BASH_FUNC_STRSIGNAL])
-if test "$bash_cv_sys_siglist" = no && test "$bash_cv_under_sys_siglist" = no && test "$bash_cv_have_strsignal" = no; then
-  SIGLIST_O=siglist.o
-else
-  SIGLIST_O=
-fi
-AC_SUBST([SIGLIST_O])
-])
-
-dnl Check for sys_errlist[] and sys_nerr, check for declaration
-AC_DEFUN([BASH_SYS_ERRLIST],
-[AC_MSG_CHECKING([for sys_errlist and sys_nerr])
-AC_CACHE_VAL(bash_cv_sys_errlist,
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <errno.h>]], [[extern char *sys_errlist[];
- extern int sys_nerr;
- char *msg = sys_errlist[sys_nerr - 1];]])],[bash_cv_sys_errlist=yes],[bash_cv_sys_errlist=no])])dnl
-AC_MSG_RESULT($bash_cv_sys_errlist)
-if test $bash_cv_sys_errlist = yes; then
-AC_DEFINE([HAVE_SYS_ERRLIST], 1, [Define if sys_errlist[] and sys_nerr are declared.])
-fi
-])
-
-dnl
-dnl Check if dup2() does not clear the close on exec flag
-dnl
-AC_DEFUN([BASH_FUNC_DUP2_CLOEXEC_CHECK],
-[AC_MSG_CHECKING(if dup2 fails to clear the close-on-exec flag)
-AC_CACHE_VAL(bash_cv_dup2_broken,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <sys/types.h>
-#include <fcntl.h>
-#include <stdlib.h>
-int
-main()
-{
-  int fd1, fd2, fl;
-  fd1 = open("/dev/null", 2);
-  if (fcntl(fd1, 2, 1) < 0)
-    exit(1);
-  fd2 = dup2(fd1, 1);
-  if (fd2 < 0)
-    exit(2);
-  fl = fcntl(fd2, 1, 0);
-  /* fl will be 1 if dup2 did not reset the close-on-exec flag. */
-  exit(fl != 1);
-}
-]])],[bash_cv_dup2_broken=yes],[bash_cv_dup2_broken=no],[AC_MSG_WARN(cannot check dup2 if cross compiling -- defaulting to no)
-     bash_cv_dup2_broken=no])
-])
-AC_MSG_RESULT($bash_cv_dup2_broken)
-if test $bash_cv_dup2_broken = yes; then
-AC_DEFINE([DUP2_BROKEN], 1, [Define if dup2 fails to clear the close-on-exec flag.])
-fi
-])
-
-AC_DEFUN([BASH_FUNC_STRSIGNAL],
-[AC_MSG_CHECKING([for the existence of strsignal])
-AC_CACHE_VAL(bash_cv_have_strsignal,
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
-#include <signal.h>
-#include <string.h>]], [[char *s = (char *)strsignal(2);]])],[bash_cv_have_strsignal=yes],[bash_cv_have_strsignal=no])])
-AC_MSG_RESULT($bash_cv_have_strsignal)
-if test $bash_cv_have_strsignal = yes; then
-AC_DEFINE([HAVE_STRSIGNAL], 1, [Define if you have the `strsignal' function.])
-fi
-])
-
-dnl Check to see if opendir will open non-directories (not a nice thing)
-AC_DEFUN([BASH_FUNC_OPENDIR_CHECK],
-[AC_REQUIRE([AC_HEADER_DIRENT])dnl
-AC_MSG_CHECKING(if opendir() opens non-directories)
-AC_CACHE_VAL(bash_cv_opendir_not_robust,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdio.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
-#if defined(HAVE_DIRENT_H)
-# include <dirent.h>
-#else
-# define dirent direct
-# ifdef HAVE_SYS_NDIR_H
-#  include <sys/ndir.h>
-# endif /* SYSNDIR */
-# ifdef HAVE_SYS_DIR_H
-#  include <sys/dir.h>
-# endif /* SYSDIR */
-# ifdef HAVE_NDIR_H
-#  include <ndir.h>
-# endif
-#endif /* HAVE_DIRENT_H */
-#include <stdlib.h>
-int
-main()
-{
-DIR *dir;
-int fd, err;
-err = mkdir("bash-aclocal", 0700);
-if (err < 0) {
-  perror("mkdir");
-  exit(1);
-}
-unlink("bash-aclocal/not_a_directory");
-fd = open("bash-aclocal/not_a_directory", O_WRONLY|O_CREAT|O_EXCL, 0666);
-write(fd, "\n", 1);
-close(fd);
-dir = opendir("bash-aclocal/not_a_directory");
-unlink("bash-aclocal/not_a_directory");
-rmdir("bash-aclocal");
-exit (dir == 0);
-}]])],[bash_cv_opendir_not_robust=yes],[bash_cv_opendir_not_robust=no],[AC_MSG_WARN(cannot check opendir if cross compiling -- defaulting to no)
-     bash_cv_opendir_not_robust=no
-])])
-AC_MSG_RESULT($bash_cv_opendir_not_robust)
-if test $bash_cv_opendir_not_robust = yes; then
-AC_DEFINE([OPENDIR_NOT_ROBUST], 1, [Define if opendir() opens non-directories.])
-fi
-])
-
-dnl
 dnl Type of struct rlimit fields: some systems (OSF/1, NetBSD, RISC/os 5.0)
 dnl have a rlim_t, others (4.4BSD based systems) use quad_t, others use
 dnl long and still others use int (HP-UX 9.01, SunOS 4.1.3).  To simplify
@@ -245,19 +45,6 @@ AC_DEFUN([BASH_TYPE_SIG_ATOMIC_T],
 if test "$ac_cv_have_sig_atomic_t" = "no"
 then
     AC_CHECK_TYPE(sig_atomic_t,int)
-fi
-])
-
-AC_DEFUN([BASH_FUNC_LSTAT],
-[dnl Cannot use AC_CHECK_FUNCS(lstat) because Linux defines lstat() as an
-dnl inline function in <sys/stat.h>.
-AC_CACHE_CHECK([for lstat], bash_cv_func_lstat,
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <sys/types.h>
-#include <sys/stat.h>
-]], [[ lstat(".",(struct stat *)0); ]])],[bash_cv_func_lstat=yes],[bash_cv_func_lstat=no])])
-if test $bash_cv_func_lstat = yes; then
-  AC_DEFINE([HAVE_LSTAT], 1, [Define if you have the lstat function.])
 fi
 ])
 
@@ -363,30 +150,6 @@ AC_DEFINE([ULIMIT_MAXFDS], 1, [Define if ulimit can substitute for getdtablesize
 fi
 ])
 
-AC_DEFUN([BASH_FUNC_FNMATCH_EXTMATCH],
-[AC_MSG_CHECKING(if fnmatch does extended pattern matching with FNM_EXTMATCH)
-AC_CACHE_VAL(bash_cv_fnm_extmatch,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <fnmatch.h>
-
-int
-main()
-{
-#ifdef FNM_EXTMATCH
-  return (0);
-#else
-  return (1);
-#endif
-}
-]])],[bash_cv_fnm_extmatch=yes],[bash_cv_fnm_extmatch=no],[AC_MSG_WARN(cannot check FNM_EXTMATCH if cross compiling -- defaulting to no)
-     bash_cv_fnm_extmatch=no])
-])
-AC_MSG_RESULT($bash_cv_fnm_extmatch)
-if test $bash_cv_fnm_extmatch = yes; then
-AC_DEFINE([HAVE_LIBC_FNM_EXTMATCH], 1, [Define if fnmatch does extended pattern matching with FNM_EXTMATCH.])
-fi
-])
-
 AC_DEFUN([BASH_FUNC_STRCOLL],
 [AC_MSG_CHECKING(whether or not strcoll and strcmp differ)
 AC_CACHE_VAL(bash_cv_func_strcoll_broken,
@@ -432,32 +195,6 @@ main(int c, char *v[])
 AC_MSG_RESULT($bash_cv_func_strcoll_broken)
 if test $bash_cv_func_strcoll_broken = yes; then
 AC_DEFINE([STRCOLL_BROKEN], 1, [Define if strcoll returns the same value as strcmp in the default locale.])
-fi
-])
-
-AC_DEFUN([BASH_FUNC_PRINTF_A_FORMAT],
-[AC_MSG_CHECKING([for printf floating point output in hex notation])
-AC_CACHE_VAL(bash_cv_printf_a_format,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-int
-main()
-{
-	double y = 0.0;
-	char abuf[1024];
-
-	sprintf(abuf, "%A", y);
-	exit(strchr(abuf, 'P') == (char *)0);
-}
-]])],[bash_cv_printf_a_format=yes],[bash_cv_printf_a_format=no],[AC_MSG_WARN(cannot check printf if cross compiling -- defaulting to no)
-    bash_cv_printf_a_format=no
-])])
-AC_MSG_RESULT($bash_cv_printf_a_format)
-if test $bash_cv_printf_a_format = yes; then
-AC_DEFINE([HAVE_PRINTF_A_FORMAT], 1, [Define if printf supports floating-point output in hex notation.])
 fi
 ])
 
@@ -1445,14 +1182,6 @@ AC_DEFUN([AM_PATH_LISPDIR],
  AC_SUBST(lispdir)
 ])
 
-dnl From gnulib
-AC_DEFUN([BASH_FUNC_FPURGE],
-[
-  AC_CHECK_FUNCS_ONCE([fpurge])
-  AC_CHECK_FUNCS_ONCE([__fpurge])
-  AC_CHECK_DECLS([fpurge], , , [#include <stdio.h>])
-])
-
 AC_DEFUN([BASH_STRUCT_WEXITSTATUS_OFFSET],
 [AC_MSG_CHECKING(for offset of exit status in return status from wait)
 AC_CACHE_VAL(bash_cv_wexitstatus_offset,
@@ -1497,42 +1226,6 @@ if test "$bash_cv_wexitstatus_offset" -gt 32 ; then
 fi
 AC_MSG_RESULT($bash_cv_wexitstatus_offset)
 AC_DEFINE_UNQUOTED([WEXITSTATUS_OFFSET], [$bash_cv_wexitstatus_offset], [Offset of exit status in wait status word])
-])
-
-AC_DEFUN([BASH_FUNC_FNMATCH_EQUIV_FALLBACK],
-[AC_MSG_CHECKING(whether fnmatch can be used to check bracket equivalence classes)
-AC_CACHE_VAL(bash_cv_fnmatch_equiv_fallback,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <fnmatch.h>
-#include <locale.h>
-
-char *pattern = "[[=a=]]";
-
-/* char *string = "ä"; */
-unsigned char string[4] = { '\xc3', '\xa4', '\0' };
-
-int
-main (int c, char **v)
-{
-  setlocale (LC_ALL, "en_US.UTF-8");
-  if (fnmatch (pattern, (const char *)string, 0) != FNM_NOMATCH)
-    exit (0);
-  exit (1);
-}
-
-]])],[bash_cv_fnmatch_equiv_fallback=yes],[bash_cv_fnmatch_equiv_fallback=no],[AC_MSG_WARN(cannot check fnmatch if cross compiling -- defaulting to no)
-    bash_cv_fnmatch_equiv_fallback=no
-])])
-AC_MSG_RESULT($bash_cv_fnmatch_equiv_fallback)
-if test "$bash_cv_fnmatch_equiv_fallback" = "yes" ; then
-    bash_cv_fnmatch_equiv_value=1
-else
-    bash_cv_fnmatch_equiv_value=0
-fi
-AC_DEFINE_UNQUOTED([FNMATCH_EQUIV_FALLBACK], [$bash_cv_fnmatch_equiv_value], [Whether fnmatch can be used for bracket equivalence classes])
 ])
 
 dnl Useful macros to check libraries which are not implicit
