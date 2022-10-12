@@ -25,7 +25,7 @@ GLBDIR = lib/glob
 BLTDIR = builtins
 
 DEFS += -DLOCALEDIR=\"$(localedir)\"
-LDADD = @LTLIBINTL@
+LDADD = @LTLIBINTL@ lib/gnulib/libgnu.a
 
 # TODO: add docs and tests subdirs
 SUBDIRS = lib/gnulib po

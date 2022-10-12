@@ -439,7 +439,7 @@ am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	$(SHDIR)/shmbchar.$(OBJEXT) $(TLDIR)/tilde.$(OBJEXT)
 bash_OBJECTS = $(am_bash_OBJECTS)
 bash_LDADD = $(LDADD)
-bash_DEPENDENCIES =
+bash_DEPENDENCIES = lib/gnulib/libgnu.a
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -447,20 +447,20 @@ am__v_lt_1 =
 am_mkbuiltins_OBJECTS = $(BLTDIR)/mkbuiltins.$(OBJEXT)
 mkbuiltins_OBJECTS = $(am_mkbuiltins_OBJECTS)
 mkbuiltins_LDADD = $(LDADD)
-mkbuiltins_DEPENDENCIES =
+mkbuiltins_DEPENDENCIES = lib/gnulib/libgnu.a
 am_mksignames_OBJECTS = support/signames.$(OBJEXT) \
 	support/mksignames.$(OBJEXT)
 mksignames_OBJECTS = $(am_mksignames_OBJECTS)
 mksignames_LDADD = $(LDADD)
-mksignames_DEPENDENCIES =
+mksignames_DEPENDENCIES = lib/gnulib/libgnu.a
 am_mksyntax_OBJECTS = mksyntax.$(OBJEXT)
 mksyntax_OBJECTS = $(am_mksyntax_OBJECTS)
 mksyntax_LDADD = $(LDADD)
-mksyntax_DEPENDENCIES =
+mksyntax_DEPENDENCIES = lib/gnulib/libgnu.a
 am_psize_OBJECTS = $(BLTDIR)/psize.$(OBJEXT)
 psize_OBJECTS = $(am_psize_OBJECTS)
 psize_LDADD = $(LDADD)
-psize_DEPENDENCIES =
+psize_DEPENDENCIES = lib/gnulib/libgnu.a
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -2248,7 +2248,7 @@ SHDIR = lib/sh
 TLDIR = lib/tilde
 GLBDIR = lib/glob
 BLTDIR = builtins
-LDADD = @LTLIBINTL@
+LDADD = @LTLIBINTL@ lib/gnulib/libgnu.a
 
 # TODO: add docs and tests subdirs
 SUBDIRS = lib/gnulib po

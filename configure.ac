@@ -386,7 +386,7 @@ AC_DEFINE([_GNU_SOURCE], [1], [Enable any available GNU C library extensions.])
 dnl initialize GNU gettext
 AM_ICONV
 AM_GNU_GETTEXT([external], [need-ngettext], [intl])
-AM_GNU_GETTEXT_VERSION([0.19])
+AM_GNU_GETTEXT_VERSION([0.21])
 
 # Check if we need to include TCP/IP libraries.
 BASH_LIB_SOCKET
