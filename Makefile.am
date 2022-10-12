@@ -28,7 +28,10 @@ DEFS += -DLOCALEDIR=\"$(localedir)\"
 LDADD = @LTLIBINTL@
 
 # TODO: add docs and tests subdirs
-SUBDIRS = po
+SUBDIRS = lib/gnulib po
+
+# TODO: add more files here
+EXTRA_DIST = m4/gnulib-cache.m4
 
 bin_PROGRAMS = bash
 
@@ -200,28 +203,22 @@ bash_SOURCES += $(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
 	$(RLDIR)/rlshell.hh $(RLDIR)/rltty.hh $(RLDIR)/rlwinsize.hh \
 	$(RLDIR)/tcap.hh $(RLDIR)/tilde.hh
 
-bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/getcwd.cc \
-	$(SHDIR)/getenv.cc $(SHDIR)/oslib.cc $(SHDIR)/setlinebuf.cc \
-	$(SHDIR)/strcasecmp.cc $(SHDIR)/strerror.cc \
-	$(SHDIR)/vprint.cc $(SHDIR)/rename.cc $(SHDIR)/zread.cc \
+# TODO: remove any source files now supplied by Gnulib.
+bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/oslib.cc \
+	$(SHDIR)/setlinebuf.cc $(SHDIR)/zread.cc \
 	$(SHDIR)/inet_aton.cc $(SHDIR)/netconn.cc $(SHDIR)/netopen.cc \
-	$(SHDIR)/strpbrk.cc $(SHDIR)/timeval.cc $(SHDIR)/makepath.cc \
-	$(SHDIR)/pathcanon.cc $(SHDIR)/pathphys.cc $(SHDIR)/tmpfile.cc \
+	$(SHDIR)/timeval.cc $(SHDIR)/makepath.cc \
+	$(SHDIR)/pathcanon.cc $(SHDIR)/pathphys.cc \
 	$(SHDIR)/spell.cc $(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
 	$(SHDIR)/strcasestr.cc $(SHDIR)/mailstat.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
-	$(SHDIR)/shmatch.cc $(SHDIR)/strnlen.cc \
-	$(SHDIR)/strtoimax.cc $(SHDIR)/strtoumax.cc \
+	$(SHDIR)/shmatch.cc \
 	$(SHDIR)/stringlist.cc $(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc \
 	$(SHDIR)/mbschr.cc $(SHDIR)/timers.cc $(SHDIR)/zcatfd.cc \
 	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/eaccess.cc \
-	$(SHDIR)/fpurge.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
-	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/dprintf.cc \
+	$(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
+	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc \
 	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
-	$(SHDIR)/strchrnul.cc $(SHDIR)/unicode.cc $(SHDIR)/wcswidth.cc \
-	$(SHDIR)/wcsnwidth.cc $(SHDIR)/shmbchar.cc \
-	$(SHDIR)/random.cc $(SHDIR)/gettimeofday.cc
-
-# TODO: conditionally add mktime.cc if the system mktime tests fail.
+	$(SHDIR)/unicode.cc $(SHDIR)/shmbchar.cc
 
 bash_SOURCES += $(TLDIR)/tilde.cc

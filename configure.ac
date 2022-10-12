@@ -343,22 +343,15 @@ AC_SUBST(HELPSTRINGS)
 
 AC_USE_SYSTEM_EXTENSIONS
 
-dnl compilation checks
-AC_LANG(C++)
-
 # Checks for programs.
-AC_PROG_CXX
-AC_PROG_AWK
 AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PROG_MAKE_SET
-AC_PROG_MKDIR_P
+gl_EARLY
+AC_PROG_CXX
 AC_PROG_YACC
 
-dnl initialize libtool
+dnl initialize libtool and Gnulib
 LT_INIT
+gl_INIT
 
 echo ""
 echo "Beginning configuration for bash-$BASHVERS-$RELSTATUS for ${build_cpu}-${build_vendor}-${build_os}"
@@ -387,9 +380,6 @@ esac
 
 dnl include custom bash rules, moved from aclocal.m4.
 m4_include([m4/bash-rules.m4])
-
-m4_include([m4/stat-time.m4])
-m4_include([m4/timespec.m4])
 
 dnl Turn on any extensions available in the GNU C library.
 AC_DEFINE([_GNU_SOURCE], [1], [Enable any available GNU C library extensions.])
@@ -429,13 +419,10 @@ AC_CHECK_HEADERS([arpa/inet.h dirent.h fcntl.h grp.h inttypes.h langinfo.h libin
 		  termio.h termios.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_HEADER_STDBOOL
 AC_TYPE_UID_T
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
-AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
 AC_CHECK_MEMBERS([struct stat.st_blksize])
 AC_STRUCT_ST_BLOCKS
 AC_CHECK_MEMBERS([struct stat.st_rdev])
@@ -446,7 +433,6 @@ AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 AC_TYPE_INT32_T
 AC_TYPE_INT64_T
-AC_CHECK_TYPES([ptrdiff_t])
 
 # Checks for library functions.
 AC_FUNC_CHOWN
@@ -655,6 +641,6 @@ AC_SUBST(build_cpu)
 AC_SUBST(build_vendor)
 AC_SUBST(build_os)
 
-AC_CONFIG_FILES([Makefile doc/Makefile po/Makefile.in \
+AC_CONFIG_FILES([Makefile doc/Makefile po/Makefile.in lib/gnulib/Makefile \
 		 pathnames.hh support/bash.pc support/bashbug.sh])
 AC_OUTPUT
