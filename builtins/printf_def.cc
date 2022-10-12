@@ -1,7 +1,7 @@
-// This file is printf_def.cc.
+// This file is printf_def.cc (previously builtins/printf.def).
 // It implements the builtin "printf" in Bash.
 
-// Copyright (C) 1997-2020 Free Software Foundation, Inc.
+// Copyright (C) 1997-2021 Free Software Foundation, Inc.
 
 // This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -38,8 +38,9 @@
 
 //   %b	expand backslash escape sequences in the corresponding argument
 //   %q	quote the argument in a way that can be reused as shell input
-//   %(fmt)T	output the date-time string resulting from using FMT as a
-//   format
+//   %Q	like %q, but apply any precision to the unquoted argument before
+// 		quoting
+//   %(fmt)T	output the date-time string resulting from using FMT as a format
 // 	        string for strftime(3)
 
 // The format is re-used as necessary to consume all of the arguments.  If
@@ -54,16 +55,9 @@
 
 #include "config.h"
 
-#include "bashtypes.hh"
-
-#include <chartypes.hh>
-
-#include "bashintl.hh"
-#include "posixtime.hh"
-
-#include "common.hh"
 #include "shell.hh"
-#include "shmbutil.hh"
+
+#include "strftime.h"
 
 #if defined(PRI_MACROS_BROKEN)
 #undef PRIdMAX
@@ -285,7 +279,7 @@ Shell::printf_builtin (WORD_LIST *list)
   if (vflag && list->word->word && list->word->word[0] == '\0')
     {
       SHELL_VAR *v;
-      v = builtin_bind_variable (vname, "", 0);
+      v = builtin_bind_variable (vname, "", bindflags);
       stupidly_hack_special_variables (vname);
       return (v == 0 || readonly_p (v) || noassign_p (v)) ? EXECUTION_FAILURE
                                                           : EXECUTION_SUCCESS;
@@ -297,7 +291,7 @@ Shell::printf_builtin (WORD_LIST *list)
   format = list->word->word;
   tw = 0;
 
-  garglist = orig_arglist = (WORD_LIST *)list->next;
+  garglist = orig_arglist = list->next ();
 
   /* If the format string is empty after preprocessing, return immediately. */
   if (format == 0 || *format == 0)
@@ -442,7 +436,7 @@ Shell::printf_builtin (WORD_LIST *list)
                 struct tm *tm;
 
                 modstart[1] = nextch; /* restore char after left paren */
-                timefmt = (char *)xmalloc (strlen (fmt) + 3);
+                timefmt = new char[strlen (fmt) + 3];
                 fmt++; /* skip over left paren */
                 for (t = timefmt, n = 1; *fmt;)
                   {
@@ -460,7 +454,7 @@ Shell::printf_builtin (WORD_LIST *list)
                     builtin_warning (
                         _ ("`%c': invalid time format specification"), *fmt);
                     fmt = start;
-                    free (timefmt);
+                    delete[] timefmt;
                     PC (*fmt);
                     continue;
                   }
@@ -490,8 +484,10 @@ Shell::printf_builtin (WORD_LIST *list)
                     secs = 0;
                     tm = localtime (&secs);
                   }
-                n = tm ? strftime (timebuf, sizeof (timebuf), timefmt, tm) : 0;
-                free (timefmt);
+                n = tm ? nstrftime (timebuf, sizeof (timebuf), timefmt, tm,
+                                    nullptr, 0)
+                       : 0;
+                delete[] timefmt;
                 if (n == 0)
                   timebuf[0] = '\0';
                 else

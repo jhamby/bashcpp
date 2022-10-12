@@ -59,6 +59,7 @@
 #  mknod \
 #  mktime \
 #  nl_langinfo \
+#  nstrftime \
 #  posix_spawn \
 #  pselect \
 #  random_r \
@@ -72,7 +73,6 @@
 #  strchrnul \
 #  strerror_r-posix \
 #  strnlen \
-#  strpbrk \
 #  strsignal \
 #  strtoimax \
 #  strtoumax \
@@ -108,6 +108,7 @@ gl_MODULES([
   mknod
   mktime
   nl_langinfo
+  nstrftime
   posix_spawn
   pselect
   random_r
@@ -121,7 +122,6 @@ gl_MODULES([
   strchrnul
   strerror_r-posix
   strnlen
-  strpbrk
   strsignal
   strtoimax
   strtoumax

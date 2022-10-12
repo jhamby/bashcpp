@@ -181,12 +181,14 @@ AC_DEFUN([gl_EARLY],
   # Code from module mkfifo:
   # Code from module mknod:
   # Code from module mktime:
+  # Code from module mktime-internal:
   # Code from module msvc-inval:
   # Code from module msvc-nothrow:
   # Code from module multiarch:
   # Code from module netinet_in:
   # Code from module nl_langinfo:
   # Code from module nocrash:
+  # Code from module nstrftime:
   # Code from module open:
   # Code from module openat:
   # Code from module openat-die:
@@ -231,6 +233,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module scratch_buffer:
   # Code from module secure_getenv:
   # Code from module select:
+  # Code from module setenv:
   # Code from module setlocale:
   # Code from module setlocale-null:
   # Code from module sh-filename:
@@ -274,7 +277,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module strings:
   # Code from module strnlen:
   # Code from module strnlen1:
-  # Code from module strpbrk:
   # Code from module strsignal:
   # Code from module strtoimax:
   # Code from module strtoll:
@@ -295,16 +297,20 @@ AC_DEFUN([gl_EARLY],
   gl_THREADLIB_EARLY
   # Code from module time:
   # Code from module time_r:
+  # Code from module time_rz:
+  # Code from module timegm:
   # Code from module times:
   # Code from module timespec:
   # Code from module tls:
   # Code from module tmpdir:
   # Code from module tmpfile:
+  # Code from module tzset:
   # Code from module unistd:
   # Code from module unistd-safer:
   # Code from module unitypes:
   # Code from module uniwidth/base:
   # Code from module uniwidth/width:
+  # Code from module unsetenv:
   # Code from module vararrays:
   # Code from module vasnprintf:
   # Code from module verify:
@@ -794,6 +800,11 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_MKTIME
   fi
   gl_TIME_MODULE_INDICATOR([mktime])
+  gl_FUNC_MKTIME_INTERNAL
+  if test $WANT_MKTIME_INTERNAL = 1; then
+    AC_LIBOBJ([mktime])
+    gl_PREREQ_MKTIME
+  fi
   AC_REQUIRE([gl_MSVC_INVAL])
   gl_CONDITIONAL([GL_COND_OBJ_MSVC_INVAL],
                  [test $HAVE_MSVC_INVALID_PARAMETER_HANDLER = 1])
@@ -814,6 +825,7 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_NL_LANGINFO_LOCK
   fi
   gl_LANGINFO_MODULE_INDICATOR([nl_langinfo])
+  gl_FUNC_GNU_STRFTIME
   gl_FUNC_OPEN
   gl_CONDITIONAL([GL_COND_OBJ_OPEN], [test $REPLACE_OPEN = 1])
   AM_COND_IF([GL_COND_OBJ_OPEN], [
@@ -975,6 +987,10 @@ AC_DEFUN([gl_INIT],
   gl_FUNC_SELECT
   gl_CONDITIONAL([GL_COND_OBJ_SELECT], [test $REPLACE_SELECT = 1])
   gl_SYS_SELECT_MODULE_INDICATOR([select])
+  gl_FUNC_SETENV
+  gl_CONDITIONAL([GL_COND_OBJ_SETENV],
+                 [test $HAVE_SETENV = 0 || test $REPLACE_SETENV = 1])
+  gl_STDLIB_MODULE_INDICATOR([setenv])
   gl_FUNC_SETLOCALE
   gl_CONDITIONAL([GL_COND_OBJ_SETLOCALE], [test $REPLACE_SETLOCALE = 1])
   AM_COND_IF([GL_COND_OBJ_SETLOCALE], [
@@ -1156,12 +1172,6 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_STRNLEN
   ])
   gl_STRING_MODULE_INDICATOR([strnlen])
-  gl_FUNC_STRPBRK
-  gl_CONDITIONAL([GL_COND_OBJ_STRPBRK], [test $HAVE_STRPBRK = 0])
-  AM_COND_IF([GL_COND_OBJ_STRPBRK], [
-    gl_PREREQ_STRPBRK
-  ])
-  gl_STRING_MODULE_INDICATOR([strpbrk])
   gl_FUNC_STRSIGNAL
   gl_CONDITIONAL([GL_COND_OBJ_STRSIGNAL],
                  [test $HAVE_STRSIGNAL = 0 || test $REPLACE_STRSIGNAL = 1])
@@ -1238,6 +1248,16 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_TIME_R
   ])
   gl_TIME_MODULE_INDICATOR([time_r])
+  gl_TIME_RZ
+  gl_CONDITIONAL([GL_COND_OBJ_TIME_RZ], [test $HAVE_TIMEZONE_T = 0])
+  gl_TIME_MODULE_INDICATOR([time_rz])
+  gl_FUNC_TIMEGM
+  gl_CONDITIONAL([GL_COND_OBJ_TIMEGM],
+                 [test $HAVE_TIMEGM = 0 || test $REPLACE_TIMEGM = 1])
+  AM_COND_IF([GL_COND_OBJ_TIMEGM], [
+    gl_PREREQ_TIMEGM
+  ])
+  gl_TIME_MODULE_INDICATOR([timegm])
   gl_FUNC_TIMES
   gl_CONDITIONAL([GL_COND_OBJ_TIMES], [test $HAVE_TIMES = 0])
   gl_SYS_TIMES_MODULE_INDICATOR([times])
@@ -1250,6 +1270,9 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_TMPFILE
   ])
   gl_STDIO_MODULE_INDICATOR([tmpfile])
+  gl_FUNC_TZSET
+  gl_CONDITIONAL([GL_COND_OBJ_TZSET], [test $REPLACE_TZSET = 1])
+  gl_TIME_MODULE_INDICATOR([tzset])
   gl_UNISTD_H
   gl_UNISTD_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
@@ -1274,6 +1297,13 @@ AC_DEFUN([gl_INIT],
   gl_LIBUNISTRING_LIBHEADER([0.9.11], [uniwidth.h])
   AC_PROG_MKDIR_P
   gl_LIBUNISTRING_MODULE([0.9.11], [uniwidth/width])
+  gl_FUNC_UNSETENV
+  gl_CONDITIONAL([GL_COND_OBJ_UNSETENV],
+                 [test $HAVE_UNSETENV = 0 || test $REPLACE_UNSETENV = 1])
+  AM_COND_IF([GL_COND_OBJ_UNSETENV], [
+    gl_PREREQ_UNSETENV
+  ])
+  gl_STDLIB_MODULE_INDICATOR([unsetenv])
   AC_C_VARARRAYS
   AC_REQUIRE([AC_C_RESTRICT])
   gl_FUNC_VASNPRINTF
@@ -1709,6 +1739,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/netinet_in.in.h
   lib/nl_langinfo-lock.c
   lib/nl_langinfo.c
+  lib/nstrftime.c
   lib/open.c
   lib/openat-die.c
   lib/openat-priv.h
@@ -1753,6 +1784,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/scratch_buffer.h
   lib/secure_getenv.c
   lib/select.c
+  lib/setenv.c
   lib/setlocale-lock.c
   lib/setlocale.c
   lib/setlocale_null.c
@@ -1810,6 +1842,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/strerror-override.h
   lib/strerror.c
   lib/strerror_r.c
+  lib/strftime.h
   lib/string.in.h
   lib/strings.in.h
   lib/stripslash.c
@@ -1817,7 +1850,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/strnlen.c
   lib/strnlen1.c
   lib/strnlen1.h
-  lib/strpbrk.c
   lib/strsignal.c
   lib/strtoimax.c
   lib/strtol.c
@@ -1839,14 +1871,18 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/tempname.c
   lib/tempname.h
   lib/thread-optim.h
+  lib/time-internal.h
   lib/time.in.h
   lib/time_r.c
+  lib/time_rz.c
+  lib/timegm.c
   lib/times.c
   lib/timespec.c
   lib/timespec.h
   lib/tmpdir.c
   lib/tmpdir.h
   lib/tmpfile.c
+  lib/tzset.c
   lib/unictype/bitmap.h
   lib/unistd--.h
   lib/unistd-safer.h
@@ -1858,6 +1894,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/uniwidth/width.c
   lib/uniwidth/width0.h
   lib/uniwidth/width2.h
+  lib/unsetenv.c
   lib/vasnprintf.c
   lib/vasnprintf.h
   lib/verify.h
@@ -2030,6 +2067,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/netinet_in_h.m4
   m4/nl_langinfo.m4
   m4/nocrash.m4
+  m4/nstrftime.m4
   m4/off_t.m4
   m4/open-cloexec.m4
   m4/open-slash.m4
@@ -2064,6 +2102,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/sched_h.m4
   m4/secure_getenv.m4
   m4/select.m4
+  m4/setenv.m4
   m4/setlocale.m4
   m4/setlocale_null.m4
   m4/sh-filename.m4
@@ -2100,7 +2139,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/string_h.m4
   m4/strings_h.m4
   m4/strnlen.m4
-  m4/strpbrk.m4
   m4/strsignal.m4
   m4/strtoimax.m4
   m4/strtoll.m4
@@ -2119,11 +2157,15 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/threadlib.m4
   m4/time_h.m4
   m4/time_r.m4
+  m4/time_rz.m4
+  m4/timegm.m4
   m4/times.m4
   m4/timespec.m4
   m4/tls.m4
+  m4/tm_gmtoff.m4
   m4/tmpdir.m4
   m4/tmpfile.m4
+  m4/tzset.m4
   m4/unistd-safer.m4
   m4/unistd_h.m4
   m4/vararrays.m4

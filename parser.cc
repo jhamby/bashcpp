@@ -23,6 +23,8 @@
 
 #include "shell.hh"
 
+#include "strftime.h"
+
 namespace bash
 {
 
@@ -1789,9 +1791,8 @@ re_read_token:
 #if defined(PROCESS_SUBSTITUTION)
       /* Check for the constructs which introduce process substitution.
          Shells running in `posix mode' don't do process substitution. */
-      if MBTEST ((character != '>' && character != '<')
-                 || peek_char != '(')
-#endif                                /* PROCESS_SUBSTITUTION */
+      if MBTEST ((character != '>' && character != '<') || peek_char != '(')
+#endif /* PROCESS_SUBSTITUTION */
         return parser::symbol_type (character);
     }
 
@@ -2968,11 +2969,6 @@ Shell::read_token_word (int character)
   /* The current delimiting character. */
   char cd;
 
-  //   int result, peek_char;
-  //   char *ttok, *ttrans;
-  //   int ttoklen, ttranslen;
-  //   int64_t lvalue;
-
   if (token_buffer.capacity () < TOKEN_DEFAULT_INITIAL_SIZE)
     token_buffer.reserve (TOKEN_DEFAULT_INITIAL_SIZE);
 
@@ -3237,12 +3233,12 @@ Shell::read_token_word (int character)
       /* Identify possible array subscript assignment; match [...].  If
          parser_state & PST_COMPASSIGN, we need to parse [sub]=words treating
          `sub' as if it were enclosed in double quotes. */
-      else if MBTEST (character == '[' &&
-                      ((!token_buffer.empty ()
-                        && assignment_acceptable (last_read_token)
-                        && token_is_ident (token_buffer))
-                       || (token_buffer.empty ()
-                           && (parser_state & PST_COMPASSIGN))))
+      else if MBTEST (character == '['
+                      && ((!token_buffer.empty ()
+                           && assignment_acceptable (last_read_token)
+                           && token_is_ident (token_buffer))
+                          || (token_buffer.empty ()
+                              && (parser_state & PST_COMPASSIGN))))
         {
           std::string ttok;
           try
@@ -3751,15 +3747,20 @@ Shell::decode_prompt_string (string_view string)
               now = localtime (&the_time);
               size = 0;
               if (c == 'd')
-                size = strftime (timebuf, sizeof (timebuf), "%a %b %d", now);
+                size = nstrftime (timebuf, sizeof (timebuf), "%a %b %d", now,
+                                  nullptr, 0);
               else if (c == 't')
-                size = strftime (timebuf, sizeof (timebuf), "%H:%M:%S", now);
+                size = nstrftime (timebuf, sizeof (timebuf), "%H:%M:%S", now,
+                                  nullptr, 0);
               else if (c == 'T')
-                size = strftime (timebuf, sizeof (timebuf), "%I:%M:%S", now);
+                size = nstrftime (timebuf, sizeof (timebuf), "%I:%M:%S", now,
+                                  nullptr, 0);
               else if (c == '@')
-                size = strftime (timebuf, sizeof (timebuf), "%I:%M %p", now);
+                size = nstrftime (timebuf, sizeof (timebuf), "%I:%M %p", now,
+                                  nullptr, 0);
               else if (c == 'A')
-                size = strftime (timebuf, sizeof (timebuf), "%H:%M", now);
+                size = nstrftime (timebuf, sizeof (timebuf), "%H:%M", now,
+                                  nullptr, 0);
 
               if (size != 0)
                 {
@@ -3768,7 +3769,7 @@ Shell::decode_prompt_string (string_view string)
                 }
               break;
 
-            case 'D':               /* strftime format */
+            case 'D': /* strftime format */
               if (*(it + 1) != '{')
                 goto not_escape;
 
@@ -3788,8 +3789,8 @@ Shell::decode_prompt_string (string_view string)
                 if (timefmt.empty ())
                   timefmt = "%X"; // locale-specific current time
 
-                size = strftime (timebuf, sizeof (timebuf), timefmt.c_str (),
-                                 now);
+                size = nstrftime (timebuf, sizeof (timebuf), timefmt.c_str (),
+                                  now, nullptr, 0);
 
                 if (size != 0)
                   {

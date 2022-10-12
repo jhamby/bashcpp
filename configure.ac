@@ -440,6 +440,8 @@ AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf dup2 faccessat fchdir 
 		strsignal strtoimax strtoumax sysconf tcgetattr \
 		times ttyname tzset ulimit uname vfprintf waitpid wcswidth wcwidth])
 
+gl_FUNC_GNU_STRFTIME
+
 BASH_CHECK_MULTIBYTE
 
 dnl checks for the dynamic loading library functions in libc and libdl
