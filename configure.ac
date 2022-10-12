@@ -435,12 +435,10 @@ AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf dup2 faccessat fchdir 
 		localeconv localtime_r lstat mblen mbrlen mbschr mbsnrtowcs mkdir mkdtemp \
 		mkfifo mknod mkstemp mmap nl_langinfo pathconf pselect putenv random \
 		readlink regcomp regexec rename select setdtablesize setenv setitimer \
-		setlocale setregid setresgid setresuid setvbuf socket stpcpy strcasecmp \
+		setlocale setpgid setregid setresgid setresuid setvbuf socket stpcpy strcasecmp \
 		strcasestr strchrnul strerror strncasecmp strnlen strpbrk \
 		strsignal strtoimax strtoumax sysconf tcgetattr \
 		times ttyname tzset ulimit uname vfprintf waitpid wcswidth wcwidth])
-
-gl_FUNC_GNU_STRFTIME
 
 BASH_CHECK_MULTIBYTE
 

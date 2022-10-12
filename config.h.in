@@ -619,9 +619,6 @@
 /* Define to 1 when the gnulib module select should be tested. */
 #undef GNULIB_TEST_SELECT
 
-/* Define to 1 when the gnulib module setenv should be tested. */
-#undef GNULIB_TEST_SETENV
-
 /* Define to 1 when the gnulib module setlocale should be tested. */
 #undef GNULIB_TEST_SETLOCALE
 
@@ -676,23 +673,11 @@
 /* Define to 1 when the gnulib module strtoull should be tested. */
 #undef GNULIB_TEST_STRTOULL
 
-/* Define to 1 when the gnulib module timegm should be tested. */
-#undef GNULIB_TEST_TIMEGM
-
 /* Define to 1 when the gnulib module time_r should be tested. */
 #undef GNULIB_TEST_TIME_R
 
-/* Define to 1 when the gnulib module time_rz should be tested. */
-#undef GNULIB_TEST_TIME_RZ
-
 /* Define to 1 when the gnulib module tmpfile should be tested. */
 #undef GNULIB_TEST_TMPFILE
-
-/* Define to 1 when the gnulib module tzset should be tested. */
-#undef GNULIB_TEST_TZSET
-
-/* Define to 1 when the gnulib module unsetenv should be tested. */
-#undef GNULIB_TEST_UNSETENV
 
 /* Define to 1 when the gnulib module vfprintf should be tested. */
 #undef GNULIB_TEST_VFPRINTF
@@ -956,10 +941,6 @@
    and to 0 if you don't. */
 #undef HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME
 
-/* Define to 1 if you have the declaration of `setenv', and to 0 if you don't.
-   */
-#undef HAVE_DECL_SETENV
-
 /* Define to 1 if you have the declaration of `snprintf', and to 0 if you
    don't. */
 #undef HAVE_DECL_SNPRINTF
@@ -1007,14 +988,6 @@
 /* Define to 1 if you have the declaration of `towlower', and to 0 if you
    don't. */
 #undef HAVE_DECL_TOWLOWER
-
-/* Define to 1 if you have the declaration of `tzname', and to 0 if you don't.
-   */
-#undef HAVE_DECL_TZNAME
-
-/* Define to 1 if you have the declaration of `unsetenv', and to 0 if you
-   don't. */
-#undef HAVE_DECL_UNSETENV
 
 /* Define to 1 if you have the declaration of `wcsdup', and to 0 if you don't.
    */
@@ -1347,10 +1320,6 @@
 /* Define to 1 if you have the `locale_charset' function. */
 #undef HAVE_LOCALE_CHARSET
 
-/* Define if localtime-like functions can loop forever on extreme arguments.
-   */
-#undef HAVE_LOCALTIME_INFLOOP_BUG
-
 /* Define to 1 if you have the `localtime_r' function. */
 #undef HAVE_LOCALTIME_R
 
@@ -1598,9 +1567,6 @@
 /* Define to 1 if you have the <sdkddkver.h> header file. */
 #undef HAVE_SDKDDKVER_H
 
-/* Define to 1 if you have the <search.h> header file. */
-#undef HAVE_SEARCH_H
-
 /* Define to 1 if you have the `secure_getenv' function. */
 #undef HAVE_SECURE_GETENV
 
@@ -1624,6 +1590,9 @@
 
 /* Define to 1 if you have the `setlocale' function. */
 #undef HAVE_SETLOCALE
+
+/* Define to 1 if you have the `setpgid' function. */
+#undef HAVE_SETPGID
 
 /* Define to 1 if you have the `setregid' function. */
 #undef HAVE_SETREGID
@@ -1835,9 +1804,6 @@
 /* Define to 1 if the system has the type `struct tms'. */
 #undef HAVE_STRUCT_TMS
 
-/* Define to 1 if `tm_zone' is a member of `struct tm'. */
-#undef HAVE_STRUCT_TM_TM_ZONE
-
 /* Define to 1 if your `struct stat' has `st_blocks'. Deprecated, use
    `HAVE_STRUCT_STAT_ST_BLOCKS' instead. */
 #undef HAVE_ST_BLOCKS
@@ -1928,24 +1894,11 @@
 /* Define to 1 if you have the <threads.h> header file. */
 #undef HAVE_THREADS_H
 
-/* Define to 1 if you have the `timegm' function. */
-#undef HAVE_TIMEGM
-
 /* Define to 1 if you have the `times' function. */
 #undef HAVE_TIMES
 
 /* Define if you have struct timeval in sys/time.h or time.h. */
 #undef HAVE_TIMEVAL
-
-/* Define to 1 if the system has the type `timezone_t'. */
-#undef HAVE_TIMEZONE_T
-
-/* Define if struct tm has the tm_gmtoff member. */
-#undef HAVE_TM_GMTOFF
-
-/* Define to 1 if your `struct tm' has `tm_zone'. Deprecated, use
-   `HAVE_STRUCT_TM_TM_ZONE' instead. */
-#undef HAVE_TM_ZONE
 
 /* Define to 1 if you have the `towlower' function. */
 #undef HAVE_TOWLOWER
@@ -1953,15 +1906,8 @@
 /* Define to 1 if you have the `towupper' function. */
 #undef HAVE_TOWUPPER
 
-/* Define to 1 if you have the `tsearch' function. */
-#undef HAVE_TSEARCH
-
 /* Define to 1 if you have the `ttyname' function. */
 #undef HAVE_TTYNAME
-
-/* Define to 1 if you don't have `tm_zone' but do have the external array
-   `tzname'. */
-#undef HAVE_TZNAME
 
 /* Define to 1 if you have the `tzset' function. */
 #undef HAVE_TZSET
@@ -1980,9 +1926,6 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
-
-/* Define to 1 if you have the `unsetenv' function. */
-#undef HAVE_UNSETENV
 
 /* Define to 1 if the system has the type 'unsigned long long int'. */
 #undef HAVE_UNSIGNED_LONG_LONG_INT
@@ -2319,9 +2262,6 @@
 /* Define if this system is missing support for named pipes. */
 #undef NAMED_PIPES_MISSING
 
-/* Define if the compilation of mktime.c should define 'mktime_internal'. */
-#undef NEED_MKTIME_INTERNAL
-
 /* Define if the compilation of mktime.c should define 'mktime' with the
    native Windows TZ workaround. */
 #undef NEED_MKTIME_WINDOWS
@@ -2645,9 +2585,6 @@
 /* Define if TIOCSTAT is defined in your sys/ioctl.h. */
 #undef TIOCSTAT_IN_SYS_IOCTL
 
-/* Define to 1 if your <sys/time.h> declares `struct tm'. */
-#undef TM_IN_SYS_TIME
-
 /* Support for $"..." translatable strings. */
 #undef TRANSLATABLE_STRINGS
 
@@ -2772,9 +2709,6 @@
 
 /* Version number of package */
 #undef VERSION
-
-/* Define to 1 if unsetenv returns void instead of int. */
-#undef VOID_UNSETENV
 
 /* Define to l, ll, u, ul, ull, etc., as suitable for constants of type
    'wchar_t'. */
@@ -3356,14 +3290,8 @@
 #define _GL_CMP(n1, n2) (((n1) > (n2)) - ((n1) < (n2)))
 
 
-/* Define to the real name of the mktime_internal function. */
-#undef mktime_internal
-
 /* Define to `int' if <sys/types.h> does not define. */
 #undef mode_t
-
-/* Define to the name of the strftime replacement function. */
-#undef my_strftime
 
 /* Define to the type of st_nlink in struct stat, or a supertype. */
 #undef nlink_t

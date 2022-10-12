@@ -54,7 +54,6 @@
 #  mknod \
 #  mktime \
 #  nl_langinfo \
-#  nstrftime \
 #  posix_spawn \
 #  pselect \
 #  random_r \
@@ -1781,15 +1780,6 @@ EXTRA_libgnu_a_SOURCES += mktime.c
 
 ## end   gnulib module mktime
 
-## begin gnulib module mktime-internal
-
-
-EXTRA_DIST += mktime-internal.h mktime.c
-
-EXTRA_libgnu_a_SOURCES += mktime.c
-
-## end   gnulib module mktime-internal
-
 ## begin gnulib module msvc-inval
 
 if GL_COND_OBJ_MSVC_INVAL
@@ -1851,14 +1841,6 @@ endif
 EXTRA_DIST += windows-initguard.h
 
 ## end   gnulib module nl_langinfo
-
-## begin gnulib module nstrftime
-
-libgnu_a_SOURCES += nstrftime.c
-
-EXTRA_DIST += strftime.h
-
-## end   gnulib module nstrftime
 
 ## begin gnulib module open
 
@@ -2253,14 +2235,6 @@ libgnu_a_SOURCES += select.c
 endif
 
 ## end   gnulib module select
-
-## begin gnulib module setenv
-
-if GL_COND_OBJ_SETENV
-libgnu_a_SOURCES += setenv.c
-endif
-
-## end   gnulib module setenv
 
 ## begin gnulib module setlocale
 
@@ -3623,26 +3597,6 @@ endif
 
 ## end   gnulib module time_r
 
-## begin gnulib module time_rz
-
-if GL_COND_OBJ_TIME_RZ
-libgnu_a_SOURCES += time_rz.c
-endif
-
-EXTRA_DIST += time-internal.h
-
-## end   gnulib module time_rz
-
-## begin gnulib module timegm
-
-if GL_COND_OBJ_TIMEGM
-libgnu_a_SOURCES += timegm.c
-endif
-
-EXTRA_DIST += mktime-internal.h
-
-## end   gnulib module timegm
-
 ## begin gnulib module times
 
 if GL_COND_OBJ_TIMES
@@ -3678,14 +3632,6 @@ libgnu_a_SOURCES += tmpfile.c
 endif
 
 ## end   gnulib module tmpfile
-
-## begin gnulib module tzset
-
-if GL_COND_OBJ_TZSET
-libgnu_a_SOURCES += tzset.c
-endif
-
-## end   gnulib module tzset
 
 ## begin gnulib module unistd
 
@@ -3937,14 +3883,6 @@ endif
 EXTRA_DIST += unictype/bitmap.h uniwidth/cjk.h uniwidth/width0.h uniwidth/width2.h
 
 ## end   gnulib module uniwidth/width
-
-## begin gnulib module unsetenv
-
-if GL_COND_OBJ_UNSETENV
-libgnu_a_SOURCES += unsetenv.c
-endif
-
-## end   gnulib module unsetenv
 
 ## begin gnulib module vasnprintf
 

@@ -196,8 +196,8 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/msvc-nothrow.m4 $(top_srcdir)/m4/multiarch.m4 \
 	$(top_srcdir)/m4/netinet_in_h.m4 \
 	$(top_srcdir)/m4/nl_langinfo.m4 $(top_srcdir)/m4/nls.m4 \
-	$(top_srcdir)/m4/nocrash.m4 $(top_srcdir)/m4/nstrftime.m4 \
-	$(top_srcdir)/m4/off_t.m4 $(top_srcdir)/m4/open-cloexec.m4 \
+	$(top_srcdir)/m4/nocrash.m4 $(top_srcdir)/m4/off_t.m4 \
+	$(top_srcdir)/m4/open-cloexec.m4 \
 	$(top_srcdir)/m4/open-slash.m4 $(top_srcdir)/m4/open.m4 \
 	$(top_srcdir)/m4/openat.m4 $(top_srcdir)/m4/opendir.m4 \
 	$(top_srcdir)/m4/pathmax.m4 $(top_srcdir)/m4/pipe.m4 \
@@ -216,7 +216,7 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/safe-read.m4 $(top_srcdir)/m4/safe-write.m4 \
 	$(top_srcdir)/m4/save-cwd.m4 $(top_srcdir)/m4/sched_h.m4 \
 	$(top_srcdir)/m4/secure_getenv.m4 $(top_srcdir)/m4/select.m4 \
-	$(top_srcdir)/m4/setenv.m4 $(top_srcdir)/m4/setlocale.m4 \
+	$(top_srcdir)/m4/setlocale.m4 \
 	$(top_srcdir)/m4/setlocale_null.m4 \
 	$(top_srcdir)/m4/sh-filename.m4 \
 	$(top_srcdir)/m4/sig_atomic_t.m4 $(top_srcdir)/m4/sigaction.m4 \
@@ -246,11 +246,9 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/sys_types_h.m4 $(top_srcdir)/m4/sys_uio_h.m4 \
 	$(top_srcdir)/m4/sys_wait_h.m4 $(top_srcdir)/m4/tempname.m4 \
 	$(top_srcdir)/m4/threadlib.m4 $(top_srcdir)/m4/time_h.m4 \
-	$(top_srcdir)/m4/time_r.m4 $(top_srcdir)/m4/time_rz.m4 \
-	$(top_srcdir)/m4/timegm.m4 $(top_srcdir)/m4/times.m4 \
+	$(top_srcdir)/m4/time_r.m4 $(top_srcdir)/m4/times.m4 \
 	$(top_srcdir)/m4/timespec.m4 $(top_srcdir)/m4/tls.m4 \
-	$(top_srcdir)/m4/tm_gmtoff.m4 $(top_srcdir)/m4/tmpdir.m4 \
-	$(top_srcdir)/m4/tmpfile.m4 $(top_srcdir)/m4/tzset.m4 \
+	$(top_srcdir)/m4/tmpdir.m4 $(top_srcdir)/m4/tmpfile.m4 \
 	$(top_srcdir)/m4/unistd-safer.m4 $(top_srcdir)/m4/unistd_h.m4 \
 	$(top_srcdir)/m4/vasnprintf.m4 \
 	$(top_srcdir)/m4/vfprintf-posix.m4 \

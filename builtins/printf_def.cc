@@ -57,8 +57,6 @@
 
 #include "shell.hh"
 
-#include "strftime.h"
-
 #if defined(PRI_MACROS_BROKEN)
 #undef PRIdMAX
 #endif
@@ -484,9 +482,7 @@ Shell::printf_builtin (WORD_LIST *list)
                     secs = 0;
                     tm = localtime (&secs);
                   }
-                n = tm ? nstrftime (timebuf, sizeof (timebuf), timefmt, tm,
-                                    nullptr, 0)
-                       : 0;
+                n = tm ? strftime (timebuf, sizeof (timebuf), timefmt, tm) : 0;
                 delete[] timefmt;
                 if (n == 0)
                   timebuf[0] = '\0';

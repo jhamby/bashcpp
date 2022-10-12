@@ -59,7 +59,6 @@
 #  mknod \
 #  mktime \
 #  nl_langinfo \
-#  nstrftime \
 #  posix_spawn \
 #  pselect \
 #  random_r \
@@ -108,7 +107,6 @@ gl_MODULES([
   mknod
   mktime
   nl_langinfo
-  nstrftime
   posix_spawn
   pselect
   random_r

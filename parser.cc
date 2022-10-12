@@ -23,8 +23,6 @@
 
 #include "shell.hh"
 
-#include "strftime.h"
-
 namespace bash
 {
 
@@ -3747,20 +3745,15 @@ Shell::decode_prompt_string (string_view string)
               now = localtime (&the_time);
               size = 0;
               if (c == 'd')
-                size = nstrftime (timebuf, sizeof (timebuf), "%a %b %d", now,
-                                  nullptr, 0);
+                size = strftime (timebuf, sizeof (timebuf), "%a %b %d", now);
               else if (c == 't')
-                size = nstrftime (timebuf, sizeof (timebuf), "%H:%M:%S", now,
-                                  nullptr, 0);
+                size = strftime (timebuf, sizeof (timebuf), "%H:%M:%S", now);
               else if (c == 'T')
-                size = nstrftime (timebuf, sizeof (timebuf), "%I:%M:%S", now,
-                                  nullptr, 0);
+                size = strftime (timebuf, sizeof (timebuf), "%I:%M:%S", now);
               else if (c == '@')
-                size = nstrftime (timebuf, sizeof (timebuf), "%I:%M %p", now,
-                                  nullptr, 0);
+                size = strftime (timebuf, sizeof (timebuf), "%I:%M %p", now);
               else if (c == 'A')
-                size = nstrftime (timebuf, sizeof (timebuf), "%H:%M", now,
-                                  nullptr, 0);
+                size = strftime (timebuf, sizeof (timebuf), "%H:%M", now);
 
               if (size != 0)
                 {
@@ -3789,8 +3782,8 @@ Shell::decode_prompt_string (string_view string)
                 if (timefmt.empty ())
                   timefmt = "%X"; // locale-specific current time
 
-                size = nstrftime (timebuf, sizeof (timebuf), timefmt.c_str (),
-                                  now, nullptr, 0);
+                size = strftime (timebuf, sizeof (timebuf), timefmt.c_str (),
+                                 now);
 
                 if (size != 0)
                   {
