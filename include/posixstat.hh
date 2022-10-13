@@ -27,6 +27,20 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+// Undefine the Gnulib macros that break Solaris 10, Haiku OS, etc..
+#ifdef strtoll
+#undef strtoll
+#endif
+#ifdef strtoull
+#undef strtoull
+#endif
+#ifdef open
+#undef open
+#endif
+
+#define SET_CLOSE_ON_EXEC(fd) (fcntl ((fd), F_SETFD, FD_CLOEXEC))
+#define SET_OPEN_ON_EXEC(fd) (fcntl ((fd), F_SETFD, FD_NCLOEXEC))
+
 #if defined(STAT_MACROS_BROKEN)
 #undef S_ISBLK
 #undef S_ISCHR
@@ -35,14 +49,6 @@
 #undef S_ISREG
 #undef S_ISLNK
 #endif /* STAT_MACROS_BROKEN */
-
-/* These are guaranteed to work only on isc386 */
-#if !defined(S_IFDIR) && !defined(S_ISDIR)
-#define S_IFDIR 0040000
-#endif /* !S_IFDIR && !S_ISDIR */
-#if !defined(S_IFMT)
-#define S_IFMT 0170000
-#endif /* !S_IFMT */
 
 /* Posix 1003.1 5.6.1.1 <sys/stat.h> file types */
 

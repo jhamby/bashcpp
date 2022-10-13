@@ -24,11 +24,6 @@
 #include "bashtypes.hh"
 #include "chartypes.hh"
 
-#include <fcntl.h>
-
-#define SET_CLOSE_ON_EXEC(fd) (fcntl ((fd), F_SETFD, FD_CLOEXEC))
-#define SET_OPEN_ON_EXEC(fd) (fcntl ((fd), F_SETFD, FD_NCLOEXEC))
-
 #if defined(HAVE_SYS_RESOURCE_H) && defined(RLIMTYPE)
 #if defined(HAVE_SYS_TIME_H)
 #include <sys/time.h>
