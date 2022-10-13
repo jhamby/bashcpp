@@ -3857,7 +3857,7 @@ Shell::decode_prompt_string (string_view string)
                   }
                 t_string[tlen] = '\0';
 
-#if defined(MACOSX)
+#if defined(__APPLE__)
                 /* Convert from "fs" format to "input" format */
                 temp = fnx_fromfs (t_string, strlen (t_string));
                 if (temp != t_string)

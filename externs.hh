@@ -156,7 +156,7 @@ std::string fmtumax (uint64_t, int, fmt_flags);
 
 /* Declarations for functions defined in lib/sh/fnxform.c */
 
-#if defined(MACOSX)
+#if defined(__APPLE__)
 char *fnx_fromfs (char *, size_t);
 char *fnx_tofs (char *, size_t);
 #else

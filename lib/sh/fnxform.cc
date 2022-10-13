@@ -43,7 +43,7 @@ extern "C" const char *locale_charset (void);
 namespace bash
 {
 
-#ifdef MACOSX
+#if defined(__APPLE__)
 static iconv_t conv_fromfs = reinterpret_cast<iconv_t> (-1);
 static iconv_t conv_tofs = reinterpret_cast<iconv_t> (-1);
 

@@ -1974,9 +1974,9 @@ public:
 
   builtin *builtin_address_internal (string_view, bool);
 
-  sh_builtin_func_t find_shell_builtin (char *);
-  sh_builtin_func_t builtin_address (char *);
-  sh_builtin_func_t find_special_builtin (char *);
+  sh_builtin_func_t find_shell_builtin (string_view);
+  sh_builtin_func_t builtin_address (string_view);
+  sh_builtin_func_t find_special_builtin (string_view);
 
   // This function is now defined in the generated builtins.cc.
   void initialize_shell_builtins ();

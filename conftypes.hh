@@ -31,11 +31,11 @@ extern const int patch_level;
 /* Placeholder for future modifications if cross-compiling or building a
    `fat' binary, e.g. on Apple Rhapsody.  These values are used in multiple
    files, so they appear here. */
-#if !defined(RHAPSODY) && !defined(MACOSX)
+#if !defined(__APPLE__)
 #define HOSTTYPE CONF_HOSTTYPE
 #define OSTYPE CONF_OSTYPE
 #define MACHTYPE CONF_MACHTYPE
-#else /* RHAPSODY */
+#else /* __APPLE__ */
 #if defined(__powerpc__) || defined(__ppc__)
 #define HOSTTYPE "powerpc"
 #elif defined(__i386__)
@@ -48,7 +48,7 @@ extern const int patch_level;
 #define VENDOR CONF_VENDOR
 
 #define MACHTYPE HOSTTYPE "-" VENDOR "-" OSTYPE
-#endif /* RHAPSODY */
+#endif /* __APPLE__ */
 
 #ifndef HOSTTYPE
 #define HOSTTYPE "unknown"
