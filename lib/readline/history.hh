@@ -47,12 +47,12 @@ public:
   {
   }
 
-  HIST_ENTRY (const std::string &entry, const std::string &ts, histdata_t d)
+  HIST_ENTRY (string_view entry, string_view ts, histdata_t d)
       : line (entry), timestamp (ts), data (d)
   {
   }
 
-  HIST_ENTRY (const std::string &entry) : line (entry) {}
+  HIST_ENTRY (string_view entry) : line (entry) {}
 
   ~HIST_ENTRY () { delete data; }
 
@@ -90,7 +90,7 @@ public:
      readline line buffer) and an index into it (which could be rl_point) and
      returns size_t (or -1). Also used for the inhibit history expansion
      callback. */
-  typedef size_t (History::*rl_linebuf_func_t) (const std::string &, int);
+  typedef size_t (History::*rl_linebuf_func_t) (string_view, int);
 
   /* Initialization and state management. */
 
@@ -144,7 +144,7 @@ public:
   /* Make the history entry at WHICH have LINE and DATA.  This returns
      the old entry so you can dispose of the data.  In the case of an
      invalid WHICH, nullptr is returned. */
-  HIST_ENTRY *replace_history_entry (size_t, const std::string &, histdata_t);
+  HIST_ENTRY *replace_history_entry (size_t, string_view, histdata_t);
 
   /* Clear the history list and start over. */
   inline void
@@ -318,7 +318,7 @@ public:
      is the offset in the line of that history entry that the string was
      found in.  Otherwise, nothing is changed, and a -1 is returned. */
   size_t
-  history_search (const std::string &str, int direction)
+  history_search (string_view str, int direction)
   {
     return static_cast<size_t> (
         history_search_internal (str, direction, NON_ANCHORED_SEARCH));
@@ -328,7 +328,7 @@ public:
      The search is anchored: matching lines must begin with string.
      DIRECTION is as in history_search(). */
   size_t
-  history_search_prefix (const std::string &str, int direction)
+  history_search_prefix (string_view str, int direction)
   {
     return static_cast<size_t> (
         history_search_internal (str, direction, ANCHORED_SEARCH));
@@ -339,7 +339,7 @@ public:
      backwards from POS, else forwards.
      Returns the absolute index of the history element where STRING
      was found, or -1 otherwise. */
-  size_t history_search_pos (const std::string &, int, size_t);
+  size_t history_search_pos (string_view , int, size_t);
 
   /* Managing the history file. */
 
@@ -438,13 +438,13 @@ public:
     return true;
   }
 
-  size_t _rl_adjust_point (const std::string &string, size_t point,
+  size_t _rl_adjust_point (string_view string, size_t point,
                            mbstate_t *ps);
 
   size_t _hs_history_patsearch (const char *string, int direction,
                                 hist_search_flags flags);
 
-  wchar_t _rl_char_value (const std::string &buf, size_t ind);
+  wchar_t _rl_char_value (string_view buf, size_t ind);
 
   /* mbutil.c */
 
@@ -452,7 +452,7 @@ public:
      If `find_non_zero` is true, we look for non-zero-width multibyte
      characters. */
   inline size_t
-  _rl_find_next_mbchar (const std::string &string, size_t seed, int count,
+  _rl_find_next_mbchar (string_view string, size_t seed, int count,
                         find_mbchar_flags find_non_zero)
   {
 #if defined(HANDLE_MULTIBYTE)
@@ -466,7 +466,7 @@ public:
      Returned point will be point <= seed.  If `find_non_zero` is true,
      we look for non-zero-width multibyte characters. */
   inline size_t
-  _rl_find_prev_mbchar (const std::string &string, size_t seed,
+  _rl_find_prev_mbchar (string_view string, size_t seed,
                         find_mbchar_flags find_non_zero)
   {
 #if defined(HANDLE_MULTIBYTE)
@@ -479,7 +479,7 @@ public:
   void _hs_replace_history_data (size_t which, histdata_t old,
                                  histdata_t new_);
 
-  ssize_t _rl_get_char_len (const std::string &src, mbstate_t *ps);
+  ssize_t _rl_get_char_len (string_view src, mbstate_t *ps);
 
 private:
   // Private member functions
@@ -489,8 +489,7 @@ private:
   inline bool
   HIST_TIMESTAMP_START (const char *s)
   {
-    return *s == history_comment_char
-           && std::isdigit (static_cast<unsigned char> (s[1]));
+    return *s == history_comment_char && c_isdigit (s[1]);
   }
 
   // histexpand.c
@@ -528,22 +527,22 @@ private:
 
   // histsearch.c
 
-  size_t history_search_internal (const std::string &string, int direction,
+  size_t history_search_internal (string_view string, int direction,
                                   hist_search_flags flags);
 
   // mbutil.c
 
   // Find next multi-byte char in std::string.
-  size_t _rl_find_next_mbchar_internal (const std::string &string, size_t seed,
+  size_t _rl_find_next_mbchar_internal (string_view string, size_t seed,
                                         int count,
                                         find_mbchar_flags find_non_zero);
 
   // Find next multi-byte char in std::string.
-  size_t _rl_find_prev_mbchar_internal (const std::string &string, size_t seed,
+  size_t _rl_find_prev_mbchar_internal (string_view string, size_t seed,
                                         find_mbchar_flags find_non_zero);
 
   // helper function
-  size_t _rl_find_prev_utf8char (const std::string &string, size_t seed,
+  size_t _rl_find_prev_utf8char (string_view string, size_t seed,
                                  find_mbchar_flags find_non_zero);
 
   // helper function
@@ -553,8 +552,8 @@ private:
     wchar_t wc;
     mbstate_t ps;
 
-    std::memset (&ps, 0, sizeof (mbstate_t));
-    size_t tmp = std::mbrtowc (&wc, string + ind, len - ind, &ps);
+    memset (&ps, 0, sizeof (mbstate_t));
+    size_t tmp = mbrtowc (&wc, string + ind, len - ind, &ps);
 
     /* treat invalid multibyte sequences as non-zero-width */
     return MB_INVALIDCH (tmp) || MB_NULLWCH (tmp) || WCWIDTH (wc) > 0;

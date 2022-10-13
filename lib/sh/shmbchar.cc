@@ -51,15 +51,15 @@ mbstrlen (const char *s)
   bool f;
 
   mbstate_t mbs, mbsbak;
-  std::memset (&mbs, '\0', sizeof (std::mbstate_t));
-  std::memset (&mbsbak, '\0', sizeof (std::mbstate_t));
+  memset (&mbs, '\0', sizeof (mbstate_t));
+  memset (&mbsbak, '\0', sizeof (mbstate_t));
 
   size_t nc = 0;
   size_t mb_cur_max = MB_CUR_MAX;
   while (*s
          && (clen = (f = is_basic (static_cast<unsigned char> (*s)))
                         ? 1
-                        : std::mbrlen (s, mb_cur_max, &mbs))
+                        : mbrlen (s, mb_cur_max, &mbs))
                 != 0)
     {
       if (MB_INVALIDCH (clen))
@@ -87,7 +87,7 @@ Shell::mbsmbchar (const char *s)
     return utf8_mbsmbchar (s); /* XXX */
 
   mbstate_t mbs;
-  std::memset (&mbs, '\0', sizeof (std::mbstate_t));
+  memset (&mbs, '\0', sizeof (mbstate_t));
 
   const char *t;
   size_t clen;
@@ -101,7 +101,7 @@ Shell::mbsmbchar (const char *s)
       if (locale_utf8locale) /* not used if above code active */
         clen = utf8_mblen (t, mb_cur_max);
       else
-        clen = std::mbrlen (t, mb_cur_max, &mbs);
+        clen = mbrlen (t, mb_cur_max, &mbs);
 
       if (clen == 0)
         return nullptr;

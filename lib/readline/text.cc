@@ -109,8 +109,7 @@ Readline::rl_delete_text (size_t from, size_t to)
    TEXT.  The operation is undoable.  To replace the entire line in an
    undoable mode, use _rl_replace_text(text, 0, rl_line_buffer.size ()); */
 size_t
-Readline::_rl_replace_text (const std::string &text, size_t start,
-                            size_t end)
+Readline::_rl_replace_text (string_view text, size_t start, size_t end)
 {
   size_t n = 0;
   rl_begin_undo_group ();
@@ -620,7 +619,7 @@ Readline::_rl_insert_char (int count, int c)
       ps_back = _rl_pending_mbstate;
       _rl_pending_bytes[_rl_pending_bytes_length++] = static_cast<char> (c);
 
-      ret = std::mbrtowc (&wc, _rl_pending_bytes,
+      ret = mbrtowc (&wc, _rl_pending_bytes,
                           static_cast<size_t> (_rl_pending_bytes_length),
                           &_rl_pending_mbstate);
 
@@ -640,11 +639,11 @@ Readline::_rl_insert_char (int count, int c)
           incoming[1] = '\0';
           incoming_length = 1;
           _rl_pending_bytes_length--;
-          std::memmove (_rl_pending_bytes, _rl_pending_bytes + 1,
+          memmove (_rl_pending_bytes, _rl_pending_bytes + 1,
                         static_cast<size_t> (_rl_pending_bytes_length));
           /* Clear the state of the byte sequence, because in this case the
              effect of mbstate is undefined. */
-          std::memset (&_rl_pending_mbstate, 0, sizeof (mbstate_t));
+          memset (&_rl_pending_mbstate, 0, sizeof (mbstate_t));
         }
       else if (ret == 0)
         {
@@ -653,7 +652,7 @@ Readline::_rl_insert_char (int count, int c)
           _rl_pending_bytes_length--;
           /* Clear the state of the byte sequence, because in this case the
              effect of mbstate is undefined. */
-          std::memset (&_rl_pending_mbstate, 0, sizeof (mbstate_t));
+          memset (&_rl_pending_mbstate, 0, sizeof (mbstate_t));
         }
       else if (ret == 1)
         {
@@ -664,7 +663,7 @@ Readline::_rl_insert_char (int count, int c)
       else
         {
           /* We successfully read a single multibyte character. */
-          std::memcpy (incoming, _rl_pending_bytes,
+          memcpy (incoming, _rl_pending_bytes,
                        static_cast<size_t> (_rl_pending_bytes_length));
 
           incoming[_rl_pending_bytes_length] = '\0';
@@ -1093,7 +1092,7 @@ Readline::_rl_rubout_char (int count, int key)
       int c = static_cast<unsigned char> (rl_line_buffer[--rl_point]);
       rl_delete_text (rl_point, orig_point);
       /* The erase-at-end-of-line hack is of questionable merit now. */
-      if (rl_point == rl_line_buffer.size () && std::isprint (c)
+      if (rl_point == rl_line_buffer.size () && c_isprint (c)
           && _rl_last_c_pos)
         {
           size_t l = rl_character_len (c, rl_point);
@@ -1210,7 +1209,7 @@ Readline::rl_insert_comment (int, int key)
     rl_insert_text (rl_comment_text);
   else
     {
-      size_t rl_comment_len = std::strlen (rl_comment_text);
+      size_t rl_comment_len = strlen (rl_comment_text);
       if (STREQN (rl_comment_text, rl_line_buffer.c_str (), rl_comment_len))
         rl_delete_text (rl_point, rl_point + rl_comment_len);
       else
@@ -1280,7 +1279,7 @@ Readline::rl_change_case (int count, case_change_type op)
     std::swap (start, end);
 
 #if defined(HANDLE_MULTIBYTE)
-  std::memset (&mps, 0, sizeof (mbstate_t));
+  memset (&mps, 0, sizeof (mbstate_t));
 #endif
 
   /* We are going to modify some text, so let's prepare to undo it. */
@@ -1323,7 +1322,7 @@ Readline::rl_change_case (int count, case_change_type op)
 #if defined(HANDLE_MULTIBYTE)
       else
         {
-          m = std::mbrtowc (&wc, rl_line_buffer.c_str () + start, end - start,
+          m = mbrtowc (&wc, rl_line_buffer.c_str () + start, end - start,
                             &mps);
           if (MB_INVALIDCH (m))
             wc = static_cast<wchar_t> (rl_line_buffer[start]);
@@ -1336,20 +1335,20 @@ Readline::rl_change_case (int count, case_change_type op)
             {
               mbstate_t ts;
 
-              std::memset (&ts, 0, sizeof (mbstate_t));
-              mlen = std::wcrtomb (mb, nwc, &ts);
+              memset (&ts, 0, sizeof (mbstate_t));
+              mlen = wcrtomb (mb, nwc, &ts);
               if (static_cast<ssize_t> (mlen) < 0)
                 {
                   nwc = wc;
-                  std::memset (&ts, 0, sizeof (mbstate_t));
-                  mlen = std::wcrtomb (mb, nwc, &ts);
+                  memset (&ts, 0, sizeof (mbstate_t));
+                  mlen = wcrtomb (mb, nwc, &ts);
                   if (static_cast<ssize_t> (mlen) < 0) /* should not happen */
                     mlen = m = 0;
                 }
               /* what to do if m != mlen? C++ makes replacement simple. */
               /* m == length of old char, mlen == length of new char */
               if (m == mlen)
-                std::memcpy (&rl_line_buffer[start], mb, mlen);
+                memcpy (&rl_line_buffer[start], mb, mlen);
               else
                 rl_line_buffer.replace (start, m, mb, mlen);
             }

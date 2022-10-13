@@ -114,7 +114,7 @@ sh_canonpath (const char *path, path_flags flags)
     {
       stub_char = DIRSEP;
 #if defined(__CYGWIN__)
-      base = (std::isalpha ((unsigned char)result[0]) && result[1] == ':')
+      base = (c_isalpha (result[0]) && result[1] == ':')
                  ? result + 3
                  : result + 1;
 #else
@@ -127,7 +127,7 @@ sh_canonpath (const char *path, path_flags flags)
     {
       stub_char = '.';
 #if defined(__CYGWIN__)
-      base = (std::isalpha ((unsigned char)result[0]) && result[1] == ':')
+      base = (c_isalpha (result[0]) && result[1] == ':')
                  ? result + 2
                  : result;
 #else
@@ -227,7 +227,7 @@ sh_canonpath (const char *path, path_flags flags)
       if (result[2] == '\0') /* short-circuit for bare `//' */
         result[1] = '\0';
       else
-        std::memmove (result, result + 1, strlen (result + 1) + 1);
+        memmove (result, result + 1, strlen (result + 1) + 1);
     }
 
   return result;

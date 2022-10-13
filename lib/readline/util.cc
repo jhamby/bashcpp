@@ -80,7 +80,7 @@ Readline::rl_tty_status (int, int)
 #endif
 {
 #if defined(TIOCSTAT)
-  ::ioctl (1, TIOCSTAT, reinterpret_cast<char *> (0));
+  ioctl (1, TIOCSTAT, reinterpret_cast<char *> (0));
   rl_refresh_line (count, key);
 #else
   rl_ding ();
@@ -99,7 +99,7 @@ Readline::rl_copy_text (size_t from, size_t to)
 
   size_t length = to - from;
   char *copy = new char[1 + length];
-  std::strncpy (copy, &rl_line_buffer[from], length);
+  strncpy (copy, &rl_line_buffer[from], length);
   copy[length] = '\0';
   return copy;
 }
@@ -140,7 +140,7 @@ Readline::rl_tilde_expand (int, int)
     {
       size_t len = end + 1 - start;
       char *temp = new char[len + 1];
-      std::strncpy (temp, &rl_line_buffer[start], len);
+      strncpy (temp, &rl_line_buffer[start], len);
       temp[len] = '\0';
       char *homedir = tilde_expand (temp);
       delete[] temp;
@@ -159,10 +159,10 @@ Readline::_rl_ttymsg (const char *format, ...)
 
   va_start (args, format);
 
-  std::fprintf (stderr, "readline: ");
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
-  std::fflush (stderr);
+  fprintf (stderr, "readline: ");
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
+  fflush (stderr);
 
   va_end (args);
 
@@ -176,10 +176,10 @@ Readline::_rl_errmsg (const char *format, ...)
 
   va_start (args, format);
 
-  std::fprintf (stderr, "readline: ");
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
-  std::fflush (stderr);
+  fprintf (stderr, "readline: ");
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
+  fflush (stderr);
 
   va_end (args);
 }

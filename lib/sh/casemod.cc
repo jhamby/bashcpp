@@ -44,32 +44,31 @@ namespace bash
 #error the non-multibyte code path needs updating
 #define cval(s, i, l) ((s)[(i)])
 #define iswalnum(c) isalnum (c)
-#define TOGGLE(x)                                                             \
-  (std::isupper (x) ? std::tolower ((unsigned char)x) : (std::toupper (x)))
+#define TOGGLE(x) (c_isupper (x) ? c_tolower (x) : (c_toupper (x)))
 #else
 
 static inline wchar_t
 _to_wupper (wchar_t x)
 {
   wint_t wc = static_cast<wint_t> (x);
-  return static_cast<wchar_t> (std::iswlower (wc) ? std::towupper (wc) : wc);
+  return static_cast<wchar_t> (iswlower (wc) ? towupper (wc) : wc);
 }
 
 static inline wchar_t
 _to_wlower (wchar_t x)
 {
   wint_t wc = static_cast<wint_t> (x);
-  return static_cast<wchar_t> (std::iswupper (wc) ? std::towlower (wc) : wc);
+  return static_cast<wchar_t> (iswupper (wc) ? towlower (wc) : wc);
 }
 
 static inline wchar_t
 TOGGLE (wchar_t x)
 {
   wint_t wc = static_cast<wint_t> (x);
-  if (std::iswupper (wc))
-    return static_cast<wchar_t> (std::towlower (wc));
-  else if (std::iswlower (wc))
-    return static_cast<wchar_t> (std::towupper (wc));
+  if (iswupper (wc))
+    return static_cast<wchar_t> (towlower (wc));
+  else if (iswlower (wc))
+    return static_cast<wchar_t> (towupper (wc));
   else
     return x;
 }
@@ -114,7 +113,7 @@ Shell::sh_modcase (string_view string, string_view pat, sh_modcase_flags flags)
     return std::string ();
 
 #if defined(HANDLE_MULTIBYTE)
-  std::memset (&state, 0, sizeof (mbstate_t));
+  memset (&state, 0, sizeof (mbstate_t));
 #endif
 
   size_t start = 0;
@@ -133,7 +132,7 @@ Shell::sh_modcase (string_view string, string_view pat, sh_modcase_flags flags)
     {
       wchar_t wc = cval (string, start, end);
 
-      if (std::iswalnum (static_cast<wint_t> (wc)) == 0)
+      if (iswalnum (static_cast<wint_t> (wc)) == 0)
         inword = false;
 
       if (!pat.empty ())
@@ -233,7 +232,7 @@ Shell::sh_modcase (string_view string, string_view pat, sh_modcase_flags flags)
 #if defined(HANDLE_MULTIBYTE)
       else
         {
-          size_t m = std::mbrtowc (&wc, &string[start], end - start, &state);
+          size_t m = mbrtowc (&wc, &string[start], end - start, &state);
           /* Have to go through wide case conversion even for single-byte
              chars, to accommodate single-byte characters where the
              corresponding upper or lower case equivalent is multibyte. */
@@ -276,7 +275,7 @@ Shell::sh_modcase (string_view string, string_view pat, sh_modcase_flags flags)
             ret.push_back (static_cast<char> (nwc));
           else
             {
-              size_t mlen = std::wcrtomb (mb, nwc, &state);
+              size_t mlen = wcrtomb (mb, nwc, &state);
               if (mlen > 0)
                 mb[mlen] = '\0';
               /* Don't assume the same width */

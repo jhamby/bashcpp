@@ -39,7 +39,7 @@
 namespace bash
 {
 
-static std::string mk_msgstr (const std::string &, bool *);
+static std::string mk_msgstr (string_view, bool *);
 
 #if defined(HAVE_LANGINFO_CODESET) || defined(HAVE_LOCALE_CHARSET)
 static bool locale_isutf8 ();
@@ -53,7 +53,7 @@ void
 Shell::set_default_locale ()
 {
 #if defined(HAVE_SETLOCALE)
-  default_locale = std::setlocale (LC_ALL, "");
+  default_locale = setlocale (LC_ALL, "");
   if (default_locale)
     default_locale = savestring (default_locale);
 #else
@@ -91,7 +91,7 @@ Shell::set_default_locale_vars ()
   val = get_string_value ("LC_CTYPE");
   if (val == nullptr && lc_all && *lc_all)
     {
-      std::setlocale (LC_CTYPE, lc_all);
+      setlocale (LC_CTYPE, lc_all);
       locale_setblanks ();
       locale_mb_cur_max = MB_CUR_MAX;
 #if defined(HAVE_LANGINFO_CODESET) || defined(HAVE_LOCALE_CHARSET)
@@ -101,7 +101,7 @@ Shell::set_default_locale_vars ()
 #endif
 
 #if defined(HANDLE_MULTIBYTE)
-      locale_shiftstates = std::mblen (nullptr, 0);
+      locale_shiftstates = mblen (nullptr, 0);
 #else
       local_shiftstates = 0;
 #endif
@@ -113,25 +113,25 @@ Shell::set_default_locale_vars ()
 #if defined(LC_COLLATE)
   val = get_string_value ("LC_COLLATE");
   if (val == nullptr && lc_all && *lc_all)
-    std::setlocale (LC_COLLATE, lc_all);
+    setlocale (LC_COLLATE, lc_all);
 #endif /* LC_COLLATE */
 
 #if defined(LC_MESSAGES)
   val = get_string_value ("LC_MESSAGES");
   if (val == nullptr && lc_all && *lc_all)
-    std::setlocale (LC_MESSAGES, lc_all);
+    setlocale (LC_MESSAGES, lc_all);
 #endif /* LC_MESSAGES */
 
 #if defined(LC_NUMERIC)
   val = get_string_value ("LC_NUMERIC");
   if (val == nullptr && lc_all && *lc_all)
-    std::setlocale (LC_NUMERIC, lc_all);
+    setlocale (LC_NUMERIC, lc_all);
 #endif /* LC_NUMERIC */
 
 #if defined(LC_TIME)
   val = get_string_value ("LC_TIME");
   if (val == nullptr && lc_all && *lc_all)
-    std::setlocale (LC_TIME, lc_all);
+    setlocale (LC_TIME, lc_all);
 #endif /* LC_TIME */
 
 #endif /* HAVE_SETLOCALE */
@@ -192,7 +192,7 @@ Shell::set_locale_var (const char *var, const char *value)
           lc_all[0] = '\0';
         }
 #if defined(HAVE_SETLOCALE)
-      bool r = *lc_all ? ((x = std::setlocale (LC_ALL, lc_all)) != nullptr)
+      bool r = *lc_all ? ((x = setlocale (LC_ALL, lc_all)) != nullptr)
                        : reset_locale_vars ();
       if (x == nullptr)
         {
@@ -231,7 +231,7 @@ Shell::set_locale_var (const char *var, const char *value)
 #if defined(LC_CTYPE)
       if (lc_all == nullptr || *lc_all == '\0')
         {
-          x = std::setlocale (LC_CTYPE, get_locale_var ("LC_CTYPE"));
+          x = setlocale (LC_CTYPE, get_locale_var ("LC_CTYPE"));
           locale_setblanks ();
           locale_mb_cur_max = MB_CUR_MAX;
           /* if setlocale() returns nullptr, the locale is not changed */
@@ -242,7 +242,7 @@ Shell::set_locale_var (const char *var, const char *value)
             locale_utf8locale = locale_isutf8 (x);
 #endif
 #if defined(HANDLE_MULTIBYTE)
-          locale_shiftstates = std::mblen (nullptr, 0);
+          locale_shiftstates = mblen (nullptr, 0);
 #else
           local_shiftstates = 0;
 #endif
@@ -254,28 +254,28 @@ Shell::set_locale_var (const char *var, const char *value)
     {
 #if defined(LC_COLLATE)
       if (lc_all == nullptr || *lc_all == '\0')
-        x = std::setlocale (LC_COLLATE, get_locale_var ("LC_COLLATE"));
+        x = setlocale (LC_COLLATE, get_locale_var ("LC_COLLATE"));
 #endif /* LC_COLLATE */
     }
   else if (var[3] == 'M' && var[4] == 'E') /* LC_MESSAGES */
     {
 #if defined(LC_MESSAGES)
       if (lc_all == nullptr || *lc_all == '\0')
-        x = std::setlocale (LC_MESSAGES, get_locale_var ("LC_MESSAGES"));
+        x = setlocale (LC_MESSAGES, get_locale_var ("LC_MESSAGES"));
 #endif /* LC_MESSAGES */
     }
   else if (var[3] == 'N' && var[4] == 'U') /* LC_NUMERIC */
     {
 #if defined(LC_NUMERIC)
       if (lc_all == nullptr || *lc_all == '\0')
-        x = std::setlocale (LC_NUMERIC, get_locale_var ("LC_NUMERIC"));
+        x = setlocale (LC_NUMERIC, get_locale_var ("LC_NUMERIC"));
 #endif /* LC_NUMERIC */
     }
   else if (var[3] == 'T' && var[4] == 'I') /* LC_TIME */
     {
 #if defined(LC_TIME)
       if (lc_all == nullptr || *lc_all == '\0')
-        x = std::setlocale (LC_TIME, get_locale_var ("LC_TIME"));
+        x = setlocale (LC_TIME, get_locale_var ("LC_TIME"));
 #endif /* LC_TIME */
     }
 #endif /* HAVE_SETLOCALE */
@@ -287,7 +287,7 @@ Shell::set_locale_var (const char *var, const char *value)
                           get_locale_var (var));
       else
         internal_warning (_ ("setlocale: %s: cannot change locale (%s): %s"),
-                          var, get_locale_var (var), std::strerror (errno));
+                          var, get_locale_var (var), strerror (errno));
     }
 
   return x != nullptr;
@@ -359,24 +359,24 @@ Shell::reset_locale_vars ()
   if (lang == nullptr || *lang == '\0')
     maybe_make_export_env (); /* trust that this will change environment for
                                  setlocale */
-  if (std::setlocale (LC_ALL, lang ? lang : "") == nullptr)
+  if (setlocale (LC_ALL, lang ? lang : "") == nullptr)
     return 0;
 
   x = nullptr;
 #if defined(LC_CTYPE)
-  x = std::setlocale (LC_CTYPE, get_locale_var ("LC_CTYPE"));
+  x = setlocale (LC_CTYPE, get_locale_var ("LC_CTYPE"));
 #endif
 #if defined(LC_COLLATE)
-  (void)std::setlocale (LC_COLLATE, get_locale_var ("LC_COLLATE"));
+  (void)setlocale (LC_COLLATE, get_locale_var ("LC_COLLATE"));
 #endif
 #if defined(LC_MESSAGES)
-  (void)std::setlocale (LC_MESSAGES, get_locale_var ("LC_MESSAGES"));
+  (void)setlocale (LC_MESSAGES, get_locale_var ("LC_MESSAGES"));
 #endif
 #if defined(LC_NUMERIC)
-  (void)std::setlocale (LC_NUMERIC, get_locale_var ("LC_NUMERIC"));
+  (void)setlocale (LC_NUMERIC, get_locale_var ("LC_NUMERIC"));
 #endif
 #if defined(LC_TIME)
-  (void)std::setlocale (LC_TIME, get_locale_var ("LC_TIME"));
+  (void)setlocale (LC_TIME, get_locale_var ("LC_TIME"));
 #endif
 
   locale_setblanks ();
@@ -388,7 +388,7 @@ Shell::reset_locale_vars ()
     locale_utf8locale = locale_isutf8 (x);
 #endif
 #if defined(HANDLE_MULTIBYTE)
-  locale_shiftstates = std::mblen (nullptr, 0);
+  locale_shiftstates = mblen (nullptr, 0);
 #else
   local_shiftstates = 0;
 #endif
@@ -401,7 +401,7 @@ Shell::reset_locale_vars ()
 // to the current locale.  In the `C' or `POSIX' locale, or if gettext()
 // is not available, the passed string is returned unchanged.
 std::string
-Shell::localetrans (const std::string &string)
+Shell::localetrans (string_view string)
 {
   /* Don't try to translate null strings. */
   if (string.empty ())
@@ -439,14 +439,14 @@ Shell::localetrans (const std::string &string)
 // Change a bash string into a string suitable for inclusion in a `po' file.
 // This backslash-escapes `"' and `\' and changes newlines into \\\n"\n".
 std::string
-mk_msgstr (const std::string &string, bool *foundnlp)
+mk_msgstr (string_view string, bool *foundnlp)
 {
   std::string ret;
   ret.reserve (string.length () + 2);
 
   ret.push_back ('"');
 
-  std::string::const_iterator it;
+  string_view::iterator it;
   for (it = string.begin (); it != string.end (); ++it)
     {
       if (*it == '\n') /* <NL> -> \n"<NL>" */
@@ -473,7 +473,7 @@ mk_msgstr (const std::string &string, bool *foundnlp)
 // caller. If translation is performed, the translated string will be
 // double-quoted by the caller.
 std::string
-Shell::localeexpand (const std::string &string, int lineno)
+Shell::localeexpand (string_view string, int lineno)
 {
   /* If we're just dumping translatable strings, don't do anything with the
      string itself, but if we're dumping in `po' file format, convert it into
@@ -487,14 +487,14 @@ Shell::localeexpand (const std::string &string, int lineno)
       if (dump_po_strings)
         {
           bool foundnl = false;
-          std::string t = mk_msgstr (string.c_str (), &foundnl);
+          std::string t = mk_msgstr (string, &foundnl);
           const char *t2 = foundnl ? "\"\"\n" : "";
 
-          std::printf ("#: %s:%d\nmsgid %s%s\nmsgstr \"\"\n", yy_input_name (),
+          printf ("#: %s:%d\nmsgid %s%s\nmsgstr \"\"\n", yy_input_name (),
                        lineno, t2, t.c_str ());
         }
       else
-        std::printf ("\"%s\"\n", string.c_str ());
+        printf ("\"%s\"\n", string.c_str ());
 
       return string;
     }
@@ -513,7 +513,7 @@ Shell::locale_setblanks ()
 
   for (x = 0; x < SYNSIZE; x++)
     {
-      if (std::isblank (static_cast<unsigned char> (x)))
+      if (c_isblank (x))
         sh_syntaxtab[x] |= (CSHBRK | CBLANK);
       else if (member (static_cast<char> (x), shell_break_chars))
         {

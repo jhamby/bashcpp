@@ -157,7 +157,7 @@ Shell::_netopen4 (const char *host, const char *serv, int typ)
       return -1;
     }
 
-  std::memset (&sin, 0, sizeof (sin));
+  memset (&sin, 0, sizeof (sin));
   sin.sin_family = AF_INET;
   sin.sin_port = p;
   sin.sin_addr = ina;
@@ -194,7 +194,7 @@ Shell::_netopen6 (const char *host, const char *serv, int typ)
   struct addrinfo hints, *res, *res0;
   int gerr;
 
-  std::memset (&hints, 0, sizeof (hints));
+  memset (&hints, 0, sizeof (hints));
   /* XXX -- if problems with IPv6, set to PF_INET for IPv4 only */
 #ifdef DEBUG /* PF_INET is the one that works for me */
   hints.ai_family = PF_INET;
@@ -260,7 +260,7 @@ Shell::netopen (const char *path)
   np = savestring (path);
 
   s = np + 9;
-  t = std::strchr (s, '/');
+  t = strchr (s, '/');
   if (t == nullptr)
     {
       internal_error (_ ("%s: bad network path specification"), path);

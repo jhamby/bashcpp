@@ -464,6 +464,9 @@
 /* Define to 1 when the gnulib module malloc-posix should be tested. */
 #undef GNULIB_TEST_MALLOC_POSIX
 
+/* Define to 1 when the gnulib module mbrlen should be tested. */
+#undef GNULIB_TEST_MBRLEN
+
 /* Define to 1 when the gnulib module mbrtowc should be tested. */
 #undef GNULIB_TEST_MBRTOWC
 
@@ -913,6 +916,10 @@
    don't. */
 #undef HAVE_DECL_LOCALTIME_R
 
+/* Define to 1 if you have the declaration of `mbrlen', and to 0 if you don't.
+   */
+#undef HAVE_DECL_MBRLEN
+
 /* Define to 1 if you have the declaration of `mbrtowc', and to 0 if you
    don't. */
 #undef HAVE_DECL_MBRTOWC
@@ -1339,9 +1346,6 @@
 
 /* Define to 1 if you have the <math.h> header file. */
 #undef HAVE_MATH_H
-
-/* Define to 1 if you have the `mblen' function. */
-#undef HAVE_MBLEN
 
 /* Define to 1 if you have the `mbrlen' function. */
 #undef HAVE_MBRLEN

@@ -72,7 +72,7 @@ utf8locale (char *lspec)
   char *cp;
 
 #if defined(HAVE_LANGINFO_CODESET)
-  cp = ::nl_langinfo (CODESET);
+  cp = nl_langinfo (CODESET);
   return STREQ (cp, "UTF-8") || STREQ (cp, "utf8");
 #else
   size_t len;
@@ -80,8 +80,8 @@ utf8locale (char *lspec)
 
   if (cp == 0 || len < 4 || len > 5)
     return 0;
-  return (len == 5) ? std::strncmp (cp, "UTF-8", len) == 0
-                    : std::strncmp (cp, "utf8", 4) == 0;
+  return (len == 5) ? strncmp (cp, "UTF-8", len) == 0
+                    : strncmp (cp, "utf8", 4) == 0;
 #endif
 }
 
@@ -211,7 +211,7 @@ normalize_codeset (char *codeset)
   bool all_digits = true;
   for (len = 0, i = 0; i < namelen; i++)
     {
-      if (std::isalnum (static_cast<unsigned char> (codeset[i])))
+      if (c_isalnum (codeset[i]))
         {
           len++;
           all_digits &= _rl_digit_p (codeset[i]);
@@ -230,7 +230,7 @@ normalize_codeset (char *codeset)
     }
 
   for (i = 0; i < namelen; i++)
-    if (std::isalpha (static_cast<unsigned char> (codeset[i])))
+    if (c_isalpha (codeset[i]))
       *wp++ = _rl_to_lower (codeset[i]);
     else if (_rl_digit_p (codeset[i]))
       *wp++ = codeset[i];
@@ -258,7 +258,7 @@ find_codeset (char *name, size_t *lenp)
      name.  Perhaps there are funny codeset names.  */
   if (language == cp)
     {
-      *lenp = std::strlen (language);
+      *lenp = strlen (language);
       result = language;
     }
   else
@@ -284,7 +284,7 @@ find_codeset (char *name, size_t *lenp)
         }
       else
         {
-          *lenp = std::strlen (language);
+          *lenp = strlen (language);
           result = language;
         }
     }

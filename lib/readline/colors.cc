@@ -81,18 +81,14 @@ Readline::_rl_print_color_indicator (const std::string &f)
       name = filename.c_str ();
     }
 
-#if defined(HAVE_LSTAT)
-  stat_ok = ::lstat (name, &astat);
-#else
-  stat_ok = ::stat (name, &astat);
-#endif
+  stat_ok = lstat (name, &astat);
   if (stat_ok == 0)
     {
       mode = astat.st_mode;
 #if defined(HAVE_LSTAT)
       if (S_ISLNK (mode))
         {
-          linkok = (::stat (name, &linkstat) == 0);
+          linkok = (stat (name, &linkstat) == 0);
           if (linkok && _rl_color_indicator[C_LINK] == "target")
             mode = linkstat.st_mode;
         }
@@ -185,7 +181,7 @@ Readline::_rl_print_color_indicator (const std::string &f)
       for (ext = _rl_color_ext_list; ext != nullptr; ext = ext->next)
         {
           if (ext->ext.size () <= len
-              && std::strncmp (name - ext->ext.size (), ext->ext.c_str (),
+              && strncmp (name - ext->ext.size (), ext->ext.c_str (),
                                ext->ext.size ())
                      == 0)
             break;

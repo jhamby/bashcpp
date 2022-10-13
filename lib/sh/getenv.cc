@@ -76,7 +76,7 @@ bash::Shell::getenv (const char *name)
          shell_variables will be 0 when this is invoked.  We look up the
          variable in the real environment in that case. */
 
-      for (i = 0, len = std::strlen (name); environ[i]; i++)
+      for (i = 0, len = strlen (name); environ[i]; i++)
         {
           if ((STREQN (environ[i], name, len)) && (environ[i][len] == '='))
             return environ[i] + len + 1;

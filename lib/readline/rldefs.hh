@@ -30,7 +30,6 @@
 #include "config-bot.hh"
 
 // First, include common C++ wrappers for standard C headers.
-#include <cctype>
 #include <cerrno>
 #include <climits>
 #include <csignal>
@@ -39,6 +38,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <cwctype>
+
+// Include Gnulib versions of C type functions.
+#include "c-ctype.h"
 
 // Next, include some common C++ library headers.
 #include <algorithm>

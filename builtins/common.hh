@@ -110,6 +110,21 @@ enum get_job_flags
   JM_FIRSTMATCH = 0x10 /* return first matching job */
 };
 
+static inline get_job_flags &
+operator|= (get_job_flags &a, const get_job_flags &b)
+{
+  a = static_cast<get_job_flags> (static_cast<uint32_t> (a)
+                                | static_cast<uint32_t> (b));
+  return a;
+}
+
+static inline get_job_flags
+operator| (const get_job_flags &a, const get_job_flags &b)
+{
+  return static_cast<get_job_flags> (static_cast<uint32_t> (a)
+                                   | static_cast<uint32_t> (b));
+}
+
 /* Flags for remember_args and value of changed_dollar_vars */
 enum remember_args_flags
 {

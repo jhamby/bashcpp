@@ -77,7 +77,7 @@ extern "C" char PC, *BC, *UP;
 #else
 #define TGETFLAG_SUCCESS 1
 #endif
-#define TGETFLAG(cap) (::tgetflag (cap) == TGETFLAG_SUCCESS)
+#define TGETFLAG(cap) (tgetflag (cap) == TGETFLAG_SUCCESS)
 
 /* Get readline's idea of the screen size.  TTY is a file descriptor open
    to the terminal.  If IGNORE_ENV is true, we do not pay attention to the
@@ -92,7 +92,7 @@ Readline::_rl_get_screen_size (int tty, bool ignore_env)
 #endif /* TIOCGWINSZ */
   unsigned int wr = 0, wc = 0;
 #if defined(TIOCGWINSZ)
-  if (::ioctl (tty, TIOCGWINSZ, &window_size) == 0)
+  if (ioctl (tty, TIOCGWINSZ, &window_size) == 0)
     {
       wc = window_size.ws_col;
       wr = window_size.ws_row;
@@ -119,13 +119,13 @@ Readline::_rl_get_screen_size (int tty, bool ignore_env)
   if (_rl_screenwidth == 0)
     {
       if (!ignore_env && (ss = sh_get_env_value ("COLUMNS")))
-        _rl_screenwidth = static_cast<unsigned int> (std::atoi (ss));
+        _rl_screenwidth = static_cast<unsigned int> (atoi (ss));
 
       if (_rl_screenwidth == 0)
         _rl_screenwidth = wc;
 
       if (_rl_screenwidth == 0 && term_string_buffer)
-        _rl_screenwidth = static_cast<unsigned int> (::tgetnum ("co"));
+        _rl_screenwidth = static_cast<unsigned int> (tgetnum ("co"));
     }
 
   /* Environment variable LINES overrides setting of "li" if IGNORE_ENV
@@ -133,13 +133,13 @@ Readline::_rl_get_screen_size (int tty, bool ignore_env)
   if (_rl_screenheight == 0)
     {
       if (!ignore_env && (ss = sh_get_env_value ("LINES")))
-        _rl_screenheight = static_cast<unsigned int> (std::atoi (ss));
+        _rl_screenheight = static_cast<unsigned int> (atoi (ss));
 
       if (_rl_screenheight == 0)
         _rl_screenheight = wr;
 
       if (_rl_screenheight == 0 && term_string_buffer)
-        _rl_screenheight = static_cast<unsigned int> (::tgetnum ("li"));
+        _rl_screenheight = static_cast<unsigned int> (tgetnum ("li"));
     }
 
   /* If all else fails, default to 80x24 terminal. */
@@ -231,7 +231,7 @@ Readline::get_term_capabilities (char **bp)
 
   for (std::vector<_tc_string>::iterator it = _tc_strings.begin ();
        it != _tc_strings.end (); ++it)
-    *((*it).tc_value) = ::tgetstr (const_cast<char *> ((*it).tc_var), bp);
+    *((*it).tc_value) = tgetstr (const_cast<char *> ((*it).tc_var), bp);
 
   tcap_initialized = true;
 }
@@ -246,7 +246,7 @@ Readline::_rl_init_terminal_io (const char *terminal_name)
   term = terminal_name ? terminal_name : sh_get_env_value ("TERM");
   _rl_term_clrpag = _rl_term_cr = _rl_term_clreol = _rl_term_clrscroll
       = nullptr;
-  tty = rl_instream ? ::fileno (rl_instream) : 0;
+  tty = rl_instream ? fileno (rl_instream) : 0;
 
   if (term == nullptr)
     term = "dumb";
@@ -270,7 +270,7 @@ Readline::_rl_init_terminal_io (const char *terminal_name)
 
       buffer = term_string_buffer;
 
-      tgetent_ret = ::tgetent (term_buffer, term);
+      tgetent_ret = tgetent (term_buffer, term);
     }
 
   if (tgetent_ret != TGETENT_SUCCESS)
@@ -411,7 +411,7 @@ Readline::rl_get_termcap (const char *cap)
   size_t mid = high >> 1;
   int direction;
 
-  while ((direction = std::strcmp (cap, _tc_strings[mid].tc_var)))
+  while ((direction = strcmp (cap, _tc_strings[mid].tc_var)))
     {
       if (direction > 0)
         if (mid == high)
@@ -433,7 +433,7 @@ Readline::rl_get_termcap (const char *cap)
 int
 _rl_output_character_function (int c)
 {
-  return std::putc (c, _rl_out_stream);
+  return putc (c, _rl_out_stream);
 }
 
 /* Ring the terminal bell. */
@@ -449,14 +449,14 @@ Readline::rl_ding ()
         case VISIBLE_BELL:
           if (_rl_visible_bell)
             {
-              ::tputs (_rl_visible_bell, 1, &_rl_output_character_function);
+              tputs (_rl_visible_bell, 1, &_rl_output_character_function);
               break;
             }
           /* FALLTHROUGH */
           __attribute__ ((fallthrough));
         case AUDIBLE_BELL:
-          std::fprintf (stderr, "\007");
-          std::fflush (stderr);
+          fprintf (stderr, "\007");
+          fflush (stderr);
           break;
         }
       return 0;

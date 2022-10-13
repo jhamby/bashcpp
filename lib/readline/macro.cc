@@ -244,8 +244,8 @@ Readline::rl_print_last_kbd_macro (int, int)
 
   std::string m = _rl_untranslate_macro_value (rl_current_macro.c_str (), 1);
   rl_crlf ();
-  std::printf ("%s", m.c_str ());
-  std::fflush (stdout);
+  printf ("%s", m.c_str ());
+  fflush (stdout);
   rl_crlf ();
   rl_forced_update_display ();
   rl_display_fixed = true;

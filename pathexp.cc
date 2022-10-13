@@ -74,7 +74,7 @@ unquoted_glob_pattern_p (const char *string)
   DECLARE_MBSTATE;
 
   open = false;
-  send = string + std::strlen (string);
+  send = string + strlen (string);
 
   while ((c = *string++))
     {
@@ -207,7 +207,7 @@ quote_string_for_globbing (const char *pathname, int qflags)
   int cclass, collsym, equiv, c, last_was_backslash;
   int savei, savej;
 
-  temp = new char[2 * std::strlen (pathname) + 1];
+  temp = new char[2 * strlen (pathname) + 1];
 
   if ((qflags & QGLOB_CVTNULL) && QUOTED_NULL (pathname))
     {
@@ -387,7 +387,7 @@ quote_globbing_chars (const char *string)
   const char *s, *send;
   DECLARE_MBSTATE;
 
-  slen = std::strlen (string);
+  slen = strlen (string);
   send = string + slen;
 
   temp = new char[slen * 2 + 1];
@@ -522,7 +522,7 @@ glob_name_is_acceptable (const char *name)
 
   /* . and .. are never matched. We extend this to the terminal component of a
      pathname. */
-  n = std::strrchr (name, '/');
+  n = strrchr (name, '/');
   if (n == 0 || n[1] == 0)
     n = (char *)name;
   else

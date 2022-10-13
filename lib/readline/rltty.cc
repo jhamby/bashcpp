@@ -55,8 +55,8 @@ set_winsize (int tty)
 #if defined(TIOCGWINSZ)
   struct winsize w;
 
-  if (::ioctl (tty, TIOCGWINSZ, &w) == 0)
-    (void)::ioctl (tty, TIOCSWINSZ, &w);
+  if (ioctl (tty, TIOCGWINSZ, &w) == 0)
+    (void)ioctl (tty, TIOCSWINSZ, &w);
 #endif /* TIOCGWINSZ */
 }
 
@@ -72,15 +72,15 @@ set_winsize (int tty)
 #endif
 
 #if defined(TERMIOS_TTY_DRIVER)
-#define GETATTR(tty, tiop) (::tcgetattr (tty, tiop))
+#define GETATTR(tty, tiop) (tcgetattr (tty, tiop))
 #ifdef M_UNIX
-#define SETATTR(tty, tiop) (::tcsetattr (tty, TCSANOW, tiop))
+#define SETATTR(tty, tiop) (tcsetattr (tty, TCSANOW, tiop))
 #else
-#define SETATTR(tty, tiop) (::tcsetattr (tty, TCSADRAIN, tiop))
+#define SETATTR(tty, tiop) (tcsetattr (tty, TCSADRAIN, tiop))
 #endif /* !M_UNIX */
 #else
-#define GETATTR(tty, tiop) (::ioctl (tty, TCGETA, tiop))
-#define SETATTR(tty, tiop) (::ioctl (tty, TCSETAW, tiop))
+#define GETATTR(tty, tiop) (ioctl (tty, TCGETA, tiop))
+#define SETATTR(tty, tiop) (ioctl (tty, TCSETAW, tiop))
 #endif /* !TERMIOS_TTY_DRIVER */
 
 #if 0
@@ -322,7 +322,7 @@ Readline::rl_prep_terminal (int meta_flag)
   /* Try to keep this function from being INTerrupted. */
   _rl_block_sigint ();
 
-  tty = rl_instream ? ::fileno (rl_instream) : ::fileno (stdin);
+  tty = rl_instream ? fileno (rl_instream) : fileno (stdin);
 
   if (get_tty_settings (tty, &tio) < 0)
     {
@@ -381,11 +381,11 @@ Readline::rl_prep_terminal (int meta_flag)
 
   if (_rl_enable_bracketed_paste)
     {
-      std::fprintf (rl_outstream, BRACK_PASTE_INIT);
+      fprintf (rl_outstream, BRACK_PASTE_INIT);
       nprep |= TPX_BRACKPASTE;
     }
 
-  std::fflush (rl_outstream);
+  fflush (rl_outstream);
   terminal_prepped = nprep;
   RL_SETSTATE (RL_STATE_TERMPREPPED);
 
@@ -404,19 +404,19 @@ Readline::rl_deprep_terminal ()
   /* Try to keep this function from being interrupted. */
   _rl_block_sigint ();
 
-  tty = rl_instream ? ::fileno (rl_instream) : ::fileno (stdin);
+  tty = rl_instream ? fileno (rl_instream) : fileno (stdin);
 
   if (terminal_prepped & TPX_BRACKPASTE)
     {
-      std::fprintf (rl_outstream, BRACK_PASTE_FINI);
+      fprintf (rl_outstream, BRACK_PASTE_FINI);
       if (_rl_eof_found)
-        std::fprintf (rl_outstream, "\n");
+        fprintf (rl_outstream, "\n");
     }
 
   if (_rl_enable_keypad)
     _rl_control_keypad (0);
 
-  std::fflush (rl_outstream);
+  fflush (rl_outstream);
 
   if (set_tty_settings (tty, &otio) < 0)
     {
@@ -456,16 +456,16 @@ Readline::rl_restart_output (int, int)
   return 0;
 #else /* !__MING32__ */
 
-  int fildes = ::fileno (rl_outstream);
+  int fildes = fileno (rl_outstream);
 #if defined(TIOCSTART)
-  ::ioctl (fildes, TIOCSTART, 0);
+  ioctl (fildes, TIOCSTART, 0);
 
 #else /* !TIOCSTART */
 #if defined(TERMIOS_TTY_DRIVER)
-  ::tcflow (fildes, TCOON); /* Simulate a ^Q. */
+  tcflow (fildes, TCOON); /* Simulate a ^Q. */
 #else /* !TERMIOS_TTY_DRIVER */
 #if defined(TCXONC)
-  ::ioctl (fildes, TCXONC, TCOON);
+  ioctl (fildes, TCXONC, TCOON);
 #endif /* TCXONC */
 #endif /* !TERMIOS_TTY_DRIVER */
 #endif /* !TIOCSTART */
@@ -481,16 +481,16 @@ Readline::rl_stop_output (int, int)
   return 0;
 #else
 
-  int fildes = ::fileno (rl_instream);
+  int fildes = fileno (rl_instream);
 
 #if defined(TIOCSTOP)
-  ::ioctl (fildes, TIOCSTOP, 0);
+  ioctl (fildes, TIOCSTOP, 0);
 #else /* !TIOCSTOP */
 #if defined(TERMIOS_TTY_DRIVER)
-  ::tcflow (fildes, TCOOFF);
+  tcflow (fildes, TCOOFF);
 #else
 #if defined(TCXONC)
-  ::ioctl (fildes, TCXONC, TCOON);
+  ioctl (fildes, TCXONC, TCOON);
 #endif /* TCXONC */
 #endif /* !TERMIOS_TTY_DRIVER */
 #endif /* !TIOCSTOP */
@@ -567,7 +567,7 @@ Readline::rl_tty_set_default_bindings (Keymap kmap)
   TIOTYPE ttybuff;
   int tty;
 
-  tty = ::fileno (rl_instream);
+  tty = fileno (rl_instream);
 
   if (get_tty_settings (tty, &ttybuff) == 0)
     _rl_bind_tty_special_chars (kmap, ttybuff);
@@ -622,7 +622,7 @@ Readline::_rl_disable_tty_signals ()
   if (tty_sigs_disabled)
     return 0;
 
-  if (_get_tty_settings (::fileno (rl_instream), &sigstty) < 0)
+  if (_get_tty_settings (fileno (rl_instream), &sigstty) < 0)
     return -1;
 
   nosigstty = sigstty;
@@ -630,8 +630,8 @@ Readline::_rl_disable_tty_signals ()
   nosigstty.c_lflag &= static_cast<tcflag_t> (~ISIG);
   nosigstty.c_iflag &= static_cast<tcflag_t> (~IXON);
 
-  if (_set_tty_settings (::fileno (rl_instream), &nosigstty) < 0)
-    return _set_tty_settings (::fileno (rl_instream), &sigstty);
+  if (_set_tty_settings (fileno (rl_instream), &nosigstty) < 0)
+    return _set_tty_settings (fileno (rl_instream), &sigstty);
 
   tty_sigs_disabled = true;
   return 0;
@@ -645,7 +645,7 @@ Readline::_rl_restore_tty_signals ()
   if (!tty_sigs_disabled)
     return 0;
 
-  r = _set_tty_settings (::fileno (rl_instream), &sigstty);
+  r = _set_tty_settings (fileno (rl_instream), &sigstty);
 
   if (r == 0)
     tty_sigs_disabled = false;

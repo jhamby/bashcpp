@@ -77,7 +77,7 @@ spname (const char *oldname, char *newname)
           if (oldname[1] == '\0' && newname[1] == '\0' && oldname[0] != '.'
               && newname[0] == '.')
             return -1;
-          return std::strcmp (oldname, newname) != 0;
+          return strcmp (oldname, newname) != 0;
         }
 
       /* Copy next component into guess */
@@ -109,11 +109,11 @@ mindist (const char *dir, const char *guess, char *best)
     dir = ".";
 
   DIR *fd;
-  if ((fd = ::opendir (dir)) == NULL)
+  if ((fd = opendir (dir)) == NULL)
     return dist;
 
   struct dirent *dp;
-  while ((dp = ::readdir (fd)) != NULL)
+  while ((dp = readdir (fd)) != NULL)
     {
       /*
        *  Look for a better guess.  If the new guess is as
@@ -124,7 +124,7 @@ mindist (const char *dir, const char *guess, char *best)
       int x = spdist (dp->d_name, guess);
       if (x <= dist && x != 3)
         {
-          std::strcpy (best, dp->d_name);
+          strcpy (best, dp->d_name);
           dist = x;
           if (dist == 0) /* Exact match */
             break;

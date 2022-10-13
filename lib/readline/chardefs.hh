@@ -34,7 +34,7 @@ whitespace (char c)
 static inline bool
 member (char c, const char *s)
 {
-  return c ? (std::strchr (s, c) != nullptr) : false;
+  return c ? (strchr (s, c) != nullptr) : false;
 }
 
 /* Some character stuff. */
@@ -77,13 +77,13 @@ member (char c, const char *s)
 static inline bool
 _rl_lowercase_p (int c)
 {
-  return NON_NEGATIVE (c) && std::islower (c);
+  return NON_NEGATIVE (c) && c_islower (c);
 }
 
 static inline bool
 _rl_uppercase_p (int c)
 {
-  return NON_NEGATIVE (c) && std::isupper (c);
+  return NON_NEGATIVE (c) && c_isupper (c);
 }
 
 static inline bool
@@ -95,27 +95,25 @@ _rl_digit_p (int c)
 static inline bool
 _rl_pure_alphabetic (int c)
 {
-  return NON_NEGATIVE (c) && std::isalpha (c);
+  return NON_NEGATIVE (c) && c_isalpha (c);
 }
 
 static inline bool
 ALPHABETIC (int c)
 {
-  return NON_NEGATIVE (c) && std::isalnum (c);
+  return NON_NEGATIVE (c) && c_isalnum (c);
 }
 
 static inline int
 _rl_to_upper (int c)
 {
-  return _rl_lowercase_p (c) ? std::toupper (static_cast<unsigned char> (c))
-                             : c;
+  return _rl_lowercase_p (c) ? c_toupper (c) : c;
 }
 
 static inline int
 _rl_to_lower (int c)
 {
-  return _rl_uppercase_p (c) ? std::tolower (static_cast<unsigned char> (c))
-                             : c;
+  return _rl_uppercase_p (c) ? c_tolower (c) : c;
 }
 
 static inline int
@@ -127,7 +125,7 @@ _rl_digit_value (int c)
 static inline bool
 _rl_isident (int c)
 {
-  return std::isalnum (c) || (c) == '_';
+  return c_isalnum (c) || (c) == '_';
 }
 
 static inline bool
@@ -145,7 +143,7 @@ OCTVALUE (int c)
 static inline bool
 ISXDIGIT (int c)
 {
-  return std::isxdigit (c);
+  return c_isxdigit (c);
 }
 
 static inline int
@@ -169,18 +167,18 @@ rl_alphabetic (char c)
     return true;
 
   return (_rl_allow_pathname_alphabetic_chars
-          && std::strchr (pathname_alphabetic_chars, c) != nullptr);
+          && strchr (pathname_alphabetic_chars, c) != nullptr);
 }
 
 #if defined(HANDLE_MULTIBYTE)
 static inline bool
 _rl_walphabetic (wint_t wc)
 {
-  if (std::iswalnum (wc))
+  if (iswalnum (wc))
     return true;
 
   return (_rl_allow_pathname_alphabetic_chars
-          && std::strchr (pathname_alphabetic_chars, (wc & 0177)) != nullptr);
+          && strchr (pathname_alphabetic_chars, (wc & 0177)) != nullptr);
 }
 #endif
 

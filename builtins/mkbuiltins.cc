@@ -216,21 +216,21 @@ main (int argc, char **argv)
     {
       char *arg = argv[arg_index++];
 
-      if (std::strcmp (arg, "-externfile") == 0)
+      if (strcmp (arg, "-externfile") == 0)
         bash::extern_filename = argv[arg_index++];
-      else if (std::strcmp (arg, "-structfile") == 0)
+      else if (strcmp (arg, "-structfile") == 0)
         bash::struct_filename = argv[arg_index++];
-      else if (std::strcmp (arg, "-noproduction") == 0)
+      else if (strcmp (arg, "-noproduction") == 0)
         bash::inhibit_production = true;
-      else if (std::strcmp (arg, "-nofunctions") == 0)
+      else if (strcmp (arg, "-nofunctions") == 0)
         bash::inhibit_functions = true;
-      else if (std::strcmp (arg, "-document") == 0)
+      else if (strcmp (arg, "-document") == 0)
         {
           bash::documentation_file.open (documentation_filename.c_str ());
           if (!bash::documentation_file.is_open ())
             bash::file_error (documentation_filename);
         }
-      else if (std::strcmp (arg, "-D") == 0)
+      else if (strcmp (arg, "-D") == 0)
         {
           bash::source_directory = argv[arg_index];
 
@@ -240,30 +240,30 @@ main (int argc, char **argv)
 
           arg_index++;
         }
-      else if (std::strcmp (arg, "-documentonly") == 0)
+      else if (strcmp (arg, "-documentonly") == 0)
         {
           bash::only_documentation = true;
           bash::documentation_file.open (documentation_filename.c_str ());
           if (!bash::documentation_file.is_open ())
             bash::file_error (documentation_filename);
         }
-      else if (std::strcmp (arg, "-H") == 0)
+      else if (strcmp (arg, "-H") == 0)
         {
           bash::separate_helpfiles = true;
           bash::helpfile_directory = argv[arg_index++];
         }
-      else if (std::strcmp (arg, "-S") == 0)
+      else if (strcmp (arg, "-S") == 0)
         bash::single_longdoc_strings = false;
       else
         {
           cerr << argv[0] << ": Unknown flag " << arg << ".\n";
-          std::exit (2);
+          exit (2);
         }
     }
 
   /* If there are no files to process, just quit now. */
   if (arg_index == argc)
-    std::exit (0);
+    exit (0);
 
   ofstream structfile, externfile;
   std::string temp_struct_filename;
@@ -274,7 +274,7 @@ main (int argc, char **argv)
       if (!bash::struct_filename.empty ())
         {
           std::ostringstream filename_sstream;
-          filename_sstream << "mk-" << ::getpid ();
+          filename_sstream << "mk-" << getpid ();
           temp_struct_filename = filename_sstream.str ();
 
           structfile.open (temp_struct_filename.c_str ());
@@ -326,8 +326,8 @@ main (int argc, char **argv)
         {
           bash::write_longdocs (structfile, bash::saved_builtins);
           structfile.close ();
-          ::rename (temp_struct_filename.c_str (),
-                    bash::struct_filename.c_str ());
+          rename (temp_struct_filename.c_str (),
+                  bash::struct_filename.c_str ());
         }
     }
 
@@ -381,7 +381,7 @@ static HandlerEntry *
 find_directive (const char *directive)
 {
   for (int i = 0; handlers[i].directive; i++)
-    if (std::strcmp (handlers[i].directive, directive) == 0)
+    if (strcmp (handlers[i].directive, directive) == 0)
       return &handlers[i];
 
   return nullptr;
@@ -412,11 +412,10 @@ extract_info (const string &filename, ofstream &structfile,
   int fd;
   ssize_t nr;
 
-  if (::stat (filename.c_str (), &finfo) == -1)
+  if (stat (filename.c_str (), &finfo) == -1)
     file_error (filename);
 
-  fd = ::open (filename.c_str (), O_RDONLY,
-               0644); /* fix insecure permissions */
+  fd = open (filename.c_str (), O_RDONLY, 0644); /* fix insecure permissions */
 
   if (fd == -1)
     file_error (filename);
@@ -424,14 +423,14 @@ extract_info (const string &filename, ofstream &structfile,
   size_t file_size = static_cast<size_t> (finfo.st_size);
   char *buffer = new char[1 + file_size];
 
-  if ((nr = ::read (fd, buffer, file_size)) < 0)
+  if ((nr = read (fd, buffer, file_size)) < 0)
     file_error (filename);
 
   /* This is needed on WIN32, and does not hurt on Unix. */
   if (static_cast<size_t> (nr) < file_size)
     file_size = static_cast<size_t> (nr);
 
-  ::close (fd);
+  close (fd);
 
   if (nr == 0)
     {
@@ -451,7 +450,7 @@ extract_info (const string &filename, ofstream &structfile,
         i++;
 
       buffer[i] = '\0';
-      if (!std::strncmp (&buffer[start], "// ", 3)) // skip C++ comment prefix
+      if (strncmp (&buffer[start], "// ", 3) == 0) // skip C++ comment prefix
         start += 3;
       defs.lines.push_back (&buffer[start]);
     }
@@ -671,7 +670,7 @@ function_handler (const string &self, DefFile &defs, const string &arg)
     {
       line_error (defs,
                   "syntax error: no current builtin for $FUNCTION directive");
-      std::exit (1);
+      exit (1);
     }
   if (!builtin->function.empty ())
     {
@@ -803,8 +802,8 @@ line_error (DefFile &defs, const string &msg)
 static void
 file_error (const string &filename)
 {
-  std::perror (filename.c_str ());
-  std::exit (2);
+  perror (filename.c_str ());
+  exit (2);
 }
 
 /* **************************************************************** */
@@ -1266,7 +1265,7 @@ static bool
 _find_in_table (const char *name, const char *name_table[])
 {
   for (int i = 0; name_table[i]; i++)
-    if (std::strcmp (name, name_table[i]) == 0)
+    if (strcmp (name, name_table[i]) == 0)
       return true;
 
   return false;

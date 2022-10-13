@@ -218,9 +218,9 @@ Readline::_rl_signal_handler (int sig)
 #endif
 
 #if defined(HAVE_KILL)
-      ::kill (::getpid (), sig);
+      kill (getpid (), sig);
 #else
-      std::raise (sig); /* assume we have raise */
+      raise (sig); /* assume we have raise */
 #endif
 
       /* We don't need to modify the signal mask now that this is not run in
@@ -312,7 +312,7 @@ rl_set_sighandler (int sig, SigHandler handler, sighandler_cxt *ohandler)
      rl_signal_handler, because that would cause infinite recursion. */
   if (handler != &rl_signal_handler
       || old_handler.sa_handler != &rl_signal_handler)
-    std::memcpy (ohandler, &old_handler, sizeof (sighandler_cxt));
+    memcpy (ohandler, &old_handler, sizeof (sighandler_cxt));
 
   return ohandler->sa_handler;
 }

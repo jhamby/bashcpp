@@ -43,7 +43,7 @@ strlist_copy (const STRINGLIST *sl)
 
   for (sit = sl->begin (), dit = new_list->begin ();
        sit != sl->end () && dit != new_list->end (); ++sit, ++dit)
-    *dit = ::strdup (*sit);
+    *dit = strdup (*sit);
 
   return new_list;
 }
@@ -63,12 +63,12 @@ strlist_merge (const STRINGLIST *m1, const STRINGLIST *m2)
   if (m1)
     for (sit = m1->begin (), dit = sl->begin ();
          sit != m1->end () && dit != sl->end (); ++sit, ++dit)
-      *dit = ::strdup (*sit);
+      *dit = strdup (*sit);
 
   if (m2)
     for (sit = m2->begin (), dit = sl->begin ();
          sit != m2->end () && dit != sl->end (); ++sit, ++dit)
-      *dit = ::strdup (*sit);
+      *dit = strdup (*sit);
 
   return sl;
 }
@@ -93,7 +93,7 @@ strlist_append (STRINGLIST *m1, const STRINGLIST *m2)
       for (sit = m2->begin (),
           dit = (m1->begin () + static_cast<ssize_t> (len1));
            sit != m2->end (); ++sit, ++dit)
-        *dit = ::strdup (*sit);
+        *dit = strdup (*sit);
     }
 }
 
@@ -103,8 +103,8 @@ strlist_prefix_suffix (STRINGLIST *sl, const char *prefix, const char *suffix)
   if (sl == nullptr || sl->size () == 0)
     return;
 
-  size_t plen = std::strlen (prefix);
-  size_t slen = std::strlen (suffix);
+  size_t plen = strlen (prefix);
+  size_t slen = strlen (suffix);
 
   if (plen == 0 && slen == 0)
     return;
@@ -112,7 +112,7 @@ strlist_prefix_suffix (STRINGLIST *sl, const char *prefix, const char *suffix)
   STRINGLIST::iterator it;
   for (it = sl->begin (); it != sl->end (); ++it)
     {
-      size_t llen = std::strlen (*it);
+      size_t llen = strlen (*it);
       size_t tlen = plen + llen + slen;
 
       char *t = new char[tlen + 1];

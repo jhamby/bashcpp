@@ -49,6 +49,7 @@
 #  inet_ntop \
 #  ldexpl \
 #  lstat \
+#  mbrlen \
 #  mbschr \
 #  mkfifo \
 #  mknod \
@@ -1660,6 +1661,14 @@ libgnu_a_SOURCES += mbchar.c
 EXTRA_DIST += mbchar.h
 
 ## end   gnulib module mbchar
+
+## begin gnulib module mbrlen
+
+if GL_COND_OBJ_MBRLEN
+libgnu_a_SOURCES += mbrlen.c
+endif
+
+## end   gnulib module mbrlen
 
 ## begin gnulib module mbrtowc
 

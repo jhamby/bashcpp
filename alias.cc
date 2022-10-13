@@ -121,8 +121,7 @@ add_alias (const char *name, const char *value)
 
   if (temp)
     {
-      std::free (temp->value);
-      temp->value = savestring (value);
+      temp->value = value;
       temp->flags &= ~AL_EXPANDNEXT;
       if (value[0])
         {
@@ -153,6 +152,8 @@ add_alias (const char *name, const char *value)
     }
 }
 
+#if 0
+// FIXME: move this to the alias_t destructor.
 /* Delete a single alias structure. */
 static void
 free_alias_data (PTR_T data)
@@ -162,10 +163,11 @@ free_alias_data (PTR_T data)
   if (a->flags & AL_BEINGEXPANDED)
     clear_string_list_expander (a); /* call back to the parser */
 
-  std::free (a->value);
-  std::free (a->name);
-  std::free (data);
+  free (a->value);
+  free (a->name);
+  free (data);
 }
+#endif
 
 /* Remove the alias with name NAME from the alias table.  Returns
    the number of aliases left in the table, or -1 if the alias didn't
@@ -180,8 +182,8 @@ remove_alias (const char *name)
   if (elt)
     {
       free_alias_data (elt->data);
-      std::free (elt->key); /* alias name */
-      std::free (elt);      /* XXX */
+      free (elt->key); /* alias name */
+      free (elt);      /* XXX */
 #if defined(PROGRAMMABLE_COMPLETION)
       set_itemlist_dirty (&it_aliases);
 #endif
@@ -238,7 +240,7 @@ map_over_aliases (sh_alias_map_func_t *function)
 static void
 sort_aliases (alias_t **array)
 {
-  std::qsort ((void *)array, strvec_len ((char **)array), sizeof (alias_t *),
+  qsort ((void *)array, strvec_len ((char **)array), sizeof (alias_t *),
               (QSFUNC *)qsort_alias_compare);
 }
 
@@ -248,7 +250,7 @@ qsort_alias_compare (alias_t **as1, alias_t **as2)
   int result;
 
   if ((result = (*as1)->name[0] - (*as2)->name[0]) == 0)
-    result = std::strcmp ((*as1)->name, (*as2)->name);
+    result = strcmp ((*as1)->name, (*as2)->name);
 
   return result;
 }
@@ -465,7 +467,7 @@ alias_expand (const char *string)
   int line_len, tl, real_start, expand_next, expand_this_token;
   alias_t *alias;
 
-  line_len = std::strlen (string) + 1;
+  line_len = strlen (string) + 1;
   line = (char *)xmalloc (line_len);
   token = (char *)xmalloc (line_len);
 
@@ -490,16 +492,16 @@ alias_expand (const char *string)
 
       if (start == i && string[i] == '\0')
         {
-          std::free (token);
+          free (token);
           return line;
         }
 
       /* copy the just-skipped characters into the output string,
          expanding it if there is not enough room. */
-      int j = std::strlen (line);
+      int j = strlen (line);
       tl = i - start; /* number of characters just skipped */
       RESIZE_MALLOCED_BUFFER (line, j, (tl + 1), line_len, (tl + 50));
-      std::strncpy (line + j, string + start, tl);
+      strncpy (line + j, string + start, tl);
       line[j + tl] = '\0';
 
       real_start = i;
@@ -543,14 +545,14 @@ alias_expand (const char *string)
           int vlen, llen;
 
           v = alias->value;
-          vlen = std::strlen (v);
-          llen = std::strlen (line);
+          vlen = strlen (v);
+          llen = strlen (line);
 
           /* +3 because we possibly add one more character below. */
           RESIZE_MALLOCED_BUFFER (line, llen, (vlen + 3), line_len,
                                   (vlen + 50));
 
-          std::strcpy (line + llen, v);
+          strcpy (line + llen, v);
 
           if ((expand_this_token && vlen && whitespace (v[vlen - 1]))
               || alias_expand_all)
@@ -560,13 +562,13 @@ alias_expand (const char *string)
         {
           int llen, tlen;
 
-          llen = std::strlen (line);
+          llen = strlen (line);
           tlen = i - real_start; /* tlen == strlen(token) */
 
           RESIZE_MALLOCED_BUFFER (line, llen, (tlen + 1), line_len,
                                   (llen + tlen + 50));
 
-          std::strncpy (line + llen, string + real_start, tlen);
+          strncpy (line + llen, string + real_start, tlen);
           line[llen + tlen] = '\0';
         }
       command_word = 0;

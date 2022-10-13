@@ -156,7 +156,7 @@ Readline::rl_unbind_function_in_map (rl_command_func_t func, Keymap map)
    now, this is always used to attempt to bind the arrow keys, hence the
    check for rl_vi_movement_mode. */
 int
-Readline::rl_bind_keyseq_if_unbound_in_map (const std::string &keyseq,
+Readline::rl_bind_keyseq_if_unbound_in_map (string_view keyseq,
                                             rl_command_func_t default_func,
                                             Keymap kmap)
 {
@@ -191,8 +191,7 @@ Readline::rl_bind_keyseq_if_unbound_in_map (const std::string &keyseq,
    a KEYMAP_ENTRY ref.  This makes new keymaps as necessary.
    The initial place to do bindings is in MAP. */
 int
-Readline::rl_generic_bind (const std::string &keyseq, KEYMAP_ENTRY &k,
-                           Keymap map)
+Readline::rl_generic_bind (string_view keyseq, KEYMAP_ENTRY &k, Keymap map)
 {
   /* If no keys to bind to, exit right away. */
   if (keyseq.empty ())
@@ -317,7 +316,7 @@ Readline::rl_generic_bind (const std::string &keyseq, KEYMAP_ENTRY &k,
 // Translate the ASCII representation of SEQ, stuffing the values into STRING.
 // Return non-zero if there was an error parsing SEQ.
 int
-Readline::rl_translate_keyseq (const std::string &seq, std::string &array)
+Readline::rl_translate_keyseq (string_view seq, std::string &array)
 {
   int c = 0;
 
@@ -552,8 +551,7 @@ Readline::rl_untranslate_keyseq (int seq)
 }
 
 std::string
-Readline::_rl_untranslate_macro_value (const std::string &seq,
-                                       bool use_escapes)
+Readline::_rl_untranslate_macro_value (string_view seq, bool use_escapes)
 {
   std::string ret;
   ret.reserve (seq.size ());
@@ -613,8 +611,8 @@ Readline::_rl_untranslate_macro_value (const std::string &seq,
    type of the object pointed to.  One of ISFUNC (function), ISKMAP (keymap),
    or ISMACR (macro). */
 Readline::rl_command_func_t
-Readline::_rl_function_of_keyseq_internal (const std::string &keyseq,
-                                           Keymap map, keymap_entry_type *type)
+Readline::_rl_function_of_keyseq_internal (string_view keyseq, Keymap map,
+                                           keymap_entry_type *type)
 {
   if (map == nullptr)
     map = _rl_keymap;
@@ -682,11 +680,11 @@ Readline::_rl_read_file (char *filename, size_t *sizep)
   char *buffer;
   int file;
 
-  if (((file = ::open (filename, O_RDONLY, 0644)) < 0)
-      || (::fstat (file, &finfo) < 0))
+  if (((file = open (filename, O_RDONLY, 0644)) < 0)
+      || (fstat (file, &finfo) < 0))
     {
       if (file >= 0)
-        ::close (file);
+        close (file);
       return nullptr;
     }
 
@@ -697,7 +695,7 @@ Readline::_rl_read_file (char *filename, size_t *sizep)
   if (sfile_size != finfo.st_size || sfile_size < 0)
     {
       if (file >= 0)
-        ::close (file);
+        close (file);
 #if defined(EFBIG)
       errno = EFBIG;
 #endif
@@ -706,8 +704,8 @@ Readline::_rl_read_file (char *filename, size_t *sizep)
 
   /* Read the file into BUFFER. */
   buffer = new char[file_size + 1];
-  ssize_t i = ::read (file, buffer, file_size);
-  ::close (file);
+  ssize_t i = read (file, buffer, file_size);
+  close (file);
 
   if (i < 0)
     {
@@ -834,14 +832,14 @@ Readline::_rl_init_file_error (const char *format, ...)
   va_list args;
   va_start (args, format);
 
-  std::fprintf (stderr, "readline: ");
+  fprintf (stderr, "readline: ");
   if (currently_reading_init_file)
-    std::fprintf (stderr, "%s: line %d: ", current_readline_init_file,
-                  current_readline_init_lineno);
+    fprintf (stderr, "%s: line %d: ", current_readline_init_file,
+             current_readline_init_lineno);
 
-  std::vfprintf (stderr, format, args);
-  std::fprintf (stderr, "\n");
-  std::fflush (stderr);
+  vfprintf (stderr, format, args);
+  fprintf (stderr, "\n");
+  fflush (stderr);
 
   va_end (args);
 }
@@ -933,7 +931,7 @@ Readline::parser_if (char *args)
   if (_rl_parsing_conditionalized_out)
     return 0;
 
-  size_t llen = std::strlen (args);
+  size_t llen = strlen (args);
 
   /* Isolate first argument. */
   size_t i;
@@ -952,7 +950,7 @@ Readline::parser_if (char *args)
 
       /* Terminals like "aaa-60" are equivalent to "aaa". */
       tname = savestring (rl_terminal_name);
-      tem = std::strchr (tname, '-');
+      tem = strchr (tname, '-');
       if (tem)
         *tem = '\0';
 
@@ -1092,7 +1090,7 @@ Readline::parser_if (char *args)
       _rl_parsing_conditionalized_out = 1;
       vname = (boolvar >= 0) ? boolean_varname (boolvar)
                              : string_varname (strvar);
-      vlen = std::strlen (vname);
+      vlen = strlen (vname);
       if (i > 0 && i <= llen && args[i - 1] == '\0')
         args[i - 1] = ' ';
       args[llen] = '\0'; /* just in case */
@@ -1198,7 +1196,7 @@ Readline::parser_include (char *args)
   old_line_number = current_readline_init_lineno;
   old_include_level = current_readline_init_include_level;
 
-  e = std::strchr (args, '\n');
+  e = strchr (args, '\n');
   if (e)
     *e = '\0';
   r = _rl_read_init_file (args, old_include_level + 1);
@@ -1397,7 +1395,7 @@ Readline::rl_parse_and_bind (char *string)
           else
             {
               /* remove trailing whitespace */
-              e = value + std::strlen (value) - 1;
+              e = value + strlen (value) - 1;
               while (e >= value && whitespace (*e))
                 e--;
               e++; /* skip back to whitespace or EOS */
@@ -1470,7 +1468,7 @@ Readline::rl_parse_and_bind (char *string)
      rl_bind_keyseq ().  Otherwise, let the older code deal with it. */
   if (*string == '"')
     {
-      char *seq = new char[1 + std::strlen (string)];
+      char *seq = new char[1 + strlen (string)];
 
       int j, k, passc;
       for (j = 1, k = passc = 0; string[j]; j++)
@@ -1496,7 +1494,7 @@ Readline::rl_parse_and_bind (char *string)
       /* Binding macro? */
       if (*funname == '\'' || *funname == '"')
         {
-          size_t fl = std::strlen (funname);
+          size_t fl = strlen (funname);
 
           /* Remove the delimiting quotes from each end of FUNNAME. */
           if (fl && funname[fl - 1] == *funname)
@@ -1512,7 +1510,7 @@ Readline::rl_parse_and_bind (char *string)
     }
 
   /* Get the actual character we want to deal with. */
-  char *kname = std::strrchr (string, '-');
+  char *kname = strrchr (string, '-');
   if (kname == nullptr)
     kname = string;
   else
@@ -1544,7 +1542,7 @@ Readline::rl_parse_and_bind (char *string)
   if (*funname == '\'' || *funname == '"')
     {
       char useq[2];
-      size_t fl = std::strlen (funname);
+      size_t fl = strlen (funname);
 
       useq[0] = static_cast<char> (key);
       useq[1] = '\0';
@@ -1848,7 +1846,7 @@ Readline::sv_dispprefix (const char *value)
 
   if (value && *value)
     {
-      nval = std::atoi (value);
+      nval = atoi (value);
       if (nval < 0)
         nval = 0;
     }
@@ -1863,7 +1861,7 @@ Readline::sv_compquery (const char *value)
 
   if (value && *value)
     {
-      nval = std::atoi (value);
+      nval = atoi (value);
       if (nval < 0)
         nval = 0;
     }
@@ -1877,7 +1875,7 @@ Readline::sv_compwidth (const char *value)
   int nval = -1;
 
   if (value && *value)
-    nval = std::atoi (value);
+    nval = atoi (value);
 
   _rl_completion_columns = nval;
   return 0;
@@ -1891,7 +1889,7 @@ Readline::sv_histsize (const char *value)
   nval = 500;
   if (value && *value)
     {
-      nval = std::atoi (value);
+      nval = atoi (value);
       if (nval < 0)
         {
           unstifle_history ();
@@ -1924,7 +1922,7 @@ Readline::sv_seqtimeout (const char *value)
   nval = 0;
   if (value && *value)
     {
-      nval = std::atoi (value);
+      nval = atoi (value);
       if (nval < 0)
         nval = 0;
     }
@@ -2111,7 +2109,7 @@ Readline::init_keymap_names ()
 #endif
 
 int
-Readline::rl_set_keymap_name (const std::string &name, Keymap map)
+Readline::rl_set_keymap_name (string_view name, Keymap map)
 {
   int ni, mi;
 
@@ -2168,7 +2166,7 @@ Readline::rl_list_funmap_names ()
     return;
 
   for (int i = 0; funmap_names[i]; i++)
-    std::fprintf (rl_outstream, "%s\n", funmap_names[i]);
+    fprintf (rl_outstream, "%s\n", funmap_names[i]);
 
   delete[] funmap_names;
 }
@@ -2330,7 +2328,7 @@ Readline::rl_function_dumper (bool print_readably)
 
   names = rl_funmap_names ();
 
-  std::fprintf (rl_outstream, "\n");
+  fprintf (rl_outstream, "\n");
 
   for (int i = 0; (name = names[i]); i++)
     {
@@ -2341,35 +2339,34 @@ Readline::rl_function_dumper (bool print_readably)
       if (print_readably)
         {
           if (invokers.empty ())
-            std::fprintf (rl_outstream, "# %s (not bound)\n", name);
+            fprintf (rl_outstream, "# %s (not bound)\n", name);
           else
             {
               std::vector<std::string>::iterator j;
               for (j = invokers.begin (); j != invokers.end (); ++j)
                 {
-                  std::fprintf (rl_outstream, "\"%s\": %s\n", (*j).c_str (),
-                                name);
+                  fprintf (rl_outstream, "\"%s\": %s\n", (*j).c_str (), name);
                 }
             }
         }
       else
         {
           if (invokers.empty ())
-            std::fprintf (rl_outstream, "%s is not bound to any keys\n", name);
+            fprintf (rl_outstream, "%s is not bound to any keys\n", name);
           else
             {
-              std::fprintf (rl_outstream, "%s can be found on ", name);
+              fprintf (rl_outstream, "%s can be found on ", name);
 
               std::vector<std::string>::iterator j;
               for (j = invokers.begin ();
                    j != invokers.end () && (j - invokers.begin ()) < 5; ++j)
                 {
-                  std::fprintf (rl_outstream, "\"%s\"%s", (*j).c_str (),
-                                (j + 1 != invokers.end ()) ? ", " : ".\n");
+                  fprintf (rl_outstream, "\"%s\"%s", (*j).c_str (),
+                           (j + 1 != invokers.end ()) ? ", " : ".\n");
                 }
 
               if ((j - invokers.begin ()) == 5 && j != invokers.end ())
-                std::fprintf (rl_outstream, "...\n");
+                fprintf (rl_outstream, "...\n");
             }
         }
     }
@@ -2384,7 +2381,7 @@ int
 Readline::rl_dump_functions (int, int)
 {
   if (rl_dispatching)
-    std::fprintf (rl_outstream, "\r\n");
+    fprintf (rl_outstream, "\r\n");
 
   rl_function_dumper (rl_explicit_arg);
   rl_on_new_line ();
@@ -2393,7 +2390,7 @@ Readline::rl_dump_functions (int, int)
 
 void
 Readline::_rl_macro_dumper_internal (bool print_readably, Keymap map,
-                                     const std::string &prefix)
+                                     const char *prefix)
 {
   std::string keyname;
   std::string out;
@@ -2407,11 +2404,11 @@ Readline::_rl_macro_dumper_internal (bool print_readably, Keymap map,
           out = _rl_untranslate_macro_value (map[key].value.macro, false);
 
           if (print_readably)
-            std::fprintf (rl_outstream, "\"%s%s\": \"%s\"\n", prefix.c_str (),
-                          keyname.c_str (), out.c_str ());
+            fprintf (rl_outstream, "\"%s%s\": \"%s\"\n", prefix.c_str (),
+                     keyname.c_str (), out.c_str ());
           else
-            std::fprintf (rl_outstream, "%s%s outputs %s\n", prefix.c_str (),
-                          keyname.c_str (), out.c_str ());
+            fprintf (rl_outstream, "%s%s outputs %s\n", prefix.c_str (),
+                     keyname.c_str (), out.c_str ());
           keyname.clear ();
           break;
 
@@ -2443,7 +2440,7 @@ int
 Readline::rl_dump_macros (int, int)
 {
   if (rl_dispatching)
-    std::fprintf (rl_outstream, "\r\n");
+    fprintf (rl_outstream, "\r\n");
 
   rl_macro_dumper (rl_explicit_arg);
   rl_on_new_line ();
@@ -2470,28 +2467,28 @@ Readline::_rl_get_string_variable_value (const char *name)
                                        : RL_COMMENT_BEGIN_DEFAULT;
   else if (_rl_stricmp (name, "completion-display-width") == 0)
     {
-      std::snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%zd",
-                     _rl_completion_columns);
+      snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%zd",
+                _rl_completion_columns);
       return _rl_numbuf;
     }
   else if (_rl_stricmp (name, "completion-prefix-display-length") == 0)
     {
-      std::snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%zu",
-                     _rl_completion_prefix_display_length);
+      snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%zu",
+                _rl_completion_prefix_display_length);
       return _rl_numbuf;
     }
   else if (_rl_stricmp (name, "completion-query-items") == 0)
     {
-      std::snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%d",
-                     rl_completion_query_items);
+      snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%d",
+                rl_completion_query_items);
       return _rl_numbuf;
     }
   else if (_rl_stricmp (name, "editing-mode") == 0)
     return rl_get_keymap_name_from_edit_mode ();
   else if (_rl_stricmp (name, "history-size") == 0)
     {
-      std::snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%zu",
-                     history_is_stifled () ? history_max_entries : 0);
+      snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%zu",
+                history_is_stifled () ? history_max_entries : 0);
       return _rl_numbuf;
     }
   else if (_rl_stricmp (name, "isearch-terminators") == 0)
@@ -2502,7 +2499,7 @@ Readline::_rl_get_string_variable_value (const char *name)
           = _rl_untranslate_macro_value (_rl_isearch_terminators, false);
       if (!ret.empty ())
         {
-          std::strncpy (_rl_numbuf, ret.c_str (), sizeof (_rl_numbuf) - 1);
+          strncpy (_rl_numbuf, ret.c_str (), sizeof (_rl_numbuf) - 1);
           _rl_numbuf[sizeof (_rl_numbuf) - 1] = '\0';
         }
       else
@@ -2518,8 +2515,7 @@ Readline::_rl_get_string_variable_value (const char *name)
     }
   else if (_rl_stricmp (name, "keyseq-timeout") == 0)
     {
-      std::snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%d",
-                     _rl_keyseq_timeout);
+      snprintf (_rl_numbuf, sizeof (_rl_numbuf), "%d", _rl_keyseq_timeout);
       return _rl_numbuf;
     }
   else if (_rl_stricmp (name, "emacs-mode-string") == 0)
@@ -2542,11 +2538,11 @@ Readline::rl_variable_dumper (bool print_readably)
        it != boolean_varlist_.end (); ++it)
     {
       if (print_readably)
-        std::fprintf (rl_outstream, "set %s %s\n", it->name,
-                      *(it->value) ? "on" : "off");
+        fprintf (rl_outstream, "set %s %s\n", it->name,
+                 *(it->value) ? "on" : "off");
       else
-        std::fprintf (rl_outstream, "%s is set to `%s'\n", it->name,
-                      *(it->value) ? "on" : "off");
+        fprintf (rl_outstream, "%s is set to `%s'\n", it->name,
+                 *(it->value) ? "on" : "off");
     }
 
   for (int i = 0; string_varlist[i].name; i++)
@@ -2556,10 +2552,10 @@ Readline::rl_variable_dumper (bool print_readably)
         continue;
 
       if (print_readably)
-        std::fprintf (rl_outstream, "set %s %s\n", string_varlist[i].name, v);
+        fprintf (rl_outstream, "set %s %s\n", string_varlist[i].name, v);
       else
-        std::fprintf (rl_outstream, "%s is set to `%s'\n",
-                      string_varlist[i].name, v);
+        fprintf (rl_outstream, "%s is set to `%s'\n", string_varlist[i].name,
+                 v);
     }
 }
 
@@ -2570,7 +2566,7 @@ int
 Readline::rl_dump_variables (int, int)
 {
   if (rl_dispatching)
-    std::fprintf (rl_outstream, "\r\n");
+    fprintf (rl_outstream, "\r\n");
 
   rl_variable_dumper (rl_explicit_arg);
   rl_on_new_line ();

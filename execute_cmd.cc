@@ -1095,8 +1095,8 @@ Shell::print_formatted_time (FILE *fp, const char *format, time_t rs, int rsf,
         }
     }
 
-  std::fprintf (fp, "%s\n", str.c_str ());
-  std::fflush (fp);
+  fprintf (fp, "%s\n", str.c_str ());
+  fflush (fp);
 }
 
 int
@@ -1999,7 +1999,7 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
       fflush (stdout);
       fflush (stderr);
 
-      std::exit (estat);
+      exit (estat);
     }
 
   close (rpipe[1]);
@@ -3947,7 +3947,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
           if (builtin)
             builtin_is_special = true;
         }
-      if (builtin == 0)
+      if (builtin == nullptr)
         func = find_function (words->word->word);
     }
 
@@ -3964,23 +3964,24 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
   /* This is where we handle the command builtin as a pseudo-reserved word
      prefix. This allows us to optimize away forks if we can. */
   int old_command_builtin = -1;
-  if (builtin == 0 && func == 0)
+  if (builtin == nullptr && func == nullptr)
     {
       WORD_LIST *disposer, *l;
       int cmdtype;
 
       builtin = find_shell_builtin (words->word->word);
-      while (builtin == command_builtin)
+      while (builtin == &Shell::command_builtin)
         {
           disposer = words;
           cmdtype = 0;
           words = check_command_builtin (words, &cmdtype);
           if (cmdtype > 0) /* command -p [--] words */
             {
-              for (l = disposer; l->next != words; l = (WORD_LIST *)(l->next))
+              for (l = disposer; l->next () != words; l = l->next ())
                 ;
-              l->next = 0;
-              dispose_words (disposer);
+              l->set_next (nullptr);
+              delete disposer;
+
               cmdflags |= (CMD_COMMAND_BUILTIN | CMD_NO_FUNCTIONS);
               if (cmdtype == 2)
                 cmdflags |= CMD_STDPATH;
@@ -3999,6 +4000,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
     }
 
   add_unwind_protect_ptr (dispose_words, words);
+
   QUIT;
 
   /* Bind the last word in this command to "$_" after execution. */
@@ -4006,21 +4008,21 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
   for (lastword = words; lastword->next (); lastword = lastword->next ())
     ;
 
-  lastarg = lastword->word->word;
+  std::string &lastarg = lastword->word->word;
 
   /* Initialize variables here so goto doesn't skip over construction. */
-  char *command_line = 0;
+  char *command_line = nullptr;
   char *temp;
   int old_builtin;
 
 #if defined(JOB_CONTROL)
   /* Is this command a job control related thing? */
-  if (words->word->word[0] == '%' && already_forked == 0)
+  if (words->word->word[0] == '%' && !already_forked)
     {
       this_command_name = async ? "bg" : "fg";
       last_shell_builtin = this_shell_builtin;
       this_shell_builtin = builtin_address (this_command_name);
-      result = (*this_shell_builtin) (words);
+      result = ((*this).*this_shell_builtin) (words);
       goto return_result;
     }
 
@@ -4028,19 +4030,21 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
      If they do, find out whether this word is a candidate for a running
      job. */
   if (job_control && !already_forked && !async && !first_word_quoted
-      && !words->next && words->word->word[0] && !simple_command->redirects
+      && !words->next () && !words->word->word.empty () && !simple_command->redirects
       && pipe_in == NO_PIPE && pipe_out == NO_PIPE
       && (temp = get_string_value ("auto_resume")))
     {
       int job, started_status;
 
       get_job_flags jflags = JM_STOPPED | JM_FIRSTMATCH;
+
       if (STREQ (temp, "exact"))
         jflags |= JM_EXACT;
       else if (STREQ (temp, "substring"))
         jflags |= JM_SUBSTRING;
       else
         jflags |= JM_PREFIX;
+
       job = get_job_by_name (words->word->word, jflags);
       if (job != NO_JOB)
         {
@@ -4168,12 +4172,12 @@ run_builtin:
         }
     }
 
-  if (autocd && interactive && words->word
-      && is_dirname (words->word->word.c_str ()))
+  if (autocd && interactive && words->word && is_dirname (words->word->word.c_str ()))
     {
-      words = make_word_list (make_word ("--"), words);
-      words = make_word_list (make_word ("cd"), words);
+      words = new WORD_LIST (make_word ("--"), words);
+      words = new WORD_LIST (make_word ("cd"), words);
       xtrace_print_word_list (words, 0);
+
       func = find_function ("cd");
       goto run_builtin;
     }
@@ -4196,13 +4200,15 @@ execute_from_filesystem:
 
 return_result:
   bind_lastarg (lastarg);
-  FREE (command_line);
-  dispose_words (words);
+  delete[] command_line;
+  delete words;
+
   if (builtin)
     {
       executing_builtin = old_builtin;
       executing_command_builtin = old_command_builtin;
     }
+
   discard_unwind_frame ("simple-command");
   this_command_name = nullptr; /* points to freed memory now */
   return result;

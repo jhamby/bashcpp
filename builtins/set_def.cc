@@ -560,7 +560,7 @@ parse_shellopts (char *value)
   while ((vname = extract_colon_unit (value, &vptr)))
     {
       set_minus_o_option (FLAG_ON, vname);
-      std::free (vname);
+      free (vname);
     }
 }
 
@@ -582,7 +582,7 @@ Shell::initialize_shell_options (bool no_shellopts)
           if (temp)
             {
               parse_shellopts (temp);
-              std::free (temp);
+              free (temp);
             }
         }
     }

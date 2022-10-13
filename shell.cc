@@ -70,7 +70,7 @@ main (int argc, char **argv)
   catch (const std::exception &e)
     {
       report_error (_ ("unhandled exception: %s"), e.what ());
-      std::exit (2);
+      exit (2);
     }
 }
 #else  /* !NO_MAIN_ENV_ARG */
@@ -84,8 +84,8 @@ main (int argc, char **argv, char **env)
     }
   catch (const std::exception &e)
     {
-      std::fprintf (stderr, _ ("unhandled exception: %s"), e.what ());
-      std::exit (2);
+      fprintf (stderr, _ ("unhandled exception: %s"), e.what ());
+      exit (2);
     }
 }
 #endif /* !NO_MAIN_ENV_ARG */
@@ -249,13 +249,13 @@ Shell::early_init ()
 
   /* Wait forever if we are debugging a login shell. */
   while (debugging_login_shell)
-    ::sleep (3);
+    sleep (3);
 
   set_default_locale ();
 
   running_setuid = uidget ();
 
-  if (std::getenv ("POSIXLY_CORRECT") || std::getenv ("POSIX_PEDANTIC"))
+  if (getenv ("POSIXLY_CORRECT") || getenv ("POSIX_PEDANTIC"))
     posixly_correct = true;
 }
 
@@ -302,7 +302,7 @@ Shell::run_shell (int argc, char **argv, char **env)
   shell_environment = env;
   set_shell_name (argv[0]);
 
-  ::gettimeofday (&shellstart, nullptr);
+  gettimeofday (&shellstart, nullptr);
   shell_start_time = shellstart.tv_sec;
 
   /* Parse argument flags from the input line. */
@@ -313,13 +313,13 @@ Shell::run_shell (int argc, char **argv, char **env)
   if (want_initial_help)
     {
       show_shell_usage (stdout, true);
-      std::exit (EXECUTION_SUCCESS);
+      exit (EXECUTION_SUCCESS);
     }
 
   if (do_version)
     {
       show_shell_version (1);
-      std::exit (EXECUTION_SUCCESS);
+      exit (EXECUTION_SUCCESS);
     }
 
   echo_input_at_read = verbose_flag; /* --verbose given */
@@ -356,7 +356,7 @@ Shell::run_shell (int argc, char **argv, char **env)
       if (command_execution_string == nullptr)
         {
           report_error (_ ("%s: option requires an argument"), "-c");
-          std::exit (EX_BADUSAGE);
+          exit (EX_BADUSAGE);
         }
       arg_index++;
     }
@@ -573,9 +573,9 @@ Shell::run_shell (int argc, char **argv, char **env)
               /* In this mode, bash is reading a script from stdin, which is a
                  pipe or redirected file. */
 #if defined(BUFFERED_INPUT)
-              default_buffered_input = ::fileno (stdin); /* == 0 */
+              default_buffered_input = fileno (stdin); /* == 0 */
 #else
-              std::setbuf (default_input, nullptr);
+              setbuf (default_input, nullptr);
 #endif /* !BUFFERED_INPUT */
               read_from_stdin = true;
             }
@@ -703,7 +703,7 @@ Shell::parse_long_options (char **argv, int arg_start, int arg_end)
             {
               report_error (_ ("%s: invalid option"), argv[arg_index]);
               show_shell_usage (stderr, false);
-              std::exit (EX_BADUSAGE);
+              exit (EX_BADUSAGE);
             }
           break; /* No such argument.  Maybe flag arg. */
         }
@@ -766,7 +766,7 @@ Shell::parse_shell_options (char **argv, int arg_start, int arg_end)
                 }
               if (set_minus_o_option (on_or_off, o_option)
                   != EXECUTION_SUCCESS)
-                std::exit (EX_BADUSAGE);
+                exit (EX_BADUSAGE);
               next_arg++;
               break;
 
@@ -795,7 +795,7 @@ Shell::parse_shell_options (char **argv, int arg_start, int arg_end)
                   report_error (_ ("%c%c: invalid option"), on_or_off,
                                 arg_character);
                   show_shell_usage (stderr, false);
-                  std::exit (EX_BADUSAGE);
+                  exit (EX_BADUSAGE);
                 }
             }
         }
@@ -811,8 +811,8 @@ Shell::parse_shell_options (char **argv, int arg_start, int arg_end)
 void
 Shell::exit_shell (int s)
 {
-  std::fflush (stdout); /* XXX */
-  std::fflush (stderr);
+  fflush (stdout); /* XXX */
+  fflush (stderr);
 
   /* Clean up the terminal if we are in a state where it's been modified. */
 #if defined(READLINE)
@@ -866,8 +866,8 @@ Shell::exit_shell (int s)
 void
 Shell::subshell_exit (int s)
 {
-  std::fflush (stdout);
-  std::fflush (stderr);
+  fflush (stdout);
+  fflush (stderr);
 
   /* Do trap[0] if defined.  Allow it to override the exit status
      passed to us. */
@@ -1115,7 +1115,7 @@ Shell::uidget ()
 {
   uid_t u;
 
-  u = ::getuid ();
+  u = getuid ();
   if (current_user.uid != u)
     {
       delete[] current_user.user_name;
@@ -1126,9 +1126,9 @@ Shell::uidget ()
     }
 
   current_user.uid = u;
-  current_user.gid = ::getgid ();
-  current_user.euid = ::geteuid ();
-  current_user.egid = ::getegid ();
+  current_user.gid = getgid ();
+  current_user.euid = geteuid ();
+  current_user.egid = getegid ();
 
   /* See whether or not we are running setuid or setgid. */
   return (current_user.uid != current_user.euid)
@@ -1151,7 +1151,7 @@ Shell::disable_priv_mode ()
                  current_user.uid, current_user.euid);
 #if defined(EXIT_ON_SETUID_FAILURE)
       if (e == EAGAIN)
-        std::exit (e);
+        exit (e);
 #endif
     }
 #if HAVE_SETRESGID
@@ -1220,7 +1220,7 @@ run_wordexp (char *words)
 
   if (result == 0)
     {
-      std::printf ("0\n0\n");
+      printf ("0\n0\n");
       return 0;
     }
 
@@ -1229,13 +1229,13 @@ run_wordexp (char *words)
   for (nw = nb = 0, wl = result; wl; wl = wl->next)
     {
       nw++;
-      nb += std::strlen (wl->word->word);
+      nb += strlen (wl->word->word);
     }
-  std::printf ("%u\n%u\n", nw, nb);
+  printf ("%u\n%u\n", nw, nb);
   /* Print each word on a separate line.  This will have to be changed when
      the interface to glibc is completed. */
   for (wl = result; wl; wl = wl->next)
-    std::printf ("%s\n", wl->word->word);
+    printf ("%s\n", wl->word->word);
 
   return 0;
 }
@@ -1435,16 +1435,16 @@ Shell::open_shell_script (string_view script_name)
 #endif
 
   /* Only do this with non-tty file descriptors we can seek on. */
-  if (!fd_is_tty && (::lseek (fd, 0L, 1) != -1))
+  if (!fd_is_tty && (lseek (fd, 0L, 1) != -1))
     {
       /* Check to see if the `file' in `bash file' is a binary file
          according to the same tests done by execute_simple_command (),
          and report an error and exit if it is. */
-      sample_len = static_cast<int> (::read (fd, sample, sizeof (sample)));
+      sample_len = static_cast<int> (read (fd, sample, sizeof (sample)));
       if (sample_len < 0)
         {
           int e = errno;
-          if ((::fstat (fd, &sb) == 0) && S_ISDIR (sb.st_mode))
+          if ((fstat (fd, &sb) == 0) && S_ISDIR (sb.st_mode))
             {
 #if defined(EISDIR)
               errno = EISDIR;
@@ -1461,7 +1461,7 @@ Shell::open_shell_script (string_view script_name)
 #if defined(JOB_CONTROL)
           end_job_control (); /* just in case we were run as bash -i script */
 #endif
-          std::exit (EX_NOEXEC);
+          exit (EX_NOEXEC);
         }
       else if (sample_len > 0
                && (check_binary_file (sample,
@@ -1472,10 +1472,10 @@ Shell::open_shell_script (string_view script_name)
 #if defined(JOB_CONTROL)
           end_job_control (); /* just in case we were run as bash -i script */
 #endif
-          std::exit (EX_BINARY_FILE);
+          exit (EX_BINARY_FILE);
         }
       /* Now rewind the file back to the beginning. */
-      ::lseek (fd, 0L, 0);
+      lseek (fd, 0L, 0);
     }
 
   /* Open the script.  But try to move the file descriptor to a randomly
@@ -1492,7 +1492,7 @@ Shell::open_shell_script (string_view script_name)
   if (default_input == 0)
     {
       file_error (filename);
-      std::exit (EX_NOTFOUND);
+      exit (EX_NOTFOUND);
     }
 
   SET_CLOSE_ON_EXEC (fd);
@@ -1504,13 +1504,13 @@ Shell::open_shell_script (string_view script_name)
      like `bash -i /dev/stdin' is executed. */
   if (interactive_shell && fd_is_tty)
     {
-      ::dup2 (fd, 0);
-      ::close (fd);
+      dup2 (fd, 0);
+      close (fd);
       fd = 0;
 #if defined(BUFFERED_INPUT)
       default_buffered_input = 0;
 #else
-      std::fclose (default_input);
+      fclose (default_input);
       default_input = stdin;
 #endif
     }
@@ -1566,7 +1566,7 @@ Shell::unset_bash_input (int check_zero)
 #else  /* !BUFFERED_INPUT */
   if (default_input)
     {
-      std::fclose (default_input);
+      fclose (default_input);
       default_input = nullptr;
     }
 #endif /* !BUFFERED_INPUT */
@@ -1665,9 +1665,9 @@ Shell::get_current_user_info ()
   if (current_user.user_name == nullptr)
     {
 #if defined(__TANDEM)
-      entry = ::getpwnam (getlogin ());
+      entry = getpwnam (getlogin ());
 #else
-      entry = ::getpwuid (current_user.uid);
+      entry = getpwuid (current_user.uid);
 #endif
       if (entry)
         {
@@ -1684,7 +1684,7 @@ Shell::get_current_user_info ()
           current_user.home_dir = savestring ("/");
         }
 #if defined(HAVE_GETPWENT)
-      ::endpwent ();
+      endpwent ();
 #endif
     }
 }
@@ -1719,7 +1719,7 @@ Shell::shell_initialize ()
   if (current_host_name == nullptr)
     {
       /* Initialize current_host_name. */
-      if (::gethostname (hostname, 255) < 0)
+      if (gethostname (hostname, 255) < 0)
         current_host_name = "??host??";
       else
         current_host_name = savestring (hostname);
@@ -1836,22 +1836,22 @@ Shell::show_shell_usage (FILE *fp, bool extra)
   char *s, *t;
 
   if (extra)
-    std::fprintf (fp, _ ("GNU bash, version %s-(%s)\n"),
+    fprintf (fp, _ ("GNU bash, version %s-(%s)\n"),
                   shell_version_string ().c_str (), MACHTYPE);
-  std::fprintf (fp,
+  fprintf (fp,
                 _ ("Usage:\t%s [GNU long option] [option] ...\n\t%s [GNU long "
                    "option] [option] script-file ...\n"),
                 shell_name, shell_name);
-  std::fputs (_ ("GNU long options:\n"), fp);
+  fputs (_ ("GNU long options:\n"), fp);
   for (std::vector<LongArg>::iterator it = long_args.begin ();
        it != long_args.end (); ++it)
     {
       std::string name_str (to_string ((*it).name));
-      std::fprintf (fp, "\t--%s\n", name_str.c_str ());
+      fprintf (fp, "\t--%s\n", name_str.c_str ());
     }
 
-  std::fputs (_ ("Shell options:\n"), fp);
-  std::fputs (
+  fputs (_ ("Shell options:\n"), fp);
+  fputs (
       _ ("\t-ilrsD or -c command or -O shopt_option\t\t(invocation only)\n"),
       fp);
 
@@ -1862,33 +1862,32 @@ Shell::show_shell_usage (FILE *fp, bool extra)
 
   if (set_opts)
     {
-      s = std::strchr (set_opts, '[');
+      s = strchr (set_opts, '[');
       if (s == nullptr)
         s = set_opts;
       while (*++s == '-')
         ;
-      t = std::strchr (s, ']');
+      t = strchr (s, ']');
       if (t)
         *t = '\0';
-      std::fprintf (fp, _ ("\t-%s or -o option\n"), s);
+      fprintf (fp, _ ("\t-%s or -o option\n"), s);
       delete[] set_opts;
     }
 
   if (extra)
     {
-      std::fprintf (fp,
+      fprintf (fp,
                     _ ("Type `%s -c \"help set\"' for more information about "
                        "shell options.\n"),
                     shell_name);
-      std::fprintf (fp,
+      fprintf (fp,
                     _ ("Type `%s -c help' for more information about shell "
                        "builtin commands.\n"),
                     shell_name);
-      std::fprintf (fp, _ ("Use the `bashbug' command to report bugs.\n"));
-      std::fprintf (fp, "\n");
-      std::fprintf (
-          fp, _ ("bash home page: <http://www.gnu.org/software/bash>\n"));
-      std::fprintf (fp, _ ("General help using GNU software: "
+      fprintf (fp, _ ("Use the `bashbug' command to report bugs.\n"));
+      fprintf (fp, "\n");
+      fprintf (fp, _ ("bash home page: <http://www.gnu.org/software/bash>\n"));
+      fprintf (fp, _ ("General help using GNU software: "
                            "<http://www.gnu.org/gethelp/>\n"));
     }
 }
@@ -1900,7 +1899,7 @@ Shell::run_shopt_alist ()
 
   for (it = shopt_alist.begin (); it != shopt_alist.end (); ++it)
     if (shopt_setopt ((*it).word, ((*it).token == '-')) != EXECUTION_SUCCESS)
-      std::exit (EX_BADUSAGE);
+      exit (EX_BADUSAGE);
 
   shopt_alist.clear ();
 }

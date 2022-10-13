@@ -74,7 +74,7 @@ Shell::ansicstr (const std::string &string, int flags, bool *sawc)
               || (locale_utf8locale == 0 && mb_cur_max > 0
                   && is_basic (c) == 0))
             {
-              clen = std::mbrtowc (&wc, &(*(s - 1)), mb_cur_max, 0);
+              clen = mbrtowc (&wc, &(*(s - 1)), mb_cur_max, 0);
               if (MB_INVALIDCH (clen))
                 clen = 1;
             }
@@ -144,15 +144,14 @@ Shell::ansicstr (const std::string &string, int flags, bool *sawc)
                   s++;
                 }
               /* Consume at least two hex characters */
-              for (temp = 2, c = 0;
-                   std::isxdigit ((unsigned char)*s) && temp--; s++)
+              for (temp = 2, c = 0; c_isxdigit (*s) && temp--; s++)
                 c = (c * 16) + hexvalue (*s);
               /* DGK says that after a `\x{' ksh93 consumes ISXDIGIT chars
                  until a non-xdigit or `}', so potentially more than two
                  chars are consumed. */
               if (flags & 16)
                 {
-                  for (; std::isxdigit (static_cast<unsigned char> (*s)); s++)
+                  for (; c_isxdigit (*s); s++)
                     c = (c * 16) + hexvalue (*s);
                   flags &= ~16;
                   if (*s == '}')
@@ -169,9 +168,7 @@ Shell::ansicstr (const std::string &string, int flags, bool *sawc)
             case 'u':
             case 'U':
               temp = (c == 'u') ? 4 : 8; /* \uNNNN \UNNNNNNNN */
-              for (v = 0;
-                   std::isxdigit (static_cast<unsigned char> (*s)) && temp--;
-                   s++)
+              for (v = 0; c_isxdigit (*s) && temp--; s++)
                 v = (v * 16) + hexvalue (*s);
               if (temp == ((c == 'u') ? 4 : 8))
                 {
@@ -291,12 +288,12 @@ ansic_quote (const std::string &str)
           b = is_basic (c);
           /* XXX - clen comparison to 0 is dicey */
           if ((!b
-               && ((clen = std::mbrtowc (&wc, &(*it), MB_CUR_MAX, 0))
+               && ((clen = mbrtowc (&wc, &(*it), MB_CUR_MAX, 0))
                        == static_cast<size_t> (-1)
-                   || MB_INVALIDCH (clen) || std::iswprint (wc) == 0))
-              || (b && std::isprint (c) == 0))
+                   || MB_INVALIDCH (clen) || iswprint (wc) == 0))
+              || (b && isprint (c) == 0))
 #else
-          if (std::isprint (c) == 0)
+          if (isprint (c) == 0)
 #endif
             {
               ret.push_back ('\\');
@@ -337,16 +334,16 @@ ansic_wshouldquote (const char *string)
   wchar_t *wcstr = NULL;
   size_t slen;
 
-  slen = std::mbstowcs (wcstr, string, 0);
+  slen = mbstowcs (wcstr, string, 0);
 
   if (slen == static_cast<size_t> (-1))
     return true;
 
   wcstr = new wchar_t[slen + 1];
-  std::mbstowcs (wcstr, string, slen + 1);
+  mbstowcs (wcstr, string, slen + 1);
 
   for (wcs = wcstr; (wcc = *wcs); wcs++)
-    if (std::iswprint (wcc) == 0)
+    if (iswprint (wcc) == 0)
       {
         delete[] wcstr;
         return true;
@@ -359,9 +356,9 @@ ansic_wshouldquote (const char *string)
 
 /* return 1 if we need to quote with $'...' because of non-printing chars. */
 bool
-ansic_shouldquote (const std::string &string)
+ansic_shouldquote (string_view string)
 {
-  std::string::const_iterator s;
+  string_view::iterator s;
   for (s = string.begin (); s != string.end (); ++s)
     {
       unsigned char c = static_cast<unsigned char> (*s);
@@ -369,7 +366,7 @@ ansic_shouldquote (const std::string &string)
       if (!is_basic (c))
         return ansic_wshouldquote (string.c_str () + (s - string.begin ()));
 #endif
-      if (std::isprint (c) == 0)
+      if (isprint (c) == 0)
         return true;
     }
 

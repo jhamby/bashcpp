@@ -63,6 +63,7 @@
 #  inet_ntop \
 #  ldexpl \
 #  lstat \
+#  mbrlen \
 #  mbschr \
 #  mkfifo \
 #  mknod \
@@ -209,86 +210,87 @@ host_triplet = @host@
 @GL_COND_OBJ_LDEXPL_TRUE@am__append_40 = ldexpl.c
 @GL_COND_OBJ_LOCALECONV_TRUE@am__append_41 = localeconv.c
 @GL_COND_OBJ_LSTAT_TRUE@am__append_42 = lstat.c
-@GL_COND_OBJ_MBRTOWC_TRUE@am__append_43 = mbrtowc.c
-@GL_COND_OBJ_MBSINIT_TRUE@am__append_44 = mbsinit.c
-@GL_COND_OBJ_MBSRTOWCS_TRUE@am__append_45 = mbsrtowcs.c
-@GL_COND_OBJ_MBTOWC_TRUE@am__append_46 = mbtowc.c
-@GL_COND_OBJ_MEMCHR_TRUE@am__append_47 = memchr.c
-@GL_COND_OBJ_MEMPCPY_TRUE@am__append_48 = mempcpy.c
-@GL_COND_OBJ_MEMRCHR_TRUE@am__append_49 = memrchr.c
-@GL_COND_OBJ_MKDIR_TRUE@am__append_50 = mkdir.c
-@GL_COND_OBJ_MKFIFO_TRUE@am__append_51 = mkfifo.c
-@GL_COND_OBJ_MKNOD_TRUE@am__append_52 = mknod.c
-@GL_COND_OBJ_MSVC_INVAL_TRUE@am__append_53 = msvc-inval.c
-@GL_COND_OBJ_MSVC_NOTHROW_TRUE@am__append_54 = msvc-nothrow.c
-@GL_COND_OBJ_NL_LANGINFO_TRUE@am__append_55 = nl_langinfo.c
-@GL_COND_OBJ_NL_LANGINFO_LOCK_TRUE@am__append_56 = nl_langinfo-lock.c
-@GL_COND_OBJ_OPEN_TRUE@am__append_57 = open.c
-@GL_COND_OBJ_OPENAT_TRUE@am__append_58 = openat.c
-@GL_COND_OBJ_OPENDIR_TRUE@am__append_59 = opendir.c
-@GL_COND_OBJ_PIPE_TRUE@am__append_60 = pipe.c
-@GL_COND_OBJ_SPAWN_TRUE@am__append_61 = spawn.c
-@GL_COND_OBJ_SPAWNI_TRUE@am__append_62 = spawni.c
-@GL_COND_OBJ_SPAWN_FACTION_ADDCHDIR_TRUE@am__append_63 = spawn_faction_addchdir.c
-@GL_COND_OBJ_SPAWN_FACTION_ADDOPEN_TRUE@am__append_64 = spawn_faction_addopen.c
-@GL_COND_OBJ_SPAWN_FACTION_DESTROY_TRUE@am__append_65 = spawn_faction_destroy.c
-@GL_COND_OBJ_SPAWN_FACTION_INIT_TRUE@am__append_66 = spawn_faction_init.c
-@GL_COND_OBJ_SPAWNATTR_DESTROY_TRUE@am__append_67 = spawnattr_destroy.c
-@GL_COND_OBJ_SPAWNATTR_INIT_TRUE@am__append_68 = spawnattr_init.c
-@GL_COND_OBJ_SPAWNATTR_SETFLAGS_TRUE@am__append_69 = spawnattr_setflags.c
-@GL_COND_OBJ_SPAWNATTR_SETSIGMASK_TRUE@am__append_70 = spawnattr_setsigmask.c
-@GL_COND_OBJ_SPAWNP_TRUE@am__append_71 = spawnp.c
-@GL_COND_OBJ_PSELECT_TRUE@am__append_72 = pselect.c
-@GL_COND_OBJ_PTHREAD_SIGMASK_TRUE@am__append_73 = pthread_sigmask.c
-@GL_COND_OBJ_RAISE_TRUE@am__append_74 = raise.c
-@GL_COND_OBJ_RANDOM_R_TRUE@am__append_75 = random_r.c
-@GL_COND_OBJ_RAWMEMCHR_TRUE@am__append_76 = rawmemchr.c
-@GL_COND_OBJ_READ_TRUE@am__append_77 = read.c
-@GL_COND_OBJ_READDIR_TRUE@am__append_78 = readdir.c
-@GL_COND_OBJ_READLINK_TRUE@am__append_79 = readlink.c
-@GL_COND_OBJ_REALLOCARRAY_TRUE@am__append_80 = reallocarray.c
-@GL_COND_OBJ_RENAME_TRUE@am__append_81 = rename.c
-@GL_COND_OBJ_REWINDDIR_TRUE@am__append_82 = rewinddir.c
-@GL_COND_OBJ_RMDIR_TRUE@am__append_83 = rmdir.c
-@GL_COND_OBJ_SECURE_GETENV_TRUE@am__append_84 = secure_getenv.c
-@GL_COND_OBJ_SELECT_TRUE@am__append_85 = select.c
-@GL_COND_OBJ_SETLOCALE_TRUE@am__append_86 = setlocale.c
-@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__append_87 = setlocale-lock.c
-@GL_COND_OBJ_SIGACTION_TRUE@am__append_88 = sigaction.c
-@GL_COND_OBJ_SIGNBIT3_TRUE@am__append_89 = signbitf.c signbitd.c signbitl.c
-@GL_COND_OBJ_SIGPROCMASK_TRUE@am__append_90 = sigprocmask.c
-@GL_COND_OBJ_STAT_TRUE@am__append_91 = stat.c
-@GL_COND_OBJ_STDIO_READ_TRUE@am__append_92 = stdio-read.c
-@GL_COND_OBJ_STDIO_WRITE_TRUE@am__append_93 = stdio-write.c
-@GL_COND_OBJ_STPCPY_TRUE@am__append_94 = stpcpy.c
-@GL_COND_OBJ_STRCASECMP_TRUE@am__append_95 = strcasecmp.c
-@GL_COND_OBJ_STRNCASECMP_TRUE@am__append_96 = strncasecmp.c
-@GL_COND_OBJ_STRCHRNUL_TRUE@am__append_97 = strchrnul.c
-@GL_COND_OBJ_STRDUP_TRUE@am__append_98 = strdup.c
-@GL_COND_OBJ_STRERROR_TRUE@am__append_99 = strerror.c
-@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__append_100 = strerror-override.c
-@GL_COND_OBJ_STRNLEN_TRUE@am__append_101 = strnlen.c
-@GL_COND_OBJ_STRSIGNAL_TRUE@am__append_102 = strsignal.c
-@GL_COND_OBJ_STRTOIMAX_TRUE@am__append_103 = strtoimax.c
-@GL_COND_OBJ_STRTOLL_TRUE@am__append_104 = strtoll.c
-@GL_COND_OBJ_STRTOULL_TRUE@am__append_105 = strtoull.c
-@GL_COND_OBJ_STRTOUMAX_TRUE@am__append_106 = strtoumax.c
-@GL_COND_OBJ_TIME_R_TRUE@am__append_107 = time_r.c
-@GL_COND_OBJ_TIMES_TRUE@am__append_108 = times.c
-@GL_COND_OBJ_TMPFILE_TRUE@am__append_109 = tmpfile.c
-@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__append_110 = uniwidth/width.c
-@GL_COND_OBJ_WAITPID_TRUE@am__append_111 = waitpid.c
-@GL_COND_OBJ_WCSWIDTH_TRUE@am__append_112 = wcswidth.c
-@GL_COND_OBJ_WCWIDTH_TRUE@am__append_113 = wcwidth.c
-@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__append_114 = windows-mutex.c
-@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__append_115 = windows-once.c
-@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__append_116 = windows-recmutex.c
-@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__append_117 = windows-rwlock.c
-@GL_COND_OBJ_WINDOWS_SPAWN_TRUE@am__append_118 = windows-spawn.c
-@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__append_119 = windows-tls.c
-@GL_COND_OBJ_WMEMCHR_TRUE@am__append_120 = wmemchr.c
-@GL_COND_OBJ_WMEMPCPY_TRUE@am__append_121 = wmempcpy.c
-@GL_COND_OBJ_WRITE_TRUE@am__append_122 = write.c
+@GL_COND_OBJ_MBRLEN_TRUE@am__append_43 = mbrlen.c
+@GL_COND_OBJ_MBRTOWC_TRUE@am__append_44 = mbrtowc.c
+@GL_COND_OBJ_MBSINIT_TRUE@am__append_45 = mbsinit.c
+@GL_COND_OBJ_MBSRTOWCS_TRUE@am__append_46 = mbsrtowcs.c
+@GL_COND_OBJ_MBTOWC_TRUE@am__append_47 = mbtowc.c
+@GL_COND_OBJ_MEMCHR_TRUE@am__append_48 = memchr.c
+@GL_COND_OBJ_MEMPCPY_TRUE@am__append_49 = mempcpy.c
+@GL_COND_OBJ_MEMRCHR_TRUE@am__append_50 = memrchr.c
+@GL_COND_OBJ_MKDIR_TRUE@am__append_51 = mkdir.c
+@GL_COND_OBJ_MKFIFO_TRUE@am__append_52 = mkfifo.c
+@GL_COND_OBJ_MKNOD_TRUE@am__append_53 = mknod.c
+@GL_COND_OBJ_MSVC_INVAL_TRUE@am__append_54 = msvc-inval.c
+@GL_COND_OBJ_MSVC_NOTHROW_TRUE@am__append_55 = msvc-nothrow.c
+@GL_COND_OBJ_NL_LANGINFO_TRUE@am__append_56 = nl_langinfo.c
+@GL_COND_OBJ_NL_LANGINFO_LOCK_TRUE@am__append_57 = nl_langinfo-lock.c
+@GL_COND_OBJ_OPEN_TRUE@am__append_58 = open.c
+@GL_COND_OBJ_OPENAT_TRUE@am__append_59 = openat.c
+@GL_COND_OBJ_OPENDIR_TRUE@am__append_60 = opendir.c
+@GL_COND_OBJ_PIPE_TRUE@am__append_61 = pipe.c
+@GL_COND_OBJ_SPAWN_TRUE@am__append_62 = spawn.c
+@GL_COND_OBJ_SPAWNI_TRUE@am__append_63 = spawni.c
+@GL_COND_OBJ_SPAWN_FACTION_ADDCHDIR_TRUE@am__append_64 = spawn_faction_addchdir.c
+@GL_COND_OBJ_SPAWN_FACTION_ADDOPEN_TRUE@am__append_65 = spawn_faction_addopen.c
+@GL_COND_OBJ_SPAWN_FACTION_DESTROY_TRUE@am__append_66 = spawn_faction_destroy.c
+@GL_COND_OBJ_SPAWN_FACTION_INIT_TRUE@am__append_67 = spawn_faction_init.c
+@GL_COND_OBJ_SPAWNATTR_DESTROY_TRUE@am__append_68 = spawnattr_destroy.c
+@GL_COND_OBJ_SPAWNATTR_INIT_TRUE@am__append_69 = spawnattr_init.c
+@GL_COND_OBJ_SPAWNATTR_SETFLAGS_TRUE@am__append_70 = spawnattr_setflags.c
+@GL_COND_OBJ_SPAWNATTR_SETSIGMASK_TRUE@am__append_71 = spawnattr_setsigmask.c
+@GL_COND_OBJ_SPAWNP_TRUE@am__append_72 = spawnp.c
+@GL_COND_OBJ_PSELECT_TRUE@am__append_73 = pselect.c
+@GL_COND_OBJ_PTHREAD_SIGMASK_TRUE@am__append_74 = pthread_sigmask.c
+@GL_COND_OBJ_RAISE_TRUE@am__append_75 = raise.c
+@GL_COND_OBJ_RANDOM_R_TRUE@am__append_76 = random_r.c
+@GL_COND_OBJ_RAWMEMCHR_TRUE@am__append_77 = rawmemchr.c
+@GL_COND_OBJ_READ_TRUE@am__append_78 = read.c
+@GL_COND_OBJ_READDIR_TRUE@am__append_79 = readdir.c
+@GL_COND_OBJ_READLINK_TRUE@am__append_80 = readlink.c
+@GL_COND_OBJ_REALLOCARRAY_TRUE@am__append_81 = reallocarray.c
+@GL_COND_OBJ_RENAME_TRUE@am__append_82 = rename.c
+@GL_COND_OBJ_REWINDDIR_TRUE@am__append_83 = rewinddir.c
+@GL_COND_OBJ_RMDIR_TRUE@am__append_84 = rmdir.c
+@GL_COND_OBJ_SECURE_GETENV_TRUE@am__append_85 = secure_getenv.c
+@GL_COND_OBJ_SELECT_TRUE@am__append_86 = select.c
+@GL_COND_OBJ_SETLOCALE_TRUE@am__append_87 = setlocale.c
+@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__append_88 = setlocale-lock.c
+@GL_COND_OBJ_SIGACTION_TRUE@am__append_89 = sigaction.c
+@GL_COND_OBJ_SIGNBIT3_TRUE@am__append_90 = signbitf.c signbitd.c signbitl.c
+@GL_COND_OBJ_SIGPROCMASK_TRUE@am__append_91 = sigprocmask.c
+@GL_COND_OBJ_STAT_TRUE@am__append_92 = stat.c
+@GL_COND_OBJ_STDIO_READ_TRUE@am__append_93 = stdio-read.c
+@GL_COND_OBJ_STDIO_WRITE_TRUE@am__append_94 = stdio-write.c
+@GL_COND_OBJ_STPCPY_TRUE@am__append_95 = stpcpy.c
+@GL_COND_OBJ_STRCASECMP_TRUE@am__append_96 = strcasecmp.c
+@GL_COND_OBJ_STRNCASECMP_TRUE@am__append_97 = strncasecmp.c
+@GL_COND_OBJ_STRCHRNUL_TRUE@am__append_98 = strchrnul.c
+@GL_COND_OBJ_STRDUP_TRUE@am__append_99 = strdup.c
+@GL_COND_OBJ_STRERROR_TRUE@am__append_100 = strerror.c
+@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__append_101 = strerror-override.c
+@GL_COND_OBJ_STRNLEN_TRUE@am__append_102 = strnlen.c
+@GL_COND_OBJ_STRSIGNAL_TRUE@am__append_103 = strsignal.c
+@GL_COND_OBJ_STRTOIMAX_TRUE@am__append_104 = strtoimax.c
+@GL_COND_OBJ_STRTOLL_TRUE@am__append_105 = strtoll.c
+@GL_COND_OBJ_STRTOULL_TRUE@am__append_106 = strtoull.c
+@GL_COND_OBJ_STRTOUMAX_TRUE@am__append_107 = strtoumax.c
+@GL_COND_OBJ_TIME_R_TRUE@am__append_108 = time_r.c
+@GL_COND_OBJ_TIMES_TRUE@am__append_109 = times.c
+@GL_COND_OBJ_TMPFILE_TRUE@am__append_110 = tmpfile.c
+@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__append_111 = uniwidth/width.c
+@GL_COND_OBJ_WAITPID_TRUE@am__append_112 = waitpid.c
+@GL_COND_OBJ_WCSWIDTH_TRUE@am__append_113 = wcswidth.c
+@GL_COND_OBJ_WCWIDTH_TRUE@am__append_114 = wcwidth.c
+@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__append_115 = windows-mutex.c
+@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__append_116 = windows-once.c
+@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__append_117 = windows-recmutex.c
+@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__append_118 = windows-rwlock.c
+@GL_COND_OBJ_WINDOWS_SPAWN_TRUE@am__append_119 = windows-spawn.c
+@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__append_120 = windows-tls.c
+@GL_COND_OBJ_WMEMCHR_TRUE@am__append_121 = wmemchr.c
+@GL_COND_OBJ_WMEMPCPY_TRUE@am__append_122 = wmempcpy.c
+@GL_COND_OBJ_WRITE_TRUE@am__append_123 = write.c
 subdir = lib/gnulib
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
@@ -360,15 +362,15 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/malloc.m4 \
 	$(top_srcdir)/m4/malloca.m4 $(top_srcdir)/m4/math_h.m4 \
 	$(top_srcdir)/m4/mathfunc.m4 $(top_srcdir)/m4/mbchar.m4 \
-	$(top_srcdir)/m4/mbiter.m4 $(top_srcdir)/m4/mbrtowc.m4 \
-	$(top_srcdir)/m4/mbsinit.m4 $(top_srcdir)/m4/mbsrtowcs.m4 \
-	$(top_srcdir)/m4/mbstate_t.m4 $(top_srcdir)/m4/mbtowc.m4 \
-	$(top_srcdir)/m4/memchr.m4 $(top_srcdir)/m4/mempcpy.m4 \
-	$(top_srcdir)/m4/memrchr.m4 $(top_srcdir)/m4/minmax.m4 \
-	$(top_srcdir)/m4/mkdir.m4 $(top_srcdir)/m4/mkfifo.m4 \
-	$(top_srcdir)/m4/mknod.m4 $(top_srcdir)/m4/mktime.m4 \
-	$(top_srcdir)/m4/mmap-anon.m4 $(top_srcdir)/m4/mode_t.m4 \
-	$(top_srcdir)/m4/msvc-inval.m4 \
+	$(top_srcdir)/m4/mbiter.m4 $(top_srcdir)/m4/mbrlen.m4 \
+	$(top_srcdir)/m4/mbrtowc.m4 $(top_srcdir)/m4/mbsinit.m4 \
+	$(top_srcdir)/m4/mbsrtowcs.m4 $(top_srcdir)/m4/mbstate_t.m4 \
+	$(top_srcdir)/m4/mbtowc.m4 $(top_srcdir)/m4/memchr.m4 \
+	$(top_srcdir)/m4/mempcpy.m4 $(top_srcdir)/m4/memrchr.m4 \
+	$(top_srcdir)/m4/minmax.m4 $(top_srcdir)/m4/mkdir.m4 \
+	$(top_srcdir)/m4/mkfifo.m4 $(top_srcdir)/m4/mknod.m4 \
+	$(top_srcdir)/m4/mktime.m4 $(top_srcdir)/m4/mmap-anon.m4 \
+	$(top_srcdir)/m4/mode_t.m4 $(top_srcdir)/m4/msvc-inval.m4 \
 	$(top_srcdir)/m4/msvc-nothrow.m4 $(top_srcdir)/m4/multiarch.m4 \
 	$(top_srcdir)/m4/netinet_in_h.m4 \
 	$(top_srcdir)/m4/nl_langinfo.m4 $(top_srcdir)/m4/nls.m4 \
@@ -473,19 +475,20 @@ am__libgnu_a_SOURCES_DIST = access.c openat-priv.h openat-proc.c \
 	hash-triple-simple.c ialloc.c idx.h inet_ntop.c isblank.c \
 	iswblank.c iswdigit.c iswxdigit.c ldexpl.c localcharset.c \
 	localeconv.c localename.c localename-table.c glthread/lock.h \
-	glthread/lock.c lstat.c malloca.c math.c mbchar.c mbrtowc.c \
-	mbschr.c mbsinit.c mbsrtowcs.c mbtowc.c mbuiter.h mbuiter.c \
-	memchr.c mempcpy.c memrchr.c minmax.h mkdir.c mkfifo.c mknod.c \
-	msvc-inval.c msvc-nothrow.c nl_langinfo.c nl_langinfo-lock.c \
-	open.c openat.c openat-die.c opendir.c pipe.c spawn.c spawni.c \
-	spawn_faction_addchdir.c spawn_faction_addopen.c \
-	spawn_faction_destroy.c spawn_faction_init.c \
-	spawnattr_destroy.c spawnattr_init.c spawnattr_setflags.c \
-	spawnattr_setsigmask.c spawnp.c printf-frexp.c printf-frexpl.c \
-	pselect.c pthread_sigmask.c raise.c random_r.c rawmemchr.c \
-	read.c readdir.c readlink.c reallocarray.c rename.c \
-	rewinddir.c rmdir.c safe-read.c safe-write.c save-cwd.c \
-	malloc/scratch_buffer_dupfree.c malloc/scratch_buffer_grow.c \
+	glthread/lock.c lstat.c malloca.c math.c mbchar.c mbrlen.c \
+	mbrtowc.c mbschr.c mbsinit.c mbsrtowcs.c mbtowc.c mbuiter.h \
+	mbuiter.c memchr.c mempcpy.c memrchr.c minmax.h mkdir.c \
+	mkfifo.c mknod.c msvc-inval.c msvc-nothrow.c nl_langinfo.c \
+	nl_langinfo-lock.c open.c openat.c openat-die.c opendir.c \
+	pipe.c spawn.c spawni.c spawn_faction_addchdir.c \
+	spawn_faction_addopen.c spawn_faction_destroy.c \
+	spawn_faction_init.c spawnattr_destroy.c spawnattr_init.c \
+	spawnattr_setflags.c spawnattr_setsigmask.c spawnp.c \
+	printf-frexp.c printf-frexpl.c pselect.c pthread_sigmask.c \
+	raise.c random_r.c rawmemchr.c read.c readdir.c readlink.c \
+	reallocarray.c rename.c rewinddir.c rmdir.c safe-read.c \
+	safe-write.c save-cwd.c malloc/scratch_buffer_dupfree.c \
+	malloc/scratch_buffer_grow.c \
 	malloc/scratch_buffer_grow_preserve.c \
 	malloc/scratch_buffer_set_array_size.c secure_getenv.c \
 	select.c setlocale.c setlocale_null.c setlocale-lock.c \
@@ -563,118 +566,119 @@ am__libgnu_a_SOURCES_DIST = access.c openat-priv.h openat-proc.c \
 @GL_COND_OBJ_LOCALECONV_TRUE@	libgnu_a-localeconv.$(OBJEXT)
 am__dirstamp = $(am__leading_dot)dirstamp
 @GL_COND_OBJ_LSTAT_TRUE@am__objects_42 = libgnu_a-lstat.$(OBJEXT)
-@GL_COND_OBJ_MBRTOWC_TRUE@am__objects_43 = libgnu_a-mbrtowc.$(OBJEXT)
-@GL_COND_OBJ_MBSINIT_TRUE@am__objects_44 = libgnu_a-mbsinit.$(OBJEXT)
-@GL_COND_OBJ_MBSRTOWCS_TRUE@am__objects_45 =  \
+@GL_COND_OBJ_MBRLEN_TRUE@am__objects_43 = libgnu_a-mbrlen.$(OBJEXT)
+@GL_COND_OBJ_MBRTOWC_TRUE@am__objects_44 = libgnu_a-mbrtowc.$(OBJEXT)
+@GL_COND_OBJ_MBSINIT_TRUE@am__objects_45 = libgnu_a-mbsinit.$(OBJEXT)
+@GL_COND_OBJ_MBSRTOWCS_TRUE@am__objects_46 =  \
 @GL_COND_OBJ_MBSRTOWCS_TRUE@	libgnu_a-mbsrtowcs.$(OBJEXT)
-@GL_COND_OBJ_MBTOWC_TRUE@am__objects_46 = libgnu_a-mbtowc.$(OBJEXT)
-@GL_COND_OBJ_MEMCHR_TRUE@am__objects_47 = libgnu_a-memchr.$(OBJEXT)
-@GL_COND_OBJ_MEMPCPY_TRUE@am__objects_48 = libgnu_a-mempcpy.$(OBJEXT)
-@GL_COND_OBJ_MEMRCHR_TRUE@am__objects_49 = libgnu_a-memrchr.$(OBJEXT)
-@GL_COND_OBJ_MKDIR_TRUE@am__objects_50 = libgnu_a-mkdir.$(OBJEXT)
-@GL_COND_OBJ_MKFIFO_TRUE@am__objects_51 = libgnu_a-mkfifo.$(OBJEXT)
-@GL_COND_OBJ_MKNOD_TRUE@am__objects_52 = libgnu_a-mknod.$(OBJEXT)
-@GL_COND_OBJ_MSVC_INVAL_TRUE@am__objects_53 =  \
+@GL_COND_OBJ_MBTOWC_TRUE@am__objects_47 = libgnu_a-mbtowc.$(OBJEXT)
+@GL_COND_OBJ_MEMCHR_TRUE@am__objects_48 = libgnu_a-memchr.$(OBJEXT)
+@GL_COND_OBJ_MEMPCPY_TRUE@am__objects_49 = libgnu_a-mempcpy.$(OBJEXT)
+@GL_COND_OBJ_MEMRCHR_TRUE@am__objects_50 = libgnu_a-memrchr.$(OBJEXT)
+@GL_COND_OBJ_MKDIR_TRUE@am__objects_51 = libgnu_a-mkdir.$(OBJEXT)
+@GL_COND_OBJ_MKFIFO_TRUE@am__objects_52 = libgnu_a-mkfifo.$(OBJEXT)
+@GL_COND_OBJ_MKNOD_TRUE@am__objects_53 = libgnu_a-mknod.$(OBJEXT)
+@GL_COND_OBJ_MSVC_INVAL_TRUE@am__objects_54 =  \
 @GL_COND_OBJ_MSVC_INVAL_TRUE@	libgnu_a-msvc-inval.$(OBJEXT)
-@GL_COND_OBJ_MSVC_NOTHROW_TRUE@am__objects_54 = libgnu_a-msvc-nothrow.$(OBJEXT)
-@GL_COND_OBJ_NL_LANGINFO_TRUE@am__objects_55 =  \
+@GL_COND_OBJ_MSVC_NOTHROW_TRUE@am__objects_55 = libgnu_a-msvc-nothrow.$(OBJEXT)
+@GL_COND_OBJ_NL_LANGINFO_TRUE@am__objects_56 =  \
 @GL_COND_OBJ_NL_LANGINFO_TRUE@	libgnu_a-nl_langinfo.$(OBJEXT)
-@GL_COND_OBJ_NL_LANGINFO_LOCK_TRUE@am__objects_56 = libgnu_a-nl_langinfo-lock.$(OBJEXT)
-@GL_COND_OBJ_OPEN_TRUE@am__objects_57 = libgnu_a-open.$(OBJEXT)
-@GL_COND_OBJ_OPENAT_TRUE@am__objects_58 = libgnu_a-openat.$(OBJEXT)
-@GL_COND_OBJ_OPENDIR_TRUE@am__objects_59 = libgnu_a-opendir.$(OBJEXT)
-@GL_COND_OBJ_PIPE_TRUE@am__objects_60 = libgnu_a-pipe.$(OBJEXT)
-@GL_COND_OBJ_SPAWN_TRUE@am__objects_61 = libgnu_a-spawn.$(OBJEXT)
-@GL_COND_OBJ_SPAWNI_TRUE@am__objects_62 = libgnu_a-spawni.$(OBJEXT)
-@GL_COND_OBJ_SPAWN_FACTION_ADDCHDIR_TRUE@am__objects_63 = libgnu_a-spawn_faction_addchdir.$(OBJEXT)
-@GL_COND_OBJ_SPAWN_FACTION_ADDOPEN_TRUE@am__objects_64 = libgnu_a-spawn_faction_addopen.$(OBJEXT)
-@GL_COND_OBJ_SPAWN_FACTION_DESTROY_TRUE@am__objects_65 = libgnu_a-spawn_faction_destroy.$(OBJEXT)
-@GL_COND_OBJ_SPAWN_FACTION_INIT_TRUE@am__objects_66 = libgnu_a-spawn_faction_init.$(OBJEXT)
-@GL_COND_OBJ_SPAWNATTR_DESTROY_TRUE@am__objects_67 = libgnu_a-spawnattr_destroy.$(OBJEXT)
-@GL_COND_OBJ_SPAWNATTR_INIT_TRUE@am__objects_68 = libgnu_a-spawnattr_init.$(OBJEXT)
-@GL_COND_OBJ_SPAWNATTR_SETFLAGS_TRUE@am__objects_69 = libgnu_a-spawnattr_setflags.$(OBJEXT)
-@GL_COND_OBJ_SPAWNATTR_SETSIGMASK_TRUE@am__objects_70 = libgnu_a-spawnattr_setsigmask.$(OBJEXT)
-@GL_COND_OBJ_SPAWNP_TRUE@am__objects_71 = libgnu_a-spawnp.$(OBJEXT)
-@GL_COND_OBJ_PSELECT_TRUE@am__objects_72 = libgnu_a-pselect.$(OBJEXT)
-@GL_COND_OBJ_PTHREAD_SIGMASK_TRUE@am__objects_73 = libgnu_a-pthread_sigmask.$(OBJEXT)
-@GL_COND_OBJ_RAISE_TRUE@am__objects_74 = libgnu_a-raise.$(OBJEXT)
-@GL_COND_OBJ_RANDOM_R_TRUE@am__objects_75 =  \
+@GL_COND_OBJ_NL_LANGINFO_LOCK_TRUE@am__objects_57 = libgnu_a-nl_langinfo-lock.$(OBJEXT)
+@GL_COND_OBJ_OPEN_TRUE@am__objects_58 = libgnu_a-open.$(OBJEXT)
+@GL_COND_OBJ_OPENAT_TRUE@am__objects_59 = libgnu_a-openat.$(OBJEXT)
+@GL_COND_OBJ_OPENDIR_TRUE@am__objects_60 = libgnu_a-opendir.$(OBJEXT)
+@GL_COND_OBJ_PIPE_TRUE@am__objects_61 = libgnu_a-pipe.$(OBJEXT)
+@GL_COND_OBJ_SPAWN_TRUE@am__objects_62 = libgnu_a-spawn.$(OBJEXT)
+@GL_COND_OBJ_SPAWNI_TRUE@am__objects_63 = libgnu_a-spawni.$(OBJEXT)
+@GL_COND_OBJ_SPAWN_FACTION_ADDCHDIR_TRUE@am__objects_64 = libgnu_a-spawn_faction_addchdir.$(OBJEXT)
+@GL_COND_OBJ_SPAWN_FACTION_ADDOPEN_TRUE@am__objects_65 = libgnu_a-spawn_faction_addopen.$(OBJEXT)
+@GL_COND_OBJ_SPAWN_FACTION_DESTROY_TRUE@am__objects_66 = libgnu_a-spawn_faction_destroy.$(OBJEXT)
+@GL_COND_OBJ_SPAWN_FACTION_INIT_TRUE@am__objects_67 = libgnu_a-spawn_faction_init.$(OBJEXT)
+@GL_COND_OBJ_SPAWNATTR_DESTROY_TRUE@am__objects_68 = libgnu_a-spawnattr_destroy.$(OBJEXT)
+@GL_COND_OBJ_SPAWNATTR_INIT_TRUE@am__objects_69 = libgnu_a-spawnattr_init.$(OBJEXT)
+@GL_COND_OBJ_SPAWNATTR_SETFLAGS_TRUE@am__objects_70 = libgnu_a-spawnattr_setflags.$(OBJEXT)
+@GL_COND_OBJ_SPAWNATTR_SETSIGMASK_TRUE@am__objects_71 = libgnu_a-spawnattr_setsigmask.$(OBJEXT)
+@GL_COND_OBJ_SPAWNP_TRUE@am__objects_72 = libgnu_a-spawnp.$(OBJEXT)
+@GL_COND_OBJ_PSELECT_TRUE@am__objects_73 = libgnu_a-pselect.$(OBJEXT)
+@GL_COND_OBJ_PTHREAD_SIGMASK_TRUE@am__objects_74 = libgnu_a-pthread_sigmask.$(OBJEXT)
+@GL_COND_OBJ_RAISE_TRUE@am__objects_75 = libgnu_a-raise.$(OBJEXT)
+@GL_COND_OBJ_RANDOM_R_TRUE@am__objects_76 =  \
 @GL_COND_OBJ_RANDOM_R_TRUE@	libgnu_a-random_r.$(OBJEXT)
-@GL_COND_OBJ_RAWMEMCHR_TRUE@am__objects_76 =  \
+@GL_COND_OBJ_RAWMEMCHR_TRUE@am__objects_77 =  \
 @GL_COND_OBJ_RAWMEMCHR_TRUE@	libgnu_a-rawmemchr.$(OBJEXT)
-@GL_COND_OBJ_READ_TRUE@am__objects_77 = libgnu_a-read.$(OBJEXT)
-@GL_COND_OBJ_READDIR_TRUE@am__objects_78 = libgnu_a-readdir.$(OBJEXT)
-@GL_COND_OBJ_READLINK_TRUE@am__objects_79 =  \
+@GL_COND_OBJ_READ_TRUE@am__objects_78 = libgnu_a-read.$(OBJEXT)
+@GL_COND_OBJ_READDIR_TRUE@am__objects_79 = libgnu_a-readdir.$(OBJEXT)
+@GL_COND_OBJ_READLINK_TRUE@am__objects_80 =  \
 @GL_COND_OBJ_READLINK_TRUE@	libgnu_a-readlink.$(OBJEXT)
-@GL_COND_OBJ_REALLOCARRAY_TRUE@am__objects_80 = libgnu_a-reallocarray.$(OBJEXT)
-@GL_COND_OBJ_RENAME_TRUE@am__objects_81 = libgnu_a-rename.$(OBJEXT)
-@GL_COND_OBJ_REWINDDIR_TRUE@am__objects_82 =  \
+@GL_COND_OBJ_REALLOCARRAY_TRUE@am__objects_81 = libgnu_a-reallocarray.$(OBJEXT)
+@GL_COND_OBJ_RENAME_TRUE@am__objects_82 = libgnu_a-rename.$(OBJEXT)
+@GL_COND_OBJ_REWINDDIR_TRUE@am__objects_83 =  \
 @GL_COND_OBJ_REWINDDIR_TRUE@	libgnu_a-rewinddir.$(OBJEXT)
-@GL_COND_OBJ_RMDIR_TRUE@am__objects_83 = libgnu_a-rmdir.$(OBJEXT)
-@GL_COND_OBJ_SECURE_GETENV_TRUE@am__objects_84 = libgnu_a-secure_getenv.$(OBJEXT)
-@GL_COND_OBJ_SELECT_TRUE@am__objects_85 = libgnu_a-select.$(OBJEXT)
-@GL_COND_OBJ_SETLOCALE_TRUE@am__objects_86 =  \
+@GL_COND_OBJ_RMDIR_TRUE@am__objects_84 = libgnu_a-rmdir.$(OBJEXT)
+@GL_COND_OBJ_SECURE_GETENV_TRUE@am__objects_85 = libgnu_a-secure_getenv.$(OBJEXT)
+@GL_COND_OBJ_SELECT_TRUE@am__objects_86 = libgnu_a-select.$(OBJEXT)
+@GL_COND_OBJ_SETLOCALE_TRUE@am__objects_87 =  \
 @GL_COND_OBJ_SETLOCALE_TRUE@	libgnu_a-setlocale.$(OBJEXT)
-@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__objects_87 = libgnu_a-setlocale-lock.$(OBJEXT)
-@GL_COND_OBJ_SIGACTION_TRUE@am__objects_88 =  \
+@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__objects_88 = libgnu_a-setlocale-lock.$(OBJEXT)
+@GL_COND_OBJ_SIGACTION_TRUE@am__objects_89 =  \
 @GL_COND_OBJ_SIGACTION_TRUE@	libgnu_a-sigaction.$(OBJEXT)
-@GL_COND_OBJ_SIGNBIT3_TRUE@am__objects_89 =  \
+@GL_COND_OBJ_SIGNBIT3_TRUE@am__objects_90 =  \
 @GL_COND_OBJ_SIGNBIT3_TRUE@	libgnu_a-signbitf.$(OBJEXT) \
 @GL_COND_OBJ_SIGNBIT3_TRUE@	libgnu_a-signbitd.$(OBJEXT) \
 @GL_COND_OBJ_SIGNBIT3_TRUE@	libgnu_a-signbitl.$(OBJEXT)
-@GL_COND_OBJ_SIGPROCMASK_TRUE@am__objects_90 =  \
+@GL_COND_OBJ_SIGPROCMASK_TRUE@am__objects_91 =  \
 @GL_COND_OBJ_SIGPROCMASK_TRUE@	libgnu_a-sigprocmask.$(OBJEXT)
-@GL_COND_OBJ_STAT_TRUE@am__objects_91 = libgnu_a-stat.$(OBJEXT)
-@GL_COND_OBJ_STDIO_READ_TRUE@am__objects_92 =  \
+@GL_COND_OBJ_STAT_TRUE@am__objects_92 = libgnu_a-stat.$(OBJEXT)
+@GL_COND_OBJ_STDIO_READ_TRUE@am__objects_93 =  \
 @GL_COND_OBJ_STDIO_READ_TRUE@	libgnu_a-stdio-read.$(OBJEXT)
-@GL_COND_OBJ_STDIO_WRITE_TRUE@am__objects_93 =  \
+@GL_COND_OBJ_STDIO_WRITE_TRUE@am__objects_94 =  \
 @GL_COND_OBJ_STDIO_WRITE_TRUE@	libgnu_a-stdio-write.$(OBJEXT)
-@GL_COND_OBJ_STPCPY_TRUE@am__objects_94 = libgnu_a-stpcpy.$(OBJEXT)
-@GL_COND_OBJ_STRCASECMP_TRUE@am__objects_95 =  \
+@GL_COND_OBJ_STPCPY_TRUE@am__objects_95 = libgnu_a-stpcpy.$(OBJEXT)
+@GL_COND_OBJ_STRCASECMP_TRUE@am__objects_96 =  \
 @GL_COND_OBJ_STRCASECMP_TRUE@	libgnu_a-strcasecmp.$(OBJEXT)
-@GL_COND_OBJ_STRNCASECMP_TRUE@am__objects_96 =  \
+@GL_COND_OBJ_STRNCASECMP_TRUE@am__objects_97 =  \
 @GL_COND_OBJ_STRNCASECMP_TRUE@	libgnu_a-strncasecmp.$(OBJEXT)
-@GL_COND_OBJ_STRCHRNUL_TRUE@am__objects_97 =  \
+@GL_COND_OBJ_STRCHRNUL_TRUE@am__objects_98 =  \
 @GL_COND_OBJ_STRCHRNUL_TRUE@	libgnu_a-strchrnul.$(OBJEXT)
-@GL_COND_OBJ_STRDUP_TRUE@am__objects_98 = libgnu_a-strdup.$(OBJEXT)
-@GL_COND_OBJ_STRERROR_TRUE@am__objects_99 =  \
+@GL_COND_OBJ_STRDUP_TRUE@am__objects_99 = libgnu_a-strdup.$(OBJEXT)
+@GL_COND_OBJ_STRERROR_TRUE@am__objects_100 =  \
 @GL_COND_OBJ_STRERROR_TRUE@	libgnu_a-strerror.$(OBJEXT)
-@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__objects_100 = libgnu_a-strerror-override.$(OBJEXT)
-@GL_COND_OBJ_STRNLEN_TRUE@am__objects_101 =  \
+@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__objects_101 = libgnu_a-strerror-override.$(OBJEXT)
+@GL_COND_OBJ_STRNLEN_TRUE@am__objects_102 =  \
 @GL_COND_OBJ_STRNLEN_TRUE@	libgnu_a-strnlen.$(OBJEXT)
-@GL_COND_OBJ_STRSIGNAL_TRUE@am__objects_102 =  \
+@GL_COND_OBJ_STRSIGNAL_TRUE@am__objects_103 =  \
 @GL_COND_OBJ_STRSIGNAL_TRUE@	libgnu_a-strsignal.$(OBJEXT)
-@GL_COND_OBJ_STRTOIMAX_TRUE@am__objects_103 =  \
+@GL_COND_OBJ_STRTOIMAX_TRUE@am__objects_104 =  \
 @GL_COND_OBJ_STRTOIMAX_TRUE@	libgnu_a-strtoimax.$(OBJEXT)
-@GL_COND_OBJ_STRTOLL_TRUE@am__objects_104 =  \
+@GL_COND_OBJ_STRTOLL_TRUE@am__objects_105 =  \
 @GL_COND_OBJ_STRTOLL_TRUE@	libgnu_a-strtoll.$(OBJEXT)
-@GL_COND_OBJ_STRTOULL_TRUE@am__objects_105 =  \
+@GL_COND_OBJ_STRTOULL_TRUE@am__objects_106 =  \
 @GL_COND_OBJ_STRTOULL_TRUE@	libgnu_a-strtoull.$(OBJEXT)
-@GL_COND_OBJ_STRTOUMAX_TRUE@am__objects_106 =  \
+@GL_COND_OBJ_STRTOUMAX_TRUE@am__objects_107 =  \
 @GL_COND_OBJ_STRTOUMAX_TRUE@	libgnu_a-strtoumax.$(OBJEXT)
-@GL_COND_OBJ_TIME_R_TRUE@am__objects_107 = libgnu_a-time_r.$(OBJEXT)
-@GL_COND_OBJ_TIMES_TRUE@am__objects_108 = libgnu_a-times.$(OBJEXT)
-@GL_COND_OBJ_TMPFILE_TRUE@am__objects_109 =  \
+@GL_COND_OBJ_TIME_R_TRUE@am__objects_108 = libgnu_a-time_r.$(OBJEXT)
+@GL_COND_OBJ_TIMES_TRUE@am__objects_109 = libgnu_a-times.$(OBJEXT)
+@GL_COND_OBJ_TMPFILE_TRUE@am__objects_110 =  \
 @GL_COND_OBJ_TMPFILE_TRUE@	libgnu_a-tmpfile.$(OBJEXT)
-@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__objects_110 = uniwidth/libgnu_a-width.$(OBJEXT)
-@GL_COND_OBJ_WAITPID_TRUE@am__objects_111 =  \
+@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__objects_111 = uniwidth/libgnu_a-width.$(OBJEXT)
+@GL_COND_OBJ_WAITPID_TRUE@am__objects_112 =  \
 @GL_COND_OBJ_WAITPID_TRUE@	libgnu_a-waitpid.$(OBJEXT)
-@GL_COND_OBJ_WCSWIDTH_TRUE@am__objects_112 =  \
+@GL_COND_OBJ_WCSWIDTH_TRUE@am__objects_113 =  \
 @GL_COND_OBJ_WCSWIDTH_TRUE@	libgnu_a-wcswidth.$(OBJEXT)
-@GL_COND_OBJ_WCWIDTH_TRUE@am__objects_113 =  \
+@GL_COND_OBJ_WCWIDTH_TRUE@am__objects_114 =  \
 @GL_COND_OBJ_WCWIDTH_TRUE@	libgnu_a-wcwidth.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__objects_114 = libgnu_a-windows-mutex.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__objects_115 = libgnu_a-windows-once.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__objects_116 = libgnu_a-windows-recmutex.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__objects_117 = libgnu_a-windows-rwlock.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_SPAWN_TRUE@am__objects_118 = libgnu_a-windows-spawn.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__objects_119 =  \
+@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__objects_115 = libgnu_a-windows-mutex.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__objects_116 = libgnu_a-windows-once.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__objects_117 = libgnu_a-windows-recmutex.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__objects_118 = libgnu_a-windows-rwlock.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_SPAWN_TRUE@am__objects_119 = libgnu_a-windows-spawn.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__objects_120 =  \
 @GL_COND_OBJ_WINDOWS_TLS_TRUE@	libgnu_a-windows-tls.$(OBJEXT)
-@GL_COND_OBJ_WMEMCHR_TRUE@am__objects_120 =  \
+@GL_COND_OBJ_WMEMCHR_TRUE@am__objects_121 =  \
 @GL_COND_OBJ_WMEMCHR_TRUE@	libgnu_a-wmemchr.$(OBJEXT)
-@GL_COND_OBJ_WMEMPCPY_TRUE@am__objects_121 =  \
+@GL_COND_OBJ_WMEMPCPY_TRUE@am__objects_122 =  \
 @GL_COND_OBJ_WMEMPCPY_TRUE@	libgnu_a-wmempcpy.$(OBJEXT)
-@GL_COND_OBJ_WRITE_TRUE@am__objects_122 = libgnu_a-write.$(OBJEXT)
+@GL_COND_OBJ_WRITE_TRUE@am__objects_123 = libgnu_a-write.$(OBJEXT)
 am_libgnu_a_OBJECTS = $(am__objects_1) libgnu_a-openat-proc.$(OBJEXT) \
 	libgnu_a-basename-lgpl.$(OBJEXT) libgnu_a-bitrotate.$(OBJEXT) \
 	$(am__objects_2) libgnu_a-c-ctype.$(OBJEXT) \
@@ -710,54 +714,54 @@ am_libgnu_a_OBJECTS = $(am__objects_1) libgnu_a-openat-proc.$(OBJEXT) \
 	libgnu_a-localename-table.$(OBJEXT) \
 	glthread/libgnu_a-lock.$(OBJEXT) $(am__objects_42) \
 	libgnu_a-malloca.$(OBJEXT) libgnu_a-math.$(OBJEXT) \
-	libgnu_a-mbchar.$(OBJEXT) $(am__objects_43) \
-	libgnu_a-mbschr.$(OBJEXT) $(am__objects_44) $(am__objects_45) \
-	$(am__objects_46) libgnu_a-mbuiter.$(OBJEXT) $(am__objects_47) \
-	$(am__objects_48) $(am__objects_49) $(am__objects_50) \
-	$(am__objects_51) $(am__objects_52) $(am__objects_53) \
-	$(am__objects_54) $(am__objects_55) $(am__objects_56) \
-	$(am__objects_57) $(am__objects_58) \
-	libgnu_a-openat-die.$(OBJEXT) $(am__objects_59) \
-	$(am__objects_60) $(am__objects_61) $(am__objects_62) \
-	$(am__objects_63) $(am__objects_64) $(am__objects_65) \
-	$(am__objects_66) $(am__objects_67) $(am__objects_68) \
-	$(am__objects_69) $(am__objects_70) $(am__objects_71) \
+	libgnu_a-mbchar.$(OBJEXT) $(am__objects_43) $(am__objects_44) \
+	libgnu_a-mbschr.$(OBJEXT) $(am__objects_45) $(am__objects_46) \
+	$(am__objects_47) libgnu_a-mbuiter.$(OBJEXT) $(am__objects_48) \
+	$(am__objects_49) $(am__objects_50) $(am__objects_51) \
+	$(am__objects_52) $(am__objects_53) $(am__objects_54) \
+	$(am__objects_55) $(am__objects_56) $(am__objects_57) \
+	$(am__objects_58) $(am__objects_59) \
+	libgnu_a-openat-die.$(OBJEXT) $(am__objects_60) \
+	$(am__objects_61) $(am__objects_62) $(am__objects_63) \
+	$(am__objects_64) $(am__objects_65) $(am__objects_66) \
+	$(am__objects_67) $(am__objects_68) $(am__objects_69) \
+	$(am__objects_70) $(am__objects_71) $(am__objects_72) \
 	libgnu_a-printf-frexp.$(OBJEXT) \
-	libgnu_a-printf-frexpl.$(OBJEXT) $(am__objects_72) \
-	$(am__objects_73) $(am__objects_74) $(am__objects_75) \
-	$(am__objects_76) $(am__objects_77) $(am__objects_78) \
-	$(am__objects_79) $(am__objects_80) $(am__objects_81) \
-	$(am__objects_82) $(am__objects_83) \
+	libgnu_a-printf-frexpl.$(OBJEXT) $(am__objects_73) \
+	$(am__objects_74) $(am__objects_75) $(am__objects_76) \
+	$(am__objects_77) $(am__objects_78) $(am__objects_79) \
+	$(am__objects_80) $(am__objects_81) $(am__objects_82) \
+	$(am__objects_83) $(am__objects_84) \
 	libgnu_a-safe-read.$(OBJEXT) libgnu_a-safe-write.$(OBJEXT) \
 	libgnu_a-save-cwd.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_dupfree.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_grow.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_grow_preserve.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_set_array_size.$(OBJEXT) \
-	$(am__objects_84) $(am__objects_85) $(am__objects_86) \
-	libgnu_a-setlocale_null.$(OBJEXT) $(am__objects_87) \
-	$(am__objects_88) libgnu_a-sig-handler.$(OBJEXT) \
-	$(am__objects_89) $(am__objects_90) libgnu_a-sockets.$(OBJEXT) \
-	$(am__objects_91) libgnu_a-stat-time.$(OBJEXT) \
-	$(am__objects_92) $(am__objects_93) $(am__objects_94) \
-	$(am__objects_95) $(am__objects_96) $(am__objects_97) \
-	$(am__objects_98) $(am__objects_99) $(am__objects_100) \
-	$(am__objects_101) libgnu_a-strnlen1.$(OBJEXT) \
-	$(am__objects_102) $(am__objects_103) $(am__objects_104) \
-	$(am__objects_105) $(am__objects_106) \
+	$(am__objects_85) $(am__objects_86) $(am__objects_87) \
+	libgnu_a-setlocale_null.$(OBJEXT) $(am__objects_88) \
+	$(am__objects_89) libgnu_a-sig-handler.$(OBJEXT) \
+	$(am__objects_90) $(am__objects_91) libgnu_a-sockets.$(OBJEXT) \
+	$(am__objects_92) libgnu_a-stat-time.$(OBJEXT) \
+	$(am__objects_93) $(am__objects_94) $(am__objects_95) \
+	$(am__objects_96) $(am__objects_97) $(am__objects_98) \
+	$(am__objects_99) $(am__objects_100) $(am__objects_101) \
+	$(am__objects_102) libgnu_a-strnlen1.$(OBJEXT) \
+	$(am__objects_103) $(am__objects_104) $(am__objects_105) \
+	$(am__objects_106) $(am__objects_107) \
 	libgnu_a-sys_socket.$(OBJEXT) libgnu_a-tempname.$(OBJEXT) \
-	glthread/libgnu_a-threadlib.$(OBJEXT) $(am__objects_107) \
-	$(am__objects_108) libgnu_a-timespec.$(OBJEXT) \
+	glthread/libgnu_a-threadlib.$(OBJEXT) $(am__objects_108) \
+	$(am__objects_109) libgnu_a-timespec.$(OBJEXT) \
 	glthread/libgnu_a-tls.$(OBJEXT) libgnu_a-tmpdir.$(OBJEXT) \
-	$(am__objects_109) libgnu_a-unistd.$(OBJEXT) \
+	$(am__objects_110) libgnu_a-unistd.$(OBJEXT) \
 	libgnu_a-dup-safer.$(OBJEXT) libgnu_a-fd-safer.$(OBJEXT) \
-	libgnu_a-pipe-safer.$(OBJEXT) $(am__objects_110) \
-	libgnu_a-wait-process.$(OBJEXT) $(am__objects_111) \
-	$(am__objects_112) libgnu_a-wctype-h.$(OBJEXT) \
-	$(am__objects_113) $(am__objects_114) $(am__objects_115) \
-	$(am__objects_116) $(am__objects_117) $(am__objects_118) \
-	$(am__objects_119) $(am__objects_120) $(am__objects_121) \
-	$(am__objects_122) libgnu_a-xmalloc.$(OBJEXT) \
+	libgnu_a-pipe-safer.$(OBJEXT) $(am__objects_111) \
+	libgnu_a-wait-process.$(OBJEXT) $(am__objects_112) \
+	$(am__objects_113) libgnu_a-wctype-h.$(OBJEXT) \
+	$(am__objects_114) $(am__objects_115) $(am__objects_116) \
+	$(am__objects_117) $(am__objects_118) $(am__objects_119) \
+	$(am__objects_120) $(am__objects_121) $(am__objects_122) \
+	$(am__objects_123) libgnu_a-xmalloc.$(OBJEXT) \
 	libgnu_a-xalloc-die.$(OBJEXT) libgnu_a-xsize.$(OBJEXT)
 libgnu_a_OBJECTS = $(am_libgnu_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -849,8 +853,9 @@ am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
 	./$(DEPDIR)/libgnu_a-localename.Po \
 	./$(DEPDIR)/libgnu_a-lstat.Po ./$(DEPDIR)/libgnu_a-malloc.Po \
 	./$(DEPDIR)/libgnu_a-malloca.Po ./$(DEPDIR)/libgnu_a-math.Po \
-	./$(DEPDIR)/libgnu_a-mbchar.Po ./$(DEPDIR)/libgnu_a-mbrtowc.Po \
-	./$(DEPDIR)/libgnu_a-mbschr.Po ./$(DEPDIR)/libgnu_a-mbsinit.Po \
+	./$(DEPDIR)/libgnu_a-mbchar.Po ./$(DEPDIR)/libgnu_a-mbrlen.Po \
+	./$(DEPDIR)/libgnu_a-mbrtowc.Po ./$(DEPDIR)/libgnu_a-mbschr.Po \
+	./$(DEPDIR)/libgnu_a-mbsinit.Po \
 	./$(DEPDIR)/libgnu_a-mbsrtowcs-state.Po \
 	./$(DEPDIR)/libgnu_a-mbsrtowcs.Po \
 	./$(DEPDIR)/libgnu_a-mbtowc-lock.Po \
@@ -2681,43 +2686,43 @@ libgnu_a_SOURCES = $(am__append_1) openat-priv.h openat-proc.c \
 	localcharset.c $(am__append_41) localename.c \
 	localename-table.c glthread/lock.h glthread/lock.c \
 	$(am__append_42) malloca.c math.c mbchar.c $(am__append_43) \
-	mbschr.c $(am__append_44) $(am__append_45) $(am__append_46) \
-	mbuiter.h mbuiter.c $(am__append_47) $(am__append_48) \
-	$(am__append_49) minmax.h $(am__append_50) $(am__append_51) \
+	$(am__append_44) mbschr.c $(am__append_45) $(am__append_46) \
+	$(am__append_47) mbuiter.h mbuiter.c $(am__append_48) \
+	$(am__append_49) $(am__append_50) minmax.h $(am__append_51) \
 	$(am__append_52) $(am__append_53) $(am__append_54) \
 	$(am__append_55) $(am__append_56) $(am__append_57) \
-	$(am__append_58) openat-die.c $(am__append_59) \
+	$(am__append_58) $(am__append_59) openat-die.c \
 	$(am__append_60) $(am__append_61) $(am__append_62) \
 	$(am__append_63) $(am__append_64) $(am__append_65) \
 	$(am__append_66) $(am__append_67) $(am__append_68) \
 	$(am__append_69) $(am__append_70) $(am__append_71) \
-	printf-frexp.c printf-frexpl.c $(am__append_72) \
+	$(am__append_72) printf-frexp.c printf-frexpl.c \
 	$(am__append_73) $(am__append_74) $(am__append_75) \
 	$(am__append_76) $(am__append_77) $(am__append_78) \
 	$(am__append_79) $(am__append_80) $(am__append_81) \
-	$(am__append_82) $(am__append_83) safe-read.c safe-write.c \
-	save-cwd.c malloc/scratch_buffer_dupfree.c \
+	$(am__append_82) $(am__append_83) $(am__append_84) safe-read.c \
+	safe-write.c save-cwd.c malloc/scratch_buffer_dupfree.c \
 	malloc/scratch_buffer_grow.c \
 	malloc/scratch_buffer_grow_preserve.c \
-	malloc/scratch_buffer_set_array_size.c $(am__append_84) \
-	$(am__append_85) $(am__append_86) setlocale_null.c \
-	$(am__append_87) $(am__append_88) sig-handler.c \
-	$(am__append_89) $(am__append_90) size_max.h sockets.h \
-	sockets.c $(am__append_91) stat-time.c $(am__append_92) \
-	$(am__append_93) $(am__append_94) $(am__append_95) \
-	$(am__append_96) $(am__append_97) $(am__append_98) \
-	$(am__append_99) $(am__append_100) $(am__append_101) \
-	strnlen1.h strnlen1.c $(am__append_102) $(am__append_103) \
-	$(am__append_104) $(am__append_105) $(am__append_106) \
-	sys_socket.c tempname.c glthread/threadlib.c $(am__append_107) \
-	$(am__append_108) timespec.c glthread/tls.h glthread/tls.c \
-	tmpdir.h tmpdir.c $(am__append_109) unistd.c dup-safer.c \
-	fd-safer.c pipe-safer.c $(am__append_110) wait-process.h \
-	wait-process.c $(am__append_111) $(am__append_112) wctype-h.c \
-	$(am__append_113) $(am__append_114) $(am__append_115) \
-	$(am__append_116) $(am__append_117) $(am__append_118) \
-	$(am__append_119) $(am__append_120) $(am__append_121) \
-	$(am__append_122) xmalloc.c xalloc-die.c xsize.h xsize.c
+	malloc/scratch_buffer_set_array_size.c $(am__append_85) \
+	$(am__append_86) $(am__append_87) setlocale_null.c \
+	$(am__append_88) $(am__append_89) sig-handler.c \
+	$(am__append_90) $(am__append_91) size_max.h sockets.h \
+	sockets.c $(am__append_92) stat-time.c $(am__append_93) \
+	$(am__append_94) $(am__append_95) $(am__append_96) \
+	$(am__append_97) $(am__append_98) $(am__append_99) \
+	$(am__append_100) $(am__append_101) $(am__append_102) \
+	strnlen1.h strnlen1.c $(am__append_103) $(am__append_104) \
+	$(am__append_105) $(am__append_106) $(am__append_107) \
+	sys_socket.c tempname.c glthread/threadlib.c $(am__append_108) \
+	$(am__append_109) timespec.c glthread/tls.h glthread/tls.c \
+	tmpdir.h tmpdir.c $(am__append_110) unistd.c dup-safer.c \
+	fd-safer.c pipe-safer.c $(am__append_111) wait-process.h \
+	wait-process.c $(am__append_112) $(am__append_113) wctype-h.c \
+	$(am__append_114) $(am__append_115) $(am__append_116) \
+	$(am__append_117) $(am__append_118) $(am__append_119) \
+	$(am__append_120) $(am__append_121) $(am__append_122) \
+	$(am__append_123) xmalloc.c xalloc-die.c xsize.h xsize.c
 libgnu_a_CFLAGS = $(AM_CFLAGS) $(GL_CFLAG_GNULIB_WARNINGS)
 libgnu_a_LIBADD = $(gl_LIBOBJS) @ALLOCA@
 libgnu_a_DEPENDENCIES = $(gl_LIBOBJS) @ALLOCA@
@@ -2958,6 +2963,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-malloca.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-math.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-mbchar.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-mbrlen.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-mbrtowc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-mbschr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-mbsinit.Po@am__quote@ # am--include-marker
@@ -4183,6 +4189,20 @@ libgnu_a-mbchar.obj: mbchar.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mbchar.c' object='libgnu_a-mbchar.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-mbchar.obj `if test -f 'mbchar.c'; then $(CYGPATH_W) 'mbchar.c'; else $(CYGPATH_W) '$(srcdir)/mbchar.c'; fi`
+
+libgnu_a-mbrlen.o: mbrlen.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-mbrlen.o -MD -MP -MF $(DEPDIR)/libgnu_a-mbrlen.Tpo -c -o libgnu_a-mbrlen.o `test -f 'mbrlen.c' || echo '$(srcdir)/'`mbrlen.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-mbrlen.Tpo $(DEPDIR)/libgnu_a-mbrlen.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mbrlen.c' object='libgnu_a-mbrlen.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-mbrlen.o `test -f 'mbrlen.c' || echo '$(srcdir)/'`mbrlen.c
+
+libgnu_a-mbrlen.obj: mbrlen.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-mbrlen.obj -MD -MP -MF $(DEPDIR)/libgnu_a-mbrlen.Tpo -c -o libgnu_a-mbrlen.obj `if test -f 'mbrlen.c'; then $(CYGPATH_W) 'mbrlen.c'; else $(CYGPATH_W) '$(srcdir)/mbrlen.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-mbrlen.Tpo $(DEPDIR)/libgnu_a-mbrlen.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mbrlen.c' object='libgnu_a-mbrlen.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-mbrlen.obj `if test -f 'mbrlen.c'; then $(CYGPATH_W) 'mbrlen.c'; else $(CYGPATH_W) '$(srcdir)/mbrlen.c'; fi`
 
 libgnu_a-mbrtowc.o: mbrtowc.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-mbrtowc.o -MD -MP -MF $(DEPDIR)/libgnu_a-mbrtowc.Tpo -c -o libgnu_a-mbrtowc.o `test -f 'mbrtowc.c' || echo '$(srcdir)/'`mbrtowc.c
@@ -6522,6 +6542,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-malloca.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-math.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-mbchar.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-mbrlen.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-mbrtowc.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-mbschr.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-mbsinit.Po
@@ -6789,6 +6810,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-malloca.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-math.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-mbchar.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-mbrlen.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-mbrtowc.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-mbschr.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-mbsinit.Po

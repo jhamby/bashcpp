@@ -219,7 +219,7 @@ Readline::rl_funmap_names ()
   const char **result_copy = new const char *[result_size];
   std::copy (result.begin (), result.end (), result_copy);
 
-  std::qsort (result_copy, result_size, sizeof (char *),
+  qsort (result_copy, result_size, sizeof (char *),
               &_rl_qsort_string_compare);
   return result_copy;
 }

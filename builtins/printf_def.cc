@@ -78,7 +78,7 @@ namespace bash
       if (vflag)                                                              \
         vbadd (b, 1);                                                         \
       else                                                                    \
-        std::putchar (c);                                                     \
+        putchar (c);                                                          \
       QUIT;                                                                   \
     }                                                                         \
   while (0)
@@ -87,24 +87,24 @@ namespace bash
   do                                                                          \
     {                                                                         \
       int nw;                                                                 \
-      std::clearerr (stdout);                                                 \
+      clearerr (stdout);                                                      \
       if (have_fieldwidth && have_precision)                                  \
         nw = vflag ? vbprintf (f, fieldwidth, precision, func)                \
-                   : std::printf (f, fieldwidth, precision, func);            \
+                   : printf (f, fieldwidth, precision, func);                 \
       else if (have_fieldwidth)                                               \
         nw = vflag ? vbprintf (f, fieldwidth, func)                           \
-                   : std::printf (f, fieldwidth, func);                       \
+                   : printf (f, fieldwidth, func);                            \
       else if (have_precision)                                                \
         nw = vflag ? vbprintf (f, precision, func)                            \
-                   : std::printf (f, precision, func);                        \
+                   : printf (f, precision, func);                             \
       else                                                                    \
-        nw = vflag ? vbprintf (f, func) : std::printf (f, func);              \
+        nw = vflag ? vbprintf (f, func) : printf (f, func);                   \
       tw += nw;                                                               \
       QUIT;                                                                   \
-      if (std::ferror (stdout))                                               \
+      if (ferror (stdout))                                                    \
         {                                                                     \
           sh_wrerror ();                                                      \
-          std::clearerr (stdout);                                             \
+          clearerr (stdout);                                                  \
           return EXECUTION_FAILURE;                                           \
         }                                                                     \
     }                                                                         \
@@ -137,13 +137,13 @@ namespace bash
         }                                                                     \
       else if (vbuf)                                                          \
         vbuf[0] = 0;                                                          \
-      if (std::ferror (stdout) == 0)                                          \
-        std::fflush (stdout);                                                 \
+      if (ferror (stdout) == 0)                                               \
+        fflush (stdout);                                                      \
       QUIT;                                                                   \
-      if (std::ferror (stdout))                                               \
+      if (ferror (stdout))                                                    \
         {                                                                     \
           sh_wrerror ();                                                      \
-          std::clearerr (stdout);                                             \
+          clearerr (stdout);                                                  \
           return EXECUTION_FAILURE;                                           \
         }                                                                     \
       return value;                                                           \

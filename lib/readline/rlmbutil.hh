@@ -69,13 +69,13 @@ int _rl_walphabetic (wchar_t);
 static inline wint_t
 _rl_to_wupper (wint_t wc)
 {
-  return std::iswlower (wc) ? std::towupper (wc) : wc;
+  return iswlower (wc) ? towupper (wc) : wc;
 }
 
 static inline wint_t
 _rl_to_wlower (wint_t wc)
 {
-  return std::iswupper (wc) ? std::towlower (wc) : wc;
+  return iswupper (wc) ? towlower (wc) : wc;
 }
 
 static inline bool
@@ -217,7 +217,7 @@ _rl_wcwidth (wchar_t wc)
     case '~':
       return 1;
     default:
-      return ::wcwidth (wc);
+      return wcwidth (wc);
     }
 }
 

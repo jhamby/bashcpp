@@ -44,8 +44,8 @@ static void sigpipe (int) __attribute__ ((__noreturn__));
 static void
 sigpipe (int)
 {
-  std::fprintf (stderr, "%d\n", nw);
-  std::exit (0);
+  fprintf (stderr, "%d\n", nw);
+  exit (0);
 }
 
 int
@@ -62,7 +62,7 @@ main (int, char **)
   for (;;)
     {
       ssize_t n;
-      n = ::write (1, buf, 128);
+      n = write (1, buf, 128);
       nw += static_cast<int> (n);
     }
 }

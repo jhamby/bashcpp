@@ -39,7 +39,7 @@ namespace readline
    returned. */
 
 unsigned int
-History::history_search_internal (const std::string &string, int direction,
+History::history_search_internal (string_view string, int direction,
                                   hist_search_flags flags)
 {
   int i = static_cast<int> (where_history ());
@@ -95,7 +95,7 @@ History::history_search_internal (const std::string &string, int direction,
 #if defined(HAVE_FNMATCH)
           if (patsearch)
             {
-              if (::fnmatch (string.c_str (), line, 0) == 0)
+              if (fnmatch (string.c_str (), line, 0) == 0)
                 {
                   history_offset = static_cast<unsigned int> (i);
                   return 0;
@@ -123,7 +123,7 @@ History::history_search_internal (const std::string &string, int direction,
 #if defined(HAVE_FNMATCH)
               if (patsearch)
                 {
-                  if (::fnmatch (string.c_str (), line + line_index, 0) == 0)
+                  if (fnmatch (string.c_str (), line + line_index, 0) == 0)
                     {
                       history_offset = static_cast<unsigned int> (i);
                       return static_cast<unsigned int> (line_index);
@@ -152,7 +152,7 @@ History::history_search_internal (const std::string &string, int direction,
 #if defined(HAVE_FNMATCH)
               if (patsearch)
                 {
-                  if (::fnmatch (string.c_str (), line + line_index, 0) == 0)
+                  if (fnmatch (string.c_str (), line + line_index, 0) == 0)
                     {
                       history_offset = static_cast<unsigned int> (i);
                       return static_cast<unsigned int> (line_index);
@@ -184,7 +184,7 @@ History::_hs_history_patsearch (const char *string, int direction,
 #if defined(HAVE_FNMATCH)
   /* Assume that the string passed does not have a leading `^' and any
      anchored search request is captured in FLAGS */
-  len = std::strlen (string);
+  len = strlen (string);
   ret = static_cast<unsigned int> (len - 1);
   /* fnmatch is required to reject a pattern that ends with an unescaped
      backslash */
@@ -215,7 +215,7 @@ History::_hs_history_patsearch (const char *string, int direction,
      of a pattern that doesn't have one.  Assume a pattern that ends in a
      backslash contains an even number of trailing backslashes; we check
      above */
-  std::strcpy (pat + start, string);
+  strcpy (pat + start, string);
   if (pat[len - 1] != '*')
     {
       pat[len] = '*'; /* XXX */
@@ -237,7 +237,7 @@ History::_hs_history_patsearch (const char *string, int direction,
    backwards.  POS is an absolute index into the history list at
    which point to begin searching. */
 unsigned int
-History::history_search_pos (const std::string &string, int dir,
+History::history_search_pos (string_view string, int dir,
                              unsigned int pos)
 {
   unsigned int ret, old;

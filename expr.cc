@@ -929,7 +929,7 @@ Shell::expr_streval (std::string &tok, int e, struct lvalue *lvalue)
 #if defined(ARRAY_VARS)
   av_flags aflag = (tflag) ? AV_NOEXPAND : AV_NOFLAGS;
   v = (e == ']')
-          ? array_variable_part (tok, tflag, (std::string &*)0, (int *)0)
+          ? array_variable_part (tok, tflag, nullptr, nullptr)
           : find_variable (tok);
 #else
   v = find_variable (tok);
@@ -1349,8 +1349,8 @@ Shell::strlong (string_view num)
         }
       else if (VALID_NUMCHAR (c))
         {
-          if (std::isdigit (c))
-            c = todigit (c);
+          if (c_isdigit (c))
+            c = c_todigit (c);
           else if (c >= 'a' && c <= 'z')
             c -= 'a' - 10;
           else if (c >= 'A' && c <= 'Z')

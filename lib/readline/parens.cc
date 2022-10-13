@@ -29,8 +29,7 @@
 namespace readline
 {
 
-static int find_matching_open (const std::string &, unsigned int, char,
-                               const char *);
+static int find_matching_open (string_view, unsigned int, char, string_view);
 
 /* Change emacs_standard_keymap to have bindings for paren matching when
    ON_OR_OFF is 1, change them back to self_insert when ON_OR_OFF == 0. */
@@ -106,13 +105,13 @@ Readline::rl_insert_close (int count, int invoking_key)
       fd_set readfds;
       struct timeval timer;
       FD_ZERO (&readfds);
-      FD_SET (::fileno (rl_instream), &readfds);
+      FD_SET (fileno (rl_instream), &readfds);
       USEC_TO_TIMEVAL (_paren_blink_usec, timer);
 
       unsigned int orig_point = rl_point;
       rl_point = static_cast<unsigned int> (match_point);
       ((*this).*rl_redisplay_function) ();
-      (void)::select (1, &readfds, nullptr, nullptr, &timer);
+      (void)select (1, &readfds, nullptr, nullptr, &timer);
       rl_point = orig_point;
 #else  /* !HAVE_SELECT */
       _rl_insert_char (count, invoking_key);
@@ -122,7 +121,7 @@ Readline::rl_insert_close (int count, int invoking_key)
 }
 
 static int
-find_matching_open (const std::string &string, unsigned int from, char closer,
+find_matching_open (string_view string, unsigned int from, char closer,
                     const char *quote_chars)
 {
   char opener;
@@ -152,7 +151,7 @@ find_matching_open (const std::string &string, unsigned int from, char closer,
 
       if (delimiter && (ch == delimiter))
         delimiter = 0;
-      else if (quote_chars && std::strchr (quote_chars, ch))
+      else if (quote_chars && strchr (quote_chars, ch))
         delimiter = ch;
       else if (!delimiter && (ch == closer))
         level++;

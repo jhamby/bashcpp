@@ -89,7 +89,7 @@ int
 time_to_check_mail ()
 {
   char *temp;
-  std::time_t now;
+  time_t now;
   int64_t seconds;
 
   temp = get_string_value ("MAILCHECK");
@@ -240,7 +240,7 @@ free_mail_files ()
     dispose_mail_file (mailfiles[i]);
 
   if (mailfiles)
-    std::free (mailfiles);
+    free (mailfiles);
 
   mailfiles_count = 0;
   mailfiles = (FILEINFO **)NULL;
@@ -282,7 +282,7 @@ file_mod_date_changed (int i)
 static bool
 file_access_date_changed (int i)
 {
-  std::time_t atime;
+  time_t atime;
   struct stat finfo;
   char *file;
 
@@ -347,10 +347,10 @@ make_default_mailpath ()
 
   get_current_user_info ();
   mp = (char *)xmalloc (2 + sizeof (DEFAULT_MAIL_DIRECTORY)
-                        + std::strlen (current_user.user_name));
-  std::strcpy (mp, DEFAULT_MAIL_DIRECTORY);
+                        + strlen (current_user.user_name));
+  strcpy (mp, DEFAULT_MAIL_DIRECTORY);
   mp[sizeof (DEFAULT_MAIL_DIRECTORY) - 1] = '/';
-  std::strcpy (mp + sizeof (DEFAULT_MAIL_DIRECTORY), current_user.user_name);
+  strcpy (mp + sizeof (DEFAULT_MAIL_DIRECTORY), current_user.user_name);
   return mp;
 #else
   return (char *)NULL;
@@ -392,7 +392,7 @@ remember_mail_dates ()
       if (mp && *mp)
         *mp++ = '\0';
       add_mail_file (mailfile, mp);
-      std::free (mailfile);
+      free (mailfile);
     }
 }
 
@@ -479,7 +479,7 @@ check_mail ()
   if (dollar_underscore)
     {
       bind_variable ("_", dollar_underscore, 0);
-      std::free (dollar_underscore);
+      free (dollar_underscore);
     }
   else
     unbind_variable ("_");

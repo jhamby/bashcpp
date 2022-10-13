@@ -148,7 +148,7 @@ Readline::prompt_modestr (size_t *lenp)
 #define APPROX_DIV(n, d) (((n) < (d)) ? 1 : ((n) / (d)) + 1)
 
 std::string
-Readline::expand_prompt (const std::string &pmt, expand_prompt_flags flags,
+Readline::expand_prompt (string_view pmt, expand_prompt_flags flags,
                          size_t *lp, size_t *lip, size_t *niflp, size_t *vlp)
 {
   size_t mlen = 0;
@@ -362,7 +362,7 @@ Readline::rl_expand_prompt (char *prompt)
   if (prompt == nullptr || *prompt == '\0')
     return 0;
 
-  char *p = std::strrchr (prompt, '\n');
+  char *p = strrchr (prompt, '\n');
   if (p == nullptr)
     {
       /* The prompt is only one logical line, though it might wrap. */
@@ -532,8 +532,8 @@ Readline::rl_redisplay ()
   lpos = local_prompt.physical_chars + modmark;
 
 #if defined(HANDLE_MULTIBYTE)
-  std::memset (line_state_invisible->wrapped_line, 0,
-               line_state_invisible->wbsize * sizeof (int));
+  memset (line_state_invisible->wrapped_line, 0,
+          line_state_invisible->wbsize * sizeof (int));
 #endif
 
   /* prompt_invis_chars_first_line is the number of invisible characters
@@ -577,14 +577,14 @@ Readline::rl_redisplay ()
   in = 0;
   if (mb_cur_max > 1 && !rl_byte_oriented)
     {
-      std::memset (&ps, 0, sizeof (mbstate_t));
+      memset (&ps, 0, sizeof (mbstate_t));
       if (_rl_utf8locale && UTF8_SINGLEBYTE (rl_line_buffer[0]))
         {
           wc = static_cast<wchar_t> (rl_line_buffer[0]);
           wc_bytes = 1;
         }
       else
-        wc_bytes = std::mbrtowc (&wc, rl_line_buffer.c_str (), rl_end, &ps);
+        wc_bytes = mbrtowc (&wc, rl_line_buffer.c_str (), rl_end, &ps);
     }
   else
     wc_bytes = 1;
@@ -610,7 +610,7 @@ Readline::rl_redisplay ()
               wc_bytes = 1;
               /* Assume that a character occupies a single column. */
               wc_width = 1;
-              std::memset (&ps, 0, sizeof (mbstate_t));
+              memset (&ps, 0, sizeof (mbstate_t));
             }
           else if (MB_NULLWCH (wc_bytes))
             break; /* Found '\0' */
@@ -639,7 +639,7 @@ Readline::rl_redisplay ()
               char obuf[5];
               size_t olen;
 
-              olen = static_cast<size_t> (std::sprintf (obuf, "\\%o", c));
+              olen = static_cast<size_t> (sprintf (obuf, "\\%o", c));
 
               if (lpos + olen >= _rl_screenwidth)
                 {
@@ -744,11 +744,10 @@ Readline::rl_redisplay ()
             {
               wc = static_cast<wchar_t> (rl_line_buffer[in]);
               wc_bytes = 1;
-              std::memset (&ps, 0, sizeof (mbstate_t)); /* re-init state */
+              memset (&ps, 0, sizeof (mbstate_t)); /* re-init state */
             }
           else
-            wc_bytes
-                = std::mbrtowc (&wc, &rl_line_buffer[in], rl_end - in, &ps);
+            wc_bytes = mbrtowc (&wc, &rl_line_buffer[in], rl_end - in, &ps);
         }
       else
         in++;
@@ -848,8 +847,8 @@ Readline::rl_redisplay ()
             {
               size_t extra = inv_botlin - _rl_screenheight;
               for (linenum = 0; linenum <= extra; linenum++)
-                std::memset (INV_LINE_FACE (linenum), FACE_NORMAL,
-                             INV_LLEN (linenum));
+                memset (INV_LINE_FACE (linenum), FACE_NORMAL,
+                        INV_LLEN (linenum));
             }
 
           /* For each line in the buffer, do the updating display. */
@@ -937,7 +936,7 @@ Readline::rl_redisplay ()
                   _rl_move_vert (linenum);
                   _rl_move_cursor_relative (0, tt, VIS_FACE (linenum));
                   _rl_clear_to_eol ((linenum == _rl_vis_botlin)
-                                        ? std::strlen (tt)
+                                        ? strlen (tt)
                                         : _rl_screenwidth);
                 }
             }
@@ -1132,7 +1131,7 @@ Readline::rl_redisplay ()
           last_lmargin = lmargin;
         }
     }
-  std::fflush (rl_outstream);
+  fflush (rl_outstream);
 
   /* Swap visible and non-visible lines. */
   {
@@ -1175,7 +1174,7 @@ Readline::putc_face (int c, char face, char *cur_face)
       *cur_face = face;
     }
   if (c != EOF)
-    std::putc (c, rl_outstream);
+    putc (c, rl_outstream);
 }
 
 #define ADJUST_CPOS(x)                                                        \
@@ -1261,8 +1260,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                 line_state_invisible->wrapped_line[current_line]);
 
           /* 1. how many screen positions does first char in old consume? */
-          std::memset (&ps, 0, sizeof (mbstate_t));
-          ret = std::mbrtowc (&wc, old, mb_cur_max, &ps);
+          memset (&ps, 0, sizeof (mbstate_t));
+          ret = mbrtowc (&wc, old, mb_cur_max, &ps);
           oldbytes = ret;
           if (MB_INVALIDCH (ret))
             {
@@ -1278,8 +1277,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
 
           /* 2. how many screen positions does the first char in new consume?
            */
-          std::memset (&ps, 0, sizeof (mbstate_t));
-          ret = std::mbrtowc (&wc, new_, mb_cur_max, &ps);
+          memset (&ps, 0, sizeof (mbstate_t));
+          ret = mbrtowc (&wc, new_, mb_cur_max, &ps);
           newbytes = ret;
           if (MB_INVALIDCH (ret))
             {
@@ -1300,7 +1299,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
             {
               int t;
 
-              ret = std::mbrtowc (&wc, new_ + newbytes, mb_cur_max, &ps);
+              ret = mbrtowc (&wc, new_ + newbytes, mb_cur_max, &ps);
               if (MB_INVALIDCH (ret))
                 {
                   newwidth += 1;
@@ -1323,7 +1322,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
             {
               int t;
 
-              ret = std::mbrtowc (&wc, old + oldbytes, mb_cur_max, &ps);
+              ret = mbrtowc (&wc, old + oldbytes, mb_cur_max, &ps);
               if (MB_INVALIDCH (ret))
                 {
                   oldwidth += 1;
@@ -1376,13 +1375,13 @@ Readline::update_line (char *old, char *old_face, const char *new_,
                      bytes doesn't change. */
                   if (oldbytes != newbytes)
                     {
-                      std::memmove (old + newbytes, old + oldbytes,
-                                    strlen (old + oldbytes) + 1);
-                      std::memmove (old_face + newbytes, old_face + oldbytes,
-                                    strlen (old + oldbytes) + 1);
+                      memmove (old + newbytes, old + oldbytes,
+                               strlen (old + oldbytes) + 1);
+                      memmove (old_face + newbytes, old_face + oldbytes,
+                               strlen (old + oldbytes) + 1);
                     }
-                  std::memcpy (old, new_, newbytes);
-                  std::memcpy (old_face, new_face, newbytes);
+                  memcpy (old, new_, newbytes);
+                  memcpy (old_face, new_face, newbytes);
                   ssize_t j = static_cast<ssize_t> (newbytes)
                               - static_cast<ssize_t> (oldbytes);
                   omax = static_cast<size_t> (static_cast<ssize_t> (omax) + j);
@@ -1397,7 +1396,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
             }
           else
             {
-              std::putc (' ', rl_outstream);
+              putc (' ', rl_outstream);
               _rl_last_c_pos = 1;
               _rl_last_v_pos++;
               if (old[0] && new_[0])
@@ -1413,7 +1412,7 @@ Readline::update_line (char *old, char *old_face, const char *new_,
           if (new_[0])
             puts_face (new_, new_face, 1);
           else
-            std::putc (' ', rl_outstream);
+            putc (' ', rl_outstream);
 
           _rl_last_c_pos = 1;
           _rl_last_v_pos++;
@@ -1479,8 +1478,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
       /* See if the old line is a subset of the new line, so that the
          only change is adding characters. */
       temp = (omax < nmax) ? omax : nmax;
-      if (std::memcmp (old, new_, temp) == 0
-          && std::memcmp (old_face, new_face, temp) == 0)
+      if (memcmp (old, new_, temp) == 0
+          && memcmp (old_face, new_face, temp) == 0)
         {
           ofd = old + temp;
           nfd = new_ + temp;
@@ -1488,12 +1487,12 @@ Readline::update_line (char *old, char *old_face, const char *new_,
         }
       else
         {
-          std::memset (&ps_new, 0, sizeof (mbstate_t));
-          std::memset (&ps_old, 0, sizeof (mbstate_t));
+          memset (&ps_new, 0, sizeof (mbstate_t));
+          memset (&ps_old, 0, sizeof (mbstate_t));
 
           /* Are the old and new lines the same? */
-          if (omax == nmax && std::memcmp (new_, old, omax) == 0
-              && std::memcmp (new_face, old_face, omax) == 0)
+          if (omax == nmax && memcmp (new_, old, omax) == 0
+              && memcmp (new_face, old_face, omax) == 0)
             {
               ofd = old + omax;
               nfd = new_ + nmax;
@@ -1551,12 +1550,12 @@ Readline::update_line (char *old, char *old_face, const char *new_,
     {
       wchar_t wc;
       mbstate_t ps;
-      std::memset (&ps, 0, sizeof (mbstate_t));
+      memset (&ps, 0, sizeof (mbstate_t));
 
       /* If the first character in the difference is a zero-width character,
          assume it's a combining character and back one up so the two base
          characters no longer compare equivalently. */
-      size_t t = std::mbrtowc (&wc, ofd, mb_cur_max, &ps);
+      size_t t = mbrtowc (&wc, ofd, mb_cur_max, &ps);
       if (static_cast<ssize_t> (t) > 0 && UNICODE_COMBINING_CHAR (wc)
           && WCWIDTH (wc) == 0)
         {
@@ -1589,8 +1588,8 @@ Readline::update_line (char *old, char *old_face, const char *new_,
 
       while ((ols > ofd) && (nls > nfd))
         {
-          std::memset (&ps_old, 0, sizeof (mbstate_t));
-          std::memset (&ps_new, 0, sizeof (mbstate_t));
+          memset (&ps_old, 0, sizeof (mbstate_t));
+          memset (&ps_new, 0, sizeof (mbstate_t));
 
           if (_rl_compare_chars (old, static_cast<size_t> (ols - old), &ps_old,
                                  new_, static_cast<size_t> (nls - new_),
@@ -2222,11 +2221,11 @@ Readline::rl_on_new_line_with_prompt ()
   invisible_line = lprompt;
 
   /* If the prompt contains newlines, take the last tail. */
-  const char *prompt_last_line = std::strrchr (rl_prompt.c_str (), '\n');
+  const char *prompt_last_line = strrchr (rl_prompt.c_str (), '\n');
   if (!prompt_last_line)
     prompt_last_line = rl_prompt.c_str ();
 
-  size_t l = std::strlen (prompt_last_line);
+  size_t l = strlen (prompt_last_line);
   if (MB_CUR_MAX > 1 && !rl_byte_oriented)
     _rl_last_c_pos = _rl_col_width (prompt_last_line, 0, l, 1); /* XXX */
   else
@@ -2405,8 +2404,8 @@ Readline::_rl_move_cursor_relative (size_t newcpos, const char *data,
           if (_rl_term_forward_char)
             {
               for (i = cpos; i < dpos; i++)
-                ::tputs (_rl_term_forward_char, 1,
-                         &_rl_output_character_function);
+                tputs (_rl_term_forward_char, 1,
+                       &_rl_output_character_function);
             }
           else
             {
@@ -2441,7 +2440,7 @@ Readline::_rl_move_vert (size_t to)
   if ((delta = static_cast<int> (to) - static_cast<int> (_rl_last_v_pos)) > 0)
     {
       for (int i = 0; i < delta; i++)
-        std::putc ('\n', rl_outstream);
+        putc ('\n', rl_outstream);
       _rl_cr ();
       _rl_last_c_pos = 0;
     }
@@ -2450,14 +2449,14 @@ Readline::_rl_move_vert (size_t to)
 #ifdef __DJGPP__
       int row, col;
 
-      std::fflush (rl_outstream);
+      fflush (rl_outstream);
       ScreenGetCursor (&row, &col);
       ScreenSetCursor (row + delta, col);
       i = -delta;
 #else
       if (_rl_term_up && *_rl_term_up)
         for (int i = 0; i < -delta; i++)
-          ::tputs (_rl_term_up, 1, &_rl_output_character_function);
+          tputs (_rl_term_up, 1, &_rl_output_character_function);
 #endif /* !__DJGPP__ */
     }
 
@@ -2472,7 +2471,7 @@ Readline::rl_show_char (int c)
   int n = 1;
   if (META_CHAR (c) && (_rl_output_meta_chars == 0))
     {
-      std::fprintf (rl_outstream, "M-");
+      fprintf (rl_outstream, "M-");
       n += 2;
       c = UNMETA (c);
     }
@@ -2483,13 +2482,13 @@ Readline::rl_show_char (int c)
   if (CTRL_CHAR (c) || c == RUBOUT)
 #endif /* !DISPLAY_TABS */
     {
-      std::fprintf (rl_outstream, "C-");
+      fprintf (rl_outstream, "C-");
       n += 2;
       c = CTRL_CHAR (c) ? UNCTRL (c) : '?';
     }
 
-  std::putc (c, rl_outstream);
-  std::fflush (rl_outstream);
+  putc (c, rl_outstream);
+  fflush (rl_outstream);
   return n;
 }
 
@@ -2504,11 +2503,11 @@ Readline::rl_message (const char *format, ...)
 
   va_start (args, format);
 
-  bneed = std::vsnprintf (&msg_buf[0], msg_buf.size (), format, args);
+  bneed = vsnprintf (&msg_buf[0], msg_buf.size (), format, args);
   if (bneed > static_cast<int> (msg_buf.size ()))
     {
       msg_buf.resize (static_cast<size_t> (bneed + 1));
-      bneed = std::vsnprintf (&msg_buf[0], msg_buf.size (), format, args);
+      bneed = vsnprintf (&msg_buf[0], msg_buf.size (), format, args);
     }
   msg_buf.resize (static_cast<size_t> (bneed));
   va_end (args);
@@ -2578,8 +2577,7 @@ Readline::_rl_make_prompt_for_search (char pchar)
   /* We've saved the prompt, and can do anything with the various prompt
      strings we need before they're restored.  We want the unexpanded
      portion of the prompt string after any final newline. */
-  p = (!rl_prompt.empty ()) ? std::strrchr (rl_prompt.c_str (), '\n')
-                            : nullptr;
+  p = (!rl_prompt.empty ()) ? strrchr (rl_prompt.c_str (), '\n') : nullptr;
   if (p == nullptr)
     {
       pmt = rl_prompt;
@@ -2609,18 +2607,18 @@ Readline::open_some_spaces (size_t col)
   /* If IC is defined, then we do not have to "enter" insert mode. */
   if (_rl_term_IC)
     {
-      buffer = ::tgoto (_rl_term_IC, 0, static_cast<int> (col));
-      ::tputs (buffer, 1, &_rl_output_character_function);
+      buffer = tgoto (_rl_term_IC, 0, static_cast<int> (col));
+      tputs (buffer, 1, &_rl_output_character_function);
     }
   else if (_rl_term_im && *_rl_term_im)
     {
-      ::tputs (_rl_term_im, 1, &_rl_output_character_function);
+      tputs (_rl_term_im, 1, &_rl_output_character_function);
       /* just output the desired number of spaces */
       for (size_t i = col; i--;)
         _rl_output_character_function (' ');
       /* If there is a string to turn off insert mode, use it now. */
       if (_rl_term_ei && *_rl_term_ei)
-        ::tputs (_rl_term_ei, 1, &_rl_output_character_function);
+        tputs (_rl_term_ei, 1, &_rl_output_character_function);
       /* and move back the right number of spaces */
       _rl_backspace (col);
     }
@@ -2629,7 +2627,7 @@ Readline::open_some_spaces (size_t col)
       /* If there is a special command for inserting characters, then
          use that first to open up the space. */
       for (size_t i = col; i--;)
-        ::tputs (_rl_term_ic, 1, &_rl_output_character_function);
+        tputs (_rl_term_ic, 1, &_rl_output_character_function);
     }
 #endif /* !__MSDOS__ && (!__MINGW32__ || NCURSES_VERSION)*/
 }
@@ -2645,14 +2643,14 @@ Readline::delete_chars (int count)
   if (_rl_term_DC && *_rl_term_DC)
     {
       char *buffer;
-      buffer = ::tgoto (_rl_term_DC, count, count);
-      ::tputs (buffer, count, &_rl_output_character_function);
+      buffer = tgoto (_rl_term_DC, count, count);
+      tputs (buffer, count, &_rl_output_character_function);
     }
   else
     {
       if (_rl_term_dc && *_rl_term_dc)
         while (count--)
-          ::tputs (_rl_term_dc, 1, &_rl_output_character_function);
+          tputs (_rl_term_dc, 1, &_rl_output_character_function);
     }
 #endif /* !__MSDOS__ && (!__MINGW32__ || NCURSES_VERSION)*/
 }
@@ -2701,7 +2699,7 @@ Readline::_rl_update_final ()
   _rl_vis_botlin = 0;
   if (botline_length > 0 || _rl_last_c_pos > 0)
     rl_crlf ();
-  std::fflush (rl_outstream);
+  fflush (rl_outstream);
   rl_display_fixed = true;
 }
 
@@ -2709,7 +2707,7 @@ Readline::_rl_update_final ()
    terminal escape sequences.  Called with the cursor at column 0 of the
    line to draw the prompt on. */
 void
-Readline::redraw_prompt (const std::string &t)
+Readline::redraw_prompt (string_view t)
 {
   std::string oldp;
 
@@ -2746,7 +2744,7 @@ Readline::_rl_redisplay_after_sigwinch ()
       _rl_last_c_pos = 0;
 
       if (_rl_term_clreol)
-        ::tputs (_rl_term_clreol, 1, &_rl_output_character_function);
+        tputs (_rl_term_clreol, 1, &_rl_output_character_function);
       else
         {
           space_to_eol (_rl_screenwidth);
@@ -2784,7 +2782,7 @@ Readline::_rl_col_width (const char *str, size_t start, size_t end, int flags)
     /* this can happen in some cases where it's inconvenient to check */
     return end - start;
 
-  std::memset (&ps, 0, sizeof (mbstate_t));
+  memset (&ps, 0, sizeof (mbstate_t));
 
   size_t point = 0;
   size_t max = end;
@@ -2812,11 +2810,11 @@ Readline::_rl_col_width (const char *str, size_t start, size_t end, int flags)
       size_t tmp;
       if (_rl_utf8locale && UTF8_SINGLEBYTE (str[point]))
         {
-          std::memset (&ps, 0, sizeof (mbstate_t));
+          memset (&ps, 0, sizeof (mbstate_t));
           tmp = 1;
         }
       else
-        tmp = std::mbrlen (str + point, max, &ps);
+        tmp = mbrlen (str + point, max, &ps);
       if (MB_INVALIDCH (tmp))
         {
           /* In this case, the bytes are invalid or too short to compose a
@@ -2827,7 +2825,7 @@ Readline::_rl_col_width (const char *str, size_t start, size_t end, int flags)
 
           /* Clear the state of the byte sequence, because in this case the
              effect of mbstate is undefined. */
-          std::memset (&ps, 0, sizeof (mbstate_t));
+          memset (&ps, 0, sizeof (mbstate_t));
         }
       else if (MB_NULLWCH (tmp))
         break; /* Found '\0' */
@@ -2852,7 +2850,7 @@ Readline::_rl_col_width (const char *str, size_t start, size_t end, int flags)
           wc = static_cast<wchar_t> (str[point]);
         }
       else
-        tmp = std::mbrtowc (&wc, str + point, max, &ps);
+        tmp = mbrtowc (&wc, str + point, max, &ps);
       if (MB_INVALIDCH (tmp))
         {
           /* In this case, the bytes are invalid or too short to compose a
@@ -2866,7 +2864,7 @@ Readline::_rl_col_width (const char *str, size_t start, size_t end, int flags)
 
           /* Clear the state of the byte sequence, because in this case the
              effect of mbstate is undefined. */
-          std::memset (&ps, 0, sizeof (mbstate_t));
+          memset (&ps, 0, sizeof (mbstate_t));
         }
       else if (MB_NULLWCH (tmp))
         break; /* Found '\0' */

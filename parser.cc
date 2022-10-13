@@ -23,6 +23,8 @@
 
 #include "shell.hh"
 
+using std::make_pair;
+
 namespace bash
 {
 
@@ -134,7 +136,7 @@ Shell::yy_readline_get ()
           old_sigint = set_signal_handler (SIGINT, &sigint_sighandler_global);
         }
 
-      sh_unset_nodelay_mode (::fileno (rl_instream)); /* just in case */
+      sh_unset_nodelay_mode (fileno (rl_instream)); /* just in case */
       current_readline_line = readline (current_readline_prompt);
 
       CHECK_TERMSIG;
@@ -520,7 +522,7 @@ Shell::read_a_line (bool remove_quoted_newline)
       if (c == EOF)
         {
           if (interactive && bash_input.type == st_stream)
-            ::clearerr (stdin);
+            clearerr (stdin);
           if (read_a_line_buffer.empty ())
             return nullptr;
           c = '\n';
@@ -617,91 +619,76 @@ Shell::init_token_lists ()
 {
   // Reserved words. Only recognized as the first word of a command.
 
-  word_token_map.emplace (std::make_pair ("if", parser::token::IF));
-  word_token_map.emplace (std::make_pair ("then", parser::token::THEN));
-  word_token_map.emplace (std::make_pair ("else", parser::token::ELSE));
-  word_token_map.emplace (std::make_pair ("elif", parser::token::ELIF));
-  word_token_map.emplace (std::make_pair ("fi", parser::token::FI));
-  word_token_map.emplace (std::make_pair ("case", parser::token::CASE));
-  word_token_map.emplace (std::make_pair ("esac", parser::token::ESAC));
-  word_token_map.emplace (std::make_pair ("for", parser::token::FOR));
+  word_token_map.emplace (make_pair ("if", parser::token::IF));
+  word_token_map.emplace (make_pair ("then", parser::token::THEN));
+  word_token_map.emplace (make_pair ("else", parser::token::ELSE));
+  word_token_map.emplace (make_pair ("elif", parser::token::ELIF));
+  word_token_map.emplace (make_pair ("fi", parser::token::FI));
+  word_token_map.emplace (make_pair ("case", parser::token::CASE));
+  word_token_map.emplace (make_pair ("esac", parser::token::ESAC));
+  word_token_map.emplace (make_pair ("for", parser::token::FOR));
 #if defined(SELECT_COMMAND)
-  word_token_map.emplace (std::make_pair ("select", parser::token::SELECT));
+  word_token_map.emplace (make_pair ("select", parser::token::SELECT));
 #endif
-  word_token_map.emplace (std::make_pair ("while", parser::token::WHILE));
-  word_token_map.emplace (std::make_pair ("until", parser::token::UNTIL));
-  word_token_map.emplace (std::make_pair ("do", parser::token::DO));
-  word_token_map.emplace (std::make_pair ("done", parser::token::DONE));
-  word_token_map.emplace (std::make_pair ("in", parser::token::IN));
-  word_token_map.emplace (
-      std::make_pair ("function", parser::token::FUNCTION));
+  word_token_map.emplace (make_pair ("while", parser::token::WHILE));
+  word_token_map.emplace (make_pair ("until", parser::token::UNTIL));
+  word_token_map.emplace (make_pair ("do", parser::token::DO));
+  word_token_map.emplace (make_pair ("done", parser::token::DONE));
+  word_token_map.emplace (make_pair ("in", parser::token::IN));
+  word_token_map.emplace (make_pair ("function", parser::token::FUNCTION));
 #if defined(COMMAND_TIMING)
-  word_token_map.emplace (std::make_pair ("time", parser::token::TIME));
+  word_token_map.emplace (make_pair ("time", parser::token::TIME));
 #endif
-  word_token_map.emplace (std::make_pair ("{", parser::token_kind_type ('{')));
-  word_token_map.emplace (std::make_pair ("}", parser::token_kind_type ('}')));
-  word_token_map.emplace (std::make_pair ("!", parser::token::BANG));
+  word_token_map.emplace (make_pair ("{", parser::token_kind_type ('{')));
+  word_token_map.emplace (make_pair ("}", parser::token_kind_type ('}')));
+  word_token_map.emplace (make_pair ("!", parser::token::BANG));
 #if defined(COND_COMMAND)
-  word_token_map.emplace (std::make_pair ("[[", parser::token::COND_START));
-  word_token_map.emplace (std::make_pair ("]]", parser::token::COND_END));
+  word_token_map.emplace (make_pair ("[[", parser::token::COND_START));
+  word_token_map.emplace (make_pair ("]]", parser::token::COND_END));
 #endif
 #if defined(COPROCESS_SUPPORT)
-  word_token_map.emplace (std::make_pair ("coproc", parser::token::COPROC));
+  word_token_map.emplace (make_pair ("coproc", parser::token::COPROC));
 #endif
 
   // other tokens that can be returned by read_token ()
 
   /* Multiple-character tokens with special values */
 
-  other_token_map.emplace (std::make_pair ("--", parser::token::TIMEIGN));
-  other_token_map.emplace (std::make_pair ("-p", parser::token::TIMEOPT));
-  other_token_map.emplace (std::make_pair ("&&", parser::token::AND_AND));
-  other_token_map.emplace (std::make_pair ("||", parser::token::OR_OR));
+  other_token_map.emplace (make_pair ("--", parser::token::TIMEIGN));
+  other_token_map.emplace (make_pair ("-p", parser::token::TIMEOPT));
+  other_token_map.emplace (make_pair ("&&", parser::token::AND_AND));
+  other_token_map.emplace (make_pair ("||", parser::token::OR_OR));
+  other_token_map.emplace (make_pair (">>", parser::token::GREATER_GREATER));
+  other_token_map.emplace (make_pair ("<<", parser::token::LESS_LESS));
+  other_token_map.emplace (make_pair ("<&", parser::token::LESS_AND));
+  other_token_map.emplace (make_pair (">&", parser::token::GREATER_AND));
+  other_token_map.emplace (make_pair (";;", parser::token::SEMI_SEMI));
+  other_token_map.emplace (make_pair (";&", parser::token::SEMI_AND));
+  other_token_map.emplace (make_pair (";;&", parser::token::SEMI_SEMI_AND));
+  other_token_map.emplace (make_pair ("<<-", parser::token::LESS_LESS_MINUS));
+  other_token_map.emplace (make_pair ("<<<", parser::token::LESS_LESS_LESS));
+  other_token_map.emplace (make_pair ("&>", parser::token::AND_GREATER));
   other_token_map.emplace (
-      std::make_pair (">>", parser::token::GREATER_GREATER));
-  other_token_map.emplace (std::make_pair ("<<", parser::token::LESS_LESS));
-  other_token_map.emplace (std::make_pair ("<&", parser::token::LESS_AND));
-  other_token_map.emplace (std::make_pair (">&", parser::token::GREATER_AND));
-  other_token_map.emplace (std::make_pair (";;", parser::token::SEMI_SEMI));
-  other_token_map.emplace (std::make_pair (";&", parser::token::SEMI_AND));
-  other_token_map.emplace (
-      std::make_pair (";;&", parser::token::SEMI_SEMI_AND));
-  other_token_map.emplace (
-      std::make_pair ("<<-", parser::token::LESS_LESS_MINUS));
-  other_token_map.emplace (
-      std::make_pair ("<<<", parser::token::LESS_LESS_LESS));
-  other_token_map.emplace (std::make_pair ("&>", parser::token::AND_GREATER));
-  other_token_map.emplace (
-      std::make_pair ("&>>", parser::token::AND_GREATER_GREATER));
-  other_token_map.emplace (std::make_pair ("<>", parser::token::LESS_GREATER));
-  other_token_map.emplace (std::make_pair (">|", parser::token::GREATER_BAR));
-  other_token_map.emplace (std::make_pair ("|&", parser::token::BAR_AND));
-  other_token_map.emplace (std::make_pair ("EOF", parser::token::yacc_EOF));
+      make_pair ("&>>", parser::token::AND_GREATER_GREATER));
+  other_token_map.emplace (make_pair ("<>", parser::token::LESS_GREATER));
+  other_token_map.emplace (make_pair (">|", parser::token::GREATER_BAR));
+  other_token_map.emplace (make_pair ("|&", parser::token::BAR_AND));
+  other_token_map.emplace (make_pair ("EOF", parser::token::yacc_EOF));
 
   /* Tokens whose value is the character itself */
 
+  other_token_map.emplace (make_pair (">", parser::token_kind_type ('>')));
+  other_token_map.emplace (make_pair ("<", parser::token_kind_type ('<')));
+  other_token_map.emplace (make_pair ("-", parser::token_kind_type ('-')));
+  other_token_map.emplace (make_pair ("{", parser::token_kind_type ('{')));
+  other_token_map.emplace (make_pair ("}", parser::token_kind_type ('}')));
+  other_token_map.emplace (make_pair (";", parser::token_kind_type (';')));
+  other_token_map.emplace (make_pair ("(", parser::token_kind_type ('(')));
+  other_token_map.emplace (make_pair (")", parser::token_kind_type (')')));
+  other_token_map.emplace (make_pair ("|", parser::token_kind_type ('|')));
+  other_token_map.emplace (make_pair ("&", parser::token_kind_type ('&')));
   other_token_map.emplace (
-      std::make_pair (">", parser::token_kind_type ('>')));
-  other_token_map.emplace (
-      std::make_pair ("<", parser::token_kind_type ('<')));
-  other_token_map.emplace (
-      std::make_pair ("-", parser::token_kind_type ('-')));
-  other_token_map.emplace (
-      std::make_pair ("{", parser::token_kind_type ('{')));
-  other_token_map.emplace (
-      std::make_pair ("}", parser::token_kind_type ('}')));
-  other_token_map.emplace (
-      std::make_pair (";", parser::token_kind_type (';')));
-  other_token_map.emplace (
-      std::make_pair ("(", parser::token_kind_type ('(')));
-  other_token_map.emplace (
-      std::make_pair (")", parser::token_kind_type (')')));
-  other_token_map.emplace (
-      std::make_pair ("|", parser::token_kind_type ('|')));
-  other_token_map.emplace (
-      std::make_pair ("&", parser::token_kind_type ('&')));
-  other_token_map.emplace (
-      std::make_pair ("newline", parser::token_kind_type ('\n')));
+      make_pair ("newline", parser::token_kind_type ('\n')));
 
 #if defined(HISTORY)
 
@@ -934,7 +921,7 @@ Shell::shell_getc (bool remove_quoted_newline)
           if (echo_input_at_read
               && (shell_input_line[0] || shell_input_line_terminator != EOF)
               && shell_eof_token == 0)
-            std::fprintf (stderr, "%s\n", shell_input_line.c_str ());
+            fprintf (stderr, "%s\n", shell_input_line.c_str ());
         }
       else
         {
@@ -1982,10 +1969,10 @@ Shell::parse_matched_pair (
                           && ret.size () > 1)
             dolbrace_state = DOLBRACE_QUOTE;
           else if MBTEST (dolbrace_state == DOLBRACE_PARAM
-                          && std::strchr ("#%^,~:-=?+/", ch) != nullptr)
+                          && strchr ("#%^,~:-=?+/", ch) != nullptr)
             dolbrace_state = DOLBRACE_OP;
           else if MBTEST (dolbrace_state == DOLBRACE_OP
-                          && std::strchr ("#%^,~:-=?+/", ch) == nullptr)
+                          && strchr ("#%^,~:-=?+/", ch) == nullptr)
             dolbrace_state = DOLBRACE_WORD;
         }
 

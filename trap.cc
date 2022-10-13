@@ -141,7 +141,7 @@ decode_signal (const char *string, decode_signal_flags flags)
 #if defined(SIGRTMIN) && defined(SIGRTMAX)
   if (STREQN (string, "SIGRTMIN+", 9)
       || ((flags & DSIG_NOCASE)
-          && ::strncasecmp (string, "SIGRTMIN+", 9) == 0))
+          && strncasecmp (string, "SIGRTMIN+", 9) == 0))
     {
       if (legal_number (string + 9, &sig) && sig >= 0
           && sig <= SIGRTMAX - SIGRTMIN)
@@ -151,7 +151,7 @@ decode_signal (const char *string, decode_signal_flags flags)
     }
   else if (STREQN (string, "RTMIN+", 6)
            || ((flags & DSIG_NOCASE)
-               && ::strncasecmp (string, "RTMIN+", 6) == 0))
+               && strncasecmp (string, "RTMIN+", 6) == 0))
     {
       if (legal_number (string + 6, &sig) && sig >= 0
           && sig <= SIGRTMAX - SIGRTMIN)
@@ -174,10 +174,10 @@ decode_signal (const char *string, decode_signal_flags flags)
         {
           name += 3;
 
-          if ((flags & DSIG_NOCASE) && ::strcasecmp (string, name) == 0)
+          if ((flags & DSIG_NOCASE) && strcasecmp (string, name) == 0)
             return static_cast<int> (sig);
           else if ((flags & DSIG_NOCASE) == 0
-                   && std::strcmp (string, name) == 0)
+                   && strcmp (string, name) == 0)
             return static_cast<int> (sig);
           /* If we can't use the `SIG' prefix to match, punt on this
              name now. */
@@ -188,9 +188,9 @@ decode_signal (const char *string, decode_signal_flags flags)
       /* Check name with SIG prefix case sensitively or insensitively
          depending on whether flags includes DSIG_NOCASE */
       name = signal_names[sig];
-      if ((flags & DSIG_NOCASE) && ::strcasecmp (string, name) == 0)
+      if ((flags & DSIG_NOCASE) && strcasecmp (string, name) == 0)
         return static_cast<int> (sig);
-      else if ((flags & DSIG_NOCASE) == 0 && std::strcmp (string, name) == 0)
+      else if ((flags & DSIG_NOCASE) == 0 && strcmp (string, name) == 0)
         return static_cast<int> (sig);
     }
 
@@ -326,7 +326,7 @@ Shell::run_pending_traps ()
                   internal_warning (_ ("run_pending_traps: signal handler is "
                                        "SIG_DFL, resending %d (%s) to myself"),
                                     sig, signal_name (sig));
-                  ::kill (::getpid (), sig);
+                  kill (getpid (), sig);
                 }
             }
           else

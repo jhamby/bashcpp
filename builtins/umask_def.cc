@@ -98,7 +98,7 @@ Shell::umask_builtin (WORD_LIST *list)
 
   if (list)
     {
-      if (std::isdigit (list->word->word[0]))
+      if (c_isdigit (list->word->word[0]))
         {
           umask_value = read_octal (list->word->word.c_str ());
 

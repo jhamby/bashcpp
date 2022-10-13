@@ -103,7 +103,7 @@ find_index_in_alist (char *string, STRING_INT_ALIST *alist, int flags)
 char *
 strsub (const char *str, const char *pat, const char *rep, bool global)
 {
-  size_t patlen = std::strlen (pat);
+  size_t patlen = strlen (pat);
   std::string temp;
 
   int i;
@@ -133,7 +133,7 @@ strsub (const char *str, const char *pat, const char *rep, bool global)
 char *
 strcreplace (const char *string, int c, const char *text, bool do_glob)
 {
-  size_t len = std::strlen (text);
+  size_t len = strlen (text);
   std::string ret;
 
   const char *p;
@@ -145,7 +145,7 @@ strcreplace (const char *string, int c, const char *text, bool do_glob)
           if (len)
             {
               if (do_glob
-                  && (glob_pattern_p (text) || std::strchr (text, '\\')))
+                  && (glob_pattern_p (text) || strchr (text, '\\')))
                 {
                   char *t = quote_globbing_chars (text);
                   ret.append (t);

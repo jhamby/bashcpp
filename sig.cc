@@ -414,9 +414,9 @@ Shell::throw_to_top_level ()
 
   if (interactive && print_newline)
     {
-      std::fflush (stdout);
-      std::fprintf (stderr, "\n");
-      std::fflush (stderr);
+      fflush (stdout);
+      fprintf (stderr, "\n");
+      fflush (stderr);
     }
 
   /* An interrupted `wait' command in a script does not exit the script. */
@@ -571,10 +571,10 @@ Shell::termsig_handler (int sig)
 
   set_signal_handler (sig, SIG_DFL);
 
-  ::kill (::getpid (), sig);
+  kill (getpid (), sig);
 
   if (dollar_dollar_pid != 1)
-    std::exit (128 + sig); /* just in case the kill fails? */
+    exit (128 + sig); /* just in case the kill fails? */
 
   /* We get here only under extraordinary circumstances. */
 
@@ -596,9 +596,9 @@ Shell::termsig_handler (int sig)
   sigprocmask (SIG_SETMASK, &mask, nullptr);
 
   if (core)
-    std::abort ();
+    abort ();
 
-  std::exit (128 + sig);
+  exit (128 + sig);
 }
 #undef XSIG
 

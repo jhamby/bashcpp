@@ -491,7 +491,7 @@ sh_unset_nodelay_mode (int fd)
 {
   int flags, bflags;
 
-  if ((flags = ::fcntl (fd, F_GETFL, 0)) < 0)
+  if ((flags = fcntl (fd, F_GETFL, 0)) < 0)
     return -1;
 
   bflags = 0;
@@ -509,7 +509,7 @@ sh_unset_nodelay_mode (int fd)
   if (flags & bflags)
     {
       flags &= ~bflags;
-      return ::fcntl (fd, F_SETFL, flags);
+      return fcntl (fd, F_SETFL, flags);
     }
 
   return 0;
@@ -526,14 +526,14 @@ same_file (const char *path1, const char *path2, struct stat *stp1,
 
   if (stp1 == nullptr)
     {
-      if (::stat (path1, &st1) != 0)
+      if (stat (path1, &st1) != 0)
         return false;
       stp1 = &st1;
     }
 
   if (stp2 == nullptr)
     {
-      if (::stat (path2, &st2) != 0)
+      if (stat (path2, &st2) != 0)
         return false;
       stp2 = &st2;
     }
@@ -669,7 +669,7 @@ extract_colon_unit (const char *string, size_t *p_index)
   if (string == nullptr)
     return nullptr;
 
-  len = std::strlen (string);
+  len = strlen (string);
   if (*p_index >= len)
     return nullptr;
 
@@ -826,7 +826,7 @@ bash_tilde_find_word (const char *s, int flags, size_t *lenp)
     }
   size_t l = static_cast<size_t> (r - s);
   ret = new char[l + 1];
-  std::strncpy (ret, s, l);
+  strncpy (ret, s, l);
   ret[l] = '\0';
   if (lenp)
     *lenp = l;
@@ -879,7 +879,7 @@ Shell::initialize_group_array ()
   group_array = new GETGROUPS_T[static_cast<size_t> (maxgroups)];
 
 #if defined(HAVE_GETGROUPS)
-  ngroups = ::getgroups (maxgroups, group_array);
+  ngroups = getgroups (maxgroups, group_array);
 #endif
 
   /* If getgroups returns nothing, or the OS does not support getgroups(),
@@ -1006,12 +1006,12 @@ conf_standard_path ()
   char *p;
   size_t len;
 
-  len = ::confstr (_CS_PATH, nullptr, 0);
+  len = confstr (_CS_PATH, nullptr, 0);
   if (len > 0)
     {
       p = new char[len + 2];
       *p = '\0';
-      ::confstr (_CS_PATH, p, len);
+      confstr (_CS_PATH, p, len);
       return p;
     }
   else

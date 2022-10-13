@@ -1121,6 +1121,8 @@ HAVE_VISIBILITY
 CFLAG_VISIBILITY
 GL_COND_OBJ_MBRTOWC_FALSE
 GL_COND_OBJ_MBRTOWC_TRUE
+GL_COND_OBJ_MBRLEN_FALSE
+GL_COND_OBJ_MBRLEN_TRUE
 LIB_MBRTOWC
 NEXT_AS_FIRST_DIRECTIVE_MATH_H
 NEXT_MATH_H
@@ -5172,6 +5174,7 @@ as_fn_append ac_func_c_list " freelocale HAVE_FREELOCALE"
 as_fn_append ac_header_c_list " math.h math_h HAVE_MATH_H"
 as_fn_append ac_func_c_list " mbsinit HAVE_MBSINIT"
 as_fn_append ac_func_c_list " mbrtowc HAVE_MBRTOWC"
+as_fn_append ac_func_c_list " mbrlen HAVE_MBRLEN"
 as_fn_append ac_header_c_list " sys/mman.h sys_mman_h HAVE_SYS_MMAN_H"
 as_fn_append ac_func_c_list " mprotect HAVE_MPROTECT"
 as_fn_append ac_func_c_list " mknod HAVE_MKNOD"
@@ -10263,6 +10266,7 @@ fi
   # Code from module malloca:
   # Code from module math:
   # Code from module mbchar:
+  # Code from module mbrlen:
   # Code from module mbrtowc:
   # Code from module mbschr:
   # Code from module mbsinit:
@@ -31406,8 +31410,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:31409: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:31410: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:31413: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:31414: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -31433,7 +31437,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:31436: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:31440: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -31587,7 +31591,7 @@ fi
 
         fi
       fi
-      echo "$as_me:31590: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:31594: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -36207,8 +36211,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:36210: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:36211: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:36214: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:36215: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -36234,7 +36238,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:36237: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:36241: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -36388,7 +36392,7 @@ fi
 
         fi
       fi
-      echo "$as_me:36391: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:36395: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -36616,8 +36620,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:36619: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:36620: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:36623: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:36624: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -36643,7 +36647,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:36646: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:36650: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -36797,7 +36801,7 @@ fi
 
         fi
       fi
-      echo "$as_me:36800: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:36804: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -37245,6 +37249,972 @@ printf "%s\n" "$gl_cv_header_math_huge_val_works" >&6; }
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        if case "$host_os" in
+       mingw*) true ;;
+       *) test $ac_cv_func_mbsinit = yes ;;
+     esac \
+    && test $ac_cv_func_mbrtowc = yes; then
+
+
+
+
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether mbrtowc handles incomplete characters" >&5
+printf %s "checking whether mbrtowc handles incomplete characters... " >&6; }
+if test ${gl_cv_func_mbrtowc_incomplete_state+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+                  case "$host_os" in
+                     # Guess no on AIX and OSF/1.
+        aix* | osf*) gl_cv_func_mbrtowc_incomplete_state="guessing no" ;;
+                     # Guess yes otherwise.
+        *)           gl_cv_func_mbrtowc_incomplete_state="guessing yes" ;;
+      esac
+      if test $LOCALE_JA != none; then
+        if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  if (setlocale (LC_ALL, "$LOCALE_JA") != NULL)
+    {
+      const char input[] = "B\217\253\344\217\251\316er"; /* "Büßer" */
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, input + 1, 1, &state) == (size_t)(-2))
+        if (mbsinit (&state))
+          return 2;
+    }
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_incomplete_state=yes
+else $as_nop
+  gl_cv_func_mbrtowc_incomplete_state=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+      else
+        if test $LOCALE_FR_UTF8 != none; then
+          if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  if (setlocale (LC_ALL, "$LOCALE_FR_UTF8") != NULL)
+    {
+      const char input[] = "B\303\274\303\237er"; /* "Büßer" */
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, input + 1, 1, &state) == (size_t)(-2))
+        if (mbsinit (&state))
+          return 2;
+    }
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_incomplete_state=yes
+else $as_nop
+  gl_cv_func_mbrtowc_incomplete_state=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+        fi
+      fi
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_mbrtowc_incomplete_state" >&5
+printf "%s\n" "$gl_cv_func_mbrtowc_incomplete_state" >&6; }
+
+
+
+
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether mbrtowc works as well as mbtowc" >&5
+printf %s "checking whether mbrtowc works as well as mbtowc... " >&6; }
+if test ${gl_cv_func_mbrtowc_sanitycheck+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+                  case "$host_os" in
+                    # Guess no on Solaris 8.
+        solaris2.8) gl_cv_func_mbrtowc_sanitycheck="guessing no" ;;
+                    # Guess yes otherwise.
+        *)          gl_cv_func_mbrtowc_sanitycheck="guessing yes" ;;
+      esac
+      if test $LOCALE_ZH_CN != none; then
+        if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  /* This fails on Solaris 8:
+     mbrtowc returns 2, and sets wc to 0x00F0.
+     mbtowc returns 4 (correct) and sets wc to 0x5EDC.  */
+  if (setlocale (LC_ALL, "$LOCALE_ZH_CN") != NULL)
+    {
+      char input[] = "B\250\271\201\060\211\070er"; /* "Büßer" */
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, input + 3, 6, &state) != 4
+          && mbtowc (&wc, input + 3, 6) == 4)
+        return 2;
+    }
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_sanitycheck=yes
+else $as_nop
+  gl_cv_func_mbrtowc_sanitycheck=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+      fi
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_mbrtowc_sanitycheck" >&5
+printf "%s\n" "$gl_cv_func_mbrtowc_sanitycheck" >&6; }
+
+    REPLACE_MBSTATE_T=0
+    case "$gl_cv_func_mbrtowc_incomplete_state" in
+      *yes) ;;
+      *) REPLACE_MBSTATE_T=1 ;;
+    esac
+    case "$gl_cv_func_mbrtowc_sanitycheck" in
+      *yes) ;;
+      *) REPLACE_MBSTATE_T=1 ;;
+    esac
+  else
+    REPLACE_MBSTATE_T=1
+  fi
+
+
+
+  if test $ac_cv_func_mbrtowc = no; then
+    HAVE_MBRTOWC=0
+    ac_fn_check_decl "$LINENO" "mbrtowc" "ac_cv_have_decl_mbrtowc" "
+      #include <wchar.h>
+
+" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_mbrtowc" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_MBRTOWC $ac_have_decl" >>confdefs.h
+
+    if test $ac_cv_have_decl_mbrtowc = yes; then
+                        REPLACE_MBRTOWC=1
+    fi
+  else
+    if test $REPLACE_MBSTATE_T = 1; then
+      REPLACE_MBRTOWC=1
+    else
+
+
+
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether mbrtowc handles a NULL pwc argument" >&5
+printf %s "checking whether mbrtowc handles a NULL pwc argument... " >&6; }
+if test ${gl_cv_func_mbrtowc_null_arg1+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+                  case "$host_os" in
+                  # Guess no on Solaris.
+        solaris*) gl_cv_func_mbrtowc_null_arg1="guessing no" ;;
+                  # Guess yes otherwise.
+        *)        gl_cv_func_mbrtowc_null_arg1="guessing yes" ;;
+      esac
+      if test $LOCALE_FR_UTF8 != none; then
+        if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  int result = 0;
+
+  if (setlocale (LC_ALL, "$LOCALE_FR_UTF8") != NULL)
+    {
+      char input[] = "\303\237er";
+      mbstate_t state;
+      wchar_t wc;
+      size_t ret;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      wc = (wchar_t) 0xBADFACE;
+      ret = mbrtowc (&wc, input, 5, &state);
+      if (ret != 2)
+        result |= 1;
+      if (!mbsinit (&state))
+        result |= 2;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      ret = mbrtowc (NULL, input, 5, &state);
+      if (ret != 2) /* Solaris 7 fails here: ret is -1.  */
+        result |= 4;
+      if (!mbsinit (&state))
+        result |= 8;
+    }
+  return result;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_null_arg1=yes
+else $as_nop
+  gl_cv_func_mbrtowc_null_arg1=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+      fi
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_mbrtowc_null_arg1" >&5
+printf "%s\n" "$gl_cv_func_mbrtowc_null_arg1" >&6; }
+
+
+
+
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether mbrtowc handles a NULL string argument" >&5
+printf %s "checking whether mbrtowc handles a NULL string argument... " >&6; }
+if test ${gl_cv_func_mbrtowc_null_arg2+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+                  case "$host_os" in
+              # Guess no on OSF/1.
+        osf*) gl_cv_func_mbrtowc_null_arg2="guessing no" ;;
+              # Guess yes otherwise.
+        *)    gl_cv_func_mbrtowc_null_arg2="guessing yes" ;;
+      esac
+      if test $LOCALE_FR_UTF8 != none; then
+        if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  if (setlocale (LC_ALL, "$LOCALE_FR_UTF8") != NULL)
+    {
+      mbstate_t state;
+      wchar_t wc;
+      int ret;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      wc = (wchar_t) 0xBADFACE;
+      mbrtowc (&wc, NULL, 5, &state);
+      /* Check that wc was not modified.  */
+      if (wc != (wchar_t) 0xBADFACE)
+        return 2;
+    }
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_null_arg2=yes
+else $as_nop
+  gl_cv_func_mbrtowc_null_arg2=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+      fi
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_mbrtowc_null_arg2" >&5
+printf "%s\n" "$gl_cv_func_mbrtowc_null_arg2" >&6; }
+
+
+
+
+
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether mbrtowc has a correct return value" >&5
+printf %s "checking whether mbrtowc has a correct return value... " >&6; }
+if test ${gl_cv_func_mbrtowc_retval+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+                  case "$host_os" in
+                                   # Guess no on HP-UX, Solaris, native Windows.
+        hpux* | solaris* | mingw*) gl_cv_func_mbrtowc_retval="guessing no" ;;
+                                   # Guess yes otherwise.
+        *)                         gl_cv_func_mbrtowc_retval="guessing yes" ;;
+      esac
+      if test $LOCALE_FR_UTF8 != none || test $LOCALE_JA != none \
+         || { case "$host_os" in mingw*) true;; *) false;; esac; }; then
+        if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  int result = 0;
+  int found_some_locale = 0;
+  /* This fails on Solaris.  */
+  if (setlocale (LC_ALL, "$LOCALE_FR_UTF8") != NULL)
+    {
+      char input[] = "B\303\274\303\237er"; /* "Büßer" */
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, input + 1, 1, &state) == (size_t)(-2))
+        {
+          input[1] = '\0';
+          if (mbrtowc (&wc, input + 2, 5, &state) != 1)
+            result |= 1;
+        }
+      found_some_locale = 1;
+    }
+  /* This fails on HP-UX 11.11.  */
+  if (setlocale (LC_ALL, "$LOCALE_JA") != NULL)
+    {
+      char input[] = "B\217\253\344\217\251\316er"; /* "Büßer" */
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, input + 1, 1, &state) == (size_t)(-2))
+        {
+          input[1] = '\0';
+          if (mbrtowc (&wc, input + 2, 5, &state) != 2)
+            result |= 2;
+        }
+      found_some_locale = 1;
+    }
+  /* This fails on native Windows.  */
+  if (setlocale (LC_ALL, "Japanese_Japan.932") != NULL)
+    {
+      char input[] = "<\223\372\226\173\214\352>"; /* "<日本語>" */
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, input + 3, 1, &state) == (size_t)(-2))
+        {
+          input[3] = '\0';
+          if (mbrtowc (&wc, input + 4, 4, &state) != 1)
+            result |= 4;
+        }
+      found_some_locale = 1;
+    }
+  if (setlocale (LC_ALL, "Chinese_Taiwan.950") != NULL)
+    {
+      char input[] = "<\244\351\245\273\273\171>"; /* "<日本語>" */
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, input + 3, 1, &state) == (size_t)(-2))
+        {
+          input[3] = '\0';
+          if (mbrtowc (&wc, input + 4, 4, &state) != 1)
+            result |= 8;
+        }
+      found_some_locale = 1;
+    }
+  if (setlocale (LC_ALL, "Chinese_China.936") != NULL)
+    {
+      char input[] = "<\310\325\261\276\325\132>"; /* "<日本語>" */
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, input + 3, 1, &state) == (size_t)(-2))
+        {
+          input[3] = '\0';
+          if (mbrtowc (&wc, input + 4, 4, &state) != 1)
+            result |= 16;
+        }
+      found_some_locale = 1;
+    }
+  return (found_some_locale ? result : 77);
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_retval=yes
+else $as_nop
+  if test $? != 77; then
+             gl_cv_func_mbrtowc_retval=no
+           fi
+
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+      fi
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_mbrtowc_retval" >&5
+printf "%s\n" "$gl_cv_func_mbrtowc_retval" >&6; }
+
+
+
+
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether mbrtowc returns 0 when parsing a NUL character" >&5
+printf %s "checking whether mbrtowc returns 0 when parsing a NUL character... " >&6; }
+if test ${gl_cv_func_mbrtowc_nul_retval+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+                  case "$host_os" in
+                       # Guess no on Solaris 8 and 9.
+        solaris2.[89]) gl_cv_func_mbrtowc_nul_retval="guessing no" ;;
+                       # Guess yes otherwise.
+        *)             gl_cv_func_mbrtowc_nul_retval="guessing yes" ;;
+      esac
+      if test $LOCALE_ZH_CN != none; then
+        if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  /* This fails on Solaris 8 and 9.  */
+  if (setlocale (LC_ALL, "$LOCALE_ZH_CN") != NULL)
+    {
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, "", 1, &state) != 0)
+        return 2;
+    }
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_nul_retval=yes
+else $as_nop
+  gl_cv_func_mbrtowc_nul_retval=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+      fi
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_mbrtowc_nul_retval" >&5
+printf "%s\n" "$gl_cv_func_mbrtowc_nul_retval" >&6; }
+
+
+
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether mbrtowc stores incomplete characters" >&5
+printf %s "checking whether mbrtowc stores incomplete characters... " >&6; }
+if test ${gl_cv_func_mbrtowc_stores_incomplete+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+               case "$host_os" in
+               # Guess yes on native Windows.
+       mingw*) gl_cv_func_mbrtowc_stores_incomplete="guessing yes" ;;
+       *)      gl_cv_func_mbrtowc_stores_incomplete="guessing no" ;;
+     esac
+     case "$host_os" in
+       mingw*)
+         if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  int result = 0;
+  if (setlocale (LC_ALL, "French_France.65001") != NULL)
+    {
+      wchar_t wc = (wchar_t) 0xBADFACE;
+      mbstate_t state;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, "\303", 1, &state) == (size_t)(-2)
+          && wc != (wchar_t) 0xBADFACE)
+        result |= 1;
+    }
+  if (setlocale (LC_ALL, "Japanese_Japan.932") != NULL)
+    {
+      wchar_t wc = (wchar_t) 0xBADFACE;
+      mbstate_t state;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, "\226", 1, &state) == (size_t)(-2)
+          && wc != (wchar_t) 0xBADFACE)
+        result |= 2;
+    }
+  if (setlocale (LC_ALL, "Chinese_Taiwan.950") != NULL)
+    {
+      wchar_t wc = (wchar_t) 0xBADFACE;
+      mbstate_t state;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, "\245", 1, &state) == (size_t)(-2)
+          && wc != (wchar_t) 0xBADFACE)
+        result |= 4;
+    }
+  if (setlocale (LC_ALL, "Chinese_China.936") != NULL)
+    {
+      wchar_t wc = (wchar_t) 0xBADFACE;
+      mbstate_t state;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, "\261", 1, &state) == (size_t)(-2)
+          && wc != (wchar_t) 0xBADFACE)
+        result |= 8;
+    }
+  return result;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_stores_incomplete=no
+else $as_nop
+  gl_cv_func_mbrtowc_stores_incomplete=yes
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+         ;;
+       *)
+
+         if test $LOCALE_FR_UTF8 != none; then
+           if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  if (setlocale (LC_ALL, "$LOCALE_FR_UTF8") != NULL)
+    {
+      wchar_t wc = (wchar_t) 0xBADFACE;
+      mbstate_t state;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, "\303", 1, &state) == (size_t)(-2)
+          && wc != (wchar_t) 0xBADFACE)
+        return 1;
+    }
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_stores_incomplete=no
+else $as_nop
+  gl_cv_func_mbrtowc_stores_incomplete=yes
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+         fi
+         ;;
+     esac
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_mbrtowc_stores_incomplete" >&5
+printf "%s\n" "$gl_cv_func_mbrtowc_stores_incomplete" >&6; }
+
+
+
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether mbrtowc works on empty input" >&5
+printf %s "checking whether mbrtowc works on empty input... " >&6; }
+if test ${gl_cv_func_mbrtowc_empty_input+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+                  case "$host_os" in
+                              # Guess no on AIX and glibc systems.
+        aix* | *-gnu* | gnu*) gl_cv_func_mbrtowc_empty_input="guessing no" ;;
+                              # Guess yes on native Windows.
+        mingw*)               gl_cv_func_mbrtowc_empty_input="guessing yes" ;;
+        *)                    gl_cv_func_mbrtowc_empty_input="guessing yes" ;;
+      esac
+      if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+           #include <wchar.h>
+           static wchar_t wc;
+           static mbstate_t mbs;
+           int
+           main (void)
+           {
+             return mbrtowc (&wc, "", 0, &mbs) != (size_t) -2;
+           }
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_empty_input=yes
+else $as_nop
+  gl_cv_func_mbrtowc_empty_input=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_mbrtowc_empty_input" >&5
+printf "%s\n" "$gl_cv_func_mbrtowc_empty_input" >&6; }
+
+
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether the C locale is free of encoding errors" >&5
+printf %s "checking whether the C locale is free of encoding errors... " >&6; }
+if test ${gl_cv_func_mbrtowc_C_locale_sans_EILSEQ+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+               gl_cv_func_mbrtowc_C_locale_sans_EILSEQ="$gl_cross_guess_normal"
+
+     if test "$cross_compiling" = yes
+then :
+  case "$host_os" in
+                 # Guess yes on native Windows.
+         mingw*) gl_cv_func_mbrtowc_C_locale_sans_EILSEQ="guessing yes" ;;
+       esac
+
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <limits.h>
+            #include <locale.h>
+            #include <wchar.h>
+
+int
+main (void)
+{
+
+            int i;
+            char *locale = setlocale (LC_ALL, "C");
+            if (! locale)
+              return 2;
+            for (i = CHAR_MIN; i <= CHAR_MAX; i++)
+              {
+                char c = i;
+                wchar_t wc;
+                mbstate_t mbs = { 0, };
+                size_t ss = mbrtowc (&wc, &c, 1, &mbs);
+                if (1 < ss)
+                  return 3;
+              }
+            return 0;
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_C_locale_sans_EILSEQ=yes
+else $as_nop
+  gl_cv_func_mbrtowc_C_locale_sans_EILSEQ=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_mbrtowc_C_locale_sans_EILSEQ" >&5
+printf "%s\n" "$gl_cv_func_mbrtowc_C_locale_sans_EILSEQ" >&6; }
+
+      case "$gl_cv_func_mbrtowc_null_arg1" in
+        *yes) ;;
+        *)
+printf "%s\n" "#define MBRTOWC_NULL_ARG1_BUG 1" >>confdefs.h
+
+           REPLACE_MBRTOWC=1
+           ;;
+      esac
+      case "$gl_cv_func_mbrtowc_null_arg2" in
+        *yes) ;;
+        *)
+printf "%s\n" "#define MBRTOWC_NULL_ARG2_BUG 1" >>confdefs.h
+
+           REPLACE_MBRTOWC=1
+           ;;
+      esac
+      case "$gl_cv_func_mbrtowc_retval" in
+        *yes) ;;
+        *)
+printf "%s\n" "#define MBRTOWC_RETVAL_BUG 1" >>confdefs.h
+
+           REPLACE_MBRTOWC=1
+           ;;
+      esac
+      case "$gl_cv_func_mbrtowc_nul_retval" in
+        *yes) ;;
+        *)
+printf "%s\n" "#define MBRTOWC_NUL_RETVAL_BUG 1" >>confdefs.h
+
+           REPLACE_MBRTOWC=1
+           ;;
+      esac
+      case "$gl_cv_func_mbrtowc_stores_incomplete" in
+        *no) ;;
+        *)
+printf "%s\n" "#define MBRTOWC_STORES_INCOMPLETE_BUG 1" >>confdefs.h
+
+           REPLACE_MBRTOWC=1
+           ;;
+      esac
+      case "$gl_cv_func_mbrtowc_empty_input" in
+        *yes) ;;
+        *)
+printf "%s\n" "#define MBRTOWC_EMPTY_INPUT_BUG 1" >>confdefs.h
+
+           REPLACE_MBRTOWC=1
+           ;;
+      esac
+      case "$gl_cv_func_mbrtowc_C_locale_sans_EILSEQ" in
+        *yes) ;;
+        *)
+printf "%s\n" "#define MBRTOWC_IN_C_LOCALE_MAYBE_EILSEQ 1" >>confdefs.h
+
+           REPLACE_MBRTOWC=1
+           ;;
+      esac
+    fi
+  fi
+  if test $REPLACE_MBSTATE_T = 1; then
+    case "$host_os" in
+      mingw*) LIB_MBRTOWC= ;;
+      *)
+
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether imported symbols can be declared weak" >&5
+printf %s "checking whether imported symbols can be declared weak... " >&6; }
+if test ${gl_cv_have_weak+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  case "$host_os" in
+       cygwin*)
+                                    gl_cv_have_weak="guessing no"
+         ;;
+       *)
+         gl_cv_have_weak=no
+                  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+extern void xyzzy ();
+#pragma weak xyzzy
+int
+main (void)
+{
+xyzzy();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  gl_cv_have_weak=maybe
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+         if test $gl_cv_have_weak = maybe; then
+                                 if test "$cross_compiling" = yes
+then :
+                              cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#ifdef __ELF__
+                 Extensible Linking Format
+                 #endif
+
+_ACEOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  $EGREP "Extensible Linking Format" >/dev/null 2>&1
+then :
+  gl_cv_have_weak="guessing yes"
+else $as_nop
+  gl_cv_have_weak="guessing no"
+fi
+rm -rf conftest*
+
+
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <stdio.h>
+#pragma weak fputs
+int main ()
+{
+  return (fputs == NULL);
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_have_weak=yes
+else $as_nop
+  gl_cv_have_weak=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+         fi
+         ;;
+     esac
+          case " $LDFLAGS " in
+       *" -static "*) gl_cv_have_weak=no ;;
+     esac
+                    case "$gl_cv_have_weak" in
+       *yes)
+         case "$host_os" in
+           freebsd* | dragonfly* | midnightbsd*)
+             : > conftest1.c
+             $CC $CPPFLAGS $CFLAGS $LDFLAGS -fPIC -shared -o libempty.so conftest1.c -lpthread >&5 2>&1
+             cat <<EOF > conftest2.c
+#include <pthread.h>
+#pragma weak pthread_mutexattr_gettype
+int main ()
+{
+  return (pthread_mutexattr_gettype != NULL);
+}
+EOF
+             $CC $CPPFLAGS $CFLAGS $LDFLAGS -o conftest conftest2.c libempty.so >&5 2>&1 \
+               || gl_cv_have_weak=no
+             rm -f conftest1.c libempty.so conftest2.c conftest
+             ;;
+         esac
+         ;;
+     esac
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_have_weak" >&5
+printf "%s\n" "$gl_cv_have_weak" >&6; }
+  case "$gl_cv_have_weak" in
+    *yes)
+
+printf "%s\n" "#define HAVE_WEAK_SYMBOLS 1" >>confdefs.h
+
+      ;;
+  esac
+
+        case "$gl_cv_have_weak" in
+          *yes) LIB_MBRTOWC= ;;
+          *)    LIB_MBRTOWC="$LIBPTHREAD" ;;
+        esac
+        ;;
+    esac
+  else
+    LIB_MBRTOWC=
+  fi
 
 
 
@@ -53051,6 +54021,80 @@ printf "%s\n" "#define GNULIB_TEST_MALLOC_POSIX 1" >>confdefs.h
 
 
 
+  if test $ac_cv_func_mbrlen = no; then
+    HAVE_MBRLEN=0
+    ac_fn_check_decl "$LINENO" "mbrlen" "ac_cv_have_decl_mbrlen" "
+      #include <wchar.h>
+
+" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_mbrlen" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_MBRLEN $ac_have_decl" >>confdefs.h
+
+    if test $ac_cv_have_decl_mbrlen = yes; then
+                        REPLACE_MBRLEN=1
+    fi
+  else
+                    if test $REPLACE_MBRTOWC = 1; then
+      REPLACE_MBRLEN=1
+    fi
+  fi
+
+
+     if test $HAVE_MBRLEN = 0 || test $REPLACE_MBRLEN = 1; then
+  GL_COND_OBJ_MBRLEN_TRUE=
+  GL_COND_OBJ_MBRLEN_FALSE='#'
+else
+  GL_COND_OBJ_MBRLEN_TRUE='#'
+  GL_COND_OBJ_MBRLEN_FALSE=
+fi
+:
+    if test -z "${GL_COND_OBJ_MBRLEN_TRUE}" && test -z "${GL_COND_OBJ_MBRLEN_FALSE}"; then
+    GL_COND_OBJ_MBRLEN_TRUE='#'
+    GL_COND_OBJ_MBRLEN_FALSE='#'
+  fi
+
+  if test -z "$GL_COND_OBJ_MBRLEN_TRUE"; then :
+
+
+  :
+
+
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          GL_GNULIB_MBRLEN=1
+
+
+
+
+
+printf "%s\n" "#define GNULIB_TEST_MBRLEN 1" >>confdefs.h
+
+
+
+
+
+
+
+
+
 
 
 
@@ -66789,12 +67833,6 @@ ac_fn_c_check_func "$LINENO" "lstat" "ac_cv_func_lstat"
 if test "x$ac_cv_func_lstat" = xyes
 then :
   printf "%s\n" "#define HAVE_LSTAT 1" >>confdefs.h
-
-fi
-ac_fn_c_check_func "$LINENO" "mblen" "ac_cv_func_mblen"
-if test "x$ac_cv_func_mblen" = xyes
-then :
-  printf "%s\n" "#define HAVE_MBLEN 1" >>confdefs.h
 
 fi
 ac_fn_c_check_func "$LINENO" "mbrlen" "ac_cv_func_mbrlen"

@@ -112,12 +112,12 @@ History::history_filename (const char *filename)
   size_t home_len = strlen (home);
 
   return_val = new char[2 + home_len + 8]; /* strlen(".history") == 8 */
-  std::strcpy (return_val, home);
+  strcpy (return_val, home);
   return_val[home_len] = '/';
 #if defined(__MSDOS__)
-  std::strcpy (return_val + home_len + 1, "_history");
+  strcpy (return_val + home_len + 1, "_history");
 #else
-  std::strcpy (return_val + home_len + 1, ".history");
+  strcpy (return_val + home_len + 1, ".history");
 #endif
 
   return return_val;
@@ -135,18 +135,18 @@ history_tempfile (const char *filename)
      history file; call will fail if not a symlink */
   char linkbuf[PATH_MAX + 1];
   ssize_t n;
-  if ((n = ::readlink (filename, linkbuf, sizeof (linkbuf) - 1)) > 0)
+  if ((n = readlink (filename, linkbuf, sizeof (linkbuf) - 1)) > 0)
     {
       linkbuf[n] = '\0';
       fn = linkbuf;
     }
 #endif
 
-  size_t len = std::strlen (fn);
+  size_t len = strlen (fn);
   char *ret = new char[len + 11];
-  std::strcpy (ret, fn);
+  strcpy (ret, fn);
 
-  int pid = static_cast<int> (::getpid ());
+  int pid = static_cast<int> (getpid ());
 
   /* filename-PID.tmp */
   ret[len] = '-';
@@ -155,7 +155,7 @@ history_tempfile (const char *filename)
   ret[len + 3] = (pid / 100 % 10) + '0';
   ret[len + 4] = (pid / 10 % 10) + '0';
   ret[len + 5] = (pid % 10) + '0';
-  std::strcpy (ret + len + 6, ".tmp");
+  strcpy (ret + len + 6, ".tmp");
 
   return ret;
 }
@@ -174,12 +174,12 @@ History::read_history_range (const char *filename, unsigned int from,
   char *buffer = nullptr;
   char *input = history_filename (filename);
 
-  int file = input ? ::open (input, O_RDONLY | O_BINARY, 0644) : -1;
+  int file = input ? open (input, O_RDONLY | O_BINARY, 0644) : -1;
   size_t file_size; // this must be before goto error_and_exit
   ssize_t chars_read;
 
   struct stat finfo;
-  if ((file < 0) || (::fstat (file, &finfo) == -1))
+  if ((file < 0) || (fstat (file, &finfo) == -1))
     goto error_and_exit;
 
   if (S_ISREG (finfo.st_mode) == 0)
@@ -197,14 +197,14 @@ History::read_history_range (const char *filename, unsigned int from,
   if (file_size == 0)
     {
       delete[] input;
-      ::close (file);
+      close (file);
       return 0; /* don't waste time if we don't have to */
     }
 
 #ifdef HISTORY_USE_MMAP
   /* We map read/write and private so we can change newlines to NULs without
      affecting the underlying object. */
-  buffer = ::mmap (0, file_size, PROT_READ | PROT_WRITE, MAP_RFLAGS, file, 0);
+  buffer = mmap (0, file_size, PROT_READ | PROT_WRITE, MAP_RFLAGS, file, 0);
   if ((void *)buffer == MAP_FAILED)
     {
       errno = overflow_errno;
@@ -213,7 +213,7 @@ History::read_history_range (const char *filename, unsigned int from,
   chars_read = file_size;
 #else
   buffer = new char[file_size + 1];
-  chars_read = ::read (file, buffer, file_size);
+  chars_read = read (file, buffer, file_size);
 #endif
 
   if (chars_read < 0)
@@ -225,7 +225,7 @@ History::read_history_range (const char *filename, unsigned int from,
         chars_read = EIO;
 
       if (file >= 0)
-        ::close (file);
+        close (file);
 
       delete[] input;
 #ifndef HISTORY_USE_MMAP
@@ -235,7 +235,7 @@ History::read_history_range (const char *filename, unsigned int from,
       return static_cast<int> (chars_read);
     }
 
-  ::close (file);
+  close (file);
 
   /* Set TO to larger than end of file if negative. */
   if (to == static_cast<unsigned int> (-1))
@@ -250,8 +250,7 @@ History::read_history_range (const char *filename, unsigned int from,
      have timestamps if the buffer starts with `#[:digit:]' and temporarily
      set history_comment_char so timestamp parsing works right */
   bool reset_comment_char = false;
-  if (history_comment_char == '\0' && buffer[0] == '#'
-      && std::isdigit (static_cast<unsigned char> (buffer[1])))
+  if (history_comment_char == '\0' && buffer[0] == '#' && c_isdigit (buffer[1]))
     {
       history_comment_char = '#';
       reset_comment_char = true;
@@ -340,7 +339,7 @@ History::read_history_range (const char *filename, unsigned int from,
 #ifndef HISTORY_USE_MMAP
   delete[] buffer;
 #else
-  ::munmap (buffer, file_size);
+  munmap (buffer, file_size);
 #endif
 
   return 0;
@@ -354,7 +353,7 @@ history_rename (const char *old, const char *new_)
 #if defined(_WIN32)
   return MoveFileEx (old, new_, MOVEFILE_REPLACE_EXISTING) == 0 ? -1 : 0;
 #else
-  return ::rename (old, new_);
+  return rename (old, new_);
 #endif
 }
 
@@ -368,7 +367,7 @@ histfile_restore (const char *backup, const char *orig)
   ssize_t n;
 
   /* Follow to target of symlink to avoid renaming symlink itself */
-  if ((n = ::readlink (orig, linkbuf, sizeof (linkbuf) - 1)) > 0)
+  if ((n = readlink (orig, linkbuf, sizeof (linkbuf) - 1)) > 0)
     {
       linkbuf[n] = '\0';
       return history_rename (backup, linkbuf);
@@ -401,15 +400,15 @@ History::history_truncate_file (const char *fname, unsigned int lines)
   buffer = nullptr;
   filename = history_filename (fname);
   tempname = nullptr;
-  file = filename ? ::open (filename, O_RDONLY | O_BINARY, 0644) : -1;
+  file = filename ? open (filename, O_RDONLY | O_BINARY, 0644) : -1;
   rv = exists = 0;
 
   /* Don't try to truncate non-regular files. */
-  if (file == -1 || ::fstat (file, &finfo) == -1)
+  if (file == -1 || fstat (file, &finfo) == -1)
     {
       rv = errno;
       if (file != -1)
-        ::close (file);
+        close (file);
       goto truncate_exit;
     }
   exists = 1;
@@ -419,7 +418,7 @@ History::history_truncate_file (const char *fname, unsigned int lines)
 
   if (S_ISREG (finfo.st_mode) == 0)
     {
-      ::close (file);
+      close (file);
 #ifdef EFTYPE
       rv = EFTYPE;
 #else
@@ -431,8 +430,8 @@ History::history_truncate_file (const char *fname, unsigned int lines)
   file_size = static_cast<size_t> (finfo.st_size);
 
   buffer = new char[file_size + 1];
-  chars_read = ::read (file, buffer, file_size);
-  ::close (file);
+  chars_read = read (file, buffer, file_size);
+  close (file);
 
   if (chars_read <= 0)
     {
@@ -479,18 +478,17 @@ History::history_truncate_file (const char *fname, unsigned int lines)
 
   tempname = history_tempfile (filename);
 
-  if ((file
-       = ::open (tempname, (O_WRONLY | O_CREAT | O_TRUNC | O_BINARY), 0600))
+  if ((file = open (tempname, (O_WRONLY | O_CREAT | O_TRUNC | O_BINARY), 0600))
       != -1)
     {
-      if (::write (file, bp, static_cast<size_t> (chars_read - (bp - buffer)))
+      if (write (file, bp, static_cast<size_t> (chars_read - (bp - buffer)))
           < 0)
         rv = errno;
 
-      if (::fstat (file, &nfinfo) < 0 && rv == 0)
+      if (fstat (file, &nfinfo) < 0 && rv == 0)
         rv = errno;
 
-      if (::close (file) < 0 && rv == 0)
+      if (close (file) < 0 && rv == 0)
         rv = errno;
     }
   else
@@ -508,7 +506,7 @@ truncate_exit:
     {
       rv = errno;
       if (tempname)
-        ::unlink (tempname);
+        unlink (tempname);
       history_lines_written_to_file = 0;
     }
 
@@ -518,7 +516,7 @@ truncate_exit:
      with a shared history file, we don't want to leave the history file
      owned by root. */
   if (rv == 0 && exists && SHOULD_CHOWN (finfo, nfinfo))
-    (void)::chown (filename, finfo.st_uid, finfo.st_gid);
+    (void)chown (filename, finfo.st_uid, finfo.st_gid);
 #endif
 
   delete[] filename;
@@ -549,14 +547,14 @@ History::history_do_write (const char *filename, unsigned int nelements,
 #endif
 
   char *histname = history_filename (filename);
-  bool exists = histname ? (::stat (histname, &finfo) == 0) : false;
+  bool exists = histname ? (stat (histname, &finfo) == 0) : false;
 
   char *tempname = (overwrite && exists && S_ISREG (finfo.st_mode))
                        ? history_tempfile (histname)
                        : nullptr;
   char *output = tempname ? tempname : histname;
 
-  int file = output ? ::open (output, mode, 0600) : -1;
+  int file = output ? open (output, mode, 0600) : -1;
   int rv = 0;
 
   if (file == -1)
@@ -568,7 +566,7 @@ History::history_do_write (const char *filename, unsigned int nelements,
     }
 
 #ifdef HISTORY_USE_MMAP
-  cursize = overwrite ? 0 : ::lseek (file, 0, SEEK_END);
+  cursize = overwrite ? 0 : lseek (file, 0, SEEK_END);
 #endif
 
   if (nelements > history_length ())
@@ -595,17 +593,17 @@ History::history_do_write (const char *filename, unsigned int nelements,
     char *buffer;
 
 #ifdef HISTORY_USE_MMAP
-    if (::ftruncate (file, buffer_size + cursize) == -1)
+    if (ftruncate (file, buffer_size + cursize) == -1)
       goto mmap_error;
-    buffer = ::mmap (0, buffer_size, PROT_READ | PROT_WRITE, MAP_WFLAGS, file,
+    buffer = mmap (0, buffer_size, PROT_READ | PROT_WRITE, MAP_WFLAGS, file,
                      cursize);
     if ((void *)buffer == MAP_FAILED)
       {
       mmap_error:
         rv = errno;
-        ::close (file);
+        close (file);
         if (tempname)
-          ::unlink (tempname);
+          unlink (tempname);
         delete[] histname;
         delete[] tempname;
         return rv;
@@ -622,21 +620,21 @@ History::history_do_write (const char *filename, unsigned int nelements,
             (i < 0) ? i + static_cast<int> (history_length ()) : i);
         if (history_write_timestamps && !the_history[pos]->timestamp.empty ())
           {
-            std::strcpy (buffer + j, the_history[pos]->timestamp.c_str ());
+            strcpy (buffer + j, the_history[pos]->timestamp.c_str ());
             j += the_history[pos]->timestamp.size ();
             buffer[j++] = '\n';
           }
-        std::strcpy (buffer + j, the_history[pos]->line.c_str ());
+        strcpy (buffer + j, the_history[pos]->line.c_str ());
         j += the_history[pos]->line.size ();
         buffer[j++] = '\n';
       }
 
 #ifdef HISTORY_USE_MMAP
-    if (::msync (buffer, buffer_size, MS_ASYNC) != 0
-        || ::munmap (buffer, buffer_size) != 0)
+    if (msync (buffer, buffer_size, MS_ASYNC) != 0
+        || munmap (buffer, buffer_size) != 0)
       rv = errno;
 #else
-    if (::write (file, buffer, buffer_size) < 0)
+    if (write (file, buffer, buffer_size) < 0)
       rv = errno;
 
     delete[] buffer;
@@ -645,7 +643,7 @@ History::history_do_write (const char *filename, unsigned int nelements,
 
   history_lines_written_to_file = nelements;
 
-  if (::close (file) < 0 && rv == 0)
+  if (close (file) < 0 && rv == 0)
     rv = errno;
 
   if (rv == 0 && histname && tempname)
@@ -655,7 +653,7 @@ History::history_do_write (const char *filename, unsigned int nelements,
     {
       rv = errno;
       if (tempname)
-        ::unlink (tempname);
+        unlink (tempname);
       history_lines_written_to_file = 0;
     }
 
@@ -665,7 +663,7 @@ History::history_do_write (const char *filename, unsigned int nelements,
      with a shared history file, we don't want to leave the history file
      owned by root. */
   if (rv == 0 && exists)
-    (void) ::chown (histname, finfo.st_uid, finfo.st_gid);
+    (void) chown (histname, finfo.st_uid, finfo.st_gid);
 #endif
 
   delete[] histname;

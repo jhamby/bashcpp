@@ -65,15 +65,15 @@ namespace readline
 
 // moved from rldefs.h
 #if defined(HAVE_STRCASECMP)
-#define _rl_stricmp ::strcasecmp
-#define _rl_strnicmp ::strncasecmp
+#define _rl_stricmp strcasecmp
+#define _rl_strnicmp strncasecmp
 #else
 int _rl_stricmp (const char *, const char *);
 int _rl_strnicmp (const char *, const char *, int);
 #endif
 
 #if defined(HAVE_STRPBRK) && !defined(HANDLE_MULTIBYTE)
-#define _rl_strpbrk(a, b) std::strpbrk ((a), (b))
+#define _rl_strpbrk(a, b) strpbrk ((a), (b))
 #else
 char *_rl_strpbrk (const char *, const char *);
 #endif
@@ -105,7 +105,7 @@ public:
   }
 
   UNDO_ENTRY (undo_code what_, size_t start_, size_t end_,
-              const std::string &text_)
+              string_view text_)
       : text (text_), start (start_), end (end_), what (what_)
   {
   }
@@ -285,7 +285,7 @@ extern "C"
 }
 
 #if defined(HAVE_POSIX_SIGNALS)
-typedef struct ::sigaction sighandler_cxt;
+typedef struct sigaction sighandler_cxt;
 #define rl_sigaction(s, nh, oh) sigaction (s, nh, oh)
 #else
 typedef struct
@@ -328,18 +328,17 @@ public:
   /* Typedefs for the completion system */
 
   // Returns a newly-allocated string, or nullptr.
-  typedef std::string *(Readline::*rl_compentry_func_t) (const std::string &,
-                                                         int);
+  typedef std::string *(Readline::*rl_compentry_func_t) (string_view, int);
 
   // Completion function that takes an input string and start/end positions,
   // and returns a newly-allocated vector of strings, or nullptr.
   typedef std::vector<std::string *> *(Readline::*rl_completion_func_t) (
-      const std::string &, size_t, size_t);
+      string_view, size_t, size_t);
 
-  typedef std::string (Readline::*rl_quote_func_t) (const std::string &,
+  typedef std::string (Readline::*rl_quote_func_t) (string_view,
                                                     replace_type, char *);
 
-  typedef std::string (Readline::*rl_dequote_func_t) (const std::string &,
+  typedef std::string (Readline::*rl_dequote_func_t) (string_view,
                                                       int);
 
   typedef int (Readline::*rl_compignore_func_t) (std::vector<std::string *> &);
@@ -486,14 +485,14 @@ public:
   // Use a linear search because the list is in order for reverse lookups (by
   // map), and also because users can add their own keymaps.
   inline int
-  _rl_get_keymap_by_name (const std::string &name)
+  _rl_get_keymap_by_name (const char *name)
   {
     std::vector<nmk> *nml = keymap_names ();
     int i = 0;
 
     for (std::vector<nmk>::iterator it = nml->begin (); it != nml->end ();
          ++it, ++i)
-      if (_rl_stricmp (name.c_str (), it->name) == 0)
+      if (_rl_stricmp (name, it->name) == 0)
         return i;
 
     return -1;
@@ -755,7 +754,7 @@ public:
 
   /* Not available unless READLINE_CALLBACKS is defined. */
 
-  void rl_callback_handler_install (const std::string &, rl_vcpfunc_t);
+  void rl_callback_handler_install (string_view, rl_vcpfunc_t);
   void rl_callback_read_char ();
   void rl_callback_handler_remove ();
   void rl_callback_sigcleanup ();
@@ -837,9 +836,9 @@ public:
   /* Readline functions. */
 
   /* Read a line of input. Prompt with PROMPT (may be empty). */
-  std::string readline (const std::string &);
+  std::string readline (string_view);
 
-  void rl_set_prompt (const std::string &);
+  void rl_set_prompt (string_view);
 
   size_t rl_expand_prompt (char *); // this temporarily modifies the input
 
@@ -850,7 +849,7 @@ public:
   /* Add NAME to the list of named functions.  Make FUNCTION be the function
      that gets called.  If KEY is not -1, then bind it. */
   inline void
-  rl_add_defun (const std::string &name, rl_command_func_t function, int key)
+  rl_add_defun (string_view name, rl_command_func_t function, int key)
   {
     if (key != -1)
       rl_bind_key (key, function);
@@ -894,7 +893,7 @@ public:
 
   // Unbind all keys bound to COMMAND, a bindable command name, in MAP.
   inline int
-  rl_unbind_command_in_map (const std::string &command, Keymap map)
+  rl_unbind_command_in_map (const char *command, Keymap map)
   {
     rl_command_func_t func = rl_named_function (command);
     if (func == nullptr)
@@ -907,7 +906,7 @@ public:
      FUNCTION, starting in the current keymap.  This makes new
      keymaps as necessary. */
   inline int
-  rl_bind_keyseq (const std::string &keyseq, rl_command_func_t function)
+  rl_bind_keyseq (string_view keyseq, rl_command_func_t function)
   {
     KEYMAP_ENTRY entry (ISFUNC, function);
     return rl_generic_bind (keyseq, entry, _rl_keymap);
@@ -917,7 +916,7 @@ public:
      FUNCTION.  This makes new keymaps as necessary.  The initial
      place to do bindings is in MAP. */
   inline int
-  rl_bind_keyseq_in_map (const std::string &keyseq, rl_command_func_t function,
+  rl_bind_keyseq_in_map (string_view keyseq, rl_command_func_t function,
                          Keymap map)
   {
     KEYMAP_ENTRY entry (ISFUNC, function);
@@ -925,7 +924,7 @@ public:
   }
 
   inline int
-  rl_bind_keyseq_if_unbound (const std::string &keyseq,
+  rl_bind_keyseq_if_unbound (string_view keyseq,
                              rl_command_func_t default_func)
   {
     return rl_bind_keyseq_if_unbound_in_map (keyseq, default_func, _rl_keymap);
@@ -935,7 +934,7 @@ public:
      the string of characters MACRO.  This makes new keymaps as
      necessary.  The initial place to do bindings is in MAP. */
   inline int
-  rl_macro_bind (const std::string &keyseq, const std::string &macro,
+  rl_macro_bind (string_view keyseq, string_view macro,
                  Keymap map)
   {
     std::string macro_keys;
@@ -948,10 +947,10 @@ public:
     return 0;
   }
 
-  int rl_bind_keyseq_if_unbound_in_map (const std::string &, rl_command_func_t,
+  int rl_bind_keyseq_if_unbound_in_map (string_view, rl_command_func_t,
                                         Keymap);
 
-  int rl_generic_bind (const std::string &keyseq, KEYMAP_ENTRY &k, Keymap map);
+  int rl_generic_bind (string_view keyseq, KEYMAP_ENTRY &k, Keymap map);
 
   const char *rl_variable_value (const char *);
 
@@ -961,26 +960,26 @@ public:
      If STRING doesn't have a matching function, then nullptr
      is returned. The string match is case-insensitive. */
   inline rl_command_func_t
-  rl_named_function (const std::string &string)
+  rl_named_function (const char *string)
   {
     rl_initialize_funmap ();
 
     for (size_t i = 0; funmap[i]; i++)
-      if (_rl_stricmp (funmap[i]->name, string.c_str ()) == 0)
+      if (_rl_stricmp (funmap[i]->name, string) == 0)
         return funmap[i]->function;
 
     return nullptr;
   }
 
   inline rl_command_func_t
-  rl_function_of_keyseq (const std::string &keyseq, Keymap map,
+  rl_function_of_keyseq (string_view keyseq, Keymap map,
                          keymap_entry_type *type)
   {
     return _rl_function_of_keyseq_internal (keyseq, map, type);
   }
 
   inline rl_command_func_t
-  rl_function_of_keyseq_len (const std::string &keyseq, Keymap map,
+  rl_function_of_keyseq_len (string_view keyseq, Keymap map,
                              keymap_entry_type *type)
   {
     return _rl_function_of_keyseq_internal (keyseq, map, type);
@@ -1031,7 +1030,7 @@ public:
   /* Return the keymap corresponding to a given name.  Names look like
      `emacs' or `emacs-meta' or `vi-insert'.  */
   Keymap
-  rl_get_keymap_by_name (const std::string &name)
+  rl_get_keymap_by_name (const char *name)
   {
     int i = _rl_get_keymap_by_name (name);
     return (i >= 0) ? keymap_names_[static_cast<size_t> (i)].map : nullptr;
@@ -1053,7 +1052,7 @@ public:
   }
 
   // Set the name of MAP to NAME. This function isn't used by bash.
-  int rl_set_keymap_name (const std::string &, Keymap);
+  int rl_set_keymap_name (string_view, Keymap);
 
   // Functions for manipulating the funmap, which maps command names to
   // functions.
@@ -1061,7 +1060,7 @@ public:
   void rl_initialize_funmap ();
 
   void
-  rl_add_funmap_entry (const std::string &name, rl_command_func_t function)
+  rl_add_funmap_entry (string_view name, rl_command_func_t function)
   {
     FUNMAP *new_funmap = new FUNMAP ();
     new_funmap->name = savestring (name);
@@ -1134,9 +1133,9 @@ public:
   {
 #if defined(NEW_TTY_DRIVER) || defined(__MINT__)
     if (_rl_term_cr)
-      ::tputs (_rl_term_cr, 1, &_rl_output_character_function);
+      tputs (_rl_term_cr, 1, &_rl_output_character_function);
 #endif /* NEW_TTY_DRIVER || __MINT__ */
-    std::putc ('\n', _rl_out_stream);
+    putc ('\n', _rl_out_stream);
   }
 
   /* Functions to manage the mark and region, especially the notion of an
@@ -1185,7 +1184,7 @@ public:
   /* Replace the current line buffer contents with TEXT.  If CLEAR_UNDO is
      non-zero, we free the current undo list. */
   inline void
-  rl_replace_line (const std::string &text, bool clear_undo)
+  rl_replace_line (string_view text, bool clear_undo)
   {
     rl_line_buffer = text;
 
@@ -1195,7 +1194,7 @@ public:
     _rl_fix_point (true);
   }
 
-  size_t rl_insert_text (const std::string &);
+  size_t rl_insert_text (string_view);
   size_t rl_delete_text (size_t, size_t);
   void rl_kill_text (size_t, size_t);
   char *rl_copy_text (size_t, size_t);
@@ -1237,19 +1236,19 @@ public:
   inline void
   rl_reset_screen_size ()
   {
-    _rl_get_screen_size (::fileno (rl_instream), false);
+    _rl_get_screen_size (fileno (rl_instream), false);
   }
 
   inline void
   _rl_sigwinch_resize_terminal ()
   {
-    _rl_get_screen_size (::fileno (rl_instream), true);
+    _rl_get_screen_size (fileno (rl_instream), true);
   }
 
   void
   rl_resize_terminal ()
   {
-    _rl_get_screen_size (::fileno (rl_instream), true);
+    _rl_get_screen_size (fileno (rl_instream), true);
     if (_rl_echoing_p)
       {
         if (CUSTOM_REDISPLAY_FUNC ())
@@ -1368,11 +1367,11 @@ public:
   int rl_complete_internal (int);
   void rl_display_match_list (std::vector<std::string *> &, size_t);
 
-  std::vector<std::string *> *rl_completion_matches (const std::string &,
+  std::vector<std::string *> *rl_completion_matches (string_view,
                                                      rl_compentry_func_t);
 
-  std::string *rl_username_completion_function (const std::string &, int);
-  std::string *rl_filename_completion_function (const std::string &, int);
+  std::string *rl_username_completion_function (string_view, int);
+  std::string *rl_filename_completion_function (string_view, int);
 
   int rl_completion_mode (rl_command_func_t);
 
@@ -1654,7 +1653,7 @@ private:
 
   /* Undocumented in the texinfo manual; not really useful to programs. */
 
-  int rl_translate_keyseq (const std::string &, std::string &);
+  int rl_translate_keyseq (string_view, std::string &);
   std::string rl_untranslate_keyseq (int);
 
   /* Undocumented; used internally only. */
@@ -1704,7 +1703,7 @@ private:
     if (CTRL_CHAR (c) || c == RUBOUT)
       return 2;
 
-    return (std::isprint (uc)) ? 1 : 2;
+    return (c_isprint (uc)) ? 1 : 2;
   }
 
   /* parse-colors.cc */
@@ -1736,7 +1735,7 @@ private:
   void _rl_init_file_error (const char *, ...)
       __attribute__ ((__format__ (printf, 2, 3)));
 
-  rl_command_func_t _rl_function_of_keyseq_internal (const std::string &,
+  rl_command_func_t _rl_function_of_keyseq_internal (string_view,
                                                      Keymap,
                                                      keymap_entry_type *);
 
@@ -1758,7 +1757,7 @@ private:
     return false;
   }
 
-  void _rl_macro_dumper_internal (bool, Keymap, const std::string &);
+  void _rl_macro_dumper_internal (bool, Keymap, const char *);
 
   // moved from rlprivate.hh macros
 
@@ -1825,7 +1824,7 @@ private:
 
   /* bind.cc */
 
-  std::string _rl_untranslate_macro_value (const std::string &, bool);
+  std::string _rl_untranslate_macro_value (string_view, bool);
 
   int handle_parser_directive (char *);
 
@@ -1849,7 +1848,7 @@ private:
   /* Print prefix color. Returns 0 on success and 1 on error. */
   int _rl_print_prefix_color ();
 
-  bool _rl_print_color_indicator (const std::string &);
+  bool _rl_print_color_indicator (string_view);
   void _rl_prep_non_filename_text ();
 
 #if defined(COLOR_SUPPORT)
@@ -1857,7 +1856,7 @@ private:
   void init_rl_color_indicators ();
 
   inline int
-  colored_stat_start (const std::string &filename)
+  colored_stat_start (string_view filename)
   {
     _rl_set_normal_color ();
     return _rl_print_color_indicator (filename);
@@ -1885,9 +1884,9 @@ private:
 
   /* Output a color indicator (which may contain nulls).  */
   inline void
-  _rl_put_indicator (const std::string &ind)
+  _rl_put_indicator (string_view ind)
   {
-    ::fwrite (ind.data (), ind.size (), 1, rl_outstream);
+    fwrite (ind.data (), ind.size (), 1, rl_outstream);
   }
 
   inline bool
@@ -1960,32 +1959,32 @@ private:
   int _rl_internal_pager (int);
 
 #if defined(VISIBLE_STATS)
-  int stat_char (const std::string &);
+  int stat_char (string_view);
 #endif
 
-  std::string printable_part (const std::string &);
-  size_t fnwidth (const std::string &string);
-  size_t fnprint (const std::string &, size_t, size_t);
-  size_t print_filename (const std::string &, size_t, size_t);
-  std::vector<std::string *> *gen_completion_matches (const std::string &,
+  std::string printable_part (string_view);
+  size_t fnwidth (string_view string);
+  size_t fnprint (string_view, size_t, size_t);
+  size_t print_filename (string_view, size_t, size_t);
+  std::vector<std::string *> *gen_completion_matches (string_view,
                                                       size_t, size_t,
                                                       rl_compentry_func_t,
                                                       rl_qf_flags, int);
   void remove_duplicate_matches (std::vector<std::string *> &);
   void compute_lcd_of_matches (std::vector<std::string *> &,
-                               const std::string &);
+                               string_view);
   int postprocess_matches (std::vector<std::string *> &, bool);
   size_t complete_get_screenwidth ();
   void display_matches (const std::vector<std::string *> &);
-  std::string make_quoted_replacement (const std::string &, replace_type,
+  std::string make_quoted_replacement (string_view, replace_type,
                                        char *);
-  void insert_match (const std::string &, size_t, replace_type, char *);
+  void insert_match (string_view, size_t, replace_type, char *);
   int append_to_match (std::string &, unsigned char, unsigned char, bool);
   void insert_all_matches (const std::vector<std::string *> &, size_t, char *);
-  int compare_match (const std::string &, const std::string &);
-  bool complete_fncmp (const std::string &, const std::string &);
+  int compare_match (string_view, string_view);
+  bool complete_fncmp (string_view, string_view);
 
-  std::string rl_quote_filename (const std::string &, replace_type, char *);
+  std::string rl_quote_filename (string_view, replace_type, char *);
 
   /* display.cc */
 
@@ -2004,7 +2003,7 @@ private:
   /* Just strip out RL_PROMPT_START_IGNORE and RL_PROMPT_END_IGNORE from
      PMT and return the rest of PMT. */
   inline std::string
-  _rl_strip_prompt (const std::string &pmt)
+  _rl_strip_prompt (string_view pmt)
   {
     return expand_prompt (pmt, PMT_NONE, nullptr, nullptr, nullptr, nullptr);
   }
@@ -2023,7 +2022,7 @@ private:
   void _rl_update_final ();
   void _rl_redisplay_after_sigwinch ();
   void open_some_spaces (size_t);
-  void redraw_prompt (const std::string &);
+  void redraw_prompt (string_view);
 
   const char *prompt_modestr (size_t *);
 
@@ -2034,7 +2033,7 @@ private:
   };
 
   /* Expand prompt and return indices into it. Returns an RAII C++ string. */
-  std::string expand_prompt (const std::string &, expand_prompt_flags,
+  std::string expand_prompt (string_view, expand_prompt_flags,
                              size_t *, size_t *, size_t *, size_t *);
 
   void update_line (char *old, char *old_face, const char *new_,
@@ -2072,7 +2071,7 @@ private:
   }
 
   inline void
-  invis_adds (const std::string &str, char face)
+  invis_adds (string_view str, char face)
   {
     line_state_invisible->line.append (str);
     line_state_invisible->lface.append (str.size (), face);
@@ -2175,7 +2174,7 @@ private:
     _rl_backspace (l);
 
     for (size_t i = 0; i < l; i++)
-      std::putc (' ', rl_outstream);
+      putc (' ', rl_outstream);
 
     _rl_backspace (l);
 
@@ -2190,7 +2189,7 @@ private:
   _rl_clear_to_eol (size_t count)
   {
     if (_rl_term_clreol)
-      ::tputs (_rl_term_clreol, 1, _rl_output_character_function);
+      tputs (_rl_term_clreol, 1, _rl_output_character_function);
     else if (count)
       space_to_eol (count);
   }
@@ -2211,9 +2210,9 @@ private:
   {
     if (_rl_term_clrpag)
       {
-        ::tputs (_rl_term_clrpag, 1, _rl_output_character_function);
+        tputs (_rl_term_clrpag, 1, _rl_output_character_function);
         if (clrscr && _rl_term_clrscroll)
-          ::tputs (_rl_term_clrscroll, 1, _rl_output_character_function);
+          tputs (_rl_term_clrscroll, 1, _rl_output_character_function);
       }
     else
       rl_crlf ();
@@ -2243,7 +2242,7 @@ private:
         if (_rl_vis_botlin > 0) /* minor optimization plus bug fix */
           _rl_move_vert (_rl_vis_botlin);
         _rl_vis_botlin = 0;
-        std::fflush (rl_outstream);
+        fflush (rl_outstream);
         rl_restart_output (1, 0);
       }
   }
@@ -2254,13 +2253,13 @@ private:
     cr ();
     _rl_clear_to_eol (0);
     cr ();
-    std::fflush (rl_outstream);
+    fflush (rl_outstream);
   }
 
   inline void
   _rl_ttyflush ()
   {
-    std::fflush (rl_outstream);
+    fflush (rl_outstream);
   }
 
   /* return the `current display line' of the cursor -- the number of lines to
@@ -2300,7 +2299,7 @@ private:
   void putc_face (int, char, char *);
 
   inline void
-  puts_face (const std::string &str, const std::string &face, size_t n)
+  puts_face (string_view str, string_view face, size_t n)
   {
     size_t i;
     char cur_face;
@@ -2400,7 +2399,7 @@ private:
   _rl_search_cxt *_rl_isearch_init (int);
   void _rl_isearch_fini (_rl_search_cxt *);
 
-  void rl_display_search (const std::string &, rl_search_flags);
+  void rl_display_search (string_view, rl_search_flags);
 
   /* kill.cc */
 
@@ -2408,7 +2407,7 @@ private:
   std::string _rl_bracketed_text ();
   int _rl_bracketed_read_key ();
   int _rl_bracketed_read_mbstring (std::string &, int);
-  void _rl_copy_to_kill_ring (const std::string &, bool);
+  void _rl_copy_to_kill_ring (string_view, bool);
   void region_kill_internal (bool);
   int rl_yank_nth_arg_internal (int, int, int);
 
@@ -2542,13 +2541,13 @@ private:
   char *_rl_init_locale ();
   void _rl_init_eightbit ();
 
-  inline string_view
-  _rl_get_locale_var (const std::string &v)
+  inline const char *
+  _rl_get_locale_var (const char *v)
   {
-    string_view lspec = sh_get_env_value ("LC_ALL");
-    if (lspec.empty ())
-      lspec = sh_get_env_value (v.c_str ());
-    if (lspec.empty ())
+    const char *lspec = sh_get_env_value ("LC_ALL");
+    if (lspec == nullptr || *lspec == 0)
+      lspec = sh_get_env_value (v);
+    if (lspec == nullptr || *lspec == 0)
       lspec = sh_get_env_value ("LANG");
 
     return lspec;
@@ -2682,7 +2681,7 @@ private:
 #if defined(_AIX)
   /* Currently this is only used on AIX */
   inline void
-  rltty_warning (const std::string &msg)
+  rltty_warning (string_viewmsg)
   {
     _rl_errmsg ("warning: %s", msg);
   }
@@ -2703,9 +2702,9 @@ private:
   int _rl_nsearch_callback (_rl_search_cxt *);
   int _rl_nsearch_cleanup (_rl_search_cxt *, int);
   void make_history_line_current (HIST_ENTRY *);
-  size_t noninc_search_from_pos (const std::string &, size_t, int,
+  size_t noninc_search_from_pos (string_view, size_t, int,
                                  rl_search_flags, size_t *);
-  bool noninc_dosearch (const std::string &, int, rl_search_flags);
+  bool noninc_dosearch (string_view, int, rl_search_flags);
   _rl_search_cxt *_rl_nsearch_init (int, char);
   void _rl_nsearch_abort (_rl_search_cxt *);
   int _rl_nsearch_dispatch (_rl_search_cxt *, int);
@@ -2756,7 +2755,7 @@ private:
      non-null serve to check whether or not we have initialized termcap. */
   void _rl_get_screen_size (int, bool);
 
-  void _rl_init_terminal_io (const std::string &);
+  void _rl_init_terminal_io (string_view);
 
   void _tc_strings_init ();
 
@@ -2768,14 +2767,14 @@ private:
   _rl_standout_on ()
   {
     if (_rl_term_so && _rl_term_se)
-      ::tputs (_rl_term_so, 1, &_rl_output_character_function);
+      tputs (_rl_term_so, 1, &_rl_output_character_function);
   }
 
   inline void
   _rl_standout_off ()
   {
     if (_rl_term_so && _rl_term_se)
-      ::tputs (_rl_term_se, 1, &_rl_output_character_function);
+      tputs (_rl_term_se, 1, &_rl_output_character_function);
   }
 
   /* ************************************************************** */
@@ -2787,7 +2786,7 @@ private:
   {
     if (term_has_meta && _rl_term_mm)
       {
-        ::tputs (_rl_term_mm, 1, &_rl_output_character_function);
+        tputs (_rl_term_mm, 1, &_rl_output_character_function);
         _rl_enabled_meta = true;
       }
   }
@@ -2797,7 +2796,7 @@ private:
   {
     if (term_has_meta && _rl_term_mo && _rl_enabled_meta)
       {
-        ::tputs (_rl_term_mo, 1, &_rl_output_character_function);
+        tputs (_rl_term_mo, 1, &_rl_output_character_function);
         _rl_enabled_meta = false;
       }
   }
@@ -2806,9 +2805,9 @@ private:
   _rl_control_keypad (bool on)
   {
     if (on && _rl_term_ks)
-      ::tputs (_rl_term_ks, 1, &_rl_output_character_function);
+      tputs (_rl_term_ks, 1, &_rl_output_character_function);
     else if (!on && _rl_term_ke)
-      ::tputs (_rl_term_ke, 1, &_rl_output_character_function);
+      tputs (_rl_term_ke, 1, &_rl_output_character_function);
   }
 
   /* ************************************************************** */
@@ -2827,9 +2826,9 @@ private:
         if (force || im != rl_insert_mode)
           {
             if (im == RL_IM_OVERWRITE)
-              ::tputs (_rl_term_vs, 1, &_rl_output_character_function);
+              tputs (_rl_term_vs, 1, &_rl_output_character_function);
             else
-              ::tputs (_rl_term_ve, 1, &_rl_output_character_function);
+              tputs (_rl_term_ve, 1, &_rl_output_character_function);
           }
       }
   }
@@ -2876,7 +2875,7 @@ private:
   inline void
   _rl_output_some_chars (const char *string, size_t count)
   {
-    std::fwrite (string, 1, count, _rl_out_stream);
+    fwrite (string, 1, count, _rl_out_stream);
   }
 
   /* Move the cursor back. */
@@ -2885,23 +2884,23 @@ private:
   {
     if (_rl_term_backspace)
       for (size_t i = 0; i < count; i++)
-        ::tputs (_rl_term_backspace, 1, &_rl_output_character_function);
+        tputs (_rl_term_backspace, 1, &_rl_output_character_function);
     else
       for (size_t i = 0; i < count; i++)
-        std::putc ('\b', _rl_out_stream);
+        putc ('\b', _rl_out_stream);
   }
 
   inline void
   _rl_cr ()
   {
-    ::tputs (_rl_term_cr, 1, &_rl_output_character_function);
+    tputs (_rl_term_cr, 1, &_rl_output_character_function);
   }
 
 #if defined(HANDLE_MULTIBYTE)
   size_t _rl_col_width (const char *str, size_t start, size_t end, int flags);
 #else
   inline size_t
-  _rl_col_width (const std::string &, size_t start, size_t end, int)
+  _rl_col_width (string_view, size_t start, size_t end, int)
   {
     return (end <= start) ? 0 : (end - start);
   }
@@ -2929,7 +2928,7 @@ private:
       rl_mark = rl_end ();
   }
 
-  size_t _rl_replace_text (const std::string &, size_t, size_t);
+  size_t _rl_replace_text (string_view, size_t, size_t);
   size_t _rl_forward_char_internal (int);
   size_t _rl_backward_char_internal (int);
 
@@ -2985,7 +2984,7 @@ private:
 
   int _rl_abort_internal ();
   int _rl_null_function (int, int);
-  char *_rl_strindex (const std::string &, const std::string &);
+  char *_rl_strindex (string_view, string_view);
 
   /* vi_mode.cc */
 

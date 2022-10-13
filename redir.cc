@@ -111,7 +111,7 @@ static REDIRECTEE rd;
       if ((r) < 0)                                                            \
         {                                                                     \
           if (fd >= 0)                                                        \
-            ::close (fd);                                                     \
+            close (fd);                                                       \
           set_exit_status (EXECUTION_FAILURE);                                \
           return (e) == 0 ? EINVAL : (e);                                     \
         }                                                                     \
@@ -202,7 +202,7 @@ Shell::redirection_error (REDIRECT *temp, int error,
 
     case HEREDOC_REDIRECT:
       internal_error (_ ("cannot create temp file for here-document: %s"),
-                      std::strerror (heredoc_errno));
+                      strerror (heredoc_errno));
       break;
 
     case BADVAR_REDIRECT:
@@ -210,7 +210,7 @@ Shell::redirection_error (REDIRECT *temp, int error,
       break;
 
     default:
-      internal_error ("%s: %s", filename, std::strerror (error));
+      internal_error ("%s: %s", filename, strerror (error));
       break;
     }
 
@@ -397,7 +397,7 @@ heredoc_write (int fd, char *heredoc, size_t herelen)
   int e;
 
   errno = 0;
-  nw = ::write (fd, heredoc, herelen);
+  nw = write (fd, heredoc, herelen);
   e = errno;
   if (nw != herelen)
     {
@@ -428,7 +428,7 @@ here_document_to_fd (WORD_DESC *redirectee, enum r_instruction ri)
   /* If we have a zero-length document, don't mess with a temp file */
   if (document_len == 0)
     {
-      fd = ::open ("/dev/null", O_RDONLY);
+      fd = open ("/dev/null", O_RDONLY);
       r = errno;
       if (document != redirectee->word)
         FREE (document);
@@ -485,7 +485,7 @@ use_tempfile:
       return fd;
     }
 
-  ::fchmod (fd, S_IRUSR | S_IWUSR);
+  fchmod (fd, S_IRUSR | S_IWUSR);
   SET_CLOSE_ON_EXEC (fd);
 
   errno = r = 0; /* XXX */

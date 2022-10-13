@@ -63,7 +63,7 @@ substring (const char *string, size_t start, size_t end)
 
   len = end - start;
   result = new char[len + 1];
-  std::memcpy (result, string + start, len);
+  memcpy (result, string + start, len);
   result[len] = '\0';
   return result;
 }
@@ -349,7 +349,7 @@ strlist_print (const STRINGLIST *sl, const char *prefix)
 
   STRINGLIST::const_iterator it;
   for (it = sl->begin (); it != sl->end (); ++it)
-    std::printf ("%s%s\n", prefix ? prefix : "", *it);
+    printf ("%s%s\n", prefix ? prefix : "", *it);
 }
 
 // Custom comparison function for sorting string pointer vectors.
@@ -603,7 +603,7 @@ sh_openpipe (int *pv)
 {
   int r;
 
-  if ((r = ::pipe (pv)) < 0)
+  if ((r = pipe (pv)) < 0)
     return r;
 
   pv[0] = move_to_high_fd (pv[0], 1, 64);
@@ -616,10 +616,10 @@ static inline int
 sh_closepipe (int *pv)
 {
   if (pv[0] >= 0)
-    ::close (pv[0]);
+    close (pv[0]);
 
   if (pv[1] >= 0)
-    ::close (pv[1]);
+    close (pv[1]);
 
   pv[0] = pv[1] = -1;
   return 0;
@@ -636,14 +636,14 @@ sh_setclexec (int fd)
 static inline bool
 sh_validfd (int fd)
 {
-  return ::fcntl (fd, F_GETFD, 0) >= 0;
+  return fcntl (fd, F_GETFD, 0) >= 0;
 }
 
 static inline bool
 fd_ispipe (int fd)
 {
   errno = 0;
-  return (::lseek (fd, 0L, SEEK_CUR) < 0) && (errno == ESPIPE);
+  return (lseek (fd, 0L, SEEK_CUR) < 0) && (errno == ESPIPE);
 }
 
 #ifdef _POSIXSTAT_H_
@@ -661,7 +661,7 @@ file_exists (const char *fn)
 {
   struct stat sb;
 
-  return ::stat (fn, &sb) == 0;
+  return stat (fn, &sb) == 0;
 }
 
 static inline bool
@@ -669,7 +669,7 @@ file_isdir (const char *fn)
 {
   struct stat sb;
 
-  return (::stat (fn, &sb) == 0) && S_ISDIR (sb.st_mode);
+  return (stat (fn, &sb) == 0) && S_ISDIR (sb.st_mode);
 }
 
 static inline bool

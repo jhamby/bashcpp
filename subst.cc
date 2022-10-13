@@ -150,7 +150,7 @@ Shell::string_extract (const char *string, size_t *sindex,
   size_t slen;
   DECLARE_MBSTATE;
 
-  slen = (MB_CUR_MAX > 1) ? (std::strlen (string + *sindex) + *sindex) : 0;
+  slen = (MB_CUR_MAX > 1) ? (strlen (string + *sindex) + *sindex) : 0;
   size_t i = *sindex;
   bool found = false;
 
@@ -444,7 +444,7 @@ Shell::string_extract_single_quoted (const char *string, size_t *sindex)
   DECLARE_MBSTATE;
 
   /* Don't need slen for ADVANCE_CHAR unless multibyte chars possible. */
-  slen = (MB_CUR_MAX > 1) ? std::strlen (string + *sindex) + *sindex : 0;
+  slen = (MB_CUR_MAX > 1) ? strlen (string + *sindex) + *sindex : 0;
   i = *sindex;
   while (string[i] && string[i] != '\'')
     ADVANCE_CHAR (string, slen, i);
@@ -504,7 +504,7 @@ Shell::string_extract_verbatim (const char *string, size_t slen,
   if (*charlist == 0)
     {
       const char *temp = string + *sindex;
-      size_t len = (*sindex == 0) ? slen : std::strlen (temp);
+      size_t len = (*sindex == 0) ? slen : strlen (temp);
       char *t2 = savestring (temp);
       *sindex += len;
       return t2;
@@ -542,11 +542,11 @@ Shell::string_extract_verbatim (const char *string, size_t slen,
       if (locale_utf8locale && slen > i && UTF8_SINGLEBYTE (string[i]))
         mblength = (string[i] != 0) ? 1 : 0;
       else
-        mblength = std::mblen (string + i, slen - i);
+        mblength = mblen (string + i, slen - i);
       if (mblength > 1)
         {
           wchar_t wc;
-          mblength = std::mbtowc (&wc, string + i, slen - i);
+          mblength = mbtowc (&wc, string + i, slen - i);
           if (MB_INVALIDCH (mblength))
             {
               if (member (c, charlist))
@@ -557,14 +557,14 @@ Shell::string_extract_verbatim (const char *string, size_t slen,
               if (wcharlist == 0)
                 {
                   size_t len;
-                  len = std::mbstowcs (wcharlist, charlist, 0);
+                  len = mbstowcs (wcharlist, charlist, 0);
                   if (len == static_cast<size_t> (-1))
                     len = 0;
                   wcharlist = new wchar_t[len + 1];
-                  std::mbstowcs (wcharlist, charlist, len + 1);
+                  mbstowcs (wcharlist, charlist, len + 1);
                 }
 
-              if (std::wcschr (wcharlist, wc))
+              if (wcschr (wcharlist, wc))
                 break;
             }
         }
@@ -615,7 +615,7 @@ Shell::extract_command_subst (const char *string, size_t *sindex,
 char *
 extract_array_assignment_list (const char *string, size_t *sindex)
 {
-  size_t slen = std::strlen (string);
+  size_t slen = strlen (string);
   if (string[slen - 1] == RPAREN)
     {
       char *ret = substring (string, *sindex, slen - 1);
@@ -641,10 +641,10 @@ Shell::extract_delimited_string (const char *string, size_t *sindex,
 {
   DECLARE_MBSTATE;
 
-  size_t slen = std::strlen (string + *sindex) + *sindex;
-  size_t len_opener = std::strlen (opener);
-  size_t len_alt_opener = std::strlen (alt_opener);
-  size_t len_closer = std::strlen (closer);
+  size_t slen = strlen (string + *sindex) + *sindex;
+  size_t len_opener = strlen (opener);
+  size_t len_alt_opener = strlen (alt_opener);
+  size_t len_closer = strlen (closer);
 
   bool pass_character = false, in_comment = false;
 
@@ -791,7 +791,7 @@ Shell::extract_delimited_string (const char *string, size_t *sindex,
   else
     {
       result = new char[1 + si];
-      std::strncpy (result, string + *sindex, si);
+      strncpy (result, string + *sindex, si);
       result[si] = '\0';
     }
   *sindex = i;
@@ -815,7 +815,7 @@ Shell::extract_dollar_brace_string (const char *string, size_t *sindex,
 
   bool pass_character = false;
   int nesting_level = 1;
-  size_t slen = std::strlen (string + *sindex) + *sindex;
+  size_t slen = strlen (string + *sindex) + *sindex;
 
   /* The handling of dolbrace_state needs to agree with the code in parse.y:
      parse_matched_pair().  The different initial value is to handle the
@@ -1039,7 +1039,7 @@ Shell::skip_matched_pair (const char *string, size_t start, char open,
 {
   DECLARE_MBSTATE;
 
-  size_t slen = std::strlen (string + start) + start;
+  size_t slen = strlen (string + start) + start;
   bool oldthrow = no_throw_on_fatal_error;
   no_throw_on_fatal_error = true;
 
@@ -1140,7 +1140,7 @@ Shell::skip_to_delim (const char *string, size_t start, const char *delims,
 {
   DECLARE_MBSTATE;
 
-  size_t slen = std::strlen (string + start) + start;
+  size_t slen = strlen (string + start) + start;
   bool oldthrow = no_throw_on_fatal_error;
   if (flags & SD_NOTHROW)
     no_throw_on_fatal_error = true;
@@ -1331,7 +1331,7 @@ Shell::skip_to_histexp (const char *string, size_t start, const char *delims,
 {
   DECLARE_MBSTATE;
 
-  size_t slen = std::strlen (string + start) + start;
+  size_t slen = strlen (string + start) + start;
   bool oldthrow = no_throw_on_fatal_error;
 
   if (flags & SD_NOTHROW)
@@ -1449,7 +1449,7 @@ Shell::skip_to_histexp (const char *string, size_t start, const char *delims,
    rl_completer_quote_characters. */
 
 unsigned int
-Shell::char_is_quoted (const std::string &str, int eindex)
+Shell::char_is_quoted (string_view str, int eindex)
 {
   DECLARE_MBSTATE;
 
@@ -1507,8 +1507,8 @@ Shell::unclosed_pair (const char *string, int eindex, const char *openstr)
 {
   DECLARE_MBSTATE;
 
-  size_t slen = std::strlen (string);
-  size_t olen = std::strlen (openstr);
+  size_t slen = strlen (string);
+  size_t olen = strlen (openstr);
 
   bool pass_next = false, openc = false;
 
@@ -1587,7 +1587,7 @@ Shell::split_at_delims (const char *string, int slen, const char *delims,
 #endif
       DECLARE_MBSTATE;
 
-      slength = std::strlen (delims);
+      slength = strlen (delims);
       d2 = new char[slength + 1];
       i = ts = 0;
       while (delims[i])
@@ -1595,12 +1595,12 @@ Shell::split_at_delims (const char *string, int slen, const char *delims,
 #if defined(HANDLE_MULTIBYTE)
           mbstate_t state_bak;
           state_bak = state;
-          mblength = std::mbrlen (delims + i, slength, &state);
+          mblength = mbrlen (delims + i, slength, &state);
           if (MB_INVALIDCH (mblength))
             state = state_bak;
           else if (mblength > 1)
             {
-              std::memcpy (d2 + ts, delims + i, mblength);
+              memcpy (d2 + ts, delims + i, mblength);
               ts += mblength;
               i += mblength;
               slength -= mblength;
@@ -1741,7 +1741,7 @@ string_list_internal (WORD_LIST *list, const char *sep)
     return list->word->word;
 
   /* This is nearly always called with either sep[0] == 0 or sep[1] == 0. */
-  size_t sep_len = std::strlen (sep);
+  size_t sep_len = strlen (sep);
 
   std::string ret;
 
@@ -1782,7 +1782,7 @@ Shell::ifs_firstchar (int *lenp)
     }
   else
     {
-      std::memcpy (ret, ifs_firstc, ifs_firstc_len);
+      memcpy (ret, ifs_firstc, ifs_firstc_len);
       ret[len = ifs_firstc_len] = '\0';
     }
 #else
@@ -1998,7 +1998,7 @@ Shell::string_list_pos_params (char pchar, WORD_LIST *list,
                      : 0)
 
 /* member of the space character class in the current locale */
-#define ifs_whitespace(c) std::isspace (c)
+#define ifs_whitespace(c) c_isspace (c)
 
 /* "adjacent IFS white space" */
 #define ifs_whitesep(c)                                                       \
@@ -2053,7 +2053,7 @@ Shell::list_string (const char *string, const char *separators,
         extract a word, stopping at a separator
         skip sequences of whitespace characters as long as they are separators
      This obeys the field splitting rules in Posix.2. */
-  size_t slen = std::strlen (string);
+  size_t slen = strlen (string);
   size_t sindex;
   WORD_LIST *result = new WORD_LIST ();
   for (sindex = 0; string[sindex];)
@@ -2173,7 +2173,7 @@ Shell::get_word_from_string (char **stringp, const char *separators,
 
   unsigned char
       local_cmap[UCHAR_MAX + 1]; /* really only need single-byte chars here */
-  std::memset (local_cmap, '\0', sizeof (local_cmap));
+  memset (local_cmap, '\0', sizeof (local_cmap));
 
   sx_flags xflags = SX_NOFLAGS;
   for (const char *sep = separators; sep && *sep; sep++)
@@ -2217,7 +2217,7 @@ Shell::get_word_from_string (char **stringp, const char *separators,
 
   /* Don't need string length in ADVANCE_CHAR unless multibyte chars are
      possible, but need it in string_extract_verbatim for bounds checking */
-  size_t slen = std::strlen (s);
+  size_t slen = strlen (s);
   char *current_word
       = string_extract_verbatim (s, slen, &sindex, separators, xflags);
 
@@ -2270,7 +2270,7 @@ Shell::strip_trailing_ifs_whitespace (char *string, const char *separators,
 {
   char *s;
 
-  s = string + std::strlen (string) - 1;
+  s = string + strlen (string) - 1;
   while (s > string
          && ((spctabnl (*s) && isifs (*s))
              || (saw_escape && *s == CTLESC && spctabnl (s[1]))))
@@ -2975,7 +2975,7 @@ expand_string_assignment (const char *string, int quoted)
    passed string when an error occurs.  Might want to trap other exceptions
    here so we don't endlessly loop. */
 WORD_LIST *
-expand_prompt_string (const std::string &string, int quoted,
+expand_prompt_string (string_view string, int quoted,
                       word_desc_flags wflags)
 {
   WORD_LIST *value;

@@ -54,6 +54,7 @@
 #  inet_ntop \
 #  ldexpl \
 #  lstat \
+#  mbrlen \
 #  mbschr \
 #  mkfifo \
 #  mknod \
@@ -102,6 +103,7 @@ gl_MODULES([
   inet_ntop
   ldexpl
   lstat
+  mbrlen
   mbschr
   mkfifo
   mknod

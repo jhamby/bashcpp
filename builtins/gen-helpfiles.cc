@@ -76,22 +76,22 @@ main (int argc, char **argv)
     {
       char *arg = argv[arg_index++];
 
-      if (std::strcmp (arg, "-noproduction") == 0)
+      if (strcmp (arg, "-noproduction") == 0)
         ;
-      else if (std::strcmp (arg, "-H") == 0)
+      else if (strcmp (arg, "-H") == 0)
         helpfile_directory = argv[arg_index++];
-      else if (std::strcmp (arg, "-S") == 0)
+      else if (strcmp (arg, "-S") == 0)
         single_longdoc_strings = 0;
       else
         {
-          std::fprintf (stderr, "%s: Unknown flag %s.\n", argv[0], arg);
-          std::exit (2);
+          fprintf (stderr, "%s: Unknown flag %s.\n", argv[0], arg);
+          exit (2);
         }
     }
 
   write_helpfiles (shell_builtins);
 
-  std::exit (0);
+  exit (0);
 }
 
 /* Write DOCUMENTATION to STREAM, perhaps surrounding it with double-quotes
@@ -105,7 +105,7 @@ write_documentation (FILE *stream, const char *documentation, int indentation)
     return;
 
   if (documentation)
-    std::fprintf (stream, "%*s%s\n", indentation, " ", documentation);
+    fprintf (stream, "%*s%s\n", indentation, " ", documentation);
 }
 
 int
@@ -119,12 +119,12 @@ write_helpfiles (struct builtin *builtins)
   i = mkdir ("helpfiles", 0777);
   if (i < 0 && errno != EEXIST)
     {
-      std::fprintf (stderr,
-                    "write_helpfiles: helpfiles: cannot create directory\n");
+      fprintf (stderr,
+               "write_helpfiles: helpfiles: cannot create directory\n");
       return -1;
     }
 
-  hdlen = std::strlen ("helpfiles/");
+  hdlen = strlen ("helpfiles/");
   for (i = 0; i < num_shell_builtins; i++)
     {
       b = builtins[i];
@@ -133,25 +133,25 @@ write_helpfiles (struct builtin *builtins)
       helpfile = (char *)malloc (hdlen + strlen (fname) + 1);
       if (helpfile == 0)
         {
-          std::fprintf (stderr, "gen-helpfiles: cannot allocate memory\n");
-          std::exit (1);
+          fprintf (stderr, "gen-helpfiles: cannot allocate memory\n");
+          exit (1);
         }
 
-      std::sprintf (helpfile, "helpfiles/%s", fname);
+      sprintf (helpfile, "helpfiles/%s", fname);
 
-      helpfp = std::fopen (helpfile, "w");
+      helpfp = fopen (helpfile, "w");
       if (helpfp == 0)
         {
-          std::fprintf (stderr, "write_helpfiles: cannot open %s\n", helpfile);
-          std::free (helpfile);
+          fprintf (stderr, "write_helpfiles: cannot open %s\n", helpfile);
+          free (helpfile);
           continue;
         }
 
       write_documentation (helpfp, b.long_doc[0], 4);
 
-      std::fflush (helpfp);
-      std::fclose (helpfp);
-      std::free (helpfile);
+      fflush (helpfp);
+      fclose (helpfp);
+      free (helpfile);
     }
   return 0;
 }

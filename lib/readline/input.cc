@@ -102,7 +102,7 @@ Readline::rl_gather_tyi ()
 
   chars_avail = 0;
   input = 0;
-  tty = ::fileno (rl_instream);
+  tty = fileno (rl_instream);
 
 #if defined(HAVE_SELECT)
   FD_ZERO (&readfds);
@@ -110,7 +110,7 @@ Readline::rl_gather_tyi ()
   FD_SET (tty, &readfds);
   FD_SET (tty, &exceptfds);
   USEC_TO_TIMEVAL (_keyboard_input_timeout, timeout);
-  result = ::select (tty + 1, &readfds, nullptr, &exceptfds, &timeout);
+  result = select (tty + 1, &readfds, nullptr, &exceptfds, &timeout);
   if (result <= 0)
     return 0; /* Nothing to read. */
 #endif
@@ -118,7 +118,7 @@ Readline::rl_gather_tyi ()
   result = -1;
   errno = 0;
 #if defined(FIONREAD)
-  result = ::ioctl (tty, FIONREAD, &chars_avail);
+  result = ioctl (tty, FIONREAD, &chars_avail);
   if (result == -1 && errno == EIO)
     return -1;
   if (result == -1)
@@ -128,11 +128,11 @@ Readline::rl_gather_tyi ()
 #if defined(O_NDELAY)
   if (result == -1)
     {
-      int tem = ::fcntl (tty, F_GETFL, 0);
+      int tem = fcntl (tty, F_GETFL, 0);
 
-      ::fcntl (tty, F_SETFL, (tem | O_NDELAY));
-      chars_avail = static_cast<int> (::read (tty, &input, 1));
-      ::fcntl (tty, F_SETFL, tem);
+      fcntl (tty, F_SETFL, (tem | O_NDELAY));
+      chars_avail = static_cast<int> (read (tty, &input, 1));
+      fcntl (tty, F_SETFL, tem);
 
       if (chars_avail == -1 && errno == EAGAIN)
         return 0;
@@ -149,7 +149,7 @@ Readline::rl_gather_tyi ()
 #if defined(__MINGW32__)
   /* Use getch/_kbhit to check for available console input, in the same way
      that we read it normally. */
-  chars_avail = ::isatty (tty) ? ::_kbhit () : 0;
+  chars_avail = isatty (tty) ? _kbhit () : 0;
   result = 0;
 #endif
 
@@ -219,7 +219,7 @@ Readline::_rl_input_available ()
   if (rl_input_available_hook)
     return ((*this).*rl_input_available_hook) ();
 
-  tty = ::fileno (rl_instream);
+  tty = fileno (rl_instream);
 
 #if defined(HAVE_SELECT)
   FD_ZERO (&readfds);
@@ -227,13 +227,13 @@ Readline::_rl_input_available ()
   FD_SET (tty, &readfds);
   FD_SET (tty, &exceptfds);
   USEC_TO_TIMEVAL (_keyboard_input_timeout, timeout);
-  return ::select (tty + 1, &readfds, nullptr, &exceptfds, &timeout) > 0;
+  return select (tty + 1, &readfds, nullptr, &exceptfds, &timeout) > 0;
 #elif defined(FIONREAD)
-  if (::ioctl (tty, FIONREAD, &chars_avail) == 0)
+  if (ioctl (tty, FIONREAD, &chars_avail) == 0)
     return chars_avail;
 #elif defined(__MINGW32__)
-  if (::isatty (tty))
-    return ::_kbhit ();
+  if (isatty (tty))
+    return _kbhit ();
 #else
   return 0;
 #endif
@@ -247,9 +247,9 @@ Readline::_rl_nchars_available ()
   chars_avail = 0;
 
 #if defined(FIONREAD)
-  fd = ::fileno (rl_instream);
+  fd = fileno (rl_instream);
   errno = 0;
-  result = ::ioctl (fd, FIONREAD, &chars_avail);
+  result = ioctl (fd, FIONREAD, &chars_avail);
   if (result == -1 && errno == EIO)
     return -1;
 #endif
@@ -376,27 +376,27 @@ Readline::rl_getc (FILE *stream)
       /* We know at this point that _rl_caught_signal == 0 */
 
 #if defined(__MINGW32__)
-      if (::isatty (::fileno (stream)))
-        return ::_getch (); /* "There is no error return." */
+      if (isatty (fileno (stream)))
+        return _getch (); /* "There is no error return." */
 #endif
       result = 0;
 #if defined(HAVE_PSELECT)
       FD_ZERO (&readfds);
-      FD_SET (::fileno (stream), &readfds);
+      FD_SET (fileno (stream), &readfds);
 #if defined(HANDLE_SIGNALS)
-      result = ::pselect (::fileno (stream) + 1, &readfds, nullptr, nullptr,
-                          nullptr, &_rl_orig_sigset);
+      result = pselect (fileno (stream) + 1, &readfds, nullptr, nullptr,
+                        nullptr, &_rl_orig_sigset);
 #else
       sigemptyset (&empty_set);
       sigprocmask (SIG_BLOCK, NULL, &empty_set);
-      result = ::pselect (::fileno (stream) + 1, &readfds, nullptr, nullptr,
-                          nullptr, &empty_set);
+      result = pselect (fileno (stream) + 1, &readfds, nullptr, nullptr,
+                        nullptr, &empty_set);
 #endif /* HANDLE_SIGNALS */
 #endif
       unsigned char c = 0;
       if (result >= 0)
         result = static_cast<int> (
-            ::read (::fileno (stream), &c, sizeof (unsigned char)));
+            read (fileno (stream), &c, sizeof (unsigned char)));
 
       if (result == 1)
         return c;
@@ -420,7 +420,7 @@ Readline::rl_getc (FILE *stream)
 
       if (errno == X_EWOULDBLOCK || errno == X_EAGAIN)
         {
-          if (sh_unset_nodelay_mode (::fileno (stream)) < 0)
+          if (sh_unset_nodelay_mode (fileno (stream)) < 0)
             return EOF;
           continue;
         }
@@ -486,8 +486,8 @@ Readline::_rl_read_mbchar (char *mbchar, int size)
   wchar_t wc;
   mbstate_t ps, ps_back;
 
-  std::memset (&ps, 0, sizeof (mbstate_t));
-  std::memset (&ps_back, 0, sizeof (mbstate_t));
+  memset (&ps, 0, sizeof (mbstate_t));
+  memset (&ps_back, 0, sizeof (mbstate_t));
 
   mb_len = 0;
   while (mb_len < size)
@@ -500,7 +500,7 @@ Readline::_rl_read_mbchar (char *mbchar, int size)
       mbchar[mb_len++] = static_cast<char> (c);
 
       mbchar_bytes_length
-          = std::mbrtowc (&wc, mbchar, static_cast<size_t> (mb_len), &ps);
+          = mbrtowc (&wc, mbchar, static_cast<size_t> (mb_len), &ps);
       if (mbchar_bytes_length == static_cast<size_t> (-1))
         break; /* invalid byte sequence for the current locale */
       else if (mbchar_bytes_length == static_cast<size_t> (-2))
@@ -533,11 +533,11 @@ Readline::_rl_read_mbstring (int first, char *mb, int mlen)
   mbstate_t ps;
 
   c = first;
-  std::memset (mb, 0, static_cast<size_t> (mlen));
+  memset (mb, 0, static_cast<size_t> (mlen));
   for (i = 0; c >= 0 && i < mlen; i++)
     {
       mb[i] = static_cast<char> (c);
-      std::memset (&ps, 0, sizeof (mbstate_t));
+      memset (&ps, 0, sizeof (mbstate_t));
       ssize_t n = _rl_get_char_len (mb, &ps);
       if (n == -2)
         {

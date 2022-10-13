@@ -72,7 +72,7 @@ really_munge_braces (char **array, int real_start, int real_end, int gcd_zero)
 
   for (start = real_start; start < real_end; start = end + 1)
     {
-      gcd = std::strlen (array[start]);
+      gcd = strlen (array[start]);
       for (end = start + 1; end < real_end; end++)
         {
           int temp;
@@ -109,7 +109,7 @@ really_munge_braces (char **array, int real_start, int real_end, int gcd_zero)
              insert the (quoted) prefix and an opening brace. */
           tlen = gcd - gcd_zero;
           x = new char[tlen + 1];
-          std::strncpy (x, array[start] + gcd_zero, tlen);
+          strncpy (x, array[start] + gcd_zero, tlen);
           x[tlen] = '\0';
           subterm = sh_backslash_quote (x, 0, 0);
           delete[] x;
@@ -117,7 +117,7 @@ really_munge_braces (char **array, int real_start, int real_end, int gcd_zero)
           delete[] subterm;
           result.push_back ('{');
           subterm = really_munge_braces (array, start, end + 1, gcd);
-          subterm[std::strlen (subterm) - 1] = '}';
+          subterm[strlen (subterm) - 1] = '}';
         }
 
       result.append (subterm);

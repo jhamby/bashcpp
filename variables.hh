@@ -455,12 +455,6 @@ constexpr int NAMEREF_MAX = 8; /* only 8 levels of nameref indirection */
 #endif
 
 static inline bool
-ifsname (const std::string &s)
-{
-  return s == "IFS";
-}
-
-static inline bool
 ifsname (string_view s)
 {
   return s == "IFS";

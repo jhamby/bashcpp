@@ -86,15 +86,15 @@ shell_version_string ()
 void
 show_shell_version (bool extended)
 {
-  std::printf (_ ("GNU bash, version %s (%s)\n"),
+  printf (_ ("GNU bash, version %s (%s)\n"),
                shell_version_string ().c_str (), MACHTYPE);
   if (extended)
     {
-      std::printf ("%s\n", _ (bash_copyright));
-      std::printf ("%s\n", _ (bash_license));
-      std::printf ("%s\n", _ ("This is free software; you are free to change "
+      printf ("%s\n", _ (bash_copyright));
+      printf ("%s\n", _ (bash_license));
+      printf ("%s\n", _ ("This is free software; you are free to change "
                               "and redistribute it."));
-      std::printf (
+      printf (
           "%s\n", _ ("There is NO WARRANTY, to the extent permitted by law."));
     }
 }

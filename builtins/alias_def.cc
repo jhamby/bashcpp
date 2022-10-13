@@ -221,12 +221,12 @@ Shell::print_alias (alias_t *alias, print_alias_flags flags)
 {
   std::string value = sh_single_quote (alias->value);
   if (flags & AL_REUSABLE)
-    std::printf ("alias %s", (!(alias->name.empty ()) && alias->name[0] == '-')
+    printf ("alias %s", (!(alias->name.empty ()) && alias->name[0] == '-')
                                  ? "-- "
                                  : "");
-  std::printf ("%s=%s\n", alias->name, value.c_str ());
+  printf ("%s=%s\n", alias->name, value.c_str ());
 
-  std::fflush (stdout);
+  fflush (stdout);
 }
 
 } // namespace bash

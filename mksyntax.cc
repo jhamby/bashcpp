@@ -81,9 +81,9 @@ namespace bash {\n\n";
 
 static void __attribute__ ((__noreturn__)) usage ()
 {
-  std::fprintf (stderr, "%s: usage: %s [-d] [-o filename]\n", progname,
+  fprintf (stderr, "%s: usage: %s [-d] [-o filename]\n", progname,
                 progname);
-  std::exit (2);
+  exit (2);
 }
 
 static const char *
@@ -93,7 +93,7 @@ cdesc (int i)
 
   if (i == ' ')
     return "SPC";
-  else if (std::isprint (i))
+  else if (c_isprint (i))
     {
       xbuf[0] = static_cast<char> (i);
       xbuf[1] = '\0';
@@ -133,7 +133,7 @@ cdesc (int i)
       xbuf[1] = 't';
       break;
     default:
-      std::sprintf (xbuf, "%d", i);
+      sprintf (xbuf, "%d", i);
       break;
     }
 
@@ -162,7 +162,7 @@ addcstr (const char *str, int flag)
       if (debug)
         {
           fstr = getcstr (flag);
-          std::fprintf (stderr, "added %s for character %s\n", fstr,
+          fprintf (stderr, "added %s for character %s\n", fstr,
                         cdesc (uc));
         }
 
@@ -178,7 +178,7 @@ addcchar (unsigned char c, int flag)
   if (debug)
     {
       fstr = getcstr (flag);
-      std::fprintf (stderr, "added %s for character %s\n", fstr, cdesc (c));
+      fprintf (stderr, "added %s for character %s\n", fstr, cdesc (c));
     }
   lsyntax[c] |= flag;
 }
@@ -244,7 +244,7 @@ dump_lflags (FILE *fp, int ind)
   first = 1;
 
   if (xflags == 0)
-    std::fputs (wordflags[0].fstr, fp);
+    fputs (wordflags[0].fstr, fp);
   else
     {
       for (i = 1; i < N_WFLAGS; i++)
@@ -253,8 +253,8 @@ dump_lflags (FILE *fp, int ind)
             if (first)
               first = 0;
             else
-              std::putc ('|', fp);
-            std::fputs (wordflags[i].fstr, fp);
+              putc ('|', fp);
+            fputs (wordflags[i].fstr, fp);
           }
     }
 }
@@ -262,11 +262,11 @@ dump_lflags (FILE *fp, int ind)
 static void
 wcomment (FILE *fp, int i)
 {
-  std::fputs ("\t\t/* ", fp);
+  fputs ("\t\t/* ", fp);
 
-  std::fprintf (fp, "%s", cdesc (i));
+  fprintf (fp, "%s", cdesc (i));
 
-  std::fputs (" */", fp);
+  fputs (" */", fp);
 }
 
 static void
@@ -274,17 +274,17 @@ dump_lsyntax (FILE *fp)
 {
   int i;
 
-  // std::fprintf (fp, "int sh_syntabsiz = %d;\n", SYNSIZE);	// declared
+  // fprintf (fp, "int sh_syntabsiz = %d;\n", SYNSIZE);	// declared
   // externally as const
-  std::fprintf (fp, "char_flags Shell::sh_syntaxtab[%d] = {\n", SYNSIZE);
+  fprintf (fp, "char_flags Shell::sh_syntaxtab[%d] = {\n", SYNSIZE);
 
   for (i = 0; i < SYNSIZE; i++)
     {
-      std::putc ('\t', fp);
+      putc ('\t', fp);
       dump_lflags (fp, i);
-      std::putc (',', fp);
+      putc (',', fp);
       wcomment (fp, i);
-      std::putc ('\n', fp);
+      putc ('\n', fp);
     }
 
   fprintf (fp, "};\n");
@@ -299,7 +299,7 @@ main (int argc, char **argv)
   const char *filename;
   FILE *fp;
 
-  if ((bash::progname = std::strrchr (argv[0], '/')) == nullptr)
+  if ((bash::progname = strrchr (argv[0], '/')) == nullptr)
     bash::progname = argv[0];
   else
     bash::progname++;
@@ -327,12 +327,12 @@ main (int argc, char **argv)
 
   if (filename)
     {
-      fp = std::fopen (filename, "w");
+      fp = fopen (filename, "w");
       if (fp == nullptr)
         {
-          std::fprintf (stderr, "%s: %s: cannot open: %s\n", bash::progname,
-                        filename, std::strerror (errno));
-          std::exit (1);
+          fprintf (stderr, "%s: %s: cannot open: %s\n", bash::progname,
+                        filename, strerror (errno));
+          exit (1);
         }
     }
   else
@@ -346,14 +346,14 @@ main (int argc, char **argv)
 
   bash::load_lsyntax ();
 
-  std::fprintf (fp, "%s\n", bash::preamble);
-  std::fprintf (fp, "%s\n", bash::includes);
+  fprintf (fp, "%s\n", bash::preamble);
+  fprintf (fp, "%s\n", bash::includes);
 
   bash::dump_lsyntax (fp);
 
-  std::fprintf (fp, "}\n"); /* end namespace bash */
+  fprintf (fp, "}\n"); /* end namespace bash */
 
   if (fp != stdout)
-    std::fclose (fp);
-  std::exit (0);
+    fclose (fp);
+  exit (0);
 }

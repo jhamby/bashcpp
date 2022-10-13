@@ -156,21 +156,21 @@ public:
 static inline char *
 savestring (const char *s)
 {
-  return std::strcpy (new char[1 + std::strlen (s)], s);
+  return strcpy (new char[1 + strlen (s)], s);
 }
 
 // Create a new copy of C++ string s. Free with delete[].
 static inline char *
 savestring (const std::string &s)
 {
-  return std::strcpy (new char[1 + s.size ()], s.c_str ());
+  return strcpy (new char[1 + s.size ()], s.c_str ());
 }
 
 // Create a new copy of C++ string_view s. Free with delete[].
 static inline char *
 savestring (string_view s)
 {
-  char *result = std::strcpy (new char[1 + s.size ()], s.data ());
+  char *result = strcpy (new char[1 + s.size ()], s.data ());
   result[s.size ()] = '\0';
   return result;
 }
@@ -275,14 +275,14 @@ public:
 static inline bool
 STREQ (const char *a, const char *b)
 {
-  return (std::strcmp (a, b) == 0);
+  return (strcmp (a, b) == 0);
 }
 
 // Compare two strings for equality, up to n characters.
 static inline bool
 STREQN (const char *a, const char *b, size_t n)
 {
-  return (std::strncmp (a, b, n) == 0);
+  return (strncmp (a, b, n) == 0);
 }
 
 static inline bool
@@ -294,7 +294,7 @@ whitespace (char c)
 static inline bool
 member (char c, const char *s)
 {
-  return c ? (std::strchr (s, c) != nullptr) : false;
+  return c ? (strchr (s, c) != nullptr) : false;
 }
 
 /* UTF-8 functions, inlined from lib/sh/utf8.c. */
@@ -304,13 +304,13 @@ member (char c, const char *s)
 static inline const char *
 utf8_mbschr (const char *s, int c)
 {
-  return std::strchr (s, c); /* for now */
+  return strchr (s, c); /* for now */
 }
 
 static inline char *
 utf8_mbschr (char *s, int c)
 {
-  return std::strchr (s, c); /* for now */
+  return strchr (s, c); /* for now */
 }
 
 static inline const char *
@@ -421,8 +421,8 @@ utf8_mblen (string_view s, size_t n)
 
 #endif // HANDLE_MULTIBYTE
 
-#define NOW (std::time (nullptr))
-#define GETTIME(tv) (::gettimeofday (&(tv), nullptr))
+#define NOW (time (nullptr))
+#define GETTIME(tv) (gettimeofday (&(tv), nullptr))
 
 /* Some defines for calling file status functions. */
 enum file_stat_flags
@@ -447,9 +447,7 @@ constexpr int HIGH_FD_MAX = 256;
 #define RELPATH(x) ((x)[0] != '/')
 #else /* __CYGWIN__ */
 #define ABSPATH(x)                                                            \
-  (((x)[0] && std::isalpha (static_cast<unsigned char> ((x)[0]))              \
-    && (x)[1] == ':')                                                         \
-   || ISDIRSEP ((x)[0]))
+  (((x)[0] && c_isalpha (((x)[0])) && (x)[1] == ':') || ISDIRSEP ((x)[0]))
 #define RELPATH(x) (ABSPATH (x) == 0)
 #endif /* __CYGWIN__ */
 

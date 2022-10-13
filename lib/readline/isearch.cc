@@ -56,7 +56,7 @@ Readline::rl_forward_search_history (int sign, int key)
    SEARCH_STRING contains the string that is being searched for,
    FLAGS are the rl_search_flags. */
 void
-Readline::rl_display_search (const std::string &search_string,
+Readline::rl_display_search (string_view search_string,
                              rl_search_flags flags)
 {
   std::string message;
@@ -222,7 +222,7 @@ Readline::_rl_isearch_dispatch (_rl_search_cxt *cxt, int c)
      string even when ESC is one of the isearch-terminators. Not perfect yet.
    */
   if (_rl_enable_bracketed_paste && c == ESC
-      && std::strchr (cxt->search_terminators, c)
+      && strchr (cxt->search_terminators, c)
       && (n = _rl_nchars_available ()) > (BRACK_PASTE_SLEN - 1))
     {
       j = _rl_read_bracketed_paste_prefix (c);
@@ -242,7 +242,7 @@ Readline::_rl_isearch_dispatch (_rl_search_cxt *cxt, int c)
      This can be a problem if c == ESC and we want to terminate the
      incremental search, so we check */
   if (c >= 0 && cxt->keymap[c].type == ISKMAP
-      && std::strchr (cxt->search_terminators, cxt->lastc) == nullptr)
+      && strchr (cxt->search_terminators, cxt->lastc) == nullptr)
     {
       /* _rl_keyseq_timeout specified in milliseconds; _rl_input_queued
          takes microseconds, so multiply by 1000.  If we don't get any
@@ -273,7 +273,7 @@ Readline::_rl_isearch_dispatch (_rl_search_cxt *cxt, int c)
               cxt->pmb[1] = '\0';
             }
           else
-            std::memcpy (cxt->pmb, cxt->mb, sizeof (cxt->pmb));
+            memcpy (cxt->pmb, cxt->mb, sizeof (cxt->pmb));
         }
 #endif
       return 1;
@@ -381,7 +381,7 @@ add_character:
      variable isearch-terminators) are used to terminate the search but
      not subsequently execute the character as a command.  The default
      value is "\033\012" (ESC and C-J). */
-  if (cxt->lastc > 0 && std::strchr (cxt->search_terminators, cxt->lastc))
+  if (cxt->lastc > 0 && strchr (cxt->search_terminators, cxt->lastc))
     {
       /* ESC still terminates the search, but if there is pending
          input or if input arrives within 0.1 seconds (on systems
@@ -550,7 +550,7 @@ opcode_dispatch:
     default:
       size_t wlen;
 #if defined(HANDLE_MULTIBYTE)
-      wlen = (cxt->mb[0] == 0 || cxt->mb[1] == 0) ? 1 : std::strlen (cxt->mb);
+      wlen = (cxt->mb[0] == 0 || cxt->mb[1] == 0) ? 1 : strlen (cxt->mb);
 #else
       wlen = 1;
 #endif

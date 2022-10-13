@@ -37,17 +37,6 @@ namespace bash
 #define ISOPT(s) (((*(s) == '-') || (plus && *(s) == '+')) && (s)[1])
 #define NOTOPT(s) (((*(s) != '-') && (!plus || *(s) != '+')) || (s)[1] == '\0')
 
-// static int	sp;
-
-// char    *list_optarg;
-// int	list_optopt;
-// int	list_opttype;
-
-// static WORD_LIST *lhead = nullptr;
-// WORD_LIST	*lcurrent = nullptr;
-// WORD_LIST	*loptend;	/* Points to the first non-option argument in
-// the list */
-
 int
 Shell::internal_getopt (WORD_LIST *list, const char *opts)
 {
@@ -164,7 +153,7 @@ Shell::internal_getopt (WORD_LIST *list, const char *opts)
       /* option requires a numeric argument */
       if (lcurrent->word->word[getopt_sp + 1])
         {
-          if (std::isdigit (lcurrent->word->word[getopt_sp + 1]))
+          if (c_isdigit (lcurrent->word->word[getopt_sp + 1]))
             {
               list_optarg = lcurrent->word->word.c_str () + getopt_sp + 1;
               list_optflags = W_NOFLAGS;

@@ -38,7 +38,7 @@ namespace readline
    If APPEND is true, and the last command was a kill, the text is appended
    to the current kill ring slot, otherwise prepended. */
 void
-Readline::_rl_copy_to_kill_ring (const std::string &text, bool append)
+Readline::_rl_copy_to_kill_ring (string_view text, bool append)
 {
   size_t slot;
 
@@ -738,13 +738,13 @@ Readline::rl_paste_from_clipboard (int count, int key)
   data = static_cast<char *> (GetClipboardData (CF_TEXT));
   if (data)
     {
-      ptr = std::strchr (data, '\r');
+      ptr = strchr (data, '\r');
       if (ptr)
         {
           len = ptr - data;
           ptr = new char[len + 1];
           ptr[len] = '\0';
-          std::strncpy (ptr, data, len);
+          strncpy (ptr, data, len);
         }
       else
         ptr = data;

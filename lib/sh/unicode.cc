@@ -55,20 +55,20 @@ Shell::stub_charset ()
   locale = get_locale_var ("LC_CTYPE");
   if (locale == nullptr || *locale == 0)
     {
-      std::strcpy (charsetbuf, "ASCII");
+      strcpy (charsetbuf, "ASCII");
       return charsetbuf;
     }
-  s = std::strrchr (locale, '.');
+  s = strrchr (locale, '.');
   if (s)
     {
-      std::strncpy (charsetbuf, s + 1, sizeof (charsetbuf) - 1);
+      strncpy (charsetbuf, s + 1, sizeof (charsetbuf) - 1);
       charsetbuf[sizeof (charsetbuf) - 1] = '\0';
-      char *t = std::strchr (charsetbuf, '@');
+      char *t = strchr (charsetbuf, '@');
       if (t)
         *t = 0;
       return charsetbuf;
     }
-  std::strncpy (charsetbuf, locale, sizeof (charsetbuf) - 1);
+  strncpy (charsetbuf, locale, sizeof (charsetbuf) - 1);
   charsetbuf[sizeof (charsetbuf) - 1] = '\0';
   return charsetbuf;
 }
@@ -80,7 +80,7 @@ Shell::u32reset ()
 #if defined(HAVE_ICONV)
   if (u32init && localconv != reinterpret_cast<iconv_t> (-1))
     {
-      ::iconv_close (localconv);
+      iconv_close (localconv);
       localconv = reinterpret_cast<iconv_t> (-1);
     }
 #endif
@@ -95,11 +95,11 @@ u32tocesc (uint32_t wc, std::string &s)
 
   s.resize (s.size () + 11); // max length + null terminator
   if (wc < 0x10000)
-    l = std::sprintf (&(*(s.end () - 10)), "\\u%04X", wc);
+    l = sprintf (&(*(s.end () - 10)), "\\u%04X", wc);
   else
-    l = std::sprintf (&(*(s.end () - 10)), "\\u%08X", wc);
+    l = sprintf (&(*(s.end () - 10)), "\\u%08X", wc);
 
-  s.resize (std::strlen (&(*(s.begin ())))); // shrink to actual size
+  s.resize (strlen (&(*(s.begin ())))); // shrink to actual size
   return l;
 }
 
@@ -207,10 +207,10 @@ Shell::u32cconv (uint32_t c, std::string &s)
 #if defined(__STDC_ISO_10646__)
   wc = static_cast<wchar_t> (c);
   if (sizeof (wchar_t) == 4 && c <= 0x7fffffff)
-    n = std::wctomb (s.c_str (), wc);
+    n = wctomb (s.c_str (), wc);
 #if SIZEOF_WCHAR_T == 2
   else if (sizeof (wchar_t) == 2 && c <= 0x10ffff && u32toutf16 (c, ws))
-    n = std::wcstombs (s, ws, MB_LEN_MAX);
+    n = wcstombs (s, ws, MB_LEN_MAX);
 #endif
   else
     n = -1;
@@ -259,9 +259,9 @@ Shell::u32cconv (uint32_t c, std::string &s)
   iptr = s;
   sn = static_cast<size_t> (n);
 
-  ::iconv (localconv, nullptr, nullptr, nullptr, nullptr);
+  iconv (localconv, nullptr, nullptr, nullptr, nullptr);
 
-  if (::iconv (localconv, const_cast<char **> (&iptr), &sn, &optr, &obytesleft)
+  if (iconv (localconv, const_cast<char **> (&iptr), &sn, &optr, &obytesleft)
       == static_cast<size_t> (-1))
     {
       /* You get ISO C99 escape sequences if iconv fails */
@@ -273,7 +273,7 @@ Shell::u32cconv (uint32_t c, std::string &s)
 
   /* number of chars to be copied is optr - obuf if we want to do bounds
      checking */
-  std::strcpy (s, obuf);
+  strcpy (s, obuf);
   return static_cast<int> (optr - obuf);
 
 #else  /* !HAVE_ICONV */

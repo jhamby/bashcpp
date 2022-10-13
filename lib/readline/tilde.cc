@@ -48,7 +48,7 @@ tilde_find_prefix (const char *string, size_t *len)
 {
   char **prefixes = tilde_additional_prefixes;
 
-  size_t string_len = std::strlen (string);
+  size_t string_len = strlen (string);
   *len = 0;
 
   if (*string == '\0' || *string == '~')
@@ -60,11 +60,9 @@ tilde_find_prefix (const char *string, size_t *len)
         {
           for (size_t j = 0; prefixes[j]; j++)
             {
-              if (std::strncmp (string + i, prefixes[j],
-                                std::strlen (prefixes[j]))
-                  == 0)
+              if (strncmp (string + i, prefixes[j], strlen (prefixes[j])) == 0)
                 {
-                  *len = std::strlen (prefixes[j]) - 1;
+                  *len = strlen (prefixes[j]) - 1;
                   return i + *len;
                 }
             }
@@ -79,7 +77,7 @@ static size_t
 tilde_find_suffix (const char *string)
 {
   char **suffixes = tilde_additional_suffixes;
-  size_t string_len = std::strlen (string);
+  size_t string_len = strlen (string);
 
   size_t i;
   for (i = 0; i < string_len; i++)
@@ -93,8 +91,7 @@ tilde_find_suffix (const char *string)
 
       for (size_t j = 0; suffixes && suffixes[j]; j++)
         {
-          if (std::strncmp (string + i, suffixes[j], std::strlen (suffixes[j]))
-              == 0)
+          if (strncmp (string + i, suffixes[j], strlen (suffixes[j])) == 0)
             return i;
         }
     }
@@ -131,7 +128,7 @@ tilde_expand (const char *string)
 
       /* Expand the entire tilde word, and copy it into RESULT. */
       char *tilde_word = new char[1 + end];
-      std::strncpy (tilde_word, string, end);
+      strncpy (tilde_word, string, end);
       tilde_word[end] = '\0';
       string += end;
 
@@ -165,7 +162,7 @@ isolate_tilde_prefix (const char *fname, size_t *lenp)
   char *ret;
   size_t i;
 
-  ret = new char[std::strlen (fname)];
+  ret = new char[strlen (fname)];
 #if defined(__MSDOS__)
   for (i = 1; fname[i] && fname[i] != '/' && fname[i] != '\\'; i++)
 #else
@@ -183,14 +180,14 @@ isolate_tilde_prefix (const char *fname, size_t *lenp)
 static char *
 glue_prefix_and_suffix (const char *prefix, const char *suffix, size_t suffind)
 {
-  size_t plen = prefix ? std::strlen (prefix) : 0;
-  size_t slen = std::strlen (suffix + suffind);
+  size_t plen = prefix ? strlen (prefix) : 0;
+  size_t slen = strlen (suffix + suffind);
 
   char *ret = new char[plen + slen + 1];
   if (plen)
-    std::strcpy (ret, prefix);
+    strcpy (ret, prefix);
 
-  std::strcpy (ret + plen, suffix + suffind);
+  strcpy (ret + plen, suffix + suffind);
   return ret;
 }
 
@@ -249,7 +246,7 @@ Readline::tilde_expand_word (const char *filename)
      password database. */
   char *dirname = nullptr;
 #if defined(HAVE_GETPWNAM)
-  user_entry = ::getpwnam (username);
+  user_entry = getpwnam (username);
 #else
   user_entry = 0;
 #endif
@@ -278,7 +275,7 @@ Readline::tilde_expand_word (const char *filename)
 
   delete[] username;
 #if defined(HAVE_GETPWENT)
-  ::endpwent ();
+  endpwent ();
 #endif
   return dirname;
 }
@@ -296,22 +293,21 @@ main (int argc, char **argv)
 
   while (!done)
     {
-      std::printf ("~expand: ");
-      std::fflush (stdout);
+      printf ("~expand: ");
+      fflush (stdout);
 
-      if (!std::gets (line))
-        std::strcpy (line, "done");
+      if (!gets (line))
+        strcpy (line, "done");
 
-      if ((std::strcmp (line, "done") == 0)
-          || (std::strcmp (line, "quit") == 0)
-          || (std::strcmp (line, "exit") == 0))
+      if ((strcmp (line, "done") == 0) || (strcmp (line, "quit") == 0)
+          || (strcmp (line, "exit") == 0))
         {
           done = 1;
           break;
         }
 
       result = readline::tilde_expand (line);
-      std::printf ("  --> %s\n", result);
+      printf ("  --> %s\n", result);
       delete[] result;
     }
 }

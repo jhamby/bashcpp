@@ -68,7 +68,7 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
   rflags |= REG_NOSUB;
 #endif
 
-  if (::regcomp (&regex, pattern, rflags))
+  if (regcomp (&regex, pattern, rflags))
     return 2; /* flag for printing a warning here. */
 
 #if defined(ARRAY_VARS)
@@ -78,13 +78,13 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
 #endif
 
   /* man regexec: nullptr PMATCH ignored if NMATCH == 0 */
-  if (::regexec (&regex, string, matches ? regex.re_nsub + 1 : 0, matches, 0))
+  if (regexec (&regex, string, matches ? regex.re_nsub + 1 : 0, matches, 0))
     result = EXECUTION_FAILURE;
   else
     result = EXECUTION_SUCCESS; /* match */
 
 #if defined(ARRAY_VARS)
-  subexp_len = std::strlen (string) + 10;
+  subexp_len = strlen (string) + 10;
   subexp_str = new char[subexp_len + 1];
 
   /* Store the parenthesized subexpressions in the array BASH_REMATCH.
@@ -104,8 +104,8 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
     {
       for (size_t subexp_ind = 0; subexp_ind <= regex.re_nsub; subexp_ind++)
         {
-          std::memset (subexp_str, 0, subexp_len);
-          std::strncpy (subexp_str, string + matches[subexp_ind].rm_so,
+          memset (subexp_str, 0, subexp_len);
+          strncpy (subexp_str, string + matches[subexp_ind].rm_so,
                         matches[subexp_ind].rm_eo - matches[subexp_ind].rm_so);
           array_insert (amatch, subexp_ind, subexp_str);
         }
@@ -115,7 +115,7 @@ Shell::sh_regmatch (const char *string, const char *pattern, int flags)
   delete[] matches;
 #endif /* ARRAY_VARS */
 
-  ::regfree (&regex);
+  regfree (&regex);
 
   return result;
 }

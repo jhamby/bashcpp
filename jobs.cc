@@ -4063,8 +4063,8 @@ initialize_job_control (bool force)
     {
       job_control = false;
       original_pgrp = NO_PID;
-      shell_tty = std::fileno (stderr);
-      terminal_pgrp = ::tcgetpgrp (shell_tty); /* for checking later */
+      shell_tty = fileno (stderr);
+      terminal_pgrp = tcgetpgrp (shell_tty); /* for checking later */
     }
   else
     {
@@ -4075,14 +4075,14 @@ initialize_job_control (bool force)
          need to see whether we have a controlling tty by opening /dev/tty,
          since trying to use job control tty pgrp manipulations on a non-tty
          is going to fail. */
-      if (forced_interactive && ::isatty (std::fileno (stderr)) == 0)
-        shell_tty = ::open ("/dev/tty", O_RDWR | O_NONBLOCK);
+      if (forced_interactive && isatty (fileno (stderr)) == 0)
+        shell_tty = open ("/dev/tty", O_RDWR | O_NONBLOCK);
 
       /* Get our controlling terminal.  If job_control is set, or
          interactive is set, then this is an interactive shell no
          matter where fd 2 is directed. */
       if (shell_tty == -1)
-        shell_tty = ::dup (std::fileno (stderr)); /* fd 2 */
+        shell_tty = dup (fileno (stderr)); /* fd 2 */
 
       if (shell_tty != -1)
         shell_tty = move_to_high_fd (shell_tty, 1, -1);
@@ -4091,14 +4091,14 @@ initialize_job_control (bool force)
          rlogind with DEBUG defined, like NeXT and Alliant. */
       if (shell_pgrp == 0)
         {
-          shell_pgrp = ::getpid ();
-          ::setpgid (0, shell_pgrp);
+          shell_pgrp = getpid ();
+          setpgid (0, shell_pgrp);
           if (shell_tty != -1)
-            ::tcsetpgrp (shell_tty, shell_pgrp);
+            tcsetpgrp (shell_tty, shell_pgrp);
         }
 
       tty_sigs = 0;
-      while ((terminal_pgrp = ::tcgetpgrp (shell_tty)) != -1)
+      while ((terminal_pgrp = tcgetpgrp (shell_tty)) != -1)
         {
           if (shell_pgrp != terminal_pgrp)
             {
@@ -4106,7 +4106,7 @@ initialize_job_control (bool force)
 
               CHECK_TERMSIG;
               ottin = set_signal_handler (SIGTTIN, SIG_DFL);
-              ::kill (0, SIGTTIN);
+              kill (0, SIGTTIN);
               set_signal_handler (SIGTTIN, ottin);
               if (tty_sigs++ > 16)
                 {
@@ -4134,9 +4134,9 @@ initialize_job_control (bool force)
       else
         {
           original_pgrp = shell_pgrp;
-          shell_pgrp = ::getpid ();
+          shell_pgrp = getpid ();
 
-          if ((original_pgrp != shell_pgrp) && (::setpgid (0, shell_pgrp) < 0))
+          if ((original_pgrp != shell_pgrp) && (setpgid (0, shell_pgrp) < 0))
             {
               sys_error (_ ("initialize_job_control: setpgid"));
               shell_pgrp = original_pgrp;
@@ -4181,7 +4181,7 @@ initialize_job_control (bool force)
 just_bail:
   running_in_background = terminal_pgrp != shell_pgrp;
 
-  if (shell_tty != std::fileno (stderr))
+  if (shell_tty != fileno (stderr))
     SET_CLOSE_ON_EXEC (shell_tty);
 
   set_signal_handler (SIGCHLD, &sigchld_handler);
@@ -4292,7 +4292,7 @@ sigcont_sighandler (int sig)
 {
   initialize_job_signals ();
   set_signal_handler (SIGCONT, old_cont);
-  ::kill (::getpid (), SIGCONT);
+  kill (getpid (), SIGCONT);
 }
 
 /* Here we handle stop signals while we are running not as a login shell. */
@@ -4307,7 +4307,7 @@ sigstop_sighandler (int sig)
 
   give_terminal_to (shell_pgrp, 0);
 
-  ::kill (::getpid (), sig);
+  kill (getpid (), sig);
 }
 
 /* Give the terminal to PGRP.  */

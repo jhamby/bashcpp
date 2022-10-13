@@ -31,14 +31,23 @@ namespace readline
 static inline char *
 savestring (const char *s)
 {
-  return std::strcpy (new char[1 + std::strlen (s)], s);
+  return strcpy (new char[1 + strlen (s)], s);
 }
 
 // Create a new copy of C++ string s. Free with delete[].
 static inline char *
 savestring (const std::string &s)
 {
-  return std::strcpy (new char[1 + s.size ()], s.c_str ());
+  return strcpy (new char[1 + s.size ()], s.c_str ());
+}
+
+// Create a new copy of C++ string_view s. Free with delete[].
+static inline char *
+savestring (string_view s)
+{
+  char *result = strcpy (new char[1 + s.size ()], s.data ());
+  result[s.size ()] = '\0';
+  return result;
 }
 
 #if 0
@@ -46,14 +55,14 @@ savestring (const std::string &s)
 static inline bool
 STREQ (const char *a, const char *b)
 {
-  return std::strcmp (a, b) == 0;
+  return strcmp (a, b) == 0;
 }
 
 // Compare two strings for equality, up to n characters.
 static inline bool
 STREQN (const char *a, const char *b, size_t n)
 {
-  return std::strncmp (a, b, n) == 0;
+  return strncmp (a, b, n) == 0;
 }
 #endif
 

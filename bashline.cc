@@ -729,8 +729,8 @@ display_shell_version (int count, int c)
 {
   rl_crlf ();
   show_shell_version (0);
-  std::putc ('\r', rl_outstream);
-  std::fflush (rl_outstream);
+  putc ('\r', rl_outstream);
+  fflush (rl_outstream);
   rl_on_new_line ();
   rl_redisplay ();
   return 0;
@@ -799,11 +799,11 @@ snarf_hosts_from_file (const char *filename)
 {
   char *temp, buffer[256], name[256];
 
-  FILE *file = std::fopen (filename, "r");
+  FILE *file = fopen (filename, "r");
   if (file == 0)
     return;
 
-  while ((temp = std::fgets (buffer, 255, file)))
+  while ((temp = fgets (buffer, 255, file)))
     {
       /* Skip to first character. */
       int i;
@@ -853,12 +853,12 @@ snarf_hosts_from_file (const char *filename)
             ;
           if (i == start)
             continue;
-          std::strncpy (name, buffer + start, i - start);
+          strncpy (name, buffer + start, i - start);
           name[i - start] = '\0';
           add_host_name (name);
         }
     }
-  std::fclose (file);
+  fclose (file);
 }
 
 /* Return the hostname list. */
@@ -876,7 +876,7 @@ clear_hostname_list ()
   if (hostname_list_initialized == 0)
     return;
   for (int i = 0; i < hostname_list_length; i++)
-    std::free (hostname_list[i]);
+    delete[] hostname_list[i];
   hostname_list_length = hostname_list_initialized = 0;
 }
 
@@ -907,7 +907,7 @@ hostnames_matching (char *text)
     }
 
   /* Scan until found, or failure. */
-  int len = std::strlen (text);
+  int len = strlen (text);
   result = (char **)NULL;
   int i, nmatch, rsize;
   for (i = nmatch = rsize = 0; i < hostname_list_length; i++)
@@ -954,7 +954,7 @@ edit_and_execute_command (int count, int c, int editing_mode,
   if (rl_explicit_arg)
     {
       command = (char *)xmalloc (strlen (edit_command) + 8);
-      std::sprintf (command, "%s %d", edit_command, count);
+      sprintf (command, "%s %d", edit_command, count);
     }
   else
     {

@@ -837,15 +837,15 @@ signal_is_trapped (int s)
 void
 fatal_error (const char *s, ...)
 {
-  std::fprintf (stderr, "array_test: fatal memory error\n");
-  std::abort ();
+  fprintf (stderr, "array_test: fatal memory error\n");
+  abort ();
 }
 
 void
 programming_error (const char *s, ...)
 {
-  std::fprintf (stderr, "array_test: fatal programming error\n");
-  std::abort ();
+  fprintf (stderr, "array_test: fatal programming error\n");
+  abort ();
 }
 
 WORD_DESC *
@@ -880,11 +880,11 @@ list_string (char *s, char *t, int i)
     return nullptr;
   r = savestring (s);
   wl = nullptr;
-  a = std::strtok (r, t);
+  a = strtok (r, t);
   while (a)
     {
       wl = make_word_list (make_bare_word (a), wl);
-      a = std::strtok (nullptr, t);
+      a = strtok (nullptr, t);
     }
   return REVERSE_LIST (wl, WORD_LIST *);
 }
@@ -945,13 +945,13 @@ main ()
   a->insert (42, "forty-two");
   print_array (a);
   s = array_to_string (a, " ", 0);
-  std::printf ("s = %s\n", s);
+  printf ("s = %s\n", s);
   copy_of_a = array_from_string (s, " ");
-  std::printf ("copy_of_a:");
+  printf ("copy_of_a:");
   print_array (copy_of_a);
   array_dispose (copy_of_a);
-  std::printf ("\n");
-  std::free (s);
+  printf ("\n");
+  delete[] s;
   ae = array_remove (a, 4);
   array_dispose_element (ae);
   ae = array_remove (a, 1029);
@@ -959,39 +959,39 @@ main ()
   a->insert (16, "sixteen");
   print_array (a);
   s = array_to_string (a, " ", 0);
-  std::printf ("s = %s\n", s);
+  printf ("s = %s\n", s);
   copy_of_a = array_from_string (s, " ");
-  std::printf ("copy_of_a:");
+  printf ("copy_of_a:");
   print_array (copy_of_a);
   array_dispose (copy_of_a);
-  std::printf ("\n");
-  std::free (s);
+  printf ("\n");
+  free (s);
   a->insert (2, "two");
   a->insert (1029, "new one thousand twenty-nine");
   a->insert (0, "zero");
   a->insert (134, "");
   print_array (a);
   s = array_to_string (a, ":", 0);
-  std::printf ("s = %s\n", s);
+  printf ("s = %s\n", s);
   copy_of_a = array_from_string (s, ":");
-  std::printf ("copy_of_a:");
+  printf ("copy_of_a:");
   print_array (copy_of_a);
   array_dispose (copy_of_a);
-  std::printf ("\n");
-  std::free (s);
+  printf ("\n");
+  delete[] s;
   new_a = array_copy (a);
   print_array (new_a);
   s = array_to_string (new_a, ":", 0);
-  std::printf ("s = %s\n", s);
+  printf ("s = %s\n", s);
   copy_of_a = array_from_string (s, ":");
-  std::free (s);
-  std::printf ("copy_of_a:");
+  delete[] s;
+  printf ("copy_of_a:");
   print_array (copy_of_a);
   array_shift (copy_of_a, 2, AS_DISPOSE);
-  std::printf ("copy_of_a shifted by two:");
+  printf ("copy_of_a shifted by two:");
   print_array (copy_of_a);
   ae = array_shift (copy_of_a, 2, 0);
-  std::printf ("copy_of_a shifted by two:");
+  printf ("copy_of_a shifted by two:");
   print_array (copy_of_a);
   for (; ae;)
     {
@@ -1000,14 +1000,14 @@ main ()
       ae = aew;
     }
   array_rshift (copy_of_a, 1, (char *)0);
-  std::printf ("copy_of_a rshift by 1:");
+  printf ("copy_of_a rshift by 1:");
   print_array (copy_of_a);
   array_rshift (copy_of_a, 2, "new element zero");
-  std::printf ("copy_of_a rshift again by 2 with new element zero:");
+  printf ("copy_of_a rshift again by 2 with new element zero:");
   print_array (copy_of_a);
   s = array_to_assign (copy_of_a, 0);
-  std::printf ("copy_of_a=%s\n", s);
-  std::free (s);
+  printf ("copy_of_a=%s\n", s);
+  delete[] s;
   ae = array_shift (copy_of_a, array_num_elements (copy_of_a), 0);
   for (; ae;)
     {
@@ -1016,7 +1016,7 @@ main ()
       ae = aew;
     }
   array_dispose (copy_of_a);
-  std::printf ("\n");
+  printf ("\n");
   array_dispose (a);
   array_dispose (new_a);
 }

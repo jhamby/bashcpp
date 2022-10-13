@@ -665,23 +665,23 @@ Readline::_rl_vi_change_mbchar_case (int count)
   char mb[MB_LEN_MAX + 1];
   mbstate_t ps;
 
-  std::memset (&ps, 0, sizeof (mbstate_t));
+  memset (&ps, 0, sizeof (mbstate_t));
 
   if (_rl_adjust_point (rl_line_buffer.c_str (), rl_point, &ps) > 0)
     count--;
 
   while (count-- && rl_point < rl_line_buffer.size ())
     {
-      size_t m = std::mbrtowc (&wc, rl_line_buffer.c_str () + rl_point,
+      size_t m = mbrtowc (&wc, rl_line_buffer.c_str () + rl_point,
                                rl_line_buffer.size () - rl_point, &ps);
       if (MB_INVALIDCH (m))
         wc = static_cast<wchar_t> (rl_line_buffer[rl_point]);
       else if (MB_NULLWCH (m))
         wc = L'\0';
-      if (std::iswupper (static_cast<wint_t> (wc)))
-        wc = static_cast<wchar_t> (std::towlower (static_cast<wint_t> (wc)));
-      else if (std::iswlower (static_cast<wint_t> (wc)))
-        wc = static_cast<wchar_t> (std::towupper (static_cast<wint_t> (wc)));
+      if (iswupper (static_cast<wint_t> (wc)))
+        wc = static_cast<wchar_t> (towlower (static_cast<wint_t> (wc)));
+      else if (iswlower (static_cast<wint_t> (wc)))
+        wc = static_cast<wchar_t> (towupper (static_cast<wint_t> (wc)));
       else
         {
           /* Just skip over chars neither upper nor lower case */
@@ -693,7 +693,7 @@ Readline::_rl_vi_change_mbchar_case (int count)
       if (wc)
         {
           size_t p = rl_point;
-          size_t mlen = std::wcrtomb (mb, wc, &ps);
+          size_t mlen = wcrtomb (mb, wc, &ps);
           if (static_cast<ssize_t> (mlen) >= 0)
             mb[mlen] = '\0';
           rl_begin_undo_group ();
@@ -1028,7 +1028,7 @@ Readline::vi_delete_dispatch (_rl_vimotion_cxt *m)
 {
   /* These are the motion commands that do not require adjusting the
      mark. */
-  if (((std::strchr (" l|h^0bBFT`", m->motion) == nullptr)
+  if (((strchr (" l|h^0bBFT`", m->motion) == nullptr)
        && (rl_point >= m->start))
       && (rl_mark < rl_line_buffer.size ()))
     INCREMENT_POS (rl_mark);
@@ -1096,7 +1096,7 @@ Readline::vi_change_dispatch (_rl_vimotion_cxt *m)
   /* These are the motion commands that do not require adjusting the
      mark.  c[wW] are handled by special-case code in rl_vi_domove(),
      and already leave the mark at the correct location. */
-  if (((std::strchr (" l|hwW^0bBFT`", m->motion) == nullptr)
+  if (((strchr (" l|hwW^0bBFT`", m->motion) == nullptr)
        && (rl_point >= m->start))
       && (rl_mark < rl_line_buffer.size ()))
     INCREMENT_POS (rl_mark);
@@ -1187,7 +1187,7 @@ Readline::vi_yank_dispatch (_rl_vimotion_cxt *m)
 {
   /* These are the motion commands that do not require adjusting the
      mark. */
-  if (((std::strchr (" l|h^0%bBFT`", m->motion) == nullptr)
+  if (((strchr (" l|h^0%bBFT`", m->motion) == nullptr)
        && (rl_point >= m->start))
       && (rl_mark < rl_line_buffer.size ()))
     INCREMENT_POS (rl_mark);
@@ -1706,7 +1706,7 @@ Readline::rl_vi_change_char (int count, int)
 
   if (_rl_vi_redoing)
     {
-      std::strncpy (mb, _rl_vi_last_replacement, MB_LEN_MAX);
+      strncpy (mb, _rl_vi_last_replacement, MB_LEN_MAX);
       c = static_cast<unsigned char> (_rl_vi_last_replacement[0]); /* XXX */
       mb[MB_LEN_MAX] = '\0';
     }
@@ -1723,7 +1723,7 @@ Readline::rl_vi_change_char (int count, int)
       c = _rl_vi_callback_getchar (mb, MB_LEN_MAX);
 #ifdef HANDLE_MULTIBYTE
       if (MB_CUR_MAX > 1 && !rl_byte_oriented)
-        std::strncpy (_rl_vi_last_replacement, mb, MB_LEN_MAX);
+        strncpy (_rl_vi_last_replacement, mb, MB_LEN_MAX);
       else
 #endif
         _rl_vi_last_replacement[0] = static_cast<char> (c);

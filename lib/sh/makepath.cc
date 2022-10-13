@@ -71,7 +71,7 @@ Shell::sh_makepath (const char *path, const char *dir, mp_flags flags)
           if (xpath == nullptr)
             MAKEDOT ();
           else
-            pathlen = std::strlen (xpath);
+            pathlen = strlen (xpath);
         }
       else
         MAKEDOT ();
@@ -88,11 +88,11 @@ Shell::sh_makepath (const char *path, const char *dir, mp_flags flags)
       xpath = ((flags & MP_DOTILDE) && path[0] == '~')
                   ? bash_tilde_expand (path, 0)
                   : const_cast<char *> (path);
-      pathlen = std::strlen (xpath);
+      pathlen = strlen (xpath);
     }
 
   xdir = dir;
-  dirlen = std::strlen (xdir);
+  dirlen = strlen (xdir);
   if ((flags & MP_RMDOT) && dir[0] == '.' && dir[1] == '/')
     {
       xdir += 2;

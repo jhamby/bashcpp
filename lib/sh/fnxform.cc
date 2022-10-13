@@ -68,10 +68,10 @@ curencoding ()
   loc = get_locale_var ("LC_CTYPE");
   if (loc == 0 || *loc == 0)
     return "";
-  char *dot = std::strchr (loc, '.');
+  char *dot = strchr (loc, '.');
   if (dot == 0)
     return loc;
-  char *mod = std::strchr (dot, '@');
+  char *mod = strchr (dot, '@');
   if (mod)
     *mod = '\0';
   return ++dot;

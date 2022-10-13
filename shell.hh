@@ -1890,9 +1890,9 @@ public:
   print_shopt (const char *name, char val, shopt_flags flags)
   {
     if (flags & PFLAG)
-      std::printf ("shopt %s %s\n", val ? "-s" : "-u", name);
+      printf ("shopt %s %s\n", val ? "-s" : "-u", name);
     else
-      std::printf (OPTFMT, name, val ? str_on : str_off);
+      printf (OPTFMT, name, val ? str_on : str_off);
   }
 
   void
@@ -2959,7 +2959,7 @@ protected:
     int fd;
 
     // Infer warns that this is a resource leak. Hopefully it isn't one.
-    fd = ::open (file, O_RDONLY);
+    fd = open (file, O_RDONLY);
     return (fd >= 0) ? fd_to_buffered_stream (fd) : nullptr;
   }
 
@@ -2990,7 +2990,7 @@ protected:
     if (bp->b_flag & B_SHAREDBUF)
       bp->b_buffer = nullptr;
     free_buffered_stream (bp);
-    return ::close (fd);
+    return close (fd);
   }
 
   /* Deallocate the buffered stream associated with file descriptor FD, and
@@ -3005,7 +3005,7 @@ protected:
       }
     size_t sfd = static_cast<size_t> (fd);
     if (sfd >= buffers.size () || !buffers[sfd])
-      return ::close (fd);
+      return close (fd);
     return close_buffered_stream (buffers[sfd]);
   }
 
@@ -3346,12 +3346,12 @@ protected:
   ttgetattr (int fd, TTYSTRUCT *ttp)
   {
 #ifdef TERMIOS_TTY_DRIVER
-    return ::tcgetattr (fd, ttp);
+    return tcgetattr (fd, ttp);
 #else
 #ifdef TERMIO_TTY_DRIVER
-    return ::ioctl (fd, TCGETA, ttp);
+    return ioctl (fd, TCGETA, ttp);
 #else
-    return ::ioctl (fd, TIOCGETP, ttp);
+    return ioctl (fd, TIOCGETP, ttp);
 #endif
 #endif
   }
@@ -3360,12 +3360,12 @@ protected:
   ttsetattr (int fd, TTYSTRUCT *ttp)
   {
 #ifdef TERMIOS_TTY_DRIVER
-    return ::tcsetattr (fd, TCSADRAIN, ttp);
+    return tcsetattr (fd, TCSADRAIN, ttp);
 #else
 #ifdef TERMIO_TTY_DRIVER
-    return ::ioctl (fd, TCSETAW, ttp);
+    return ioctl (fd, TCSETAW, ttp);
 #else
-    return ::ioctl (fd, TIOCSETN, ttp);
+    return ioctl (fd, TIOCSETN, ttp);
 #endif
 #endif
   }
@@ -3644,7 +3644,7 @@ protected:
     ssize_t r;
 
     check_signals (); /* check for signals before a blocking read */
-    while ((r = ::read (fd, buf, len)) < 0 && errno == EINTR)
+    while ((r = read (fd, buf, len)) < 0 && errno == EINTR)
       {
         int t;
         t = errno;
@@ -3678,7 +3678,7 @@ protected:
   {
     for (int nintr = 0;;)
       {
-        ssize_t r = ::read (fd, buf, len);
+        ssize_t r = read (fd, buf, len);
         if (r >= 0)
           return r;
         if (r == -1 && errno == EINTR)
@@ -3698,7 +3698,7 @@ protected:
   zreadintr (int fd, char *buf, size_t len)
   {
     check_signals ();
-    return ::read (fd, buf, len);
+    return read (fd, buf, len);
   }
 
   void
@@ -3717,7 +3717,7 @@ protected:
     off = zread_lused - zread_lind;
     r = 0;
     if (off > 0)
-      r = ::lseek (fd, -off, SEEK_CUR);
+      r = lseek (fd, -off, SEEK_CUR);
 
     if (r != -1)
       zread_lused = zread_lind = 0;
@@ -3739,7 +3739,7 @@ protected:
 
     for (n = nb, nt = 0;;)
       {
-        ssize_t i = ::write (fd, buf, n);
+        ssize_t i = write (fd, buf, n);
         if (i > 0)
           {
             n -= static_cast<size_t> (i);
@@ -4037,7 +4037,7 @@ protected:
   static void
   sh_exit (int s) __attribute__ ((__noreturn__))
   {
-    std::exit (s);
+    exit (s);
   }
 
   void
@@ -4495,7 +4495,7 @@ protected:
   void
   print_command (COMMAND *command)
   {
-    std::printf ("%s", make_command_string (command).c_str ());
+    printf ("%s", make_command_string (command).c_str ());
   }
 
   // Return a new string which is the printed representation of the command
@@ -5660,8 +5660,8 @@ protected:
   void
   print_prompt ()
   {
-    std::fprintf (stderr, "%s", current_decoded_prompt.c_str ());
-    std::fflush (stderr);
+    fprintf (stderr, "%s", current_decoded_prompt.c_str ());
+    fflush (stderr);
   }
 
   std::string parse_compound_assignment ();
@@ -5917,7 +5917,7 @@ protected:
 
   char *the_current_working_directory;
 
-  // The buffer used by print_cmd.cc. */
+  // The buffer used by print_cmd.cc.
   std::string the_printed_command;
 
   // The FILE pointer used for xtrace.

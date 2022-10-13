@@ -167,6 +167,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module malloca:
   # Code from module math:
   # Code from module mbchar:
+  # Code from module mbrlen:
   # Code from module mbrtowc:
   # Code from module mbschr:
   # Code from module mbsinit:
@@ -721,6 +722,13 @@ AC_DEFUN([gl_INIT],
   gl_MATH_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
   gl_MBCHAR
+  gl_FUNC_MBRLEN
+  gl_CONDITIONAL([GL_COND_OBJ_MBRLEN],
+                 [test $HAVE_MBRLEN = 0 || test $REPLACE_MBRLEN = 1])
+  AM_COND_IF([GL_COND_OBJ_MBRLEN], [
+    gl_PREREQ_MBRLEN
+  ])
+  gl_WCHAR_MODULE_INDICATOR([mbrlen])
   gl_FUNC_MBRTOWC
   gl_CONDITIONAL([GL_COND_OBJ_MBRTOWC],
                  [test $HAVE_MBRTOWC = 0 || test $REPLACE_MBRTOWC = 1])
@@ -1671,6 +1679,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/math.in.h
   lib/mbchar.c
   lib/mbchar.h
+  lib/mbrlen.c
   lib/mbrtowc-impl-utf8.h
   lib/mbrtowc-impl.h
   lib/mbrtowc.c
@@ -2001,6 +2010,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/mathfunc.m4
   m4/mbchar.m4
   m4/mbiter.m4
+  m4/mbrlen.m4
   m4/mbrtowc.m4
   m4/mbsinit.m4
   m4/mbsrtowcs.m4

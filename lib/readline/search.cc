@@ -160,7 +160,7 @@ Readline::noninc_dosearch (const char *string, int dir, rl_search_flags flags)
       && ind < rl_end ())
     {
       rl_point = ind;
-      rl_mark = ind + static_cast<unsigned int> (std::strlen (string));
+      rl_mark = ind + static_cast<unsigned int> (strlen (string));
       if (rl_mark > rl_end ())
         rl_mark = rl_end (); /* can't happen? */
       rl_activate_mark ();

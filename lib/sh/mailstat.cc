@@ -1,4 +1,5 @@
-/* mailstat.cc -- stat a mailbox file, handling maildir-type mail directories */
+/* mailstat.cc -- stat a mailbox file, handling maildir-type mail directories
+ */
 
 /* Copyright (C) 2001 Free Software Foundation, Inc.
 
@@ -68,10 +69,10 @@ mailstat (const char *path, struct stat *st)
   atime = mtime = 0;
 
   /* First see if it's a directory. */
-  if ((i = ::stat (path, st)) != 0 || S_ISDIR (st->st_mode) == 0)
+  if ((i = stat (path, st)) != 0 || S_ISDIR (st->st_mode) == 0)
     return i;
 
-  if (std::strlen (path) > sizeof (dir) - 5)
+  if (strlen (path) > sizeof (dir) - 5)
     {
 #ifdef ENAMETOOLONG
       errno = ENAMETOOLONG;
@@ -94,19 +95,19 @@ mailstat (const char *path, struct stat *st)
 
   /* See if cur/ is present */
   sprintf (dir, "%s/cur", path);
-  if (::stat (dir, &st_tmp) || S_ISDIR (st_tmp.st_mode) == 0)
+  if (stat (dir, &st_tmp) || S_ISDIR (st_tmp.st_mode) == 0)
     return 0;
   st_ret.st_atime = st_tmp.st_atime;
 
   /* See if tmp/ is present */
-  std::sprintf (dir, "%s/tmp", path);
-  if (::stat (dir, &st_tmp) || S_ISDIR (st_tmp.st_mode) == 0)
+  sprintf (dir, "%s/tmp", path);
+  if (stat (dir, &st_tmp) || S_ISDIR (st_tmp.st_mode) == 0)
     return 0;
   st_ret.st_mtime = st_tmp.st_mtime;
 
   /* And new/ */
-  std::sprintf (dir, "%s/new", path);
-  if (::stat (dir, &st_tmp) || S_ISDIR (st_tmp.st_mode) == 0)
+  sprintf (dir, "%s/new", path);
+  if (stat (dir, &st_tmp) || S_ISDIR (st_tmp.st_mode) == 0)
     return 0;
   st_ret.st_mtime = st_tmp.st_mtime;
 
@@ -124,18 +125,17 @@ mailstat (const char *path, struct stat *st)
   /* Loop over new/ and cur/ */
   for (i = 0; i < 2; i++)
     {
-      std::sprintf (dir, "%s/%s", path, i ? "cur" : "new");
-      std::sprintf (file, "%s/", dir);
-      l = std::strlen (file);
-      if ((dd = ::opendir (dir)) == NULL)
+      sprintf (dir, "%s/%s", path, i ? "cur" : "new");
+      sprintf (file, "%s/", dir);
+      l = strlen (file);
+      if ((dd = opendir (dir)) == NULL)
         return 0;
-      while ((fn = ::readdir (dd)) != NULL)
+      while ((fn = readdir (dd)) != NULL)
         {
-          if (fn->d_name[0] == '.'
-              || std::strlen (fn->d_name) + l >= sizeof (file))
+          if (fn->d_name[0] == '.' || strlen (fn->d_name) + l >= sizeof (file))
             continue;
-          std::strcpy (file + l, fn->d_name);
-          if (::stat (file, &st_tmp) != 0)
+          strcpy (file + l, fn->d_name);
+          if (stat (file, &st_tmp) != 0)
             continue;
           st_ret.st_size += st_tmp.st_size;
 #ifdef HAVE_STRUCT_STAT_ST_BLOCKS
@@ -148,7 +148,7 @@ mailstat (const char *path, struct stat *st)
           if (st_tmp.st_mtime > mtime)
             mtime = st_tmp.st_mtime;
         }
-      ::closedir (dd);
+      closedir (dd);
     }
 
   /*  if (atime) */ /* Set atime even if cur/ is empty */

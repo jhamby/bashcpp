@@ -74,7 +74,7 @@ Readline::_rl_callback_newline ()
 
 /* Install a readline handler, set up the terminal, and issue the prompt. */
 void
-Readline::rl_callback_handler_install (const std::string &prompt,
+Readline::rl_callback_handler_install (string_view prompt,
                                        rl_vcpfunc_t linefunc)
 {
   rl_set_prompt (prompt);
@@ -105,7 +105,7 @@ Readline::rl_callback_read_char ()
   if (rl_linefunc == nullptr)
     {
       _rl_errmsg ("readline_callback_read_char() called with no handler!");
-      std::abort ();
+      abort ();
     }
 
   try

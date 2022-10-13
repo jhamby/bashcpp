@@ -105,8 +105,8 @@ Shell::xtrace_reset ()
 {
   if (xtrace_fd >= 0 && xtrace_fp)
     {
-      std::fflush (xtrace_fp);
-      std::fclose (xtrace_fp);
+      fflush (xtrace_fp);
+      fclose (xtrace_fp);
     }
   else if (xtrace_fd >= 0)
     close (xtrace_fd);
@@ -140,14 +140,14 @@ Shell::indirection_level_string ()
 
 #if defined(HANDLE_MULTIBYTE)
   size_t ps4_len = ps4_str.size ();
-  ps4_firstc_len = std::mblen (ps4_str.c_str (), ps4_len);
+  ps4_firstc_len = mblen (ps4_str.c_str (), ps4_len);
   if (ps4_firstc_len == 1 || ps4_firstc_len == 0 || ps4_firstc_len < 0)
     {
       ps4_firstc[0] = ps4_str[0];
       ps4_firstc[ps4_firstc_len = 1] = '\0';
     }
   else
-    std::memcpy (ps4_firstc, ps4_str.data (),
+    memcpy (ps4_firstc, ps4_str.data (),
                  static_cast<size_t> (ps4_firstc_len + 1)); // include '\0'
 #else
   ps4_firstc[0] = ps4_str[0];
@@ -176,7 +176,7 @@ Shell::xtrace_print_assignment (const char *name, const char *value,
   CHECK_XTRACE_FP;
 
   if (xflags)
-    std::fprintf (xtrace_fp, "%s", indirection_level_string ());
+    fprintf (xtrace_fp, "%s", indirection_level_string ());
 
   /* VALUE should not be NULL when this is called. */
   if (*value == '\0' || assign_list)
@@ -189,11 +189,11 @@ Shell::xtrace_print_assignment (const char *name, const char *value,
     nval = value;
 
   if (assign_list)
-    std::fprintf (xtrace_fp, "%s=(%s)\n", name, nval.c_str ());
+    fprintf (xtrace_fp, "%s=(%s)\n", name, nval.c_str ());
   else
-    std::fprintf (xtrace_fp, "%s=%s\n", name, nval.c_str ());
+    fprintf (xtrace_fp, "%s=%s\n", name, nval.c_str ());
 
-  std::fflush (xtrace_fp);
+  fflush (xtrace_fp);
 }
 
 /* A function to print the words of a simple command when set -x is on.  Also
@@ -215,32 +215,32 @@ Shell::xtrace_print_word_list (WORD_LIST *list, int xtflags)
     {
       std::string &t = w->word->word;
       if (t.empty ())
-        std::fprintf (xtrace_fp, "''%s", w->next () ? " " : "");
+        fprintf (xtrace_fp, "''%s", w->next () ? " " : "");
       else if (xtflags & 2)
-        std::fprintf (xtrace_fp, "%s%s", t.c_str (), w->next () ? " " : "");
+        fprintf (xtrace_fp, "%s%s", t.c_str (), w->next () ? " " : "");
       else if (sh_contains_shell_metas (t))
         {
           std::string x = sh_single_quote (t);
-          std::fprintf (xtrace_fp, "%s%s", x.c_str (), w->next () ? " " : "");
+          fprintf (xtrace_fp, "%s%s", x.c_str (), w->next () ? " " : "");
         }
       else if (ansic_shouldquote (t))
         {
           std::string x = ansic_quote (t);
-          std::fprintf (xtrace_fp, "%s%s", x.c_str (), w->next () ? " " : "");
+          fprintf (xtrace_fp, "%s%s", x.c_str (), w->next () ? " " : "");
         }
       else
-        std::fprintf (xtrace_fp, "%s%s", t.c_str (), w->next () ? " " : "");
+        fprintf (xtrace_fp, "%s%s", t.c_str (), w->next () ? " " : "");
     }
-  std::fprintf (xtrace_fp, "\n");
-  std::fflush (xtrace_fp);
+  fprintf (xtrace_fp, "\n");
+  fflush (xtrace_fp);
 }
 
 void
 Shell::xtrace_print_for_command_head (FOR_SELECT_COM *for_command)
 {
   CHECK_XTRACE_FP;
-  std::fprintf (xtrace_fp, "%s", indirection_level_string ().c_str ());
-  std::fprintf (xtrace_fp, "for %s in ", for_command->name->word.c_str ());
+  fprintf (xtrace_fp, "%s", indirection_level_string ().c_str ());
+  fprintf (xtrace_fp, "for %s in ", for_command->name->word.c_str ());
   xtrace_print_word_list (for_command->map_list, 2);
 }
 
@@ -298,8 +298,8 @@ void
 Shell::xtrace_print_select_command_head (FOR_SELECT_COM *select_command)
 {
   CHECK_XTRACE_FP;
-  std::fprintf (xtrace_fp, "%s", indirection_level_string ());
-  std::fprintf (xtrace_fp, "select %s in ",
+  fprintf (xtrace_fp, "%s", indirection_level_string ());
+  fprintf (xtrace_fp, "select %s in ",
                 select_command->name->word.c_str ());
   xtrace_print_word_list (select_command->map_list, 2);
 }
@@ -346,8 +346,8 @@ void
 Shell::xtrace_print_case_command_head (CASE_COM *case_command)
 {
   CHECK_XTRACE_FP;
-  std::fprintf (xtrace_fp, "%s", indirection_level_string ());
-  std::fprintf (xtrace_fp, "case %s in\n", case_command->word->word.c_str ());
+  fprintf (xtrace_fp, "%s", indirection_level_string ());
+  fprintf (xtrace_fp, "case %s in\n", case_command->word->word.c_str ());
 }
 
 // This function is called from execute_case_command ().
@@ -511,10 +511,10 @@ COND_COM::print (Shell *shell)
 void
 Shell::debug_print_cond_command (COND_COM *cond)
 {
-  std::fprintf (stderr, "DEBUG: ");
+  fprintf (stderr, "DEBUG: ");
   the_printed_command.clear ();
   cond->print (this);
-  std::fprintf (stderr, "%s\n", the_printed_command.c_str ());
+  fprintf (stderr, "%s\n", the_printed_command.c_str ());
 }
 #endif
 
@@ -524,27 +524,27 @@ Shell::xtrace_print_cond_term (cond_com_type type, bool invert, WORD_DESC *op,
 {
   CHECK_XTRACE_FP;
   the_printed_command.clear ();
-  std::fprintf (xtrace_fp, "%s", indirection_level_string ());
-  std::fprintf (xtrace_fp, "[[ ");
+  fprintf (xtrace_fp, "%s", indirection_level_string ());
+  fprintf (xtrace_fp, "[[ ");
 
   if (invert)
-    std::fprintf (xtrace_fp, "! ");
+    fprintf (xtrace_fp, "! ");
 
   if (type == COND_UNARY)
     {
-      std::fprintf (xtrace_fp, "%s ", op->word.c_str ());
-      std::fprintf (xtrace_fp, "%s", (arg1 && *arg1) ? arg1 : "''");
+      fprintf (xtrace_fp, "%s ", op->word.c_str ());
+      fprintf (xtrace_fp, "%s", (arg1 && *arg1) ? arg1 : "''");
     }
   else if (type == COND_BINARY)
     {
-      std::fprintf (xtrace_fp, "%s", (arg1 && *arg1) ? arg1 : "''");
-      std::fprintf (xtrace_fp, " %s ", op->word.c_str ());
-      std::fprintf (xtrace_fp, "%s", (arg2 && *arg2) ? arg2 : "''");
+      fprintf (xtrace_fp, "%s", (arg1 && *arg1) ? arg1 : "''");
+      fprintf (xtrace_fp, " %s ", op->word.c_str ());
+      fprintf (xtrace_fp, "%s", (arg2 && *arg2) ? arg2 : "''");
     }
 
-  std::fprintf (xtrace_fp, " ]]\n");
+  fprintf (xtrace_fp, " ]]\n");
 
-  std::fflush (xtrace_fp);
+  fflush (xtrace_fp);
 }
 #endif /* COND_COMMAND */
 
@@ -556,16 +556,16 @@ Shell::xtrace_print_arith_cmd (WORD_LIST *list)
   WORD_LIST *w;
 
   CHECK_XTRACE_FP;
-  std::fprintf (xtrace_fp, "%s", indirection_level_string ());
-  std::fprintf (xtrace_fp, "(( ");
+  fprintf (xtrace_fp, "%s", indirection_level_string ());
+  fprintf (xtrace_fp, "(( ");
 
   for (w = list; w; w = w->next ())
-    std::fprintf (xtrace_fp, "%s%s", w->word->word.c_str (),
+    fprintf (xtrace_fp, "%s%s", w->word->word.c_str (),
                   w->next () ? " " : "");
 
-  std::fprintf (xtrace_fp, " ))\n");
+  fprintf (xtrace_fp, " ))\n");
 
-  std::fflush (xtrace_fp);
+  fflush (xtrace_fp);
 }
 #endif
 
@@ -645,7 +645,7 @@ Shell::print_redirection_list (REDIRECT *redirects)
         {
           /* Temporarily translate it as the execution code does. */
           const char *rw = redirects->redirectee.r.filename->word.c_str ();
-          if (*rw && *rw != '-' && std::isdigit (*rw) == 0
+          if (*rw && *rw != '-' && c_isdigit (*rw) == 0
               && EXPCHAR (*rw) == 0)
             redirects->instruction = r_err_and_out;
           print_redirection (redirects);
@@ -1158,7 +1158,7 @@ Shell::cprintf (const char *control, ...)
               digit_arg = va_arg (args, int);
               if (digit_arg < 0)
                 {
-                  std::sprintf (intbuf, "%u", static_cast<unsigned int> (-1));
+                  sprintf (intbuf, "%u", static_cast<unsigned int> (-1));
                   argp = intbuf;
                 }
               else

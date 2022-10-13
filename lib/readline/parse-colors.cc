@@ -321,7 +321,7 @@ Readline::_rl_parse_colors ()
   init_rl_color_indicators ();
 
   ext = nullptr;
-  std::strcpy (label, "??");
+  strcpy (label, "??");
 
   /* This is an overly conservative estimate, but any possible
      LS_COLORS string will *not* generate a color_buf longer than

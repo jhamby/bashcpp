@@ -236,7 +236,7 @@ alrm_catcher (int)
   const char *msg;
 
   msg = _ ("\007timed out waiting for input: auto-logout\n");
-  (void)::write (1, msg, std::strlen (msg));
+  (void)write (1, msg, strlen (msg));
 
   the_shell->bash_logout (); /* run ~/.bash_logout if this is a login shell */
   terminating_signal = SIGKILL; // XXX - throw EXITPROG as soon as possible
@@ -256,7 +256,7 @@ Shell::send_pwd_to_eterm ()
     pwd = get_working_directory ("eterm");
 
   if (pwd)
-    std::fprintf (stderr, "\032/%s\n", pwd);
+    fprintf (stderr, "\032/%s\n", pwd);
 }
 
 #if defined(ARRAY_VARS)
@@ -366,11 +366,11 @@ Shell::read_command ()
 
       if (tmout_var && tmout_var->is_set ())
         {
-          tmout_len = ::atoi (tmout_var->str_value ());
+          tmout_len = atoi (tmout_var->str_value ());
           if (tmout_len > 0)
             {
               old_alrm = set_signal_handler (SIGALRM, &alrm_catcher);
-              ::alarm (static_cast<unsigned int> (tmout_len));
+              alarm (static_cast<unsigned int> (tmout_len));
             }
         }
     }
@@ -382,7 +382,7 @@ Shell::read_command ()
 
   if (interactive && tmout_var && (tmout_len > 0))
     {
-      ::alarm (0);
+      alarm (0);
       set_signal_handler (SIGALRM, old_alrm);
     }
 
