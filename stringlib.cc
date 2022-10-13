@@ -31,11 +31,7 @@
 #include "pathexp.hh"
 #include "shell.hh"
 
-#include "glob.hh"
-
-#if defined(EXTENDED_GLOB)
-#include "strmatch.hh"
-#endif
+#include <glob.h>
 
 namespace bash
 {

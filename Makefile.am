@@ -21,7 +21,6 @@ ACLOCAL_AMFLAGS = --install -I m4
 RLDIR = lib/readline
 SHDIR = lib/sh
 TLDIR = lib/tilde
-GLBDIR = lib/glob
 BLTDIR = builtins
 
 DEFS += -DLOCALEDIR=\"$(localedir)\"
@@ -48,7 +47,7 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
 	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
 	siglist.hh subst.hh syntax.hh trap.hh variables.hh \
-	include/chartypes.hh \
+	include/chartypes.hh include/strmatch.hh \
 	include/maxpath.hh include/posixdir.hh include/posixselect.hh \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
 	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
@@ -71,7 +70,7 @@ endif
 AM_YFLAGS = -d
 
 AM_CPPFLAGS = -I$(srcdir)/lib/gnulib -I$(builddir)/lib/gnulib \
-	      -I$(srcdir)/include -I$(srcdir)/lib/glob -I$(srcdir)/lib/tilde
+	      -I$(srcdir)/include -I$(srcdir)/lib/tilde
 
 AM_CPPFLAGS += -I$(srcdir)/lib/readline
 
@@ -181,12 +180,8 @@ version.hh: $(CONFIG_HEADER) patchlevel.hh
 	$(SHELL) $(srcdir)/support/mkversion.sh -b -S $(srcdir) -s $(RELSTATUS) -d $(Version) -o newversion.hh \
 		&& mv newversion.hh version.hh
 
-bash_SOURCES += $(GLBDIR)/glob.cc $(GLBDIR)/smatch.cc $(GLBDIR)/gmisc.cc \
-	$(GLBDIR)/xmbsrtowcs.cc $(GLBDIR)/collsyms.hh $(GLBDIR)/glob.hh \
-	$(GLBDIR)/glob_loop.hh $(GLBDIR)/gm_loop.hh $(GLBDIR)/ndir.hh \
-	$(GLBDIR)/sm_loop.hh $(GLBDIR)/strmatch.hh
-
 # TODO: include these source files conditionally based on READLINE and HISTORY
+
 bash_SOURCES += $(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
 	$(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc $(RLDIR)/rltty.cc \
 	$(RLDIR)/complete.cc $(RLDIR)/bind.cc $(RLDIR)/isearch.cc \

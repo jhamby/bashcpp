@@ -55,6 +55,7 @@
 #  ldexpl \
 #  lstat \
 #  mbrlen \
+#  mbrtowc \
 #  mbschr \
 #  mkfifo \
 #  mknod \
@@ -104,6 +105,7 @@ gl_MODULES([
   ldexpl
   lstat
   mbrlen
+  mbrtowc
   mbschr
   mkfifo
   mknod

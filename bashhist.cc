@@ -22,15 +22,15 @@
 
 #if defined(HISTORY)
 
-#include "builtins/common.hh"
 #include "flags.hh"
 #include "input.hh"
 #include "parser.hh"
 #include "pathexp.hh" /* for the struct ignorevar stuff */
 #include "shell.hh"
 
-#include "glob.hh"
-#include "strmatch.hh"
+#include "builtins/common.hh"
+
+#include <glob.h>
 
 #if defined(SYSLOG_HISTORY)
 #include <syslog.h>

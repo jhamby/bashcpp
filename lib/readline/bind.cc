@@ -327,7 +327,7 @@ Readline::rl_translate_keyseq (string_view seq, std::string &array)
      without base character at the end of SEQ, they are processed as the
      prefixes for '\0'.
   */
-  std::string::const_iterator it;
+  string_view::iterator it;
   for (it = seq.begin ();
        (it != seq.end () && (c = *it)) || has_control || has_meta; ++it)
     {
@@ -556,7 +556,7 @@ Readline::_rl_untranslate_macro_value (string_view seq, bool use_escapes)
   std::string ret;
   ret.reserve (seq.size ());
 
-  std::string::const_iterator s;
+  string_view::iterator s;
   for (s = seq.begin (); s != seq.end (); ++s)
     {
       int c = *s;
@@ -617,7 +617,7 @@ Readline::_rl_function_of_keyseq_internal (string_view keyseq, Keymap map,
   if (map == nullptr)
     map = _rl_keymap;
 
-  std::string::const_iterator it;
+  string_view::iterator it;
   for (it = keyseq.begin (); it != keyseq.end (); ++it)
     {
       int ic = static_cast<unsigned char> (*it);
@@ -2109,7 +2109,7 @@ Readline::init_keymap_names ()
 #endif
 
 int
-Readline::rl_set_keymap_name (string_view name, Keymap map)
+Readline::rl_set_keymap_name (const char *name, Keymap map)
 {
   int ni, mi;
 
@@ -2404,10 +2404,10 @@ Readline::_rl_macro_dumper_internal (bool print_readably, Keymap map,
           out = _rl_untranslate_macro_value (map[key].value.macro, false);
 
           if (print_readably)
-            fprintf (rl_outstream, "\"%s%s\": \"%s\"\n", prefix.c_str (),
+            fprintf (rl_outstream, "\"%s%s\": \"%s\"\n", prefix,
                      keyname.c_str (), out.c_str ());
           else
-            fprintf (rl_outstream, "%s%s outputs %s\n", prefix.c_str (),
+            fprintf (rl_outstream, "%s%s outputs %s\n", prefix,
                      keyname.c_str (), out.c_str ());
           keyname.clear ();
           break;
@@ -2429,7 +2429,7 @@ Readline::_rl_macro_dumper_internal (bool print_readably, Keymap map,
             }
 
           _rl_macro_dumper_internal (print_readably, map[key].value.map,
-                                     keyname);
+                                     keyname.c_str ());
           keyname.clear ();
           break;
         }

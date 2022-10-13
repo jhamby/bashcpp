@@ -50,6 +50,7 @@
 #  ldexpl \
 #  lstat \
 #  mbrlen \
+#  mbrtowc \
 #  mbschr \
 #  mkfifo \
 #  mknod \

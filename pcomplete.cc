@@ -25,6 +25,7 @@
 
 #include "bashtypes.hh"
 #include "posixstat.hh"
+#include "posixtime.hh"
 
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
@@ -32,13 +33,6 @@
 
 #include <cstdarg>
 
-#include "posixtime.hh"
-
-#include "bashintl.hh"
-
-#include "alias.hh"
-#include "pathexp.hh"
-#include "pcomplete.hh"
 #include "shell.hh"
 
 #if defined(JOB_CONTROL)
@@ -56,8 +50,7 @@
 
 #include "builtext.hh"
 
-#include "glob.hh"
-#include "strmatch.hh"
+#include <glob.h>
 
 namespace bash
 {

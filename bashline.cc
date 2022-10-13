@@ -39,7 +39,7 @@
 #include "builtext.hh" /* for read_builtin */
 #include "common.hh"
 
-#include "glob.hh"
+#include <glob.h>
 
 #if defined(ALIAS)
 #include "alias.hh"

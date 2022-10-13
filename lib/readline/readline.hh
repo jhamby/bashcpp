@@ -1052,7 +1052,7 @@ public:
   }
 
   // Set the name of MAP to NAME. This function isn't used by bash.
-  int rl_set_keymap_name (string_view, Keymap);
+  int rl_set_keymap_name (const char *, Keymap);
 
   // Functions for manipulating the funmap, which maps command names to
   // functions.
@@ -1848,7 +1848,7 @@ private:
   /* Print prefix color. Returns 0 on success and 1 on error. */
   int _rl_print_prefix_color ();
 
-  bool _rl_print_color_indicator (string_view);
+  bool _rl_print_color_indicator (const char *);
   void _rl_prep_non_filename_text ();
 
 #if defined(COLOR_SUPPORT)
@@ -1856,7 +1856,7 @@ private:
   void init_rl_color_indicators ();
 
   inline int
-  colored_stat_start (string_view filename)
+  colored_stat_start (const char *filename)
   {
     _rl_set_normal_color ();
     return _rl_print_color_indicator (filename);
@@ -1959,10 +1959,10 @@ private:
   int _rl_internal_pager (int);
 
 #if defined(VISIBLE_STATS)
-  int stat_char (string_view);
+  int stat_char (const char *);
 #endif
 
-  std::string printable_part (string_view);
+  string_view printable_part (string_view);
   size_t fnwidth (string_view string);
   size_t fnprint (string_view, size_t, size_t);
   size_t print_filename (string_view, size_t, size_t);

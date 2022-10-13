@@ -58,7 +58,7 @@ Readline::_rl_print_prefix_color ()
 
 /* Returns whether any color sequence was printed. */
 bool
-Readline::_rl_print_color_indicator (const std::string &f)
+Readline::_rl_print_color_indicator (const char *f)
 {
   enum indicator_no colored_filetype;
   COLOR_EXT_TYPE *ext; /* Color extension */
@@ -71,7 +71,7 @@ Readline::_rl_print_color_indicator (const std::string &f)
   int linkok; /* 1 == ok, 0 == dangling symlink, -1 == missing */
   int stat_ok;
 
-  name = f.c_str ();
+  name = f;
 
   /* This should already have undergone tilde expansion */
   if (rl_filename_stat_hook)

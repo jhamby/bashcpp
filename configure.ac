@@ -432,7 +432,7 @@ AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf dup2 faccessat fchdir 
 		gethostname getpeername getpwent getpwnam getpwuid \
 		getrandom getrlimit getrusage getservbyname getservent \
 		gettimeofday group_member imaxdiv inet_aton kill killpg \
-		localeconv localtime_r lstat mbrlen mbschr mbsnrtowcs mkdir mkdtemp \
+		localeconv localtime_r lstat mbrlen mbrtowc mbschr mbsnrtowcs mkdir mkdtemp \
 		mkfifo mknod mkstemp mmap nl_langinfo pathconf pselect putenv random \
 		readlink regcomp regexec rename select setdtablesize setenv setitimer \
 		setlocale setpgid setregid setresgid setresuid setvbuf socket stpcpy strcasecmp \
