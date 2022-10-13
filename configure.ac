@@ -30,7 +30,7 @@ define(relstatus, dev)
 dnl make sure we are using a recent autoconf version
 AC_PREREQ([2.69])
 
-AC_CONFIG_SRCDIR(siglist.cc)
+AC_CONFIG_SRCDIR(shell.cc)
 
 dnl where to find install.sh, config.sub, and config.guess
 AC_CONFIG_AUX_DIR(support)
