@@ -42,13 +42,13 @@ enum stream_type
 /* Possible values for b_flag. */
 enum bstream_flags
 {
-  B_NOFLAGS = 0,
-  B_EOF = 0x01,
-  B_ERROR = 0x02,
-  B_UNBUFF = 0x04,
-  B_WASBASHINPUT = 0x08,
-  B_TEXT = 0x10,
-  B_SHAREDBUF = 0x20 /* shared input buffer */
+  BST_NOFLAGS = 0,
+  BST_EOF = 0x01,
+  BST_ERROR = 0x02,
+  BST_UNBUFF = 0x04,
+  BST_WASBASHINPUT = 0x08,
+  BST_TEXT = 0x10,
+  BST_SHAREDBUF = 0x20 /* shared input buffer */
 };
 
 static inline bstream_flags &

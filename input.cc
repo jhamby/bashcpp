@@ -130,11 +130,11 @@ Shell::make_buffered_stream (int fd, char *buffer, size_t bufsize)
   bp->b_fd = fd;
   bp->b_buffer = buffer;
   bp->b_size = bufsize;
-  bp->b_used = bp->b_inputp = bp->b_flag = B_NOFLAGS;
+  bp->b_used = bp->b_inputp = bp->b_flag = BST_NOFLAGS;
   if (bufsize == 1)
-    bp->b_flag |= B_UNBUFF;
+    bp->b_flag |= BST_UNBUFF;
   if (O_TEXT && (::fcntl (fd, F_GETFL) & O_TEXT) != 0)
-    bp->b_flag |= B_TEXT;
+    bp->b_flag |= BST_TEXT;
   return bp;
 }
 
@@ -172,7 +172,7 @@ Shell::save_bash_input (int fd, int new_fd)
          descriptor?  Free up the buffer and report the error. */
       internal_error (
           _ ("save_bash_input: buffer already exists for new fd %d"), nfd);
-      if (buffers[snfd]->b_flag & B_SHAREDBUF)
+      if (buffers[snfd]->b_flag & BST_SHAREDBUF)
         buffers[snfd]->b_buffer = nullptr;
       free_buffered_stream (buffers[snfd]);
     }
@@ -256,7 +256,7 @@ Shell::duplicate_buffered_stream (int fd1, int fd2)
           && buffers[sfd1]->b_buffer == buffers[sfd2]->b_buffer)
         buffers[sfd2] = nullptr;
       /* If this buffer is shared with another fd, don't free the buffer */
-      else if (buffers[sfd2]->b_flag & B_SHAREDBUF)
+      else if (buffers[sfd2]->b_flag & BST_SHAREDBUF)
         {
           buffers[sfd2]->b_buffer = nullptr;
           free_buffered_stream (buffers[sfd2]);
@@ -272,12 +272,12 @@ Shell::duplicate_buffered_stream (int fd1, int fd2)
     {
       if (!buffers[sfd2])
         fd_to_buffered_stream (fd2);
-      buffers[sfd2]->b_flag |= B_WASBASHINPUT;
+      buffers[sfd2]->b_flag |= BST_WASBASHINPUT;
     }
 
   if (fd_is_bash_input (fd1)
-      || (buffers[sfd1] && (buffers[sfd1]->b_flag & B_SHAREDBUF)))
-    buffers[sfd2]->b_flag |= B_SHAREDBUF;
+      || (buffers[sfd1] && (buffers[sfd1]->b_flag & BST_SHAREDBUF)))
+    buffers[sfd2]->b_flag |= BST_SHAREDBUF;
 
   return fd2;
 }
@@ -323,14 +323,14 @@ Shell::b_fill_buffer (BUFFERED_STREAM *bp)
      compensate for lseek() on text files returning an offset different from
      the count of characters read() returns.  Text-mode streams have to be
      treated as unbuffered. */
-  if ((bp->b_flag & (B_TEXT | B_UNBUFF)) == B_TEXT)
+  if ((bp->b_flag & (BST_TEXT | BST_UNBUFF)) == BST_TEXT)
     {
       o = lseek (bp->b_fd, 0, SEEK_CUR);
       nr = zread (bp->b_fd, bp->b_buffer, bp->b_size);
       if (nr > 0 && nr < lseek (bp->b_fd, 0, SEEK_CUR) - o)
         {
           lseek (bp->b_fd, o, SEEK_SET);
-          bp->b_flag |= B_UNBUFF;
+          bp->b_flag |= BST_UNBUFF;
           bp->b_size = 1;
           nr = zread (bp->b_fd, bp->b_buffer, bp->b_size);
         }
@@ -342,9 +342,9 @@ Shell::b_fill_buffer (BUFFERED_STREAM *bp)
       bp->b_used = bp->b_inputp = 0;
       bp->b_buffer[0] = 0;
       if (nr == 0)
-        bp->b_flag |= B_EOF;
+        bp->b_flag |= BST_EOF;
       else
-        bp->b_flag |= B_ERROR;
+        bp->b_flag |= BST_ERROR;
       return EOF;
     }
 

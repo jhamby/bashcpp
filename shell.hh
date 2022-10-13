@@ -2987,7 +2987,7 @@ protected:
       return 0;
 
     int fd = bp->b_fd;
-    if (bp->b_flag & B_SHAREDBUF)
+    if (bp->b_flag & BST_SHAREDBUF)
       bp->b_buffer = nullptr;
     free_buffered_stream (bp);
     return close (fd);

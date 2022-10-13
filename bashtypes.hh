@@ -33,6 +33,15 @@
 #include <stdint.h>
 #endif
 
+// Include and undefine the Gnulib macros that break (at least) Haiku OS.
+#include <stdlib.h>
+#ifdef strtoll
+#undef strtoll
+#endif
+#ifdef strtoull
+#undef strtoull
+#endif
+
 // Undefine gnulib's static_assert macro from "assert.h",
 // which breaks the system C++ headers on MINIX and Solaris.
 #ifdef static_assert

@@ -24,6 +24,7 @@
 #if !defined(_POSIXSTAT_H_)
 #define _POSIXSTAT_H_
 
+#include <fcntl.h>
 #include <sys/stat.h>
 
 #if defined(STAT_MACROS_BROKEN)

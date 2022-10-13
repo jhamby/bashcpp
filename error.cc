@@ -21,10 +21,7 @@
 #include "config.h"
 
 #include <fcntl.h>
-
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include <cstdarg>
 
