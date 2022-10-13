@@ -1169,7 +1169,7 @@ public:
   inline void
   rl_replace_line (string_view text, bool clear_undo)
   {
-    rl_line_buffer = text;
+    rl_line_buffer = to_string (text);
 
     if (clear_undo)
       rl_free_undo_list ();
@@ -2056,7 +2056,7 @@ private:
   inline void
   invis_adds (string_view str, char face)
   {
-    line_state_invisible->line.append (str);
+    line_state_invisible->line.append (to_string (str));
     line_state_invisible->lface.append (str.size (), face);
   }
 

@@ -33,6 +33,12 @@
 #include <stdint.h>
 #endif
 
+// Undefine gnulib's static_assert macro from "assert.h",
+// which breaks the system C++ headers on MINIX and Solaris.
+#ifdef static_assert
+#undef static_assert
+#endif
+
 // Use C++17 std::string_view or our own lite version.
 #if __cplusplus >= 201703L
 #include <string_view>
