@@ -284,29 +284,12 @@ extern "C"
   typedef void (*SigHandler) (int sig);
 }
 
-#if defined(HAVE_POSIX_SIGNALS)
 typedef struct sigaction sighandler_cxt;
 #define rl_sigaction(s, nh, oh) sigaction (s, nh, oh)
-#else
-typedef struct
-{
-  SigHandler sa_handler;
-  int sa_mask, sa_flags;
-} sighandler_cxt;
-#define sigemptyset(m)
-#endif /* !HAVE_POSIX_SIGNALS */
-
-#ifndef SA_RESTART
-#define SA_RESTART 0
-#endif
 
 #endif /* HANDLE_SIGNALS */
 
-#if defined(TERMIOS_TTY_DRIVER)
 #define TIOTYPE struct termios
-#else
-#define TIOTYPE struct termio
-#endif /* !TERMIOS_TTY_DRIVER */
 
 // Main Readline class containing all of the methods and shared state.
 class Readline : public History
@@ -3595,15 +3578,8 @@ private:
   sighandler_cxt old_tstp, old_ttou, old_ttin;
 #endif
 
-#if defined(HAVE_POSIX_SIGNALS)
   sigset_t sigint_set, sigint_oset;
   sigset_t sigwinch_set, sigwinch_oset;
-#else /* !HAVE_POSIX_SIGNALS */
-#if defined(HAVE_BSD_SIGNALS)
-  int sigint_oldmask;
-  int sigwinch_oldmask;
-#endif /* HAVE_BSD_SIGNALS */
-#endif /* !HAVE_POSIX_SIGNALS */
 
   /* terminal.cc */
 
@@ -3921,9 +3897,7 @@ private:
   sighandler_cxt _rl_old_winch;
 #endif
 
-#if defined(HAVE_POSIX_SIGNALS)
   sigset_t _rl_orig_sigset;
-#endif /* !HAVE_POSIX_SIGNALS */
 
 #if !defined(NO_TTY_DRIVER)
   TIOTYPE otio; // "struct termios" for POSIX termios.

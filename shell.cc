@@ -1664,11 +1664,7 @@ Shell::get_current_user_info ()
   /* Don't fetch this more than once. */
   if (current_user.user_name == nullptr)
     {
-#if defined(__TANDEM)
-      entry = getpwnam (getlogin ());
-#else
       entry = getpwuid (current_user.uid);
-#endif
       if (entry)
         {
           current_user.user_name = savestring (entry->pw_name);
@@ -1713,7 +1709,7 @@ Shell::shell_initialize ()
      for restoring the original default signal handlers.  That function
      is called when we make a new child. */
   initialize_traps ();
-  initialize_signals (false);
+  initialize_signals ();
 
   /* It's highly unlikely that this will change. */
   if (current_host_name == nullptr)

@@ -62,14 +62,16 @@ Shell::initialize_traps ()
       = trap_list[RETURN_TRAP] = nullptr;
   sigmodes[EXIT_TRAP] = sigmodes[DEBUG_TRAP] = sigmodes[ERROR_TRAP]
       = sigmodes[RETURN_TRAP] = SIG_INHERITED;
-  original_signals[EXIT_TRAP] = IMPOSSIBLE_TRAP_HANDLER;
+  original_signals[EXIT_TRAP]
+      = reinterpret_cast<SigHandler> (IMPOSSIBLE_TRAP_HANDLER);
 
   for (i = 1; i < NSIG; i++)
     {
       pending_traps[i] = 0;
       trap_list[i] = DEFAULT_SIG;
       sigmodes[i] = SIG_INHERITED; /* XXX - only set, not used */
-      original_signals[i] = IMPOSSIBLE_TRAP_HANDLER;
+      original_signals[i]
+          = reinterpret_cast<SigHandler> (IMPOSSIBLE_TRAP_HANDLER);
     }
 
     /* Show which signals are treated specially by the shell. */
@@ -98,12 +100,11 @@ Shell::initialize_traps ()
 const char *
 Shell::trap_handler_string (int sig)
 {
-  if (trap_list[sig] == reinterpret_cast<char *> (DEFAULT_SIG))
+  if (trap_list[sig] == const_cast<char *> (DEFAULT_SIG))
     return "DEFAULT_SIG";
-  else if (trap_list[sig] == reinterpret_cast<char *> (IGNORE_SIG))
+  else if (trap_list[sig] == const_cast<char *> (IGNORE_SIG))
     return "IGNORE_SIG";
-  else if (trap_list[sig]
-           == reinterpret_cast<char *> (IMPOSSIBLE_TRAP_HANDLER))
+  else if (trap_list[sig] == const_cast<char *> (IMPOSSIBLE_TRAP_HANDLER))
     return "IMPOSSIBLE_TRAP_HANDLER";
   else if (trap_list[sig])
     return trap_list[sig];
@@ -140,8 +141,7 @@ decode_signal (const char *string, decode_signal_flags flags)
 
 #if defined(SIGRTMIN) && defined(SIGRTMAX)
   if (STREQN (string, "SIGRTMIN+", 9)
-      || ((flags & DSIG_NOCASE)
-          && strncasecmp (string, "SIGRTMIN+", 9) == 0))
+      || ((flags & DSIG_NOCASE) && strncasecmp (string, "SIGRTMIN+", 9) == 0))
     {
       if (legal_number (string + 9, &sig) && sig >= 0
           && sig <= SIGRTMAX - SIGRTMIN)
@@ -176,8 +176,7 @@ decode_signal (const char *string, decode_signal_flags flags)
 
           if ((flags & DSIG_NOCASE) && strcasecmp (string, name) == 0)
             return static_cast<int> (sig);
-          else if ((flags & DSIG_NOCASE) == 0
-                   && strcmp (string, name) == 0)
+          else if ((flags & DSIG_NOCASE) == 0 && strcmp (string, name) == 0)
             return static_cast<int> (sig);
           /* If we can't use the `SIG' prefix to match, punt on this
              name now. */
@@ -301,8 +300,8 @@ Shell::run_pending_traps ()
               continue;
             }
 #endif
-          else if (trap_list[sig] == reinterpret_cast<char *> (DEFAULT_SIG)
-                   || trap_list[sig] == reinterpret_cast<char *> (IGNORE_SIG)
+          else if (trap_list[sig] == const_cast<char *> (DEFAULT_SIG)
+                   || trap_list[sig] == const_cast<char *> (IGNORE_SIG)
                    || trap_list[sig] == IMPOSSIBLE_TRAP_NAME)
             {
               /* This is possible due to a race condition.  Say a bash
@@ -321,7 +320,7 @@ Shell::run_pending_traps ()
               internal_warning (
                   _ ("run_pending_traps: bad value in trap_list[%d]: %p"), sig,
                   reinterpret_cast<const void *> (trap_list[sig]));
-              if (trap_list[sig] == reinterpret_cast<char *> (DEFAULT_SIG))
+              if (trap_list[sig] == const_cast<char *> (DEFAULT_SIG))
                 {
                   internal_warning (_ ("run_pending_traps: signal handler is "
                                        "SIG_DFL, resending %d (%s) to myself"),
@@ -403,12 +402,13 @@ Shell::trap_handler (int sig)
      to preserve the Posix "signal traps that are not being ignored shall be
      set to the default action" semantics. */
   if ((subshell_environment & SUBSHELL_IGNTRAP)
-      && trap_list[sig] != reinterpret_cast<char *> (IGNORE_SIG))
+      && trap_list[sig] != const_cast<char *> (IGNORE_SIG))
     {
       sigset_t mask;
 
       /* Paranoia */
-      if (original_signals[sig] == IMPOSSIBLE_TRAP_HANDLER)
+      if (original_signals[sig]
+          == reinterpret_cast<SigHandler> (IMPOSSIBLE_TRAP_HANDLER))
         original_signals[sig] = SIG_DFL;
 
       restore_signal (sig);
@@ -424,19 +424,12 @@ Shell::trap_handler (int sig)
       return;
     }
 
-  if ((sig >= NSIG)
-      || (trap_list[sig] == reinterpret_cast<char *> (DEFAULT_SIG))
-      || (trap_list[sig] == reinterpret_cast<char *> (IGNORE_SIG)))
+  if ((sig >= NSIG) || (trap_list[sig] == const_cast<char *> (DEFAULT_SIG))
+      || (trap_list[sig] == const_cast<char *> (IGNORE_SIG)))
     programming_error (_ ("trap_handler: bad signal %d"), sig);
   else
     {
       oerrno = errno;
-#if defined(MUST_REINSTALL_SIGHANDLERS)
-#if defined(JOB_CONTROL) && defined(SIGCHLD)
-      if (sig != SIGCHLD)
-#endif /* JOB_CONTROL && SIGCHLD */
-        set_signal_handler (sig, trap_handler);
-#endif /* MUST_REINSTALL_SIGHANDLERS */
 
       set_trap_state (sig);
 
@@ -484,7 +477,7 @@ Shell::set_sigint_handler ()
 
 /* Set SIG to call STRING as a command. */
 void
-Shell::set_signal (int sig, const char *string)
+Shell::set_signal (int sig, string_view string)
 {
   sigset_t set, oset;
 
@@ -506,7 +499,8 @@ Shell::set_signal (int sig, const char *string)
   if ((sigmodes[sig] & SIG_TRAPPED) == 0)
     {
       /* If we aren't sure of the original value, check it. */
-      if (original_signals[sig] == IMPOSSIBLE_TRAP_HANDLER)
+      if (original_signals[sig]
+          == reinterpret_cast<SigHandler> (IMPOSSIBLE_TRAP_HANDLER))
         GETORIGSIG (sig);
       if (original_signals[sig] == SIG_IGN)
         return;
@@ -567,7 +561,7 @@ Shell::restore_default_signal (int sig)
     set_signal_handler (sig, original_signals[sig]);
 
   /* Change the trap command in either case. */
-  change_signal (sig, reinterpret_cast<char *> (DEFAULT_SIG));
+  change_signal (sig, const_cast<char *> (DEFAULT_SIG));
 
   /* Mark the signal as no longer trapped. */
   sigmodes[sig] &= ~SIG_TRAPPED;
@@ -579,7 +573,7 @@ Shell::ignore_signal (int sig)
 {
   if (SPECIAL_TRAP (sig) && ((sigmodes[sig] & SIG_IGNORED) == 0))
     {
-      change_signal (sig, reinterpret_cast<char *> (IGNORE_SIG));
+      change_signal (sig, const_cast<char *> (IGNORE_SIG));
       return;
     }
 
@@ -599,7 +593,7 @@ Shell::ignore_signal (int sig)
     set_signal_handler (sig, SIG_IGN);
 
   /* Change the trap command in either case. */
-  change_signal (sig, reinterpret_cast<char *> (IGNORE_SIG));
+  change_signal (sig, const_cast<char *> (IGNORE_SIG));
 }
 
 /* Handle the calling of "trap 0".  The only sticky situation is when
@@ -860,7 +854,7 @@ Shell::free_trap_strings ()
 
   for (i = 0; i < NSIG; i++)
     {
-      if (trap_list[i] != reinterpret_cast<char *> (IGNORE_SIG))
+      if (trap_list[i] != const_cast<char *> (IGNORE_SIG))
         free_trap_string (i);
     }
   for (i = NSIG; i < BASH_NSIG; i++)
@@ -894,7 +888,7 @@ Shell::reset_or_restore_signal_handlers (sh_resetsig_func_t reset)
     {
       if (sigmodes[i] & SIG_TRAPPED)
         {
-          if (trap_list[i] == reinterpret_cast<char *> (IGNORE_SIG))
+          if (trap_list[i] == const_cast<char *> (IGNORE_SIG))
             set_signal_handler (i, SIG_IGN);
           else
             ((*this).*reset) (i);

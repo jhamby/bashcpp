@@ -53,15 +53,8 @@ namespace bash
 #define killpg(pg, sig) kill (-(pg), (sig))
 #endif /* USG || _POSIX_VERSION */
 
-#if !defined(HAVE_SIGINTERRUPT) && !defined(HAVE_POSIX_SIGNALS)
-#define siginterrupt(sig, code)
-#endif /* !HAVE_SIGINTERRUPT && !HAVE_POSIX_SIGNALS */
-
-#if defined(HAVE_WAITPID)
+// Use Gnulib version if the OS doesn't supply it.
 #define WAITPID(pid, statusp, options) waitpid (pid, statusp, options)
-#else
-#define WAITPID(pid, statusp, options) wait (statusp)
-#endif /* !HAVE_WAITPID */
 
 /* Return the fd from which we are actually getting input. */
 #define input_tty() (shell_tty != -1) ? shell_tty : fileno (stderr)
@@ -138,7 +131,7 @@ static char *j_strsignal (int);
 static void reap_zombie_children (void);
 #endif
 
-#if !defined(HAVE_SIGINTERRUPT) && defined(HAVE_POSIX_SIGNALS)
+#if !defined(HAVE_SIGINTERRUPT)
 static int siginterrupt (int, int);
 #endif
 
@@ -439,7 +432,7 @@ reap_zombie_children ()
 }
 #endif /* WAITPID */
 
-#if !defined(HAVE_SIGINTERRUPT) && defined(HAVE_POSIX_SIGNALS)
+#if !defined(HAVE_SIGINTERRUPT)
 
 #if !defined(SA_RESTART)
 #define SA_RESTART 0
@@ -459,7 +452,7 @@ siginterrupt (int sig, int flag)
 
   return sigaction (sig, &act, (struct sigaction *)NULL);
 }
-#endif /* !HAVE_SIGINTERRUPT && HAVE_POSIX_SIGNALS */
+#endif /* !HAVE_SIGINTERRUPT */
 
 /* Fork, handling errors.  Returns the pid of the newly made child, or 0.
    COMMAND is just for remembering the name of the command; we don't do
@@ -904,7 +897,7 @@ wait_for (pid_t pid, int flags)
     }
   else if (interactive_shell == 0 && subshell_environment == 0
            && check_window_size)
-    get_new_window_size (0, (int *)0, (int *)0);
+    get_new_window_size (nullptr, nullptr);
 
   return return_val;
 }
@@ -941,7 +934,7 @@ get_tty_state ()
       ttgetattr (tty, &shell_tty_info);
       got_tty_state = 1;
       if (check_window_size)
-        get_new_window_size (0, (int *)0, (int *)0);
+        get_new_window_size (nullptr, nullptr);
     }
   return 0;
 }

@@ -32,10 +32,6 @@
 #define HAVE_RESOURCE
 #endif
 
-#if !defined(GETPGRP_VOID)
-#define HAVE_BSD_PGRP
-#endif
-
 #define PREFER_STDARG
 #define USE_VARARGS
 
@@ -48,28 +44,9 @@
 #define HAVE_POSIX_REGEXP
 #endif
 
-/* backwards compatibility between different autoconf versions */
-#if defined(HAVE_DECL_SYS_SIGLIST) && !defined(SYS_SIGLIST_DECLARED)
-#define SYS_SIGLIST_DECLARED
-#endif
-
 /***********************************************************************/
 /* Unset defines based on what configure reports as missing or broken. */
 /***********************************************************************/
-
-/* Ultrix botches type-ahead when switching from canonical to
-   non-canonical mode, at least through version 4.3 */
-#if !defined(HAVE_TERMIOS_H) || !defined(HAVE_TCGETATTR) || defined(ultrix)
-#define TERMIOS_MISSING
-#endif
-
-/* If we have a getcwd(3), but one that does not dynamically allocate memory,
-   #undef HAVE_GETCWD so the replacement in getcwd.c will be built.  We do
-   not do this on Solaris, because their implementation of loopback mounts
-   breaks the traditional file system assumptions that getcwd uses. */
-#if defined(HAVE_GETCWD) && defined(GETCWD_BROKEN) && !defined(SOLARIS)
-#undef HAVE_GETCWD
-#endif
 
 #if !defined(HAVE_DEV_FD) && defined(NAMED_PIPES_MISSING)
 #undef PROCESS_SUBSTITUTION
@@ -77,10 +54,6 @@
 
 #if defined(JOB_CONTROL_MISSING)
 #undef JOB_CONTROL
-#endif
-
-#if defined(STRCOLL_BROKEN)
-#undef HAVE_STRCOLL
 #endif
 
 #if !defined(HAVE_POSIX_REGEXP)
@@ -151,28 +124,6 @@
    the configuring user turn multibyte support off. */
 #if defined(NO_MULTIBYTE_SUPPORT)
 #undef HANDLE_MULTIBYTE
-#endif
-
-/* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
-#if defined(HANDLE_MULTIBYTE) && !defined(HAVE_MBSTATE_T)
-#define wcsrtombs(dest, src, len, ps) (wcsrtombs) (dest, src, len, 0)
-#define mbsrtowcs(dest, src, len, ps) (mbsrtowcs) (dest, src, len, 0)
-#define wcrtomb(s, wc, ps) (wcrtomb) (s, wc, 0)
-#define mbrtowc(pwc, s, n, ps) (mbrtowc) (pwc, s, n, 0)
-#define mbrlen(s, n, ps) (mbrlen) (s, n, 0)
-#define mbstate_t int
-#endif
-
-/* Make sure MB_LEN_MAX is at least 16 (some systems define
-   MB_LEN_MAX as 1) */
-#ifdef HANDLE_MULTIBYTE
-#include <climits>
-#if defined(MB_LEN_MAX) && (MB_LEN_MAX < 16)
-#undef MB_LEN_MAX
-#endif
-#if !defined(MB_LEN_MAX)
-#define MB_LEN_MAX 16
-#endif
 #endif
 
 /************************************************/

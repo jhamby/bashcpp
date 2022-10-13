@@ -39,14 +39,14 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	expr.cc copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc mailcheck.cc \
 	test.cc trap.cc alias.cc braces.cc make_cmd.cc syntax.cc \
 	input.cc bashhist.cc arrayfunc.cc assoc.cc sig.cc pathexp.cc \
-	siglist.cc bashline.cc bracecomp.cc error.cc \
+	bashline.cc bracecomp.cc error.cc \
 	stringlib.cc locale.cc findcmd.cc redir.cc \
 	pcomplete.cc pcomplib.cc alias.hh array.hh assoc.hh bashintl.hh \
 	bashtypes.hh builtins.hh command.hh config-bot.hh config-top.hh \
 	conftypes.hh externs.hh findcmd.hh flags.hh \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
 	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
-	siglist.hh subst.hh syntax.hh trap.hh variables.hh \
+	subst.hh syntax.hh trap.hh variables.hh \
 	include/chartypes.hh include/strmatch.hh \
 	include/maxpath.hh include/posixdir.hh include/posixselect.hh \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \

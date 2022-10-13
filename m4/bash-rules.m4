@@ -178,14 +178,6 @@ AC_CHECK_MEMBER(struct termios.c_line, AC_DEFINE([TERMIOS_LDISC], 1, [Define if 
 ])
 ])
 
-AC_DEFUN([BASH_STRUCT_TERMIO_LDISC],
-[
-AC_CHECK_MEMBER(struct termio.c_line, AC_DEFINE([TERMIO_LDISC], 1, [Define if your struct termio has the c_line field.]), ,[
-#include <sys/types.h>
-#include <termio.h>
-])
-])
-
 dnl
 dnl Like AC_STRUCT_ST_BLOCKS, but doesn't muck with LIBOBJS
 dnl
@@ -410,40 +402,6 @@ elif test $bash_cv_struct_winsize_header = termios_h; then
   AC_DEFINE([STRUCT_WINSIZE_IN_TERMIOS], 1, [Define if you have struct winsize in termios.h.])
 fi)])
 
-dnl Check type of signal routines (posix, 4.2bsd, 4.1bsd or v7)
-AC_DEFUN([BASH_SYS_SIGNAL_VINTAGE],
-[AC_CACHE_CHECK([type of signal routines], bash_cv_signal_vintage,
-bash_cv_signal_vintage=no
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <signal.h>]], [[
-    sigset_t ss;
-    struct sigaction sa;
-    sigemptyset(&ss); sigsuspend(&ss);
-    sigaction(SIGINT, &sa, (struct sigaction *) 0);
-    sigprocmask(SIG_BLOCK, &ss, (sigset_t *) 0);
-  ]])],[bash_cv_signal_vintage=posix])]
-if test bash_cv_signal_vintage = no; then
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <signal.h>]], [[
-	int mask = sigmask(SIGINT);
-	sigsetmask(mask); sigblock(mask); sigpause(mask);
-    ]])], [bash_cv_signal_vintage=4.2bsd])]
-fi
-if test bash_cv_signal_vintage = no; then
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <signal.h>]], [[
-	void foo() { }
-	int mask = sigmask(SIGINT);
-	sigset(SIGINT, foo); sigrelse(SIGINT);
-	sighold(SIGINT); sigpause(SIGINT);
-        ]], [bash_cv_signal_vintage=svr3], [bash_cv_signal_vintage=v7])])]
-fi
-if test "$bash_cv_signal_vintage" = posix; then
-AC_DEFINE([HAVE_POSIX_SIGNALS], 1, [Define if you have POSIX signal handling (struct sigaction and friends).])
-elif test "$bash_cv_signal_vintage" = "4.2bsd"; then
-AC_DEFINE([HAVE_BSD_SIGNALS], 1, [Define if you have 4.2BSD-style signal handling (sigsetmask, sigblock, sigpause).])
-elif test "$bash_cv_signal_vintage" = svr3; then
-AC_DEFINE([HAVE_USG_SIGHOLD], 1, [Define if you have SVR3-style signal handling (sigset, sigrelse, sigpause).])
-fi
-)])
-
 dnl Check if the pgrp of setpgrp() can't be the pid of a zombie process.
 AC_DEFUN([BASH_SYS_PGRP_SYNC],
 [AC_REQUIRE([AC_FUNC_GETPGRP])
@@ -511,65 +469,9 @@ AC_DEFINE([PGRP_PIPE], 1, [Define if the pgrps from setpgrp can't be the pid of 
 fi
 ])
 
-AC_DEFUN([BASH_SYS_REINSTALL_SIGHANDLERS],
-[
-AC_MSG_CHECKING([if signal handlers must be reinstalled when invoked])
-AC_CACHE_VAL(bash_cv_must_reinstall_sighandlers,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <signal.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <stdlib.h>
-
-typedef void sigfunc(int s);
-
-volatile int nsigint;
-
-#ifdef HAVE_POSIX_SIGNALS
-sigfunc *
-set_signal_handler(int sig, sigfunc *handler)
-{
-  struct sigaction act, oact;
-  act.sa_handler = handler;
-  act.sa_flags = 0;
-  sigemptyset (&act.sa_mask);
-  sigemptyset (&oact.sa_mask);
-  sigaction (sig, &act, &oact);
-  return (oact.sa_handler);
-}
-#else
-#define set_signal_handler(s, h) signal(s, h)
-#endif
-
-void
-sigint(int s)
-{
-  nsigint++;
-}
-
-int
-main()
-{
-	nsigint = 0;
-	set_signal_handler(SIGINT, sigint);
-	kill((int)getpid(), SIGINT);
-	kill((int)getpid(), SIGINT);
-	exit(nsigint != 2);
-}
-]])],[bash_cv_must_reinstall_sighandlers=no],[bash_cv_must_reinstall_sighandlers=yes],[AC_MSG_WARN(cannot check signal handling if cross compiling -- defaulting to no)
-    bash_cv_must_reinstall_sighandlers=no
-])])
-AC_MSG_RESULT($bash_cv_must_reinstall_sighandlers)
-if test $bash_cv_must_reinstall_sighandlers = yes; then
-AC_DEFINE([MUST_REINSTALL_SIGHANDLERS], 1, [Define if signal handlers must be reinstalled after invoking.])
-fi
-])
-
 dnl check that some necessary job control definitions are present
 AC_DEFUN([BASH_SYS_JOB_CONTROL_MISSING],
-[AC_REQUIRE([BASH_SYS_SIGNAL_VINTAGE])
-AC_MSG_CHECKING(for presence of necessary job control definitions)
+[AC_MSG_CHECKING(for presence of necessary job control definitions)
 AC_CACHE_VAL(bash_cv_job_control_missing,
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
@@ -582,11 +484,6 @@ AC_CACHE_VAL(bash_cv_job_control_missing,
 #include <signal.h>
 
 /* add more tests in here as appropriate */
-
-/* signal type */
-#if !defined (HAVE_POSIX_SIGNALS) && !defined (HAVE_BSD_SIGNALS)
-#error
-#endif
 
 /* signals and tty control. */
 #if !defined (SIGTSTP) || !defined (SIGSTOP) || !defined (SIGCONT)
@@ -854,80 +751,7 @@ AC_DEFINE([UNUSABLE_RT_SIGNALS], 1, [Define if your real-time signals are unusua
 fi
 ])
 
-dnl
-dnl check for availability of multibyte characters and functions
-dnl
-dnl geez, I wish I didn't have to check for all of this stuff separately
-dnl
-AC_DEFUN([BASH_CHECK_MULTIBYTE],
-[
-AC_CHECK_HEADERS(wctype.h)
-AC_CHECK_HEADERS(wchar.h)
-AC_CHECK_HEADERS(langinfo.h)
-
-AC_CHECK_HEADERS(mbstr.h)
-
-AC_CHECK_FUNC(mbrlen)
-AC_CHECK_FUNC(mbsnrtowcs)
-AC_CHECK_FUNC(mbsrtowcs)
-
-AC_CHECK_FUNC(wcrtomb)
-AC_CHECK_FUNC(wcscoll)
-AC_CHECK_FUNC(wcsdup)
-AC_CHECK_FUNC(wcwidth)
-AC_CHECK_FUNC(wctype)
-
-AC_REPLACE_FUNCS(wcswidth)
-
-dnl checks for both mbrtowc and mbstate_t
-AC_FUNC_MBRTOWC
-if test $ac_cv_func_mbrtowc = yes; then
-	AC_DEFINE([HAVE_MBSTATE_T], 1, [Define if you have the mbstate_t type.])
-fi
-
-AC_CHECK_FUNCS(iswlower iswupper towlower towupper iswctype)
-
-AC_CACHE_CHECK([for nl_langinfo and CODESET], bash_cv_langinfo_codeset,
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <langinfo.h>]], [[char* cs = nl_langinfo(CODESET);]])],[bash_cv_langinfo_codeset=yes],[bash_cv_langinfo_codeset=no])])
-if test $bash_cv_langinfo_codeset = yes; then
-  AC_DEFINE([HAVE_LANGINFO_CODESET], 1, [Define if you have <langinfo.h> and nl_langinfo(CODESET).])
-fi
-
-dnl check for broken wcwidth
-AC_CACHE_CHECK([for wcwidth broken with unicode combining characters],
-bash_cv_wcwidth_broken,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-#include <locale.h>
-#include <wchar.h>
-
-int
-main(int c, char **v)
-{
-        int     w;
-
-        setlocale(LC_ALL, "en_US.UTF-8");
-        w = wcwidth (0x0301);
-        exit (w == 0);  /* exit 0 if wcwidth broken */
-}
-]])],[bash_cv_wcwidth_broken=yes],[bash_cv_wcwidth_broken=no],[bash_cv_wcwidth_broken=no])])
-if test "$bash_cv_wcwidth_broken" = yes; then
-        AC_DEFINE([WCWIDTH_BROKEN], 1, [Define for broken wcwidth with unicode combining chars, e.g. MINIX 3.4.])
-fi
-
-if test "$am_cv_func_iconv" = yes; then
-	OLDLIBS="$LIBS"
-	LIBS="$LIBS $LIBINTL $LIBICONV"
-	AC_CHECK_FUNCS(locale_charset)
-	LIBS="$OLDLIBS"
-fi
-
 AC_CHECK_SIZEOF(wchar_t, 4)
-
-])
 
 dnl need: prefix exec_prefix libdir includedir CC TERMCAP_LIB
 dnl require:
@@ -1044,49 +868,6 @@ RL_INCLUDEDIR=$ac_cv_rl_includedir
 
 AC_MSG_RESULT($ac_cv_rl_version)
 
-fi
-])
-
-AC_DEFUN([BASH_FUNC_CTYPE_NONASCII],
-[
-AC_MSG_CHECKING(whether the ctype macros accept non-ascii characters)
-AC_CACHE_VAL(bash_cv_func_ctype_nonascii,
-[AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#ifdef HAVE_LOCALE_H
-#include <locale.h>
-#endif
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-
-int
-main(int c, char *v[])
-{
-	char	*deflocale;
-	unsigned char x;
-	int	r1, r2;
-
-#ifdef HAVE_SETLOCALE
-	/* We take a shot here.  If that locale is not known, try the
-	   system default.  We try this one because '\342' (226) is
-	   known to be a printable character in that locale. */
-	deflocale = setlocale(LC_ALL, "en_US.ISO8859-1");
-	if (deflocale == 0)
-		deflocale = setlocale(LC_ALL, "");
-#endif
-
-	x = '\342';
-	r1 = isprint(x);
-	x -= 128;
-	r2 = isprint(x);
-	exit (r1 == 0 || r2 == 0);
-}
-]])],[bash_cv_func_ctype_nonascii=yes],[bash_cv_func_ctype_nonascii=no],[AC_MSG_WARN(cannot check ctype macros if cross compiling -- defaulting to no)
-    bash_cv_func_ctype_nonascii=no
-])])
-AC_MSG_RESULT($bash_cv_func_ctype_nonascii)
-if test $bash_cv_func_ctype_nonascii = yes; then
-AC_DEFINE([CTYPE_NON_ASCII], 1, [Define if the ctype macros accept non-ASCII characters.])
 fi
 ])
 

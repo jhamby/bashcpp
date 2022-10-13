@@ -542,10 +542,6 @@ void u32reset ();
 ssize_t wcsnwidth (const wchar_t *, size_t, size_t);
 #endif
 
-/* declarations for functions defined in lib/sh/winsize.c */
-
-void get_new_window_size (int, int *, int *);
-
 /* declarations for functions defined in lib/sh/zgetline.c */
 
 ssize_t zgetline (int, char **, size_t *, int, bool);

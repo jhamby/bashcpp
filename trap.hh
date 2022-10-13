@@ -1,4 +1,4 @@
-/* trap.h -- data structures used in the trap mechanism. */
+/* trap.hh -- data structures used in the trap mechanism. */
 
 /* Copyright (C) 1993-2013 Free Software Foundation, Inc.
 

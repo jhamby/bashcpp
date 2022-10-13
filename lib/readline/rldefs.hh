@@ -91,15 +91,7 @@ using nonstd::to_string_view;
 #if defined(_POSIX_VERSION) && !defined(TERMIOS_MISSING)
 #define TERMIOS_TTY_DRIVER
 #else
-#if defined(HAVE_TERMIO_H)
-#define TERMIO_TTY_DRIVER
-#else
-#if !defined(__MINGW32__)
-#define NEW_TTY_DRIVER
-#else
 #define NO_TTY_DRIVER
-#endif
-#endif
 #endif
 
 // Note: on Linux, we must include <termios.h> before including
@@ -109,19 +101,6 @@ using nonstd::to_string_view;
 #if defined(TERMIOS_TTY_DRIVER)
 #include <termios.h>
 #endif /* TERMIOS_TTY_DRIVER */
-
-/* System V machines use termio. */
-#if defined(TERMIO_TTY_DRIVER)
-#include <termio.h>
-#if !defined(TCOON)
-#define TCOON 1
-#endif
-#endif /* TERMIO_TTY_DRIVER */
-
-/* Other (BSD) machines use sgtty. */
-#if defined(NEW_TTY_DRIVER)
-#include <sgtty.h>
-#endif
 
 /* Posix macro to check file in statbuf for directory-ness.
    This requires that <sys/stat.h> be included before this test. */

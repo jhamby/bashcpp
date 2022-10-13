@@ -1038,7 +1038,7 @@ Shell::default_columns ()
     }
 
   if (check_window_size)
-    get_new_window_size (0, nullptr, &c);
+    get_new_window_size (nullptr, &c);
 
   return c > 0 ? c : 80;
 }

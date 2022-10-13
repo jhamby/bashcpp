@@ -293,12 +293,10 @@ Shell::parse_and_execute (char *string, string_view from_file,
 
   parse_flags lreset = flags & SEVAL_RESETLINE;
 
-#if defined(HAVE_POSIX_SIGNALS)
   /* If we throw and are going to go on, use this to restore signal mask */
   sigset_t pe_sigmask;
   sigemptyset (&pe_sigmask);
   sigprocmask (SIG_BLOCK, nullptr, &pe_sigmask);
-#endif
 
   /* Reset the line number if the caller wants us to.  If we don't reset the
      line number, we have to subtract one, because we will add one just
@@ -446,9 +444,7 @@ Shell::parse_and_execute (char *string, string_view from_file,
                 }
               else
                 {
-#if defined(HAVE_POSIX_SIGNALS)
                   sigprocmask (SIG_SETMASK, &pe_sigmask, nullptr);
-#endif
                   break;
                 }
 
@@ -570,11 +566,9 @@ Shell::parse_string (char *string, string_view from_file, parse_flags flags,
   // This will restore the previous state on destruction or unwind ().
   EvalStringUnwindHandler unwind_handler (*this, string, flags);
 
-#if defined(HAVE_POSIX_SIGNALS)
   /* If we throw and are going to go on, use this to restore signal mask */
   sigemptyset (&ps_sigmask);
   sigprocmask (SIG_BLOCK, nullptr, &ps_sigmask);
-#endif
 
   /* Reset the line number if the caller wants us to.  If we don't reset the
      line number, we have to subtract one, because we will add one just
@@ -649,9 +643,7 @@ Shell::parse_string (char *string, string_view from_file, parse_flags flags,
 
             case NOEXCEPTION:
             default:
-#if defined(HAVE_POSIX_SIGNALS)
               sigprocmask (SIG_SETMASK, &ps_sigmask, nullptr);
-#endif
               command_error ("parse_string", CMDERR_BADJUMP, e.type);
               /* NOTREACHED */
             }

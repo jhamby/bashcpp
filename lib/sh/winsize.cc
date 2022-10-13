@@ -60,19 +60,19 @@ namespace bash
 #define input_tty() (shell_tty != -1) ? shell_tty : fileno (stderr)
 
 void
-Shell::get_new_window_size (int from_sig, int *rp, int *cp)
+Shell::get_new_window_size (int *rp, int *cp)
 {
 #if defined(TIOCGWINSZ)
   struct winsize win;
   int tty;
 
   tty = input_tty ();
-  if (tty >= 0 && (::ioctl (tty, TIOCGWINSZ, &win) == 0) && win.ws_row > 0
+  if (tty >= 0 && (ioctl (tty, TIOCGWINSZ, &win) == 0) && win.ws_row > 0
       && win.ws_col > 0)
     {
       sh_set_lines_and_columns (win.ws_row, win.ws_col);
 #if defined(READLINE)
-      if ((interactive_shell && no_line_editing == 0)
+      if ((interactive_shell && !no_line_editing)
           || bash_readline_initialized)
         rl_set_screen_size (win.ws_row, win.ws_col);
 #endif

@@ -35,7 +35,6 @@
 #endif /* JOB_CONTROL */
 
 #include "sig.hh"
-#include "siglist.hh"
 #include "trap.hh"
 
 #include "builtext.hh"
@@ -188,9 +187,7 @@ static struct termsig terminating_signals[] = {
 void
 Shell::initialize_terminating_signals ()
 {
-#if defined(HAVE_POSIX_SIGNALS)
   struct sigaction act, oact;
-#endif
 
   if (termsigs_initialized)
     return;
@@ -199,7 +196,6 @@ Shell::initialize_terminating_signals ()
        set_signal_handler () for each terminating_signals.  Fortunately,
        this is possible in Posix.  Unfortunately, we have to call signal ()
        on non-Posix systems for each signal in terminating_signals. */
-#if defined(HAVE_POSIX_SIGNALS)
   act.sa_handler = termsig_sighandler_global;
   act.sa_flags = 0;
   sigemptyset (&act.sa_mask);
@@ -232,33 +228,6 @@ Shell::initialize_terminating_signals ()
         sigaction (XSIG (i), &oact, nullptr);
 #endif /* SIGPROF */
     }
-#else /* !HAVE_POSIX_SIGNALS */
-
-  // XXX non-POSIX signal handling code hasn't been tested.
-  for (i = 0; i < TERMSIGS_LENGTH; i++)
-    {
-      /* If we've already trapped it, don't do anything. */
-      if (signal_is_trapped (XSIG (i)))
-        continue;
-
-      XHANDLER (i) = signal (XSIG (i), termsig_sighandler);
-      XSAFLAGS (i) = 0;
-      /* Don't do anything with signals that are ignored at shell entry
-         if the shell is not interactive. */
-      /* XXX - should we do this for interactive shells, too? */
-      if (interactive_shell == 0 && XHANDLER (i) == SIG_IGN)
-        {
-          signal (XSIG (i), SIG_IGN);
-          set_signal_hard_ignored (XSIG (i));
-        }
-#ifdef SIGPROF
-      if (XSIG (i) == SIGPROF && XHANDLER (i) != SIG_DFL
-          && XHANDLER (i) != SIG_IGN)
-        signal (XSIG (i), XHANDLER (i));
-#endif
-    }
-
-#endif /* !HAVE_POSIX_SIGNALS */
 
   termsigs_initialized = true;
 }
@@ -269,7 +238,6 @@ Shell::initialize_shell_signals ()
   if (interactive)
     initialize_terminating_signals ();
 
-#if defined(JOB_CONTROL) || defined(HAVE_POSIX_SIGNALS)
   /* All shells use the signal mask they inherit, and pass it along
      to child processes.  Children will never block SIGCHLD, though. */
   sigemptyset (&top_level_mask);
@@ -281,7 +249,6 @@ Shell::initialize_shell_signals ()
       sigprocmask (SIG_SETMASK, &top_level_mask, nullptr);
     }
 #endif
-#endif /* JOB_CONTROL || HAVE_POSIX_SIGNALS */
 
   /* And, some signals that are specifically ignored by the shell. */
   set_signal_handler (SIGQUIT, SIG_IGN);
@@ -298,14 +265,11 @@ Shell::initialize_shell_signals ()
 void
 Shell::reset_terminating_signals ()
 {
-#if defined(HAVE_POSIX_SIGNALS)
   struct sigaction act;
-#endif
 
   if (!termsigs_initialized)
     return;
 
-#if defined(HAVE_POSIX_SIGNALS)
   act.sa_flags = 0;
   sigemptyset (&act.sa_mask);
   for (size_t i = 0; i < TERMSIGS_LENGTH; i++)
@@ -319,15 +283,6 @@ Shell::reset_terminating_signals ()
       act.sa_flags = XSAFLAGS (i);
       sigaction (XSIG (i), &act, nullptr);
     }
-#else  /* !HAVE_POSIX_SIGNALS */
-  for (size_t i = 0; i < TERMSIGS_LENGTH; i++)
-    {
-      if (signal_is_trapped (XSIG (i)) || signal_is_special (XSIG (i)))
-        continue;
-
-      signal (XSIG (i), XHANDLER (i));
-    }
-#endif /* !HAVE_POSIX_SIGNALS */
 
   termsigs_initialized = false;
 }
@@ -658,40 +613,6 @@ sigterm_sighandler_global (int)
 }
 
 /* Signal functions used by the rest of the code. */
-#if !defined(HAVE_POSIX_SIGNALS)
-
-// XXX non-POSIX signal handling code hasn't been tested.
-
-/* Perform OPERATION on NEWSET, perhaps leaving information in OLDSET. */
-sigprocmask (int operation, int *newset, int *oldset)
-{
-  int old, new;
-
-  if (newset)
-    new = *newset;
-  else
-    new = 0;
-
-  switch (operation)
-    {
-    case SIG_BLOCK:
-      old = sigblock (new);
-      break;
-
-    case SIG_SETMASK:
-      old = sigsetmask (new);
-      break;
-
-    default:
-      internal_error (_ ("sigprocmask: %d: invalid operation"), operation);
-    }
-
-  if (oldset)
-    *oldset = old;
-}
-
-#else
-
 #if !defined(SA_INTERRUPT)
 #define SA_INTERRUPT 0
 #endif
@@ -733,7 +654,6 @@ set_signal_handler (int sig, SigHandler handler)
   else
     return SIG_DFL;
 }
-#endif /* HAVE_POSIX_SIGNALS */
 
 } // namespace bash
 

@@ -745,7 +745,7 @@ Shell::shell_getc (bool remove_quoted_newline)
   if (sigwinch_received)
     {
       sigwinch_received = 0;
-      get_new_window_size (0, nullptr, nullptr);
+      get_new_window_size (nullptr, nullptr);
     }
 
   if (eol_ungetc_lookahead)

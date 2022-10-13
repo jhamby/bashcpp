@@ -47,11 +47,6 @@
 /* Need to include this up here for *_TTY_DRIVER definitions. */
 #include "shtty.hh"
 
-/* For the TIOCGPGRP and TIOCSPGRP ioctl parameters on HP-UX */
-#if defined(hpux) && !defined(TERMIOS_TTY_DRIVER)
-#include <bsdtty.h>
-#endif /* hpux && !TERMIOS_TTY_DRIVER */
-
 #include "shell.hh"
 
 #include "builtext.hh"
@@ -2129,11 +2124,6 @@ get_original_tty_job_signals ()
 
 static TTYSTRUCT shell_tty_info;
 
-#if defined(NEW_TTY_DRIVER)
-static struct tchars shell_tchars;
-static struct ltchars shell_ltchars;
-#endif /* NEW_TTY_DRIVER */
-
 /* Return the fd from which we are actually getting input. */
 #define input_tty() (shell_tty != -1) ? shell_tty : fileno (stderr)
 
@@ -2146,16 +2136,6 @@ get_tty_state ()
   tty = input_tty ();
   if (tty != -1)
     {
-#if defined(NEW_TTY_DRIVER)
-      ioctl (tty, TIOCGETP, &shell_tty_info);
-      ioctl (tty, TIOCGETC, &shell_tchars);
-      ioctl (tty, TIOCGLTC, &shell_ltchars);
-#endif /* NEW_TTY_DRIVER */
-
-#if defined(TERMIO_TTY_DRIVER)
-      ioctl (tty, TCGETA, &shell_tty_info);
-#endif /* TERMIO_TTY_DRIVER */
-
 #if defined(TERMIOS_TTY_DRIVER)
       if (tcgetattr (tty, &shell_tty_info) < 0)
         {
@@ -2169,7 +2149,7 @@ get_tty_state ()
         }
 #endif /* TERMIOS_TTY_DRIVER */
       if (check_window_size)
-        get_new_window_size (0, (int *)0, (int *)0);
+        get_new_window_size (nullptr, nullptr);
     }
   return 0;
 }
@@ -2183,16 +2163,6 @@ set_tty_state ()
   tty = input_tty ();
   if (tty != -1)
     {
-#if defined(NEW_TTY_DRIVER)
-      ioctl (tty, TIOCSETN, &shell_tty_info);
-      ioctl (tty, TIOCSETC, &shell_tchars);
-      ioctl (tty, TIOCSLTC, &shell_ltchars);
-#endif /* NEW_TTY_DRIVER */
-
-#if defined(TERMIO_TTY_DRIVER)
-      ioctl (tty, TCSETAW, &shell_tty_info);
-#endif /* TERMIO_TTY_DRIVER */
-
 #if defined(TERMIOS_TTY_DRIVER)
       if (tcsetattr (tty, TCSADRAIN, &shell_tty_info) < 0)
         {
@@ -2784,7 +2754,7 @@ if (job == NO_JOB)
                  the user has requested it, get a possibly new window size */
               if (check_window_size
                   && (job == js.j_current || IS_FOREGROUND (job)))
-                get_new_window_size (0, (int *)0, (int *)0);
+                get_new_window_size (nullptr, nullptr);
             }
           else
 #if defined(READLINE)
@@ -2863,7 +2833,7 @@ if (job == NO_JOB)
             }
 
           if (check_window_size)
-            get_new_window_size (0, (int *)0, (int *)0);
+            get_new_window_size (nullptr, nullptr);
         }
 
       /* Moved here from set_job_status_and_cleanup, which is in the SIGCHLD
@@ -4213,37 +4183,6 @@ debug_print_pgrps ()
 static int
 set_new_line_discipline (int tty)
 {
-#if defined(NEW_TTY_DRIVER)
-  int ldisc;
-
-  if (ioctl (tty, TIOCGETD, &ldisc) < 0)
-    return -1;
-
-  if (ldisc != NTTYDISC)
-    {
-      ldisc = NTTYDISC;
-
-      if (ioctl (tty, TIOCSETD, &ldisc) < 0)
-        return -1;
-    }
-  return 0;
-#endif /* NEW_TTY_DRIVER */
-
-#if defined(TERMIO_TTY_DRIVER)
-#if defined(TERMIO_LDISC) && (NTTYDISC)
-  if (ioctl (tty, TCGETA, &shell_tty_info) < 0)
-    return -1;
-
-  if (shell_tty_info.c_line != NTTYDISC)
-    {
-      shell_tty_info.c_line = NTTYDISC;
-      if (ioctl (tty, TCSETAW, &shell_tty_info) < 0)
-        return -1;
-    }
-#endif /* TERMIO_LDISC && NTTYDISC */
-  return 0;
-#endif /* TERMIO_TTY_DRIVER */
-
 #if defined(TERMIOS_TTY_DRIVER)
 #if defined(TERMIOS_LDISC) && defined(NTTYDISC)
   if (tcgetattr (tty, &shell_tty_info) < 0)
@@ -4259,8 +4198,7 @@ set_new_line_discipline (int tty)
   return 0;
 #endif /* TERMIOS_TTY_DRIVER */
 
-#if !defined(NEW_TTY_DRIVER) && !defined(TERMIO_TTY_DRIVER)                   \
-    && !defined(TERMIOS_TTY_DRIVER)
+#if !defined(TERMIOS_TTY_DRIVER)
   return -1;
 #endif
 }

@@ -395,9 +395,9 @@ BASH_LIB_NSL
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_MAJOR
-AC_CHECK_HEADERS([grp.h netdb.h pwd.h regex.h sgtty.h \
+AC_CHECK_HEADERS([grp.h langinfo.h mbstr.h netdb.h pwd.h regex.h wchar.h wctype.h \
 		  sys/dir.h sys/file.h sys/ioctl.h sys/ndir.h sys/param.h \
-		  sys/resource.h sys/wait.h syslog.h termio.h termios.h])
+		  sys/resource.h sys/wait.h syslog.h termios.h])
 
 gl_INIT
 
@@ -421,26 +421,22 @@ AC_TYPE_INT64_T
 AC_FUNC_CHOWN
 AC_FUNC_FORK
 AC_FUNC_GETGROUPS
-AC_FUNC_MALLOC
-AC_FUNC_MBRTOWC
 AC_FUNC_MMAP
-AC_FUNC_REALLOC
 AC_FUNC_STRCOLL
-AC_FUNC_STRNLEN
 AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf dup2 eaccess faccessat fchdir ftruncate \
 		getaddrinfo getcwd getdtablesize fnmatch getentropy getgroups gethostbyname \
 		gethostname getpeername getpwent getpwnam getpwuid \
 		getrandom getrlimit getrusage getservbyname getservent \
-		gettimeofday group_member imaxdiv inet_aton kill killpg \
+		gettimeofday group_member imaxdiv inet_aton \
+		iswlower iswupper towlower towupper iswctype kill killpg locale_charset \
 		localeconv localtime_r lstat mbrlen mbrtowc mbschr mbsnrtowcs mkdir mkdtemp \
 		mkfifo mknod mkstemp mmap nl_langinfo pathconf pselect putenv random \
 		readlink regcomp regexec rename select setdtablesize setenv setitimer \
 		setlocale setpgid setregid setresgid setresuid setvbuf socket stpcpy strcasecmp \
 		strcasestr strchrnul strerror strncasecmp strnlen \
 		strsignal strtoimax strtoumax sysconf tcgetattr \
-		times ttyname tzset ulimit uname vfprintf waitpid wcswidth wcwidth])
-
-BASH_CHECK_MULTIBYTE
+		times ttyname tzset ulimit uname vfprintf waitpid wcrtomb wcscoll \
+		wcswidth wctype wcwidth])
 
 dnl checks for the dynamic loading library functions in libc and libdl
 if test "$opt_static_link" != yes; then
@@ -480,7 +476,6 @@ fi
 
 dnl behavior of system calls and library functions
 BASH_SYS_PGRP_SYNC
-BASH_SYS_SIGNAL_VINTAGE
 
 dnl various system types
 AC_CHECK_TYPES([clock_t], [], [], [[#include <sys/times.h>]])
@@ -503,7 +498,6 @@ AC_CHECK_SIZEOF(intmax_t, 8)
 
 dnl presence and contents of structures used by system calls
 BASH_STRUCT_TERMIOS_LDISC
-BASH_STRUCT_TERMIO_LDISC
 BASH_STRUCT_DIRENT_D_INO
 BASH_STRUCT_DIRENT_D_FILENO
 BASH_STRUCT_DIRENT_D_NAMLEN
@@ -518,7 +512,6 @@ BASH_FUNC_GETENV
 BASH_FUNC_STRCOLL
 
 dnl presence and behavior of OS functions
-BASH_SYS_REINSTALL_SIGHANDLERS
 BASH_SYS_JOB_CONTROL_MISSING
 BASH_SYS_NAMED_PIPES
 

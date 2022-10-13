@@ -71,30 +71,12 @@ set_winsize (int tty)
 #define VTIME VEOL
 #endif
 
-#if defined(TERMIOS_TTY_DRIVER)
 #define GETATTR(tty, tiop) (tcgetattr (tty, tiop))
 #ifdef M_UNIX
 #define SETATTR(tty, tiop) (tcsetattr (tty, TCSANOW, tiop))
 #else
 #define SETATTR(tty, tiop) (tcsetattr (tty, TCSADRAIN, tiop))
 #endif /* !M_UNIX */
-#else
-#define GETATTR(tty, tiop) (ioctl (tty, TCGETA, tiop))
-#define SETATTR(tty, tiop) (ioctl (tty, TCSETAW, tiop))
-#endif /* !TERMIOS_TTY_DRIVER */
-
-#if 0
-static void save_tty_chars (TIOTYPE *);
-static int _get_tty_settings (int, TIOTYPE *);
-static int get_tty_settings (int, TIOTYPE *);
-static int _set_tty_settings (int, TIOTYPE *);
-static int set_tty_settings (int, TIOTYPE *);
-
-static void prepare_terminal_settings (int, TIOTYPE, TIOTYPE *);
-
-static void set_special_char (Keymap, TIOTYPE *, int, rl_command_func_t);
-static void _rl_bind_tty_special_chars (Keymap, TIOTYPE);
-#endif
 
 #if defined(FLUSHO)
 #define OUTPUT_BEING_FLUSHED(tp) (tp->c_lflag & FLUSHO)
@@ -267,7 +249,7 @@ Readline::prepare_terminal_settings (int meta_flag, TIOTYPE oldtio,
     /* Turn off characters that we need on Posix systems with job control,
        just to be sure.  This includes ^Y and ^V.  This should not really
        be necessary.  */
-#if defined(TERMIOS_TTY_DRIVER) && defined(_POSIX_VDISABLE)
+#if defined(_POSIX_VDISABLE)
 
 #if defined(VLNEXT)
   tiop->c_cc[VLNEXT] = _POSIX_VDISABLE;
@@ -292,7 +274,7 @@ Readline::prepare_terminal_settings (int meta_flag, TIOTYPE oldtio,
     tiop->c_cc[VDISCARD] = _POSIX_VDISABLE;
 #endif /* VDISCARD */
 
-#endif /* TERMIOS_TTY_DRIVER && _POSIX_VDISABLE */
+#endif /* _POSIX_VDISABLE */
 }
 #endif /* !NEW_TTY_DRIVER */
 
@@ -461,13 +443,7 @@ Readline::rl_restart_output (int, int)
   ioctl (fildes, TIOCSTART, 0);
 
 #else /* !TIOCSTART */
-#if defined(TERMIOS_TTY_DRIVER)
   tcflow (fildes, TCOON); /* Simulate a ^Q. */
-#else /* !TERMIOS_TTY_DRIVER */
-#if defined(TCXONC)
-  ioctl (fildes, TCXONC, TCOON);
-#endif /* TCXONC */
-#endif /* !TERMIOS_TTY_DRIVER */
 #endif /* !TIOCSTART */
 
   return 0;
@@ -486,13 +462,7 @@ Readline::rl_stop_output (int, int)
 #if defined(TIOCSTOP)
   ioctl (fildes, TIOCSTOP, 0);
 #else /* !TIOCSTOP */
-#if defined(TERMIOS_TTY_DRIVER)
   tcflow (fildes, TCOOFF);
-#else
-#if defined(TCXONC)
-  ioctl (fildes, TCXONC, TCOON);
-#endif /* TCXONC */
-#endif /* !TERMIOS_TTY_DRIVER */
 #endif /* !TIOCSTOP */
 
   return 0;
@@ -542,18 +512,18 @@ Readline::_rl_bind_tty_special_chars (Keymap kmap, TIOTYPE ttybuff)
   SET_SPECIAL (VERASE, &Readline::rl_rubout);
   SET_SPECIAL (VKILL, &Readline::rl_unix_line_discard);
 
-#if defined(VLNEXT) && defined(TERMIOS_TTY_DRIVER)
+#if defined(VLNEXT)
   SET_SPECIAL (VLNEXT, &Readline::rl_quoted_insert);
-#endif /* VLNEXT && TERMIOS_TTY_DRIVER */
+#endif /* VLNEXT */
 
-#if defined(VWERASE) && defined(TERMIOS_TTY_DRIVER)
+#if defined(VWERASE)
 #if defined(VI_MODE)
   if (rl_editing_mode == vi_mode)
     SET_SPECIAL (VWERASE, &Readline::rl_vi_unix_word_rubout);
   else
 #endif
     SET_SPECIAL (VWERASE, &Readline::rl_unix_word_rubout);
-#endif /* VWERASE && TERMIOS_TTY_DRIVER */
+#endif /* VWERASE */
 }
 
 #endif /* !NEW_TTY_DRIVER */
@@ -588,13 +558,13 @@ Readline::rl_tty_unset_default_bindings (Keymap kmap)
   RESET_SPECIAL (kmap, _rl_tty_chars.t_erase);
   RESET_SPECIAL (kmap, _rl_tty_chars.t_kill);
 
-#if defined(VLNEXT) && defined(TERMIOS_TTY_DRIVER)
+#if defined(VLNEXT)
   RESET_SPECIAL (kmap, _rl_tty_chars.t_lnext);
-#endif /* VLNEXT && TERMIOS_TTY_DRIVER */
+#endif /* VLNEXT */
 
-#if defined(VWERASE) && defined(TERMIOS_TTY_DRIVER)
+#if defined(VWERASE)
   RESET_SPECIAL (kmap, _rl_tty_chars.t_werase);
-#endif /* VWERASE && TERMIOS_TTY_DRIVER */
+#endif /* VWERASE */
 }
 
 #if defined(HANDLE_SIGNALS)

@@ -270,50 +270,49 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc \
 	mailcheck.cc test.cc trap.cc alias.cc braces.cc make_cmd.cc \
 	syntax.cc input.cc bashhist.cc arrayfunc.cc assoc.cc sig.cc \
-	pathexp.cc siglist.cc bashline.cc bracecomp.cc error.cc \
-	stringlib.cc locale.cc findcmd.cc redir.cc pcomplete.cc \
-	pcomplib.cc alias.hh array.hh assoc.hh bashintl.hh \
-	bashtypes.hh builtins.hh command.hh config-bot.hh \
-	config-top.hh conftypes.hh externs.hh findcmd.hh flags.hh \
-	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
-	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
-	siglist.hh subst.hh syntax.hh trap.hh variables.hh \
-	include/chartypes.hh include/strmatch.hh include/maxpath.hh \
-	include/posixdir.hh include/posixselect.hh \
-	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
-	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
-	include/stat-time.hh include/systimes.hh include/typemax.hh \
-	include/unionwait.hh include/timer.hh pathnames.hh \
-	include/nonstd/string_view.hpp array2.cc array.cc jobs.cc \
-	nojobs.cc $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc \
-	$(BLTDIR)/break_def.cc $(BLTDIR)/builtin_def.cc \
-	$(BLTDIR)/caller_def.cc $(BLTDIR)/cd_def.cc \
-	$(BLTDIR)/colon_def.cc $(BLTDIR)/command_def.cc \
-	$(BLTDIR)/declare_def.cc $(BLTDIR)/echo_def.cc \
-	$(BLTDIR)/enable_def.cc $(BLTDIR)/eval_def.cc \
-	$(BLTDIR)/getopts_def.cc $(BLTDIR)/exec_def.cc \
-	$(BLTDIR)/exit_def.cc $(BLTDIR)/fc_def.cc \
-	$(BLTDIR)/fg_bg_def.cc $(BLTDIR)/hash_def.cc \
-	$(BLTDIR)/help_def.cc $(BLTDIR)/history_def.cc \
-	$(BLTDIR)/jobs_def.cc $(BLTDIR)/kill_def.cc \
-	$(BLTDIR)/let_def.cc $(BLTDIR)/read_def.cc \
-	$(BLTDIR)/return_def.cc $(BLTDIR)/set_def.cc \
-	$(BLTDIR)/setattr_def.cc $(BLTDIR)/shift_def.cc \
-	$(BLTDIR)/source_def.cc $(BLTDIR)/suspend_def.cc \
-	$(BLTDIR)/test_def.cc $(BLTDIR)/times_def.cc \
-	$(BLTDIR)/trap_def.cc $(BLTDIR)/type_def.cc \
-	$(BLTDIR)/ulimit_def.cc $(BLTDIR)/umask_def.cc \
-	$(BLTDIR)/wait_def.cc $(BLTDIR)/reserved_def.cc \
-	$(BLTDIR)/pushd_def.cc $(BLTDIR)/shopt_def.cc \
-	$(BLTDIR)/printf_def.cc $(BLTDIR)/complete_def.cc \
-	$(BLTDIR)/mapfile_def.cc $(BLTDIR)/builtins.cc \
-	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc \
-	$(BLTDIR)/evalfile.cc $(BLTDIR)/getopt.cc \
-	$(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh \
-	$(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
-	$(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc $(RLDIR)/rltty.cc \
-	$(RLDIR)/complete.cc $(RLDIR)/bind.cc $(RLDIR)/isearch.cc \
-	$(RLDIR)/display.cc $(RLDIR)/signals.cc \
+	pathexp.cc bashline.cc bracecomp.cc error.cc stringlib.cc \
+	locale.cc findcmd.cc redir.cc pcomplete.cc pcomplib.cc \
+	alias.hh array.hh assoc.hh bashintl.hh bashtypes.hh \
+	builtins.hh command.hh config-bot.hh config-top.hh \
+	conftypes.hh externs.hh findcmd.hh flags.hh general.hh \
+	hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh patchlevel.hh \
+	pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh subst.hh \
+	syntax.hh trap.hh variables.hh include/chartypes.hh \
+	include/strmatch.hh include/maxpath.hh include/posixdir.hh \
+	include/posixselect.hh include/posixstat.hh \
+	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
+	include/shmbutil.hh include/shtty.hh include/stat-time.hh \
+	include/systimes.hh include/typemax.hh include/unionwait.hh \
+	include/timer.hh pathnames.hh include/nonstd/string_view.hpp \
+	array2.cc array.cc jobs.cc nojobs.cc $(BLTDIR)/alias_def.cc \
+	$(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
+	$(BLTDIR)/builtin_def.cc $(BLTDIR)/caller_def.cc \
+	$(BLTDIR)/cd_def.cc $(BLTDIR)/colon_def.cc \
+	$(BLTDIR)/command_def.cc $(BLTDIR)/declare_def.cc \
+	$(BLTDIR)/echo_def.cc $(BLTDIR)/enable_def.cc \
+	$(BLTDIR)/eval_def.cc $(BLTDIR)/getopts_def.cc \
+	$(BLTDIR)/exec_def.cc $(BLTDIR)/exit_def.cc \
+	$(BLTDIR)/fc_def.cc $(BLTDIR)/fg_bg_def.cc \
+	$(BLTDIR)/hash_def.cc $(BLTDIR)/help_def.cc \
+	$(BLTDIR)/history_def.cc $(BLTDIR)/jobs_def.cc \
+	$(BLTDIR)/kill_def.cc $(BLTDIR)/let_def.cc \
+	$(BLTDIR)/read_def.cc $(BLTDIR)/return_def.cc \
+	$(BLTDIR)/set_def.cc $(BLTDIR)/setattr_def.cc \
+	$(BLTDIR)/shift_def.cc $(BLTDIR)/source_def.cc \
+	$(BLTDIR)/suspend_def.cc $(BLTDIR)/test_def.cc \
+	$(BLTDIR)/times_def.cc $(BLTDIR)/trap_def.cc \
+	$(BLTDIR)/type_def.cc $(BLTDIR)/ulimit_def.cc \
+	$(BLTDIR)/umask_def.cc $(BLTDIR)/wait_def.cc \
+	$(BLTDIR)/reserved_def.cc $(BLTDIR)/pushd_def.cc \
+	$(BLTDIR)/shopt_def.cc $(BLTDIR)/printf_def.cc \
+	$(BLTDIR)/complete_def.cc $(BLTDIR)/mapfile_def.cc \
+	$(BLTDIR)/builtins.cc $(BLTDIR)/common.cc \
+	$(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
+	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc \
+	$(BLTDIR)/getopt.hh $(RLDIR)/readline.cc $(RLDIR)/funmap.cc \
+	$(RLDIR)/keymaps.cc $(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc \
+	$(RLDIR)/rltty.cc $(RLDIR)/complete.cc $(RLDIR)/bind.cc \
+	$(RLDIR)/isearch.cc $(RLDIR)/display.cc $(RLDIR)/signals.cc \
 	$(RLDIR)/emacs_keymap.hh $(RLDIR)/vi_keymap.hh \
 	$(RLDIR)/util.cc $(RLDIR)/kill.cc $(RLDIR)/undo.cc \
 	$(RLDIR)/macro.cc $(RLDIR)/input.cc $(RLDIR)/callback.cc \
@@ -379,48 +378,48 @@ am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	alias.$(OBJEXT) braces.$(OBJEXT) make_cmd.$(OBJEXT) \
 	syntax.$(OBJEXT) input.$(OBJEXT) bashhist.$(OBJEXT) \
 	arrayfunc.$(OBJEXT) assoc.$(OBJEXT) sig.$(OBJEXT) \
-	pathexp.$(OBJEXT) siglist.$(OBJEXT) bashline.$(OBJEXT) \
-	bracecomp.$(OBJEXT) error.$(OBJEXT) stringlib.$(OBJEXT) \
-	locale.$(OBJEXT) findcmd.$(OBJEXT) redir.$(OBJEXT) \
-	pcomplete.$(OBJEXT) pcomplib.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
-	$(am__objects_5) $(BLTDIR)/builtins.$(OBJEXT) \
-	$(BLTDIR)/common.$(OBJEXT) $(BLTDIR)/evalstring.$(OBJEXT) \
-	$(BLTDIR)/evalfile.$(OBJEXT) $(BLTDIR)/getopt.$(OBJEXT) \
-	$(BLTDIR)/bashgetopt.$(OBJEXT) $(RLDIR)/readline.$(OBJEXT) \
-	$(RLDIR)/funmap.$(OBJEXT) $(RLDIR)/keymaps.$(OBJEXT) \
-	$(RLDIR)/vi_mode.$(OBJEXT) $(RLDIR)/parens.$(OBJEXT) \
-	$(RLDIR)/rltty.$(OBJEXT) $(RLDIR)/complete.$(OBJEXT) \
-	$(RLDIR)/bind.$(OBJEXT) $(RLDIR)/isearch.$(OBJEXT) \
-	$(RLDIR)/display.$(OBJEXT) $(RLDIR)/signals.$(OBJEXT) \
-	$(RLDIR)/util.$(OBJEXT) $(RLDIR)/kill.$(OBJEXT) \
-	$(RLDIR)/undo.$(OBJEXT) $(RLDIR)/macro.$(OBJEXT) \
-	$(RLDIR)/input.$(OBJEXT) $(RLDIR)/callback.$(OBJEXT) \
-	$(RLDIR)/terminal.$(OBJEXT) $(RLDIR)/history.$(OBJEXT) \
-	$(RLDIR)/histsearch.$(OBJEXT) $(RLDIR)/histexpand.$(OBJEXT) \
-	$(RLDIR)/histfile.$(OBJEXT) $(RLDIR)/nls.$(OBJEXT) \
-	$(RLDIR)/search.$(OBJEXT) $(RLDIR)/shell.$(OBJEXT) \
-	$(RLDIR)/tilde.$(OBJEXT) $(RLDIR)/text.$(OBJEXT) \
-	$(RLDIR)/misc.$(OBJEXT) $(RLDIR)/colors.$(OBJEXT) \
-	$(RLDIR)/parse-colors.$(OBJEXT) $(RLDIR)/mbutil.$(OBJEXT) \
-	$(SHDIR)/clktck.$(OBJEXT) $(SHDIR)/clock.$(OBJEXT) \
-	$(SHDIR)/setlinebuf.$(OBJEXT) $(SHDIR)/zread.$(OBJEXT) \
-	$(SHDIR)/inet_aton.$(OBJEXT) $(SHDIR)/netconn.$(OBJEXT) \
-	$(SHDIR)/netopen.$(OBJEXT) $(SHDIR)/timeval.$(OBJEXT) \
-	$(SHDIR)/makepath.$(OBJEXT) $(SHDIR)/pathcanon.$(OBJEXT) \
-	$(SHDIR)/pathphys.$(OBJEXT) $(SHDIR)/spell.$(OBJEXT) \
-	$(SHDIR)/shquote.$(OBJEXT) $(SHDIR)/strtrans.$(OBJEXT) \
-	$(SHDIR)/mailstat.$(OBJEXT) $(SHDIR)/fmtulong.$(OBJEXT) \
-	$(SHDIR)/fmtullong.$(OBJEXT) $(SHDIR)/fmtumax.$(OBJEXT) \
-	$(SHDIR)/shmatch.$(OBJEXT) $(SHDIR)/oslib.$(OBJEXT) \
-	$(SHDIR)/stringlist.$(OBJEXT) $(SHDIR)/stringvec.$(OBJEXT) \
-	$(SHDIR)/strvis.$(OBJEXT) $(SHDIR)/timers.$(OBJEXT) \
-	$(SHDIR)/zcatfd.$(OBJEXT) $(SHDIR)/zmapfd.$(OBJEXT) \
-	$(SHDIR)/winsize.$(OBJEXT) $(SHDIR)/zgetline.$(OBJEXT) \
-	$(SHDIR)/uconvert.$(OBJEXT) $(SHDIR)/ufuncs.$(OBJEXT) \
-	$(SHDIR)/casemod.$(OBJEXT) $(SHDIR)/input_avail.$(OBJEXT) \
-	$(SHDIR)/fnxform.$(OBJEXT) $(SHDIR)/unicode.$(OBJEXT) \
-	$(SHDIR)/shmbchar.$(OBJEXT) $(TLDIR)/tilde.$(OBJEXT)
+	pathexp.$(OBJEXT) bashline.$(OBJEXT) bracecomp.$(OBJEXT) \
+	error.$(OBJEXT) stringlib.$(OBJEXT) locale.$(OBJEXT) \
+	findcmd.$(OBJEXT) redir.$(OBJEXT) pcomplete.$(OBJEXT) \
+	pcomplib.$(OBJEXT) $(am__objects_1) $(am__objects_2) \
+	$(am__objects_3) $(am__objects_4) $(am__objects_5) \
+	$(BLTDIR)/builtins.$(OBJEXT) $(BLTDIR)/common.$(OBJEXT) \
+	$(BLTDIR)/evalstring.$(OBJEXT) $(BLTDIR)/evalfile.$(OBJEXT) \
+	$(BLTDIR)/getopt.$(OBJEXT) $(BLTDIR)/bashgetopt.$(OBJEXT) \
+	$(RLDIR)/readline.$(OBJEXT) $(RLDIR)/funmap.$(OBJEXT) \
+	$(RLDIR)/keymaps.$(OBJEXT) $(RLDIR)/vi_mode.$(OBJEXT) \
+	$(RLDIR)/parens.$(OBJEXT) $(RLDIR)/rltty.$(OBJEXT) \
+	$(RLDIR)/complete.$(OBJEXT) $(RLDIR)/bind.$(OBJEXT) \
+	$(RLDIR)/isearch.$(OBJEXT) $(RLDIR)/display.$(OBJEXT) \
+	$(RLDIR)/signals.$(OBJEXT) $(RLDIR)/util.$(OBJEXT) \
+	$(RLDIR)/kill.$(OBJEXT) $(RLDIR)/undo.$(OBJEXT) \
+	$(RLDIR)/macro.$(OBJEXT) $(RLDIR)/input.$(OBJEXT) \
+	$(RLDIR)/callback.$(OBJEXT) $(RLDIR)/terminal.$(OBJEXT) \
+	$(RLDIR)/history.$(OBJEXT) $(RLDIR)/histsearch.$(OBJEXT) \
+	$(RLDIR)/histexpand.$(OBJEXT) $(RLDIR)/histfile.$(OBJEXT) \
+	$(RLDIR)/nls.$(OBJEXT) $(RLDIR)/search.$(OBJEXT) \
+	$(RLDIR)/shell.$(OBJEXT) $(RLDIR)/tilde.$(OBJEXT) \
+	$(RLDIR)/text.$(OBJEXT) $(RLDIR)/misc.$(OBJEXT) \
+	$(RLDIR)/colors.$(OBJEXT) $(RLDIR)/parse-colors.$(OBJEXT) \
+	$(RLDIR)/mbutil.$(OBJEXT) $(SHDIR)/clktck.$(OBJEXT) \
+	$(SHDIR)/clock.$(OBJEXT) $(SHDIR)/setlinebuf.$(OBJEXT) \
+	$(SHDIR)/zread.$(OBJEXT) $(SHDIR)/inet_aton.$(OBJEXT) \
+	$(SHDIR)/netconn.$(OBJEXT) $(SHDIR)/netopen.$(OBJEXT) \
+	$(SHDIR)/timeval.$(OBJEXT) $(SHDIR)/makepath.$(OBJEXT) \
+	$(SHDIR)/pathcanon.$(OBJEXT) $(SHDIR)/pathphys.$(OBJEXT) \
+	$(SHDIR)/spell.$(OBJEXT) $(SHDIR)/shquote.$(OBJEXT) \
+	$(SHDIR)/strtrans.$(OBJEXT) $(SHDIR)/mailstat.$(OBJEXT) \
+	$(SHDIR)/fmtulong.$(OBJEXT) $(SHDIR)/fmtullong.$(OBJEXT) \
+	$(SHDIR)/fmtumax.$(OBJEXT) $(SHDIR)/shmatch.$(OBJEXT) \
+	$(SHDIR)/oslib.$(OBJEXT) $(SHDIR)/stringlist.$(OBJEXT) \
+	$(SHDIR)/stringvec.$(OBJEXT) $(SHDIR)/strvis.$(OBJEXT) \
+	$(SHDIR)/timers.$(OBJEXT) $(SHDIR)/zcatfd.$(OBJEXT) \
+	$(SHDIR)/zmapfd.$(OBJEXT) $(SHDIR)/winsize.$(OBJEXT) \
+	$(SHDIR)/zgetline.$(OBJEXT) $(SHDIR)/uconvert.$(OBJEXT) \
+	$(SHDIR)/ufuncs.$(OBJEXT) $(SHDIR)/casemod.$(OBJEXT) \
+	$(SHDIR)/input_avail.$(OBJEXT) $(SHDIR)/fnxform.$(OBJEXT) \
+	$(SHDIR)/unicode.$(OBJEXT) $(SHDIR)/shmbchar.$(OBJEXT) \
+	$(TLDIR)/tilde.$(OBJEXT)
 bash_OBJECTS = $(am_bash_OBJECTS)
 bash_LDADD = $(LDADD)
 bash_DEPENDENCIES = lib/gnulib/libgnu.a
@@ -557,7 +556,7 @@ am__depfiles_remade = $(BLTDIR)/$(DEPDIR)/alias_def.Po \
 	./$(DEPDIR)/parse.Po ./$(DEPDIR)/parser.Po \
 	./$(DEPDIR)/pathexp.Po ./$(DEPDIR)/pcomplete.Po \
 	./$(DEPDIR)/pcomplib.Po ./$(DEPDIR)/redir.Po \
-	./$(DEPDIR)/shell.Po ./$(DEPDIR)/sig.Po ./$(DEPDIR)/siglist.Po \
+	./$(DEPDIR)/shell.Po ./$(DEPDIR)/sig.Po \
 	./$(DEPDIR)/stringlib.Po ./$(DEPDIR)/subst.Po \
 	./$(DEPDIR)/syntax.Po ./$(DEPDIR)/test.Po ./$(DEPDIR)/trap.Po \
 	./$(DEPDIR)/variables.Po ./$(DEPDIR)/version.Po \
@@ -2196,29 +2195,29 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	copy_cmd.cc flags.cc subst.cc hashcmd.cc hashlib.cc \
 	mailcheck.cc test.cc trap.cc alias.cc braces.cc make_cmd.cc \
 	syntax.cc input.cc bashhist.cc arrayfunc.cc assoc.cc sig.cc \
-	pathexp.cc siglist.cc bashline.cc bracecomp.cc error.cc \
-	stringlib.cc locale.cc findcmd.cc redir.cc pcomplete.cc \
-	pcomplib.cc alias.hh array.hh assoc.hh bashintl.hh \
-	bashtypes.hh builtins.hh command.hh config-bot.hh \
-	config-top.hh conftypes.hh externs.hh findcmd.hh flags.hh \
-	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
-	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
-	siglist.hh subst.hh syntax.hh trap.hh variables.hh \
-	include/chartypes.hh include/strmatch.hh include/maxpath.hh \
-	include/posixdir.hh include/posixselect.hh \
-	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
-	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
-	include/stat-time.hh include/systimes.hh include/typemax.hh \
-	include/unionwait.hh include/timer.hh pathnames.hh \
-	include/nonstd/string_view.hpp $(am__append_1) $(am__append_2) \
-	$(am__append_3) $(am__append_4) $(DEFSRC) \
-	$(BLTDIR)/builtins.cc $(BLTDIR)/common.cc \
-	$(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
-	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc \
-	$(BLTDIR)/getopt.hh $(RLDIR)/readline.cc $(RLDIR)/funmap.cc \
-	$(RLDIR)/keymaps.cc $(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc \
-	$(RLDIR)/rltty.cc $(RLDIR)/complete.cc $(RLDIR)/bind.cc \
-	$(RLDIR)/isearch.cc $(RLDIR)/display.cc $(RLDIR)/signals.cc \
+	pathexp.cc bashline.cc bracecomp.cc error.cc stringlib.cc \
+	locale.cc findcmd.cc redir.cc pcomplete.cc pcomplib.cc \
+	alias.hh array.hh assoc.hh bashintl.hh bashtypes.hh \
+	builtins.hh command.hh config-bot.hh config-top.hh \
+	conftypes.hh externs.hh findcmd.hh flags.hh general.hh \
+	hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh patchlevel.hh \
+	pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh subst.hh \
+	syntax.hh trap.hh variables.hh include/chartypes.hh \
+	include/strmatch.hh include/maxpath.hh include/posixdir.hh \
+	include/posixselect.hh include/posixstat.hh \
+	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
+	include/shmbutil.hh include/shtty.hh include/stat-time.hh \
+	include/systimes.hh include/typemax.hh include/unionwait.hh \
+	include/timer.hh pathnames.hh include/nonstd/string_view.hpp \
+	$(am__append_1) $(am__append_2) $(am__append_3) \
+	$(am__append_4) $(DEFSRC) $(BLTDIR)/builtins.cc \
+	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc \
+	$(BLTDIR)/evalfile.cc $(BLTDIR)/getopt.cc \
+	$(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh \
+	$(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
+	$(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc $(RLDIR)/rltty.cc \
+	$(RLDIR)/complete.cc $(RLDIR)/bind.cc $(RLDIR)/isearch.cc \
+	$(RLDIR)/display.cc $(RLDIR)/signals.cc \
 	$(RLDIR)/emacs_keymap.hh $(RLDIR)/vi_keymap.hh \
 	$(RLDIR)/util.cc $(RLDIR)/kill.cc $(RLDIR)/undo.cc \
 	$(RLDIR)/macro.cc $(RLDIR)/input.cc $(RLDIR)/callback.cc \
@@ -2855,7 +2854,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/redir.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shell.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sig.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/siglist.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stringlib.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/subst.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/syntax.Po@am__quote@ # am--include-marker
@@ -3421,7 +3419,6 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/redir.Po
 	-rm -f ./$(DEPDIR)/shell.Po
 	-rm -f ./$(DEPDIR)/sig.Po
-	-rm -f ./$(DEPDIR)/siglist.Po
 	-rm -f ./$(DEPDIR)/stringlib.Po
 	-rm -f ./$(DEPDIR)/subst.Po
 	-rm -f ./$(DEPDIR)/syntax.Po
@@ -3631,7 +3628,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/redir.Po
 	-rm -f ./$(DEPDIR)/shell.Po
 	-rm -f ./$(DEPDIR)/sig.Po
-	-rm -f ./$(DEPDIR)/siglist.Po
 	-rm -f ./$(DEPDIR)/stringlib.Po
 	-rm -f ./$(DEPDIR)/subst.Po
 	-rm -f ./$(DEPDIR)/syntax.Po

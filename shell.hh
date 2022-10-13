@@ -367,7 +367,7 @@ extern Shell *the_shell;
 
 // Define two invalid references to indicate an invalid entry.
 
-#define IMPOSSIBLE_TRAP_HANDLER (&std::exit)
+#define IMPOSSIBLE_TRAP_HANDLER reinterpret_cast<SigHandler> (2)
 #define IMPOSSIBLE_TRAP_NAME (reinterpret_cast<char *> (the_shell))
 
 enum print_flags
@@ -3268,7 +3268,7 @@ protected:
    * Returns the connected socket or -1 on error.
    */
   int
-  _netopen (const char * host, const char * serv, int typ)
+  _netopen (const char *host, const char *serv, int typ)
   {
 #ifdef HAVE_GETADDRINFO
     return _netopen6 (host, serv, typ);
@@ -3345,29 +3345,13 @@ protected:
   static int
   ttgetattr (int fd, TTYSTRUCT *ttp)
   {
-#ifdef TERMIOS_TTY_DRIVER
     return tcgetattr (fd, ttp);
-#else
-#ifdef TERMIO_TTY_DRIVER
-    return ioctl (fd, TCGETA, ttp);
-#else
-    return ioctl (fd, TIOCGETP, ttp);
-#endif
-#endif
   }
 
   static int
   ttsetattr (int fd, TTYSTRUCT *ttp)
   {
-#ifdef TERMIOS_TTY_DRIVER
     return tcsetattr (fd, TCSADRAIN, ttp);
-#else
-#ifdef TERMIO_TTY_DRIVER
-    return ioctl (fd, TCSETAW, ttp);
-#else
-    return ioctl (fd, TIOCSETN, ttp);
-#endif
-#endif
   }
 
   void
@@ -3411,7 +3395,7 @@ protected:
   static void
   tt_setonechar (TTYSTRUCT *ttp)
   {
-#if defined(TERMIOS_TTY_DRIVER) || defined(TERMIO_TTY_DRIVER)
+#if defined(TERMIOS_TTY_DRIVER)
 
     /* XXX - might not want this -- it disables erase and kill processing. */
     ttp->c_lflag &= ~(static_cast<tcflag_t> (ICANON));
@@ -3477,7 +3461,7 @@ protected:
   static void
   tt_setnoecho (TTYSTRUCT *ttp)
   {
-#if defined(TERMIOS_TTY_DRIVER) || defined(TERMIO_TTY_DRIVER)
+#if defined(TERMIOS_TTY_DRIVER)
     ttp->c_lflag &= ~(static_cast<tcflag_t> (ECHO | ECHOK | ECHONL));
 #else
     ttp->sg_flags &= ~ECHO;
@@ -3511,7 +3495,7 @@ protected:
   static void
   tt_seteightbit (TTYSTRUCT *ttp)
   {
-#if defined(TERMIOS_TTY_DRIVER) || defined(TERMIO_TTY_DRIVER)
+#if defined(TERMIOS_TTY_DRIVER)
     ttp->c_iflag &= ~(static_cast<tcflag_t> (ISTRIP));
     ttp->c_cflag |= CS8;
     ttp->c_cflag &= ~(static_cast<tcflag_t> (PARENB));
@@ -3547,7 +3531,7 @@ protected:
   static void
   tt_setnocanon (TTYSTRUCT *ttp)
   {
-#if defined(TERMIOS_TTY_DRIVER) || defined(TERMIO_TTY_DRIVER)
+#if defined(TERMIOS_TTY_DRIVER)
     ttp->c_lflag &= ~(static_cast<tcflag_t> (ICANON));
 #endif
   }
@@ -3628,7 +3612,7 @@ protected:
 
   /* from lib/sh/winsize.cc */
 
-  void get_new_window_size (int, int *, int *);
+  void get_new_window_size (int *, int *);
 
   /* from lib/sh/zcatfd.cc */
 
@@ -3934,7 +3918,8 @@ protected:
   WORD_LIST *check_command_builtin (WORD_LIST *, int *);
 
   /* Return 1 if the file found by searching $PATH for PATHNAME, defaulting
-     to PATHNAME, is a directory.  Used by the autocd code in execute_cmd.cc. */
+     to PATHNAME, is a directory.  Used by the autocd code in execute_cmd.cc.
+   */
   bool
   is_dirname (const char *pathname)
   {
@@ -4049,20 +4034,10 @@ protected:
   /* Functions from sig.cc */
 
   void
-#if !defined(HAVE_SYS_SIGLIST) && !defined(HAVE_UNDER_SYS_SIGLIST)            \
-    && !defined(HAVE_STRSIGNAL)
-  initialize_signals (bool reinit)
-#else
-  initialize_signals (bool)
-#endif
+  initialize_signals ()
   {
     initialize_shell_signals ();
-//   initialize_job_signals ();
-#if !defined(HAVE_SYS_SIGLIST) && !defined(HAVE_UNDER_SYS_SIGLIST)            \
-    && !defined(HAVE_STRSIGNAL)
-    if (!reinit)
-      initialize_siglist ();
-#endif /* !HAVE_SYS_SIGLIST && !HAVE_UNDER_SYS_SIGLIST && !HAVE_STRSIGNAL */
+    //   initialize_job_signals ();
   }
 
   void
@@ -4097,16 +4072,14 @@ protected:
   void
   restore_sigmask ()
   {
-#if defined(JOB_CONTROL) || defined(HAVE_POSIX_SIGNALS)
     sigprocmask (SIG_SETMASK, &top_level_mask, nullptr);
-#endif
   }
 
   /* Functions from trap.cc */
   void run_pending_traps ();
   void initialize_traps ();
 #ifdef DEBUG
-  string_view trap_handler_string (int);
+  const char *trap_handler_string (int);
 #endif
   int run_exit_trap ();
   void set_trap_state (int);
@@ -6104,10 +6077,8 @@ protected:
   void (*old_winch) (int);
 #endif
 
-#if defined(JOB_CONTROL) || defined(HAVE_POSIX_SIGNALS)
   /* The signal masks that this shell runs with. */
   sigset_t top_level_mask;
-#endif /* JOB_CONTROL */
 
   /* This provides a way to map from a file descriptor to the buffer
      associated with that file descriptor, rather than just the other

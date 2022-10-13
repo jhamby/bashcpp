@@ -682,10 +682,6 @@
 /* Define to 1 if you have the <bp-sym.h> header file. */
 #undef HAVE_BP_SYM_H
 
-/* Define if you have 4.2BSD-style signal handling (sigsetmask, sigblock,
-   sigpause). */
-#undef HAVE_BSD_SIGNALS
-
 /* Define to 1 if you have the `btowc' function. */
 #undef HAVE_BTOWC
 
@@ -1245,10 +1241,6 @@
 /* Define to 1 if you have the `lstat' function. */
 #undef HAVE_LSTAT
 
-/* Define to 1 if your system has a GNU libc compatible `malloc' function, and
-   to 0 otherwise. */
-#undef HAVE_MALLOC
-
 /* Define if malloc, realloc, and calloc set errno on allocation failure. */
 #undef HAVE_MALLOC_POSIX
 
@@ -1262,7 +1254,7 @@
 /* Define to 1 if you have the `mbrlen' function. */
 #undef HAVE_MBRLEN
 
-/* Define to 1 if mbrtowc and mbstate_t are properly declared. */
+/* Define to 1 if you have the `mbrtowc' function. */
 #undef HAVE_MBRTOWC
 
 /* Define to 1 if you have the `mbschr' function. */
@@ -1277,7 +1269,7 @@
 /* Define to 1 if you have the `mbsrtowcs' function. */
 #undef HAVE_MBSRTOWCS
 
-/* Define if you have the mbstate_t type. */
+/* Define to 1 if <wchar.h> declares mbstate_t. */
 #undef HAVE_MBSTATE_T
 
 /* Define to 1 if you have the <mbstr.h> header file. */
@@ -1365,9 +1357,6 @@
 /* Define to 1 if you have the `pipe' function. */
 #undef HAVE_PIPE
 
-/* Define if you have POSIX signal handling (struct sigaction and friends). */
-#undef HAVE_POSIX_SIGNALS
-
 /* Define to 1 if you have the `pselect' function. */
 #undef HAVE_PSELECT
 
@@ -1416,10 +1405,6 @@
 
 /* Define to 1 if you have the `readlink' function. */
 #undef HAVE_READLINK
-
-/* Define to 1 if your system has a GNU libc compatible `realloc' function,
-   and to 0 otherwise. */
-#undef HAVE_REALLOC
 
 /* Define to 1 if you have the `realpath' function. */
 #undef HAVE_REALPATH
@@ -1480,9 +1465,6 @@
 
 /* Define to 1 if you have the `setvbuf' function. */
 #undef HAVE_SETVBUF
-
-/* Define to 1 if you have the <sgtty.h> header file. */
-#undef HAVE_SGTTY_H
 
 /* Define to 1 if you have the `shutdown' function. */
 #undef HAVE_SHUTDOWN
@@ -1736,9 +1718,6 @@
 /* Define to 1 if you have the <termios.h> header file. */
 #undef HAVE_TERMIOS_H
 
-/* Define to 1 if you have the <termio.h> header file. */
-#undef HAVE_TERMIO_H
-
 /* Define to 1 if you have the `thrd_create' function. */
 #undef HAVE_THRD_CREATE
 
@@ -1784,10 +1763,6 @@
 /* Define to 1 if you have the `uselocale' function. */
 #undef HAVE_USELOCALE
 
-/* Define if you have SVR3-style signal handling (sigset, sigrelse, sigpause).
-   */
-#undef HAVE_USG_SIGHOLD
-
 /* Define if you have a global __progname variable */
 #undef HAVE_VAR___PROGNAME
 
@@ -1819,6 +1794,9 @@
 /* Define to 1 if you have the `wcrtomb' function. */
 #undef HAVE_WCRTOMB
 
+/* Define to 1 if you have the `wcscoll' function. */
+#undef HAVE_WCSCOLL
+
 /* Define to 1 if you have the `wcslen' function. */
 #undef HAVE_WCSLEN
 
@@ -1827,6 +1805,9 @@
 
 /* Define to 1 if you have the `wcswidth' function. */
 #undef HAVE_WCSWIDTH
+
+/* Define to 1 if you have the `wctype' function. */
+#undef HAVE_WCTYPE
 
 /* Define to 1 if you have the <wctype.h> header file. */
 #undef HAVE_WCTYPE_H
@@ -2103,9 +2084,6 @@
 
 /* Define to 1 if mknod cannot create a fifo without super-user privileges */
 #undef MKNOD_FIFO_BUG
-
-/* Define if signal handlers must be reinstalled after invoking. */
-#undef MUST_REINSTALL_SIGHANDLERS
 
 /* Define if this system is missing support for named pipes. */
 #undef NAMED_PIPES_MISSING
@@ -2408,9 +2386,6 @@
 /* Define if your struct termios has the c_line field. */
 #undef TERMIOS_LDISC
 
-/* Define if your struct termio has the c_line field. */
-#undef TERMIO_LDISC
-
 /* Define to 1 if time_t is signed. */
 #undef TIME_T_IS_SIGNED
 
@@ -2549,9 +2524,6 @@
 /* Define if your WCONTINUED flag for waitpid is unavailable or available but
    broken. */
 #undef WCONTINUED_BROKEN
-
-/* Define for broken wcwidth with unicode combining chars, e.g. MINIX 3.4. */
-#undef WCWIDTH_BROKEN
 
 /* Offset of exit status in wait status word */
 #undef WEXITSTATUS_OFFSET
@@ -3097,9 +3069,6 @@
 # define __GNUC_STDC_INLINE__ 1
 #endif
 
-/* Define to rpl_malloc if the replacement function should be used. */
-#undef malloc
-
 /* Define to a type if <wchar.h> does not define. */
 #undef mbstate_t
 
@@ -3134,9 +3103,6 @@
 /* Define as the type of the result of subtracting two pointers, if the system
    doesn't define it. */
 #undef ptrdiff_t
-
-/* Define to rpl_realloc if the replacement function should be used. */
-#undef realloc
 
 /* Define to the equivalent of the C99 'restrict' keyword, or to
    nothing if this is not supported.  Do not define if restrict is

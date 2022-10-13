@@ -21,10 +21,8 @@
 #if !defined(_JOBS_H_)
 #define _JOBS_H_
 
-#include "quit.hh"
-#include "siglist.hh"
-
 #include "posixwait.hh"
+#include "quit.hh"
 
 #include <vector>
 
