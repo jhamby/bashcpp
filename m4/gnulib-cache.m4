@@ -38,10 +38,8 @@
 #  --no-libtool \
 #  --macro-prefix=gl \
 #  c-ctype \
-#  copysign \
 #  dprintf \
 #  dup2 \
-#  execute \
 #  faccessat \
 #  fnmatch \
 #  fpurge \
@@ -61,7 +59,6 @@
 #  mknod \
 #  mktime \
 #  nl_langinfo \
-#  posix_spawn \
 #  pselect \
 #  random_r \
 #  rename \
@@ -82,16 +79,15 @@
 #  tmpfile \
 #  vfprintf-posix \
 #  vprintf-posix \
+#  waitpid \
 #  wcswidth
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
 gl_MODULES([
   c-ctype
-  copysign
   dprintf
   dup2
-  execute
   faccessat
   fnmatch
   fpurge
@@ -111,7 +107,6 @@ gl_MODULES([
   mknod
   mktime
   nl_langinfo
-  posix_spawn
   pselect
   random_r
   rename
@@ -132,6 +127,7 @@ gl_MODULES([
   tmpfile
   vfprintf-posix
   vprintf-posix
+  waitpid
   wcswidth
 ])
 gl_AVOID([])

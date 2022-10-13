@@ -221,10 +221,6 @@
 #undef GLOBASCII_DEFAULT
 
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
-   whether the gnulib module canonicalize shall be considered present. */
-#undef GNULIB_CANONICALIZE
-
-/* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module canonicalize-lgpl shall be considered present. */
 #undef GNULIB_CANONICALIZE_LGPL
 
@@ -269,10 +265,6 @@
 #undef GNULIB_PRINTF_ATTRIBUTE_FLAVOR_GNU
 
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
-   whether the gnulib module reallocarray shall be considered present. */
-#undef GNULIB_REALLOCARRAY
-
-/* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module scanf shall be considered present. */
 #undef GNULIB_SCANF
 
@@ -292,20 +284,8 @@
    whether the gnulib module tempname shall be considered present. */
 #undef GNULIB_TEMPNAME
 
-/* Define to 1 when the gnulib module access should be tested. */
-#undef GNULIB_TEST_ACCESS
-
 /* Define to 1 when the gnulib module btowc should be tested. */
 #undef GNULIB_TEST_BTOWC
-
-/* Define to 1 when the gnulib module calloc-gnu should be tested. */
-#undef GNULIB_TEST_CALLOC_GNU
-
-/* Define to 1 when the gnulib module calloc-posix should be tested. */
-#undef GNULIB_TEST_CALLOC_POSIX
-
-/* Define to 1 when the gnulib module canonicalize should be tested. */
-#undef GNULIB_TEST_CANONICALIZE
 
 /* Define to 1 when the gnulib module canonicalize_file_name should be tested.
    */
@@ -323,9 +303,6 @@
 /* Define to 1 when the gnulib module closedir should be tested. */
 #undef GNULIB_TEST_CLOSEDIR
 
-/* Define to 1 when the gnulib module copysign should be tested. */
-#undef GNULIB_TEST_COPYSIGN
-
 /* Define to 1 when the gnulib module dirfd should be tested. */
 #undef GNULIB_TEST_DIRFD
 
@@ -337,9 +314,6 @@
 
 /* Define to 1 when the gnulib module dup2 should be tested. */
 #undef GNULIB_TEST_DUP2
-
-/* Define to 1 when the gnulib module environ should be tested. */
-#undef GNULIB_TEST_ENVIRON
 
 /* Define to 1 when the gnulib module euidaccess should be tested. */
 #undef GNULIB_TEST_EUIDACCESS
@@ -518,44 +492,6 @@
 /* Define to 1 when the gnulib module pipe should be tested. */
 #undef GNULIB_TEST_PIPE
 
-/* Define to 1 when the gnulib module posix_spawn should be tested. */
-#undef GNULIB_TEST_POSIX_SPAWN
-
-/* Define to 1 when the gnulib module posix_spawnattr_destroy should be
-   tested. */
-#undef GNULIB_TEST_POSIX_SPAWNATTR_DESTROY
-
-/* Define to 1 when the gnulib module posix_spawnattr_init should be tested.
-   */
-#undef GNULIB_TEST_POSIX_SPAWNATTR_INIT
-
-/* Define to 1 when the gnulib module posix_spawnattr_setflags should be
-   tested. */
-#undef GNULIB_TEST_POSIX_SPAWNATTR_SETFLAGS
-
-/* Define to 1 when the gnulib module posix_spawnattr_setsigmask should be
-   tested. */
-#undef GNULIB_TEST_POSIX_SPAWNATTR_SETSIGMASK
-
-/* Define to 1 when the gnulib module posix_spawnp should be tested. */
-#undef GNULIB_TEST_POSIX_SPAWNP
-
-/* Define to 1 when the gnulib module posix_spawn_file_actions_addchdir should
-   be tested. */
-#undef GNULIB_TEST_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR
-
-/* Define to 1 when the gnulib module posix_spawn_file_actions_addopen should
-   be tested. */
-#undef GNULIB_TEST_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN
-
-/* Define to 1 when the gnulib module posix_spawn_file_actions_destroy should
-   be tested. */
-#undef GNULIB_TEST_POSIX_SPAWN_FILE_ACTIONS_DESTROY
-
-/* Define to 1 when the gnulib module posix_spawn_file_actions_init should be
-   tested. */
-#undef GNULIB_TEST_POSIX_SPAWN_FILE_ACTIONS_INIT
-
 /* Define to 1 when the gnulib module printf should be tested. */
 #undef GNULIB_TEST_PRINTF
 
@@ -592,9 +528,6 @@
 /* Define to 1 when the gnulib module readlink should be tested. */
 #undef GNULIB_TEST_READLINK
 
-/* Define to 1 when the gnulib module reallocarray should be tested. */
-#undef GNULIB_TEST_REALLOCARRAY
-
 /* Define to 1 when the gnulib module realloc-gnu should be tested. */
 #undef GNULIB_TEST_REALLOC_GNU
 
@@ -628,9 +561,6 @@
 /* Define to 1 when the gnulib module setlocale_null should be tested. */
 #undef GNULIB_TEST_SETLOCALE_NULL
 
-/* Define to 1 when the gnulib module sigaction should be tested. */
-#undef GNULIB_TEST_SIGACTION
-
 /* Define to 1 when the gnulib module signbit should be tested. */
 #undef GNULIB_TEST_SIGNBIT
 
@@ -645,9 +575,6 @@
 
 /* Define to 1 when the gnulib module stat should be tested. */
 #undef GNULIB_TEST_STAT
-
-/* Define to 1 when the gnulib module stpcpy should be tested. */
-#undef GNULIB_TEST_STPCPY
 
 /* Define to 1 when the gnulib module strcasestr should be tested. */
 #undef GNULIB_TEST_STRCASESTR
@@ -719,14 +646,6 @@
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module vprintf-posix shall be considered present. */
 #undef GNULIB_VPRINTF_POSIX
-
-/* Define to a C preprocessor expression that evaluates to 1 or 0, depending
-   whether the gnulib module xalloc shall be considered present. */
-#undef GNULIB_XALLOC
-
-/* Define to a C preprocessor expression that evaluates to 1 or 0, depending
-   whether the gnulib module xalloc-die shall be considered present. */
-#undef GNULIB_XALLOC_DIE
 
 /* Define to 1 if `TIOCGWINSZ' requires <sys/ioctl.h>. */
 #undef GWINSZ_IN_SYS_IOCTL
@@ -936,10 +855,6 @@
    don't. */
 #undef HAVE_DECL_MEMRCHR
 
-/* Define to 1 if you have the declaration of `posix_spawn', and to 0 if you
-   don't. */
-#undef HAVE_DECL_POSIX_SPAWN
-
 /* Define to 1 if you have the declaration of `program_invocation_name', and
    to 0 if you don't. */
 #undef HAVE_DECL_PROGRAM_INVOCATION_NAME
@@ -1052,9 +967,6 @@
 
 /* Define to 1 if you have the `eaccess' function. */
 #undef HAVE_EACCESS
-
-/* Define if you have the declaration of environ. */
-#undef HAVE_ENVIRON_DECL
 
 /* Define to 1 if you have the `euidaccess' function. */
 #undef HAVE_EUIDACCESS
@@ -1450,31 +1362,11 @@
 /* Define to 1 if you have the `pathconf' function. */
 #undef HAVE_PATHCONF
 
-/* Define to 1 if you have the <paths.h> header file. */
-#undef HAVE_PATHS_H
-
 /* Define to 1 if you have the `pipe' function. */
 #undef HAVE_PIPE
 
 /* Define if you have POSIX signal handling (struct sigaction and friends). */
 #undef HAVE_POSIX_SIGNALS
-
-/* Define to 1 if you have the `posix_spawn' function. */
-#undef HAVE_POSIX_SPAWN
-
-/* Define to 1 if the system has the type `posix_spawnattr_t'. */
-#undef HAVE_POSIX_SPAWNATTR_T
-
-/* Define to 1 if you have the `posix_spawn_file_actions_addchdir' function.
-   */
-#undef HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR
-
-/* Define to 1 if you have the `posix_spawn_file_actions_addchdir_np'
-   function. */
-#undef HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR_NP
-
-/* Define to 1 if the system has the type `posix_spawn_file_actions_t'. */
-#undef HAVE_POSIX_SPAWN_FILE_ACTIONS_T
 
 /* Define to 1 if you have the `pselect' function. */
 #undef HAVE_PSELECT
@@ -1529,9 +1421,6 @@
    and to 0 otherwise. */
 #undef HAVE_REALLOC
 
-/* Define to 1 if you have the `reallocarray' function. */
-#undef HAVE_REALLOCARRAY
-
 /* Define to 1 if you have the `realpath' function. */
 #undef HAVE_REALPATH
 
@@ -1556,15 +1445,6 @@
 /* Define to 1 if the system has the type `sa_family_t'. */
 #undef HAVE_SA_FAMILY_T
 
-/* Define to 1 if you have the <sched.h> header file. */
-#undef HAVE_SCHED_H
-
-/* Define to 1 if you have the `sched_setparam' function. */
-#undef HAVE_SCHED_SETPARAM
-
-/* Define to 1 if you have the `sched_setscheduler' function. */
-#undef HAVE_SCHED_SETSCHEDULER
-
 /* Define to 1 if you have the <sdkddkver.h> header file. */
 #undef HAVE_SDKDDKVER_H
 
@@ -1577,14 +1457,8 @@
 /* Define to 1 if you have the `setdtablesize' function. */
 #undef HAVE_SETDTABLESIZE
 
-/* Define to 1 if you have the `setegid' function. */
-#undef HAVE_SETEGID
-
 /* Define to 1 if you have the `setenv' function. */
 #undef HAVE_SETENV
-
-/* Define to 1 if you have the `seteuid' function. */
-#undef HAVE_SETEUID
 
 /* Define to 1 if you have the `setitimer' function. */
 #undef HAVE_SETITIMER
@@ -1612,18 +1486,6 @@
 
 /* Define to 1 if you have the `shutdown' function. */
 #undef HAVE_SHUTDOWN
-
-/* Define to 1 if you have the `sigaction' function. */
-#undef HAVE_SIGACTION
-
-/* Define to 1 if you have the `sigaltstack' function. */
-#undef HAVE_SIGALTSTACK
-
-/* Define to 1 if the system has the type `siginfo_t'. */
-#undef HAVE_SIGINFO_T
-
-/* Define to 1 if you have the `siginterrupt' function. */
-#undef HAVE_SIGINTERRUPT
 
 /* Define to 1 if 'sig_atomic_t' is a signed integer type. */
 #undef HAVE_SIGNED_SIG_ATOMIC_T
@@ -1660,9 +1522,6 @@
 
 /* Define if the locale_t type is as on Solaris 11.4. */
 #undef HAVE_SOLARIS114_LOCALES
-
-/* Define to 1 if you have the <spawn.h> header file. */
-#undef HAVE_SPAWN_H
 
 /* Define to 1 if you have the <stdalign.h> header file. */
 #undef HAVE_STDALIGN_H
@@ -1757,9 +1616,6 @@
 /* Define to 1 if the system has the type `struct random_data'. */
 #undef HAVE_STRUCT_RANDOM_DATA
 
-/* Define to 1 if `sa_sigaction' is a member of `struct sigaction'. */
-#undef HAVE_STRUCT_SIGACTION_SA_SIGACTION
-
 /* Define to 1 if the system has the type `struct sockaddr_storage'. */
 #undef HAVE_STRUCT_SOCKADDR_STORAGE
 
@@ -1817,9 +1673,6 @@
 
 /* Define to 1 if you have the <sys/bitypes.h> header file. */
 #undef HAVE_SYS_BITYPES_H
-
-/* Define to 1 if you have the <sys/cdefs.h> header file. */
-#undef HAVE_SYS_CDEFS_H
 
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
@@ -1953,9 +1806,6 @@
 /* Define to 1 or 0, depending whether the compiler supports simple visibility
    declarations. */
 #undef HAVE_VISIBILITY
-
-/* Define to 1 if you have the `waitid' function. */
-#undef HAVE_WAITID
 
 /* Define to 1 if you have the `waitpid' function. */
 #undef HAVE_WAITPID
@@ -2442,9 +2292,6 @@
    */
 #undef REPLACE_OPEN_DIRECTORY
 
-/* Define if gnulib uses its own posix_spawn and posix_spawnp functions. */
-#undef REPLACE_POSIX_SPAWN
-
 /* Define to 1 if strerror(0) does not return a message implying success. */
 #undef REPLACE_STRERROR_0
 
@@ -2477,19 +2324,6 @@
 
 /* Define to 1 if setlocale (category, NULL) is multithread-safe. */
 #undef SETLOCALE_NULL_ONE_MTSAFE
-
-/* File name of the Bourne shell.  */
-#if (defined _WIN32 && !defined __CYGWIN__) || defined __CYGWIN__ || defined __ANDROID__
-/* Omit the directory part because
-   - For native Windows programs in a Cygwin environment, the Cygwin mounts
-     are not visible.
-   - For 32-bit Cygwin programs in a 64-bit Cygwin environment, the Cygwin
-     mounts are not visible.
-   - On Android, /bin/sh does not exist. It's /system/bin/sh instead.  */
-# define BOURNE_SHELL "sh"
-#else
-# define BOURNE_SHELL "/bin/sh"
-#endif
 
 /* Define to l, ll, u, ul, ull, etc., as suitable for constants of type
    'sig_atomic_t'. */
@@ -3232,9 +3066,6 @@
 #endif
 
 
-/* Define as 'access' if you don't have the eaccess() function. */
-#undef eaccess
-
 /* Define to `int' if <sys/types.h> doesn't define. */
 #undef gid_t
 
@@ -3321,10 +3152,6 @@
 # define _Restrict
 # define __restrict__
 #endif
-
-/* Define as an integer type suitable for memory locations that can be
-   accessed atomically even in the presence of asynchronous signals. */
-#undef sig_atomic_t
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t

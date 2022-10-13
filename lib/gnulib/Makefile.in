@@ -47,10 +47,8 @@
 #  --no-libtool \
 #  --macro-prefix=gl \
 #  c-ctype \
-#  copysign \
 #  dprintf \
 #  dup2 \
-#  execute \
 #  faccessat \
 #  fnmatch \
 #  fpurge \
@@ -70,7 +68,6 @@
 #  mknod \
 #  mktime \
 #  nl_langinfo \
-#  posix_spawn \
 #  pselect \
 #  random_r \
 #  rename \
@@ -91,6 +88,7 @@
 #  tmpfile \
 #  vfprintf-posix \
 #  vprintf-posix \
+#  waitpid \
 #  wcswidth
 
 
@@ -169,158 +167,137 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@GL_COND_OBJ_ACCESS_TRUE@am__append_1 = access.c
-@GL_COND_OBJ_BTOWC_TRUE@am__append_2 = btowc.c
-@GL_COND_OBJ_CANONICALIZE_LGPL_TRUE@am__append_3 = canonicalize-lgpl.c
-@GL_COND_OBJ_CHDIR_LONG_TRUE@am__append_4 = chdir-long.c
-@GL_COND_OBJ_CLOSE_TRUE@am__append_5 = close.c
-@GL_COND_OBJ_CLOSEDIR_TRUE@am__append_6 = closedir.c
-@GL_COND_OBJ_COPYSIGN_TRUE@am__append_7 = copysign.c
-@GL_COND_OBJ_DIRFD_TRUE@am__append_8 = dirfd.c
-@GL_COND_OBJ_DUP_TRUE@am__append_9 = dup.c
-@GL_COND_OBJ_DUP2_TRUE@am__append_10 = dup2.c
-@GL_COND_OBJ_ERROR_TRUE@am__append_11 = error.c
-@GL_COND_OBJ_EUIDACCESS_TRUE@am__append_12 = euidaccess.c
-@GL_COND_OBJ_FACCESSAT_TRUE@am__append_13 = faccessat.c
-@GL_COND_OBJ_FCHDIR_TRUE@am__append_14 = fchdir.c
-@GL_COND_OBJ_FCNTL_TRUE@am__append_15 = fcntl.c
-@GL_COND_OBJ_FDOPENDIR_TRUE@am__append_16 = fdopendir.c
-@GL_COND_OBJ_FLOAT_TRUE@am__append_17 = float.c
-@GL_COND_OBJ_ITOLD_TRUE@am__append_18 = itold.c
-@GL_COND_OBJ_FPURGE_TRUE@am__append_19 = fpurge.c
-@GL_COND_OBJ_FREE_TRUE@am__append_20 = free.c
-@GL_COND_OBJ_FSETERR_TRUE@am__append_21 = fseterr.c
-@GL_COND_OBJ_FSTAT_TRUE@am__append_22 = fstat.c
-@GL_COND_OBJ_FSTATAT_TRUE@am__append_23 = fstatat.c
-@GL_COND_OBJ_GETCWD_TRUE@am__append_24 = getcwd.c
-@GL_COND_OBJ_GETCWD_LGPL_TRUE@am__append_25 = getcwd-lgpl.c
-@GL_COND_OBJ_GETDTABLESIZE_TRUE@am__append_26 = getdtablesize.c
-@GL_COND_OBJ_GETGROUPS_TRUE@am__append_27 = getgroups.c
-@GL_COND_OBJ_GETHOSTNAME_TRUE@am__append_28 = gethostname.c
-@GL_COND_OBJ_GETLOGIN_R_TRUE@am__append_29 = getlogin_r.c
-@GL_COND_OBJ_GETRANDOM_TRUE@am__append_30 = getrandom.c
-@GL_COND_OBJ_GETTIMEOFDAY_TRUE@am__append_31 = gettimeofday.c
-@GL_COND_OBJ_GLOB_TRUE@am__append_32 = glob.c globfree.c
-@GL_COND_OBJ_GLOB_PATTERN_P_TRUE@am__append_33 = glob_pattern_p.c
-@GL_COND_OBJ_GROUP_MEMBER_TRUE@am__append_34 = group-member.c
-@GL_COND_OBJ_INET_NTOP_TRUE@am__append_35 = inet_ntop.c
-@GL_COND_OBJ_ISBLANK_TRUE@am__append_36 = isblank.c
-@GL_COND_OBJ_ISWBLANK_TRUE@am__append_37 = iswblank.c
-@GL_COND_OBJ_ISWDIGIT_TRUE@am__append_38 = iswdigit.c
-@GL_COND_OBJ_ISWXDIGIT_TRUE@am__append_39 = iswxdigit.c
-@GL_COND_OBJ_LDEXPL_TRUE@am__append_40 = ldexpl.c
-@GL_COND_OBJ_LOCALECONV_TRUE@am__append_41 = localeconv.c
-@GL_COND_OBJ_LSTAT_TRUE@am__append_42 = lstat.c
-@GL_COND_OBJ_MBRLEN_TRUE@am__append_43 = mbrlen.c
-@GL_COND_OBJ_MBRTOWC_TRUE@am__append_44 = mbrtowc.c
-@GL_COND_OBJ_MBSINIT_TRUE@am__append_45 = mbsinit.c
-@GL_COND_OBJ_MBSRTOWCS_TRUE@am__append_46 = mbsrtowcs.c
-@GL_COND_OBJ_MBTOWC_TRUE@am__append_47 = mbtowc.c
-@GL_COND_OBJ_MEMCHR_TRUE@am__append_48 = memchr.c
-@GL_COND_OBJ_MEMPCPY_TRUE@am__append_49 = mempcpy.c
-@GL_COND_OBJ_MEMRCHR_TRUE@am__append_50 = memrchr.c
-@GL_COND_OBJ_MKDIR_TRUE@am__append_51 = mkdir.c
-@GL_COND_OBJ_MKFIFO_TRUE@am__append_52 = mkfifo.c
-@GL_COND_OBJ_MKNOD_TRUE@am__append_53 = mknod.c
-@GL_COND_OBJ_MSVC_INVAL_TRUE@am__append_54 = msvc-inval.c
-@GL_COND_OBJ_MSVC_NOTHROW_TRUE@am__append_55 = msvc-nothrow.c
-@GL_COND_OBJ_NL_LANGINFO_TRUE@am__append_56 = nl_langinfo.c
-@GL_COND_OBJ_NL_LANGINFO_LOCK_TRUE@am__append_57 = nl_langinfo-lock.c
-@GL_COND_OBJ_OPEN_TRUE@am__append_58 = open.c
-@GL_COND_OBJ_OPENAT_TRUE@am__append_59 = openat.c
-@GL_COND_OBJ_OPENDIR_TRUE@am__append_60 = opendir.c
-@GL_COND_OBJ_PIPE_TRUE@am__append_61 = pipe.c
-@GL_COND_OBJ_SPAWN_TRUE@am__append_62 = spawn.c
-@GL_COND_OBJ_SPAWNI_TRUE@am__append_63 = spawni.c
-@GL_COND_OBJ_SPAWN_FACTION_ADDCHDIR_TRUE@am__append_64 = spawn_faction_addchdir.c
-@GL_COND_OBJ_SPAWN_FACTION_ADDOPEN_TRUE@am__append_65 = spawn_faction_addopen.c
-@GL_COND_OBJ_SPAWN_FACTION_DESTROY_TRUE@am__append_66 = spawn_faction_destroy.c
-@GL_COND_OBJ_SPAWN_FACTION_INIT_TRUE@am__append_67 = spawn_faction_init.c
-@GL_COND_OBJ_SPAWNATTR_DESTROY_TRUE@am__append_68 = spawnattr_destroy.c
-@GL_COND_OBJ_SPAWNATTR_INIT_TRUE@am__append_69 = spawnattr_init.c
-@GL_COND_OBJ_SPAWNATTR_SETFLAGS_TRUE@am__append_70 = spawnattr_setflags.c
-@GL_COND_OBJ_SPAWNATTR_SETSIGMASK_TRUE@am__append_71 = spawnattr_setsigmask.c
-@GL_COND_OBJ_SPAWNP_TRUE@am__append_72 = spawnp.c
-@GL_COND_OBJ_PSELECT_TRUE@am__append_73 = pselect.c
-@GL_COND_OBJ_PTHREAD_SIGMASK_TRUE@am__append_74 = pthread_sigmask.c
-@GL_COND_OBJ_RAISE_TRUE@am__append_75 = raise.c
-@GL_COND_OBJ_RANDOM_R_TRUE@am__append_76 = random_r.c
-@GL_COND_OBJ_RAWMEMCHR_TRUE@am__append_77 = rawmemchr.c
-@GL_COND_OBJ_READ_TRUE@am__append_78 = read.c
-@GL_COND_OBJ_READDIR_TRUE@am__append_79 = readdir.c
-@GL_COND_OBJ_READLINK_TRUE@am__append_80 = readlink.c
-@GL_COND_OBJ_REALLOCARRAY_TRUE@am__append_81 = reallocarray.c
-@GL_COND_OBJ_RENAME_TRUE@am__append_82 = rename.c
-@GL_COND_OBJ_REWINDDIR_TRUE@am__append_83 = rewinddir.c
-@GL_COND_OBJ_RMDIR_TRUE@am__append_84 = rmdir.c
-@GL_COND_OBJ_SECURE_GETENV_TRUE@am__append_85 = secure_getenv.c
-@GL_COND_OBJ_SELECT_TRUE@am__append_86 = select.c
-@GL_COND_OBJ_SETLOCALE_TRUE@am__append_87 = setlocale.c
-@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__append_88 = setlocale-lock.c
-@GL_COND_OBJ_SIGACTION_TRUE@am__append_89 = sigaction.c
-@GL_COND_OBJ_SIGNBIT3_TRUE@am__append_90 = signbitf.c signbitd.c signbitl.c
-@GL_COND_OBJ_SIGPROCMASK_TRUE@am__append_91 = sigprocmask.c
-@GL_COND_OBJ_STAT_TRUE@am__append_92 = stat.c
-@GL_COND_OBJ_STDIO_READ_TRUE@am__append_93 = stdio-read.c
-@GL_COND_OBJ_STDIO_WRITE_TRUE@am__append_94 = stdio-write.c
-@GL_COND_OBJ_STPCPY_TRUE@am__append_95 = stpcpy.c
-@GL_COND_OBJ_STRCASECMP_TRUE@am__append_96 = strcasecmp.c
-@GL_COND_OBJ_STRNCASECMP_TRUE@am__append_97 = strncasecmp.c
-@GL_COND_OBJ_STRCHRNUL_TRUE@am__append_98 = strchrnul.c
-@GL_COND_OBJ_STRDUP_TRUE@am__append_99 = strdup.c
-@GL_COND_OBJ_STRERROR_TRUE@am__append_100 = strerror.c
-@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__append_101 = strerror-override.c
-@GL_COND_OBJ_STRNLEN_TRUE@am__append_102 = strnlen.c
-@GL_COND_OBJ_STRSIGNAL_TRUE@am__append_103 = strsignal.c
-@GL_COND_OBJ_STRTOIMAX_TRUE@am__append_104 = strtoimax.c
-@GL_COND_OBJ_STRTOLL_TRUE@am__append_105 = strtoll.c
-@GL_COND_OBJ_STRTOULL_TRUE@am__append_106 = strtoull.c
-@GL_COND_OBJ_STRTOUMAX_TRUE@am__append_107 = strtoumax.c
-@GL_COND_OBJ_TIME_R_TRUE@am__append_108 = time_r.c
-@GL_COND_OBJ_TIMES_TRUE@am__append_109 = times.c
-@GL_COND_OBJ_TMPFILE_TRUE@am__append_110 = tmpfile.c
-@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__append_111 = uniwidth/width.c
-@GL_COND_OBJ_WAITPID_TRUE@am__append_112 = waitpid.c
-@GL_COND_OBJ_WCSWIDTH_TRUE@am__append_113 = wcswidth.c
-@GL_COND_OBJ_WCWIDTH_TRUE@am__append_114 = wcwidth.c
-@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__append_115 = windows-mutex.c
-@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__append_116 = windows-once.c
-@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__append_117 = windows-recmutex.c
-@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__append_118 = windows-rwlock.c
-@GL_COND_OBJ_WINDOWS_SPAWN_TRUE@am__append_119 = windows-spawn.c
-@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__append_120 = windows-tls.c
-@GL_COND_OBJ_WMEMCHR_TRUE@am__append_121 = wmemchr.c
-@GL_COND_OBJ_WMEMPCPY_TRUE@am__append_122 = wmempcpy.c
-@GL_COND_OBJ_WRITE_TRUE@am__append_123 = write.c
+@GL_COND_OBJ_BTOWC_TRUE@am__append_1 = btowc.c
+@GL_COND_OBJ_CANONICALIZE_LGPL_TRUE@am__append_2 = canonicalize-lgpl.c
+@GL_COND_OBJ_CHDIR_LONG_TRUE@am__append_3 = chdir-long.c
+@GL_COND_OBJ_CLOSE_TRUE@am__append_4 = close.c
+@GL_COND_OBJ_CLOSEDIR_TRUE@am__append_5 = closedir.c
+@GL_COND_OBJ_DIRFD_TRUE@am__append_6 = dirfd.c
+@GL_COND_OBJ_DUP_TRUE@am__append_7 = dup.c
+@GL_COND_OBJ_DUP2_TRUE@am__append_8 = dup2.c
+@GL_COND_OBJ_ERROR_TRUE@am__append_9 = error.c
+@GL_COND_OBJ_EUIDACCESS_TRUE@am__append_10 = euidaccess.c
+@GL_COND_OBJ_FACCESSAT_TRUE@am__append_11 = faccessat.c
+@GL_COND_OBJ_FCHDIR_TRUE@am__append_12 = fchdir.c
+@GL_COND_OBJ_FCNTL_TRUE@am__append_13 = fcntl.c
+@GL_COND_OBJ_FDOPENDIR_TRUE@am__append_14 = fdopendir.c
+@GL_COND_OBJ_FLOAT_TRUE@am__append_15 = float.c
+@GL_COND_OBJ_ITOLD_TRUE@am__append_16 = itold.c
+@GL_COND_OBJ_FPURGE_TRUE@am__append_17 = fpurge.c
+@GL_COND_OBJ_FREE_TRUE@am__append_18 = free.c
+@GL_COND_OBJ_FSETERR_TRUE@am__append_19 = fseterr.c
+@GL_COND_OBJ_FSTAT_TRUE@am__append_20 = fstat.c
+@GL_COND_OBJ_FSTATAT_TRUE@am__append_21 = fstatat.c
+@GL_COND_OBJ_GETCWD_TRUE@am__append_22 = getcwd.c
+@GL_COND_OBJ_GETCWD_LGPL_TRUE@am__append_23 = getcwd-lgpl.c
+@GL_COND_OBJ_GETDTABLESIZE_TRUE@am__append_24 = getdtablesize.c
+@GL_COND_OBJ_GETGROUPS_TRUE@am__append_25 = getgroups.c
+@GL_COND_OBJ_GETHOSTNAME_TRUE@am__append_26 = gethostname.c
+@GL_COND_OBJ_GETLOGIN_R_TRUE@am__append_27 = getlogin_r.c
+@GL_COND_OBJ_GETRANDOM_TRUE@am__append_28 = getrandom.c
+@GL_COND_OBJ_GETTIMEOFDAY_TRUE@am__append_29 = gettimeofday.c
+@GL_COND_OBJ_GLOB_TRUE@am__append_30 = glob.c globfree.c
+@GL_COND_OBJ_GLOB_PATTERN_P_TRUE@am__append_31 = glob_pattern_p.c
+@GL_COND_OBJ_GROUP_MEMBER_TRUE@am__append_32 = group-member.c
+@GL_COND_OBJ_INET_NTOP_TRUE@am__append_33 = inet_ntop.c
+@GL_COND_OBJ_ISBLANK_TRUE@am__append_34 = isblank.c
+@GL_COND_OBJ_ISWBLANK_TRUE@am__append_35 = iswblank.c
+@GL_COND_OBJ_ISWDIGIT_TRUE@am__append_36 = iswdigit.c
+@GL_COND_OBJ_ISWXDIGIT_TRUE@am__append_37 = iswxdigit.c
+@GL_COND_OBJ_LDEXPL_TRUE@am__append_38 = ldexpl.c
+@GL_COND_OBJ_LOCALECONV_TRUE@am__append_39 = localeconv.c
+@GL_COND_OBJ_LSTAT_TRUE@am__append_40 = lstat.c
+@GL_COND_OBJ_MBRLEN_TRUE@am__append_41 = mbrlen.c
+@GL_COND_OBJ_MBRTOWC_TRUE@am__append_42 = mbrtowc.c
+@GL_COND_OBJ_MBSINIT_TRUE@am__append_43 = mbsinit.c
+@GL_COND_OBJ_MBSRTOWCS_TRUE@am__append_44 = mbsrtowcs.c
+@GL_COND_OBJ_MBTOWC_TRUE@am__append_45 = mbtowc.c
+@GL_COND_OBJ_MEMCHR_TRUE@am__append_46 = memchr.c
+@GL_COND_OBJ_MEMPCPY_TRUE@am__append_47 = mempcpy.c
+@GL_COND_OBJ_MEMRCHR_TRUE@am__append_48 = memrchr.c
+@GL_COND_OBJ_MKDIR_TRUE@am__append_49 = mkdir.c
+@GL_COND_OBJ_MKFIFO_TRUE@am__append_50 = mkfifo.c
+@GL_COND_OBJ_MKNOD_TRUE@am__append_51 = mknod.c
+@GL_COND_OBJ_MSVC_INVAL_TRUE@am__append_52 = msvc-inval.c
+@GL_COND_OBJ_MSVC_NOTHROW_TRUE@am__append_53 = msvc-nothrow.c
+@GL_COND_OBJ_NL_LANGINFO_TRUE@am__append_54 = nl_langinfo.c
+@GL_COND_OBJ_NL_LANGINFO_LOCK_TRUE@am__append_55 = nl_langinfo-lock.c
+@GL_COND_OBJ_OPEN_TRUE@am__append_56 = open.c
+@GL_COND_OBJ_OPENAT_TRUE@am__append_57 = openat.c
+@GL_COND_OBJ_OPENDIR_TRUE@am__append_58 = opendir.c
+@GL_COND_OBJ_PIPE_TRUE@am__append_59 = pipe.c
+@GL_COND_OBJ_PSELECT_TRUE@am__append_60 = pselect.c
+@GL_COND_OBJ_PTHREAD_SIGMASK_TRUE@am__append_61 = pthread_sigmask.c
+@GL_COND_OBJ_RAISE_TRUE@am__append_62 = raise.c
+@GL_COND_OBJ_RANDOM_R_TRUE@am__append_63 = random_r.c
+@GL_COND_OBJ_RAWMEMCHR_TRUE@am__append_64 = rawmemchr.c
+@GL_COND_OBJ_READ_TRUE@am__append_65 = read.c
+@GL_COND_OBJ_READDIR_TRUE@am__append_66 = readdir.c
+@GL_COND_OBJ_READLINK_TRUE@am__append_67 = readlink.c
+@GL_COND_OBJ_RENAME_TRUE@am__append_68 = rename.c
+@GL_COND_OBJ_REWINDDIR_TRUE@am__append_69 = rewinddir.c
+@GL_COND_OBJ_RMDIR_TRUE@am__append_70 = rmdir.c
+@GL_COND_OBJ_SECURE_GETENV_TRUE@am__append_71 = secure_getenv.c
+@GL_COND_OBJ_SELECT_TRUE@am__append_72 = select.c
+@GL_COND_OBJ_SETLOCALE_TRUE@am__append_73 = setlocale.c
+@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__append_74 = setlocale-lock.c
+@GL_COND_OBJ_SIGNBIT3_TRUE@am__append_75 = signbitf.c signbitd.c signbitl.c
+@GL_COND_OBJ_SIGPROCMASK_TRUE@am__append_76 = sigprocmask.c
+@GL_COND_OBJ_STAT_TRUE@am__append_77 = stat.c
+@GL_COND_OBJ_STDIO_READ_TRUE@am__append_78 = stdio-read.c
+@GL_COND_OBJ_STDIO_WRITE_TRUE@am__append_79 = stdio-write.c
+@GL_COND_OBJ_STRCASECMP_TRUE@am__append_80 = strcasecmp.c
+@GL_COND_OBJ_STRNCASECMP_TRUE@am__append_81 = strncasecmp.c
+@GL_COND_OBJ_STRCHRNUL_TRUE@am__append_82 = strchrnul.c
+@GL_COND_OBJ_STRDUP_TRUE@am__append_83 = strdup.c
+@GL_COND_OBJ_STRERROR_TRUE@am__append_84 = strerror.c
+@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__append_85 = strerror-override.c
+@GL_COND_OBJ_STRNLEN_TRUE@am__append_86 = strnlen.c
+@GL_COND_OBJ_STRSIGNAL_TRUE@am__append_87 = strsignal.c
+@GL_COND_OBJ_STRTOIMAX_TRUE@am__append_88 = strtoimax.c
+@GL_COND_OBJ_STRTOLL_TRUE@am__append_89 = strtoll.c
+@GL_COND_OBJ_STRTOULL_TRUE@am__append_90 = strtoull.c
+@GL_COND_OBJ_STRTOUMAX_TRUE@am__append_91 = strtoumax.c
+@GL_COND_OBJ_TIME_R_TRUE@am__append_92 = time_r.c
+@GL_COND_OBJ_TIMES_TRUE@am__append_93 = times.c
+@GL_COND_OBJ_TMPFILE_TRUE@am__append_94 = tmpfile.c
+@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__append_95 = uniwidth/width.c
+@GL_COND_OBJ_WAITPID_TRUE@am__append_96 = waitpid.c
+@GL_COND_OBJ_WCSWIDTH_TRUE@am__append_97 = wcswidth.c
+@GL_COND_OBJ_WCWIDTH_TRUE@am__append_98 = wcwidth.c
+@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__append_99 = windows-mutex.c
+@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__append_100 = windows-once.c
+@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__append_101 = windows-recmutex.c
+@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__append_102 = windows-rwlock.c
+@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__append_103 = windows-tls.c
+@GL_COND_OBJ_WMEMCHR_TRUE@am__append_104 = wmemchr.c
+@GL_COND_OBJ_WMEMPCPY_TRUE@am__append_105 = wmempcpy.c
+@GL_COND_OBJ_WRITE_TRUE@am__append_106 = write.c
 subdir = lib/gnulib
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/__inline.m4 \
-	$(top_srcdir)/m4/absolute-header.m4 $(top_srcdir)/m4/access.m4 \
-	$(top_srcdir)/m4/alloca.m4 $(top_srcdir)/m4/arpa_inet_h.m4 \
-	$(top_srcdir)/m4/assert_h.m4 $(top_srcdir)/m4/btowc.m4 \
-	$(top_srcdir)/m4/builtin-expect.m4 $(top_srcdir)/m4/c-bool.m4 \
-	$(top_srcdir)/m4/calloc.m4 $(top_srcdir)/m4/canonicalize.m4 \
+	$(top_srcdir)/m4/absolute-header.m4 $(top_srcdir)/m4/alloca.m4 \
+	$(top_srcdir)/m4/arpa_inet_h.m4 $(top_srcdir)/m4/assert_h.m4 \
+	$(top_srcdir)/m4/btowc.m4 $(top_srcdir)/m4/builtin-expect.m4 \
+	$(top_srcdir)/m4/c-bool.m4 $(top_srcdir)/m4/canonicalize.m4 \
 	$(top_srcdir)/m4/chdir-long.m4 $(top_srcdir)/m4/clock_time.m4 \
 	$(top_srcdir)/m4/close.m4 $(top_srcdir)/m4/closedir.m4 \
-	$(top_srcdir)/m4/codeset.m4 $(top_srcdir)/m4/copysign.m4 \
-	$(top_srcdir)/m4/ctype_h.m4 $(top_srcdir)/m4/d-ino.m4 \
-	$(top_srcdir)/m4/d-type.m4 $(top_srcdir)/m4/dirent_h.m4 \
-	$(top_srcdir)/m4/dirfd.m4 \
+	$(top_srcdir)/m4/codeset.m4 $(top_srcdir)/m4/ctype_h.m4 \
+	$(top_srcdir)/m4/d-ino.m4 $(top_srcdir)/m4/d-type.m4 \
+	$(top_srcdir)/m4/dirent_h.m4 $(top_srcdir)/m4/dirfd.m4 \
 	$(top_srcdir)/m4/double-slash-root.m4 \
 	$(top_srcdir)/m4/dprintf.m4 $(top_srcdir)/m4/dup.m4 \
-	$(top_srcdir)/m4/dup2.m4 $(top_srcdir)/m4/eaccess.m4 \
-	$(top_srcdir)/m4/eealloc.m4 $(top_srcdir)/m4/environ.m4 \
+	$(top_srcdir)/m4/dup2.m4 $(top_srcdir)/m4/eealloc.m4 \
 	$(top_srcdir)/m4/errno_h.m4 $(top_srcdir)/m4/error.m4 \
-	$(top_srcdir)/m4/euidaccess.m4 $(top_srcdir)/m4/execute.m4 \
-	$(top_srcdir)/m4/exponentd.m4 $(top_srcdir)/m4/exponentf.m4 \
-	$(top_srcdir)/m4/exponentl.m4 $(top_srcdir)/m4/extensions.m4 \
+	$(top_srcdir)/m4/euidaccess.m4 $(top_srcdir)/m4/exponentd.m4 \
+	$(top_srcdir)/m4/exponentf.m4 $(top_srcdir)/m4/exponentl.m4 \
+	$(top_srcdir)/m4/extensions.m4 \
 	$(top_srcdir)/m4/extern-inline.m4 \
-	$(top_srcdir)/m4/faccessat.m4 $(top_srcdir)/m4/fatal-signal.m4 \
-	$(top_srcdir)/m4/fchdir.m4 $(top_srcdir)/m4/fcntl-o.m4 \
-	$(top_srcdir)/m4/fcntl.m4 $(top_srcdir)/m4/fcntl_h.m4 \
-	$(top_srcdir)/m4/fdopendir.m4 $(top_srcdir)/m4/filenamecat.m4 \
-	$(top_srcdir)/m4/findprog-in.m4 $(top_srcdir)/m4/flexmember.m4 \
+	$(top_srcdir)/m4/faccessat.m4 $(top_srcdir)/m4/fchdir.m4 \
+	$(top_srcdir)/m4/fcntl-o.m4 $(top_srcdir)/m4/fcntl.m4 \
+	$(top_srcdir)/m4/fcntl_h.m4 $(top_srcdir)/m4/fdopendir.m4 \
+	$(top_srcdir)/m4/filenamecat.m4 $(top_srcdir)/m4/flexmember.m4 \
 	$(top_srcdir)/m4/float_h.m4 $(top_srcdir)/m4/fnmatch.m4 \
 	$(top_srcdir)/m4/fnmatch_h.m4 $(top_srcdir)/m4/fpieee.m4 \
 	$(top_srcdir)/m4/fpurge.m4 $(top_srcdir)/m4/free.m4 \
@@ -362,16 +339,16 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
 	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/malloc.m4 \
 	$(top_srcdir)/m4/malloca.m4 $(top_srcdir)/m4/math_h.m4 \
-	$(top_srcdir)/m4/mathfunc.m4 $(top_srcdir)/m4/mbchar.m4 \
-	$(top_srcdir)/m4/mbiter.m4 $(top_srcdir)/m4/mbrlen.m4 \
-	$(top_srcdir)/m4/mbrtowc.m4 $(top_srcdir)/m4/mbsinit.m4 \
-	$(top_srcdir)/m4/mbsrtowcs.m4 $(top_srcdir)/m4/mbstate_t.m4 \
-	$(top_srcdir)/m4/mbtowc.m4 $(top_srcdir)/m4/memchr.m4 \
-	$(top_srcdir)/m4/mempcpy.m4 $(top_srcdir)/m4/memrchr.m4 \
-	$(top_srcdir)/m4/minmax.m4 $(top_srcdir)/m4/mkdir.m4 \
-	$(top_srcdir)/m4/mkfifo.m4 $(top_srcdir)/m4/mknod.m4 \
-	$(top_srcdir)/m4/mktime.m4 $(top_srcdir)/m4/mmap-anon.m4 \
-	$(top_srcdir)/m4/mode_t.m4 $(top_srcdir)/m4/msvc-inval.m4 \
+	$(top_srcdir)/m4/mbchar.m4 $(top_srcdir)/m4/mbiter.m4 \
+	$(top_srcdir)/m4/mbrlen.m4 $(top_srcdir)/m4/mbrtowc.m4 \
+	$(top_srcdir)/m4/mbsinit.m4 $(top_srcdir)/m4/mbsrtowcs.m4 \
+	$(top_srcdir)/m4/mbstate_t.m4 $(top_srcdir)/m4/mbtowc.m4 \
+	$(top_srcdir)/m4/memchr.m4 $(top_srcdir)/m4/mempcpy.m4 \
+	$(top_srcdir)/m4/memrchr.m4 $(top_srcdir)/m4/minmax.m4 \
+	$(top_srcdir)/m4/mkdir.m4 $(top_srcdir)/m4/mkfifo.m4 \
+	$(top_srcdir)/m4/mknod.m4 $(top_srcdir)/m4/mktime.m4 \
+	$(top_srcdir)/m4/mmap-anon.m4 $(top_srcdir)/m4/mode_t.m4 \
+	$(top_srcdir)/m4/msvc-inval.m4 \
 	$(top_srcdir)/m4/msvc-nothrow.m4 $(top_srcdir)/m4/multiarch.m4 \
 	$(top_srcdir)/m4/netinet_in_h.m4 \
 	$(top_srcdir)/m4/nl_langinfo.m4 $(top_srcdir)/m4/nls.m4 \
@@ -380,9 +357,7 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/open-slash.m4 $(top_srcdir)/m4/open.m4 \
 	$(top_srcdir)/m4/openat.m4 $(top_srcdir)/m4/opendir.m4 \
 	$(top_srcdir)/m4/pathmax.m4 $(top_srcdir)/m4/pipe.m4 \
-	$(top_srcdir)/m4/po.m4 $(top_srcdir)/m4/posix_spawn.m4 \
-	$(top_srcdir)/m4/posix_spawn_faction_addchdir.m4 \
-	$(top_srcdir)/m4/printf-frexp.m4 \
+	$(top_srcdir)/m4/po.m4 $(top_srcdir)/m4/printf-frexp.m4 \
 	$(top_srcdir)/m4/printf-frexpl.m4 $(top_srcdir)/m4/printf.m4 \
 	$(top_srcdir)/m4/progtest.m4 $(top_srcdir)/m4/pselect.m4 \
 	$(top_srcdir)/m4/pthread_rwlock_rdlock.m4 \
@@ -390,26 +365,22 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/random_r.m4 $(top_srcdir)/m4/rawmemchr.m4 \
 	$(top_srcdir)/m4/read.m4 $(top_srcdir)/m4/readdir.m4 \
 	$(top_srcdir)/m4/readlink.m4 $(top_srcdir)/m4/realloc.m4 \
-	$(top_srcdir)/m4/reallocarray.m4 $(top_srcdir)/m4/rename.m4 \
-	$(top_srcdir)/m4/rewinddir.m4 $(top_srcdir)/m4/rmdir.m4 \
-	$(top_srcdir)/m4/safe-read.m4 $(top_srcdir)/m4/safe-write.m4 \
-	$(top_srcdir)/m4/save-cwd.m4 $(top_srcdir)/m4/sched_h.m4 \
+	$(top_srcdir)/m4/rename.m4 $(top_srcdir)/m4/rewinddir.m4 \
+	$(top_srcdir)/m4/rmdir.m4 $(top_srcdir)/m4/safe-read.m4 \
+	$(top_srcdir)/m4/safe-write.m4 $(top_srcdir)/m4/save-cwd.m4 \
 	$(top_srcdir)/m4/secure_getenv.m4 $(top_srcdir)/m4/select.m4 \
 	$(top_srcdir)/m4/setlocale.m4 \
 	$(top_srcdir)/m4/setlocale_null.m4 \
-	$(top_srcdir)/m4/sh-filename.m4 \
-	$(top_srcdir)/m4/sig_atomic_t.m4 $(top_srcdir)/m4/sigaction.m4 \
 	$(top_srcdir)/m4/signal_h.m4 \
 	$(top_srcdir)/m4/signalblocking.m4 $(top_srcdir)/m4/signbit.m4 \
 	$(top_srcdir)/m4/size_max.m4 $(top_srcdir)/m4/snprintf.m4 \
 	$(top_srcdir)/m4/socketlib.m4 $(top_srcdir)/m4/sockets.m4 \
 	$(top_srcdir)/m4/socklen.m4 $(top_srcdir)/m4/sockpfaf.m4 \
-	$(top_srcdir)/m4/spawn_h.m4 $(top_srcdir)/m4/sprintf-posix.m4 \
-	$(top_srcdir)/m4/ssize_t.m4 $(top_srcdir)/m4/stat-time.m4 \
-	$(top_srcdir)/m4/stat.m4 $(top_srcdir)/m4/stdalign.m4 \
-	$(top_srcdir)/m4/stddef_h.m4 $(top_srcdir)/m4/stdint.m4 \
-	$(top_srcdir)/m4/stdint_h.m4 $(top_srcdir)/m4/stdio_h.m4 \
-	$(top_srcdir)/m4/stdlib_h.m4 $(top_srcdir)/m4/stpcpy.m4 \
+	$(top_srcdir)/m4/sprintf-posix.m4 $(top_srcdir)/m4/ssize_t.m4 \
+	$(top_srcdir)/m4/stat-time.m4 $(top_srcdir)/m4/stat.m4 \
+	$(top_srcdir)/m4/stdalign.m4 $(top_srcdir)/m4/stddef_h.m4 \
+	$(top_srcdir)/m4/stdint.m4 $(top_srcdir)/m4/stdint_h.m4 \
+	$(top_srcdir)/m4/stdio_h.m4 $(top_srcdir)/m4/stdlib_h.m4 \
 	$(top_srcdir)/m4/strcase.m4 $(top_srcdir)/m4/strcasestr.m4 \
 	$(top_srcdir)/m4/strchrnul.m4 $(top_srcdir)/m4/strdup.m4 \
 	$(top_srcdir)/m4/strerror.m4 $(top_srcdir)/m4/strerror_r.m4 \
@@ -432,16 +403,15 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/vasnprintf.m4 \
 	$(top_srcdir)/m4/vfprintf-posix.m4 \
 	$(top_srcdir)/m4/visibility.m4 \
-	$(top_srcdir)/m4/vprintf-posix.m4 \
-	$(top_srcdir)/m4/wait-process.m4 $(top_srcdir)/m4/waitpid.m4 \
+	$(top_srcdir)/m4/vprintf-posix.m4 $(top_srcdir)/m4/waitpid.m4 \
 	$(top_srcdir)/m4/warn-on-use.m4 $(top_srcdir)/m4/wchar_h.m4 \
 	$(top_srcdir)/m4/wchar_t.m4 $(top_srcdir)/m4/wcswidth.m4 \
 	$(top_srcdir)/m4/wctype_h.m4 $(top_srcdir)/m4/wcwidth.m4 \
 	$(top_srcdir)/m4/wint_t.m4 $(top_srcdir)/m4/wmemchr.m4 \
 	$(top_srcdir)/m4/wmempcpy.m4 $(top_srcdir)/m4/write.m4 \
-	$(top_srcdir)/m4/xalloc.m4 $(top_srcdir)/m4/xsize.m4 \
-	$(top_srcdir)/m4/year2038.m4 $(top_srcdir)/m4/zzgnulib.m4 \
-	$(top_srcdir)/m4/bash-rules.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/xsize.m4 $(top_srcdir)/m4/year2038.m4 \
+	$(top_srcdir)/m4/zzgnulib.m4 $(top_srcdir)/m4/bash-rules.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(noinst_HEADERS) \
@@ -458,312 +428,262 @@ am__v_AR_0 = @echo "  AR      " $@;
 am__v_AR_1 = 
 libgnu_a_AR = $(AR) $(ARFLAGS)
 am__DEPENDENCIES_1 =
-am__libgnu_a_SOURCES_DIST = access.c openat-priv.h openat-proc.c \
-	basename-lgpl.c bitrotate.h bitrotate.c btowc.c c-ctype.h \
-	c-ctype.c canonicalize.c canonicalize-lgpl.c chdir-long.c \
-	cloexec.c close.c closedir.c concat-filename.c copysign.c \
+am__libgnu_a_SOURCES_DIST = openat-priv.h openat-proc.c \
+	basename-lgpl.c btowc.c c-ctype.h c-ctype.c \
+	canonicalize-lgpl.c chdir-long.c cloexec.c close.c closedir.c \
 	dirfd.c dirname-lgpl.c stripslash.c dup.c dup2.c error.c \
-	euidaccess.c execute.h execute.c exitfail.c faccessat.c \
-	fatal-signal.h fatal-signal.c fchdir.c fcntl.c fd-hook.c \
-	fd-safer-flag.c dup-safer-flag.c fdopendir.c file-set.c \
-	filenamecat-lgpl.c findprog.h findprog-in.c float.c itold.c \
-	fpurge.c free.c fseterr.c fstat.c fstatat.c full-read.h \
-	full-read.c full-write.h full-write.c getcwd.c getcwd-lgpl.c \
-	getdtablesize.c getgroups.c gethostname.c getlogin_r.c \
-	getprogname.h getprogname.c getrandom.c gettext.h \
-	gettimeofday.c glob.c globfree.c glob_pattern_p.c \
-	group-member.c hard-locale.c hash.c hash-pjw.h hash-pjw.c \
-	hash-triple-simple.c ialloc.c idx.h inet_ntop.c isblank.c \
-	iswblank.c iswdigit.c iswxdigit.c ldexpl.c localcharset.c \
-	localeconv.c localename.c localename-table.c glthread/lock.h \
-	glthread/lock.c lstat.c malloca.c math.c mbchar.c mbrlen.c \
-	mbrtowc.c mbschr.c mbsinit.c mbsrtowcs.c mbtowc.c mbuiter.h \
-	mbuiter.c memchr.c mempcpy.c memrchr.c minmax.h mkdir.c \
-	mkfifo.c mknod.c msvc-inval.c msvc-nothrow.c nl_langinfo.c \
-	nl_langinfo-lock.c open.c openat.c openat-die.c opendir.c \
-	pipe.c spawn.c spawni.c spawn_faction_addchdir.c \
-	spawn_faction_addopen.c spawn_faction_destroy.c \
-	spawn_faction_init.c spawnattr_destroy.c spawnattr_init.c \
-	spawnattr_setflags.c spawnattr_setsigmask.c spawnp.c \
-	printf-frexp.c printf-frexpl.c pselect.c pthread_sigmask.c \
-	raise.c random_r.c rawmemchr.c read.c readdir.c readlink.c \
-	reallocarray.c rename.c rewinddir.c rmdir.c safe-read.c \
-	safe-write.c save-cwd.c malloc/scratch_buffer_dupfree.c \
-	malloc/scratch_buffer_grow.c \
+	euidaccess.c exitfail.c faccessat.c fchdir.c fcntl.c fd-hook.c \
+	fd-safer-flag.c dup-safer-flag.c fdopendir.c \
+	filenamecat-lgpl.c float.c itold.c fpurge.c free.c fseterr.c \
+	fstat.c fstatat.c full-read.h full-read.c full-write.h \
+	full-write.c getcwd.c getcwd-lgpl.c getdtablesize.c \
+	getgroups.c gethostname.c getlogin_r.c getprogname.h \
+	getprogname.c getrandom.c gettext.h gettimeofday.c glob.c \
+	globfree.c glob_pattern_p.c group-member.c hard-locale.c idx.h \
+	inet_ntop.c isblank.c iswblank.c iswdigit.c iswxdigit.c \
+	ldexpl.c localcharset.c localeconv.c localename.c \
+	localename-table.c glthread/lock.h glthread/lock.c lstat.c \
+	malloca.c math.c mbchar.c mbrlen.c mbrtowc.c mbschr.c \
+	mbsinit.c mbsrtowcs.c mbtowc.c mbuiter.h mbuiter.c memchr.c \
+	mempcpy.c memrchr.c minmax.h mkdir.c mkfifo.c mknod.c \
+	msvc-inval.c msvc-nothrow.c nl_langinfo.c nl_langinfo-lock.c \
+	open.c openat.c openat-die.c opendir.c pipe.c printf-frexp.c \
+	printf-frexpl.c pselect.c pthread_sigmask.c raise.c random_r.c \
+	rawmemchr.c read.c readdir.c readlink.c rename.c rewinddir.c \
+	rmdir.c safe-read.c safe-write.c save-cwd.c \
+	malloc/scratch_buffer_dupfree.c malloc/scratch_buffer_grow.c \
 	malloc/scratch_buffer_grow_preserve.c \
 	malloc/scratch_buffer_set_array_size.c secure_getenv.c \
 	select.c setlocale.c setlocale_null.c setlocale-lock.c \
-	sigaction.c sig-handler.c signbitf.c signbitd.c signbitl.c \
-	sigprocmask.c size_max.h sockets.h sockets.c stat.c \
-	stat-time.c stdio-read.c stdio-write.c stpcpy.c strcasecmp.c \
-	strncasecmp.c strchrnul.c strdup.c strerror.c \
-	strerror-override.c strnlen.c strnlen1.h strnlen1.c \
+	signbitf.c signbitd.c signbitl.c sigprocmask.c size_max.h \
+	sockets.h sockets.c stat.c stat-time.c stdio-read.c \
+	stdio-write.c strcasecmp.c strncasecmp.c strchrnul.c strdup.c \
+	strerror.c strerror-override.c strnlen.c strnlen1.h strnlen1.c \
 	strsignal.c strtoimax.c strtoll.c strtoull.c strtoumax.c \
 	sys_socket.c tempname.c glthread/threadlib.c time_r.c times.c \
 	timespec.c glthread/tls.h glthread/tls.c tmpdir.h tmpdir.c \
 	tmpfile.c unistd.c dup-safer.c fd-safer.c pipe-safer.c \
-	uniwidth/width.c wait-process.h wait-process.c waitpid.c \
-	wcswidth.c wctype-h.c wcwidth.c windows-mutex.c windows-once.c \
-	windows-recmutex.c windows-rwlock.c windows-spawn.c \
-	windows-tls.c wmemchr.c wmempcpy.c write.c xmalloc.c \
-	xalloc-die.c xsize.h xsize.c
-@GL_COND_OBJ_ACCESS_TRUE@am__objects_1 = libgnu_a-access.$(OBJEXT)
-@GL_COND_OBJ_BTOWC_TRUE@am__objects_2 = libgnu_a-btowc.$(OBJEXT)
-@GL_COND_OBJ_CANONICALIZE_LGPL_TRUE@am__objects_3 = libgnu_a-canonicalize-lgpl.$(OBJEXT)
-@GL_COND_OBJ_CHDIR_LONG_TRUE@am__objects_4 =  \
+	uniwidth/width.c waitpid.c wcswidth.c wctype-h.c wcwidth.c \
+	windows-mutex.c windows-once.c windows-recmutex.c \
+	windows-rwlock.c windows-tls.c wmemchr.c wmempcpy.c write.c \
+	xsize.h xsize.c
+@GL_COND_OBJ_BTOWC_TRUE@am__objects_1 = libgnu_a-btowc.$(OBJEXT)
+@GL_COND_OBJ_CANONICALIZE_LGPL_TRUE@am__objects_2 = libgnu_a-canonicalize-lgpl.$(OBJEXT)
+@GL_COND_OBJ_CHDIR_LONG_TRUE@am__objects_3 =  \
 @GL_COND_OBJ_CHDIR_LONG_TRUE@	libgnu_a-chdir-long.$(OBJEXT)
-@GL_COND_OBJ_CLOSE_TRUE@am__objects_5 = libgnu_a-close.$(OBJEXT)
-@GL_COND_OBJ_CLOSEDIR_TRUE@am__objects_6 =  \
+@GL_COND_OBJ_CLOSE_TRUE@am__objects_4 = libgnu_a-close.$(OBJEXT)
+@GL_COND_OBJ_CLOSEDIR_TRUE@am__objects_5 =  \
 @GL_COND_OBJ_CLOSEDIR_TRUE@	libgnu_a-closedir.$(OBJEXT)
-@GL_COND_OBJ_COPYSIGN_TRUE@am__objects_7 =  \
-@GL_COND_OBJ_COPYSIGN_TRUE@	libgnu_a-copysign.$(OBJEXT)
-@GL_COND_OBJ_DIRFD_TRUE@am__objects_8 = libgnu_a-dirfd.$(OBJEXT)
-@GL_COND_OBJ_DUP_TRUE@am__objects_9 = libgnu_a-dup.$(OBJEXT)
-@GL_COND_OBJ_DUP2_TRUE@am__objects_10 = libgnu_a-dup2.$(OBJEXT)
-@GL_COND_OBJ_ERROR_TRUE@am__objects_11 = libgnu_a-error.$(OBJEXT)
-@GL_COND_OBJ_EUIDACCESS_TRUE@am__objects_12 =  \
+@GL_COND_OBJ_DIRFD_TRUE@am__objects_6 = libgnu_a-dirfd.$(OBJEXT)
+@GL_COND_OBJ_DUP_TRUE@am__objects_7 = libgnu_a-dup.$(OBJEXT)
+@GL_COND_OBJ_DUP2_TRUE@am__objects_8 = libgnu_a-dup2.$(OBJEXT)
+@GL_COND_OBJ_ERROR_TRUE@am__objects_9 = libgnu_a-error.$(OBJEXT)
+@GL_COND_OBJ_EUIDACCESS_TRUE@am__objects_10 =  \
 @GL_COND_OBJ_EUIDACCESS_TRUE@	libgnu_a-euidaccess.$(OBJEXT)
-@GL_COND_OBJ_FACCESSAT_TRUE@am__objects_13 =  \
+@GL_COND_OBJ_FACCESSAT_TRUE@am__objects_11 =  \
 @GL_COND_OBJ_FACCESSAT_TRUE@	libgnu_a-faccessat.$(OBJEXT)
-@GL_COND_OBJ_FCHDIR_TRUE@am__objects_14 = libgnu_a-fchdir.$(OBJEXT)
-@GL_COND_OBJ_FCNTL_TRUE@am__objects_15 = libgnu_a-fcntl.$(OBJEXT)
-@GL_COND_OBJ_FDOPENDIR_TRUE@am__objects_16 =  \
+@GL_COND_OBJ_FCHDIR_TRUE@am__objects_12 = libgnu_a-fchdir.$(OBJEXT)
+@GL_COND_OBJ_FCNTL_TRUE@am__objects_13 = libgnu_a-fcntl.$(OBJEXT)
+@GL_COND_OBJ_FDOPENDIR_TRUE@am__objects_14 =  \
 @GL_COND_OBJ_FDOPENDIR_TRUE@	libgnu_a-fdopendir.$(OBJEXT)
-@GL_COND_OBJ_FLOAT_TRUE@am__objects_17 = libgnu_a-float.$(OBJEXT)
-@GL_COND_OBJ_ITOLD_TRUE@am__objects_18 = libgnu_a-itold.$(OBJEXT)
-@GL_COND_OBJ_FPURGE_TRUE@am__objects_19 = libgnu_a-fpurge.$(OBJEXT)
-@GL_COND_OBJ_FREE_TRUE@am__objects_20 = libgnu_a-free.$(OBJEXT)
-@GL_COND_OBJ_FSETERR_TRUE@am__objects_21 = libgnu_a-fseterr.$(OBJEXT)
-@GL_COND_OBJ_FSTAT_TRUE@am__objects_22 = libgnu_a-fstat.$(OBJEXT)
-@GL_COND_OBJ_FSTATAT_TRUE@am__objects_23 = libgnu_a-fstatat.$(OBJEXT)
-@GL_COND_OBJ_GETCWD_TRUE@am__objects_24 = libgnu_a-getcwd.$(OBJEXT)
-@GL_COND_OBJ_GETCWD_LGPL_TRUE@am__objects_25 =  \
+@GL_COND_OBJ_FLOAT_TRUE@am__objects_15 = libgnu_a-float.$(OBJEXT)
+@GL_COND_OBJ_ITOLD_TRUE@am__objects_16 = libgnu_a-itold.$(OBJEXT)
+@GL_COND_OBJ_FPURGE_TRUE@am__objects_17 = libgnu_a-fpurge.$(OBJEXT)
+@GL_COND_OBJ_FREE_TRUE@am__objects_18 = libgnu_a-free.$(OBJEXT)
+@GL_COND_OBJ_FSETERR_TRUE@am__objects_19 = libgnu_a-fseterr.$(OBJEXT)
+@GL_COND_OBJ_FSTAT_TRUE@am__objects_20 = libgnu_a-fstat.$(OBJEXT)
+@GL_COND_OBJ_FSTATAT_TRUE@am__objects_21 = libgnu_a-fstatat.$(OBJEXT)
+@GL_COND_OBJ_GETCWD_TRUE@am__objects_22 = libgnu_a-getcwd.$(OBJEXT)
+@GL_COND_OBJ_GETCWD_LGPL_TRUE@am__objects_23 =  \
 @GL_COND_OBJ_GETCWD_LGPL_TRUE@	libgnu_a-getcwd-lgpl.$(OBJEXT)
-@GL_COND_OBJ_GETDTABLESIZE_TRUE@am__objects_26 = libgnu_a-getdtablesize.$(OBJEXT)
-@GL_COND_OBJ_GETGROUPS_TRUE@am__objects_27 =  \
+@GL_COND_OBJ_GETDTABLESIZE_TRUE@am__objects_24 = libgnu_a-getdtablesize.$(OBJEXT)
+@GL_COND_OBJ_GETGROUPS_TRUE@am__objects_25 =  \
 @GL_COND_OBJ_GETGROUPS_TRUE@	libgnu_a-getgroups.$(OBJEXT)
-@GL_COND_OBJ_GETHOSTNAME_TRUE@am__objects_28 =  \
+@GL_COND_OBJ_GETHOSTNAME_TRUE@am__objects_26 =  \
 @GL_COND_OBJ_GETHOSTNAME_TRUE@	libgnu_a-gethostname.$(OBJEXT)
-@GL_COND_OBJ_GETLOGIN_R_TRUE@am__objects_29 =  \
+@GL_COND_OBJ_GETLOGIN_R_TRUE@am__objects_27 =  \
 @GL_COND_OBJ_GETLOGIN_R_TRUE@	libgnu_a-getlogin_r.$(OBJEXT)
-@GL_COND_OBJ_GETRANDOM_TRUE@am__objects_30 =  \
+@GL_COND_OBJ_GETRANDOM_TRUE@am__objects_28 =  \
 @GL_COND_OBJ_GETRANDOM_TRUE@	libgnu_a-getrandom.$(OBJEXT)
-@GL_COND_OBJ_GETTIMEOFDAY_TRUE@am__objects_31 = libgnu_a-gettimeofday.$(OBJEXT)
-@GL_COND_OBJ_GLOB_TRUE@am__objects_32 = libgnu_a-glob.$(OBJEXT) \
+@GL_COND_OBJ_GETTIMEOFDAY_TRUE@am__objects_29 = libgnu_a-gettimeofday.$(OBJEXT)
+@GL_COND_OBJ_GLOB_TRUE@am__objects_30 = libgnu_a-glob.$(OBJEXT) \
 @GL_COND_OBJ_GLOB_TRUE@	libgnu_a-globfree.$(OBJEXT)
-@GL_COND_OBJ_GLOB_PATTERN_P_TRUE@am__objects_33 = libgnu_a-glob_pattern_p.$(OBJEXT)
-@GL_COND_OBJ_GROUP_MEMBER_TRUE@am__objects_34 = libgnu_a-group-member.$(OBJEXT)
-@GL_COND_OBJ_INET_NTOP_TRUE@am__objects_35 =  \
+@GL_COND_OBJ_GLOB_PATTERN_P_TRUE@am__objects_31 = libgnu_a-glob_pattern_p.$(OBJEXT)
+@GL_COND_OBJ_GROUP_MEMBER_TRUE@am__objects_32 = libgnu_a-group-member.$(OBJEXT)
+@GL_COND_OBJ_INET_NTOP_TRUE@am__objects_33 =  \
 @GL_COND_OBJ_INET_NTOP_TRUE@	libgnu_a-inet_ntop.$(OBJEXT)
-@GL_COND_OBJ_ISBLANK_TRUE@am__objects_36 = libgnu_a-isblank.$(OBJEXT)
-@GL_COND_OBJ_ISWBLANK_TRUE@am__objects_37 =  \
+@GL_COND_OBJ_ISBLANK_TRUE@am__objects_34 = libgnu_a-isblank.$(OBJEXT)
+@GL_COND_OBJ_ISWBLANK_TRUE@am__objects_35 =  \
 @GL_COND_OBJ_ISWBLANK_TRUE@	libgnu_a-iswblank.$(OBJEXT)
-@GL_COND_OBJ_ISWDIGIT_TRUE@am__objects_38 =  \
+@GL_COND_OBJ_ISWDIGIT_TRUE@am__objects_36 =  \
 @GL_COND_OBJ_ISWDIGIT_TRUE@	libgnu_a-iswdigit.$(OBJEXT)
-@GL_COND_OBJ_ISWXDIGIT_TRUE@am__objects_39 =  \
+@GL_COND_OBJ_ISWXDIGIT_TRUE@am__objects_37 =  \
 @GL_COND_OBJ_ISWXDIGIT_TRUE@	libgnu_a-iswxdigit.$(OBJEXT)
-@GL_COND_OBJ_LDEXPL_TRUE@am__objects_40 = libgnu_a-ldexpl.$(OBJEXT)
-@GL_COND_OBJ_LOCALECONV_TRUE@am__objects_41 =  \
+@GL_COND_OBJ_LDEXPL_TRUE@am__objects_38 = libgnu_a-ldexpl.$(OBJEXT)
+@GL_COND_OBJ_LOCALECONV_TRUE@am__objects_39 =  \
 @GL_COND_OBJ_LOCALECONV_TRUE@	libgnu_a-localeconv.$(OBJEXT)
 am__dirstamp = $(am__leading_dot)dirstamp
-@GL_COND_OBJ_LSTAT_TRUE@am__objects_42 = libgnu_a-lstat.$(OBJEXT)
-@GL_COND_OBJ_MBRLEN_TRUE@am__objects_43 = libgnu_a-mbrlen.$(OBJEXT)
-@GL_COND_OBJ_MBRTOWC_TRUE@am__objects_44 = libgnu_a-mbrtowc.$(OBJEXT)
-@GL_COND_OBJ_MBSINIT_TRUE@am__objects_45 = libgnu_a-mbsinit.$(OBJEXT)
-@GL_COND_OBJ_MBSRTOWCS_TRUE@am__objects_46 =  \
+@GL_COND_OBJ_LSTAT_TRUE@am__objects_40 = libgnu_a-lstat.$(OBJEXT)
+@GL_COND_OBJ_MBRLEN_TRUE@am__objects_41 = libgnu_a-mbrlen.$(OBJEXT)
+@GL_COND_OBJ_MBRTOWC_TRUE@am__objects_42 = libgnu_a-mbrtowc.$(OBJEXT)
+@GL_COND_OBJ_MBSINIT_TRUE@am__objects_43 = libgnu_a-mbsinit.$(OBJEXT)
+@GL_COND_OBJ_MBSRTOWCS_TRUE@am__objects_44 =  \
 @GL_COND_OBJ_MBSRTOWCS_TRUE@	libgnu_a-mbsrtowcs.$(OBJEXT)
-@GL_COND_OBJ_MBTOWC_TRUE@am__objects_47 = libgnu_a-mbtowc.$(OBJEXT)
-@GL_COND_OBJ_MEMCHR_TRUE@am__objects_48 = libgnu_a-memchr.$(OBJEXT)
-@GL_COND_OBJ_MEMPCPY_TRUE@am__objects_49 = libgnu_a-mempcpy.$(OBJEXT)
-@GL_COND_OBJ_MEMRCHR_TRUE@am__objects_50 = libgnu_a-memrchr.$(OBJEXT)
-@GL_COND_OBJ_MKDIR_TRUE@am__objects_51 = libgnu_a-mkdir.$(OBJEXT)
-@GL_COND_OBJ_MKFIFO_TRUE@am__objects_52 = libgnu_a-mkfifo.$(OBJEXT)
-@GL_COND_OBJ_MKNOD_TRUE@am__objects_53 = libgnu_a-mknod.$(OBJEXT)
-@GL_COND_OBJ_MSVC_INVAL_TRUE@am__objects_54 =  \
+@GL_COND_OBJ_MBTOWC_TRUE@am__objects_45 = libgnu_a-mbtowc.$(OBJEXT)
+@GL_COND_OBJ_MEMCHR_TRUE@am__objects_46 = libgnu_a-memchr.$(OBJEXT)
+@GL_COND_OBJ_MEMPCPY_TRUE@am__objects_47 = libgnu_a-mempcpy.$(OBJEXT)
+@GL_COND_OBJ_MEMRCHR_TRUE@am__objects_48 = libgnu_a-memrchr.$(OBJEXT)
+@GL_COND_OBJ_MKDIR_TRUE@am__objects_49 = libgnu_a-mkdir.$(OBJEXT)
+@GL_COND_OBJ_MKFIFO_TRUE@am__objects_50 = libgnu_a-mkfifo.$(OBJEXT)
+@GL_COND_OBJ_MKNOD_TRUE@am__objects_51 = libgnu_a-mknod.$(OBJEXT)
+@GL_COND_OBJ_MSVC_INVAL_TRUE@am__objects_52 =  \
 @GL_COND_OBJ_MSVC_INVAL_TRUE@	libgnu_a-msvc-inval.$(OBJEXT)
-@GL_COND_OBJ_MSVC_NOTHROW_TRUE@am__objects_55 = libgnu_a-msvc-nothrow.$(OBJEXT)
-@GL_COND_OBJ_NL_LANGINFO_TRUE@am__objects_56 =  \
+@GL_COND_OBJ_MSVC_NOTHROW_TRUE@am__objects_53 = libgnu_a-msvc-nothrow.$(OBJEXT)
+@GL_COND_OBJ_NL_LANGINFO_TRUE@am__objects_54 =  \
 @GL_COND_OBJ_NL_LANGINFO_TRUE@	libgnu_a-nl_langinfo.$(OBJEXT)
-@GL_COND_OBJ_NL_LANGINFO_LOCK_TRUE@am__objects_57 = libgnu_a-nl_langinfo-lock.$(OBJEXT)
-@GL_COND_OBJ_OPEN_TRUE@am__objects_58 = libgnu_a-open.$(OBJEXT)
-@GL_COND_OBJ_OPENAT_TRUE@am__objects_59 = libgnu_a-openat.$(OBJEXT)
-@GL_COND_OBJ_OPENDIR_TRUE@am__objects_60 = libgnu_a-opendir.$(OBJEXT)
-@GL_COND_OBJ_PIPE_TRUE@am__objects_61 = libgnu_a-pipe.$(OBJEXT)
-@GL_COND_OBJ_SPAWN_TRUE@am__objects_62 = libgnu_a-spawn.$(OBJEXT)
-@GL_COND_OBJ_SPAWNI_TRUE@am__objects_63 = libgnu_a-spawni.$(OBJEXT)
-@GL_COND_OBJ_SPAWN_FACTION_ADDCHDIR_TRUE@am__objects_64 = libgnu_a-spawn_faction_addchdir.$(OBJEXT)
-@GL_COND_OBJ_SPAWN_FACTION_ADDOPEN_TRUE@am__objects_65 = libgnu_a-spawn_faction_addopen.$(OBJEXT)
-@GL_COND_OBJ_SPAWN_FACTION_DESTROY_TRUE@am__objects_66 = libgnu_a-spawn_faction_destroy.$(OBJEXT)
-@GL_COND_OBJ_SPAWN_FACTION_INIT_TRUE@am__objects_67 = libgnu_a-spawn_faction_init.$(OBJEXT)
-@GL_COND_OBJ_SPAWNATTR_DESTROY_TRUE@am__objects_68 = libgnu_a-spawnattr_destroy.$(OBJEXT)
-@GL_COND_OBJ_SPAWNATTR_INIT_TRUE@am__objects_69 = libgnu_a-spawnattr_init.$(OBJEXT)
-@GL_COND_OBJ_SPAWNATTR_SETFLAGS_TRUE@am__objects_70 = libgnu_a-spawnattr_setflags.$(OBJEXT)
-@GL_COND_OBJ_SPAWNATTR_SETSIGMASK_TRUE@am__objects_71 = libgnu_a-spawnattr_setsigmask.$(OBJEXT)
-@GL_COND_OBJ_SPAWNP_TRUE@am__objects_72 = libgnu_a-spawnp.$(OBJEXT)
-@GL_COND_OBJ_PSELECT_TRUE@am__objects_73 = libgnu_a-pselect.$(OBJEXT)
-@GL_COND_OBJ_PTHREAD_SIGMASK_TRUE@am__objects_74 = libgnu_a-pthread_sigmask.$(OBJEXT)
-@GL_COND_OBJ_RAISE_TRUE@am__objects_75 = libgnu_a-raise.$(OBJEXT)
-@GL_COND_OBJ_RANDOM_R_TRUE@am__objects_76 =  \
+@GL_COND_OBJ_NL_LANGINFO_LOCK_TRUE@am__objects_55 = libgnu_a-nl_langinfo-lock.$(OBJEXT)
+@GL_COND_OBJ_OPEN_TRUE@am__objects_56 = libgnu_a-open.$(OBJEXT)
+@GL_COND_OBJ_OPENAT_TRUE@am__objects_57 = libgnu_a-openat.$(OBJEXT)
+@GL_COND_OBJ_OPENDIR_TRUE@am__objects_58 = libgnu_a-opendir.$(OBJEXT)
+@GL_COND_OBJ_PIPE_TRUE@am__objects_59 = libgnu_a-pipe.$(OBJEXT)
+@GL_COND_OBJ_PSELECT_TRUE@am__objects_60 = libgnu_a-pselect.$(OBJEXT)
+@GL_COND_OBJ_PTHREAD_SIGMASK_TRUE@am__objects_61 = libgnu_a-pthread_sigmask.$(OBJEXT)
+@GL_COND_OBJ_RAISE_TRUE@am__objects_62 = libgnu_a-raise.$(OBJEXT)
+@GL_COND_OBJ_RANDOM_R_TRUE@am__objects_63 =  \
 @GL_COND_OBJ_RANDOM_R_TRUE@	libgnu_a-random_r.$(OBJEXT)
-@GL_COND_OBJ_RAWMEMCHR_TRUE@am__objects_77 =  \
+@GL_COND_OBJ_RAWMEMCHR_TRUE@am__objects_64 =  \
 @GL_COND_OBJ_RAWMEMCHR_TRUE@	libgnu_a-rawmemchr.$(OBJEXT)
-@GL_COND_OBJ_READ_TRUE@am__objects_78 = libgnu_a-read.$(OBJEXT)
-@GL_COND_OBJ_READDIR_TRUE@am__objects_79 = libgnu_a-readdir.$(OBJEXT)
-@GL_COND_OBJ_READLINK_TRUE@am__objects_80 =  \
+@GL_COND_OBJ_READ_TRUE@am__objects_65 = libgnu_a-read.$(OBJEXT)
+@GL_COND_OBJ_READDIR_TRUE@am__objects_66 = libgnu_a-readdir.$(OBJEXT)
+@GL_COND_OBJ_READLINK_TRUE@am__objects_67 =  \
 @GL_COND_OBJ_READLINK_TRUE@	libgnu_a-readlink.$(OBJEXT)
-@GL_COND_OBJ_REALLOCARRAY_TRUE@am__objects_81 = libgnu_a-reallocarray.$(OBJEXT)
-@GL_COND_OBJ_RENAME_TRUE@am__objects_82 = libgnu_a-rename.$(OBJEXT)
-@GL_COND_OBJ_REWINDDIR_TRUE@am__objects_83 =  \
+@GL_COND_OBJ_RENAME_TRUE@am__objects_68 = libgnu_a-rename.$(OBJEXT)
+@GL_COND_OBJ_REWINDDIR_TRUE@am__objects_69 =  \
 @GL_COND_OBJ_REWINDDIR_TRUE@	libgnu_a-rewinddir.$(OBJEXT)
-@GL_COND_OBJ_RMDIR_TRUE@am__objects_84 = libgnu_a-rmdir.$(OBJEXT)
-@GL_COND_OBJ_SECURE_GETENV_TRUE@am__objects_85 = libgnu_a-secure_getenv.$(OBJEXT)
-@GL_COND_OBJ_SELECT_TRUE@am__objects_86 = libgnu_a-select.$(OBJEXT)
-@GL_COND_OBJ_SETLOCALE_TRUE@am__objects_87 =  \
+@GL_COND_OBJ_RMDIR_TRUE@am__objects_70 = libgnu_a-rmdir.$(OBJEXT)
+@GL_COND_OBJ_SECURE_GETENV_TRUE@am__objects_71 = libgnu_a-secure_getenv.$(OBJEXT)
+@GL_COND_OBJ_SELECT_TRUE@am__objects_72 = libgnu_a-select.$(OBJEXT)
+@GL_COND_OBJ_SETLOCALE_TRUE@am__objects_73 =  \
 @GL_COND_OBJ_SETLOCALE_TRUE@	libgnu_a-setlocale.$(OBJEXT)
-@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__objects_88 = libgnu_a-setlocale-lock.$(OBJEXT)
-@GL_COND_OBJ_SIGACTION_TRUE@am__objects_89 =  \
-@GL_COND_OBJ_SIGACTION_TRUE@	libgnu_a-sigaction.$(OBJEXT)
-@GL_COND_OBJ_SIGNBIT3_TRUE@am__objects_90 =  \
+@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__objects_74 = libgnu_a-setlocale-lock.$(OBJEXT)
+@GL_COND_OBJ_SIGNBIT3_TRUE@am__objects_75 =  \
 @GL_COND_OBJ_SIGNBIT3_TRUE@	libgnu_a-signbitf.$(OBJEXT) \
 @GL_COND_OBJ_SIGNBIT3_TRUE@	libgnu_a-signbitd.$(OBJEXT) \
 @GL_COND_OBJ_SIGNBIT3_TRUE@	libgnu_a-signbitl.$(OBJEXT)
-@GL_COND_OBJ_SIGPROCMASK_TRUE@am__objects_91 =  \
+@GL_COND_OBJ_SIGPROCMASK_TRUE@am__objects_76 =  \
 @GL_COND_OBJ_SIGPROCMASK_TRUE@	libgnu_a-sigprocmask.$(OBJEXT)
-@GL_COND_OBJ_STAT_TRUE@am__objects_92 = libgnu_a-stat.$(OBJEXT)
-@GL_COND_OBJ_STDIO_READ_TRUE@am__objects_93 =  \
+@GL_COND_OBJ_STAT_TRUE@am__objects_77 = libgnu_a-stat.$(OBJEXT)
+@GL_COND_OBJ_STDIO_READ_TRUE@am__objects_78 =  \
 @GL_COND_OBJ_STDIO_READ_TRUE@	libgnu_a-stdio-read.$(OBJEXT)
-@GL_COND_OBJ_STDIO_WRITE_TRUE@am__objects_94 =  \
+@GL_COND_OBJ_STDIO_WRITE_TRUE@am__objects_79 =  \
 @GL_COND_OBJ_STDIO_WRITE_TRUE@	libgnu_a-stdio-write.$(OBJEXT)
-@GL_COND_OBJ_STPCPY_TRUE@am__objects_95 = libgnu_a-stpcpy.$(OBJEXT)
-@GL_COND_OBJ_STRCASECMP_TRUE@am__objects_96 =  \
+@GL_COND_OBJ_STRCASECMP_TRUE@am__objects_80 =  \
 @GL_COND_OBJ_STRCASECMP_TRUE@	libgnu_a-strcasecmp.$(OBJEXT)
-@GL_COND_OBJ_STRNCASECMP_TRUE@am__objects_97 =  \
+@GL_COND_OBJ_STRNCASECMP_TRUE@am__objects_81 =  \
 @GL_COND_OBJ_STRNCASECMP_TRUE@	libgnu_a-strncasecmp.$(OBJEXT)
-@GL_COND_OBJ_STRCHRNUL_TRUE@am__objects_98 =  \
+@GL_COND_OBJ_STRCHRNUL_TRUE@am__objects_82 =  \
 @GL_COND_OBJ_STRCHRNUL_TRUE@	libgnu_a-strchrnul.$(OBJEXT)
-@GL_COND_OBJ_STRDUP_TRUE@am__objects_99 = libgnu_a-strdup.$(OBJEXT)
-@GL_COND_OBJ_STRERROR_TRUE@am__objects_100 =  \
+@GL_COND_OBJ_STRDUP_TRUE@am__objects_83 = libgnu_a-strdup.$(OBJEXT)
+@GL_COND_OBJ_STRERROR_TRUE@am__objects_84 =  \
 @GL_COND_OBJ_STRERROR_TRUE@	libgnu_a-strerror.$(OBJEXT)
-@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__objects_101 = libgnu_a-strerror-override.$(OBJEXT)
-@GL_COND_OBJ_STRNLEN_TRUE@am__objects_102 =  \
-@GL_COND_OBJ_STRNLEN_TRUE@	libgnu_a-strnlen.$(OBJEXT)
-@GL_COND_OBJ_STRSIGNAL_TRUE@am__objects_103 =  \
+@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__objects_85 = libgnu_a-strerror-override.$(OBJEXT)
+@GL_COND_OBJ_STRNLEN_TRUE@am__objects_86 = libgnu_a-strnlen.$(OBJEXT)
+@GL_COND_OBJ_STRSIGNAL_TRUE@am__objects_87 =  \
 @GL_COND_OBJ_STRSIGNAL_TRUE@	libgnu_a-strsignal.$(OBJEXT)
-@GL_COND_OBJ_STRTOIMAX_TRUE@am__objects_104 =  \
+@GL_COND_OBJ_STRTOIMAX_TRUE@am__objects_88 =  \
 @GL_COND_OBJ_STRTOIMAX_TRUE@	libgnu_a-strtoimax.$(OBJEXT)
-@GL_COND_OBJ_STRTOLL_TRUE@am__objects_105 =  \
-@GL_COND_OBJ_STRTOLL_TRUE@	libgnu_a-strtoll.$(OBJEXT)
-@GL_COND_OBJ_STRTOULL_TRUE@am__objects_106 =  \
+@GL_COND_OBJ_STRTOLL_TRUE@am__objects_89 = libgnu_a-strtoll.$(OBJEXT)
+@GL_COND_OBJ_STRTOULL_TRUE@am__objects_90 =  \
 @GL_COND_OBJ_STRTOULL_TRUE@	libgnu_a-strtoull.$(OBJEXT)
-@GL_COND_OBJ_STRTOUMAX_TRUE@am__objects_107 =  \
+@GL_COND_OBJ_STRTOUMAX_TRUE@am__objects_91 =  \
 @GL_COND_OBJ_STRTOUMAX_TRUE@	libgnu_a-strtoumax.$(OBJEXT)
-@GL_COND_OBJ_TIME_R_TRUE@am__objects_108 = libgnu_a-time_r.$(OBJEXT)
-@GL_COND_OBJ_TIMES_TRUE@am__objects_109 = libgnu_a-times.$(OBJEXT)
-@GL_COND_OBJ_TMPFILE_TRUE@am__objects_110 =  \
-@GL_COND_OBJ_TMPFILE_TRUE@	libgnu_a-tmpfile.$(OBJEXT)
-@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__objects_111 = uniwidth/libgnu_a-width.$(OBJEXT)
-@GL_COND_OBJ_WAITPID_TRUE@am__objects_112 =  \
-@GL_COND_OBJ_WAITPID_TRUE@	libgnu_a-waitpid.$(OBJEXT)
-@GL_COND_OBJ_WCSWIDTH_TRUE@am__objects_113 =  \
+@GL_COND_OBJ_TIME_R_TRUE@am__objects_92 = libgnu_a-time_r.$(OBJEXT)
+@GL_COND_OBJ_TIMES_TRUE@am__objects_93 = libgnu_a-times.$(OBJEXT)
+@GL_COND_OBJ_TMPFILE_TRUE@am__objects_94 = libgnu_a-tmpfile.$(OBJEXT)
+@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__objects_95 = uniwidth/libgnu_a-width.$(OBJEXT)
+@GL_COND_OBJ_WAITPID_TRUE@am__objects_96 = libgnu_a-waitpid.$(OBJEXT)
+@GL_COND_OBJ_WCSWIDTH_TRUE@am__objects_97 =  \
 @GL_COND_OBJ_WCSWIDTH_TRUE@	libgnu_a-wcswidth.$(OBJEXT)
-@GL_COND_OBJ_WCWIDTH_TRUE@am__objects_114 =  \
-@GL_COND_OBJ_WCWIDTH_TRUE@	libgnu_a-wcwidth.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__objects_115 = libgnu_a-windows-mutex.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__objects_116 = libgnu_a-windows-once.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__objects_117 = libgnu_a-windows-recmutex.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__objects_118 = libgnu_a-windows-rwlock.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_SPAWN_TRUE@am__objects_119 = libgnu_a-windows-spawn.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__objects_120 =  \
+@GL_COND_OBJ_WCWIDTH_TRUE@am__objects_98 = libgnu_a-wcwidth.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__objects_99 = libgnu_a-windows-mutex.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__objects_100 = libgnu_a-windows-once.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__objects_101 = libgnu_a-windows-recmutex.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__objects_102 = libgnu_a-windows-rwlock.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__objects_103 =  \
 @GL_COND_OBJ_WINDOWS_TLS_TRUE@	libgnu_a-windows-tls.$(OBJEXT)
-@GL_COND_OBJ_WMEMCHR_TRUE@am__objects_121 =  \
+@GL_COND_OBJ_WMEMCHR_TRUE@am__objects_104 =  \
 @GL_COND_OBJ_WMEMCHR_TRUE@	libgnu_a-wmemchr.$(OBJEXT)
-@GL_COND_OBJ_WMEMPCPY_TRUE@am__objects_122 =  \
+@GL_COND_OBJ_WMEMPCPY_TRUE@am__objects_105 =  \
 @GL_COND_OBJ_WMEMPCPY_TRUE@	libgnu_a-wmempcpy.$(OBJEXT)
-@GL_COND_OBJ_WRITE_TRUE@am__objects_123 = libgnu_a-write.$(OBJEXT)
-am_libgnu_a_OBJECTS = $(am__objects_1) libgnu_a-openat-proc.$(OBJEXT) \
-	libgnu_a-basename-lgpl.$(OBJEXT) libgnu_a-bitrotate.$(OBJEXT) \
-	$(am__objects_2) libgnu_a-c-ctype.$(OBJEXT) \
-	libgnu_a-canonicalize.$(OBJEXT) $(am__objects_3) \
-	$(am__objects_4) libgnu_a-cloexec.$(OBJEXT) $(am__objects_5) \
-	$(am__objects_6) libgnu_a-concat-filename.$(OBJEXT) \
-	$(am__objects_7) $(am__objects_8) \
-	libgnu_a-dirname-lgpl.$(OBJEXT) libgnu_a-stripslash.$(OBJEXT) \
-	$(am__objects_9) $(am__objects_10) $(am__objects_11) \
-	$(am__objects_12) libgnu_a-execute.$(OBJEXT) \
-	libgnu_a-exitfail.$(OBJEXT) $(am__objects_13) \
-	libgnu_a-fatal-signal.$(OBJEXT) $(am__objects_14) \
-	$(am__objects_15) libgnu_a-fd-hook.$(OBJEXT) \
+@GL_COND_OBJ_WRITE_TRUE@am__objects_106 = libgnu_a-write.$(OBJEXT)
+am_libgnu_a_OBJECTS = libgnu_a-openat-proc.$(OBJEXT) \
+	libgnu_a-basename-lgpl.$(OBJEXT) $(am__objects_1) \
+	libgnu_a-c-ctype.$(OBJEXT) $(am__objects_2) $(am__objects_3) \
+	libgnu_a-cloexec.$(OBJEXT) $(am__objects_4) $(am__objects_5) \
+	$(am__objects_6) libgnu_a-dirname-lgpl.$(OBJEXT) \
+	libgnu_a-stripslash.$(OBJEXT) $(am__objects_7) \
+	$(am__objects_8) $(am__objects_9) $(am__objects_10) \
+	libgnu_a-exitfail.$(OBJEXT) $(am__objects_11) \
+	$(am__objects_12) $(am__objects_13) libgnu_a-fd-hook.$(OBJEXT) \
 	libgnu_a-fd-safer-flag.$(OBJEXT) \
-	libgnu_a-dup-safer-flag.$(OBJEXT) $(am__objects_16) \
-	libgnu_a-file-set.$(OBJEXT) \
-	libgnu_a-filenamecat-lgpl.$(OBJEXT) \
-	libgnu_a-findprog-in.$(OBJEXT) $(am__objects_17) \
-	$(am__objects_18) $(am__objects_19) $(am__objects_20) \
-	$(am__objects_21) $(am__objects_22) $(am__objects_23) \
+	libgnu_a-dup-safer-flag.$(OBJEXT) $(am__objects_14) \
+	libgnu_a-filenamecat-lgpl.$(OBJEXT) $(am__objects_15) \
+	$(am__objects_16) $(am__objects_17) $(am__objects_18) \
+	$(am__objects_19) $(am__objects_20) $(am__objects_21) \
 	libgnu_a-full-read.$(OBJEXT) libgnu_a-full-write.$(OBJEXT) \
-	$(am__objects_24) $(am__objects_25) $(am__objects_26) \
-	$(am__objects_27) $(am__objects_28) $(am__objects_29) \
-	libgnu_a-getprogname.$(OBJEXT) $(am__objects_30) \
-	$(am__objects_31) $(am__objects_32) $(am__objects_33) \
-	$(am__objects_34) libgnu_a-hard-locale.$(OBJEXT) \
-	libgnu_a-hash.$(OBJEXT) libgnu_a-hash-pjw.$(OBJEXT) \
-	libgnu_a-hash-triple-simple.$(OBJEXT) \
-	libgnu_a-ialloc.$(OBJEXT) $(am__objects_35) $(am__objects_36) \
-	$(am__objects_37) $(am__objects_38) $(am__objects_39) \
-	$(am__objects_40) libgnu_a-localcharset.$(OBJEXT) \
-	$(am__objects_41) libgnu_a-localename.$(OBJEXT) \
+	$(am__objects_22) $(am__objects_23) $(am__objects_24) \
+	$(am__objects_25) $(am__objects_26) $(am__objects_27) \
+	libgnu_a-getprogname.$(OBJEXT) $(am__objects_28) \
+	$(am__objects_29) $(am__objects_30) $(am__objects_31) \
+	$(am__objects_32) libgnu_a-hard-locale.$(OBJEXT) \
+	$(am__objects_33) $(am__objects_34) $(am__objects_35) \
+	$(am__objects_36) $(am__objects_37) $(am__objects_38) \
+	libgnu_a-localcharset.$(OBJEXT) $(am__objects_39) \
+	libgnu_a-localename.$(OBJEXT) \
 	libgnu_a-localename-table.$(OBJEXT) \
-	glthread/libgnu_a-lock.$(OBJEXT) $(am__objects_42) \
+	glthread/libgnu_a-lock.$(OBJEXT) $(am__objects_40) \
 	libgnu_a-malloca.$(OBJEXT) libgnu_a-math.$(OBJEXT) \
-	libgnu_a-mbchar.$(OBJEXT) $(am__objects_43) $(am__objects_44) \
-	libgnu_a-mbschr.$(OBJEXT) $(am__objects_45) $(am__objects_46) \
-	$(am__objects_47) libgnu_a-mbuiter.$(OBJEXT) $(am__objects_48) \
-	$(am__objects_49) $(am__objects_50) $(am__objects_51) \
-	$(am__objects_52) $(am__objects_53) $(am__objects_54) \
-	$(am__objects_55) $(am__objects_56) $(am__objects_57) \
-	$(am__objects_58) $(am__objects_59) \
-	libgnu_a-openat-die.$(OBJEXT) $(am__objects_60) \
+	libgnu_a-mbchar.$(OBJEXT) $(am__objects_41) $(am__objects_42) \
+	libgnu_a-mbschr.$(OBJEXT) $(am__objects_43) $(am__objects_44) \
+	$(am__objects_45) libgnu_a-mbuiter.$(OBJEXT) $(am__objects_46) \
+	$(am__objects_47) $(am__objects_48) $(am__objects_49) \
+	$(am__objects_50) $(am__objects_51) $(am__objects_52) \
+	$(am__objects_53) $(am__objects_54) $(am__objects_55) \
+	$(am__objects_56) $(am__objects_57) \
+	libgnu_a-openat-die.$(OBJEXT) $(am__objects_58) \
+	$(am__objects_59) libgnu_a-printf-frexp.$(OBJEXT) \
+	libgnu_a-printf-frexpl.$(OBJEXT) $(am__objects_60) \
 	$(am__objects_61) $(am__objects_62) $(am__objects_63) \
 	$(am__objects_64) $(am__objects_65) $(am__objects_66) \
 	$(am__objects_67) $(am__objects_68) $(am__objects_69) \
-	$(am__objects_70) $(am__objects_71) $(am__objects_72) \
-	libgnu_a-printf-frexp.$(OBJEXT) \
-	libgnu_a-printf-frexpl.$(OBJEXT) $(am__objects_73) \
-	$(am__objects_74) $(am__objects_75) $(am__objects_76) \
-	$(am__objects_77) $(am__objects_78) $(am__objects_79) \
-	$(am__objects_80) $(am__objects_81) $(am__objects_82) \
-	$(am__objects_83) $(am__objects_84) \
-	libgnu_a-safe-read.$(OBJEXT) libgnu_a-safe-write.$(OBJEXT) \
-	libgnu_a-save-cwd.$(OBJEXT) \
+	$(am__objects_70) libgnu_a-safe-read.$(OBJEXT) \
+	libgnu_a-safe-write.$(OBJEXT) libgnu_a-save-cwd.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_dupfree.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_grow.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_grow_preserve.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_set_array_size.$(OBJEXT) \
-	$(am__objects_85) $(am__objects_86) $(am__objects_87) \
-	libgnu_a-setlocale_null.$(OBJEXT) $(am__objects_88) \
-	$(am__objects_89) libgnu_a-sig-handler.$(OBJEXT) \
-	$(am__objects_90) $(am__objects_91) libgnu_a-sockets.$(OBJEXT) \
-	$(am__objects_92) libgnu_a-stat-time.$(OBJEXT) \
-	$(am__objects_93) $(am__objects_94) $(am__objects_95) \
-	$(am__objects_96) $(am__objects_97) $(am__objects_98) \
-	$(am__objects_99) $(am__objects_100) $(am__objects_101) \
-	$(am__objects_102) libgnu_a-strnlen1.$(OBJEXT) \
-	$(am__objects_103) $(am__objects_104) $(am__objects_105) \
-	$(am__objects_106) $(am__objects_107) \
-	libgnu_a-sys_socket.$(OBJEXT) libgnu_a-tempname.$(OBJEXT) \
-	glthread/libgnu_a-threadlib.$(OBJEXT) $(am__objects_108) \
-	$(am__objects_109) libgnu_a-timespec.$(OBJEXT) \
+	$(am__objects_71) $(am__objects_72) $(am__objects_73) \
+	libgnu_a-setlocale_null.$(OBJEXT) $(am__objects_74) \
+	$(am__objects_75) $(am__objects_76) libgnu_a-sockets.$(OBJEXT) \
+	$(am__objects_77) libgnu_a-stat-time.$(OBJEXT) \
+	$(am__objects_78) $(am__objects_79) $(am__objects_80) \
+	$(am__objects_81) $(am__objects_82) $(am__objects_83) \
+	$(am__objects_84) $(am__objects_85) $(am__objects_86) \
+	libgnu_a-strnlen1.$(OBJEXT) $(am__objects_87) \
+	$(am__objects_88) $(am__objects_89) $(am__objects_90) \
+	$(am__objects_91) libgnu_a-sys_socket.$(OBJEXT) \
+	libgnu_a-tempname.$(OBJEXT) \
+	glthread/libgnu_a-threadlib.$(OBJEXT) $(am__objects_92) \
+	$(am__objects_93) libgnu_a-timespec.$(OBJEXT) \
 	glthread/libgnu_a-tls.$(OBJEXT) libgnu_a-tmpdir.$(OBJEXT) \
-	$(am__objects_110) libgnu_a-unistd.$(OBJEXT) \
+	$(am__objects_94) libgnu_a-unistd.$(OBJEXT) \
 	libgnu_a-dup-safer.$(OBJEXT) libgnu_a-fd-safer.$(OBJEXT) \
-	libgnu_a-pipe-safer.$(OBJEXT) $(am__objects_111) \
-	libgnu_a-wait-process.$(OBJEXT) $(am__objects_112) \
-	$(am__objects_113) libgnu_a-wctype-h.$(OBJEXT) \
-	$(am__objects_114) $(am__objects_115) $(am__objects_116) \
-	$(am__objects_117) $(am__objects_118) $(am__objects_119) \
-	$(am__objects_120) $(am__objects_121) $(am__objects_122) \
-	$(am__objects_123) libgnu_a-xmalloc.$(OBJEXT) \
-	libgnu_a-xalloc-die.$(OBJEXT) libgnu_a-xsize.$(OBJEXT)
+	libgnu_a-pipe-safer.$(OBJEXT) $(am__objects_95) \
+	$(am__objects_96) $(am__objects_97) \
+	libgnu_a-wctype-h.$(OBJEXT) $(am__objects_98) \
+	$(am__objects_99) $(am__objects_100) $(am__objects_101) \
+	$(am__objects_102) $(am__objects_103) $(am__objects_104) \
+	$(am__objects_105) $(am__objects_106) libgnu_a-xsize.$(OBJEXT)
 libgnu_a_OBJECTS = $(am_libgnu_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -781,38 +701,29 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/support/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
-	./$(DEPDIR)/libgnu_a-access.Po ./$(DEPDIR)/libgnu_a-alloca.Po \
+	./$(DEPDIR)/libgnu_a-alloca.Po \
 	./$(DEPDIR)/libgnu_a-asnprintf.Po \
 	./$(DEPDIR)/libgnu_a-at-func.Po \
 	./$(DEPDIR)/libgnu_a-basename-lgpl.Po \
-	./$(DEPDIR)/libgnu_a-bitrotate.Po \
 	./$(DEPDIR)/libgnu_a-btowc.Po ./$(DEPDIR)/libgnu_a-c-ctype.Po \
-	./$(DEPDIR)/libgnu_a-calloc.Po \
 	./$(DEPDIR)/libgnu_a-canonicalize-lgpl.Po \
-	./$(DEPDIR)/libgnu_a-canonicalize.Po \
 	./$(DEPDIR)/libgnu_a-chdir-long.Po \
 	./$(DEPDIR)/libgnu_a-cloexec.Po ./$(DEPDIR)/libgnu_a-close.Po \
-	./$(DEPDIR)/libgnu_a-closedir.Po \
-	./$(DEPDIR)/libgnu_a-concat-filename.Po \
-	./$(DEPDIR)/libgnu_a-copysign.Po ./$(DEPDIR)/libgnu_a-dirfd.Po \
+	./$(DEPDIR)/libgnu_a-closedir.Po ./$(DEPDIR)/libgnu_a-dirfd.Po \
 	./$(DEPDIR)/libgnu_a-dirname-lgpl.Po \
 	./$(DEPDIR)/libgnu_a-dprintf.Po \
 	./$(DEPDIR)/libgnu_a-dup-safer-flag.Po \
 	./$(DEPDIR)/libgnu_a-dup-safer.Po ./$(DEPDIR)/libgnu_a-dup.Po \
 	./$(DEPDIR)/libgnu_a-dup2.Po ./$(DEPDIR)/libgnu_a-error.Po \
 	./$(DEPDIR)/libgnu_a-euidaccess.Po \
-	./$(DEPDIR)/libgnu_a-execute.Po \
 	./$(DEPDIR)/libgnu_a-exitfail.Po \
 	./$(DEPDIR)/libgnu_a-faccessat.Po \
-	./$(DEPDIR)/libgnu_a-fatal-signal.Po \
 	./$(DEPDIR)/libgnu_a-fchdir.Po ./$(DEPDIR)/libgnu_a-fcntl.Po \
 	./$(DEPDIR)/libgnu_a-fd-hook.Po \
 	./$(DEPDIR)/libgnu_a-fd-safer-flag.Po \
 	./$(DEPDIR)/libgnu_a-fd-safer.Po \
 	./$(DEPDIR)/libgnu_a-fdopendir.Po \
-	./$(DEPDIR)/libgnu_a-file-set.Po \
 	./$(DEPDIR)/libgnu_a-filenamecat-lgpl.Po \
-	./$(DEPDIR)/libgnu_a-findprog-in.Po \
 	./$(DEPDIR)/libgnu_a-float.Po ./$(DEPDIR)/libgnu_a-fnmatch.Po \
 	./$(DEPDIR)/libgnu_a-fnmatch_loop.Po \
 	./$(DEPDIR)/libgnu_a-fpurge.Po ./$(DEPDIR)/libgnu_a-free.Po \
@@ -835,9 +746,6 @@ am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
 	./$(DEPDIR)/libgnu_a-globfree.Po \
 	./$(DEPDIR)/libgnu_a-group-member.Po \
 	./$(DEPDIR)/libgnu_a-hard-locale.Po \
-	./$(DEPDIR)/libgnu_a-hash-pjw.Po \
-	./$(DEPDIR)/libgnu_a-hash-triple-simple.Po \
-	./$(DEPDIR)/libgnu_a-hash.Po ./$(DEPDIR)/libgnu_a-ialloc.Po \
 	./$(DEPDIR)/libgnu_a-inet_ntop.Po \
 	./$(DEPDIR)/libgnu_a-isblank.Po ./$(DEPDIR)/libgnu_a-isnan.Po \
 	./$(DEPDIR)/libgnu_a-isnand.Po ./$(DEPDIR)/libgnu_a-isnanf.Po \
@@ -885,9 +793,7 @@ am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
 	./$(DEPDIR)/libgnu_a-rawmemchr.Po ./$(DEPDIR)/libgnu_a-read.Po \
 	./$(DEPDIR)/libgnu_a-readdir.Po \
 	./$(DEPDIR)/libgnu_a-readlink.Po \
-	./$(DEPDIR)/libgnu_a-realloc.Po \
-	./$(DEPDIR)/libgnu_a-reallocarray.Po \
-	./$(DEPDIR)/libgnu_a-rename.Po \
+	./$(DEPDIR)/libgnu_a-realloc.Po ./$(DEPDIR)/libgnu_a-rename.Po \
 	./$(DEPDIR)/libgnu_a-rewinddir.Po \
 	./$(DEPDIR)/libgnu_a-rmdir.Po \
 	./$(DEPDIR)/libgnu_a-safe-read.Po \
@@ -898,29 +804,17 @@ am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
 	./$(DEPDIR)/libgnu_a-setlocale-lock.Po \
 	./$(DEPDIR)/libgnu_a-setlocale.Po \
 	./$(DEPDIR)/libgnu_a-setlocale_null.Po \
-	./$(DEPDIR)/libgnu_a-sig-handler.Po \
-	./$(DEPDIR)/libgnu_a-sigaction.Po \
 	./$(DEPDIR)/libgnu_a-signbitd.Po \
 	./$(DEPDIR)/libgnu_a-signbitf.Po \
 	./$(DEPDIR)/libgnu_a-signbitl.Po \
 	./$(DEPDIR)/libgnu_a-sigprocmask.Po \
 	./$(DEPDIR)/libgnu_a-snprintf.Po \
-	./$(DEPDIR)/libgnu_a-sockets.Po ./$(DEPDIR)/libgnu_a-spawn.Po \
-	./$(DEPDIR)/libgnu_a-spawn_faction_addchdir.Po \
-	./$(DEPDIR)/libgnu_a-spawn_faction_addopen.Po \
-	./$(DEPDIR)/libgnu_a-spawn_faction_destroy.Po \
-	./$(DEPDIR)/libgnu_a-spawn_faction_init.Po \
-	./$(DEPDIR)/libgnu_a-spawnattr_destroy.Po \
-	./$(DEPDIR)/libgnu_a-spawnattr_init.Po \
-	./$(DEPDIR)/libgnu_a-spawnattr_setflags.Po \
-	./$(DEPDIR)/libgnu_a-spawnattr_setsigmask.Po \
-	./$(DEPDIR)/libgnu_a-spawni.Po ./$(DEPDIR)/libgnu_a-spawnp.Po \
+	./$(DEPDIR)/libgnu_a-sockets.Po \
 	./$(DEPDIR)/libgnu_a-sprintf.Po \
 	./$(DEPDIR)/libgnu_a-stat-time.Po \
 	./$(DEPDIR)/libgnu_a-stat-w32.Po ./$(DEPDIR)/libgnu_a-stat.Po \
 	./$(DEPDIR)/libgnu_a-stdio-read.Po \
 	./$(DEPDIR)/libgnu_a-stdio-write.Po \
-	./$(DEPDIR)/libgnu_a-stpcpy.Po \
 	./$(DEPDIR)/libgnu_a-strcasecmp.Po \
 	./$(DEPDIR)/libgnu_a-strcasestr.Po \
 	./$(DEPDIR)/libgnu_a-strchrnul.Po \
@@ -947,7 +841,6 @@ am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
 	./$(DEPDIR)/libgnu_a-vasnprintf.Po \
 	./$(DEPDIR)/libgnu_a-vfprintf.Po \
 	./$(DEPDIR)/libgnu_a-vprintf.Po \
-	./$(DEPDIR)/libgnu_a-wait-process.Po \
 	./$(DEPDIR)/libgnu_a-waitpid.Po \
 	./$(DEPDIR)/libgnu_a-wcswidth.Po \
 	./$(DEPDIR)/libgnu_a-wctype-h.Po \
@@ -956,12 +849,10 @@ am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
 	./$(DEPDIR)/libgnu_a-windows-once.Po \
 	./$(DEPDIR)/libgnu_a-windows-recmutex.Po \
 	./$(DEPDIR)/libgnu_a-windows-rwlock.Po \
-	./$(DEPDIR)/libgnu_a-windows-spawn.Po \
 	./$(DEPDIR)/libgnu_a-windows-tls.Po \
 	./$(DEPDIR)/libgnu_a-wmemchr.Po \
 	./$(DEPDIR)/libgnu_a-wmempcpy.Po ./$(DEPDIR)/libgnu_a-write.Po \
-	./$(DEPDIR)/libgnu_a-xalloc-die.Po \
-	./$(DEPDIR)/libgnu_a-xmalloc.Po ./$(DEPDIR)/libgnu_a-xsize.Po \
+	./$(DEPDIR)/libgnu_a-xsize.Po \
 	glthread/$(DEPDIR)/libgnu_a-lock.Po \
 	glthread/$(DEPDIR)/libgnu_a-threadlib.Po \
 	glthread/$(DEPDIR)/libgnu_a-tls.Po \
@@ -1086,7 +977,6 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CFLAG_VISIBILITY = @CFLAG_VISIBILITY@
-COPYSIGN_LIBM = @COPYSIGN_LIBM@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CPPFLAGS_FOR_BUILD = @CPPFLAGS_FOR_BUILD@
@@ -1421,29 +1311,6 @@ GL_GNULIB_PIPE2 = @GL_GNULIB_PIPE2@
 GL_GNULIB_POPEN = @GL_GNULIB_POPEN@
 GL_GNULIB_POSIX_MEMALIGN = @GL_GNULIB_POSIX_MEMALIGN@
 GL_GNULIB_POSIX_OPENPT = @GL_GNULIB_POSIX_OPENPT@
-GL_GNULIB_POSIX_SPAWN = @GL_GNULIB_POSIX_SPAWN@
-GL_GNULIB_POSIX_SPAWNATTR_DESTROY = @GL_GNULIB_POSIX_SPAWNATTR_DESTROY@
-GL_GNULIB_POSIX_SPAWNATTR_GETFLAGS = @GL_GNULIB_POSIX_SPAWNATTR_GETFLAGS@
-GL_GNULIB_POSIX_SPAWNATTR_GETPGROUP = @GL_GNULIB_POSIX_SPAWNATTR_GETPGROUP@
-GL_GNULIB_POSIX_SPAWNATTR_GETSCHEDPARAM = @GL_GNULIB_POSIX_SPAWNATTR_GETSCHEDPARAM@
-GL_GNULIB_POSIX_SPAWNATTR_GETSCHEDPOLICY = @GL_GNULIB_POSIX_SPAWNATTR_GETSCHEDPOLICY@
-GL_GNULIB_POSIX_SPAWNATTR_GETSIGDEFAULT = @GL_GNULIB_POSIX_SPAWNATTR_GETSIGDEFAULT@
-GL_GNULIB_POSIX_SPAWNATTR_GETSIGMASK = @GL_GNULIB_POSIX_SPAWNATTR_GETSIGMASK@
-GL_GNULIB_POSIX_SPAWNATTR_INIT = @GL_GNULIB_POSIX_SPAWNATTR_INIT@
-GL_GNULIB_POSIX_SPAWNATTR_SETFLAGS = @GL_GNULIB_POSIX_SPAWNATTR_SETFLAGS@
-GL_GNULIB_POSIX_SPAWNATTR_SETPGROUP = @GL_GNULIB_POSIX_SPAWNATTR_SETPGROUP@
-GL_GNULIB_POSIX_SPAWNATTR_SETSCHEDPARAM = @GL_GNULIB_POSIX_SPAWNATTR_SETSCHEDPARAM@
-GL_GNULIB_POSIX_SPAWNATTR_SETSCHEDPOLICY = @GL_GNULIB_POSIX_SPAWNATTR_SETSCHEDPOLICY@
-GL_GNULIB_POSIX_SPAWNATTR_SETSIGDEFAULT = @GL_GNULIB_POSIX_SPAWNATTR_SETSIGDEFAULT@
-GL_GNULIB_POSIX_SPAWNATTR_SETSIGMASK = @GL_GNULIB_POSIX_SPAWNATTR_SETSIGMASK@
-GL_GNULIB_POSIX_SPAWNP = @GL_GNULIB_POSIX_SPAWNP@
-GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR = @GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR@
-GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE = @GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE@
-GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2 = @GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2@
-GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR = @GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR@
-GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN = @GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN@
-GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_DESTROY = @GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_DESTROY@
-GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_INIT = @GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_INIT@
 GL_GNULIB_POWF = @GL_GNULIB_POWF@
 GL_GNULIB_PREAD = @GL_GNULIB_PREAD@
 GL_GNULIB_PRINTF = @GL_GNULIB_PRINTF@
@@ -1489,7 +1356,6 @@ GL_GNULIB_ROUNDL = @GL_GNULIB_ROUNDL@
 GL_GNULIB_RPMATCH = @GL_GNULIB_RPMATCH@
 GL_GNULIB_SCANDIR = @GL_GNULIB_SCANDIR@
 GL_GNULIB_SCANF = @GL_GNULIB_SCANF@
-GL_GNULIB_SCHED_YIELD = @GL_GNULIB_SCHED_YIELD@
 GL_GNULIB_SECURE_GETENV = @GL_GNULIB_SECURE_GETENV@
 GL_GNULIB_SELECT = @GL_GNULIB_SELECT@
 GL_GNULIB_SEND = @GL_GNULIB_SEND@
@@ -1870,11 +1736,6 @@ HAVE_POPEN = @HAVE_POPEN@
 HAVE_POSIX_MEMALIGN = @HAVE_POSIX_MEMALIGN@
 HAVE_POSIX_OPENPT = @HAVE_POSIX_OPENPT@
 HAVE_POSIX_SIGNALBLOCKING = @HAVE_POSIX_SIGNALBLOCKING@
-HAVE_POSIX_SPAWN = @HAVE_POSIX_SPAWN@
-HAVE_POSIX_SPAWNATTR_T = @HAVE_POSIX_SPAWNATTR_T@
-HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR = @HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR@
-HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR = @HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR@
-HAVE_POSIX_SPAWN_FILE_ACTIONS_T = @HAVE_POSIX_SPAWN_FILE_ACTIONS_T@
 HAVE_POWF = @HAVE_POWF@
 HAVE_PREAD = @HAVE_PREAD@
 HAVE_PSELECT = @HAVE_PSELECT@
@@ -1903,8 +1764,6 @@ HAVE_RPMATCH = @HAVE_RPMATCH@
 HAVE_SAME_LONG_DOUBLE_AS_DOUBLE = @HAVE_SAME_LONG_DOUBLE_AS_DOUBLE@
 HAVE_SA_FAMILY_T = @HAVE_SA_FAMILY_T@
 HAVE_SCANDIR = @HAVE_SCANDIR@
-HAVE_SCHED_H = @HAVE_SCHED_H@
-HAVE_SCHED_YIELD = @HAVE_SCHED_YIELD@
 HAVE_SECURE_GETENV = @HAVE_SECURE_GETENV@
 HAVE_SETENV = @HAVE_SETENV@
 HAVE_SETHOSTNAME = @HAVE_SETHOSTNAME@
@@ -1922,7 +1781,6 @@ HAVE_SINF = @HAVE_SINF@
 HAVE_SINHF = @HAVE_SINHF@
 HAVE_SINL = @HAVE_SINL@
 HAVE_SLEEP = @HAVE_SLEEP@
-HAVE_SPAWN_H = @HAVE_SPAWN_H@
 HAVE_SQRTF = @HAVE_SQRTF@
 HAVE_SQRTL = @HAVE_SQRTL@
 HAVE_STDINT_H = @HAVE_STDINT_H@
@@ -1943,7 +1801,6 @@ HAVE_STRTOLL = @HAVE_STRTOLL@
 HAVE_STRTOUL = @HAVE_STRTOUL@
 HAVE_STRTOULL = @HAVE_STRTOULL@
 HAVE_STRUCT_RANDOM_DATA = @HAVE_STRUCT_RANDOM_DATA@
-HAVE_STRUCT_SCHED_PARAM = @HAVE_STRUCT_SCHED_PARAM@
 HAVE_STRUCT_SIGACTION_SA_SIGACTION = @HAVE_STRUCT_SIGACTION_SA_SIGACTION@
 HAVE_STRUCT_SOCKADDR_STORAGE = @HAVE_STRUCT_SOCKADDR_STORAGE@
 HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY = @HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY@
@@ -1953,7 +1810,6 @@ HAVE_STRVERSCMP = @HAVE_STRVERSCMP@
 HAVE_SYMLINK = @HAVE_SYMLINK@
 HAVE_SYMLINKAT = @HAVE_SYMLINKAT@
 HAVE_SYS_BITYPES_H = @HAVE_SYS_BITYPES_H@
-HAVE_SYS_CDEFS_H = @HAVE_SYS_CDEFS_H@
 HAVE_SYS_INTTYPES_H = @HAVE_SYS_INTTYPES_H@
 HAVE_SYS_LOADAVG_H = @HAVE_SYS_LOADAVG_H@
 HAVE_SYS_PARAM_H = @HAVE_SYS_PARAM_H@
@@ -2069,7 +1925,6 @@ LIB_GETRANDOM = @LIB_GETRANDOM@
 LIB_HARD_LOCALE = @LIB_HARD_LOCALE@
 LIB_MBRTOWC = @LIB_MBRTOWC@
 LIB_NL_LANGINFO = @LIB_NL_LANGINFO@
-LIB_POSIX_SPAWN = @LIB_POSIX_SPAWN@
 LIB_PTHREAD_SIGMASK = @LIB_PTHREAD_SIGMASK@
 LIB_SCHED_YIELD = @LIB_SCHED_YIELD@
 LIB_SELECT = @LIB_SELECT@
@@ -2114,9 +1969,7 @@ NEXT_AS_FIRST_DIRECTIVE_LIMITS_H = @NEXT_AS_FIRST_DIRECTIVE_LIMITS_H@
 NEXT_AS_FIRST_DIRECTIVE_LOCALE_H = @NEXT_AS_FIRST_DIRECTIVE_LOCALE_H@
 NEXT_AS_FIRST_DIRECTIVE_MATH_H = @NEXT_AS_FIRST_DIRECTIVE_MATH_H@
 NEXT_AS_FIRST_DIRECTIVE_NETINET_IN_H = @NEXT_AS_FIRST_DIRECTIVE_NETINET_IN_H@
-NEXT_AS_FIRST_DIRECTIVE_SCHED_H = @NEXT_AS_FIRST_DIRECTIVE_SCHED_H@
 NEXT_AS_FIRST_DIRECTIVE_SIGNAL_H = @NEXT_AS_FIRST_DIRECTIVE_SIGNAL_H@
-NEXT_AS_FIRST_DIRECTIVE_SPAWN_H = @NEXT_AS_FIRST_DIRECTIVE_SPAWN_H@
 NEXT_AS_FIRST_DIRECTIVE_STDDEF_H = @NEXT_AS_FIRST_DIRECTIVE_STDDEF_H@
 NEXT_AS_FIRST_DIRECTIVE_STDINT_H = @NEXT_AS_FIRST_DIRECTIVE_STDINT_H@
 NEXT_AS_FIRST_DIRECTIVE_STDIO_H = @NEXT_AS_FIRST_DIRECTIVE_STDIO_H@
@@ -2149,9 +2002,7 @@ NEXT_LIMITS_H = @NEXT_LIMITS_H@
 NEXT_LOCALE_H = @NEXT_LOCALE_H@
 NEXT_MATH_H = @NEXT_MATH_H@
 NEXT_NETINET_IN_H = @NEXT_NETINET_IN_H@
-NEXT_SCHED_H = @NEXT_SCHED_H@
 NEXT_SIGNAL_H = @NEXT_SIGNAL_H@
-NEXT_SPAWN_H = @NEXT_SPAWN_H@
 NEXT_STDDEF_H = @NEXT_STDDEF_H@
 NEXT_STDINT_H = @NEXT_STDINT_H@
 NEXT_STDIO_H = @NEXT_STDIO_H@
@@ -2365,12 +2216,6 @@ REPLACE_OPENDIR = @REPLACE_OPENDIR@
 REPLACE_PERROR = @REPLACE_PERROR@
 REPLACE_POPEN = @REPLACE_POPEN@
 REPLACE_POSIX_MEMALIGN = @REPLACE_POSIX_MEMALIGN@
-REPLACE_POSIX_SPAWN = @REPLACE_POSIX_SPAWN@
-REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR = @REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR@
-REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE = @REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE@
-REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2 = @REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2@
-REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR = @REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR@
-REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN = @REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN@
 REPLACE_PREAD = @REPLACE_PREAD@
 REPLACE_PRINTF = @REPLACE_PRINTF@
 REPLACE_PSELECT = @REPLACE_PSELECT@
@@ -2401,7 +2246,6 @@ REPLACE_RMDIR = @REPLACE_RMDIR@
 REPLACE_ROUND = @REPLACE_ROUND@
 REPLACE_ROUNDF = @REPLACE_ROUNDF@
 REPLACE_ROUNDL = @REPLACE_ROUNDL@
-REPLACE_SCHED_YIELD = @REPLACE_SCHED_YIELD@
 REPLACE_SELECT = @REPLACE_SELECT@
 REPLACE_SETENV = @REPLACE_SETENV@
 REPLACE_SETLOCALE = @REPLACE_SETLOCALE@
@@ -2579,45 +2423,42 @@ noinst_HEADERS =
 noinst_LIBRARIES = libgnu.a
 noinst_LTLIBRARIES = 
 EXTRA_DIST = alloca.c alloca.in.h arpa_inet.in.h assert.in.h verify.h \
-	assure.h attribute.h basename-lgpl.h calloc.c calloc.c \
-	canonicalize.h chdir-long.h cloexec.h dirent-private.h \
-	concat-filename.h ctype.in.h dirent.in.h dirname.h dprintf.c \
+	assure.h attribute.h basename-lgpl.h chdir-long.h cloexec.h \
+	dirent-private.h ctype.in.h dirent.in.h dirname.h dprintf.c \
 	eloop-threshold.h errno.in.h error.h exitfail.h at-func.c \
-	fcntl.in.h fd-hook.h file-set.h filename.h filenamecat.h \
-	flexmember.h float.in.h fnmatch.c fnmatch_loop.c fnmatch.in.h \
-	fpucw.h stdio-impl.h frexp.c frexp.c frexpl.c fseterr.h \
-	stdio-impl.h stat-w32.c stat-w32.h at-func.c full-write.c \
-	w32sock.h glob_internal.h glob-libc.h glob.in.h hard-locale.h \
-	hash.h hash-triple.h ialloc.h intprops-internal.h intprops.h \
-	inttypes.in.h float+.h isnan.c isnand-nolibm.h isnand.c \
-	float+.h isnan.c isnanf-nolibm.h isnanf.c float+.h isnan.c \
-	isnanl.c float+.h isnan.c isnanl-nolibm.h isnanl.c \
-	langinfo.in.h cdefs.h libc-config.h limits.in.h localcharset.h \
-	locale.in.h localename-table.h localename.h malloc.c malloc.c \
-	malloca.h math.in.h mbchar.h lc-charset-dispatch.c \
-	lc-charset-dispatch.h mbrtowc-impl-utf8.h mbrtowc-impl.h \
-	mbtowc-lock.c mbtowc-lock.h windows-initguard.h \
-	mbsrtowcs-impl.h mbsrtowcs-state.c mbtowc-impl.h \
-	memchr.valgrind mktime-internal.h mktime.c msvc-inval.h \
-	msvc-nothrow.h netinet_in.in.h windows-initguard.h openat.h \
-	dirent-private.h pathmax.h spawn_int.h spawn_int.h spawn_int.h \
-	spawn_int.h printf-frexp.h printf-frexp.c printf-frexpl.h \
+	fcntl.in.h fd-hook.h filename.h filenamecat.h flexmember.h \
+	float.in.h fnmatch.c fnmatch_loop.c fnmatch.in.h fpucw.h \
+	stdio-impl.h frexp.c frexp.c frexpl.c fseterr.h stdio-impl.h \
+	stat-w32.c stat-w32.h at-func.c full-write.c w32sock.h \
+	glob_internal.h glob-libc.h glob.in.h hard-locale.h \
+	intprops-internal.h intprops.h inttypes.in.h float+.h isnan.c \
+	isnand-nolibm.h isnand.c float+.h isnan.c isnanf-nolibm.h \
+	isnanf.c float+.h isnan.c isnanl.c float+.h isnan.c \
+	isnanl-nolibm.h isnanl.c langinfo.in.h cdefs.h libc-config.h \
+	limits.in.h localcharset.h locale.in.h localename-table.h \
+	localename.h malloc.c malloc.c malloca.h math.in.h mbchar.h \
+	lc-charset-dispatch.c lc-charset-dispatch.h \
+	mbrtowc-impl-utf8.h mbrtowc-impl.h mbtowc-lock.c mbtowc-lock.h \
+	windows-initguard.h mbsrtowcs-impl.h mbsrtowcs-state.c \
+	mbtowc-impl.h memchr.valgrind mktime-internal.h mktime.c \
+	msvc-inval.h msvc-nothrow.h netinet_in.in.h \
+	windows-initguard.h openat.h dirent-private.h pathmax.h \
+	printf-frexp.h printf-frexp.c printf-frexpl.h \
 	rawmemchr.valgrind dirent-private.h realloc.c realloc.c \
 	dirent-private.h root-uid.h safe-read.h sys-limits.h \
 	safe-read.c safe-write.h sys-limits.h same-inode.h save-cwd.h \
-	sched.in.h malloc/scratch_buffer.h scratch_buffer.h \
-	setlocale_null.h windows-initguard.h sig-handler.h signal.in.h \
-	float+.h _Noreturn.h arg-nonnull.h c++defs.h warn-on-use.h \
-	snprintf.c w32sock.h spawn.in.h sprintf.c stat-w32.c \
-	stat-w32.h stat-time.h stdalign.in.h intprops-internal.h \
-	stdckdint.in.h stddef.in.h stdint.in.h stdio.in.h stdlib.in.h \
-	strcasestr.c str-two-way.h strcasestr.c strchrnul.valgrind \
-	streq.h strerror-override.h strerror_r.c string.in.h \
-	strings.in.h siglist.h strtol.c strtol.c strtoul.c strtoimax.c \
-	sys_random.in.h sys_select.in.h sys_socket.in.h sys_stat.in.h \
-	sys_time.in.h sys_times.in.h sys_types.in.h sys_uio.in.h \
-	sys_wait.in.h tempname.h thread-optim.h time.in.h timespec.h \
-	unistd.in.h unistd--.h unistd-safer.h unitypes.in.h \
+	malloc/scratch_buffer.h scratch_buffer.h setlocale_null.h \
+	windows-initguard.h signal.in.h float+.h _Noreturn.h \
+	arg-nonnull.h c++defs.h warn-on-use.h snprintf.c w32sock.h \
+	sprintf.c stat-w32.c stat-w32.h stat-time.h stdalign.in.h \
+	intprops-internal.h stdckdint.in.h stddef.in.h stdint.in.h \
+	stdio.in.h stdlib.in.h strcasestr.c str-two-way.h strcasestr.c \
+	strchrnul.valgrind streq.h strerror-override.h strerror_r.c \
+	string.in.h strings.in.h siglist.h strtol.c strtol.c strtoul.c \
+	strtoimax.c sys_random.in.h sys_select.in.h sys_socket.in.h \
+	sys_stat.in.h sys_time.in.h sys_times.in.h sys_types.in.h \
+	sys_uio.in.h sys_wait.in.h tempname.h thread-optim.h time.in.h \
+	timespec.h unistd.in.h unistd--.h unistd-safer.h unitypes.in.h \
 	localcharset.h uniwidth.in.h unictype/bitmap.h uniwidth/cjk.h \
 	uniwidth/width0.h uniwidth/width2.h asnprintf.c float+.h \
 	printf-args.c printf-args.h printf-parse.c printf-parse.h \
@@ -2625,16 +2466,15 @@ EXTRA_DIST = alloca.c alloca.in.h arpa_inet.in.h assert.in.h verify.h \
 	wchar.in.h wcswidth-impl.h wctype.in.h windows-initguard.h \
 	windows-mutex.h windows-once.h windows-initguard.h \
 	windows-recmutex.h windows-initguard.h windows-rwlock.h \
-	windows-spawn.h windows-tls.h wmemchr-impl.h xalloc.h xalloc.h \
-	xalloc-oversized.h
+	windows-tls.h wmemchr-impl.h xalloc-oversized.h
 BUILT_SOURCES = $(ALLOCA_H) arpa/inet.h $(ASSERT_H) ctype.h dirent.h \
 	$(ERRNO_H) fcntl.h $(FLOAT_H) $(FNMATCH_H) $(GLOB_H) \
 	glob-libc.gl.h inttypes.h langinfo.h $(LIMITS_H) locale.h \
-	math.h $(NETINET_IN_H) sched.h malloc/scratch_buffer.gl.h \
-	signal.h spawn.h $(STDALIGN_H) $(STDCKDINT_H) $(STDDEF_H) \
-	$(STDINT_H) stdio.h stdlib.h string.h strings.h sys/random.h \
-	sys/select.h sys/socket.h sys/stat.h sys/time.h sys/times.h \
-	sys/types.h sys/uio.h sys/wait.h time.h unistd.h \
+	math.h $(NETINET_IN_H) malloc/scratch_buffer.gl.h signal.h \
+	$(STDALIGN_H) $(STDCKDINT_H) $(STDDEF_H) $(STDINT_H) stdio.h \
+	stdlib.h string.h strings.h sys/random.h sys/select.h \
+	sys/socket.h sys/stat.h sys/time.h sys/times.h sys/types.h \
+	sys/uio.h sys/wait.h time.h unistd.h \
 	$(LIBUNISTRING_UNITYPES_H) $(LIBUNISTRING_UNIWIDTH_H) wchar.h \
 	wctype.h
 SUFFIXES = 
@@ -2644,18 +2484,18 @@ MOSTLYCLEANFILES = core *.stackdump alloca.h alloca.h-t arpa/inet.h \
 	float.h-t fnmatch.h fnmatch.h-t glob.h glob.h-t glob-libc.gl.h \
 	glob-libc.gl.h-t inttypes.h inttypes.h-t langinfo.h \
 	langinfo.h-t limits.h limits.h-t locale.h locale.h-t math.h \
-	math.h-t netinet/in.h netinet/in.h-t sched.h sched.h-t \
+	math.h-t netinet/in.h netinet/in.h-t \
 	malloc/scratch_buffer.gl.h malloc/scratch_buffer.gl.h-t \
-	signal.h signal.h-t spawn.h spawn.h-t stdalign.h stdalign.h-t \
-	stdckdint.h stdckdint.h-t stddef.h stddef.h-t stdint.h \
-	stdint.h-t stdio.h stdio.h-t stdlib.h stdlib.h-t string.h \
-	string.h-t strings.h strings.h-t sys/random.h sys/random.h-t \
-	sys/select.h sys/select.h-t sys/socket.h sys/socket.h-t \
-	sys/stat.h sys/stat.h-t sys/time.h sys/time.h-t sys/times.h \
-	sys/times.h-t sys/types.h sys/types.h-t sys/uio.h sys/uio.h-t \
-	sys/wait.h sys/wait.h-t time.h time.h-t unistd.h unistd.h-t \
-	unitypes.h unitypes.h-t uniwidth.h uniwidth.h-t wchar.h \
-	wchar.h-t wctype.h wctype.h-t
+	signal.h signal.h-t stdalign.h stdalign.h-t stdckdint.h \
+	stdckdint.h-t stddef.h stddef.h-t stdint.h stdint.h-t stdio.h \
+	stdio.h-t stdlib.h stdlib.h-t string.h string.h-t strings.h \
+	strings.h-t sys/random.h sys/random.h-t sys/select.h \
+	sys/select.h-t sys/socket.h sys/socket.h-t sys/stat.h \
+	sys/stat.h-t sys/time.h sys/time.h-t sys/times.h sys/times.h-t \
+	sys/types.h sys/types.h-t sys/uio.h sys/uio.h-t sys/wait.h \
+	sys/wait.h-t time.h time.h-t unistd.h unistd.h-t unitypes.h \
+	unitypes.h-t uniwidth.h uniwidth.h-t wchar.h wchar.h-t \
+	wctype.h wctype.h-t
 MOSTLYCLEANDIRS = arpa netinet sys sys sys sys sys sys sys
 CLEANFILES = 
 DISTCLEANFILES = 
@@ -2663,74 +2503,63 @@ MAINTAINERCLEANFILES =
 # No GNU Make output.
 AM_CPPFLAGS = 
 AM_CFLAGS = 
-libgnu_a_SOURCES = $(am__append_1) openat-priv.h openat-proc.c \
-	basename-lgpl.c bitrotate.h bitrotate.c $(am__append_2) \
-	c-ctype.h c-ctype.c canonicalize.c $(am__append_3) \
-	$(am__append_4) cloexec.c $(am__append_5) $(am__append_6) \
-	concat-filename.c $(am__append_7) $(am__append_8) \
-	dirname-lgpl.c stripslash.c $(am__append_9) $(am__append_10) \
-	$(am__append_11) $(am__append_12) execute.h execute.c \
-	exitfail.c $(am__append_13) fatal-signal.h fatal-signal.c \
-	$(am__append_14) $(am__append_15) fd-hook.c fd-safer-flag.c \
-	dup-safer-flag.c $(am__append_16) file-set.c \
-	filenamecat-lgpl.c findprog.h findprog-in.c $(am__append_17) \
-	$(am__append_18) $(am__append_19) $(am__append_20) \
-	$(am__append_21) $(am__append_22) $(am__append_23) full-read.h \
-	full-read.c full-write.h full-write.c $(am__append_24) \
-	$(am__append_25) $(am__append_26) $(am__append_27) \
-	$(am__append_28) $(am__append_29) getprogname.h getprogname.c \
-	$(am__append_30) gettext.h $(am__append_31) $(am__append_32) \
-	$(am__append_33) $(am__append_34) hard-locale.c hash.c \
-	hash-pjw.h hash-pjw.c hash-triple-simple.c ialloc.c idx.h \
-	$(am__append_35) $(am__append_36) $(am__append_37) \
-	$(am__append_38) $(am__append_39) $(am__append_40) \
-	localcharset.c $(am__append_41) localename.c \
-	localename-table.c glthread/lock.h glthread/lock.c \
-	$(am__append_42) malloca.c math.c mbchar.c $(am__append_43) \
-	$(am__append_44) mbschr.c $(am__append_45) $(am__append_46) \
-	$(am__append_47) mbuiter.h mbuiter.c $(am__append_48) \
-	$(am__append_49) $(am__append_50) minmax.h $(am__append_51) \
+libgnu_a_SOURCES = openat-priv.h openat-proc.c basename-lgpl.c \
+	$(am__append_1) c-ctype.h c-ctype.c $(am__append_2) \
+	$(am__append_3) cloexec.c $(am__append_4) $(am__append_5) \
+	$(am__append_6) dirname-lgpl.c stripslash.c $(am__append_7) \
+	$(am__append_8) $(am__append_9) $(am__append_10) exitfail.c \
+	$(am__append_11) $(am__append_12) $(am__append_13) fd-hook.c \
+	fd-safer-flag.c dup-safer-flag.c $(am__append_14) \
+	filenamecat-lgpl.c $(am__append_15) $(am__append_16) \
+	$(am__append_17) $(am__append_18) $(am__append_19) \
+	$(am__append_20) $(am__append_21) full-read.h full-read.c \
+	full-write.h full-write.c $(am__append_22) $(am__append_23) \
+	$(am__append_24) $(am__append_25) $(am__append_26) \
+	$(am__append_27) getprogname.h getprogname.c $(am__append_28) \
+	gettext.h $(am__append_29) $(am__append_30) $(am__append_31) \
+	$(am__append_32) hard-locale.c idx.h $(am__append_33) \
+	$(am__append_34) $(am__append_35) $(am__append_36) \
+	$(am__append_37) $(am__append_38) localcharset.c \
+	$(am__append_39) localename.c localename-table.c \
+	glthread/lock.h glthread/lock.c $(am__append_40) malloca.c \
+	math.c mbchar.c $(am__append_41) $(am__append_42) mbschr.c \
+	$(am__append_43) $(am__append_44) $(am__append_45) mbuiter.h \
+	mbuiter.c $(am__append_46) $(am__append_47) $(am__append_48) \
+	minmax.h $(am__append_49) $(am__append_50) $(am__append_51) \
 	$(am__append_52) $(am__append_53) $(am__append_54) \
 	$(am__append_55) $(am__append_56) $(am__append_57) \
-	$(am__append_58) $(am__append_59) openat-die.c \
-	$(am__append_60) $(am__append_61) $(am__append_62) \
-	$(am__append_63) $(am__append_64) $(am__append_65) \
-	$(am__append_66) $(am__append_67) $(am__append_68) \
-	$(am__append_69) $(am__append_70) $(am__append_71) \
-	$(am__append_72) printf-frexp.c printf-frexpl.c \
-	$(am__append_73) $(am__append_74) $(am__append_75) \
-	$(am__append_76) $(am__append_77) $(am__append_78) \
-	$(am__append_79) $(am__append_80) $(am__append_81) \
-	$(am__append_82) $(am__append_83) $(am__append_84) safe-read.c \
+	openat-die.c $(am__append_58) $(am__append_59) printf-frexp.c \
+	printf-frexpl.c $(am__append_60) $(am__append_61) \
+	$(am__append_62) $(am__append_63) $(am__append_64) \
+	$(am__append_65) $(am__append_66) $(am__append_67) \
+	$(am__append_68) $(am__append_69) $(am__append_70) safe-read.c \
 	safe-write.c save-cwd.c malloc/scratch_buffer_dupfree.c \
 	malloc/scratch_buffer_grow.c \
 	malloc/scratch_buffer_grow_preserve.c \
-	malloc/scratch_buffer_set_array_size.c $(am__append_85) \
-	$(am__append_86) $(am__append_87) setlocale_null.c \
-	$(am__append_88) $(am__append_89) sig-handler.c \
-	$(am__append_90) $(am__append_91) size_max.h sockets.h \
-	sockets.c $(am__append_92) stat-time.c $(am__append_93) \
-	$(am__append_94) $(am__append_95) $(am__append_96) \
-	$(am__append_97) $(am__append_98) $(am__append_99) \
-	$(am__append_100) $(am__append_101) $(am__append_102) \
-	strnlen1.h strnlen1.c $(am__append_103) $(am__append_104) \
-	$(am__append_105) $(am__append_106) $(am__append_107) \
-	sys_socket.c tempname.c glthread/threadlib.c $(am__append_108) \
-	$(am__append_109) timespec.c glthread/tls.h glthread/tls.c \
-	tmpdir.h tmpdir.c $(am__append_110) unistd.c dup-safer.c \
-	fd-safer.c pipe-safer.c $(am__append_111) wait-process.h \
-	wait-process.c $(am__append_112) $(am__append_113) wctype-h.c \
-	$(am__append_114) $(am__append_115) $(am__append_116) \
-	$(am__append_117) $(am__append_118) $(am__append_119) \
-	$(am__append_120) $(am__append_121) $(am__append_122) \
-	$(am__append_123) xmalloc.c xalloc-die.c xsize.h xsize.c
+	malloc/scratch_buffer_set_array_size.c $(am__append_71) \
+	$(am__append_72) $(am__append_73) setlocale_null.c \
+	$(am__append_74) $(am__append_75) $(am__append_76) size_max.h \
+	sockets.h sockets.c $(am__append_77) stat-time.c \
+	$(am__append_78) $(am__append_79) $(am__append_80) \
+	$(am__append_81) $(am__append_82) $(am__append_83) \
+	$(am__append_84) $(am__append_85) $(am__append_86) strnlen1.h \
+	strnlen1.c $(am__append_87) $(am__append_88) $(am__append_89) \
+	$(am__append_90) $(am__append_91) sys_socket.c tempname.c \
+	glthread/threadlib.c $(am__append_92) $(am__append_93) \
+	timespec.c glthread/tls.h glthread/tls.c tmpdir.h tmpdir.c \
+	$(am__append_94) unistd.c dup-safer.c fd-safer.c pipe-safer.c \
+	$(am__append_95) $(am__append_96) $(am__append_97) wctype-h.c \
+	$(am__append_98) $(am__append_99) $(am__append_100) \
+	$(am__append_101) $(am__append_102) $(am__append_103) \
+	$(am__append_104) $(am__append_105) $(am__append_106) xsize.h \
+	xsize.c
 libgnu_a_CFLAGS = $(AM_CFLAGS) $(GL_CFLAG_GNULIB_WARNINGS)
 libgnu_a_LIBADD = $(gl_LIBOBJS) @ALLOCA@
 libgnu_a_DEPENDENCIES = $(gl_LIBOBJS) @ALLOCA@
-EXTRA_libgnu_a_SOURCES = alloca.c calloc.c calloc.c dprintf.c \
-	at-func.c fnmatch.c fnmatch_loop.c frexp.c frexp.c frexpl.c \
-	stat-w32.c at-func.c full-write.c isnan.c isnand.c isnan.c \
-	isnanf.c isnan.c isnanl.c isnan.c isnanl.c malloc.c malloc.c \
+EXTRA_libgnu_a_SOURCES = alloca.c dprintf.c at-func.c fnmatch.c \
+	fnmatch_loop.c frexp.c frexp.c frexpl.c stat-w32.c at-func.c \
+	full-write.c isnan.c isnand.c isnan.c isnanf.c isnan.c \
+	isnanl.c isnan.c isnanl.c malloc.c malloc.c \
 	lc-charset-dispatch.c mbtowc-lock.c mbsrtowcs-state.c mktime.c \
 	printf-frexp.c realloc.c realloc.c safe-read.c snprintf.c \
 	sprintf.c stat-w32.c strcasestr.c strcasestr.c strerror_r.c \
@@ -2874,23 +2703,17 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alloca.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-access.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-alloca.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-asnprintf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-at-func.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-basename-lgpl.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-bitrotate.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-btowc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-c-ctype.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-calloc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-canonicalize-lgpl.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-canonicalize.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-chdir-long.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-cloexec.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-close.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-closedir.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-concat-filename.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-copysign.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-dirfd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-dirname-lgpl.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-dprintf.Po@am__quote@ # am--include-marker
@@ -2900,19 +2723,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-dup2.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-error.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-euidaccess.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-execute.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-exitfail.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-faccessat.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-fatal-signal.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-fchdir.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-fcntl.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-fd-hook.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-fd-safer-flag.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-fd-safer.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-fdopendir.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-file-set.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-filenamecat-lgpl.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-findprog-in.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-float.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-fnmatch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-fnmatch_loop.Po@am__quote@ # am--include-marker
@@ -2939,10 +2758,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-globfree.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-group-member.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-hard-locale.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-hash-pjw.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-hash-triple-simple.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-hash.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-ialloc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-inet_ntop.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-isblank.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-isnan.Po@am__quote@ # am--include-marker
@@ -3004,7 +2819,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-readdir.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-readlink.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-realloc.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-reallocarray.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-rename.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-rewinddir.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-rmdir.Po@am__quote@ # am--include-marker
@@ -3016,32 +2830,18 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-setlocale-lock.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-setlocale.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-setlocale_null.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-sig-handler.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-sigaction.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-signbitd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-signbitf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-signbitl.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-sigprocmask.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-snprintf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-sockets.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-spawn.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-spawn_faction_addchdir.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-spawn_faction_addopen.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-spawn_faction_destroy.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-spawn_faction_init.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-spawnattr_destroy.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-spawnattr_init.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-spawnattr_setflags.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-spawnattr_setsigmask.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-spawni.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-spawnp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-sprintf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-stat-time.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-stat-w32.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-stat.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-stdio-read.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-stdio-write.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-stpcpy.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strcasecmp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strcasestr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strchrnul.Po@am__quote@ # am--include-marker
@@ -3071,7 +2871,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-vasnprintf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-vfprintf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-vprintf.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-wait-process.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-waitpid.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-wcswidth.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-wctype-h.Po@am__quote@ # am--include-marker
@@ -3080,13 +2879,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-windows-once.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-windows-recmutex.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-windows-rwlock.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-windows-spawn.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-windows-tls.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-wmemchr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-wmempcpy.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-write.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-xalloc-die.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-xmalloc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-xsize.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@glthread/$(DEPDIR)/libgnu_a-lock.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@glthread/$(DEPDIR)/libgnu_a-threadlib.Po@am__quote@ # am--include-marker
@@ -3127,20 +2923,6 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
-libgnu_a-access.o: access.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-access.o -MD -MP -MF $(DEPDIR)/libgnu_a-access.Tpo -c -o libgnu_a-access.o `test -f 'access.c' || echo '$(srcdir)/'`access.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-access.Tpo $(DEPDIR)/libgnu_a-access.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='access.c' object='libgnu_a-access.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-access.o `test -f 'access.c' || echo '$(srcdir)/'`access.c
-
-libgnu_a-access.obj: access.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-access.obj -MD -MP -MF $(DEPDIR)/libgnu_a-access.Tpo -c -o libgnu_a-access.obj `if test -f 'access.c'; then $(CYGPATH_W) 'access.c'; else $(CYGPATH_W) '$(srcdir)/access.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-access.Tpo $(DEPDIR)/libgnu_a-access.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='access.c' object='libgnu_a-access.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-access.obj `if test -f 'access.c'; then $(CYGPATH_W) 'access.c'; else $(CYGPATH_W) '$(srcdir)/access.c'; fi`
-
 libgnu_a-openat-proc.o: openat-proc.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-openat-proc.o -MD -MP -MF $(DEPDIR)/libgnu_a-openat-proc.Tpo -c -o libgnu_a-openat-proc.o `test -f 'openat-proc.c' || echo '$(srcdir)/'`openat-proc.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-openat-proc.Tpo $(DEPDIR)/libgnu_a-openat-proc.Po
@@ -3169,20 +2951,6 @@ libgnu_a-basename-lgpl.obj: basename-lgpl.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-basename-lgpl.obj `if test -f 'basename-lgpl.c'; then $(CYGPATH_W) 'basename-lgpl.c'; else $(CYGPATH_W) '$(srcdir)/basename-lgpl.c'; fi`
 
-libgnu_a-bitrotate.o: bitrotate.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-bitrotate.o -MD -MP -MF $(DEPDIR)/libgnu_a-bitrotate.Tpo -c -o libgnu_a-bitrotate.o `test -f 'bitrotate.c' || echo '$(srcdir)/'`bitrotate.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-bitrotate.Tpo $(DEPDIR)/libgnu_a-bitrotate.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bitrotate.c' object='libgnu_a-bitrotate.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-bitrotate.o `test -f 'bitrotate.c' || echo '$(srcdir)/'`bitrotate.c
-
-libgnu_a-bitrotate.obj: bitrotate.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-bitrotate.obj -MD -MP -MF $(DEPDIR)/libgnu_a-bitrotate.Tpo -c -o libgnu_a-bitrotate.obj `if test -f 'bitrotate.c'; then $(CYGPATH_W) 'bitrotate.c'; else $(CYGPATH_W) '$(srcdir)/bitrotate.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-bitrotate.Tpo $(DEPDIR)/libgnu_a-bitrotate.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bitrotate.c' object='libgnu_a-bitrotate.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-bitrotate.obj `if test -f 'bitrotate.c'; then $(CYGPATH_W) 'bitrotate.c'; else $(CYGPATH_W) '$(srcdir)/bitrotate.c'; fi`
-
 libgnu_a-btowc.o: btowc.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-btowc.o -MD -MP -MF $(DEPDIR)/libgnu_a-btowc.Tpo -c -o libgnu_a-btowc.o `test -f 'btowc.c' || echo '$(srcdir)/'`btowc.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-btowc.Tpo $(DEPDIR)/libgnu_a-btowc.Po
@@ -3210,20 +2978,6 @@ libgnu_a-c-ctype.obj: c-ctype.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='c-ctype.c' object='libgnu_a-c-ctype.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-c-ctype.obj `if test -f 'c-ctype.c'; then $(CYGPATH_W) 'c-ctype.c'; else $(CYGPATH_W) '$(srcdir)/c-ctype.c'; fi`
-
-libgnu_a-canonicalize.o: canonicalize.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-canonicalize.o -MD -MP -MF $(DEPDIR)/libgnu_a-canonicalize.Tpo -c -o libgnu_a-canonicalize.o `test -f 'canonicalize.c' || echo '$(srcdir)/'`canonicalize.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-canonicalize.Tpo $(DEPDIR)/libgnu_a-canonicalize.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='canonicalize.c' object='libgnu_a-canonicalize.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-canonicalize.o `test -f 'canonicalize.c' || echo '$(srcdir)/'`canonicalize.c
-
-libgnu_a-canonicalize.obj: canonicalize.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-canonicalize.obj -MD -MP -MF $(DEPDIR)/libgnu_a-canonicalize.Tpo -c -o libgnu_a-canonicalize.obj `if test -f 'canonicalize.c'; then $(CYGPATH_W) 'canonicalize.c'; else $(CYGPATH_W) '$(srcdir)/canonicalize.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-canonicalize.Tpo $(DEPDIR)/libgnu_a-canonicalize.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='canonicalize.c' object='libgnu_a-canonicalize.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-canonicalize.obj `if test -f 'canonicalize.c'; then $(CYGPATH_W) 'canonicalize.c'; else $(CYGPATH_W) '$(srcdir)/canonicalize.c'; fi`
 
 libgnu_a-canonicalize-lgpl.o: canonicalize-lgpl.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-canonicalize-lgpl.o -MD -MP -MF $(DEPDIR)/libgnu_a-canonicalize-lgpl.Tpo -c -o libgnu_a-canonicalize-lgpl.o `test -f 'canonicalize-lgpl.c' || echo '$(srcdir)/'`canonicalize-lgpl.c
@@ -3294,34 +3048,6 @@ libgnu_a-closedir.obj: closedir.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='closedir.c' object='libgnu_a-closedir.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-closedir.obj `if test -f 'closedir.c'; then $(CYGPATH_W) 'closedir.c'; else $(CYGPATH_W) '$(srcdir)/closedir.c'; fi`
-
-libgnu_a-concat-filename.o: concat-filename.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-concat-filename.o -MD -MP -MF $(DEPDIR)/libgnu_a-concat-filename.Tpo -c -o libgnu_a-concat-filename.o `test -f 'concat-filename.c' || echo '$(srcdir)/'`concat-filename.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-concat-filename.Tpo $(DEPDIR)/libgnu_a-concat-filename.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='concat-filename.c' object='libgnu_a-concat-filename.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-concat-filename.o `test -f 'concat-filename.c' || echo '$(srcdir)/'`concat-filename.c
-
-libgnu_a-concat-filename.obj: concat-filename.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-concat-filename.obj -MD -MP -MF $(DEPDIR)/libgnu_a-concat-filename.Tpo -c -o libgnu_a-concat-filename.obj `if test -f 'concat-filename.c'; then $(CYGPATH_W) 'concat-filename.c'; else $(CYGPATH_W) '$(srcdir)/concat-filename.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-concat-filename.Tpo $(DEPDIR)/libgnu_a-concat-filename.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='concat-filename.c' object='libgnu_a-concat-filename.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-concat-filename.obj `if test -f 'concat-filename.c'; then $(CYGPATH_W) 'concat-filename.c'; else $(CYGPATH_W) '$(srcdir)/concat-filename.c'; fi`
-
-libgnu_a-copysign.o: copysign.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-copysign.o -MD -MP -MF $(DEPDIR)/libgnu_a-copysign.Tpo -c -o libgnu_a-copysign.o `test -f 'copysign.c' || echo '$(srcdir)/'`copysign.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-copysign.Tpo $(DEPDIR)/libgnu_a-copysign.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='copysign.c' object='libgnu_a-copysign.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-copysign.o `test -f 'copysign.c' || echo '$(srcdir)/'`copysign.c
-
-libgnu_a-copysign.obj: copysign.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-copysign.obj -MD -MP -MF $(DEPDIR)/libgnu_a-copysign.Tpo -c -o libgnu_a-copysign.obj `if test -f 'copysign.c'; then $(CYGPATH_W) 'copysign.c'; else $(CYGPATH_W) '$(srcdir)/copysign.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-copysign.Tpo $(DEPDIR)/libgnu_a-copysign.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='copysign.c' object='libgnu_a-copysign.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-copysign.obj `if test -f 'copysign.c'; then $(CYGPATH_W) 'copysign.c'; else $(CYGPATH_W) '$(srcdir)/copysign.c'; fi`
 
 libgnu_a-dirfd.o: dirfd.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-dirfd.o -MD -MP -MF $(DEPDIR)/libgnu_a-dirfd.Tpo -c -o libgnu_a-dirfd.o `test -f 'dirfd.c' || echo '$(srcdir)/'`dirfd.c
@@ -3421,20 +3147,6 @@ libgnu_a-euidaccess.obj: euidaccess.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-euidaccess.obj `if test -f 'euidaccess.c'; then $(CYGPATH_W) 'euidaccess.c'; else $(CYGPATH_W) '$(srcdir)/euidaccess.c'; fi`
 
-libgnu_a-execute.o: execute.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-execute.o -MD -MP -MF $(DEPDIR)/libgnu_a-execute.Tpo -c -o libgnu_a-execute.o `test -f 'execute.c' || echo '$(srcdir)/'`execute.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-execute.Tpo $(DEPDIR)/libgnu_a-execute.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execute.c' object='libgnu_a-execute.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-execute.o `test -f 'execute.c' || echo '$(srcdir)/'`execute.c
-
-libgnu_a-execute.obj: execute.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-execute.obj -MD -MP -MF $(DEPDIR)/libgnu_a-execute.Tpo -c -o libgnu_a-execute.obj `if test -f 'execute.c'; then $(CYGPATH_W) 'execute.c'; else $(CYGPATH_W) '$(srcdir)/execute.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-execute.Tpo $(DEPDIR)/libgnu_a-execute.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='execute.c' object='libgnu_a-execute.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-execute.obj `if test -f 'execute.c'; then $(CYGPATH_W) 'execute.c'; else $(CYGPATH_W) '$(srcdir)/execute.c'; fi`
-
 libgnu_a-exitfail.o: exitfail.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-exitfail.o -MD -MP -MF $(DEPDIR)/libgnu_a-exitfail.Tpo -c -o libgnu_a-exitfail.o `test -f 'exitfail.c' || echo '$(srcdir)/'`exitfail.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-exitfail.Tpo $(DEPDIR)/libgnu_a-exitfail.Po
@@ -3462,20 +3174,6 @@ libgnu_a-faccessat.obj: faccessat.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='faccessat.c' object='libgnu_a-faccessat.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-faccessat.obj `if test -f 'faccessat.c'; then $(CYGPATH_W) 'faccessat.c'; else $(CYGPATH_W) '$(srcdir)/faccessat.c'; fi`
-
-libgnu_a-fatal-signal.o: fatal-signal.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-fatal-signal.o -MD -MP -MF $(DEPDIR)/libgnu_a-fatal-signal.Tpo -c -o libgnu_a-fatal-signal.o `test -f 'fatal-signal.c' || echo '$(srcdir)/'`fatal-signal.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-fatal-signal.Tpo $(DEPDIR)/libgnu_a-fatal-signal.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fatal-signal.c' object='libgnu_a-fatal-signal.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-fatal-signal.o `test -f 'fatal-signal.c' || echo '$(srcdir)/'`fatal-signal.c
-
-libgnu_a-fatal-signal.obj: fatal-signal.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-fatal-signal.obj -MD -MP -MF $(DEPDIR)/libgnu_a-fatal-signal.Tpo -c -o libgnu_a-fatal-signal.obj `if test -f 'fatal-signal.c'; then $(CYGPATH_W) 'fatal-signal.c'; else $(CYGPATH_W) '$(srcdir)/fatal-signal.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-fatal-signal.Tpo $(DEPDIR)/libgnu_a-fatal-signal.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fatal-signal.c' object='libgnu_a-fatal-signal.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-fatal-signal.obj `if test -f 'fatal-signal.c'; then $(CYGPATH_W) 'fatal-signal.c'; else $(CYGPATH_W) '$(srcdir)/fatal-signal.c'; fi`
 
 libgnu_a-fchdir.o: fchdir.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-fchdir.o -MD -MP -MF $(DEPDIR)/libgnu_a-fchdir.Tpo -c -o libgnu_a-fchdir.o `test -f 'fchdir.c' || echo '$(srcdir)/'`fchdir.c
@@ -3561,20 +3259,6 @@ libgnu_a-fdopendir.obj: fdopendir.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-fdopendir.obj `if test -f 'fdopendir.c'; then $(CYGPATH_W) 'fdopendir.c'; else $(CYGPATH_W) '$(srcdir)/fdopendir.c'; fi`
 
-libgnu_a-file-set.o: file-set.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-file-set.o -MD -MP -MF $(DEPDIR)/libgnu_a-file-set.Tpo -c -o libgnu_a-file-set.o `test -f 'file-set.c' || echo '$(srcdir)/'`file-set.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-file-set.Tpo $(DEPDIR)/libgnu_a-file-set.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='file-set.c' object='libgnu_a-file-set.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-file-set.o `test -f 'file-set.c' || echo '$(srcdir)/'`file-set.c
-
-libgnu_a-file-set.obj: file-set.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-file-set.obj -MD -MP -MF $(DEPDIR)/libgnu_a-file-set.Tpo -c -o libgnu_a-file-set.obj `if test -f 'file-set.c'; then $(CYGPATH_W) 'file-set.c'; else $(CYGPATH_W) '$(srcdir)/file-set.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-file-set.Tpo $(DEPDIR)/libgnu_a-file-set.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='file-set.c' object='libgnu_a-file-set.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-file-set.obj `if test -f 'file-set.c'; then $(CYGPATH_W) 'file-set.c'; else $(CYGPATH_W) '$(srcdir)/file-set.c'; fi`
-
 libgnu_a-filenamecat-lgpl.o: filenamecat-lgpl.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-filenamecat-lgpl.o -MD -MP -MF $(DEPDIR)/libgnu_a-filenamecat-lgpl.Tpo -c -o libgnu_a-filenamecat-lgpl.o `test -f 'filenamecat-lgpl.c' || echo '$(srcdir)/'`filenamecat-lgpl.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-filenamecat-lgpl.Tpo $(DEPDIR)/libgnu_a-filenamecat-lgpl.Po
@@ -3588,20 +3272,6 @@ libgnu_a-filenamecat-lgpl.obj: filenamecat-lgpl.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='filenamecat-lgpl.c' object='libgnu_a-filenamecat-lgpl.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-filenamecat-lgpl.obj `if test -f 'filenamecat-lgpl.c'; then $(CYGPATH_W) 'filenamecat-lgpl.c'; else $(CYGPATH_W) '$(srcdir)/filenamecat-lgpl.c'; fi`
-
-libgnu_a-findprog-in.o: findprog-in.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-findprog-in.o -MD -MP -MF $(DEPDIR)/libgnu_a-findprog-in.Tpo -c -o libgnu_a-findprog-in.o `test -f 'findprog-in.c' || echo '$(srcdir)/'`findprog-in.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-findprog-in.Tpo $(DEPDIR)/libgnu_a-findprog-in.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='findprog-in.c' object='libgnu_a-findprog-in.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-findprog-in.o `test -f 'findprog-in.c' || echo '$(srcdir)/'`findprog-in.c
-
-libgnu_a-findprog-in.obj: findprog-in.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-findprog-in.obj -MD -MP -MF $(DEPDIR)/libgnu_a-findprog-in.Tpo -c -o libgnu_a-findprog-in.obj `if test -f 'findprog-in.c'; then $(CYGPATH_W) 'findprog-in.c'; else $(CYGPATH_W) '$(srcdir)/findprog-in.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-findprog-in.Tpo $(DEPDIR)/libgnu_a-findprog-in.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='findprog-in.c' object='libgnu_a-findprog-in.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-findprog-in.obj `if test -f 'findprog-in.c'; then $(CYGPATH_W) 'findprog-in.c'; else $(CYGPATH_W) '$(srcdir)/findprog-in.c'; fi`
 
 libgnu_a-float.o: float.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-float.o -MD -MP -MF $(DEPDIR)/libgnu_a-float.Tpo -c -o libgnu_a-float.o `test -f 'float.c' || echo '$(srcdir)/'`float.c
@@ -3924,62 +3594,6 @@ libgnu_a-hard-locale.obj: hard-locale.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hard-locale.c' object='libgnu_a-hard-locale.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-hard-locale.obj `if test -f 'hard-locale.c'; then $(CYGPATH_W) 'hard-locale.c'; else $(CYGPATH_W) '$(srcdir)/hard-locale.c'; fi`
-
-libgnu_a-hash.o: hash.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-hash.o -MD -MP -MF $(DEPDIR)/libgnu_a-hash.Tpo -c -o libgnu_a-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-hash.Tpo $(DEPDIR)/libgnu_a-hash.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hash.c' object='libgnu_a-hash.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-hash.o `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
-
-libgnu_a-hash.obj: hash.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-hash.obj -MD -MP -MF $(DEPDIR)/libgnu_a-hash.Tpo -c -o libgnu_a-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-hash.Tpo $(DEPDIR)/libgnu_a-hash.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hash.c' object='libgnu_a-hash.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-hash.obj `if test -f 'hash.c'; then $(CYGPATH_W) 'hash.c'; else $(CYGPATH_W) '$(srcdir)/hash.c'; fi`
-
-libgnu_a-hash-pjw.o: hash-pjw.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-hash-pjw.o -MD -MP -MF $(DEPDIR)/libgnu_a-hash-pjw.Tpo -c -o libgnu_a-hash-pjw.o `test -f 'hash-pjw.c' || echo '$(srcdir)/'`hash-pjw.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-hash-pjw.Tpo $(DEPDIR)/libgnu_a-hash-pjw.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hash-pjw.c' object='libgnu_a-hash-pjw.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-hash-pjw.o `test -f 'hash-pjw.c' || echo '$(srcdir)/'`hash-pjw.c
-
-libgnu_a-hash-pjw.obj: hash-pjw.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-hash-pjw.obj -MD -MP -MF $(DEPDIR)/libgnu_a-hash-pjw.Tpo -c -o libgnu_a-hash-pjw.obj `if test -f 'hash-pjw.c'; then $(CYGPATH_W) 'hash-pjw.c'; else $(CYGPATH_W) '$(srcdir)/hash-pjw.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-hash-pjw.Tpo $(DEPDIR)/libgnu_a-hash-pjw.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hash-pjw.c' object='libgnu_a-hash-pjw.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-hash-pjw.obj `if test -f 'hash-pjw.c'; then $(CYGPATH_W) 'hash-pjw.c'; else $(CYGPATH_W) '$(srcdir)/hash-pjw.c'; fi`
-
-libgnu_a-hash-triple-simple.o: hash-triple-simple.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-hash-triple-simple.o -MD -MP -MF $(DEPDIR)/libgnu_a-hash-triple-simple.Tpo -c -o libgnu_a-hash-triple-simple.o `test -f 'hash-triple-simple.c' || echo '$(srcdir)/'`hash-triple-simple.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-hash-triple-simple.Tpo $(DEPDIR)/libgnu_a-hash-triple-simple.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hash-triple-simple.c' object='libgnu_a-hash-triple-simple.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-hash-triple-simple.o `test -f 'hash-triple-simple.c' || echo '$(srcdir)/'`hash-triple-simple.c
-
-libgnu_a-hash-triple-simple.obj: hash-triple-simple.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-hash-triple-simple.obj -MD -MP -MF $(DEPDIR)/libgnu_a-hash-triple-simple.Tpo -c -o libgnu_a-hash-triple-simple.obj `if test -f 'hash-triple-simple.c'; then $(CYGPATH_W) 'hash-triple-simple.c'; else $(CYGPATH_W) '$(srcdir)/hash-triple-simple.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-hash-triple-simple.Tpo $(DEPDIR)/libgnu_a-hash-triple-simple.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hash-triple-simple.c' object='libgnu_a-hash-triple-simple.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-hash-triple-simple.obj `if test -f 'hash-triple-simple.c'; then $(CYGPATH_W) 'hash-triple-simple.c'; else $(CYGPATH_W) '$(srcdir)/hash-triple-simple.c'; fi`
-
-libgnu_a-ialloc.o: ialloc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-ialloc.o -MD -MP -MF $(DEPDIR)/libgnu_a-ialloc.Tpo -c -o libgnu_a-ialloc.o `test -f 'ialloc.c' || echo '$(srcdir)/'`ialloc.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-ialloc.Tpo $(DEPDIR)/libgnu_a-ialloc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ialloc.c' object='libgnu_a-ialloc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-ialloc.o `test -f 'ialloc.c' || echo '$(srcdir)/'`ialloc.c
-
-libgnu_a-ialloc.obj: ialloc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-ialloc.obj -MD -MP -MF $(DEPDIR)/libgnu_a-ialloc.Tpo -c -o libgnu_a-ialloc.obj `if test -f 'ialloc.c'; then $(CYGPATH_W) 'ialloc.c'; else $(CYGPATH_W) '$(srcdir)/ialloc.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-ialloc.Tpo $(DEPDIR)/libgnu_a-ialloc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ialloc.c' object='libgnu_a-ialloc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-ialloc.obj `if test -f 'ialloc.c'; then $(CYGPATH_W) 'ialloc.c'; else $(CYGPATH_W) '$(srcdir)/ialloc.c'; fi`
 
 libgnu_a-inet_ntop.o: inet_ntop.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-inet_ntop.o -MD -MP -MF $(DEPDIR)/libgnu_a-inet_ntop.Tpo -c -o libgnu_a-inet_ntop.o `test -f 'inet_ntop.c' || echo '$(srcdir)/'`inet_ntop.c
@@ -4499,160 +4113,6 @@ libgnu_a-pipe.obj: pipe.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-pipe.obj `if test -f 'pipe.c'; then $(CYGPATH_W) 'pipe.c'; else $(CYGPATH_W) '$(srcdir)/pipe.c'; fi`
 
-libgnu_a-spawn.o: spawn.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawn.o -MD -MP -MF $(DEPDIR)/libgnu_a-spawn.Tpo -c -o libgnu_a-spawn.o `test -f 'spawn.c' || echo '$(srcdir)/'`spawn.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawn.Tpo $(DEPDIR)/libgnu_a-spawn.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawn.c' object='libgnu_a-spawn.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawn.o `test -f 'spawn.c' || echo '$(srcdir)/'`spawn.c
-
-libgnu_a-spawn.obj: spawn.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawn.obj -MD -MP -MF $(DEPDIR)/libgnu_a-spawn.Tpo -c -o libgnu_a-spawn.obj `if test -f 'spawn.c'; then $(CYGPATH_W) 'spawn.c'; else $(CYGPATH_W) '$(srcdir)/spawn.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawn.Tpo $(DEPDIR)/libgnu_a-spawn.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawn.c' object='libgnu_a-spawn.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawn.obj `if test -f 'spawn.c'; then $(CYGPATH_W) 'spawn.c'; else $(CYGPATH_W) '$(srcdir)/spawn.c'; fi`
-
-libgnu_a-spawni.o: spawni.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawni.o -MD -MP -MF $(DEPDIR)/libgnu_a-spawni.Tpo -c -o libgnu_a-spawni.o `test -f 'spawni.c' || echo '$(srcdir)/'`spawni.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawni.Tpo $(DEPDIR)/libgnu_a-spawni.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawni.c' object='libgnu_a-spawni.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawni.o `test -f 'spawni.c' || echo '$(srcdir)/'`spawni.c
-
-libgnu_a-spawni.obj: spawni.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawni.obj -MD -MP -MF $(DEPDIR)/libgnu_a-spawni.Tpo -c -o libgnu_a-spawni.obj `if test -f 'spawni.c'; then $(CYGPATH_W) 'spawni.c'; else $(CYGPATH_W) '$(srcdir)/spawni.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawni.Tpo $(DEPDIR)/libgnu_a-spawni.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawni.c' object='libgnu_a-spawni.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawni.obj `if test -f 'spawni.c'; then $(CYGPATH_W) 'spawni.c'; else $(CYGPATH_W) '$(srcdir)/spawni.c'; fi`
-
-libgnu_a-spawn_faction_addchdir.o: spawn_faction_addchdir.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawn_faction_addchdir.o -MD -MP -MF $(DEPDIR)/libgnu_a-spawn_faction_addchdir.Tpo -c -o libgnu_a-spawn_faction_addchdir.o `test -f 'spawn_faction_addchdir.c' || echo '$(srcdir)/'`spawn_faction_addchdir.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawn_faction_addchdir.Tpo $(DEPDIR)/libgnu_a-spawn_faction_addchdir.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawn_faction_addchdir.c' object='libgnu_a-spawn_faction_addchdir.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawn_faction_addchdir.o `test -f 'spawn_faction_addchdir.c' || echo '$(srcdir)/'`spawn_faction_addchdir.c
-
-libgnu_a-spawn_faction_addchdir.obj: spawn_faction_addchdir.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawn_faction_addchdir.obj -MD -MP -MF $(DEPDIR)/libgnu_a-spawn_faction_addchdir.Tpo -c -o libgnu_a-spawn_faction_addchdir.obj `if test -f 'spawn_faction_addchdir.c'; then $(CYGPATH_W) 'spawn_faction_addchdir.c'; else $(CYGPATH_W) '$(srcdir)/spawn_faction_addchdir.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawn_faction_addchdir.Tpo $(DEPDIR)/libgnu_a-spawn_faction_addchdir.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawn_faction_addchdir.c' object='libgnu_a-spawn_faction_addchdir.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawn_faction_addchdir.obj `if test -f 'spawn_faction_addchdir.c'; then $(CYGPATH_W) 'spawn_faction_addchdir.c'; else $(CYGPATH_W) '$(srcdir)/spawn_faction_addchdir.c'; fi`
-
-libgnu_a-spawn_faction_addopen.o: spawn_faction_addopen.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawn_faction_addopen.o -MD -MP -MF $(DEPDIR)/libgnu_a-spawn_faction_addopen.Tpo -c -o libgnu_a-spawn_faction_addopen.o `test -f 'spawn_faction_addopen.c' || echo '$(srcdir)/'`spawn_faction_addopen.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawn_faction_addopen.Tpo $(DEPDIR)/libgnu_a-spawn_faction_addopen.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawn_faction_addopen.c' object='libgnu_a-spawn_faction_addopen.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawn_faction_addopen.o `test -f 'spawn_faction_addopen.c' || echo '$(srcdir)/'`spawn_faction_addopen.c
-
-libgnu_a-spawn_faction_addopen.obj: spawn_faction_addopen.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawn_faction_addopen.obj -MD -MP -MF $(DEPDIR)/libgnu_a-spawn_faction_addopen.Tpo -c -o libgnu_a-spawn_faction_addopen.obj `if test -f 'spawn_faction_addopen.c'; then $(CYGPATH_W) 'spawn_faction_addopen.c'; else $(CYGPATH_W) '$(srcdir)/spawn_faction_addopen.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawn_faction_addopen.Tpo $(DEPDIR)/libgnu_a-spawn_faction_addopen.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawn_faction_addopen.c' object='libgnu_a-spawn_faction_addopen.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawn_faction_addopen.obj `if test -f 'spawn_faction_addopen.c'; then $(CYGPATH_W) 'spawn_faction_addopen.c'; else $(CYGPATH_W) '$(srcdir)/spawn_faction_addopen.c'; fi`
-
-libgnu_a-spawn_faction_destroy.o: spawn_faction_destroy.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawn_faction_destroy.o -MD -MP -MF $(DEPDIR)/libgnu_a-spawn_faction_destroy.Tpo -c -o libgnu_a-spawn_faction_destroy.o `test -f 'spawn_faction_destroy.c' || echo '$(srcdir)/'`spawn_faction_destroy.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawn_faction_destroy.Tpo $(DEPDIR)/libgnu_a-spawn_faction_destroy.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawn_faction_destroy.c' object='libgnu_a-spawn_faction_destroy.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawn_faction_destroy.o `test -f 'spawn_faction_destroy.c' || echo '$(srcdir)/'`spawn_faction_destroy.c
-
-libgnu_a-spawn_faction_destroy.obj: spawn_faction_destroy.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawn_faction_destroy.obj -MD -MP -MF $(DEPDIR)/libgnu_a-spawn_faction_destroy.Tpo -c -o libgnu_a-spawn_faction_destroy.obj `if test -f 'spawn_faction_destroy.c'; then $(CYGPATH_W) 'spawn_faction_destroy.c'; else $(CYGPATH_W) '$(srcdir)/spawn_faction_destroy.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawn_faction_destroy.Tpo $(DEPDIR)/libgnu_a-spawn_faction_destroy.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawn_faction_destroy.c' object='libgnu_a-spawn_faction_destroy.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawn_faction_destroy.obj `if test -f 'spawn_faction_destroy.c'; then $(CYGPATH_W) 'spawn_faction_destroy.c'; else $(CYGPATH_W) '$(srcdir)/spawn_faction_destroy.c'; fi`
-
-libgnu_a-spawn_faction_init.o: spawn_faction_init.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawn_faction_init.o -MD -MP -MF $(DEPDIR)/libgnu_a-spawn_faction_init.Tpo -c -o libgnu_a-spawn_faction_init.o `test -f 'spawn_faction_init.c' || echo '$(srcdir)/'`spawn_faction_init.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawn_faction_init.Tpo $(DEPDIR)/libgnu_a-spawn_faction_init.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawn_faction_init.c' object='libgnu_a-spawn_faction_init.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawn_faction_init.o `test -f 'spawn_faction_init.c' || echo '$(srcdir)/'`spawn_faction_init.c
-
-libgnu_a-spawn_faction_init.obj: spawn_faction_init.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawn_faction_init.obj -MD -MP -MF $(DEPDIR)/libgnu_a-spawn_faction_init.Tpo -c -o libgnu_a-spawn_faction_init.obj `if test -f 'spawn_faction_init.c'; then $(CYGPATH_W) 'spawn_faction_init.c'; else $(CYGPATH_W) '$(srcdir)/spawn_faction_init.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawn_faction_init.Tpo $(DEPDIR)/libgnu_a-spawn_faction_init.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawn_faction_init.c' object='libgnu_a-spawn_faction_init.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawn_faction_init.obj `if test -f 'spawn_faction_init.c'; then $(CYGPATH_W) 'spawn_faction_init.c'; else $(CYGPATH_W) '$(srcdir)/spawn_faction_init.c'; fi`
-
-libgnu_a-spawnattr_destroy.o: spawnattr_destroy.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawnattr_destroy.o -MD -MP -MF $(DEPDIR)/libgnu_a-spawnattr_destroy.Tpo -c -o libgnu_a-spawnattr_destroy.o `test -f 'spawnattr_destroy.c' || echo '$(srcdir)/'`spawnattr_destroy.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawnattr_destroy.Tpo $(DEPDIR)/libgnu_a-spawnattr_destroy.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawnattr_destroy.c' object='libgnu_a-spawnattr_destroy.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawnattr_destroy.o `test -f 'spawnattr_destroy.c' || echo '$(srcdir)/'`spawnattr_destroy.c
-
-libgnu_a-spawnattr_destroy.obj: spawnattr_destroy.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawnattr_destroy.obj -MD -MP -MF $(DEPDIR)/libgnu_a-spawnattr_destroy.Tpo -c -o libgnu_a-spawnattr_destroy.obj `if test -f 'spawnattr_destroy.c'; then $(CYGPATH_W) 'spawnattr_destroy.c'; else $(CYGPATH_W) '$(srcdir)/spawnattr_destroy.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawnattr_destroy.Tpo $(DEPDIR)/libgnu_a-spawnattr_destroy.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawnattr_destroy.c' object='libgnu_a-spawnattr_destroy.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawnattr_destroy.obj `if test -f 'spawnattr_destroy.c'; then $(CYGPATH_W) 'spawnattr_destroy.c'; else $(CYGPATH_W) '$(srcdir)/spawnattr_destroy.c'; fi`
-
-libgnu_a-spawnattr_init.o: spawnattr_init.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawnattr_init.o -MD -MP -MF $(DEPDIR)/libgnu_a-spawnattr_init.Tpo -c -o libgnu_a-spawnattr_init.o `test -f 'spawnattr_init.c' || echo '$(srcdir)/'`spawnattr_init.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawnattr_init.Tpo $(DEPDIR)/libgnu_a-spawnattr_init.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawnattr_init.c' object='libgnu_a-spawnattr_init.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawnattr_init.o `test -f 'spawnattr_init.c' || echo '$(srcdir)/'`spawnattr_init.c
-
-libgnu_a-spawnattr_init.obj: spawnattr_init.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawnattr_init.obj -MD -MP -MF $(DEPDIR)/libgnu_a-spawnattr_init.Tpo -c -o libgnu_a-spawnattr_init.obj `if test -f 'spawnattr_init.c'; then $(CYGPATH_W) 'spawnattr_init.c'; else $(CYGPATH_W) '$(srcdir)/spawnattr_init.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawnattr_init.Tpo $(DEPDIR)/libgnu_a-spawnattr_init.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawnattr_init.c' object='libgnu_a-spawnattr_init.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawnattr_init.obj `if test -f 'spawnattr_init.c'; then $(CYGPATH_W) 'spawnattr_init.c'; else $(CYGPATH_W) '$(srcdir)/spawnattr_init.c'; fi`
-
-libgnu_a-spawnattr_setflags.o: spawnattr_setflags.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawnattr_setflags.o -MD -MP -MF $(DEPDIR)/libgnu_a-spawnattr_setflags.Tpo -c -o libgnu_a-spawnattr_setflags.o `test -f 'spawnattr_setflags.c' || echo '$(srcdir)/'`spawnattr_setflags.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawnattr_setflags.Tpo $(DEPDIR)/libgnu_a-spawnattr_setflags.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawnattr_setflags.c' object='libgnu_a-spawnattr_setflags.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawnattr_setflags.o `test -f 'spawnattr_setflags.c' || echo '$(srcdir)/'`spawnattr_setflags.c
-
-libgnu_a-spawnattr_setflags.obj: spawnattr_setflags.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawnattr_setflags.obj -MD -MP -MF $(DEPDIR)/libgnu_a-spawnattr_setflags.Tpo -c -o libgnu_a-spawnattr_setflags.obj `if test -f 'spawnattr_setflags.c'; then $(CYGPATH_W) 'spawnattr_setflags.c'; else $(CYGPATH_W) '$(srcdir)/spawnattr_setflags.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawnattr_setflags.Tpo $(DEPDIR)/libgnu_a-spawnattr_setflags.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawnattr_setflags.c' object='libgnu_a-spawnattr_setflags.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawnattr_setflags.obj `if test -f 'spawnattr_setflags.c'; then $(CYGPATH_W) 'spawnattr_setflags.c'; else $(CYGPATH_W) '$(srcdir)/spawnattr_setflags.c'; fi`
-
-libgnu_a-spawnattr_setsigmask.o: spawnattr_setsigmask.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawnattr_setsigmask.o -MD -MP -MF $(DEPDIR)/libgnu_a-spawnattr_setsigmask.Tpo -c -o libgnu_a-spawnattr_setsigmask.o `test -f 'spawnattr_setsigmask.c' || echo '$(srcdir)/'`spawnattr_setsigmask.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawnattr_setsigmask.Tpo $(DEPDIR)/libgnu_a-spawnattr_setsigmask.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawnattr_setsigmask.c' object='libgnu_a-spawnattr_setsigmask.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawnattr_setsigmask.o `test -f 'spawnattr_setsigmask.c' || echo '$(srcdir)/'`spawnattr_setsigmask.c
-
-libgnu_a-spawnattr_setsigmask.obj: spawnattr_setsigmask.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawnattr_setsigmask.obj -MD -MP -MF $(DEPDIR)/libgnu_a-spawnattr_setsigmask.Tpo -c -o libgnu_a-spawnattr_setsigmask.obj `if test -f 'spawnattr_setsigmask.c'; then $(CYGPATH_W) 'spawnattr_setsigmask.c'; else $(CYGPATH_W) '$(srcdir)/spawnattr_setsigmask.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawnattr_setsigmask.Tpo $(DEPDIR)/libgnu_a-spawnattr_setsigmask.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawnattr_setsigmask.c' object='libgnu_a-spawnattr_setsigmask.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawnattr_setsigmask.obj `if test -f 'spawnattr_setsigmask.c'; then $(CYGPATH_W) 'spawnattr_setsigmask.c'; else $(CYGPATH_W) '$(srcdir)/spawnattr_setsigmask.c'; fi`
-
-libgnu_a-spawnp.o: spawnp.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawnp.o -MD -MP -MF $(DEPDIR)/libgnu_a-spawnp.Tpo -c -o libgnu_a-spawnp.o `test -f 'spawnp.c' || echo '$(srcdir)/'`spawnp.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawnp.Tpo $(DEPDIR)/libgnu_a-spawnp.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawnp.c' object='libgnu_a-spawnp.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawnp.o `test -f 'spawnp.c' || echo '$(srcdir)/'`spawnp.c
-
-libgnu_a-spawnp.obj: spawnp.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-spawnp.obj -MD -MP -MF $(DEPDIR)/libgnu_a-spawnp.Tpo -c -o libgnu_a-spawnp.obj `if test -f 'spawnp.c'; then $(CYGPATH_W) 'spawnp.c'; else $(CYGPATH_W) '$(srcdir)/spawnp.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-spawnp.Tpo $(DEPDIR)/libgnu_a-spawnp.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spawnp.c' object='libgnu_a-spawnp.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-spawnp.obj `if test -f 'spawnp.c'; then $(CYGPATH_W) 'spawnp.c'; else $(CYGPATH_W) '$(srcdir)/spawnp.c'; fi`
-
 libgnu_a-printf-frexp.o: printf-frexp.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-printf-frexp.o -MD -MP -MF $(DEPDIR)/libgnu_a-printf-frexp.Tpo -c -o libgnu_a-printf-frexp.o `test -f 'printf-frexp.c' || echo '$(srcdir)/'`printf-frexp.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-printf-frexp.Tpo $(DEPDIR)/libgnu_a-printf-frexp.Po
@@ -4792,20 +4252,6 @@ libgnu_a-readlink.obj: readlink.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='readlink.c' object='libgnu_a-readlink.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-readlink.obj `if test -f 'readlink.c'; then $(CYGPATH_W) 'readlink.c'; else $(CYGPATH_W) '$(srcdir)/readlink.c'; fi`
-
-libgnu_a-reallocarray.o: reallocarray.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-reallocarray.o -MD -MP -MF $(DEPDIR)/libgnu_a-reallocarray.Tpo -c -o libgnu_a-reallocarray.o `test -f 'reallocarray.c' || echo '$(srcdir)/'`reallocarray.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-reallocarray.Tpo $(DEPDIR)/libgnu_a-reallocarray.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='reallocarray.c' object='libgnu_a-reallocarray.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-reallocarray.o `test -f 'reallocarray.c' || echo '$(srcdir)/'`reallocarray.c
-
-libgnu_a-reallocarray.obj: reallocarray.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-reallocarray.obj -MD -MP -MF $(DEPDIR)/libgnu_a-reallocarray.Tpo -c -o libgnu_a-reallocarray.obj `if test -f 'reallocarray.c'; then $(CYGPATH_W) 'reallocarray.c'; else $(CYGPATH_W) '$(srcdir)/reallocarray.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-reallocarray.Tpo $(DEPDIR)/libgnu_a-reallocarray.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='reallocarray.c' object='libgnu_a-reallocarray.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-reallocarray.obj `if test -f 'reallocarray.c'; then $(CYGPATH_W) 'reallocarray.c'; else $(CYGPATH_W) '$(srcdir)/reallocarray.c'; fi`
 
 libgnu_a-rename.o: rename.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-rename.o -MD -MP -MF $(DEPDIR)/libgnu_a-rename.Tpo -c -o libgnu_a-rename.o `test -f 'rename.c' || echo '$(srcdir)/'`rename.c
@@ -5017,34 +4463,6 @@ libgnu_a-setlocale-lock.obj: setlocale-lock.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-setlocale-lock.obj `if test -f 'setlocale-lock.c'; then $(CYGPATH_W) 'setlocale-lock.c'; else $(CYGPATH_W) '$(srcdir)/setlocale-lock.c'; fi`
 
-libgnu_a-sigaction.o: sigaction.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-sigaction.o -MD -MP -MF $(DEPDIR)/libgnu_a-sigaction.Tpo -c -o libgnu_a-sigaction.o `test -f 'sigaction.c' || echo '$(srcdir)/'`sigaction.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-sigaction.Tpo $(DEPDIR)/libgnu_a-sigaction.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sigaction.c' object='libgnu_a-sigaction.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-sigaction.o `test -f 'sigaction.c' || echo '$(srcdir)/'`sigaction.c
-
-libgnu_a-sigaction.obj: sigaction.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-sigaction.obj -MD -MP -MF $(DEPDIR)/libgnu_a-sigaction.Tpo -c -o libgnu_a-sigaction.obj `if test -f 'sigaction.c'; then $(CYGPATH_W) 'sigaction.c'; else $(CYGPATH_W) '$(srcdir)/sigaction.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-sigaction.Tpo $(DEPDIR)/libgnu_a-sigaction.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sigaction.c' object='libgnu_a-sigaction.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-sigaction.obj `if test -f 'sigaction.c'; then $(CYGPATH_W) 'sigaction.c'; else $(CYGPATH_W) '$(srcdir)/sigaction.c'; fi`
-
-libgnu_a-sig-handler.o: sig-handler.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-sig-handler.o -MD -MP -MF $(DEPDIR)/libgnu_a-sig-handler.Tpo -c -o libgnu_a-sig-handler.o `test -f 'sig-handler.c' || echo '$(srcdir)/'`sig-handler.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-sig-handler.Tpo $(DEPDIR)/libgnu_a-sig-handler.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sig-handler.c' object='libgnu_a-sig-handler.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-sig-handler.o `test -f 'sig-handler.c' || echo '$(srcdir)/'`sig-handler.c
-
-libgnu_a-sig-handler.obj: sig-handler.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-sig-handler.obj -MD -MP -MF $(DEPDIR)/libgnu_a-sig-handler.Tpo -c -o libgnu_a-sig-handler.obj `if test -f 'sig-handler.c'; then $(CYGPATH_W) 'sig-handler.c'; else $(CYGPATH_W) '$(srcdir)/sig-handler.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-sig-handler.Tpo $(DEPDIR)/libgnu_a-sig-handler.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sig-handler.c' object='libgnu_a-sig-handler.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-sig-handler.obj `if test -f 'sig-handler.c'; then $(CYGPATH_W) 'sig-handler.c'; else $(CYGPATH_W) '$(srcdir)/sig-handler.c'; fi`
-
 libgnu_a-signbitf.o: signbitf.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-signbitf.o -MD -MP -MF $(DEPDIR)/libgnu_a-signbitf.Tpo -c -o libgnu_a-signbitf.o `test -f 'signbitf.c' || echo '$(srcdir)/'`signbitf.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-signbitf.Tpo $(DEPDIR)/libgnu_a-signbitf.Po
@@ -5170,20 +4588,6 @@ libgnu_a-stdio-write.obj: stdio-write.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='stdio-write.c' object='libgnu_a-stdio-write.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-stdio-write.obj `if test -f 'stdio-write.c'; then $(CYGPATH_W) 'stdio-write.c'; else $(CYGPATH_W) '$(srcdir)/stdio-write.c'; fi`
-
-libgnu_a-stpcpy.o: stpcpy.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-stpcpy.o -MD -MP -MF $(DEPDIR)/libgnu_a-stpcpy.Tpo -c -o libgnu_a-stpcpy.o `test -f 'stpcpy.c' || echo '$(srcdir)/'`stpcpy.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-stpcpy.Tpo $(DEPDIR)/libgnu_a-stpcpy.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='stpcpy.c' object='libgnu_a-stpcpy.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-stpcpy.o `test -f 'stpcpy.c' || echo '$(srcdir)/'`stpcpy.c
-
-libgnu_a-stpcpy.obj: stpcpy.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-stpcpy.obj -MD -MP -MF $(DEPDIR)/libgnu_a-stpcpy.Tpo -c -o libgnu_a-stpcpy.obj `if test -f 'stpcpy.c'; then $(CYGPATH_W) 'stpcpy.c'; else $(CYGPATH_W) '$(srcdir)/stpcpy.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-stpcpy.Tpo $(DEPDIR)/libgnu_a-stpcpy.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='stpcpy.c' object='libgnu_a-stpcpy.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-stpcpy.obj `if test -f 'stpcpy.c'; then $(CYGPATH_W) 'stpcpy.c'; else $(CYGPATH_W) '$(srcdir)/stpcpy.c'; fi`
 
 libgnu_a-strcasecmp.o: strcasecmp.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strcasecmp.o -MD -MP -MF $(DEPDIR)/libgnu_a-strcasecmp.Tpo -c -o libgnu_a-strcasecmp.o `test -f 'strcasecmp.c' || echo '$(srcdir)/'`strcasecmp.c
@@ -5563,20 +4967,6 @@ uniwidth/libgnu_a-width.obj: uniwidth/width.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o uniwidth/libgnu_a-width.obj `if test -f 'uniwidth/width.c'; then $(CYGPATH_W) 'uniwidth/width.c'; else $(CYGPATH_W) '$(srcdir)/uniwidth/width.c'; fi`
 
-libgnu_a-wait-process.o: wait-process.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-wait-process.o -MD -MP -MF $(DEPDIR)/libgnu_a-wait-process.Tpo -c -o libgnu_a-wait-process.o `test -f 'wait-process.c' || echo '$(srcdir)/'`wait-process.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-wait-process.Tpo $(DEPDIR)/libgnu_a-wait-process.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wait-process.c' object='libgnu_a-wait-process.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-wait-process.o `test -f 'wait-process.c' || echo '$(srcdir)/'`wait-process.c
-
-libgnu_a-wait-process.obj: wait-process.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-wait-process.obj -MD -MP -MF $(DEPDIR)/libgnu_a-wait-process.Tpo -c -o libgnu_a-wait-process.obj `if test -f 'wait-process.c'; then $(CYGPATH_W) 'wait-process.c'; else $(CYGPATH_W) '$(srcdir)/wait-process.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-wait-process.Tpo $(DEPDIR)/libgnu_a-wait-process.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wait-process.c' object='libgnu_a-wait-process.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-wait-process.obj `if test -f 'wait-process.c'; then $(CYGPATH_W) 'wait-process.c'; else $(CYGPATH_W) '$(srcdir)/wait-process.c'; fi`
-
 libgnu_a-waitpid.o: waitpid.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-waitpid.o -MD -MP -MF $(DEPDIR)/libgnu_a-waitpid.Tpo -c -o libgnu_a-waitpid.o `test -f 'waitpid.c' || echo '$(srcdir)/'`waitpid.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-waitpid.Tpo $(DEPDIR)/libgnu_a-waitpid.Po
@@ -5689,20 +5079,6 @@ libgnu_a-windows-rwlock.obj: windows-rwlock.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-windows-rwlock.obj `if test -f 'windows-rwlock.c'; then $(CYGPATH_W) 'windows-rwlock.c'; else $(CYGPATH_W) '$(srcdir)/windows-rwlock.c'; fi`
 
-libgnu_a-windows-spawn.o: windows-spawn.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-windows-spawn.o -MD -MP -MF $(DEPDIR)/libgnu_a-windows-spawn.Tpo -c -o libgnu_a-windows-spawn.o `test -f 'windows-spawn.c' || echo '$(srcdir)/'`windows-spawn.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-windows-spawn.Tpo $(DEPDIR)/libgnu_a-windows-spawn.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='windows-spawn.c' object='libgnu_a-windows-spawn.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-windows-spawn.o `test -f 'windows-spawn.c' || echo '$(srcdir)/'`windows-spawn.c
-
-libgnu_a-windows-spawn.obj: windows-spawn.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-windows-spawn.obj -MD -MP -MF $(DEPDIR)/libgnu_a-windows-spawn.Tpo -c -o libgnu_a-windows-spawn.obj `if test -f 'windows-spawn.c'; then $(CYGPATH_W) 'windows-spawn.c'; else $(CYGPATH_W) '$(srcdir)/windows-spawn.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-windows-spawn.Tpo $(DEPDIR)/libgnu_a-windows-spawn.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='windows-spawn.c' object='libgnu_a-windows-spawn.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-windows-spawn.obj `if test -f 'windows-spawn.c'; then $(CYGPATH_W) 'windows-spawn.c'; else $(CYGPATH_W) '$(srcdir)/windows-spawn.c'; fi`
-
 libgnu_a-windows-tls.o: windows-tls.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-windows-tls.o -MD -MP -MF $(DEPDIR)/libgnu_a-windows-tls.Tpo -c -o libgnu_a-windows-tls.o `test -f 'windows-tls.c' || echo '$(srcdir)/'`windows-tls.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-windows-tls.Tpo $(DEPDIR)/libgnu_a-windows-tls.Po
@@ -5759,34 +5135,6 @@ libgnu_a-write.obj: write.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-write.obj `if test -f 'write.c'; then $(CYGPATH_W) 'write.c'; else $(CYGPATH_W) '$(srcdir)/write.c'; fi`
 
-libgnu_a-xmalloc.o: xmalloc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-xmalloc.o -MD -MP -MF $(DEPDIR)/libgnu_a-xmalloc.Tpo -c -o libgnu_a-xmalloc.o `test -f 'xmalloc.c' || echo '$(srcdir)/'`xmalloc.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-xmalloc.Tpo $(DEPDIR)/libgnu_a-xmalloc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xmalloc.c' object='libgnu_a-xmalloc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-xmalloc.o `test -f 'xmalloc.c' || echo '$(srcdir)/'`xmalloc.c
-
-libgnu_a-xmalloc.obj: xmalloc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-xmalloc.obj -MD -MP -MF $(DEPDIR)/libgnu_a-xmalloc.Tpo -c -o libgnu_a-xmalloc.obj `if test -f 'xmalloc.c'; then $(CYGPATH_W) 'xmalloc.c'; else $(CYGPATH_W) '$(srcdir)/xmalloc.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-xmalloc.Tpo $(DEPDIR)/libgnu_a-xmalloc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xmalloc.c' object='libgnu_a-xmalloc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-xmalloc.obj `if test -f 'xmalloc.c'; then $(CYGPATH_W) 'xmalloc.c'; else $(CYGPATH_W) '$(srcdir)/xmalloc.c'; fi`
-
-libgnu_a-xalloc-die.o: xalloc-die.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-xalloc-die.o -MD -MP -MF $(DEPDIR)/libgnu_a-xalloc-die.Tpo -c -o libgnu_a-xalloc-die.o `test -f 'xalloc-die.c' || echo '$(srcdir)/'`xalloc-die.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-xalloc-die.Tpo $(DEPDIR)/libgnu_a-xalloc-die.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xalloc-die.c' object='libgnu_a-xalloc-die.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-xalloc-die.o `test -f 'xalloc-die.c' || echo '$(srcdir)/'`xalloc-die.c
-
-libgnu_a-xalloc-die.obj: xalloc-die.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-xalloc-die.obj -MD -MP -MF $(DEPDIR)/libgnu_a-xalloc-die.Tpo -c -o libgnu_a-xalloc-die.obj `if test -f 'xalloc-die.c'; then $(CYGPATH_W) 'xalloc-die.c'; else $(CYGPATH_W) '$(srcdir)/xalloc-die.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-xalloc-die.Tpo $(DEPDIR)/libgnu_a-xalloc-die.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xalloc-die.c' object='libgnu_a-xalloc-die.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-xalloc-die.obj `if test -f 'xalloc-die.c'; then $(CYGPATH_W) 'xalloc-die.c'; else $(CYGPATH_W) '$(srcdir)/xalloc-die.c'; fi`
-
 libgnu_a-xsize.o: xsize.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-xsize.o -MD -MP -MF $(DEPDIR)/libgnu_a-xsize.Tpo -c -o libgnu_a-xsize.o `test -f 'xsize.c' || echo '$(srcdir)/'`xsize.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-xsize.Tpo $(DEPDIR)/libgnu_a-xsize.Po
@@ -5814,20 +5162,6 @@ libgnu_a-alloca.obj: alloca.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='alloca.c' object='libgnu_a-alloca.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-alloca.obj `if test -f 'alloca.c'; then $(CYGPATH_W) 'alloca.c'; else $(CYGPATH_W) '$(srcdir)/alloca.c'; fi`
-
-libgnu_a-calloc.o: calloc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-calloc.o -MD -MP -MF $(DEPDIR)/libgnu_a-calloc.Tpo -c -o libgnu_a-calloc.o `test -f 'calloc.c' || echo '$(srcdir)/'`calloc.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-calloc.Tpo $(DEPDIR)/libgnu_a-calloc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='calloc.c' object='libgnu_a-calloc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-calloc.o `test -f 'calloc.c' || echo '$(srcdir)/'`calloc.c
-
-libgnu_a-calloc.obj: calloc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-calloc.obj -MD -MP -MF $(DEPDIR)/libgnu_a-calloc.Tpo -c -o libgnu_a-calloc.obj `if test -f 'calloc.c'; then $(CYGPATH_W) 'calloc.c'; else $(CYGPATH_W) '$(srcdir)/calloc.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-calloc.Tpo $(DEPDIR)/libgnu_a-calloc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='calloc.c' object='libgnu_a-calloc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-calloc.obj `if test -f 'calloc.c'; then $(CYGPATH_W) 'calloc.c'; else $(CYGPATH_W) '$(srcdir)/calloc.c'; fi`
 
 libgnu_a-dprintf.o: dprintf.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-dprintf.o -MD -MP -MF $(DEPDIR)/libgnu_a-dprintf.Tpo -c -o libgnu_a-dprintf.o `test -f 'dprintf.c' || echo '$(srcdir)/'`dprintf.c
@@ -6453,23 +5787,17 @@ clean-am: clean-generic clean-libtool clean-noinstLIBRARIES \
 
 distclean: distclean-recursive
 		-rm -f ./$(DEPDIR)/alloca.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-access.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-alloca.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-asnprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-at-func.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-basename-lgpl.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-bitrotate.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-btowc.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-c-ctype.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-calloc.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-canonicalize-lgpl.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-canonicalize.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-chdir-long.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-cloexec.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-close.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-closedir.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-concat-filename.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-copysign.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-dirfd.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-dirname-lgpl.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-dprintf.Po
@@ -6479,19 +5807,15 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-dup2.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-error.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-euidaccess.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-execute.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-exitfail.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-faccessat.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-fatal-signal.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fchdir.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fcntl.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fd-hook.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fd-safer-flag.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fd-safer.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fdopendir.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-file-set.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-filenamecat-lgpl.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-findprog-in.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-float.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fnmatch.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fnmatch_loop.Po
@@ -6518,10 +5842,6 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-globfree.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-group-member.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-hard-locale.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-hash-pjw.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-hash-triple-simple.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-hash.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-ialloc.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-inet_ntop.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-isblank.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-isnan.Po
@@ -6583,7 +5903,6 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-readdir.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-readlink.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-realloc.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-reallocarray.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rename.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rewinddir.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rmdir.Po
@@ -6595,32 +5914,18 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-setlocale-lock.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-setlocale.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-setlocale_null.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-sig-handler.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-sigaction.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-signbitd.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-signbitf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-signbitl.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-sigprocmask.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-snprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-sockets.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawn.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawn_faction_addchdir.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawn_faction_addopen.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawn_faction_destroy.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawn_faction_init.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawnattr_destroy.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawnattr_init.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawnattr_setflags.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawnattr_setsigmask.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawni.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawnp.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-sprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-stat-time.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-stat-w32.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-stat.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-stdio-read.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-stdio-write.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-stpcpy.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strcasecmp.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strcasestr.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strchrnul.Po
@@ -6650,7 +5955,6 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-vasnprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-vfprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-vprintf.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-wait-process.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-waitpid.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wcswidth.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wctype-h.Po
@@ -6659,13 +5963,10 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-windows-once.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-windows-recmutex.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-windows-rwlock.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-windows-spawn.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-windows-tls.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wmemchr.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wmempcpy.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-write.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-xalloc-die.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-xmalloc.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-xsize.Po
 	-rm -f glthread/$(DEPDIR)/libgnu_a-lock.Po
 	-rm -f glthread/$(DEPDIR)/libgnu_a-threadlib.Po
@@ -6721,23 +6022,17 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
 		-rm -f ./$(DEPDIR)/alloca.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-access.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-alloca.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-asnprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-at-func.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-basename-lgpl.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-bitrotate.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-btowc.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-c-ctype.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-calloc.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-canonicalize-lgpl.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-canonicalize.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-chdir-long.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-cloexec.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-close.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-closedir.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-concat-filename.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-copysign.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-dirfd.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-dirname-lgpl.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-dprintf.Po
@@ -6747,19 +6042,15 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-dup2.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-error.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-euidaccess.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-execute.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-exitfail.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-faccessat.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-fatal-signal.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fchdir.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fcntl.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fd-hook.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fd-safer-flag.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fd-safer.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fdopendir.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-file-set.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-filenamecat-lgpl.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-findprog-in.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-float.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fnmatch.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-fnmatch_loop.Po
@@ -6786,10 +6077,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-globfree.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-group-member.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-hard-locale.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-hash-pjw.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-hash-triple-simple.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-hash.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-ialloc.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-inet_ntop.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-isblank.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-isnan.Po
@@ -6851,7 +6138,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-readdir.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-readlink.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-realloc.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-reallocarray.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rename.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rewinddir.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rmdir.Po
@@ -6863,32 +6149,18 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-setlocale-lock.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-setlocale.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-setlocale_null.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-sig-handler.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-sigaction.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-signbitd.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-signbitf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-signbitl.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-sigprocmask.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-snprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-sockets.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawn.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawn_faction_addchdir.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawn_faction_addopen.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawn_faction_destroy.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawn_faction_init.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawnattr_destroy.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawnattr_init.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawnattr_setflags.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawnattr_setsigmask.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawni.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-spawnp.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-sprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-stat-time.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-stat-w32.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-stat.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-stdio-read.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-stdio-write.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-stpcpy.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strcasecmp.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strcasestr.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strchrnul.Po
@@ -6918,7 +6190,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-vasnprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-vfprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-vprintf.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-wait-process.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-waitpid.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wcswidth.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wctype-h.Po
@@ -6927,13 +6198,10 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-windows-once.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-windows-recmutex.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-windows-rwlock.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-windows-spawn.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-windows-tls.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wmemchr.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wmempcpy.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-write.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-xalloc-die.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-xmalloc.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-xsize.Po
 	-rm -f glthread/$(DEPDIR)/libgnu_a-lock.Po
 	-rm -f glthread/$(DEPDIR)/libgnu_a-threadlib.Po
@@ -7620,26 +6888,6 @@ math.h: math.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(ARG_NONNULL_H) $(
 @GL_GENERATE_NETINET_IN_H_FALSE@netinet/in.h: $(top_builddir)/config.status
 @GL_GENERATE_NETINET_IN_H_FALSE@	rm -f $@
 
-# We need the following in order to create a replacement for <sched.h> when
-# the system doesn't have one.
-sched.h: sched.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(WARN_ON_USE_H)
-	$(gl_V_at)$(SED_HEADER_STDOUT) \
-	      -e 's|@''GUARD_PREFIX''@|GL|g' \
-	      -e 's|@''HAVE_SCHED_H''@|$(HAVE_SCHED_H)|g' \
-	      -e 's|@''HAVE_SYS_CDEFS_H''@|$(HAVE_SYS_CDEFS_H)|g' \
-	      -e 's|@''INCLUDE_NEXT''@|$(INCLUDE_NEXT)|g' \
-	      -e 's|@''PRAGMA_SYSTEM_HEADER''@|@PRAGMA_SYSTEM_HEADER@|g' \
-	      -e 's|@''PRAGMA_COLUMNS''@|@PRAGMA_COLUMNS@|g' \
-	      -e 's|@''NEXT_SCHED_H''@|$(NEXT_SCHED_H)|g' \
-	      -e 's|@''HAVE_STRUCT_SCHED_PARAM''@|$(HAVE_STRUCT_SCHED_PARAM)|g' \
-	      -e 's/@''GNULIB_SCHED_YIELD''@/$(GL_GNULIB_SCHED_YIELD)/g' \
-	      -e 's|@''HAVE_SCHED_YIELD''@|$(HAVE_SCHED_YIELD)|g' \
-	      -e 's|@''REPLACE_SCHED_YIELD''@|$(REPLACE_SCHED_YIELD)|g' \
-	      -e '/definitions of _GL_FUNCDECL_RPL/r $(CXXDEFS_H)' \
-	      -e '/definition of _GL_WARN_ON_USE/r $(WARN_ON_USE_H)' \
-	      $(srcdir)/sched.in.h > $@-t
-	$(AM_V_at)mv $@-t $@
-
 malloc/scratch_buffer.gl.h: malloc/scratch_buffer.h
 	$(AM_V_GEN)$(MKDIR_P) 'malloc'
 	$(AM_V_at)$(SED_HEADER_STDOUT) \
@@ -7679,56 +6927,6 @@ signal.h: signal.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(ARG_NONNULL_H
 	      -e '/definition of _GL_ARG_NONNULL/r $(ARG_NONNULL_H)' \
 	      -e '/definition of _GL_WARN_ON_USE/r $(WARN_ON_USE_H)' \
 	      $(srcdir)/signal.in.h > $@-t
-	$(AM_V_at)mv $@-t $@
-
-# We need the following in order to create a replacement for <spawn.h> when
-# the system doesn't have one.
-spawn.h: spawn.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(ARG_NONNULL_H) $(WARN_ON_USE_H)
-	$(gl_V_at)$(SED_HEADER_STDOUT) \
-	      -e 's|@''GUARD_PREFIX''@|GL|g' \
-	      -e 's|@''HAVE_SPAWN_H''@|$(HAVE_SPAWN_H)|g' \
-	      -e 's|@''INCLUDE_NEXT''@|$(INCLUDE_NEXT)|g' \
-	      -e 's|@''PRAGMA_SYSTEM_HEADER''@|@PRAGMA_SYSTEM_HEADER@|g' \
-	      -e 's|@''PRAGMA_COLUMNS''@|@PRAGMA_COLUMNS@|g' \
-	      -e 's|@''NEXT_SPAWN_H''@|$(NEXT_SPAWN_H)|g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN''@/$(GL_GNULIB_POSIX_SPAWN)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNP''@/$(GL_GNULIB_POSIX_SPAWNP)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_INIT''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_INIT)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_DESTROY''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_DESTROY)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_INIT''@/$(GL_GNULIB_POSIX_SPAWNATTR_INIT)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETFLAGS''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETFLAGS)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETFLAGS''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETFLAGS)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETPGROUP''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETPGROUP)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETPGROUP''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETPGROUP)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETSCHEDPARAM''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETSCHEDPARAM)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETSCHEDPARAM''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETSCHEDPARAM)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETSCHEDPOLICY''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETSCHEDPOLICY)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETSCHEDPOLICY''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETSCHEDPOLICY)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETSIGDEFAULT''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETSIGDEFAULT)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETSIGDEFAULT''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETSIGDEFAULT)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETSIGMASK''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETSIGMASK)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETSIGMASK''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETSIGMASK)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_DESTROY''@/$(GL_GNULIB_POSIX_SPAWNATTR_DESTROY)/g' \
-	      -e 's|@''HAVE_POSIX_SPAWN''@|$(HAVE_POSIX_SPAWN)|g' \
-	      -e 's|@''HAVE_POSIX_SPAWNATTR_T''@|$(HAVE_POSIX_SPAWNATTR_T)|g' \
-	      -e 's|@''HAVE_POSIX_SPAWN_FILE_ACTIONS_T''@|$(HAVE_POSIX_SPAWN_FILE_ACTIONS_T)|g' \
-	      -e 's|@''HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR''@|$(HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR)|g' \
-	      -e 's|@''HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR''@|$(HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN''@|$(REPLACE_POSIX_SPAWN)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR''@|$(REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE''@|$(REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2''@|$(REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR''@|$(REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN''@|$(REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN)|g' \
-	      -e '/definitions of _GL_FUNCDECL_RPL/r $(CXXDEFS_H)' \
-	      -e '/definition of _GL_ARG_NONNULL/r $(ARG_NONNULL_H)' \
-	      -e '/definition of _GL_WARN_ON_USE/r $(WARN_ON_USE_H)' \
-	      $(srcdir)/spawn.in.h > $@-t
 	$(AM_V_at)mv $@-t $@
 
 # We need the following in order to create <stdalign.h> when the system

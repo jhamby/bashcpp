@@ -99,34 +99,6 @@ AC_DEFINE([CAN_REDEFINE_GETENV], 1, [Define if we can redefine the getenv functi
 fi
 ])
 
-# We should check for putenv before calling this
-AC_DEFUN([BASH_FUNC_STD_PUTENV],
-[AC_CACHE_CHECK([for standard-conformant putenv declaration], bash_cv_std_putenv,
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <stdlib.h>
-#include <stddef.h>
-extern int putenv (char *);
-]], [[return (putenv == 0);]])],[bash_cv_std_putenv=yes],[bash_cv_std_putenv=no
-])])
-if test $bash_cv_std_putenv = yes; then
-AC_DEFINE([HAVE_STD_PUTENV], 1, [Define if you have the putenv function.])
-fi
-])
-
-# We should check for unsetenv before calling this
-AC_DEFUN([BASH_FUNC_STD_UNSETENV],
-[AC_CACHE_CHECK([for standard-conformant unsetenv declaration], bash_cv_std_unsetenv,
-[AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <stdlib.h>
-#include <stddef.h>
-extern int unsetenv (const char *);
-]], [[return (unsetenv == 0);]])],[bash_cv_std_unsetenv=yes],[bash_cv_std_unsetenv=no
-])])
-if test $bash_cv_std_unsetenv = yes; then
-AC_DEFINE([HAVE_STD_UNSETENV], 1, [Define if you have the unsetenv function.])
-fi
-])
-
 AC_DEFUN([BASH_FUNC_ULIMIT_MAXFDS],
 [AC_MSG_CHECKING(whether ulimit can substitute for getdtablesize)
 AC_CACHE_VAL(bash_cv_ulimit_maxfds,

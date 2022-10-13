@@ -349,7 +349,7 @@ gl_EARLY
 AC_PROG_CXX
 AC_PROG_YACC
 
-dnl initialize libtool and Gnulib
+dnl initialize libtool
 LT_INIT
 
 echo ""
@@ -397,7 +397,7 @@ AC_FUNC_ALLOCA
 AC_HEADER_MAJOR
 AC_CHECK_HEADERS([grp.h netdb.h pwd.h regex.h sgtty.h \
 		  sys/dir.h sys/file.h sys/ioctl.h sys/ndir.h sys/param.h \
-		  sys/resource.h syslog.h termio.h termios.h])
+		  sys/resource.h sys/wait.h syslog.h termio.h termios.h])
 
 gl_INIT
 
@@ -427,7 +427,7 @@ AC_FUNC_MMAP
 AC_FUNC_REALLOC
 AC_FUNC_STRCOLL
 AC_FUNC_STRNLEN
-AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf dup2 faccessat fchdir ftruncate \
+AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf dup2 eaccess faccessat fchdir ftruncate \
 		getaddrinfo getcwd getdtablesize fnmatch getentropy getgroups gethostbyname \
 		gethostname getpeername getpwent getpwnam getpwuid \
 		getrandom getrlimit getrusage getservbyname getservent \

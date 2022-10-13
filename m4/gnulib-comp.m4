@@ -43,7 +43,6 @@ AC_DEFUN([gl_EARLY],
   AC_REQUIRE([gl_PROG_AR_RANLIB])
 
   # Code from module absolute-header:
-  # Code from module access:
   # Code from module alloca:
   # Code from module alloca-opt:
   # Code from module arpa_inet:
@@ -52,14 +51,10 @@ AC_DEFUN([gl_EARLY],
   # Code from module at-internal:
   # Code from module attribute:
   # Code from module basename-lgpl:
-  # Code from module bitrotate:
   # Code from module btowc:
   # Code from module builtin-expect:
   # Code from module c-ctype:
   # Code from module c99:
-  # Code from module calloc-gnu:
-  # Code from module calloc-posix:
-  # Code from module canonicalize:
   # Code from module canonicalize-lgpl:
   # Code from module chdir:
   # Code from module chdir-long:
@@ -67,8 +62,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module cloexec:
   # Code from module close:
   # Code from module closedir:
-  # Code from module concat-filename:
-  # Code from module copysign:
   # Code from module ctype:
   # Code from module d-ino:
   # Code from module d-type:
@@ -80,26 +73,21 @@ AC_DEFUN([gl_EARLY],
   # Code from module dup:
   # Code from module dup2:
   # Code from module eloop-threshold:
-  # Code from module environ:
   # Code from module errno:
   # Code from module error:
   # Code from module euidaccess:
-  # Code from module execute:
   # Code from module exitfail:
   # Code from module extensions:
   # Code from module extern-inline:
   # Code from module faccessat:
-  # Code from module fatal-signal:
   # Code from module fchdir:
   # Code from module fcntl:
   # Code from module fcntl-h:
   # Code from module fd-hook:
   # Code from module fd-safer-flag:
   # Code from module fdopendir:
-  # Code from module file-set:
   # Code from module filename:
   # Code from module filenamecat-lgpl:
-  # Code from module findprog-in:
   # Code from module flexmember:
   # Code from module float:
   # Code from module fnmatch:
@@ -131,10 +119,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module glob-h:
   # Code from module group-member:
   # Code from module hard-locale:
-  # Code from module hash:
-  # Code from module hash-pjw:
-  # Code from module hash-triple-simple:
-  # Code from module ialloc:
   # Code from module idx:
   # Code from module include_next:
   # Code from module inet_ntop:
@@ -195,17 +179,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module opendir:
   # Code from module pathmax:
   # Code from module pipe-posix:
-  # Code from module posix_spawn:
-  # Code from module posix_spawn-internal:
-  # Code from module posix_spawn_file_actions_addchdir:
-  # Code from module posix_spawn_file_actions_addopen:
-  # Code from module posix_spawn_file_actions_destroy:
-  # Code from module posix_spawn_file_actions_init:
-  # Code from module posix_spawnattr_destroy:
-  # Code from module posix_spawnattr_init:
-  # Code from module posix_spawnattr_setflags:
-  # Code from module posix_spawnattr_setsigmask:
-  # Code from module posix_spawnp:
   # Code from module printf-frexp:
   # Code from module printf-frexpl:
   # Code from module printf-safe:
@@ -219,7 +192,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module readlink:
   # Code from module realloc-gnu:
   # Code from module realloc-posix:
-  # Code from module reallocarray:
   # Code from module rename:
   # Code from module rewinddir:
   # Code from module rmdir:
@@ -228,14 +200,11 @@ AC_DEFUN([gl_EARLY],
   # Code from module safe-write:
   # Code from module same-inode:
   # Code from module save-cwd:
-  # Code from module sched:
   # Code from module scratch_buffer:
   # Code from module secure_getenv:
   # Code from module select:
   # Code from module setlocale:
   # Code from module setlocale-null:
-  # Code from module sh-filename:
-  # Code from module sigaction:
   # Code from module signal-h:
   # Code from module signbit:
   # Code from module sigprocmask:
@@ -248,7 +217,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module socketlib:
   # Code from module sockets:
   # Code from module socklen:
-  # Code from module spawn:
   # Code from module sprintf-posix:
   # Code from module ssize_t:
   # Code from module stat:
@@ -261,7 +229,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module stdint:
   # Code from module stdio:
   # Code from module stdlib:
-  # Code from module stpcpy:
   # Code from module strcase:
   # Code from module strcasestr:
   # Code from module strcasestr-simple:
@@ -310,7 +277,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module verify:
   # Code from module vfprintf-posix:
   # Code from module vprintf-posix:
-  # Code from module wait-process:
   # Code from module waitpid:
   # Code from module wchar:
   # Code from module wcswidth:
@@ -320,13 +286,10 @@ AC_DEFUN([gl_EARLY],
   # Code from module windows-once:
   # Code from module windows-recmutex:
   # Code from module windows-rwlock:
-  # Code from module windows-spawn:
   # Code from module windows-tls:
   # Code from module wmemchr:
   # Code from module wmempcpy:
   # Code from module write:
-  # Code from module xalloc:
-  # Code from module xalloc-die:
   # Code from module xalloc-oversized:
   # Code from module xsize:
 ])
@@ -351,9 +314,6 @@ AC_DEFUN([gl_INIT],
   gl_COMMON
   gl_source_base='lib/gnulib'
   gl_source_base_prefix=
-  gl_FUNC_ACCESS
-  gl_CONDITIONAL([GL_COND_OBJ_ACCESS], [test $REPLACE_ACCESS = 1])
-  gl_UNISTD_MODULE_INDICATOR([access])
   gl_FUNC_ALLOCA
   gl_CONDITIONAL_HEADER([alloca.h])
   AC_PROG_MKDIR_P
@@ -372,20 +332,6 @@ AC_DEFUN([gl_INIT],
   ])
   gl_WCHAR_MODULE_INDICATOR([btowc])
   gl___BUILTIN_EXPECT
-  gl_FUNC_CALLOC_GNU
-  if test $REPLACE_CALLOC_FOR_CALLOC_GNU = 1; then
-    AC_LIBOBJ([calloc])
-  fi
-  gl_STDLIB_MODULE_INDICATOR([calloc-gnu])
-  gl_FUNC_CALLOC_POSIX
-  if test $REPLACE_CALLOC_FOR_CALLOC_POSIX = 1; then
-    AC_LIBOBJ([calloc])
-  fi
-  gl_STDLIB_MODULE_INDICATOR([calloc-posix])
-  gl_FUNC_CANONICALIZE_FILENAME_MODE
-  gl_MODULE_INDICATOR([canonicalize])
-  gl_MODULE_INDICATOR_FOR_TESTS([canonicalize])
-  gl_STDLIB_MODULE_INDICATOR([canonicalize_file_name])
   gl_CANONICALIZE_LGPL
   gl_CONDITIONAL([GL_COND_OBJ_CANONICALIZE_LGPL],
                  [test $HAVE_CANONICALIZE_FILE_NAME = 0 || test $REPLACE_CANONICALIZE_FILE_NAME = 1])
@@ -408,9 +354,6 @@ AC_DEFUN([gl_INIT],
   gl_CONDITIONAL([GL_COND_OBJ_CLOSEDIR],
                  [test $HAVE_CLOSEDIR = 0 || test $REPLACE_CLOSEDIR = 1])
   gl_DIRENT_MODULE_INDICATOR([closedir])
-  gl_FUNC_COPYSIGN
-  gl_CONDITIONAL([GL_COND_OBJ_COPYSIGN], [test $HAVE_COPYSIGN = 0])
-  gl_MATH_MODULE_INDICATOR([copysign])
   gl_CTYPE_H
   gl_CTYPE_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
@@ -441,8 +384,6 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_DUP2
   ])
   gl_UNISTD_MODULE_INDICATOR([dup2])
-  gl_ENVIRON
-  gl_UNISTD_MODULE_INDICATOR([environ])
   gl_HEADER_ERRNO_H
   gl_CONDITIONAL_HEADER([errno.h])
   AC_PROG_MKDIR_P
@@ -460,7 +401,6 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_EUIDACCESS
   ])
   gl_UNISTD_MODULE_INDICATOR([euidaccess])
-  gl_EXECUTE
   AC_REQUIRE([gl_EXTERN_INLINE])
   gl_FUNC_FACCESSAT
   gl_CONDITIONAL([GL_COND_OBJ_FACCESSAT],
@@ -470,7 +410,6 @@ AC_DEFUN([gl_INIT],
   ])
   gl_MODULE_INDICATOR([faccessat])
   gl_UNISTD_MODULE_INDICATOR([faccessat])
-  gl_FATAL_SIGNAL
   gl_FUNC_FCHDIR
   gl_CONDITIONAL([GL_COND_OBJ_FCHDIR], [test $HAVE_FCHDIR = 0])
   AM_COND_IF([GL_COND_OBJ_FCHDIR], [
@@ -491,7 +430,6 @@ AC_DEFUN([gl_INIT],
   gl_DIRENT_MODULE_INDICATOR([fdopendir])
   gl_MODULE_INDICATOR([fdopendir])
   gl_FILE_NAME_CONCAT_LGPL
-  gl_FINDPROG_IN
   AC_C_FLEXIBLE_ARRAY_MEMBER
   gl_FLOAT_H
   gl_CONDITIONAL_HEADER([float.h])
@@ -843,52 +781,6 @@ AC_DEFUN([gl_INIT],
   gl_FUNC_PIPE
   gl_CONDITIONAL([GL_COND_OBJ_PIPE], [test $HAVE_PIPE = 0])
   gl_UNISTD_MODULE_INDICATOR([pipe])
-  gl_POSIX_SPAWN
-  gl_CONDITIONAL([GL_COND_OBJ_SPAWN],
-                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
-  gl_SPAWN_MODULE_INDICATOR([posix_spawn])
-  gl_POSIX_SPAWN
-  gl_CONDITIONAL([GL_COND_OBJ_SPAWNI],
-                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
-  AM_COND_IF([GL_COND_OBJ_SPAWNI], [
-    gl_PREREQ_POSIX_SPAWN_INTERNAL
-  ])
-  gl_FUNC_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR
-  gl_CONDITIONAL([GL_COND_OBJ_SPAWN_FACTION_ADDCHDIR],
-                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1 || test $HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR = 0 || test $REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR = 1])
-  gl_SPAWN_MODULE_INDICATOR([posix_spawn_file_actions_addchdir])
-  gl_FUNC_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN
-  gl_CONDITIONAL([GL_COND_OBJ_SPAWN_FACTION_ADDOPEN],
-                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1 || test $REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN = 1])
-  gl_SPAWN_MODULE_INDICATOR([posix_spawn_file_actions_addopen])
-  gl_POSIX_SPAWN
-  gl_CONDITIONAL([GL_COND_OBJ_SPAWN_FACTION_DESTROY],
-                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
-  gl_SPAWN_MODULE_INDICATOR([posix_spawn_file_actions_destroy])
-  gl_POSIX_SPAWN
-  gl_CONDITIONAL([GL_COND_OBJ_SPAWN_FACTION_INIT],
-                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
-  gl_SPAWN_MODULE_INDICATOR([posix_spawn_file_actions_init])
-  gl_POSIX_SPAWN
-  gl_CONDITIONAL([GL_COND_OBJ_SPAWNATTR_DESTROY],
-                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
-  gl_SPAWN_MODULE_INDICATOR([posix_spawnattr_destroy])
-  gl_POSIX_SPAWN
-  gl_CONDITIONAL([GL_COND_OBJ_SPAWNATTR_INIT],
-                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
-  gl_SPAWN_MODULE_INDICATOR([posix_spawnattr_init])
-  gl_POSIX_SPAWN
-  gl_CONDITIONAL([GL_COND_OBJ_SPAWNATTR_SETFLAGS],
-                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
-  gl_SPAWN_MODULE_INDICATOR([posix_spawnattr_setflags])
-  gl_POSIX_SPAWN
-  gl_CONDITIONAL([GL_COND_OBJ_SPAWNATTR_SETSIGMASK],
-                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
-  gl_SPAWN_MODULE_INDICATOR([posix_spawnattr_setsigmask])
-  gl_POSIX_SPAWN
-  gl_CONDITIONAL([GL_COND_OBJ_SPAWNP],
-                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
-  gl_SPAWN_MODULE_INDICATOR([posix_spawnp])
   gl_FUNC_PRINTF_FREXP
   gl_FUNC_PRINTF_FREXPL
   m4_divert_text([INIT_PREPARE], [gl_printf_safe=yes])
@@ -949,14 +841,6 @@ AC_DEFUN([gl_INIT],
     AC_LIBOBJ([realloc])
   fi
   gl_STDLIB_MODULE_INDICATOR([realloc-posix])
-  gl_FUNC_REALLOCARRAY
-  gl_CONDITIONAL([GL_COND_OBJ_REALLOCARRAY],
-                 [test $HAVE_REALLOCARRAY = 0 || test $REPLACE_REALLOCARRAY = 1])
-  AM_COND_IF([GL_COND_OBJ_REALLOCARRAY], [
-    gl_PREREQ_REALLOCARRAY
-  ])
-  gl_MODULE_INDICATOR([reallocarray])
-  gl_STDLIB_MODULE_INDICATOR([reallocarray])
   gl_FUNC_RENAME
   gl_CONDITIONAL([GL_COND_OBJ_RENAME], [test $REPLACE_RENAME = 1])
   gl_STDIO_MODULE_INDICATOR([rename])
@@ -969,9 +853,6 @@ AC_DEFUN([gl_INIT],
   gl_PREREQ_SAFE_READ
   gl_PREREQ_SAFE_WRITE
   gl_SAVE_CWD
-  gl_SCHED_H
-  gl_SCHED_H_REQUIRE_DEFAULTS
-  AC_PROG_MKDIR_P
   AC_PROG_MKDIR_P
   gl_FUNC_SECURE_GETENV
   gl_CONDITIONAL([GL_COND_OBJ_SECURE_GETENV], [test $HAVE_SECURE_GETENV = 0])
@@ -995,13 +876,6 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_SETLOCALE_LOCK
   ])
   gl_LOCALE_MODULE_INDICATOR([setlocale_null])
-  gl_SH_FILENAME
-  gl_SIGACTION
-  gl_CONDITIONAL([GL_COND_OBJ_SIGACTION], [test $HAVE_SIGACTION = 0])
-  AM_COND_IF([GL_COND_OBJ_SIGACTION], [
-    gl_PREREQ_SIGACTION
-  ])
-  gl_SIGNAL_MODULE_INDICATOR([sigaction])
   gl_SIGNAL_H
   gl_SIGNAL_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
@@ -1021,9 +895,6 @@ AC_DEFUN([gl_INIT],
   AC_REQUIRE([gl_SOCKETLIB])
   AC_REQUIRE([gl_SOCKETS])
   gl_TYPE_SOCKLEN_T
-  gl_SPAWN_H
-  gl_SPAWN_H_REQUIRE_DEFAULTS
-  AC_PROG_MKDIR_P
   gl_FUNC_SPRINTF_POSIX
   gl_STDIO_MODULE_INDICATOR([sprintf-posix])
   gt_TYPE_SSIZE_T
@@ -1092,12 +963,6 @@ AC_DEFUN([gl_INIT],
   gl_STDLIB_H
   gl_STDLIB_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
-  gl_FUNC_STPCPY
-  gl_CONDITIONAL([GL_COND_OBJ_STPCPY], [test $HAVE_STPCPY = 0])
-  AM_COND_IF([GL_COND_OBJ_STPCPY], [
-    gl_PREREQ_STPCPY
-  ])
-  gl_STRING_MODULE_INDICATOR([stpcpy])
   gl_STRCASE
   gl_CONDITIONAL([GL_COND_OBJ_STRCASECMP], [test $HAVE_STRCASECMP = 0])
   AM_COND_IF([GL_COND_OBJ_STRCASECMP], [
@@ -1284,7 +1149,6 @@ AC_DEFUN([gl_INIT],
   gl_FUNC_VPRINTF_POSIX
   gl_STDIO_MODULE_INDICATOR([vprintf-posix])
   gl_MODULE_INDICATOR([vprintf-posix])
-  gl_WAIT_PROCESS
   gl_FUNC_WAITPID
   gl_CONDITIONAL([GL_COND_OBJ_WAITPID], [test $HAVE_WAITPID = 0])
   gl_SYS_WAIT_MODULE_INDICATOR([waitpid])
@@ -1318,9 +1182,6 @@ AC_DEFUN([gl_INIT],
   gl_CONDITIONAL([GL_COND_OBJ_WINDOWS_RWLOCK],
                  [case "$host_os" in mingw*) true;; *) false;; esac])
   AC_REQUIRE([AC_CANONICAL_HOST])
-  gl_CONDITIONAL([GL_COND_OBJ_WINDOWS_SPAWN],
-                 [case "$host_os" in mingw*) true;; *) false;; esac])
-  AC_REQUIRE([AC_CANONICAL_HOST])
   gl_CONDITIONAL([GL_COND_OBJ_WINDOWS_TLS],
                  [case "$host_os" in mingw*) true;; *) false;; esac])
   gl_FUNC_WMEMCHR
@@ -1335,9 +1196,6 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_WRITE
   ])
   gl_UNISTD_MODULE_INDICATOR([write])
-  gl_XALLOC
-  gl_MODULE_INDICATOR([xalloc])
-  gl_MODULE_INDICATOR([xalloc-die])
   gl_XSIZE
   # End of code from modules
   m4_ifval(gl_LIBSOURCES_LIST, [
@@ -1512,7 +1370,6 @@ AC_DEFUN([gltests_LIBSOURCES], [
 # gnulib-tool and may be removed by future gnulib-tool invocations.
 AC_DEFUN([gl_FILE_LIST], [
   lib/_Noreturn.h
-  lib/access.c
   lib/alloca.c
   lib/alloca.in.h
   lib/arg-nonnull.h
@@ -1524,16 +1381,11 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/attribute.h
   lib/basename-lgpl.c
   lib/basename-lgpl.h
-  lib/bitrotate.c
-  lib/bitrotate.h
   lib/btowc.c
   lib/c++defs.h
   lib/c-ctype.c
   lib/c-ctype.h
-  lib/calloc.c
   lib/canonicalize-lgpl.c
-  lib/canonicalize.c
-  lib/canonicalize.h
   lib/cdefs.h
   lib/chdir-long.c
   lib/chdir-long.h
@@ -1541,9 +1393,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/cloexec.h
   lib/close.c
   lib/closedir.c
-  lib/concat-filename.c
-  lib/concat-filename.h
-  lib/copysign.c
   lib/ctype.in.h
   lib/dirent-private.h
   lib/dirent.in.h
@@ -1560,13 +1409,9 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/error.c
   lib/error.h
   lib/euidaccess.c
-  lib/execute.c
-  lib/execute.h
   lib/exitfail.c
   lib/exitfail.h
   lib/faccessat.c
-  lib/fatal-signal.c
-  lib/fatal-signal.h
   lib/fchdir.c
   lib/fcntl.c
   lib/fcntl.in.h
@@ -1575,13 +1420,9 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/fd-safer-flag.c
   lib/fd-safer.c
   lib/fdopendir.c
-  lib/file-set.c
-  lib/file-set.h
   lib/filename.h
   lib/filenamecat-lgpl.c
   lib/filenamecat.h
-  lib/findprog-in.c
-  lib/findprog.h
   lib/flexmember.h
   lib/float+.h
   lib/float.c
@@ -1627,14 +1468,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/group-member.c
   lib/hard-locale.c
   lib/hard-locale.h
-  lib/hash-pjw.c
-  lib/hash-pjw.h
-  lib/hash-triple-simple.c
-  lib/hash-triple.h
-  lib/hash.c
-  lib/hash.h
-  lib/ialloc.c
-  lib/ialloc.h
   lib/idx.h
   lib/inet_ntop.c
   lib/intprops-internal.h
@@ -1739,7 +1572,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/readdir.c
   lib/readlink.c
   lib/realloc.c
-  lib/reallocarray.c
   lib/rename.c
   lib/rewinddir.c
   lib/rmdir.c
@@ -1751,7 +1583,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/same-inode.h
   lib/save-cwd.c
   lib/save-cwd.h
-  lib/sched.in.h
   lib/scratch_buffer.h
   lib/secure_getenv.c
   lib/select.c
@@ -1759,9 +1590,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/setlocale.c
   lib/setlocale_null.c
   lib/setlocale_null.h
-  lib/sig-handler.c
-  lib/sig-handler.h
-  lib/sigaction.c
   lib/siglist.h
   lib/signal.in.h
   lib/signbitd.c
@@ -1772,19 +1600,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/snprintf.c
   lib/sockets.c
   lib/sockets.h
-  lib/spawn.c
-  lib/spawn.in.h
-  lib/spawn_faction_addchdir.c
-  lib/spawn_faction_addopen.c
-  lib/spawn_faction_destroy.c
-  lib/spawn_faction_init.c
-  lib/spawn_int.h
-  lib/spawnattr_destroy.c
-  lib/spawnattr_init.c
-  lib/spawnattr_setflags.c
-  lib/spawnattr_setsigmask.c
-  lib/spawni.c
-  lib/spawnp.c
   lib/sprintf.c
   lib/stat-time.c
   lib/stat-time.h
@@ -1800,7 +1615,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/stdio-write.c
   lib/stdio.in.h
   lib/stdlib.in.h
-  lib/stpcpy.c
   lib/str-two-way.h
   lib/strcasecmp.c
   lib/strcasestr.c
@@ -1865,8 +1679,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/vfprintf.c
   lib/vprintf.c
   lib/w32sock.h
-  lib/wait-process.c
-  lib/wait-process.h
   lib/waitpid.c
   lib/warn-on-use.h
   lib/wchar.in.h
@@ -1884,38 +1696,30 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/windows-recmutex.h
   lib/windows-rwlock.c
   lib/windows-rwlock.h
-  lib/windows-spawn.c
-  lib/windows-spawn.h
   lib/windows-tls.c
   lib/windows-tls.h
   lib/wmemchr-impl.h
   lib/wmemchr.c
   lib/wmempcpy.c
   lib/write.c
-  lib/xalloc-die.c
   lib/xalloc-oversized.h
-  lib/xalloc.h
-  lib/xmalloc.c
   lib/xsize.c
   lib/xsize.h
   m4/00gnulib.m4
   m4/__inline.m4
   m4/absolute-header.m4
-  m4/access.m4
   m4/alloca.m4
   m4/arpa_inet_h.m4
   m4/assert_h.m4
   m4/btowc.m4
   m4/builtin-expect.m4
   m4/c-bool.m4
-  m4/calloc.m4
   m4/canonicalize.m4
   m4/chdir-long.m4
   m4/clock_time.m4
   m4/close.m4
   m4/closedir.m4
   m4/codeset.m4
-  m4/copysign.m4
   m4/ctype_h.m4
   m4/d-ino.m4
   m4/d-type.m4
@@ -1925,27 +1729,22 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/dprintf.m4
   m4/dup.m4
   m4/dup2.m4
-  m4/eaccess.m4
   m4/eealloc.m4
-  m4/environ.m4
   m4/errno_h.m4
   m4/error.m4
   m4/euidaccess.m4
-  m4/execute.m4
   m4/exponentd.m4
   m4/exponentf.m4
   m4/exponentl.m4
   m4/extensions.m4
   m4/extern-inline.m4
   m4/faccessat.m4
-  m4/fatal-signal.m4
   m4/fchdir.m4
   m4/fcntl-o.m4
   m4/fcntl.m4
   m4/fcntl_h.m4
   m4/fdopendir.m4
   m4/filenamecat.m4
-  m4/findprog-in.m4
   m4/flexmember.m4
   m4/float_h.m4
   m4/fnmatch.m4
@@ -2007,7 +1806,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/malloc.m4
   m4/malloca.m4
   m4/math_h.m4
-  m4/mathfunc.m4
   m4/mbchar.m4
   m4/mbiter.m4
   m4/mbrlen.m4
@@ -2041,8 +1839,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/pathmax.m4
   m4/pid_t.m4
   m4/pipe.m4
-  m4/posix_spawn.m4
-  m4/posix_spawn_faction_addchdir.m4
   m4/printf-frexp.m4
   m4/printf-frexpl.m4
   m4/printf.m4
@@ -2056,21 +1852,16 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/readdir.m4
   m4/readlink.m4
   m4/realloc.m4
-  m4/reallocarray.m4
   m4/rename.m4
   m4/rewinddir.m4
   m4/rmdir.m4
   m4/safe-read.m4
   m4/safe-write.m4
   m4/save-cwd.m4
-  m4/sched_h.m4
   m4/secure_getenv.m4
   m4/select.m4
   m4/setlocale.m4
   m4/setlocale_null.m4
-  m4/sh-filename.m4
-  m4/sig_atomic_t.m4
-  m4/sigaction.m4
   m4/signal_h.m4
   m4/signalblocking.m4
   m4/signbit.m4
@@ -2080,7 +1871,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/sockets.m4
   m4/socklen.m4
   m4/sockpfaf.m4
-  m4/spawn_h.m4
   m4/sprintf-posix.m4
   m4/ssize_t.m4
   m4/stat-time.m4
@@ -2092,7 +1882,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/stdint_h.m4
   m4/stdio_h.m4
   m4/stdlib_h.m4
-  m4/stpcpy.m4
   m4/strcase.m4
   m4/strcasestr.m4
   m4/strchrnul.m4
@@ -2132,7 +1921,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/vfprintf-posix.m4
   m4/visibility.m4
   m4/vprintf-posix.m4
-  m4/wait-process.m4
   m4/waitpid.m4
   m4/warn-on-use.m4
   m4/wchar_h.m4
@@ -2144,7 +1932,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/wmemchr.m4
   m4/wmempcpy.m4
   m4/write.m4
-  m4/xalloc.m4
   m4/xsize.m4
   m4/year2038.m4
   m4/zzgnulib.m4

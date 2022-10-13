@@ -33,10 +33,8 @@
 #  --no-libtool \
 #  --macro-prefix=gl \
 #  c-ctype \
-#  copysign \
 #  dprintf \
 #  dup2 \
-#  execute \
 #  faccessat \
 #  fnmatch \
 #  fpurge \
@@ -56,7 +54,6 @@
 #  mknod \
 #  mktime \
 #  nl_langinfo \
-#  posix_spawn \
 #  pselect \
 #  random_r \
 #  rename \
@@ -77,6 +74,7 @@
 #  tmpfile \
 #  vfprintf-posix \
 #  vprintf-posix \
+#  waitpid \
 #  wcswidth
 
 AUTOMAKE_OPTIONS = 1.14 gnits subdir-objects
@@ -114,14 +112,6 @@ EXTRA_libgnu_a_SOURCES =
 HAVE_INCLUDE_NEXT = (__GNUC__ || __clang__ || 60000000 <= __DECC_VER)
 
 ## end   gnulib module absolute-header
-
-## begin gnulib module access
-
-if GL_COND_OBJ_ACCESS
-libgnu_a_SOURCES += access.c
-endif
-
-## end   gnulib module access
 
 ## begin gnulib module alloca
 
@@ -250,12 +240,6 @@ EXTRA_DIST += basename-lgpl.h
 
 ## end   gnulib module basename-lgpl
 
-## begin gnulib module bitrotate
-
-libgnu_a_SOURCES += bitrotate.h bitrotate.c
-
-## end   gnulib module bitrotate
-
 ## begin gnulib module btowc
 
 if GL_COND_OBJ_BTOWC
@@ -269,32 +253,6 @@ endif
 libgnu_a_SOURCES += c-ctype.h c-ctype.c
 
 ## end   gnulib module c-ctype
-
-## begin gnulib module calloc-gnu
-
-
-EXTRA_DIST += calloc.c
-
-EXTRA_libgnu_a_SOURCES += calloc.c
-
-## end   gnulib module calloc-gnu
-
-## begin gnulib module calloc-posix
-
-
-EXTRA_DIST += calloc.c
-
-EXTRA_libgnu_a_SOURCES += calloc.c
-
-## end   gnulib module calloc-posix
-
-## begin gnulib module canonicalize
-
-libgnu_a_SOURCES += canonicalize.c
-
-EXTRA_DIST += canonicalize.h
-
-## end   gnulib module canonicalize
 
 ## begin gnulib module canonicalize-lgpl
 
@@ -339,22 +297,6 @@ endif
 EXTRA_DIST += dirent-private.h
 
 ## end   gnulib module closedir
-
-## begin gnulib module concat-filename
-
-libgnu_a_SOURCES += concat-filename.c
-
-EXTRA_DIST += concat-filename.h
-
-## end   gnulib module concat-filename
-
-## begin gnulib module copysign
-
-if GL_COND_OBJ_COPYSIGN
-libgnu_a_SOURCES += copysign.c
-endif
-
-## end   gnulib module copysign
 
 ## begin gnulib module ctype
 
@@ -525,12 +467,6 @@ endif
 
 ## end   gnulib module euidaccess
 
-## begin gnulib module execute
-
-libgnu_a_SOURCES += execute.h execute.c
-
-## end   gnulib module execute
-
 ## begin gnulib module exitfail
 
 libgnu_a_SOURCES += exitfail.c
@@ -550,12 +486,6 @@ EXTRA_DIST += at-func.c
 EXTRA_libgnu_a_SOURCES += at-func.c
 
 ## end   gnulib module faccessat
-
-## begin gnulib module fatal-signal
-
-libgnu_a_SOURCES += fatal-signal.h fatal-signal.c
-
-## end   gnulib module fatal-signal
 
 ## begin gnulib module fchdir
 
@@ -632,14 +562,6 @@ endif
 
 ## end   gnulib module fdopendir
 
-## begin gnulib module file-set
-
-libgnu_a_SOURCES += file-set.c
-
-EXTRA_DIST += file-set.h
-
-## end   gnulib module file-set
-
 ## begin gnulib module filename
 
 
@@ -654,12 +576,6 @@ libgnu_a_SOURCES += filenamecat-lgpl.c
 EXTRA_DIST += filenamecat.h
 
 ## end   gnulib module filenamecat-lgpl
-
-## begin gnulib module findprog-in
-
-libgnu_a_SOURCES += findprog.h findprog-in.c
-
-## end   gnulib module findprog-in
 
 ## begin gnulib module flexmember
 
@@ -1012,36 +928,6 @@ libgnu_a_SOURCES += hard-locale.c
 EXTRA_DIST += hard-locale.h
 
 ## end   gnulib module hard-locale
-
-## begin gnulib module hash
-
-libgnu_a_SOURCES += hash.c
-
-EXTRA_DIST += hash.h
-
-## end   gnulib module hash
-
-## begin gnulib module hash-pjw
-
-libgnu_a_SOURCES += hash-pjw.h hash-pjw.c
-
-## end   gnulib module hash-pjw
-
-## begin gnulib module hash-triple-simple
-
-libgnu_a_SOURCES += hash-triple-simple.c
-
-EXTRA_DIST += hash-triple.h
-
-## end   gnulib module hash-triple-simple
-
-## begin gnulib module ialloc
-
-libgnu_a_SOURCES += ialloc.c
-
-EXTRA_DIST += ialloc.h
-
-## end   gnulib module ialloc
 
 ## begin gnulib module idx
 
@@ -1906,102 +1792,6 @@ endif
 
 ## end   gnulib module pipe-posix
 
-## begin gnulib module posix_spawn
-
-if GL_COND_OBJ_SPAWN
-libgnu_a_SOURCES += spawn.c
-endif
-
-## end   gnulib module posix_spawn
-
-## begin gnulib module posix_spawn-internal
-
-if GL_COND_OBJ_SPAWNI
-libgnu_a_SOURCES += spawni.c
-endif
-
-EXTRA_DIST += spawn_int.h
-
-## end   gnulib module posix_spawn-internal
-
-## begin gnulib module posix_spawn_file_actions_addchdir
-
-if GL_COND_OBJ_SPAWN_FACTION_ADDCHDIR
-libgnu_a_SOURCES += spawn_faction_addchdir.c
-endif
-
-EXTRA_DIST += spawn_int.h
-
-## end   gnulib module posix_spawn_file_actions_addchdir
-
-## begin gnulib module posix_spawn_file_actions_addopen
-
-if GL_COND_OBJ_SPAWN_FACTION_ADDOPEN
-libgnu_a_SOURCES += spawn_faction_addopen.c
-endif
-
-EXTRA_DIST += spawn_int.h
-
-## end   gnulib module posix_spawn_file_actions_addopen
-
-## begin gnulib module posix_spawn_file_actions_destroy
-
-if GL_COND_OBJ_SPAWN_FACTION_DESTROY
-libgnu_a_SOURCES += spawn_faction_destroy.c
-endif
-
-## end   gnulib module posix_spawn_file_actions_destroy
-
-## begin gnulib module posix_spawn_file_actions_init
-
-if GL_COND_OBJ_SPAWN_FACTION_INIT
-libgnu_a_SOURCES += spawn_faction_init.c
-endif
-
-EXTRA_DIST += spawn_int.h
-
-## end   gnulib module posix_spawn_file_actions_init
-
-## begin gnulib module posix_spawnattr_destroy
-
-if GL_COND_OBJ_SPAWNATTR_DESTROY
-libgnu_a_SOURCES += spawnattr_destroy.c
-endif
-
-## end   gnulib module posix_spawnattr_destroy
-
-## begin gnulib module posix_spawnattr_init
-
-if GL_COND_OBJ_SPAWNATTR_INIT
-libgnu_a_SOURCES += spawnattr_init.c
-endif
-
-## end   gnulib module posix_spawnattr_init
-
-## begin gnulib module posix_spawnattr_setflags
-
-if GL_COND_OBJ_SPAWNATTR_SETFLAGS
-libgnu_a_SOURCES += spawnattr_setflags.c
-endif
-
-## end   gnulib module posix_spawnattr_setflags
-
-## begin gnulib module posix_spawnattr_setsigmask
-
-if GL_COND_OBJ_SPAWNATTR_SETSIGMASK
-libgnu_a_SOURCES += spawnattr_setsigmask.c
-endif
-
-## end   gnulib module posix_spawnattr_setsigmask
-
-## begin gnulib module posix_spawnp
-
-if GL_COND_OBJ_SPAWNP
-libgnu_a_SOURCES += spawnp.c
-endif
-
-## end   gnulib module posix_spawnp
-
 ## begin gnulib module printf-frexp
 
 libgnu_a_SOURCES += printf-frexp.c
@@ -2106,14 +1896,6 @@ EXTRA_libgnu_a_SOURCES += realloc.c
 
 ## end   gnulib module realloc-posix
 
-## begin gnulib module reallocarray
-
-if GL_COND_OBJ_REALLOCARRAY
-libgnu_a_SOURCES += reallocarray.c
-endif
-
-## end   gnulib module reallocarray
-
 ## begin gnulib module rename
 
 if GL_COND_OBJ_RENAME
@@ -2180,35 +1962,6 @@ EXTRA_DIST += save-cwd.h
 
 ## end   gnulib module save-cwd
 
-## begin gnulib module sched
-
-BUILT_SOURCES += sched.h
-
-# We need the following in order to create a replacement for <sched.h> when
-# the system doesn't have one.
-sched.h: sched.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(WARN_ON_USE_H)
-	$(gl_V_at)$(SED_HEADER_STDOUT) \
-	      -e 's|@''GUARD_PREFIX''@|GL|g' \
-	      -e 's|@''HAVE_SCHED_H''@|$(HAVE_SCHED_H)|g' \
-	      -e 's|@''HAVE_SYS_CDEFS_H''@|$(HAVE_SYS_CDEFS_H)|g' \
-	      -e 's|@''INCLUDE_NEXT''@|$(INCLUDE_NEXT)|g' \
-	      -e 's|@''PRAGMA_SYSTEM_HEADER''@|@PRAGMA_SYSTEM_HEADER@|g' \
-	      -e 's|@''PRAGMA_COLUMNS''@|@PRAGMA_COLUMNS@|g' \
-	      -e 's|@''NEXT_SCHED_H''@|$(NEXT_SCHED_H)|g' \
-	      -e 's|@''HAVE_STRUCT_SCHED_PARAM''@|$(HAVE_STRUCT_SCHED_PARAM)|g' \
-	      -e 's/@''GNULIB_SCHED_YIELD''@/$(GL_GNULIB_SCHED_YIELD)/g' \
-	      -e 's|@''HAVE_SCHED_YIELD''@|$(HAVE_SCHED_YIELD)|g' \
-	      -e 's|@''REPLACE_SCHED_YIELD''@|$(REPLACE_SCHED_YIELD)|g' \
-	      -e '/definitions of _GL_FUNCDECL_RPL/r $(CXXDEFS_H)' \
-	      -e '/definition of _GL_WARN_ON_USE/r $(WARN_ON_USE_H)' \
-	      $(srcdir)/sched.in.h > $@-t
-	$(AM_V_at)mv $@-t $@
-MOSTLYCLEANFILES += sched.h sched.h-t
-
-EXTRA_DIST += sched.in.h
-
-## end   gnulib module sched
-
 ## begin gnulib module scratch_buffer
 
 BUILT_SOURCES += malloc/scratch_buffer.gl.h
@@ -2264,17 +2017,6 @@ endif
 EXTRA_DIST += setlocale_null.h windows-initguard.h
 
 ## end   gnulib module setlocale-null
-
-## begin gnulib module sigaction
-
-if GL_COND_OBJ_SIGACTION
-libgnu_a_SOURCES += sigaction.c
-endif
-libgnu_a_SOURCES += sig-handler.c
-
-EXTRA_DIST += sig-handler.h
-
-## end   gnulib module sigaction
 
 ## begin gnulib module signal-h
 
@@ -2404,65 +2146,6 @@ libgnu_a_SOURCES += sockets.h sockets.c
 EXTRA_DIST += w32sock.h
 
 ## end   gnulib module sockets
-
-## begin gnulib module spawn
-
-BUILT_SOURCES += spawn.h
-
-# We need the following in order to create a replacement for <spawn.h> when
-# the system doesn't have one.
-spawn.h: spawn.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(ARG_NONNULL_H) $(WARN_ON_USE_H)
-	$(gl_V_at)$(SED_HEADER_STDOUT) \
-	      -e 's|@''GUARD_PREFIX''@|GL|g' \
-	      -e 's|@''HAVE_SPAWN_H''@|$(HAVE_SPAWN_H)|g' \
-	      -e 's|@''INCLUDE_NEXT''@|$(INCLUDE_NEXT)|g' \
-	      -e 's|@''PRAGMA_SYSTEM_HEADER''@|@PRAGMA_SYSTEM_HEADER@|g' \
-	      -e 's|@''PRAGMA_COLUMNS''@|@PRAGMA_COLUMNS@|g' \
-	      -e 's|@''NEXT_SPAWN_H''@|$(NEXT_SPAWN_H)|g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN''@/$(GL_GNULIB_POSIX_SPAWN)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNP''@/$(GL_GNULIB_POSIX_SPAWNP)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_INIT''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_INIT)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWN_FILE_ACTIONS_DESTROY''@/$(GL_GNULIB_POSIX_SPAWN_FILE_ACTIONS_DESTROY)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_INIT''@/$(GL_GNULIB_POSIX_SPAWNATTR_INIT)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETFLAGS''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETFLAGS)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETFLAGS''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETFLAGS)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETPGROUP''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETPGROUP)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETPGROUP''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETPGROUP)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETSCHEDPARAM''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETSCHEDPARAM)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETSCHEDPARAM''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETSCHEDPARAM)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETSCHEDPOLICY''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETSCHEDPOLICY)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETSCHEDPOLICY''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETSCHEDPOLICY)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETSIGDEFAULT''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETSIGDEFAULT)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETSIGDEFAULT''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETSIGDEFAULT)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_GETSIGMASK''@/$(GL_GNULIB_POSIX_SPAWNATTR_GETSIGMASK)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_SETSIGMASK''@/$(GL_GNULIB_POSIX_SPAWNATTR_SETSIGMASK)/g' \
-	      -e 's/@''GNULIB_POSIX_SPAWNATTR_DESTROY''@/$(GL_GNULIB_POSIX_SPAWNATTR_DESTROY)/g' \
-	      -e 's|@''HAVE_POSIX_SPAWN''@|$(HAVE_POSIX_SPAWN)|g' \
-	      -e 's|@''HAVE_POSIX_SPAWNATTR_T''@|$(HAVE_POSIX_SPAWNATTR_T)|g' \
-	      -e 's|@''HAVE_POSIX_SPAWN_FILE_ACTIONS_T''@|$(HAVE_POSIX_SPAWN_FILE_ACTIONS_T)|g' \
-	      -e 's|@''HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR''@|$(HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR)|g' \
-	      -e 's|@''HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR''@|$(HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN''@|$(REPLACE_POSIX_SPAWN)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR''@|$(REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE''@|$(REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSE)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2''@|$(REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR''@|$(REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDFCHDIR)|g' \
-	      -e 's|@''REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN''@|$(REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN)|g' \
-	      -e '/definitions of _GL_FUNCDECL_RPL/r $(CXXDEFS_H)' \
-	      -e '/definition of _GL_ARG_NONNULL/r $(ARG_NONNULL_H)' \
-	      -e '/definition of _GL_WARN_ON_USE/r $(WARN_ON_USE_H)' \
-	      $(srcdir)/spawn.in.h > $@-t
-	$(AM_V_at)mv $@-t $@
-MOSTLYCLEANFILES += spawn.h spawn.h-t
-
-EXTRA_DIST += spawn.in.h
-
-## end   gnulib module spawn
 
 ## begin gnulib module sprintf-posix
 
@@ -2902,14 +2585,6 @@ MOSTLYCLEANFILES += stdlib.h stdlib.h-t
 EXTRA_DIST += stdlib.in.h
 
 ## end   gnulib module stdlib
-
-## begin gnulib module stpcpy
-
-if GL_COND_OBJ_STPCPY
-libgnu_a_SOURCES += stpcpy.c
-endif
-
-## end   gnulib module stpcpy
 
 ## begin gnulib module strcase
 
@@ -3928,12 +3603,6 @@ EXTRA_libgnu_a_SOURCES += vprintf.c
 
 ## end   gnulib module vprintf-posix
 
-## begin gnulib module wait-process
-
-libgnu_a_SOURCES += wait-process.h wait-process.c
-
-## end   gnulib module wait-process
-
 ## begin gnulib module waitpid
 
 if GL_COND_OBJ_WAITPID
@@ -4176,16 +3845,6 @@ EXTRA_DIST += windows-initguard.h windows-rwlock.h
 
 ## end   gnulib module windows-rwlock
 
-## begin gnulib module windows-spawn
-
-if GL_COND_OBJ_WINDOWS_SPAWN
-libgnu_a_SOURCES += windows-spawn.c
-endif
-
-EXTRA_DIST += windows-spawn.h
-
-## end   gnulib module windows-spawn
-
 ## begin gnulib module windows-tls
 
 if GL_COND_OBJ_WINDOWS_TLS
@@ -4221,22 +3880,6 @@ libgnu_a_SOURCES += write.c
 endif
 
 ## end   gnulib module write
-
-## begin gnulib module xalloc
-
-libgnu_a_SOURCES += xmalloc.c
-
-EXTRA_DIST += xalloc.h
-
-## end   gnulib module xalloc
-
-## begin gnulib module xalloc-die
-
-libgnu_a_SOURCES += xalloc-die.c
-
-EXTRA_DIST += xalloc.h
-
-## end   gnulib module xalloc-die
 
 ## begin gnulib module xalloc-oversized
 
