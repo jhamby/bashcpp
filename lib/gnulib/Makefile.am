@@ -32,6 +32,7 @@
 #  --no-conditional-dependencies \
 #  --no-libtool \
 #  --macro-prefix=gl \
+#  assert \
 #  c-ctype \
 #  dprintf \
 #  dup2 \
@@ -67,8 +68,6 @@
 #  strerror_r-posix \
 #  strnlen \
 #  strsignal \
-#  strtoimax \
-#  strtoumax \
 #  times \
 #  timespec \
 #  tmpfile \
@@ -2830,50 +2829,6 @@ endif
 EXTRA_DIST += siglist.h
 
 ## end   gnulib module strsignal
-
-## begin gnulib module strtoimax
-
-if GL_COND_OBJ_STRTOIMAX
-libgnu_a_SOURCES += strtoimax.c
-endif
-
-## end   gnulib module strtoimax
-
-## begin gnulib module strtoll
-
-if GL_COND_OBJ_STRTOLL
-libgnu_a_SOURCES += strtoll.c
-endif
-
-EXTRA_DIST += strtol.c
-
-EXTRA_libgnu_a_SOURCES += strtol.c
-
-## end   gnulib module strtoll
-
-## begin gnulib module strtoull
-
-if GL_COND_OBJ_STRTOULL
-libgnu_a_SOURCES += strtoull.c
-endif
-
-EXTRA_DIST += strtol.c strtoul.c
-
-EXTRA_libgnu_a_SOURCES += strtol.c strtoul.c
-
-## end   gnulib module strtoull
-
-## begin gnulib module strtoumax
-
-if GL_COND_OBJ_STRTOUMAX
-libgnu_a_SOURCES += strtoumax.c
-endif
-
-EXTRA_DIST += strtoimax.c
-
-EXTRA_libgnu_a_SOURCES += strtoimax.c
-
-## end   gnulib module strtoumax
 
 ## begin gnulib module sys_random
 

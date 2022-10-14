@@ -767,14 +767,6 @@ GL_GNULIB_SOCKET
 HAVE_SYS_RANDOM_H
 NEXT_AS_FIRST_DIRECTIVE_SYS_RANDOM_H
 NEXT_SYS_RANDOM_H
-GL_COND_OBJ_STRTOUMAX_FALSE
-GL_COND_OBJ_STRTOUMAX_TRUE
-GL_COND_OBJ_STRTOULL_FALSE
-GL_COND_OBJ_STRTOULL_TRUE
-GL_COND_OBJ_STRTOLL_FALSE
-GL_COND_OBJ_STRTOLL_TRUE
-GL_COND_OBJ_STRTOIMAX_FALSE
-GL_COND_OBJ_STRTOIMAX_TRUE
 GL_COND_OBJ_STRSIGNAL_FALSE
 GL_COND_OBJ_STRSIGNAL_TRUE
 GL_COND_OBJ_STRNLEN_FALSE
@@ -2440,6 +2432,7 @@ with_libiconv_prefix
 enable_nls
 with_libintl_prefix
 enable_cross_guesses
+enable_assert
 '
       ac_precious_vars='build_alias
 host_alias
@@ -3187,6 +3180,7 @@ Optional Features:
   --disable-nls           do not use Native Language Support
   --enable-cross-guesses={conservative|risky}
                           specify policy for cross-compilation guesses
+  --disable-assert        turn off assertions
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -5119,8 +5113,6 @@ as_fn_append ac_header_c_list " stdckdint.h stdckdint_h HAVE_STDCKDINT_H"
 as_fn_append ac_func_c_list " strerror_r HAVE_STRERROR_R"
 as_fn_append ac_func_c_list " __xpg_strerror_r HAVE___XPG_STRERROR_R"
 as_fn_append ac_func_c_list " catgets HAVE_CATGETS"
-as_fn_append ac_func_c_list " strtoimax HAVE_STRTOIMAX"
-as_fn_append ac_func_c_list " strtoumax HAVE_STRTOUMAX"
 as_fn_append ac_header_c_list " sys/random.h sys_random_h HAVE_SYS_RANDOM_H"
 as_fn_append ac_header_c_list " sys/times.h sys_times_h HAVE_SYS_TIMES_H"
 as_fn_append ac_header_c_list " sys/uio.h sys_uio_h HAVE_SYS_UIO_H"
@@ -10057,6 +10049,7 @@ fi
   # Code from module alloca:
   # Code from module alloca-opt:
   # Code from module arpa_inet:
+  # Code from module assert:
   # Code from module assert-h:
   # Code from module assure:
   # Code from module at-internal:
@@ -10254,10 +10247,6 @@ fi
   # Code from module strnlen:
   # Code from module strnlen1:
   # Code from module strsignal:
-  # Code from module strtoimax:
-  # Code from module strtoll:
-  # Code from module strtoull:
-  # Code from module strtoumax:
   # Code from module sys_random:
   # Code from module sys_select:
   # Code from module sys_socket:
@@ -31144,8 +31133,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:31147: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:31148: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:31136: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:31137: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -31171,7 +31160,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:31174: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:31163: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -31325,7 +31314,7 @@ fi
 
         fi
       fi
-      echo "$as_me:31328: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:31317: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -35945,8 +35934,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:35948: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:35949: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:35937: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:35938: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -35972,7 +35961,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:35975: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:35964: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -36126,7 +36115,7 @@ fi
 
         fi
       fi
-      echo "$as_me:36129: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:36118: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -36354,8 +36343,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:36357: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:36358: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:36346: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:36347: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -36381,7 +36370,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:36384: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:36373: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -36535,7 +36524,7 @@ fi
 
         fi
       fi
-      echo "$as_me:36538: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:36527: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -42491,26 +42480,6 @@ fi
 printf "%s\n" "#define HAVE_DECL_STRSIGNAL $ac_have_decl" >>confdefs.h
 
 
-ac_fn_check_decl "$LINENO" "strtoimax" "ac_cv_have_decl_strtoimax" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
-if test "x$ac_cv_have_decl_strtoimax" = xyes
-then :
-  ac_have_decl=1
-else $as_nop
-  ac_have_decl=0
-fi
-printf "%s\n" "#define HAVE_DECL_STRTOIMAX $ac_have_decl" >>confdefs.h
-
-
-ac_fn_check_decl "$LINENO" "strtoumax" "ac_cv_have_decl_strtoumax" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
-if test "x$ac_cv_have_decl_strtoumax" = xyes
-then :
-  ac_have_decl=1
-else $as_nop
-  ac_have_decl=0
-fi
-printf "%s\n" "#define HAVE_DECL_STRTOUMAX $ac_have_decl" >>confdefs.h
-
-
 
 
 
@@ -43947,6 +43916,30 @@ fi
 
 
 
+
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to enable assertions" >&5
+printf %s "checking whether to enable assertions... " >&6; }
+  # Check whether --enable-assert was given.
+if test ${enable_assert+y}
+then :
+  enableval=$enable_assert; if test "x$enableval" = xno
+then :
+
+printf "%s\n" "#define NDEBUG 1" >>confdefs.h
+
+elif test "x$enableval" != xyes
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: invalid argument supplied to --enable-assert" >&5
+printf "%s\n" "$as_me: WARNING: invalid argument supplied to --enable-assert" >&2;}
+      enable_assert=yes
+fi
+else $as_nop
+  enable_assert=yes
+fi
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $enable_assert" >&5
+printf "%s\n" "$enable_assert" >&6; }
 
 
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for static_assert" >&5
@@ -62088,420 +62081,6 @@ fi
 
 
 printf "%s\n" "#define GNULIB_TEST_STRSIGNAL 1" >>confdefs.h
-
-
-
-
-
-
-
-
-  if test "$ac_cv_have_decl_strtoimax" != yes; then
-    HAVE_DECL_STRTOIMAX=0
-  fi
-
-  if test "$ac_cv_func_strtoimax" = yes; then
-    HAVE_STRTOIMAX=1
-             { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether strtoimax works" >&5
-printf %s "checking whether strtoimax works... " >&6; }
-if test ${gl_cv_func_strtoimax+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  if test "$cross_compiling" = yes
-then :
-  case "$host_os" in
-                    # Guess no on AIX 5.
-            aix5*)  gl_cv_func_strtoimax="guessing no" ;;
-                    # Guess yes on native Windows.
-            mingw*) gl_cv_func_strtoimax="guessing yes" ;;
-                    # Guess yes otherwise.
-            *)      gl_cv_func_strtoimax="guessing yes" ;;
-          esac
-
-else $as_nop
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <errno.h>
-#include <string.h>
-#include <inttypes.h>
-int main ()
-{
-  if (sizeof (intmax_t) > sizeof (int))
-    {
-      const char *s = "4294967295";
-      char *p;
-      intmax_t res;
-      errno = 0;
-      res = strtoimax (s, &p, 10);
-      if (p != s + strlen (s))
-        return 1;
-      if (errno != 0)
-        return 2;
-      if (res != (intmax_t) 65535 * (intmax_t) 65537)
-        return 3;
-    }
-  else
-    {
-      const char *s = "2147483647";
-      char *p;
-      intmax_t res;
-      errno = 0;
-      res = strtoimax (s, &p, 10);
-      if (p != s + strlen (s))
-        return 1;
-      if (errno != 0)
-        return 2;
-      if (res != 2147483647)
-        return 3;
-    }
-  return 0;
-}
-
-_ACEOF
-if ac_fn_c_try_run "$LINENO"
-then :
-  gl_cv_func_strtoimax=yes
-else $as_nop
-  gl_cv_func_strtoimax=no
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_strtoimax" >&5
-printf "%s\n" "$gl_cv_func_strtoimax" >&6; }
-    case "$gl_cv_func_strtoimax" in
-      *no) REPLACE_STRTOIMAX=1 ;;
-    esac
-  else
-    if test "$ac_cv_have_decl_strtoimax" = yes; then
-      # HP-UX 11.11 has "#define strtoimax(...) ..." but no function.
-      REPLACE_STRTOIMAX=1
-    fi
-    HAVE_STRTOIMAX=0
-  fi
-
-
-     if test $HAVE_DECL_STRTOIMAX = 0 || test $REPLACE_STRTOIMAX = 1; then
-  GL_COND_OBJ_STRTOIMAX_TRUE=
-  GL_COND_OBJ_STRTOIMAX_FALSE='#'
-else
-  GL_COND_OBJ_STRTOIMAX_TRUE='#'
-  GL_COND_OBJ_STRTOIMAX_FALSE=
-fi
-:
-    if test -z "${GL_COND_OBJ_STRTOIMAX_TRUE}" && test -z "${GL_COND_OBJ_STRTOIMAX_FALSE}"; then
-    GL_COND_OBJ_STRTOIMAX_TRUE='#'
-    GL_COND_OBJ_STRTOIMAX_FALSE='#'
-  fi
-
-  if test -z "$GL_COND_OBJ_STRTOIMAX_TRUE"; then :
-
-
-  ac_fn_check_decl "$LINENO" "strtoll" "ac_cv_have_decl_strtoll" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
-if test "x$ac_cv_have_decl_strtoll" = xyes
-then :
-  ac_have_decl=1
-else $as_nop
-  ac_have_decl=0
-fi
-printf "%s\n" "#define HAVE_DECL_STRTOLL $ac_have_decl" >>confdefs.h
-
-
-
-fi
-
-
-
-
-
-
-
-
-
-          GL_GNULIB_STRTOIMAX=1
-
-
-
-
-
-
-
-  ac_fn_c_check_func "$LINENO" "strtoll" "ac_cv_func_strtoll"
-if test "x$ac_cv_func_strtoll" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRTOLL 1" >>confdefs.h
-
-fi
-
-  if test $ac_cv_func_strtoll = yes; then
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether strtoll works" >&5
-printf %s "checking whether strtoll works... " >&6; }
-if test ${gl_cv_func_strtoll_works+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  if test "$cross_compiling" = yes
-then :
-  case "$host_os" in
-                    # Guess no on native Windows.
-            mingw*) gl_cv_func_strtoll_works="guessing no" ;;
-            *)      gl_cv_func_strtoll_works="$gl_cross_guess_normal" ;;
-          esac
-
-else $as_nop
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <stdlib.h>
-int
-main (void)
-{
-int result = 0;
-              char *term;
-              /* This test fails on Minix and native Windows.  */
-              {
-                const char input[] = "0x";
-                (void) strtoll (input, &term, 16);
-                if (term != input + 1)
-                  result |= 1;
-              }
-              return result;
-
-  ;
-  return 0;
-}
-
-_ACEOF
-if ac_fn_c_try_run "$LINENO"
-then :
-  gl_cv_func_strtoll_works=yes
-else $as_nop
-  gl_cv_func_strtoll_works=no
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_strtoll_works" >&5
-printf "%s\n" "$gl_cv_func_strtoll_works" >&6; }
-    case "$gl_cv_func_strtoll_works" in
-      *yes) ;;
-      *)    REPLACE_STRTOLL=1 ;;
-    esac
-  else
-    HAVE_STRTOLL=0
-  fi
-
-
-     if test $HAVE_STRTOLL = 0 || test $REPLACE_STRTOLL = 1; then
-  GL_COND_OBJ_STRTOLL_TRUE=
-  GL_COND_OBJ_STRTOLL_FALSE='#'
-else
-  GL_COND_OBJ_STRTOLL_TRUE='#'
-  GL_COND_OBJ_STRTOLL_FALSE=
-fi
-:
-    if test -z "${GL_COND_OBJ_STRTOLL_TRUE}" && test -z "${GL_COND_OBJ_STRTOLL_FALSE}"; then
-    GL_COND_OBJ_STRTOLL_TRUE='#'
-    GL_COND_OBJ_STRTOLL_FALSE='#'
-  fi
-
-  if test -z "$GL_COND_OBJ_STRTOLL_TRUE"; then :
-
-
-  :
-
-
-fi
-
-
-
-
-
-
-
-
-
-          GL_GNULIB_STRTOLL=1
-
-
-
-
-
-printf "%s\n" "#define GNULIB_TEST_STRTOLL 1" >>confdefs.h
-
-
-
-
-
-
-  ac_fn_c_check_func "$LINENO" "strtoull" "ac_cv_func_strtoull"
-if test "x$ac_cv_func_strtoull" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRTOULL 1" >>confdefs.h
-
-fi
-
-  if test $ac_cv_func_strtoull = yes; then
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether strtoull works" >&5
-printf %s "checking whether strtoull works... " >&6; }
-if test ${gl_cv_func_strtoull_works+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  if test "$cross_compiling" = yes
-then :
-  case "$host_os" in
-                    # Guess no on native Windows.
-            mingw*) gl_cv_func_strtoull_works="guessing no" ;;
-            *)      gl_cv_func_strtoull_works="$gl_cross_guess_normal" ;;
-          esac
-
-else $as_nop
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <stdlib.h>
-int
-main (void)
-{
-int result = 0;
-              char *term;
-              /* This test fails on Minix and native Windows.  */
-              {
-                const char input[] = "0x";
-                (void) strtoull (input, &term, 16);
-                if (term != input + 1)
-                  result |= 1;
-              }
-              return result;
-
-  ;
-  return 0;
-}
-
-_ACEOF
-if ac_fn_c_try_run "$LINENO"
-then :
-  gl_cv_func_strtoull_works=yes
-else $as_nop
-  gl_cv_func_strtoull_works=no
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_strtoull_works" >&5
-printf "%s\n" "$gl_cv_func_strtoull_works" >&6; }
-    case "$gl_cv_func_strtoull_works" in
-      *yes) ;;
-      *)    REPLACE_STRTOULL=1 ;;
-    esac
-  else
-    HAVE_STRTOULL=0
-  fi
-
-
-     if test $HAVE_STRTOULL = 0 || test $REPLACE_STRTOULL = 1; then
-  GL_COND_OBJ_STRTOULL_TRUE=
-  GL_COND_OBJ_STRTOULL_FALSE='#'
-else
-  GL_COND_OBJ_STRTOULL_TRUE='#'
-  GL_COND_OBJ_STRTOULL_FALSE=
-fi
-:
-    if test -z "${GL_COND_OBJ_STRTOULL_TRUE}" && test -z "${GL_COND_OBJ_STRTOULL_FALSE}"; then
-    GL_COND_OBJ_STRTOULL_TRUE='#'
-    GL_COND_OBJ_STRTOULL_FALSE='#'
-  fi
-
-  if test -z "$GL_COND_OBJ_STRTOULL_TRUE"; then :
-
-
-  :
-
-
-fi
-
-
-
-
-
-
-
-
-
-          GL_GNULIB_STRTOULL=1
-
-
-
-
-
-printf "%s\n" "#define GNULIB_TEST_STRTOULL 1" >>confdefs.h
-
-
-
-
-
-
-
-
-  if test "$ac_cv_have_decl_strtoumax" = yes; then
-    if test "$ac_cv_func_strtoumax" != yes; then
-      # HP-UX 11.11 has "#define strtoimax(...) ..." but no function.
-      REPLACE_STRTOUMAX=1
-    fi
-  else
-    HAVE_DECL_STRTOUMAX=0
-  fi
-
-
-     if test $HAVE_DECL_STRTOUMAX = 0 || test $REPLACE_STRTOUMAX = 1; then
-  GL_COND_OBJ_STRTOUMAX_TRUE=
-  GL_COND_OBJ_STRTOUMAX_FALSE='#'
-else
-  GL_COND_OBJ_STRTOUMAX_TRUE='#'
-  GL_COND_OBJ_STRTOUMAX_FALSE=
-fi
-:
-    if test -z "${GL_COND_OBJ_STRTOUMAX_TRUE}" && test -z "${GL_COND_OBJ_STRTOUMAX_FALSE}"; then
-    GL_COND_OBJ_STRTOUMAX_TRUE='#'
-    GL_COND_OBJ_STRTOUMAX_FALSE='#'
-  fi
-
-  if test -z "$GL_COND_OBJ_STRTOUMAX_TRUE"; then :
-
-
-  ac_fn_check_decl "$LINENO" "strtoull" "ac_cv_have_decl_strtoull" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
-if test "x$ac_cv_have_decl_strtoull" = xyes
-then :
-  ac_have_decl=1
-else $as_nop
-  ac_have_decl=0
-fi
-printf "%s\n" "#define HAVE_DECL_STRTOULL $ac_have_decl" >>confdefs.h
-
-
-
-fi
-
-
-
-
-
-
-
-
-
-          GL_GNULIB_STRTOUMAX=1
-
 
 
 

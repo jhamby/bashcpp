@@ -1508,7 +1508,7 @@ class Shell : public SimpleState PARENT_CLASS
 {
 public:
   Shell ();
-  virtual ~Shell () noexcept override;
+  virtual ~Shell () noexcept RL_OVERRIDE;
 
   // This start method replaces main() from the C version.
   void start_shell (int argc, char **argv, char **env)
@@ -1972,11 +1972,54 @@ public:
 #endif
   int display_signal_list (WORD_LIST *, int);
 
-  builtin *builtin_address_internal (string_view, bool);
+  /* Perform a binary search and return the address of the builtin function
+     whose name is NAME.  If the function couldn't be found, or the builtin
+     is disabled or has no function associated with it, return nullptr.
+     DISABLED_OKAY means find it even if the builtin is disabled. */
+  builtin *
+  builtin_address_internal (string_view name, bool disabled_okay)
+  {
+    std::map<string_view, builtin>::iterator it;
+    if ((it = shell_builtins.find (name)) != shell_builtins.end ())
+      {
+        /* It must have a function pointer.  It must be enabled, or we
+           must have explicitly allowed disabled functions to be found,
+           and it must not have been deleted. */
+        if (it->second.function && ((it->second.flags & BUILTIN_DELETED) == 0)
+            && ((it->second.flags & BUILTIN_ENABLED) || disabled_okay))
+          return &(it->second);
+        else
+          return nullptr;
+      }
+    return nullptr;
+  }
 
-  sh_builtin_func_t find_shell_builtin (string_view);
-  sh_builtin_func_t builtin_address (string_view);
-  sh_builtin_func_t find_special_builtin (string_view);
+  /* Return the pointer to the function implementing builtin command NAME. */
+  sh_builtin_func_t
+  find_shell_builtin (const char *name)
+  {
+    current_builtin = builtin_address_internal (name, false);
+    return current_builtin ? current_builtin->function : nullptr;
+  }
+
+  /* Return the address of builtin with NAME, whether it is enabled or not. */
+  sh_builtin_func_t
+  builtin_address (const char *name)
+  {
+    current_builtin = builtin_address_internal (name, true);
+    return current_builtin ? current_builtin->function : nullptr;
+  }
+
+  /* Return the function implementing the builtin NAME, but only if it is a
+     POSIX.2 special builtin. */
+  sh_builtin_func_t
+  find_special_builtin (const char *name)
+  {
+    current_builtin = builtin_address_internal (name, false);
+    return ((current_builtin && (current_builtin->flags & SPECIAL_BUILTIN))
+                ? current_builtin->function
+                : nullptr);
+  }
 
   // This function is now defined in the generated builtins.cc.
   void initialize_shell_builtins ();

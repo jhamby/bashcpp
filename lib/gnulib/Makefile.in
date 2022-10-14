@@ -46,6 +46,7 @@
 #  --no-conditional-dependencies \
 #  --no-libtool \
 #  --macro-prefix=gl \
+#  assert \
 #  c-ctype \
 #  dprintf \
 #  dup2 \
@@ -81,8 +82,6 @@
 #  strerror_r-posix \
 #  strnlen \
 #  strsignal \
-#  strtoimax \
-#  strtoumax \
 #  times \
 #  timespec \
 #  tmpfile \
@@ -254,33 +253,30 @@ host_triplet = @host@
 @GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__append_85 = strerror-override.c
 @GL_COND_OBJ_STRNLEN_TRUE@am__append_86 = strnlen.c
 @GL_COND_OBJ_STRSIGNAL_TRUE@am__append_87 = strsignal.c
-@GL_COND_OBJ_STRTOIMAX_TRUE@am__append_88 = strtoimax.c
-@GL_COND_OBJ_STRTOLL_TRUE@am__append_89 = strtoll.c
-@GL_COND_OBJ_STRTOULL_TRUE@am__append_90 = strtoull.c
-@GL_COND_OBJ_STRTOUMAX_TRUE@am__append_91 = strtoumax.c
-@GL_COND_OBJ_TIME_R_TRUE@am__append_92 = time_r.c
-@GL_COND_OBJ_TIMES_TRUE@am__append_93 = times.c
-@GL_COND_OBJ_TMPFILE_TRUE@am__append_94 = tmpfile.c
-@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__append_95 = uniwidth/width.c
-@GL_COND_OBJ_WAITPID_TRUE@am__append_96 = waitpid.c
-@GL_COND_OBJ_WCSWIDTH_TRUE@am__append_97 = wcswidth.c
-@GL_COND_OBJ_WCWIDTH_TRUE@am__append_98 = wcwidth.c
-@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__append_99 = windows-mutex.c
-@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__append_100 = windows-once.c
-@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__append_101 = windows-recmutex.c
-@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__append_102 = windows-rwlock.c
-@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__append_103 = windows-tls.c
-@GL_COND_OBJ_WMEMCHR_TRUE@am__append_104 = wmemchr.c
-@GL_COND_OBJ_WMEMPCPY_TRUE@am__append_105 = wmempcpy.c
-@GL_COND_OBJ_WRITE_TRUE@am__append_106 = write.c
+@GL_COND_OBJ_TIME_R_TRUE@am__append_88 = time_r.c
+@GL_COND_OBJ_TIMES_TRUE@am__append_89 = times.c
+@GL_COND_OBJ_TMPFILE_TRUE@am__append_90 = tmpfile.c
+@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__append_91 = uniwidth/width.c
+@GL_COND_OBJ_WAITPID_TRUE@am__append_92 = waitpid.c
+@GL_COND_OBJ_WCSWIDTH_TRUE@am__append_93 = wcswidth.c
+@GL_COND_OBJ_WCWIDTH_TRUE@am__append_94 = wcwidth.c
+@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__append_95 = windows-mutex.c
+@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__append_96 = windows-once.c
+@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__append_97 = windows-recmutex.c
+@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__append_98 = windows-rwlock.c
+@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__append_99 = windows-tls.c
+@GL_COND_OBJ_WMEMCHR_TRUE@am__append_100 = wmemchr.c
+@GL_COND_OBJ_WMEMPCPY_TRUE@am__append_101 = wmempcpy.c
+@GL_COND_OBJ_WRITE_TRUE@am__append_102 = write.c
 subdir = lib/gnulib
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/__inline.m4 \
 	$(top_srcdir)/m4/absolute-header.m4 $(top_srcdir)/m4/alloca.m4 \
-	$(top_srcdir)/m4/arpa_inet_h.m4 $(top_srcdir)/m4/assert_h.m4 \
-	$(top_srcdir)/m4/btowc.m4 $(top_srcdir)/m4/builtin-expect.m4 \
-	$(top_srcdir)/m4/c-bool.m4 $(top_srcdir)/m4/canonicalize.m4 \
+	$(top_srcdir)/m4/arpa_inet_h.m4 $(top_srcdir)/m4/assert.m4 \
+	$(top_srcdir)/m4/assert_h.m4 $(top_srcdir)/m4/btowc.m4 \
+	$(top_srcdir)/m4/builtin-expect.m4 $(top_srcdir)/m4/c-bool.m4 \
+	$(top_srcdir)/m4/canonicalize.m4 \
 	$(top_srcdir)/m4/chdir-long.m4 $(top_srcdir)/m4/clock_time.m4 \
 	$(top_srcdir)/m4/close.m4 $(top_srcdir)/m4/closedir.m4 \
 	$(top_srcdir)/m4/codeset.m4 $(top_srcdir)/m4/ctype_h.m4 \
@@ -386,8 +382,6 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/strerror.m4 $(top_srcdir)/m4/strerror_r.m4 \
 	$(top_srcdir)/m4/string_h.m4 $(top_srcdir)/m4/strings_h.m4 \
 	$(top_srcdir)/m4/strnlen.m4 $(top_srcdir)/m4/strsignal.m4 \
-	$(top_srcdir)/m4/strtoimax.m4 $(top_srcdir)/m4/strtoll.m4 \
-	$(top_srcdir)/m4/strtoull.m4 $(top_srcdir)/m4/strtoumax.m4 \
 	$(top_srcdir)/m4/sys_random_h.m4 \
 	$(top_srcdir)/m4/sys_select_h.m4 \
 	$(top_srcdir)/m4/sys_socket_h.m4 \
@@ -459,12 +453,11 @@ am__libgnu_a_SOURCES_DIST = openat-priv.h openat-proc.c \
 	sockets.h sockets.c stat.c stat-time.c stdio-read.c \
 	stdio-write.c strcasecmp.c strncasecmp.c strchrnul.c strdup.c \
 	strerror.c strerror-override.c strnlen.c strnlen1.h strnlen1.c \
-	strsignal.c strtoimax.c strtoll.c strtoull.c strtoumax.c \
-	sys_socket.c tempname.c glthread/threadlib.c time_r.c times.c \
-	timespec.c glthread/tls.h glthread/tls.c tmpdir.h tmpdir.c \
-	tmpfile.c unistd.c dup-safer.c fd-safer.c pipe-safer.c \
-	uniwidth/width.c waitpid.c wcswidth.c wctype-h.c wcwidth.c \
-	windows-mutex.c windows-once.c windows-recmutex.c \
+	strsignal.c sys_socket.c tempname.c glthread/threadlib.c \
+	time_r.c times.c timespec.c glthread/tls.h glthread/tls.c \
+	tmpdir.h tmpdir.c tmpfile.c unistd.c dup-safer.c fd-safer.c \
+	pipe-safer.c uniwidth/width.c waitpid.c wcswidth.c wctype-h.c \
+	wcwidth.c windows-mutex.c windows-once.c windows-recmutex.c \
 	windows-rwlock.c windows-tls.c wmemchr.c wmempcpy.c write.c \
 	xsize.h xsize.c
 @GL_COND_OBJ_BTOWC_TRUE@am__objects_1 = libgnu_a-btowc.$(OBJEXT)
@@ -590,32 +583,25 @@ am__dirstamp = $(am__leading_dot)dirstamp
 @GL_COND_OBJ_STRNLEN_TRUE@am__objects_86 = libgnu_a-strnlen.$(OBJEXT)
 @GL_COND_OBJ_STRSIGNAL_TRUE@am__objects_87 =  \
 @GL_COND_OBJ_STRSIGNAL_TRUE@	libgnu_a-strsignal.$(OBJEXT)
-@GL_COND_OBJ_STRTOIMAX_TRUE@am__objects_88 =  \
-@GL_COND_OBJ_STRTOIMAX_TRUE@	libgnu_a-strtoimax.$(OBJEXT)
-@GL_COND_OBJ_STRTOLL_TRUE@am__objects_89 = libgnu_a-strtoll.$(OBJEXT)
-@GL_COND_OBJ_STRTOULL_TRUE@am__objects_90 =  \
-@GL_COND_OBJ_STRTOULL_TRUE@	libgnu_a-strtoull.$(OBJEXT)
-@GL_COND_OBJ_STRTOUMAX_TRUE@am__objects_91 =  \
-@GL_COND_OBJ_STRTOUMAX_TRUE@	libgnu_a-strtoumax.$(OBJEXT)
-@GL_COND_OBJ_TIME_R_TRUE@am__objects_92 = libgnu_a-time_r.$(OBJEXT)
-@GL_COND_OBJ_TIMES_TRUE@am__objects_93 = libgnu_a-times.$(OBJEXT)
-@GL_COND_OBJ_TMPFILE_TRUE@am__objects_94 = libgnu_a-tmpfile.$(OBJEXT)
-@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__objects_95 = uniwidth/libgnu_a-width.$(OBJEXT)
-@GL_COND_OBJ_WAITPID_TRUE@am__objects_96 = libgnu_a-waitpid.$(OBJEXT)
-@GL_COND_OBJ_WCSWIDTH_TRUE@am__objects_97 =  \
+@GL_COND_OBJ_TIME_R_TRUE@am__objects_88 = libgnu_a-time_r.$(OBJEXT)
+@GL_COND_OBJ_TIMES_TRUE@am__objects_89 = libgnu_a-times.$(OBJEXT)
+@GL_COND_OBJ_TMPFILE_TRUE@am__objects_90 = libgnu_a-tmpfile.$(OBJEXT)
+@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__objects_91 = uniwidth/libgnu_a-width.$(OBJEXT)
+@GL_COND_OBJ_WAITPID_TRUE@am__objects_92 = libgnu_a-waitpid.$(OBJEXT)
+@GL_COND_OBJ_WCSWIDTH_TRUE@am__objects_93 =  \
 @GL_COND_OBJ_WCSWIDTH_TRUE@	libgnu_a-wcswidth.$(OBJEXT)
-@GL_COND_OBJ_WCWIDTH_TRUE@am__objects_98 = libgnu_a-wcwidth.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__objects_99 = libgnu_a-windows-mutex.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__objects_100 = libgnu_a-windows-once.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__objects_101 = libgnu_a-windows-recmutex.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__objects_102 = libgnu_a-windows-rwlock.$(OBJEXT)
-@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__objects_103 =  \
+@GL_COND_OBJ_WCWIDTH_TRUE@am__objects_94 = libgnu_a-wcwidth.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__objects_95 = libgnu_a-windows-mutex.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_ONCE_TRUE@am__objects_96 = libgnu_a-windows-once.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_RECMUTEX_TRUE@am__objects_97 = libgnu_a-windows-recmutex.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_RWLOCK_TRUE@am__objects_98 = libgnu_a-windows-rwlock.$(OBJEXT)
+@GL_COND_OBJ_WINDOWS_TLS_TRUE@am__objects_99 =  \
 @GL_COND_OBJ_WINDOWS_TLS_TRUE@	libgnu_a-windows-tls.$(OBJEXT)
-@GL_COND_OBJ_WMEMCHR_TRUE@am__objects_104 =  \
+@GL_COND_OBJ_WMEMCHR_TRUE@am__objects_100 =  \
 @GL_COND_OBJ_WMEMCHR_TRUE@	libgnu_a-wmemchr.$(OBJEXT)
-@GL_COND_OBJ_WMEMPCPY_TRUE@am__objects_105 =  \
+@GL_COND_OBJ_WMEMPCPY_TRUE@am__objects_101 =  \
 @GL_COND_OBJ_WMEMPCPY_TRUE@	libgnu_a-wmempcpy.$(OBJEXT)
-@GL_COND_OBJ_WRITE_TRUE@am__objects_106 = libgnu_a-write.$(OBJEXT)
+@GL_COND_OBJ_WRITE_TRUE@am__objects_102 = libgnu_a-write.$(OBJEXT)
 am_libgnu_a_OBJECTS = libgnu_a-openat-proc.$(OBJEXT) \
 	libgnu_a-basename-lgpl.$(OBJEXT) $(am__objects_1) \
 	libgnu_a-c-ctype.$(OBJEXT) $(am__objects_2) $(am__objects_3) \
@@ -670,20 +656,18 @@ am_libgnu_a_OBJECTS = libgnu_a-openat-proc.$(OBJEXT) \
 	$(am__objects_81) $(am__objects_82) $(am__objects_83) \
 	$(am__objects_84) $(am__objects_85) $(am__objects_86) \
 	libgnu_a-strnlen1.$(OBJEXT) $(am__objects_87) \
-	$(am__objects_88) $(am__objects_89) $(am__objects_90) \
-	$(am__objects_91) libgnu_a-sys_socket.$(OBJEXT) \
-	libgnu_a-tempname.$(OBJEXT) \
-	glthread/libgnu_a-threadlib.$(OBJEXT) $(am__objects_92) \
-	$(am__objects_93) libgnu_a-timespec.$(OBJEXT) \
+	libgnu_a-sys_socket.$(OBJEXT) libgnu_a-tempname.$(OBJEXT) \
+	glthread/libgnu_a-threadlib.$(OBJEXT) $(am__objects_88) \
+	$(am__objects_89) libgnu_a-timespec.$(OBJEXT) \
 	glthread/libgnu_a-tls.$(OBJEXT) libgnu_a-tmpdir.$(OBJEXT) \
-	$(am__objects_94) libgnu_a-unistd.$(OBJEXT) \
+	$(am__objects_90) libgnu_a-unistd.$(OBJEXT) \
 	libgnu_a-dup-safer.$(OBJEXT) libgnu_a-fd-safer.$(OBJEXT) \
-	libgnu_a-pipe-safer.$(OBJEXT) $(am__objects_95) \
-	$(am__objects_96) $(am__objects_97) \
-	libgnu_a-wctype-h.$(OBJEXT) $(am__objects_98) \
-	$(am__objects_99) $(am__objects_100) $(am__objects_101) \
-	$(am__objects_102) $(am__objects_103) $(am__objects_104) \
-	$(am__objects_105) $(am__objects_106) libgnu_a-xsize.$(OBJEXT)
+	libgnu_a-pipe-safer.$(OBJEXT) $(am__objects_91) \
+	$(am__objects_92) $(am__objects_93) \
+	libgnu_a-wctype-h.$(OBJEXT) $(am__objects_94) \
+	$(am__objects_95) $(am__objects_96) $(am__objects_97) \
+	$(am__objects_98) $(am__objects_99) $(am__objects_100) \
+	$(am__objects_101) $(am__objects_102) libgnu_a-xsize.$(OBJEXT)
 libgnu_a_OBJECTS = $(am_libgnu_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -827,11 +811,6 @@ am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
 	./$(DEPDIR)/libgnu_a-strnlen.Po \
 	./$(DEPDIR)/libgnu_a-strnlen1.Po \
 	./$(DEPDIR)/libgnu_a-strsignal.Po \
-	./$(DEPDIR)/libgnu_a-strtoimax.Po \
-	./$(DEPDIR)/libgnu_a-strtol.Po ./$(DEPDIR)/libgnu_a-strtoll.Po \
-	./$(DEPDIR)/libgnu_a-strtoul.Po \
-	./$(DEPDIR)/libgnu_a-strtoull.Po \
-	./$(DEPDIR)/libgnu_a-strtoumax.Po \
 	./$(DEPDIR)/libgnu_a-sys_socket.Po \
 	./$(DEPDIR)/libgnu_a-tempname.Po \
 	./$(DEPDIR)/libgnu_a-time_r.Po ./$(DEPDIR)/libgnu_a-times.Po \
@@ -2454,12 +2433,12 @@ EXTRA_DIST = alloca.c alloca.in.h arpa_inet.in.h assert.in.h verify.h \
 	intprops-internal.h stdckdint.in.h stddef.in.h stdint.in.h \
 	stdio.in.h stdlib.in.h strcasestr.c str-two-way.h strcasestr.c \
 	strchrnul.valgrind streq.h strerror-override.h strerror_r.c \
-	string.in.h strings.in.h siglist.h strtol.c strtol.c strtoul.c \
-	strtoimax.c sys_random.in.h sys_select.in.h sys_socket.in.h \
-	sys_stat.in.h sys_time.in.h sys_times.in.h sys_types.in.h \
-	sys_uio.in.h sys_wait.in.h tempname.h thread-optim.h time.in.h \
-	timespec.h unistd.in.h unistd--.h unistd-safer.h unitypes.in.h \
-	localcharset.h uniwidth.in.h unictype/bitmap.h uniwidth/cjk.h \
+	string.in.h strings.in.h siglist.h sys_random.in.h \
+	sys_select.in.h sys_socket.in.h sys_stat.in.h sys_time.in.h \
+	sys_times.in.h sys_types.in.h sys_uio.in.h sys_wait.in.h \
+	tempname.h thread-optim.h time.in.h timespec.h unistd.in.h \
+	unistd--.h unistd-safer.h unitypes.in.h localcharset.h \
+	uniwidth.in.h unictype/bitmap.h uniwidth/cjk.h \
 	uniwidth/width0.h uniwidth/width2.h asnprintf.c float+.h \
 	printf-args.c printf-args.h printf-parse.c printf-parse.h \
 	vasnprintf.c vasnprintf.h verify.h vfprintf.c vprintf.c \
@@ -2543,15 +2522,14 @@ libgnu_a_SOURCES = openat-priv.h openat-proc.c basename-lgpl.c \
 	$(am__append_78) $(am__append_79) $(am__append_80) \
 	$(am__append_81) $(am__append_82) $(am__append_83) \
 	$(am__append_84) $(am__append_85) $(am__append_86) strnlen1.h \
-	strnlen1.c $(am__append_87) $(am__append_88) $(am__append_89) \
-	$(am__append_90) $(am__append_91) sys_socket.c tempname.c \
-	glthread/threadlib.c $(am__append_92) $(am__append_93) \
+	strnlen1.c $(am__append_87) sys_socket.c tempname.c \
+	glthread/threadlib.c $(am__append_88) $(am__append_89) \
 	timespec.c glthread/tls.h glthread/tls.c tmpdir.h tmpdir.c \
-	$(am__append_94) unistd.c dup-safer.c fd-safer.c pipe-safer.c \
-	$(am__append_95) $(am__append_96) $(am__append_97) wctype-h.c \
-	$(am__append_98) $(am__append_99) $(am__append_100) \
-	$(am__append_101) $(am__append_102) $(am__append_103) \
-	$(am__append_104) $(am__append_105) $(am__append_106) xsize.h \
+	$(am__append_90) unistd.c dup-safer.c fd-safer.c pipe-safer.c \
+	$(am__append_91) $(am__append_92) $(am__append_93) wctype-h.c \
+	$(am__append_94) $(am__append_95) $(am__append_96) \
+	$(am__append_97) $(am__append_98) $(am__append_99) \
+	$(am__append_100) $(am__append_101) $(am__append_102) xsize.h \
 	xsize.c
 libgnu_a_CFLAGS = $(AM_CFLAGS) $(GL_CFLAG_GNULIB_WARNINGS)
 libgnu_a_LIBADD = $(gl_LIBOBJS) @ALLOCA@
@@ -2563,8 +2541,8 @@ EXTRA_libgnu_a_SOURCES = alloca.c dprintf.c at-func.c fnmatch.c \
 	lc-charset-dispatch.c mbtowc-lock.c mbsrtowcs-state.c mktime.c \
 	printf-frexp.c realloc.c realloc.c safe-read.c snprintf.c \
 	sprintf.c stat-w32.c strcasestr.c strcasestr.c strerror_r.c \
-	strtol.c strtol.c strtoul.c strtoimax.c asnprintf.c \
-	printf-args.c printf-parse.c vasnprintf.c vfprintf.c vprintf.c
+	asnprintf.c printf-args.c printf-parse.c vasnprintf.c \
+	vfprintf.c vprintf.c
 
 # Use this preprocessor expression to decide whether #include_next works.
 # Do not rely on a 'configure'-time test for this, since the expression
@@ -2854,12 +2832,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strnlen.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strnlen1.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strsignal.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strtoimax.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strtol.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strtoll.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strtoul.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strtoull.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strtoumax.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-sys_socket.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-tempname.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-time_r.Po@am__quote@ # am--include-marker
@@ -4715,62 +4687,6 @@ libgnu_a-strsignal.obj: strsignal.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strsignal.obj `if test -f 'strsignal.c'; then $(CYGPATH_W) 'strsignal.c'; else $(CYGPATH_W) '$(srcdir)/strsignal.c'; fi`
 
-libgnu_a-strtoimax.o: strtoimax.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoimax.o -MD -MP -MF $(DEPDIR)/libgnu_a-strtoimax.Tpo -c -o libgnu_a-strtoimax.o `test -f 'strtoimax.c' || echo '$(srcdir)/'`strtoimax.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoimax.Tpo $(DEPDIR)/libgnu_a-strtoimax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoimax.c' object='libgnu_a-strtoimax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoimax.o `test -f 'strtoimax.c' || echo '$(srcdir)/'`strtoimax.c
-
-libgnu_a-strtoimax.obj: strtoimax.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoimax.obj -MD -MP -MF $(DEPDIR)/libgnu_a-strtoimax.Tpo -c -o libgnu_a-strtoimax.obj `if test -f 'strtoimax.c'; then $(CYGPATH_W) 'strtoimax.c'; else $(CYGPATH_W) '$(srcdir)/strtoimax.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoimax.Tpo $(DEPDIR)/libgnu_a-strtoimax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoimax.c' object='libgnu_a-strtoimax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoimax.obj `if test -f 'strtoimax.c'; then $(CYGPATH_W) 'strtoimax.c'; else $(CYGPATH_W) '$(srcdir)/strtoimax.c'; fi`
-
-libgnu_a-strtoll.o: strtoll.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoll.o -MD -MP -MF $(DEPDIR)/libgnu_a-strtoll.Tpo -c -o libgnu_a-strtoll.o `test -f 'strtoll.c' || echo '$(srcdir)/'`strtoll.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoll.Tpo $(DEPDIR)/libgnu_a-strtoll.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoll.c' object='libgnu_a-strtoll.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoll.o `test -f 'strtoll.c' || echo '$(srcdir)/'`strtoll.c
-
-libgnu_a-strtoll.obj: strtoll.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoll.obj -MD -MP -MF $(DEPDIR)/libgnu_a-strtoll.Tpo -c -o libgnu_a-strtoll.obj `if test -f 'strtoll.c'; then $(CYGPATH_W) 'strtoll.c'; else $(CYGPATH_W) '$(srcdir)/strtoll.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoll.Tpo $(DEPDIR)/libgnu_a-strtoll.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoll.c' object='libgnu_a-strtoll.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoll.obj `if test -f 'strtoll.c'; then $(CYGPATH_W) 'strtoll.c'; else $(CYGPATH_W) '$(srcdir)/strtoll.c'; fi`
-
-libgnu_a-strtoull.o: strtoull.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoull.o -MD -MP -MF $(DEPDIR)/libgnu_a-strtoull.Tpo -c -o libgnu_a-strtoull.o `test -f 'strtoull.c' || echo '$(srcdir)/'`strtoull.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoull.Tpo $(DEPDIR)/libgnu_a-strtoull.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoull.c' object='libgnu_a-strtoull.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoull.o `test -f 'strtoull.c' || echo '$(srcdir)/'`strtoull.c
-
-libgnu_a-strtoull.obj: strtoull.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoull.obj -MD -MP -MF $(DEPDIR)/libgnu_a-strtoull.Tpo -c -o libgnu_a-strtoull.obj `if test -f 'strtoull.c'; then $(CYGPATH_W) 'strtoull.c'; else $(CYGPATH_W) '$(srcdir)/strtoull.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoull.Tpo $(DEPDIR)/libgnu_a-strtoull.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoull.c' object='libgnu_a-strtoull.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoull.obj `if test -f 'strtoull.c'; then $(CYGPATH_W) 'strtoull.c'; else $(CYGPATH_W) '$(srcdir)/strtoull.c'; fi`
-
-libgnu_a-strtoumax.o: strtoumax.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoumax.o -MD -MP -MF $(DEPDIR)/libgnu_a-strtoumax.Tpo -c -o libgnu_a-strtoumax.o `test -f 'strtoumax.c' || echo '$(srcdir)/'`strtoumax.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoumax.Tpo $(DEPDIR)/libgnu_a-strtoumax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoumax.c' object='libgnu_a-strtoumax.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoumax.o `test -f 'strtoumax.c' || echo '$(srcdir)/'`strtoumax.c
-
-libgnu_a-strtoumax.obj: strtoumax.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoumax.obj -MD -MP -MF $(DEPDIR)/libgnu_a-strtoumax.Tpo -c -o libgnu_a-strtoumax.obj `if test -f 'strtoumax.c'; then $(CYGPATH_W) 'strtoumax.c'; else $(CYGPATH_W) '$(srcdir)/strtoumax.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoumax.Tpo $(DEPDIR)/libgnu_a-strtoumax.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoumax.c' object='libgnu_a-strtoumax.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoumax.obj `if test -f 'strtoumax.c'; then $(CYGPATH_W) 'strtoumax.c'; else $(CYGPATH_W) '$(srcdir)/strtoumax.c'; fi`
-
 libgnu_a-sys_socket.o: sys_socket.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-sys_socket.o -MD -MP -MF $(DEPDIR)/libgnu_a-sys_socket.Tpo -c -o libgnu_a-sys_socket.o `test -f 'sys_socket.c' || echo '$(srcdir)/'`sys_socket.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-sys_socket.Tpo $(DEPDIR)/libgnu_a-sys_socket.Po
@@ -5457,34 +5373,6 @@ libgnu_a-strerror_r.obj: strerror_r.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strerror_r.obj `if test -f 'strerror_r.c'; then $(CYGPATH_W) 'strerror_r.c'; else $(CYGPATH_W) '$(srcdir)/strerror_r.c'; fi`
 
-libgnu_a-strtol.o: strtol.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtol.o -MD -MP -MF $(DEPDIR)/libgnu_a-strtol.Tpo -c -o libgnu_a-strtol.o `test -f 'strtol.c' || echo '$(srcdir)/'`strtol.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtol.Tpo $(DEPDIR)/libgnu_a-strtol.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtol.c' object='libgnu_a-strtol.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtol.o `test -f 'strtol.c' || echo '$(srcdir)/'`strtol.c
-
-libgnu_a-strtol.obj: strtol.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtol.obj -MD -MP -MF $(DEPDIR)/libgnu_a-strtol.Tpo -c -o libgnu_a-strtol.obj `if test -f 'strtol.c'; then $(CYGPATH_W) 'strtol.c'; else $(CYGPATH_W) '$(srcdir)/strtol.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtol.Tpo $(DEPDIR)/libgnu_a-strtol.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtol.c' object='libgnu_a-strtol.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtol.obj `if test -f 'strtol.c'; then $(CYGPATH_W) 'strtol.c'; else $(CYGPATH_W) '$(srcdir)/strtol.c'; fi`
-
-libgnu_a-strtoul.o: strtoul.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoul.o -MD -MP -MF $(DEPDIR)/libgnu_a-strtoul.Tpo -c -o libgnu_a-strtoul.o `test -f 'strtoul.c' || echo '$(srcdir)/'`strtoul.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoul.Tpo $(DEPDIR)/libgnu_a-strtoul.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoul.c' object='libgnu_a-strtoul.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoul.o `test -f 'strtoul.c' || echo '$(srcdir)/'`strtoul.c
-
-libgnu_a-strtoul.obj: strtoul.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoul.obj -MD -MP -MF $(DEPDIR)/libgnu_a-strtoul.Tpo -c -o libgnu_a-strtoul.obj `if test -f 'strtoul.c'; then $(CYGPATH_W) 'strtoul.c'; else $(CYGPATH_W) '$(srcdir)/strtoul.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoul.Tpo $(DEPDIR)/libgnu_a-strtoul.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoul.c' object='libgnu_a-strtoul.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoul.obj `if test -f 'strtoul.c'; then $(CYGPATH_W) 'strtoul.c'; else $(CYGPATH_W) '$(srcdir)/strtoul.c'; fi`
-
 libgnu_a-asnprintf.o: asnprintf.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-asnprintf.o -MD -MP -MF $(DEPDIR)/libgnu_a-asnprintf.Tpo -c -o libgnu_a-asnprintf.o `test -f 'asnprintf.c' || echo '$(srcdir)/'`asnprintf.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-asnprintf.Tpo $(DEPDIR)/libgnu_a-asnprintf.Po
@@ -5938,12 +5826,6 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-strnlen.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strnlen1.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strsignal.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoimax.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtol.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoll.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoul.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoull.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoumax.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-sys_socket.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-tempname.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-time_r.Po
@@ -6173,12 +6055,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-strnlen.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strnlen1.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strsignal.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoimax.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtol.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoll.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoul.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoull.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoumax.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-sys_socket.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-tempname.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-time_r.Po

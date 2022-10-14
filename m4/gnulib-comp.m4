@@ -46,6 +46,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module alloca:
   # Code from module alloca-opt:
   # Code from module arpa_inet:
+  # Code from module assert:
   # Code from module assert-h:
   # Code from module assure:
   # Code from module at-internal:
@@ -243,10 +244,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module strnlen:
   # Code from module strnlen1:
   # Code from module strsignal:
-  # Code from module strtoimax:
-  # Code from module strtoll:
-  # Code from module strtoull:
-  # Code from module strtoumax:
   # Code from module sys_random:
   # Code from module sys_select:
   # Code from module sys_socket:
@@ -320,6 +317,7 @@ AC_DEFUN([gl_INIT],
   gl_ARPA_INET_H
   gl_ARPA_INET_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
+  gl_ASSERT
   gl_ASSERT_H
   gl_CONDITIONAL_HEADER([assert.h])
   AC_PROG_MKDIR_P
@@ -1035,34 +1033,6 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_STRSIGNAL
   ])
   gl_STRING_MODULE_INDICATOR([strsignal])
-  gl_FUNC_STRTOIMAX
-  gl_CONDITIONAL([GL_COND_OBJ_STRTOIMAX],
-                 [test $HAVE_DECL_STRTOIMAX = 0 || test $REPLACE_STRTOIMAX = 1])
-  AM_COND_IF([GL_COND_OBJ_STRTOIMAX], [
-    gl_PREREQ_STRTOIMAX
-  ])
-  gl_INTTYPES_MODULE_INDICATOR([strtoimax])
-  gl_FUNC_STRTOLL
-  gl_CONDITIONAL([GL_COND_OBJ_STRTOLL],
-                 [test $HAVE_STRTOLL = 0 || test $REPLACE_STRTOLL = 1])
-  AM_COND_IF([GL_COND_OBJ_STRTOLL], [
-    gl_PREREQ_STRTOLL
-  ])
-  gl_STDLIB_MODULE_INDICATOR([strtoll])
-  gl_FUNC_STRTOULL
-  gl_CONDITIONAL([GL_COND_OBJ_STRTOULL],
-                 [test $HAVE_STRTOULL = 0 || test $REPLACE_STRTOULL = 1])
-  AM_COND_IF([GL_COND_OBJ_STRTOULL], [
-    gl_PREREQ_STRTOULL
-  ])
-  gl_STDLIB_MODULE_INDICATOR([strtoull])
-  gl_FUNC_STRTOUMAX
-  gl_CONDITIONAL([GL_COND_OBJ_STRTOUMAX],
-                 [test $HAVE_DECL_STRTOUMAX = 0 || test $REPLACE_STRTOUMAX = 1])
-  AM_COND_IF([GL_COND_OBJ_STRTOUMAX], [
-    gl_PREREQ_STRTOUMAX
-  ])
-  gl_INTTYPES_MODULE_INDICATOR([strtoumax])
   gl_SYS_RANDOM_H
   gl_SYS_RANDOM_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
@@ -1634,12 +1604,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/strnlen1.c
   lib/strnlen1.h
   lib/strsignal.c
-  lib/strtoimax.c
-  lib/strtol.c
-  lib/strtoll.c
-  lib/strtoul.c
-  lib/strtoull.c
-  lib/strtoumax.c
   lib/sys-limits.h
   lib/sys_random.in.h
   lib/sys_select.in.h
@@ -1710,6 +1674,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/absolute-header.m4
   m4/alloca.m4
   m4/arpa_inet_h.m4
+  m4/assert.m4
   m4/assert_h.m4
   m4/btowc.m4
   m4/builtin-expect.m4
@@ -1892,10 +1857,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/strings_h.m4
   m4/strnlen.m4
   m4/strsignal.m4
-  m4/strtoimax.m4
-  m4/strtoll.m4
-  m4/strtoull.m4
-  m4/strtoumax.m4
   m4/sys_random_h.m4
   m4/sys_select_h.m4
   m4/sys_socket_h.m4

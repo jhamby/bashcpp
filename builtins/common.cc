@@ -176,7 +176,7 @@ Shell::sh_invalidnum (const char *s)
 {
   const char *msg;
 
-  if (*s == '0' && isdigit (static_cast<unsigned char> (s[1])))
+  if (*s == '0' && c_isdigit (s[1]))
     msg = _ ("invalid octal number");
   else if (*s == '0' && s[1] == 'x')
     msg = _ ("invalid hex number");
@@ -503,8 +503,8 @@ Shell::read_octal (const char *string)
 
 /* Return a consed string which is the current working directory.
    FOR_WHOM is the name of the caller for error printing.  */
-const std::string *
-Shell::get_working_directory (string_view for_whom)
+char *
+Shell::get_working_directory (const char *for_whom)
 {
   if (no_symbolic_links)
     the_current_working_directory = nullptr;
@@ -529,10 +529,10 @@ Shell::get_working_directory (string_view for_whom)
 
 /* Make NAME our internal idea of the current working directory. */
 void
-Shell::set_working_directory (string_view name)
+Shell::set_working_directory (const char *name)
 {
   delete the_current_working_directory;
-  the_current_working_directory = new std::string (name);
+  the_current_working_directory = savestring (name);
 }
 
 /* **************************************************************** */
@@ -733,78 +733,6 @@ Shell::display_signal_list (WORD_LIST *list, int forcecols)
 /*	    Finding builtin commands and their functions	    */
 /*								    */
 /* **************************************************************** */
-
-/* Perform a binary search and return the address of the builtin function
-   whose name is NAME.  If the function couldn't be found, or the builtin
-   is disabled or has no function associated with it, return NULL.
-   Return the address of the builtin.
-   DISABLED_OKAY means find it even if the builtin is disabled. */
-struct builtin *
-Shell::builtin_address_internal (const char *name, int disabled_okay)
-{
-  int hi, lo, mid, j;
-
-  hi = num_shell_builtins - 1;
-  lo = 0;
-
-  while (lo <= hi)
-    {
-      mid = (lo + hi) / 2;
-
-      j = shell_builtins[mid].name[0] - name[0];
-
-      if (j == 0)
-        j = strcmp (shell_builtins[mid].name, name);
-
-      if (j == 0)
-        {
-          /* It must have a function pointer.  It must be enabled, or we
-             must have explicitly allowed disabled functions to be found,
-             and it must not have been deleted. */
-          if (shell_builtins[mid].function
-              && ((shell_builtins[mid].flags & BUILTIN_DELETED) == 0)
-              && ((shell_builtins[mid].flags & BUILTIN_ENABLED)
-                  || disabled_okay))
-            return &shell_builtins[mid];
-          else
-            return (struct builtin *)NULL;
-        }
-      if (j > 0)
-        hi = mid - 1;
-      else
-        lo = mid + 1;
-    }
-  return (struct builtin *)NULL;
-}
-
-/* Return the pointer to the function implementing builtin command NAME. */
-sh_builtin_func_t *
-Shell::find_shell_builtin (const char *name)
-{
-  current_builtin = builtin_address_internal (name, 0);
-  return current_builtin ? current_builtin->function
-                         : (sh_builtin_func_t *)NULL;
-}
-
-/* Return the address of builtin with NAME, whether it is enabled or not. */
-sh_builtin_func_t *
-Shell::builtin_address (const char *name)
-{
-  current_builtin = builtin_address_internal (name, 1);
-  return current_builtin ? current_builtin->function
-                         : (sh_builtin_func_t *)NULL;
-}
-
-/* Return the function implementing the builtin NAME, but only if it is a
-   POSIX.2 special builtin. */
-sh_builtin_func_t *
-Shell::find_special_builtin (const char *name)
-{
-  current_builtin = builtin_address_internal (name, 0);
-  return ((current_builtin && (current_builtin->flags & SPECIAL_BUILTIN))
-              ? current_builtin->function
-              : (sh_builtin_func_t *)NULL);
-}
 
 #if !defined(HELP_BUILTIN)
 void

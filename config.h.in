@@ -597,12 +597,6 @@
 /* Define to 1 when the gnulib module strsignal should be tested. */
 #undef GNULIB_TEST_STRSIGNAL
 
-/* Define to 1 when the gnulib module strtoll should be tested. */
-#undef GNULIB_TEST_STRTOLL
-
-/* Define to 1 when the gnulib module strtoull should be tested. */
-#undef GNULIB_TEST_STRTOULL
-
 /* Define to 1 when the gnulib module time_r should be tested. */
 #undef GNULIB_TEST_TIME_R
 
@@ -882,22 +876,6 @@
 /* Define to 1 if you have the declaration of `strsignal', and to 0 if you
    don't. */
 #undef HAVE_DECL_STRSIGNAL
-
-/* Define to 1 if you have the declaration of `strtoimax', and to 0 if you
-   don't. */
-#undef HAVE_DECL_STRTOIMAX
-
-/* Define to 1 if you have the declaration of `strtoll', and to 0 if you
-   don't. */
-#undef HAVE_DECL_STRTOLL
-
-/* Define to 1 if you have the declaration of `strtoull', and to 0 if you
-   don't. */
-#undef HAVE_DECL_STRTOULL
-
-/* Define to 1 if you have the declaration of `strtoumax', and to 0 if you
-   don't. */
-#undef HAVE_DECL_STRTOUMAX
 
 /* Define to 1 if you have the declaration of `sys_siglist', and to 0 if you
    don't. */
@@ -1570,12 +1548,6 @@
 /* Define to 1 if you have the `strtoimax' function. */
 #undef HAVE_STRTOIMAX
 
-/* Define to 1 if you have the `strtoll' function. */
-#undef HAVE_STRTOLL
-
-/* Define to 1 if you have the `strtoull' function. */
-#undef HAVE_STRTOULL
-
 /* Define to 1 if you have the `strtoumax' function. */
 #undef HAVE_STRTOUMAX
 
@@ -2087,6 +2059,9 @@
 
 /* Define if this system is missing support for named pipes. */
 #undef NAMED_PIPES_MISSING
+
+/* Define to 1 if assertions should be disabled. */
+#undef NDEBUG
 
 /* Define if the compilation of mktime.c should define 'mktime' with the
    native Windows TZ workaround. */

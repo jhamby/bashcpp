@@ -37,6 +37,7 @@
 #  --no-conditional-dependencies \
 #  --no-libtool \
 #  --macro-prefix=gl \
+#  assert \
 #  c-ctype \
 #  dprintf \
 #  dup2 \
@@ -72,8 +73,6 @@
 #  strerror_r-posix \
 #  strnlen \
 #  strsignal \
-#  strtoimax \
-#  strtoumax \
 #  times \
 #  timespec \
 #  tmpfile \
@@ -85,6 +84,7 @@
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
 gl_MODULES([
+  assert
   c-ctype
   dprintf
   dup2
@@ -120,8 +120,6 @@ gl_MODULES([
   strerror_r-posix
   strnlen
   strsignal
-  strtoimax
-  strtoumax
   times
   timespec
   tmpfile
