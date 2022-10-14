@@ -119,7 +119,7 @@ static SHELL_VAR *assign_seconds (SHELL_VAR *, const char *, arrayind_t, const c
 static SHELL_VAR *get_seconds (SHELL_VAR *);
 static SHELL_VAR *init_seconds_var ();
 
-static inline SHELL_VAR *set_int_value (SHELL_VAR *, intmax_t, int);
+static inline SHELL_VAR *set_int_value (SHELL_VAR *, int64_t, int);
 static inline SHELL_VAR *set_string_value (SHELL_VAR *, const char *, int);
 
 
@@ -1221,7 +1221,7 @@ init_dynamic_assoc_var (const char *name, sh_var_value_func_t *getfunc,
    Right now this takes an INTMAX_T because that's what itos needs. If
    FLAGS&1, we force the integer attribute on. */
 static inline SHELL_VAR *
-set_int_value (SHELL_VAR *var, intmax_t value, int flags)
+set_int_value (SHELL_VAR *var, int64_t value, int flags)
 {
   char *p;
 
@@ -1404,7 +1404,7 @@ get_subshell (SHELL_VAR *var)
 static SHELL_VAR *
 get_epochseconds (SHELL_VAR *var)
 {
-  intmax_t now;
+  int64_t now;
 
   now = NOW;
   return (set_int_value (var, now, 0));

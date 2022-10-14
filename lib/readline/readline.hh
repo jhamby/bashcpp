@@ -104,8 +104,7 @@ public:
     delete[] text_; // we've made a copy of the original
   }
 
-  UNDO_ENTRY (undo_code what_, size_t start_, size_t end_,
-              string_view text_)
+  UNDO_ENTRY (undo_code what_, size_t start_, size_t end_, string_view text_)
       : text (text_), start (start_), end (end_), what (what_)
   {
   }
@@ -311,22 +310,22 @@ public:
   /* Typedefs for the completion system */
 
   // Returns a newly-allocated string, or nullptr.
-  typedef std::string *(Readline::*rl_compentry_func_t) (string_view, int);
+  typedef char *(Readline::*rl_compentry_func_t) (const char *, int);
 
   // Completion function that takes an input string and start/end positions,
   // and returns a newly-allocated vector of strings, or nullptr.
-  typedef std::vector<std::string *> *(Readline::*rl_completion_func_t) (
-      string_view, size_t, size_t);
+  typedef std::vector<char *> *(Readline::*rl_completion_func_t) (const char *,
+                                                                  size_t,
+                                                                  size_t);
 
-  typedef std::string (Readline::*rl_quote_func_t) (string_view,
-                                                    replace_type, char *);
+  typedef char *(Readline::*rl_quote_func_t) (const char *, replace_type,
+                                              const char *);
 
-  typedef std::string (Readline::*rl_dequote_func_t) (string_view,
-                                                      int);
+  typedef char *(Readline::*rl_dequote_func_t) (const char *, int);
 
-  typedef int (Readline::*rl_compignore_func_t) (std::vector<std::string *> &);
+  typedef int (Readline::*rl_compignore_func_t) (std::vector<char *> &);
 
-  typedef void (Readline::*rl_compdisp_func_t) (std::vector<std::string *> &,
+  typedef void (Readline::*rl_compdisp_func_t) (const std::vector<char *> &,
                                                 size_t);
 
   /* Type for input and pre-read hook functions like rl_event_hook */
@@ -337,15 +336,15 @@ public:
 
   /* `Generic' function pointer typedefs */
 
-  typedef int (Readline::*rl_icppfunc_t) (std::string &);
+  typedef int (Readline::*rl_icppfunc_t) (char **);
 
   typedef void (Readline::*rl_voidfunc_t) ();
   typedef void (Readline::*rl_vintfunc_t) (int);
-  typedef void (Readline::*rl_vcpfunc_t) (std::string &);
+  typedef void (Readline::*rl_vcpfunc_t) (const char *);
 
   typedef char *(Readline::*rl_cpvfunc_t) ();
   typedef char *(Readline::*rl_cpifunc_t) (int);
-  typedef char *(Readline::*rl_cpcpfunc_t) (std::string &);
+  typedef char *(Readline::*rl_cpcpfunc_t) (const char *);
 
   typedef int (Readline::*_rl_sv_func_t) (const char *);
 
@@ -917,8 +916,7 @@ public:
      the string of characters MACRO.  This makes new keymaps as
      necessary.  The initial place to do bindings is in MAP. */
   inline int
-  rl_macro_bind (string_view keyseq, string_view macro,
-                 Keymap map)
+  rl_macro_bind (string_view keyseq, string_view macro, Keymap map)
   {
     std::string macro_keys;
 
@@ -1348,10 +1346,10 @@ public:
   /* Completion functions. */
 
   int rl_complete_internal (int);
-  void rl_display_match_list (std::vector<std::string *> &, size_t);
+  void rl_display_match_list (std::vector<char *> &, size_t);
 
-  std::vector<std::string *> *rl_completion_matches (string_view,
-                                                     rl_compentry_func_t);
+  std::vector<char *> *rl_completion_matches (string_view,
+                                              rl_compentry_func_t);
 
   std::string *rl_username_completion_function (string_view, int);
   std::string *rl_filename_completion_function (string_view, int);
@@ -1718,8 +1716,7 @@ private:
   void _rl_init_file_error (const char *, ...)
       __attribute__ ((__format__ (printf, 2, 3)));
 
-  rl_command_func_t _rl_function_of_keyseq_internal (string_view,
-                                                     Keymap,
+  rl_command_func_t _rl_function_of_keyseq_internal (string_view, Keymap,
                                                      keymap_entry_type *);
 
   char *_rl_read_file (char *, size_t *);
@@ -1904,12 +1901,12 @@ private:
   /* complete.cc */
 
   static void
-  _rl_free_match_list (std::vector<std::string *> *matches)
+  _rl_free_match_list (std::vector<char *> *matches)
   {
     if (!matches)
       return;
 
-    std::vector<std::string *>::iterator it;
+    std::vector<char *>::iterator it;
     for (it = matches->begin (); it != matches->end (); ++it)
       delete *it;
 
@@ -1931,8 +1928,7 @@ private:
   {
     if (sig == SIGINT) /* XXX - for now */
       {
-        _rl_free_match_list (
-            reinterpret_cast<std::vector<std::string *> *> (ptr));
+        _rl_free_match_list (reinterpret_cast<std::vector<char *> *> (ptr));
         _rl_complete_display_matches_interrupt = true;
       }
   }
@@ -1945,29 +1941,30 @@ private:
   int stat_char (const char *);
 #endif
 
-  string_view printable_part (string_view);
-  size_t fnwidth (string_view string);
-  size_t fnprint (string_view, size_t, size_t);
-  size_t print_filename (string_view, size_t, size_t);
-  std::vector<std::string *> *gen_completion_matches (string_view,
-                                                      size_t, size_t,
-                                                      rl_compentry_func_t,
-                                                      rl_qf_flags, int);
-  void remove_duplicate_matches (std::vector<std::string *> &);
-  void compute_lcd_of_matches (std::vector<std::string *> &,
-                               string_view);
-  int postprocess_matches (std::vector<std::string *> &, bool);
-  size_t complete_get_screenwidth ();
-  void display_matches (const std::vector<std::string *> &);
-  std::string make_quoted_replacement (string_view, replace_type,
-                                       char *);
-  void insert_match (string_view, size_t, replace_type, char *);
-  int append_to_match (std::string &, unsigned char, unsigned char, bool);
-  void insert_all_matches (const std::vector<std::string *> &, size_t, char *);
-  int compare_match (string_view, string_view);
-  bool complete_fncmp (string_view, string_view);
+  const char *printable_part (const char *);
+  size_t fnwidth (const char *);
+  size_t fnprint (const char *, size_t, const char *);
 
-  std::string rl_quote_filename (string_view, replace_type, char *);
+  // This function modifies the input string.
+  size_t print_filename (char *, char *, size_t);
+
+  std::vector<char *> *gen_completion_matches (const char *, size_t, size_t,
+                                               rl_compentry_func_t,
+                                               rl_qf_flags, int);
+
+  void remove_duplicate_matches (std::vector<char *> &);
+  void compute_lcd_of_matches (std::vector<char *> &, const char *);
+  int postprocess_matches (std::vector<char *> &, bool);
+  size_t complete_get_screenwidth ();
+  void display_matches (const std::vector<char *> &);
+  char *make_quoted_replacement (const char *, replace_type, const char *);
+  void insert_match (const char *, size_t, replace_type, const char *);
+  int append_to_match (const char *, unsigned char, unsigned char, bool);
+  void insert_all_matches (const std::vector<char *> &, size_t, const char *);
+  int compare_match (const char *, const char *);
+  bool complete_fncmp (const char *, const char *);
+
+  char *rl_quote_filename (const char *, replace_type, const char *);
 
   /* display.cc */
 
@@ -2016,8 +2013,8 @@ private:
   };
 
   /* Expand prompt and return indices into it. Returns an RAII C++ string. */
-  std::string expand_prompt (string_view, expand_prompt_flags,
-                             size_t *, size_t *, size_t *, size_t *);
+  std::string expand_prompt (string_view, expand_prompt_flags, size_t *,
+                             size_t *, size_t *, size_t *);
 
   void update_line (char *old, char *old_face, const char *new_,
                     const char *new_face, size_t current_line, size_t omax,
@@ -2522,9 +2519,23 @@ private:
   /* nls.cc */
 
   char *_rl_init_locale ();
-  void _rl_init_eightbit ();
 
-  inline const char *
+  bool _rl_set_localevars (const char *, bool);
+
+  /* Check for LC_ALL, LC_CTYPE, and LANG and use the first with a value
+     to decide the defaults for 8-bit character input and output. Returns
+     true if we set eight-bit mode. */
+  bool
+  _rl_init_eightbit ()
+  {
+    char *ol = _rl_current_locale;
+    char *t = _rl_init_locale (); // resets _rl_current_locale, returns a ptr
+
+    delete[] ol;
+    return _rl_set_localevars (t, false);
+  }
+
+  const char *
   _rl_get_locale_var (const char *v)
   {
     const char *lspec = sh_get_env_value ("LC_ALL");
@@ -2685,8 +2696,8 @@ private:
   int _rl_nsearch_callback (_rl_search_cxt *);
   int _rl_nsearch_cleanup (_rl_search_cxt *, int);
   void make_history_line_current (HIST_ENTRY *);
-  size_t noninc_search_from_pos (string_view, size_t, int,
-                                 rl_search_flags, size_t *);
+  size_t noninc_search_from_pos (string_view, size_t, int, rl_search_flags,
+                                 size_t *);
   bool noninc_dosearch (string_view, int, rl_search_flags);
   _rl_search_cxt *_rl_nsearch_init (int, char);
   void _rl_nsearch_abort (_rl_search_cxt *);
@@ -3148,7 +3159,8 @@ private:
     if (MB_CUR_MAX == 1 || rl_byte_oriented)
       start++;
     else
-      start = _rl_find_next_mbchar (rl_line_buffer, start, 1, MB_FIND_ANY);
+      start = _rl_find_next_mbchar (rl_line_buffer.c_str (), start, 1,
+                                    MB_FIND_ANY);
 #else  /* !HANDLE_MULTIBYTE */
     start++;
 #endif /* !HANDLE_MULTIBYTE */
@@ -3399,7 +3411,7 @@ public:
   /* If non-zero, then this is the address of a function to call when
      completing a word would normally display the list of possible matches.
      This function is called instead of actually doing the display.
-     It takes three arguments: (std::vector<std::string> matches, int
+     It takes two arguments: (std::vector<char *> matches, int
      max_length) where MATCHES is the vector of strings that matched,
      and MAX_LENGTH is the length of the longest string in that array. */
   rl_compdisp_func_t rl_completion_display_matches_hook;
@@ -3508,10 +3520,10 @@ private:
   std::string _rl_fcmp_users_dirname;
 
   char *_rl_omenu_orig_text;
-  std::vector<std::string *> *_rl_omenu_matches;
+  std::vector<char *> *_rl_omenu_matches;
 
   char *_rl_menu_orig_text;
-  std::vector<std::string *> *_rl_menu_matches;
+  std::vector<char *> *_rl_menu_matches;
 
   /* isearch.cc */
 
@@ -3556,6 +3568,10 @@ private:
   /* misc.cc */
 
   rl_hook_func_t _rl_saved_internal_startup_hook;
+
+  /* nls.cc */
+
+  char *_rl_current_locale;
 
   /* parse-colors.cc */
 

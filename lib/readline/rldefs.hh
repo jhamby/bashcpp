@@ -26,8 +26,8 @@
 
 #include "config.h"
 
-#include "config-top.hh"
 #include "config-bot.hh"
+#include "config-top.hh"
 
 // First, include common C++ wrappers for standard C headers.
 #include <cerrno>
@@ -50,13 +50,13 @@
 
 // Use C++17 std::string_view or our own lite version.
 #if __cplusplus >= 201703L
-#include <string_view>
 #include <nonstd/string_view.hpp>
+#include <string_view>
 namespace readline
 {
-using std::string_view;
 using nonstd::to_string;
 using nonstd::to_string_view;
+using std::string_view;
 }
 #else
 #include <nonstd/string_view.hpp>
@@ -84,9 +84,7 @@ using nonstd::to_string_view;
 #include <stdint.h>
 #endif
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h> /* for _POSIX_VERSION */
-#endif
 
 #if defined(_POSIX_VERSION) && !defined(TERMIOS_MISSING)
 #define TERMIOS_TTY_DRIVER
@@ -107,31 +105,6 @@ using nonstd::to_string_view;
 #if defined(S_IFDIR) && !defined(S_ISDIR)
 #define S_ISDIR(m) (((m)&S_IFMT) == S_IFDIR)
 #endif
-
-#ifdef malloc
-#undef malloc
-#endif
-#define malloc(x) Error - use C++ new instead !
-
-#ifdef free
-#undef free
-#endif
-#define free(x) Error - Use C++ delete instead !
-
-#ifdef calloc
-#undef calloc
-#endif
-#define calloc(x, y) Error - Use C++ vector instead !
-
-#ifdef realloc
-#undef realloc
-#endif
-#define realloc(x, y) Error - Use C++ vector instead !
-
-#ifdef strdup
-#undef strdup
-#endif
-#define strdup(x) Error - Use savestring () instead !
 
 namespace readline
 {
@@ -205,6 +178,20 @@ operator| (const rl_qf_flags &a, const rl_qf_flags &b)
 {
   return static_cast<rl_qf_flags> (static_cast<uint32_t> (a)
                                    | static_cast<uint32_t> (b));
+}
+
+// Compare two strings for equality.
+static inline bool
+STREQ (const char *a, const char *b)
+{
+  return (strcmp (a, b) == 0);
+}
+
+// Compare two strings for equality, up to n characters.
+static inline bool
+STREQN (const char *a, const char *b, size_t n)
+{
+  return (strncmp (a, b, n) == 0);
 }
 
 /* Default readline line buffer length. */

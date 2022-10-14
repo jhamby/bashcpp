@@ -41,8 +41,7 @@ namespace bash
 bool
 isnetconn (int fd)
 {
-#if defined(HAVE_SYS_SOCKET_H) && defined(HAVE_GETPEERNAME)                   \
-    && !defined(SVR4_2) && !defined(__BEOS__)
+#if defined(HAVE_SYS_SOCKET_H) && defined(HAVE_GETPEERNAME)
   int rv;
   socklen_t l;
   struct sockaddr sa;
@@ -55,7 +54,7 @@ isnetconn (int fd)
               || errno == EBADF))
              ? false
              : true;
-#else /* !HAVE_GETPEERNAME || SVR4_2 || __BEOS__ */
+#else /* !HAVE_GETPEERNAME */
 #if defined(SVR4) || defined(SVR4_2)
   /* Sockets on SVR4 and SVR4.2 are character special (streams) devices. */
   struct stat sb;
@@ -70,17 +69,17 @@ isnetconn (int fd)
 #endif /* S_ISFIFO */
   return S_ISCHR (sb.st_mode);
 #else  /* !SVR4 && !SVR4_2 */
-#if defined(S_ISSOCK) && !defined(__BEOS__)
+#if defined(S_ISSOCK)
   struct stat sb;
 
   if (fstat (fd, &sb) < 0)
     return false;
   return S_ISSOCK (sb.st_mode);
-#else  /* !S_ISSOCK || __BEOS__ */
+#else  /* !S_ISSOCK */
   return false;
-#endif /* !S_ISSOCK || __BEOS__ */
+#endif /* !S_ISSOCK */
 #endif /* !SVR4 && !SVR4_2 */
-#endif /* !HAVE_GETPEERNAME || SVR4_2 || __BEOS__ */
+#endif /* !HAVE_GETPEERNAME */
 }
 
 } // namespace bash

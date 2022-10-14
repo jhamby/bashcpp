@@ -65,7 +65,6 @@ Readline::_rl_print_color_indicator (const char *f)
   size_t len;          /* Length of name */
 
   const char *name;
-  std::string filename;
   struct stat astat, linkstat;
   mode_t mode = 0;
   int linkok; /* 1 == ok, 0 == dangling symlink, -1 == missing */
@@ -74,11 +73,12 @@ Readline::_rl_print_color_indicator (const char *f)
   name = f;
 
   /* This should already have undergone tilde expansion */
+  char *filename = nullptr;
   if (rl_filename_stat_hook)
     {
-      filename = f;
-      ((*this).*rl_filename_stat_hook) (filename);
-      name = filename.c_str ();
+      filename = savestring (f);
+      ((*this).*rl_filename_stat_hook) (&filename);
+      name = filename;
     }
 
   stat_ok = lstat (name, &astat);
@@ -182,11 +182,13 @@ Readline::_rl_print_color_indicator (const char *f)
         {
           if (ext->ext.size () <= len
               && strncmp (name - ext->ext.size (), ext->ext.c_str (),
-                               ext->ext.size ())
+                          ext->ext.size ())
                      == 0)
             break;
         }
     }
+
+  delete[] filename;
 
   {
     const std::string *s

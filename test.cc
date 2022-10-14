@@ -39,7 +39,7 @@
 #include "shell.hh"
 
 #include "builtins/common.hh"
-#include "lib/glob/strmatch.hh"
+#include "strmatch.hh"
 
 namespace bash
 {
@@ -323,7 +323,7 @@ Shell::filecomp (string_view s, string_view t, int op)
 int
 Shell::arithcomp (string_view s, string_view t, int op, int flags)
 {
-  intmax_t l, r;
+  int64_t l, r;
   int expok;
 
   if (flags & TEST_ARITHEXP) /* conditional command */
@@ -479,7 +479,7 @@ int
 Shell::unary_operator ()
 {
   char *op;
-  intmax_t r;
+  int64_t r;
 
   op = argv[pos];
   if (test_unop (op) == 0)
@@ -514,7 +514,7 @@ Shell::unary_operator ()
 int
 Shell::unary_test (string_view op, string_view arg, int flags)
 {
-  intmax_t r;
+  int64_t r;
   struct stat stat_buf;
   struct timespec mtime, atime;
   SHELL_VAR *v;

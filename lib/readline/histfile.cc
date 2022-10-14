@@ -166,8 +166,7 @@ history_tempfile (const char *filename)
    until the end of the file.  If FILENAME is nullptr, then read from
    ~/.history.  Returns 0 if successful, or errno if not. */
 int
-History::read_history_range (const char *filename, unsigned int from,
-                             unsigned int to)
+History::read_history_range (const char *filename, size_t from, size_t to)
 {
   history_lines_read_from_file = 0;
 
@@ -250,7 +249,8 @@ History::read_history_range (const char *filename, unsigned int from,
      have timestamps if the buffer starts with `#[:digit:]' and temporarily
      set history_comment_char so timestamp parsing works right */
   bool reset_comment_char = false;
-  if (history_comment_char == '\0' && buffer[0] == '#' && c_isdigit (buffer[1]))
+  if (history_comment_char == '\0' && buffer[0] == '#'
+      && c_isdigit (buffer[1]))
     {
       history_comment_char = '#';
       reset_comment_char = true;
@@ -386,11 +386,11 @@ histfile_restore (const char *backup, const char *orig)
    If FNAME is nullptr, then use ~/.history.  Writes a new file and renames
    it to the original name.  Returns 0 on success, errno on failure. */
 int
-History::history_truncate_file (const char *fname, unsigned int lines)
+History::history_truncate_file (const char *fname, size_t lines)
 {
   char *buffer, *filename, *tempname, *bp, *bp1; /* bp1 == bp+1 */
   int file, rv, exists;
-  unsigned int orig_lines = 0;
+  size_t orig_lines = 0;
   struct stat finfo, nfinfo;
   ssize_t chars_read;
   size_t file_size;
@@ -529,7 +529,7 @@ truncate_exit:
    from the history list to FILENAME.  OVERWRITE is non-zero if you
    wish to replace FILENAME with the entries. */
 int
-History::history_do_write (const char *filename, unsigned int nelements,
+History::history_do_write (const char *filename, size_t nelements,
                            bool overwrite)
 {
   int mode;
@@ -596,7 +596,7 @@ History::history_do_write (const char *filename, unsigned int nelements,
     if (ftruncate (file, buffer_size + cursize) == -1)
       goto mmap_error;
     buffer = mmap (0, buffer_size, PROT_READ | PROT_WRITE, MAP_WFLAGS, file,
-                     cursize);
+                   cursize);
     if ((void *)buffer == MAP_FAILED)
       {
       mmap_error:
@@ -663,7 +663,7 @@ History::history_do_write (const char *filename, unsigned int nelements,
      with a shared history file, we don't want to leave the history file
      owned by root. */
   if (rv == 0 && exists)
-    (void) chown (histname, finfo.st_uid, finfo.st_gid);
+    (void)chown (histname, finfo.st_uid, finfo.st_gid);
 #endif
 
   delete[] histname;

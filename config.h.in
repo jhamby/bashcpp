@@ -375,6 +375,9 @@
 /* Define to 1 when the gnulib module fwrite should be tested. */
 #undef GNULIB_TEST_FWRITE
 
+/* Define to 1 when the gnulib module getaddrinfo should be tested. */
+#undef GNULIB_TEST_GETADDRINFO
+
 /* Define to 1 when the gnulib module getc should be tested. */
 #undef GNULIB_TEST_GETC
 
@@ -389,9 +392,6 @@
 
 /* Define to 1 when the gnulib module getgroups should be tested. */
 #undef GNULIB_TEST_GETGROUPS
-
-/* Define to 1 when the gnulib module gethostname should be tested. */
-#undef GNULIB_TEST_GETHOSTNAME
 
 /* Define to 1 when the gnulib module getlogin_r should be tested. */
 #undef GNULIB_TEST_GETLOGIN_R
@@ -513,9 +513,6 @@
 /* Define to 1 when the gnulib module raise should be tested. */
 #undef GNULIB_TEST_RAISE
 
-/* Define to 1 when the gnulib module random_r should be tested. */
-#undef GNULIB_TEST_RANDOM_R
-
 /* Define to 1 when the gnulib module rawmemchr should be tested. */
 #undef GNULIB_TEST_RAWMEMCHR
 
@@ -578,9 +575,6 @@
 
 /* Define to 1 when the gnulib module strcasestr should be tested. */
 #undef GNULIB_TEST_STRCASESTR
-
-/* Define to 1 when the gnulib module strchrnul should be tested. */
-#undef GNULIB_TEST_STRCHRNUL
 
 /* Define to 1 when the gnulib module strdup should be tested. */
 #undef GNULIB_TEST_STRDUP
@@ -793,9 +787,25 @@
    */
 #undef HAVE_DECL_FPURGE
 
+/* Define to 1 if you have the declaration of `freeaddrinfo', and to 0 if you
+   don't. */
+#undef HAVE_DECL_FREEADDRINFO
+
+/* Define to 1 if you have the declaration of `gai_strerror', and to 0 if you
+   don't. */
+#undef HAVE_DECL_GAI_STRERROR
+
+/* Define to 1 if you have the declaration of `gai_strerrorA', and to 0 if you
+   don't. */
+#undef HAVE_DECL_GAI_STRERRORA
+
 /* Define to 1 if you have the declaration of `gcvt', and to 0 if you don't.
    */
 #undef HAVE_DECL_GCVT
+
+/* Define to 1 if you have the declaration of `getaddrinfo', and to 0 if you
+   don't. */
+#undef HAVE_DECL_GETADDRINFO
 
 /* Define to 1 if you have the declaration of `getcwd', and to 0 if you don't.
    */
@@ -812,6 +822,10 @@
 /* Define to 1 if you have the declaration of `getlogin_r', and to 0 if you
    don't. */
 #undef HAVE_DECL_GETLOGIN_R
+
+/* Define to 1 if you have the declaration of `getnameinfo', and to 0 if you
+   don't. */
+#undef HAVE_DECL_GETNAMEINFO
 
 /* Define to 1 if you have the declaration of `inet_ntop', and to 0 if you
    don't. */
@@ -1369,12 +1383,6 @@
 /* Define to 1 if you have the `random' function. */
 #undef HAVE_RANDOM
 
-/* Define to 1 if you have the <random.h> header file. */
-#undef HAVE_RANDOM_H
-
-/* Define to 1 if you have the `random_r' function. */
-#undef HAVE_RANDOM_R
-
 /* Define to 1 if you have the `rawmemchr' function. */
 #undef HAVE_RAWMEMCHR
 
@@ -1551,6 +1559,9 @@
 /* Define to 1 if you have the `strtoumax' function. */
 #undef HAVE_STRTOUMAX
 
+/* Define to 1 if the system has the type `struct addrinfo'. */
+#undef HAVE_STRUCT_ADDRINFO
+
 /* Define if your struct dirent has the d_fileno member. */
 #undef HAVE_STRUCT_DIRENT_D_FILENO
 
@@ -1567,8 +1578,8 @@
 /* Define to 1 if `decimal_point' is a member of `struct lconv'. */
 #undef HAVE_STRUCT_LCONV_DECIMAL_POINT
 
-/* Define to 1 if the system has the type `struct random_data'. */
-#undef HAVE_STRUCT_RANDOM_DATA
+/* Define to 1 if `sa_len' is a member of `struct sockaddr'. */
+#undef HAVE_STRUCT_SOCKADDR_SA_LEN
 
 /* Define to 1 if the system has the type `struct sockaddr_storage'. */
 #undef HAVE_STRUCT_SOCKADDR_STORAGE
@@ -1970,9 +1981,6 @@
    editing commands. If only HISTORY is defined, the `fc' and `history'
    builtins are available. */
 #undef HISTORY
-
-/* Define HOST_NAME_MAX when <limits.h> does not define it. */
-#undef HOST_NAME_MAX
 
 /* Define as const if the declaration of iconv() needs const. */
 #undef ICONV_CONST

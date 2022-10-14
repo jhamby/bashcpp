@@ -41,7 +41,7 @@ namespace readline
 #if defined(HANDLE_MULTIBYTE)
 
 size_t
-History::_rl_find_next_mbchar_internal (string_view string, size_t seed,
+History::_rl_find_next_mbchar_internal (const char *string, size_t seed,
                                         int count,
                                         find_mbchar_flags find_non_zero)
 {
@@ -69,7 +69,7 @@ History::_rl_find_next_mbchar_internal (string_view string, size_t seed,
 
   while (count > 0)
     {
-      size_t len = string.size () - point;
+      size_t len = strlen (string + point);
       if (len == 0)
         break;
       if (_rl_utf8locale && UTF8_SINGLEBYTE (string[point]))
@@ -79,7 +79,7 @@ History::_rl_find_next_mbchar_internal (string_view string, size_t seed,
           memset (&ps, 0, sizeof (mbstate_t));
         }
       else
-        tmp = mbrtowc (&wc, string.c_str () + point, len, &ps);
+        tmp = mbrtowc (&wc, string + point, len, &ps);
       if (MB_INVALIDCH (tmp))
         {
           /* invalid bytes. assume a byte represents a character */
@@ -108,14 +108,12 @@ History::_rl_find_next_mbchar_internal (string_view string, size_t seed,
 
   if (find_non_zero)
     {
-      tmp = mbrtowc (&wc, string.c_str () + point, string.size () - point,
-                          &ps);
+      tmp = mbrtowc (&wc, string + point, strlen (string + point), &ps);
       while (MB_NULLWCH (tmp) == 0 && MB_INVALIDCH (tmp) == 0
              && WCWIDTH (wc) == 0)
         {
           point += tmp;
-          tmp = mbrtowc (&wc, string.c_str () + point,
-                              string.size () - point, &ps);
+          tmp = mbrtowc (&wc, string + point, strlen (string + point), &ps);
         }
     }
 
@@ -124,14 +122,14 @@ History::_rl_find_next_mbchar_internal (string_view string, size_t seed,
 
 /* experimental -- needs to handle zero-width characters better */
 size_t
-History::_rl_find_prev_utf8char (string_view string, size_t seed,
+History::_rl_find_prev_utf8char (const char *string, size_t seed,
                                  find_mbchar_flags find_non_zero)
 {
   unsigned char b;
-  int save, prev;
-  size_t len = string.size ();
+  ssize_t save, prev;
+  size_t len = strlen (string);
 
-  prev = static_cast<int> (seed - 1);
+  prev = static_cast<ssize_t> (seed) - 1;
   while (prev >= 0)
     {
       b = static_cast<unsigned char> (string[static_cast<size_t> (prev)]);
@@ -154,8 +152,7 @@ History::_rl_find_prev_utf8char (string_view string, size_t seed,
         {
           if (find_non_zero)
             {
-              if (_rl_test_nonzero (string.c_str (),
-                                    static_cast<size_t> (prev), len))
+              if (_rl_test_nonzero (string, static_cast<size_t> (prev), len))
                 return static_cast<size_t> (prev);
               else /* valid but WCWIDTH (wc) == 0 */
                 --prev;
@@ -171,7 +168,7 @@ History::_rl_find_prev_utf8char (string_view string, size_t seed,
 }
 
 size_t
-History::_rl_find_prev_mbchar_internal (string_view string, size_t seed,
+History::_rl_find_prev_mbchar_internal (const char *string, size_t seed,
                                         find_mbchar_flags find_non_zero)
 {
   mbstate_t ps;
@@ -183,7 +180,7 @@ History::_rl_find_prev_mbchar_internal (string_view string, size_t seed,
     return _rl_find_prev_utf8char (string, seed, find_non_zero);
 
   memset (&ps, 0, sizeof (mbstate_t));
-  size_t length = string.size ();
+  size_t length = strlen (string);
 
   if (length < seed)
     return length;
@@ -238,10 +235,10 @@ History::_rl_find_prev_mbchar_internal (string_view string, size_t seed,
    multibyte sequence was encountered. It returns -2 if it couldn't parse
    a complete multibyte character. */
 ssize_t
-History::_rl_get_char_len (string_view src, mbstate_t *ps)
+History::_rl_get_char_len (const char *src, mbstate_t *ps)
 {
   /* Look at no more than MB_CUR_MAX characters */
-  size_t l = src.size ();
+  size_t l = strlen (src);
 
   size_t tmp;
   if (l == 0)
@@ -251,7 +248,7 @@ History::_rl_get_char_len (string_view src, mbstate_t *ps)
   else
     {
       size_t mb_cur_max = MB_CUR_MAX;
-      tmp = mbrlen (src.c_str (), (l < mb_cur_max) ? l : mb_cur_max, ps);
+      tmp = mbrlen (src, (l < mb_cur_max) ? l : mb_cur_max, ps);
     }
 
   if (tmp == static_cast<size_t> (-2))
@@ -279,10 +276,9 @@ History::_rl_get_char_len (string_view src, mbstate_t *ps)
    if point is invalid (greater than string length),
    it returns (size_t)(-1). */
 size_t
-History::_rl_adjust_point (string_view string, size_t point,
-                           mbstate_t *ps)
+History::_rl_adjust_point (const char *string, size_t point, mbstate_t *ps)
 {
-  size_t length = string.size ();
+  size_t length = strlen (string);
 
   if (point > length)
     return static_cast<size_t> (-1);
@@ -294,7 +290,7 @@ History::_rl_adjust_point (string_view string, size_t point,
       if (_rl_utf8locale && UTF8_SINGLEBYTE (string[pos]))
         tmp = 1;
       else
-        tmp = mbrlen (string.c_str () + pos, length - pos, ps);
+        tmp = mbrlen (string + pos, length - pos, ps);
 
       if (MB_INVALIDCH (tmp))
         {
@@ -317,7 +313,7 @@ History::_rl_adjust_point (string_view string, size_t point,
 }
 
 wchar_t
-History::_rl_char_value (string_view buf, size_t ind)
+History::_rl_char_value (const char *buf, size_t ind)
 {
   if (MB_LEN_MAX == 1 || rl_byte_oriented)
     return static_cast<wchar_t> (buf[ind]);
@@ -325,7 +321,7 @@ History::_rl_char_value (string_view buf, size_t ind)
   if (_rl_utf8locale && UTF8_SINGLEBYTE (buf[ind]))
     return static_cast<wchar_t> (buf[ind]);
 
-  size_t l = buf.size ();
+  size_t l = strlen (buf);
   if (ind >= l - 1)
     return static_cast<wchar_t> (buf[ind]);
 
@@ -333,7 +329,7 @@ History::_rl_char_value (string_view buf, size_t ind)
   memset (&ps, 0, sizeof (mbstate_t));
 
   wchar_t wc;
-  size_t tmp = mbrtowc (&wc, buf.c_str () + ind, l - ind, &ps);
+  size_t tmp = mbrtowc (&wc, buf + ind, l - ind, &ps);
 
   if (MB_INVALIDCH (tmp) || MB_NULLWCH (tmp))
     return static_cast<wchar_t> (buf[ind]);

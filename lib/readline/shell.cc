@@ -27,9 +27,7 @@
 
 #include <sys/types.h>
 
-#if defined(HAVE_FCNTL_H)
 #include <fcntl.h>
-#endif
 
 #if defined(HAVE_PWD_H)
 #include <pwd.h>
@@ -68,13 +66,13 @@ ReadlineShell::~ReadlineShell () {}
 
 /* Does shell-like quoting using single quotes. */
 std::string
-ReadlineShell::sh_single_quote (const std::string &string)
+ReadlineShell::sh_single_quote (string_view string)
 {
   std::string result;
   result.reserve (2 + string.size ());
   result.push_back ('\'');
 
-  std::string::const_iterator it;
+  string_view::iterator it;
   for (it = string.begin (); it != string.end (); ++it)
     {
       result.push_back (*it);
@@ -108,18 +106,18 @@ void
 ReadlineShell::sh_set_lines_and_columns (unsigned int lines, unsigned int cols)
 {
 #if defined(HAVE_SETENV)
-  std::snprintf (setenv_buf, sizeof (setenv_buf), "%u", lines);
-  ::setenv ("LINES", setenv_buf, 1);
+  snprintf (setenv_buf, sizeof (setenv_buf), "%u", lines);
+  setenv ("LINES", setenv_buf, 1);
 
-  std::snprintf (setenv_buf, sizeof (setenv_buf), "%u", cols);
-  ::setenv ("COLUMNS", setenv_buf, 1);
+  snprintf (setenv_buf, sizeof (setenv_buf), "%u", cols);
+  setenv ("COLUMNS", setenv_buf, 1);
 #else /* !HAVE_SETENV */
 #if defined(HAVE_PUTENV)
-  std::snprintf (putenv_buf1, sizeof (putenv_buf1), "LINES=%u", lines);
-  ::putenv (putenv_buf1);
+  snprintf (putenv_buf1, sizeof (putenv_buf1), "LINES=%u", lines);
+  putenv (putenv_buf1);
 
-  std::snprintf (putenv_buf2, sizeof (putenv_buf2), "COLUMNS=%u", cols);
-  ::putenv (putenv_buf2);
+  snprintf (putenv_buf2, sizeof (putenv_buf2), "COLUMNS=%u", cols);
+  putenv (putenv_buf2);
 #endif /* HAVE_PUTENV */
 #endif /* !HAVE_SETENV */
 }
@@ -127,10 +125,10 @@ ReadlineShell::sh_set_lines_and_columns (unsigned int lines, unsigned int cols)
 const char *
 ReadlineShell::sh_get_env_value (const char *varname)
 {
-  return std::getenv (varname);
+  return getenv (varname);
 }
 
-std::string
+string_view
 ReadlineShell::sh_get_home_dir ()
 {
   static std::string home_dir; // Note: static cache variable!
@@ -141,16 +139,16 @@ ReadlineShell::sh_get_home_dir ()
 
 #if defined(HAVE_GETPWUID)
 #if defined(__TANDEM)
-  entry = ::getpwnam (getlogin ());
+  entry = getpwnam (getlogin ());
 #else
-  entry = ::getpwuid (getuid ());
+  entry = getpwuid (getuid ());
 #endif
   if (entry)
     home_dir = entry->pw_dir;
 #endif
 
 #if defined(HAVE_GETPWENT)
-  ::endpwent (); /* some systems need this */
+  endpwent (); /* some systems need this */
 #endif
 
   return home_dir;
@@ -167,7 +165,7 @@ ReadlineShell::sh_unset_nodelay_mode (int fd)
 {
   int flags, bflags;
 
-  if ((flags = ::fcntl (fd, F_GETFL, 0)) < 0)
+  if ((flags = fcntl (fd, F_GETFL, 0)) < 0)
     return -1;
 
   bflags = 0;
@@ -183,7 +181,7 @@ ReadlineShell::sh_unset_nodelay_mode (int fd)
   if (flags & bflags)
     {
       flags &= ~bflags;
-      return ::fcntl (fd, F_SETFL, flags);
+      return fcntl (fd, F_SETFL, flags);
     }
 
   return 0;

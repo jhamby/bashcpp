@@ -213,20 +213,19 @@ Readline::expand_prompt (string_view pmt, expand_prompt_flags flags,
   local_prompt.newlines.resize (newlines_guess + 1);
   size_t newlines = 0;
   local_prompt.newlines[0] = 0;
-
   for (size_t i = 1; i <= newlines_guess; i++)
     local_prompt.newlines[i] = static_cast<size_t> (-1);
 
-  size_t rl, last, ninvis, invfl, ind, pind, physchars;
-  std::string::iterator p; // source iterator
-  std::string::iterator igstart;
-  bool ignoring = false, invflset = false;
+  size_t rl = 0, physchars = 0;  /* mode string now part of nprompt */
+  size_t invfl = 0;              /* invisible chars in first line of prompt */
+  bool invflset = false;         /* we only want to set invfl once */
+  const char *igstart = nullptr; /* we're not ignoring any characters yet */
+  bool ignoring = false;
+  size_t last, ninvis;
+  const char *p;
 
-  rl = physchars = 0;       /* mode string now part of nprompt */
-  invfl = 0;                /* invisible chars in first line of prompt */
-  igstart = nprompt.end (); /* we're not ignoring any characters yet */
-
-  for (last = ninvis = 0, p = nprompt.begin (); p != nprompt.end (); ++p)
+  const char *nprompt_cstr = nprompt.c_str ();
+  for (ignoring = last = ninvis = 0, p = nprompt_cstr; p && *p; p++)
     {
       /* This code strips the invisible character string markers
          RL_PROMPT_START_IGNORE and RL_PROMPT_END_IGNORE */
@@ -240,6 +239,19 @@ Readline::expand_prompt (string_view pmt, expand_prompt_flags flags,
       else if (ignoring && *p == RL_PROMPT_END_IGNORE)
         {
           ignoring = false;
+          /* If we have a run of invisible characters, adjust
+             local_prompt_newlines to add them, since update_line expects them
+             to be counted before wrapping the line. */
+          if (can_add_invis)
+            {
+              local_prompt_newlines[newlines] = r - ret;
+              /* If we're adding to the number of invisible characters on the
+                 first line of the prompt, but we've already set the number of
+                 invisible characters on that line, we need to adjust the
+                 counter. */
+              if (invflset && newlines == 1)
+                invfl = ninvis;
+            }
           if (p != (igstart + 1))
             last = ret.size () - 1;
           continue;

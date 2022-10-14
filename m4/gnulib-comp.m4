@@ -106,11 +106,11 @@ AC_DEFUN([gl_EARLY],
   # Code from module full-read:
   # Code from module full-write:
   # Code from module gen-header:
+  # Code from module getaddrinfo:
   # Code from module getcwd:
   # Code from module getcwd-lgpl:
   # Code from module getdtablesize:
   # Code from module getgroups:
-  # Code from module gethostname:
   # Code from module getlogin_r:
   # Code from module getprogname:
   # Code from module getrandom:
@@ -120,6 +120,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module glob-h:
   # Code from module group-member:
   # Code from module hard-locale:
+  # Code from module hostent:
   # Code from module idx:
   # Code from module include_next:
   # Code from module inet_ntop:
@@ -170,6 +171,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module msvc-inval:
   # Code from module msvc-nothrow:
   # Code from module multiarch:
+  # Code from module netdb:
   # Code from module netinet_in:
   # Code from module nl_langinfo:
   # Code from module nocrash:
@@ -186,7 +188,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module pselect:
   # Code from module pthread_sigmask:
   # Code from module raise:
-  # Code from module random_r:
   # Code from module rawmemchr:
   # Code from module read:
   # Code from module readdir:
@@ -204,6 +205,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module scratch_buffer:
   # Code from module secure_getenv:
   # Code from module select:
+  # Code from module servent:
   # Code from module setlocale:
   # Code from module setlocale-null:
   # Code from module signal-h:
@@ -233,7 +235,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module strcase:
   # Code from module strcasestr:
   # Code from module strcasestr-simple:
-  # Code from module strchrnul:
   # Code from module strdup-posix:
   # Code from module streq:
   # Code from module strerror:
@@ -483,6 +484,12 @@ AC_DEFUN([gl_INIT],
   gl_CONDITIONAL([GL_COND_OBJ_FSTATAT],
                  [test $HAVE_FSTATAT = 0 || test $REPLACE_FSTATAT = 1])
   gl_SYS_STAT_MODULE_INDICATOR([fstatat])
+  gl_GETADDRINFO
+  gl_CONDITIONAL([GL_COND_OBJ_GETADDRINFO],
+                 [test $HAVE_GETADDRINFO = 0 || test $REPLACE_GETADDRINFO = 1])
+  gl_CONDITIONAL([GL_COND_OBJ_GAI_STRERROR],
+                 [test $HAVE_DECL_GAI_STRERROR = 0 || test $REPLACE_GAI_STRERROR = 1])
+  gl_NETDB_MODULE_INDICATOR([getaddrinfo])
   gl_FUNC_GETCWD
   gl_CONDITIONAL([GL_COND_OBJ_GETCWD], [test $REPLACE_GETCWD = 1])
   AM_COND_IF([GL_COND_OBJ_GETCWD], [
@@ -504,12 +511,6 @@ AC_DEFUN([gl_INIT],
   gl_CONDITIONAL([GL_COND_OBJ_GETGROUPS],
                  [test $HAVE_GETGROUPS = 0 || test $REPLACE_GETGROUPS = 1])
   gl_UNISTD_MODULE_INDICATOR([getgroups])
-  gl_FUNC_GETHOSTNAME
-  gl_CONDITIONAL([GL_COND_OBJ_GETHOSTNAME], [test $HAVE_GETHOSTNAME = 0])
-  AM_COND_IF([GL_COND_OBJ_GETHOSTNAME], [
-    gl_PREREQ_GETHOSTNAME
-  ])
-  gl_UNISTD_MODULE_INDICATOR([gethostname])
   gl_FUNC_GETLOGIN_R
   gl_CONDITIONAL([GL_COND_OBJ_GETLOGIN_R],
                  [test $HAVE_GETLOGIN_R = 0 || test $REPLACE_GETLOGIN_R = 1])
@@ -557,6 +558,7 @@ AC_DEFUN([gl_INIT],
   AC_REQUIRE([gl_FUNC_SETLOCALE_NULL])
   LIB_HARD_LOCALE="$LIB_SETLOCALE_NULL"
   AC_SUBST([LIB_HARD_LOCALE])
+  gl_HOSTENT
   gl_FUNC_INET_NTOP
   gl_CONDITIONAL([GL_COND_OBJ_INET_NTOP],
                  [test $HAVE_INET_NTOP = 0 || test $REPLACE_INET_NTOP = 1])
@@ -745,6 +747,9 @@ AC_DEFUN([gl_INIT],
                  [test $HAVE_MSVC_INVALID_PARAMETER_HANDLER = 1])
   gl_MODULE_INDICATOR([msvc-nothrow])
   gl_MULTIARCH
+  gl_NETDB_H
+  gl_NETDB_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   gl_HEADER_NETINET_IN
   gl_CONDITIONAL_HEADER([netinet/in.h])
   AC_PROG_MKDIR_P
@@ -800,13 +805,6 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_RAISE
   ])
   gl_SIGNAL_MODULE_INDICATOR([raise])
-  gl_FUNC_RANDOM_R
-  gl_CONDITIONAL([GL_COND_OBJ_RANDOM_R],
-                 [test $HAVE_RANDOM_R = 0 || test $REPLACE_RANDOM_R = 1])
-  AM_COND_IF([GL_COND_OBJ_RANDOM_R], [
-    gl_PREREQ_RANDOM_R
-  ])
-  gl_STDLIB_MODULE_INDICATOR([random_r])
   gl_FUNC_RAWMEMCHR
   gl_CONDITIONAL([GL_COND_OBJ_RAWMEMCHR], [test $HAVE_RAWMEMCHR = 0])
   AM_COND_IF([GL_COND_OBJ_RAWMEMCHR], [
@@ -861,6 +859,7 @@ AC_DEFUN([gl_INIT],
   gl_FUNC_SELECT
   gl_CONDITIONAL([GL_COND_OBJ_SELECT], [test $REPLACE_SELECT = 1])
   gl_SYS_SELECT_MODULE_INDICATOR([select])
+  gl_SERVENT
   gl_FUNC_SETLOCALE
   gl_CONDITIONAL([GL_COND_OBJ_SETLOCALE], [test $REPLACE_SETLOCALE = 1])
   AM_COND_IF([GL_COND_OBJ_SETLOCALE], [
@@ -981,13 +980,6 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_STRCASESTR
   fi
   gl_STRING_MODULE_INDICATOR([strcasestr])
-  gl_FUNC_STRCHRNUL
-  gl_CONDITIONAL([GL_COND_OBJ_STRCHRNUL],
-                 [test $HAVE_STRCHRNUL = 0 || test $REPLACE_STRCHRNUL = 1])
-  AM_COND_IF([GL_COND_OBJ_STRCHRNUL], [
-    gl_PREREQ_STRCHRNUL
-  ])
-  gl_STRING_MODULE_INDICATOR([strchrnul])
   gl_FUNC_STRDUP_POSIX
   gl_CONDITIONAL([GL_COND_OBJ_STRDUP], [test $REPLACE_STRDUP = 1])
   AM_COND_IF([GL_COND_OBJ_STRDUP], [
@@ -1413,11 +1405,12 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/full-read.h
   lib/full-write.c
   lib/full-write.h
+  lib/gai_strerror.c
+  lib/getaddrinfo.c
   lib/getcwd-lgpl.c
   lib/getcwd.c
   lib/getdtablesize.c
   lib/getgroups.c
-  lib/gethostname.c
   lib/getlogin_r.c
   lib/getprogname.c
   lib/getprogname.h
@@ -1511,6 +1504,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/msvc-inval.h
   lib/msvc-nothrow.c
   lib/msvc-nothrow.h
+  lib/netdb.in.h
   lib/netinet_in.in.h
   lib/nl_langinfo-lock.c
   lib/nl_langinfo.c
@@ -1535,7 +1529,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/pselect.c
   lib/pthread_sigmask.c
   lib/raise.c
-  lib/random_r.c
   lib/rawmemchr.c
   lib/rawmemchr.valgrind
   lib/read.c
@@ -1588,8 +1581,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/str-two-way.h
   lib/strcasecmp.c
   lib/strcasestr.c
-  lib/strchrnul.c
-  lib/strchrnul.valgrind
   lib/strdup.c
   lib/streq.h
   lib/strerror-override.c
@@ -1722,12 +1713,12 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/fseterr.m4
   m4/fstat.m4
   m4/fstatat.m4
+  m4/getaddrinfo.m4
   m4/getcwd-abort-bug.m4
   m4/getcwd-path-max.m4
   m4/getcwd.m4
   m4/getdtablesize.m4
   m4/getgroups.m4
-  m4/gethostname.m4
   m4/getlogin.m4
   m4/getlogin_r.m4
   m4/getpagesize.m4
@@ -1738,6 +1729,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/glob_h.m4
   m4/gnulib-common.m4
   m4/group-member.m4
+  m4/hostent.m4
   m4/include_next.m4
   m4/inet_ntop.m4
   m4/intl-thread-locale.m4
@@ -1792,6 +1784,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/msvc-inval.m4
   m4/msvc-nothrow.m4
   m4/multiarch.m4
+  m4/netdb_h.m4
   m4/netinet_in_h.m4
   m4/nl_langinfo.m4
   m4/nocrash.m4
@@ -1811,7 +1804,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/pthread_rwlock_rdlock.m4
   m4/pthread_sigmask.m4
   m4/raise.m4
-  m4/random_r.m4
   m4/rawmemchr.m4
   m4/read.m4
   m4/readdir.m4
@@ -1825,6 +1817,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/save-cwd.m4
   m4/secure_getenv.m4
   m4/select.m4
+  m4/servent.m4
   m4/setlocale.m4
   m4/setlocale_null.m4
   m4/signal_h.m4
@@ -1849,7 +1842,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/stdlib_h.m4
   m4/strcase.m4
   m4/strcasestr.m4
-  m4/strchrnul.m4
   m4/strdup.m4
   m4/strerror.m4
   m4/strerror_r.m4

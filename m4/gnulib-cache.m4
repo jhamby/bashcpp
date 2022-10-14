@@ -39,6 +39,7 @@
 #  --macro-prefix=gl \
 #  assert \
 #  c-ctype \
+#  canonicalize-lgpl \
 #  dprintf \
 #  dup2 \
 #  faccessat \
@@ -46,11 +47,10 @@
 #  fpurge \
 #  full-read \
 #  full-write \
+#  getaddrinfo \
 #  getcwd \
-#  gethostname \
 #  gettimeofday \
 #  glob \
-#  inet_ntop \
 #  ldexpl \
 #  lstat \
 #  mbrlen \
@@ -61,7 +61,6 @@
 #  mktime \
 #  nl_langinfo \
 #  pselect \
-#  random_r \
 #  rename \
 #  setlocale \
 #  snprintf \
@@ -69,7 +68,6 @@
 #  stdio \
 #  strcase \
 #  strcasestr \
-#  strchrnul \
 #  strerror_r-posix \
 #  strnlen \
 #  strsignal \
@@ -86,6 +84,7 @@ gl_LOCAL_DIR([])
 gl_MODULES([
   assert
   c-ctype
+  canonicalize-lgpl
   dprintf
   dup2
   faccessat
@@ -93,11 +92,10 @@ gl_MODULES([
   fpurge
   full-read
   full-write
+  getaddrinfo
   getcwd
-  gethostname
   gettimeofday
   glob
-  inet_ntop
   ldexpl
   lstat
   mbrlen
@@ -108,7 +106,6 @@ gl_MODULES([
   mktime
   nl_langinfo
   pselect
-  random_r
   rename
   setlocale
   snprintf
@@ -116,7 +113,6 @@ gl_MODULES([
   stdio
   strcase
   strcasestr
-  strchrnul
   strerror_r-posix
   strnlen
   strsignal

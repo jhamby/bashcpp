@@ -21,9 +21,8 @@
 
 #include "history.hh"
 
-#if defined(HAVE_FNMATCH)
+// Use system or Gnulib version.
 #include <fnmatch.h>
-#endif
 
 namespace readline
 {
@@ -39,7 +38,7 @@ namespace readline
    returned. */
 
 unsigned int
-History::history_search_internal (string_view string, int direction,
+History::history_search_internal (const char *string, int direction,
                                   hist_search_flags flags)
 {
   int i = static_cast<int> (where_history ());

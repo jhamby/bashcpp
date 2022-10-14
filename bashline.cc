@@ -4381,8 +4381,8 @@ int
 bash_execute_unix_command (int count, int key)
 {
   int type;
-  register int i, r;
-  intmax_t mi;
+  int i, r;
+  int64_t mi;
   sh_parser_state_t ps;
   char *cmd, *value, *ce, old_ch;
   SHELL_VAR *v;

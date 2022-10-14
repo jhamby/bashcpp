@@ -143,7 +143,7 @@ word_not_found::what () const noexcept
 /* Set up the prompt and expand it.  Called from readline() and
    rl_callback_handler_install (). */
 void
-Readline::rl_set_prompt (const std::string &prompt)
+Readline::rl_set_prompt (string_view prompt)
 {
   rl_prompt = prompt;
   rl_display_prompt = rl_prompt;
@@ -155,7 +155,7 @@ Readline::rl_set_prompt (const std::string &prompt)
 /* Read a line of input.  Prompt with PROMPT.  An empty PROMPT means
    none.  A return value of nullptr means that EOF was encountered. */
 std::string
-Readline::readline (const std::string &prompt)
+Readline::readline (string_view prompt)
 {
 #if 0
   int in_callback;

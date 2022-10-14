@@ -1996,7 +1996,7 @@ public:
 
   /* Return the pointer to the function implementing builtin command NAME. */
   sh_builtin_func_t
-  find_shell_builtin (const char *name)
+  find_shell_builtin (string_view name)
   {
     current_builtin = builtin_address_internal (name, false);
     return current_builtin ? current_builtin->function : nullptr;
@@ -2004,7 +2004,7 @@ public:
 
   /* Return the address of builtin with NAME, whether it is enabled or not. */
   sh_builtin_func_t
-  builtin_address (const char *name)
+  builtin_address (string_view name)
   {
     current_builtin = builtin_address_internal (name, true);
     return current_builtin ? current_builtin->function : nullptr;
@@ -2013,7 +2013,7 @@ public:
   /* Return the function implementing the builtin NAME, but only if it is a
      POSIX.2 special builtin. */
   sh_builtin_func_t
-  find_special_builtin (const char *name)
+  find_special_builtin (string_view name)
   {
     current_builtin = builtin_address_internal (name, false);
     return ((current_builtin && (current_builtin->flags & SPECIAL_BUILTIN))
@@ -3297,31 +3297,34 @@ protected:
 
   /* from lib/sh/netopen.cc */
 
-#ifndef HAVE_GETADDRINFO
-  int _netopen4 (const char *, const char *, int);
-#else /* HAVE_GETADDRINFO */
-  int _netopen6 (const char *, const char *, int);
-#endif
+#if defined(HAVE_NETWORK)
 
+  int _netopen6 (const char *, const char *, int);
   int netopen (const char *);
 
   /*
    * Open a TCP or UDP connection to HOST on port SERV.  Uses getaddrinfo(3)
-   * if available, falling back to the traditional BSD mechanisms otherwise.
-   * Returns the connected socket or -1 on error.
+   * from the OS or Gnulib. Returns the connected socket or -1 on error.
    */
   int
   _netopen (const char *host, const char *serv, int typ)
   {
-#ifdef HAVE_GETADDRINFO
     return _netopen6 (host, serv, typ);
-#else
-    return _netopen4 (host, serv, typ);
-#endif
   }
 
+#else
+
+  int
+  netopen (const char *path)
+  {
+    internal_error (_ ("network operations not supported"));
+    return -1;
+  }
+
+#endif
+
   /* from lib/sh/pathphys.cc */
-  char *sh_realpath (string_view, char *);
+  char *sh_realpath (const char *, char *);
 
   /* from lib/sh/random.c */
   uint32_t genseed ();
@@ -5038,8 +5041,10 @@ protected:
 
   SHELL_VAR *var_lookup (string_view, VAR_CONTEXT *);
 
+  SHELL_VAR *find_function (string_view);
   SHELL_VAR *find_function_var (string_view);
   FUNCTION_DEF *find_function_def (string_view);
+
   SHELL_VAR *find_variable (string_view);
   SHELL_VAR *find_variable_noref (string_view);
   SHELL_VAR *find_var_last_nameref (string_view, int);
@@ -6319,105 +6324,5 @@ struct sh_parser_state_t
 };
 
 } // namespace bash
-
-#ifdef malloc
-#undef malloc
-#endif
-#define malloc(x) Error - use C++ new instead !
-
-#ifdef free
-#undef free
-#endif
-#define free(x) Error - Use C++ delete instead !
-
-#ifdef calloc
-#undef calloc
-#endif
-#define calloc(x, y) Error - Use C++ vector instead !
-
-#ifdef realloc
-#undef realloc
-#endif
-#define realloc(x, y) Error - Use C++ vector instead !
-
-#ifdef strdup
-#undef strdup
-#endif
-#define strdup(x) Error - Use savestring () instead !
-
-#ifdef isalnum
-#undef isalnum
-#endif
-#define isalnum(x) Error - Use c_isalnum () instead !
-
-#ifdef isalpha
-#undef isalpha
-#endif
-#define isalpha(x) Error - Use c_isalpha () instead !
-
-#ifdef isascii
-#undef isascii
-#endif
-#define isascii(x) Error - Use c_isascii () instead !
-
-#ifdef isblank
-#undef isblank
-#endif
-#define isblank(x) Error - Use c_isblank () instead !
-
-#ifdef iscntrl
-#undef iscntrl
-#endif
-#define iscntrl(x) Error - Use c_iscntrl () instead !
-
-#ifdef isdigit
-#undef isdigit
-#endif
-#define isdigit(x) Error - Use c_isdigit () instead !
-
-#ifdef isgraph
-#undef isgraph
-#endif
-#define isgraph(x) Error - Use c_isgraph () instead !
-
-#ifdef islower
-#undef islower
-#endif
-#define islower(x) Error - Use c_islower () instead !
-
-#ifdef isprint
-#undef isprint
-#endif
-#define isprint(x) Error - Use c_isprint () instead !
-
-#ifdef ispunct
-#undef ispunct
-#endif
-#define ispunct(x) Error - Use c_ispunct () instead !
-
-#ifdef isspace
-#undef isspace
-#endif
-#define isspace(x) Error - Use c_isspace () instead !
-
-#ifdef isupper
-#undef isupper
-#endif
-#define isupper(x) Error - Use c_isupper () instead !
-
-#ifdef isxdigit
-#undef isxdigit
-#endif
-#define isxdigit(x) Error - Use c_isxdigit () instead !
-
-#ifdef tolower
-#undef tolower
-#endif
-#define tolower(x) Error - Use c_tolower () instead !
-
-#ifdef toupper
-#undef toupper
-#endif
-#define toupper(x) Error - Use c_toupper () instead !
 
 #endif /* _SHELL_H_ */

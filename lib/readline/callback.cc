@@ -243,7 +243,7 @@ Readline::rl_callback_read_char ()
               rl_clear_signals ();
 #endif
               _rl_in_handler = false;
-              ((*this).*rl_linefunc) (line);
+              ((*this).*rl_linefunc) (line.c_str ());
 
               /* If the user did not clear out the line, do it for him. */
               if (rl_line_buffer[0])

@@ -34,6 +34,7 @@
 #  --macro-prefix=gl \
 #  assert \
 #  c-ctype \
+#  canonicalize-lgpl \
 #  dprintf \
 #  dup2 \
 #  faccessat \
@@ -41,11 +42,10 @@
 #  fpurge \
 #  full-read \
 #  full-write \
+#  getaddrinfo \
 #  getcwd \
-#  gethostname \
 #  gettimeofday \
 #  glob \
-#  inet_ntop \
 #  ldexpl \
 #  lstat \
 #  mbrlen \
@@ -56,7 +56,6 @@
 #  mktime \
 #  nl_langinfo \
 #  pselect \
-#  random_r \
 #  rename \
 #  setlocale \
 #  snprintf \
@@ -64,7 +63,6 @@
 #  stdio \
 #  strcase \
 #  strcasestr \
-#  strchrnul \
 #  strerror_r-posix \
 #  strnlen \
 #  strsignal \
@@ -770,6 +768,17 @@ gl_V_at = $(AM_V_GEN)
 
 ## end   gnulib module gen-header
 
+## begin gnulib module getaddrinfo
+
+if GL_COND_OBJ_GETADDRINFO
+libgnu_a_SOURCES += getaddrinfo.c
+endif
+if GL_COND_OBJ_GAI_STRERROR
+libgnu_a_SOURCES += gai_strerror.c
+endif
+
+## end   gnulib module getaddrinfo
+
 ## begin gnulib module getcwd
 
 if GL_COND_OBJ_GETCWD
@@ -801,16 +810,6 @@ libgnu_a_SOURCES += getgroups.c
 endif
 
 ## end   gnulib module getgroups
-
-## begin gnulib module gethostname
-
-if GL_COND_OBJ_GETHOSTNAME
-libgnu_a_SOURCES += gethostname.c
-endif
-
-EXTRA_DIST += w32sock.h
-
-## end   gnulib module gethostname
 
 ## begin gnulib module getlogin_r
 
@@ -1695,6 +1694,39 @@ EXTRA_DIST += msvc-nothrow.h
 
 ## end   gnulib module msvc-nothrow
 
+## begin gnulib module netdb
+
+BUILT_SOURCES += netdb.h
+
+# We need the following in order to create <netdb.h> when the system
+# doesn't have one that works with the given compiler.
+netdb.h: netdb.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(ARG_NONNULL_H) $(WARN_ON_USE_H)
+	$(gl_V_at)$(SED_HEADER_STDOUT) \
+	      -e 's|@''GUARD_PREFIX''@|GL|g' \
+	      -e 's|@''INCLUDE_NEXT''@|$(INCLUDE_NEXT)|g' \
+	      -e 's|@''PRAGMA_SYSTEM_HEADER''@|@PRAGMA_SYSTEM_HEADER@|g' \
+	      -e 's|@''PRAGMA_COLUMNS''@|@PRAGMA_COLUMNS@|g' \
+	      -e 's|@''NEXT_NETDB_H''@|$(NEXT_NETDB_H)|g' \
+	      -e 's|@''HAVE_NETDB_H''@|$(HAVE_NETDB_H)|g' \
+	      -e 's/@''GNULIB_GETADDRINFO''@/$(GL_GNULIB_GETADDRINFO)/g' \
+	      -e 's|@''HAVE_STRUCT_ADDRINFO''@|$(HAVE_STRUCT_ADDRINFO)|g' \
+	      -e 's|@''HAVE_DECL_FREEADDRINFO''@|$(HAVE_DECL_FREEADDRINFO)|g' \
+	      -e 's|@''HAVE_DECL_GAI_STRERROR''@|$(HAVE_DECL_GAI_STRERROR)|g' \
+	      -e 's|@''HAVE_DECL_GETADDRINFO''@|$(HAVE_DECL_GETADDRINFO)|g' \
+	      -e 's|@''HAVE_DECL_GETNAMEINFO''@|$(HAVE_DECL_GETNAMEINFO)|g' \
+	      -e 's|@''REPLACE_GAI_STRERROR''@|$(REPLACE_GAI_STRERROR)|g' \
+	      -e 's|@''REPLACE_GETADDRINFO''@|$(REPLACE_GETADDRINFO)|g' \
+	      -e '/definitions of _GL_FUNCDECL_RPL/r $(CXXDEFS_H)' \
+	      -e '/definition of _GL_ARG_NONNULL/r $(ARG_NONNULL_H)' \
+	      -e '/definition of _GL_WARN_ON_USE/r $(WARN_ON_USE_H)' \
+	      $(srcdir)/netdb.in.h > $@-t
+	$(AM_V_at)mv $@-t $@
+MOSTLYCLEANFILES += netdb.h netdb.h-t
+
+EXTRA_DIST += netdb.in.h
+
+## end   gnulib module netdb
+
 ## begin gnulib module netinet_in
 
 BUILT_SOURCES += $(NETINET_IN_H)
@@ -1832,14 +1864,6 @@ libgnu_a_SOURCES += raise.c
 endif
 
 ## end   gnulib module raise
-
-## begin gnulib module random_r
-
-if GL_COND_OBJ_RANDOM_R
-libgnu_a_SOURCES += random_r.c
-endif
-
-## end   gnulib module random_r
 
 ## begin gnulib module rawmemchr
 
@@ -2613,16 +2637,6 @@ EXTRA_DIST += str-two-way.h strcasestr.c
 EXTRA_libgnu_a_SOURCES += strcasestr.c
 
 ## end   gnulib module strcasestr-simple
-
-## begin gnulib module strchrnul
-
-if GL_COND_OBJ_STRCHRNUL
-libgnu_a_SOURCES += strchrnul.c
-endif
-
-EXTRA_DIST += strchrnul.valgrind
-
-## end   gnulib module strchrnul
 
 ## begin gnulib module strdup-posix
 

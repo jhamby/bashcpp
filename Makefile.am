@@ -204,7 +204,6 @@ bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc \
 	$(SHDIR)/setlinebuf.cc $(SHDIR)/zread.cc \
 	$(SHDIR)/inet_aton.cc $(SHDIR)/netconn.cc $(SHDIR)/netopen.cc \
 	$(SHDIR)/timeval.cc $(SHDIR)/makepath.cc \
-	$(SHDIR)/pathcanon.cc $(SHDIR)/pathphys.cc \
 	$(SHDIR)/spell.cc $(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
 	$(SHDIR)/mailstat.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \

@@ -64,7 +64,7 @@ getmaxgroups ()
     return maxgroups;
 
 #if defined(HAVE_SYSCONF) && defined(_SC_NGROUPS_MAX)
-  maxgroups = static_cast<int> (::sysconf (_SC_NGROUPS_MAX));
+  maxgroups = static_cast<int> (sysconf (_SC_NGROUPS_MAX));
 #else
 #if defined(NGROUPS_MAX)
   maxgroups = NGROUPS_MAX;
@@ -92,7 +92,7 @@ getmaxchild ()
     return maxchild;
 
 #if defined(HAVE_SYSCONF) && defined(_SC_CHILD_MAX)
-  maxchild = ::sysconf (_SC_CHILD_MAX);
+  maxchild = sysconf (_SC_CHILD_MAX);
 #else
 #if defined(CHILD_MAX)
   maxchild = CHILD_MAX;

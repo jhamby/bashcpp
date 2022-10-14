@@ -224,18 +224,8 @@ _rl_wcwidth (wchar_t wc)
 /* Unicode combining characters range from U+0300 to U+036F */
 #define UNICODE_COMBINING_CHAR(x) ((x) >= 768 && (x) <= 879)
 
-#if defined(WCWIDTH_BROKEN)
-#define WCWIDTH(wc)                                                           \
-  ((_rl_utf8locale && UNICODE_COMBINING_CHAR (wc)) ? 0 : _rl_wcwidth (wc))
-#else
+/* Use Gnulib version of wcwidth, if necessary. */
 #define WCWIDTH(wc) _rl_wcwidth (wc)
-#endif
-
-#if defined(WCWIDTH_BROKEN)
-#define IS_COMBINING_CHAR(x) (WCWIDTH (x) == 0 && iswcntrl (x) == 0)
-#else
-#define IS_COMBINING_CHAR(x) (WCWIDTH (x) == 0)
-#endif
 
 #define UTF8_SINGLEBYTE(c) (((c)&0x80) == 0)
 #define UTF8_MBFIRSTCHAR(c) (((c)&0xc0) == 0xc0)

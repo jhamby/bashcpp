@@ -234,24 +234,6 @@ int netopen (const char *);
 int getmaxgroups ();
 long getmaxchild ();
 
-/* declarations for functions defined in lib/sh/pathcanon.c */
-
-enum path_flags
-{
-  PATH_NOFLAGS = 0,
-  PATH_CHECKDOTDOT = 0x0001,
-  PATH_CHECKEXISTS = 0x0002,
-  PATH_HARDPATH = 0x0004,
-  PATH_NOALLOC = 0x0008
-};
-
-char *sh_canonpath (const char *, path_flags);
-
-/* declarations for functions defined in lib/sh/pathphys.c */
-
-char *sh_physpath (const char *);
-char *sh_realpath (const char *, char *);
-
 /* declarations for functions defined in lib/sh/random.c */
 
 int brand ();
