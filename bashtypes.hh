@@ -44,6 +44,7 @@ using nonstd::to_string;
 using nonstd::to_string_view;
 }
 #else
+#include <string.h>
 #include <nonstd/string_view.hpp>
 namespace bash
 {

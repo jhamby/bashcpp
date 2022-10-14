@@ -48,11 +48,11 @@ public:
   }
 
   HIST_ENTRY (string_view entry, string_view ts, histdata_t d)
-      : line (entry), timestamp (ts), data (d)
+      : line (to_string (entry)), timestamp (to_string (ts)), data (d)
   {
   }
 
-  HIST_ENTRY (string_view entry) : line (entry) {}
+  HIST_ENTRY (string_view entry) : line (to_string (entry)) {}
 
   ~HIST_ENTRY () { delete data; }
 

@@ -105,7 +105,7 @@ public:
   }
 
   UNDO_ENTRY (undo_code what_, size_t start_, size_t end_, string_view text_)
-      : text (text_), start (start_), end (end_), what (what_)
+      : text (to_string (text_)), start (start_), end (end_), what (what_)
   {
   }
 
