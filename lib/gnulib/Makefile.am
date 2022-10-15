@@ -51,14 +51,13 @@
 #  mbschr \
 #  mktime \
 #  nl_langinfo \
+#  regex \
 #  rename \
 #  setlocale \
 #  snprintf \
 #  strerror_r-posix \
 #  strnlen \
 #  strsignal \
-#  strtoll \
-#  strtoull \
 #  times \
 #  timespec \
 #  tmpfile \
@@ -390,6 +389,39 @@ libgnu_a_SOURCES += dup2.c
 endif
 
 ## end   gnulib module dup2
+
+## begin gnulib module dynarray
+
+BUILT_SOURCES += malloc/dynarray.gl.h malloc/dynarray-skeleton.gl.h
+
+malloc/dynarray.gl.h: malloc/dynarray.h
+	$(AM_V_GEN)$(MKDIR_P) '%reldir%/malloc'
+	$(AM_V_at)$(SED_HEADER_STDOUT) \
+	  -e '/libc_hidden_proto/d' \
+	  $(srcdir)/malloc/dynarray.h > $@-t
+	$(AM_V_at)mv $@-t $@
+MOSTLYCLEANFILES += malloc/dynarray.gl.h malloc/dynarray.gl.h-t
+
+malloc/dynarray-skeleton.gl.h: malloc/dynarray-skeleton.c
+	$(AM_V_GEN)$(MKDIR_P) '%reldir%/malloc'
+	$(AM_V_at)$(SED_HEADER_STDOUT) \
+	      -e 's|<malloc/dynarray\.h>|<malloc/dynarray.gl.h>|g' \
+	      -e 's|__attribute_maybe_unused__|_GL_ATTRIBUTE_MAYBE_UNUSED|g' \
+	      -e 's|__attribute_nonnull__|_GL_ATTRIBUTE_NONNULL|g' \
+	      -e 's|__attribute_warn_unused_result__|_GL_ATTRIBUTE_NODISCARD|g' \
+	      -e 's|__glibc_likely|_GL_LIKELY|g' \
+	      -e 's|__glibc_unlikely|_GL_UNLIKELY|g' \
+	      $(srcdir)/malloc/dynarray-skeleton.c > $@-t
+	$(AM_V_at)mv $@-t $@
+MOSTLYCLEANFILES += malloc/dynarray-skeleton.gl.h malloc/dynarray-skeleton.gl.h-t
+
+libgnu_a_SOURCES += malloc/dynarray_at_failure.c                 malloc/dynarray_emplace_enlarge.c                 malloc/dynarray_finalize.c                 malloc/dynarray_resize.c                 malloc/dynarray_resize_clear.c
+
+EXTRA_DIST += dynarray.h malloc/dynarray-skeleton.c malloc/dynarray.h
+
+EXTRA_libgnu_a_SOURCES += malloc/dynarray-skeleton.c
+
+## end   gnulib module dynarray
 
 ## begin gnulib module eloop-threshold
 
@@ -1469,6 +1501,18 @@ EXTRA_libgnu_a_SOURCES += realloc.c
 
 ## end   gnulib module realloc-posix
 
+## begin gnulib module regex
+
+if GL_COND_OBJ_REGEX
+libgnu_a_SOURCES += regex.c
+endif
+
+EXTRA_DIST += regcomp.c regex.h regex_internal.c regex_internal.h regexec.c
+
+EXTRA_libgnu_a_SOURCES += regcomp.c regex_internal.c regexec.c
+
+## end   gnulib module regex
+
 ## begin gnulib module rename
 
 if GL_COND_OBJ_RENAME
@@ -2300,30 +2344,6 @@ endif
 EXTRA_DIST += siglist.h
 
 ## end   gnulib module strsignal
-
-## begin gnulib module strtoll
-
-if GL_COND_OBJ_STRTOLL
-libgnu_a_SOURCES += strtoll.c
-endif
-
-EXTRA_DIST += strtol.c
-
-EXTRA_libgnu_a_SOURCES += strtol.c
-
-## end   gnulib module strtoll
-
-## begin gnulib module strtoull
-
-if GL_COND_OBJ_STRTOULL
-libgnu_a_SOURCES += strtoull.c
-endif
-
-EXTRA_DIST += strtol.c strtoul.c
-
-EXTRA_libgnu_a_SOURCES += strtol.c strtoul.c
-
-## end   gnulib module strtoull
 
 ## begin gnulib module sys_random
 
@@ -3158,6 +3178,14 @@ MOSTLYCLEANFILES += wchar.h wchar.h-t
 EXTRA_DIST += wchar.in.h
 
 ## end   gnulib module wchar
+
+## begin gnulib module wcrtomb
+
+if GL_COND_OBJ_WCRTOMB
+libgnu_a_SOURCES += wcrtomb.c
+endif
+
+## end   gnulib module wcrtomb
 
 ## begin gnulib module wcswidth
 

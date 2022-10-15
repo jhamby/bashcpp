@@ -52,7 +52,7 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
 	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
 	include/stat-time.hh include/systimes.hh include/typemax.hh \
-	include/unionwait.hh include/timer.hh pathnames.hh \
+	include/unionwait.hh pathnames.hh \
 	include/nonstd/string_view.hpp
 
 if ALT_ARRAY_IMPL
@@ -209,7 +209,7 @@ bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
 	$(SHDIR)/shmatch.cc $(SHDIR)/oslib.cc \
 	$(SHDIR)/stringlist.cc $(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc \
-	$(SHDIR)/timers.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/zcatfd.cc \
 	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc \
 	$(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
 	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc \

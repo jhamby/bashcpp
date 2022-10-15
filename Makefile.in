@@ -196,11 +196,11 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/raise.m4 $(top_srcdir)/m4/rawmemchr.m4 \
 	$(top_srcdir)/m4/read.m4 $(top_srcdir)/m4/readdir.m4 \
 	$(top_srcdir)/m4/readlink.m4 $(top_srcdir)/m4/realloc.m4 \
-	$(top_srcdir)/m4/rename.m4 $(top_srcdir)/m4/rewinddir.m4 \
-	$(top_srcdir)/m4/rmdir.m4 $(top_srcdir)/m4/safe-read.m4 \
-	$(top_srcdir)/m4/safe-write.m4 $(top_srcdir)/m4/save-cwd.m4 \
-	$(top_srcdir)/m4/secure_getenv.m4 $(top_srcdir)/m4/servent.m4 \
-	$(top_srcdir)/m4/setlocale.m4 \
+	$(top_srcdir)/m4/regex.m4 $(top_srcdir)/m4/rename.m4 \
+	$(top_srcdir)/m4/rewinddir.m4 $(top_srcdir)/m4/rmdir.m4 \
+	$(top_srcdir)/m4/safe-read.m4 $(top_srcdir)/m4/safe-write.m4 \
+	$(top_srcdir)/m4/save-cwd.m4 $(top_srcdir)/m4/secure_getenv.m4 \
+	$(top_srcdir)/m4/servent.m4 $(top_srcdir)/m4/setlocale.m4 \
 	$(top_srcdir)/m4/setlocale_null.m4 \
 	$(top_srcdir)/m4/signal_h.m4 $(top_srcdir)/m4/size_max.m4 \
 	$(top_srcdir)/m4/snprintf.m4 $(top_srcdir)/m4/socketlib.m4 \
@@ -213,7 +213,6 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/strdup.m4 $(top_srcdir)/m4/strerror.m4 \
 	$(top_srcdir)/m4/strerror_r.m4 $(top_srcdir)/m4/string_h.m4 \
 	$(top_srcdir)/m4/strnlen.m4 $(top_srcdir)/m4/strsignal.m4 \
-	$(top_srcdir)/m4/strtoll.m4 $(top_srcdir)/m4/strtoull.m4 \
 	$(top_srcdir)/m4/sys_random_h.m4 \
 	$(top_srcdir)/m4/sys_socket_h.m4 \
 	$(top_srcdir)/m4/sys_stat_h.m4 $(top_srcdir)/m4/sys_time_h.m4 \
@@ -229,12 +228,13 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/visibility.m4 $(top_srcdir)/m4/vsnprintf.m4 \
 	$(top_srcdir)/m4/waitpid.m4 $(top_srcdir)/m4/warn-on-use.m4 \
 	$(top_srcdir)/m4/wchar_h.m4 $(top_srcdir)/m4/wchar_t.m4 \
-	$(top_srcdir)/m4/wcswidth.m4 $(top_srcdir)/m4/wctype_h.m4 \
-	$(top_srcdir)/m4/wcwidth.m4 $(top_srcdir)/m4/wint_t.m4 \
-	$(top_srcdir)/m4/wmemchr.m4 $(top_srcdir)/m4/wmempcpy.m4 \
-	$(top_srcdir)/m4/write.m4 $(top_srcdir)/m4/xsize.m4 \
-	$(top_srcdir)/m4/year2038.m4 $(top_srcdir)/m4/zzgnulib.m4 \
-	$(top_srcdir)/m4/bash-rules.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/wcrtomb.m4 $(top_srcdir)/m4/wcswidth.m4 \
+	$(top_srcdir)/m4/wctype_h.m4 $(top_srcdir)/m4/wcwidth.m4 \
+	$(top_srcdir)/m4/wint_t.m4 $(top_srcdir)/m4/wmemchr.m4 \
+	$(top_srcdir)/m4/wmempcpy.m4 $(top_srcdir)/m4/write.m4 \
+	$(top_srcdir)/m4/xsize.m4 $(top_srcdir)/m4/year2038.m4 \
+	$(top_srcdir)/m4/zzgnulib.m4 $(top_srcdir)/m4/bash-rules.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
@@ -266,36 +266,36 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
 	include/shmbutil.hh include/shtty.hh include/stat-time.hh \
 	include/systimes.hh include/typemax.hh include/unionwait.hh \
-	include/timer.hh pathnames.hh include/nonstd/string_view.hpp \
-	array2.cc array.cc jobs.cc nojobs.cc $(BLTDIR)/alias_def.cc \
-	$(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
-	$(BLTDIR)/builtin_def.cc $(BLTDIR)/caller_def.cc \
-	$(BLTDIR)/cd_def.cc $(BLTDIR)/colon_def.cc \
-	$(BLTDIR)/command_def.cc $(BLTDIR)/declare_def.cc \
-	$(BLTDIR)/echo_def.cc $(BLTDIR)/enable_def.cc \
-	$(BLTDIR)/eval_def.cc $(BLTDIR)/getopts_def.cc \
-	$(BLTDIR)/exec_def.cc $(BLTDIR)/exit_def.cc \
-	$(BLTDIR)/fc_def.cc $(BLTDIR)/fg_bg_def.cc \
-	$(BLTDIR)/hash_def.cc $(BLTDIR)/help_def.cc \
-	$(BLTDIR)/history_def.cc $(BLTDIR)/jobs_def.cc \
-	$(BLTDIR)/kill_def.cc $(BLTDIR)/let_def.cc \
-	$(BLTDIR)/read_def.cc $(BLTDIR)/return_def.cc \
-	$(BLTDIR)/set_def.cc $(BLTDIR)/setattr_def.cc \
-	$(BLTDIR)/shift_def.cc $(BLTDIR)/source_def.cc \
-	$(BLTDIR)/suspend_def.cc $(BLTDIR)/test_def.cc \
-	$(BLTDIR)/times_def.cc $(BLTDIR)/trap_def.cc \
-	$(BLTDIR)/type_def.cc $(BLTDIR)/ulimit_def.cc \
-	$(BLTDIR)/umask_def.cc $(BLTDIR)/wait_def.cc \
-	$(BLTDIR)/reserved_def.cc $(BLTDIR)/pushd_def.cc \
-	$(BLTDIR)/shopt_def.cc $(BLTDIR)/printf_def.cc \
-	$(BLTDIR)/complete_def.cc $(BLTDIR)/mapfile_def.cc \
-	$(BLTDIR)/builtins.cc $(BLTDIR)/common.cc \
-	$(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
-	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc \
-	$(BLTDIR)/getopt.hh $(RLDIR)/readline.cc $(RLDIR)/funmap.cc \
-	$(RLDIR)/keymaps.cc $(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc \
-	$(RLDIR)/rltty.cc $(RLDIR)/complete.cc $(RLDIR)/bind.cc \
-	$(RLDIR)/isearch.cc $(RLDIR)/display.cc $(RLDIR)/signals.cc \
+	pathnames.hh include/nonstd/string_view.hpp array2.cc array.cc \
+	jobs.cc nojobs.cc $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc \
+	$(BLTDIR)/break_def.cc $(BLTDIR)/builtin_def.cc \
+	$(BLTDIR)/caller_def.cc $(BLTDIR)/cd_def.cc \
+	$(BLTDIR)/colon_def.cc $(BLTDIR)/command_def.cc \
+	$(BLTDIR)/declare_def.cc $(BLTDIR)/echo_def.cc \
+	$(BLTDIR)/enable_def.cc $(BLTDIR)/eval_def.cc \
+	$(BLTDIR)/getopts_def.cc $(BLTDIR)/exec_def.cc \
+	$(BLTDIR)/exit_def.cc $(BLTDIR)/fc_def.cc \
+	$(BLTDIR)/fg_bg_def.cc $(BLTDIR)/hash_def.cc \
+	$(BLTDIR)/help_def.cc $(BLTDIR)/history_def.cc \
+	$(BLTDIR)/jobs_def.cc $(BLTDIR)/kill_def.cc \
+	$(BLTDIR)/let_def.cc $(BLTDIR)/read_def.cc \
+	$(BLTDIR)/return_def.cc $(BLTDIR)/set_def.cc \
+	$(BLTDIR)/setattr_def.cc $(BLTDIR)/shift_def.cc \
+	$(BLTDIR)/source_def.cc $(BLTDIR)/suspend_def.cc \
+	$(BLTDIR)/test_def.cc $(BLTDIR)/times_def.cc \
+	$(BLTDIR)/trap_def.cc $(BLTDIR)/type_def.cc \
+	$(BLTDIR)/ulimit_def.cc $(BLTDIR)/umask_def.cc \
+	$(BLTDIR)/wait_def.cc $(BLTDIR)/reserved_def.cc \
+	$(BLTDIR)/pushd_def.cc $(BLTDIR)/shopt_def.cc \
+	$(BLTDIR)/printf_def.cc $(BLTDIR)/complete_def.cc \
+	$(BLTDIR)/mapfile_def.cc $(BLTDIR)/builtins.cc \
+	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc \
+	$(BLTDIR)/evalfile.cc $(BLTDIR)/getopt.cc \
+	$(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh \
+	$(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
+	$(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc $(RLDIR)/rltty.cc \
+	$(RLDIR)/complete.cc $(RLDIR)/bind.cc $(RLDIR)/isearch.cc \
+	$(RLDIR)/display.cc $(RLDIR)/signals.cc \
 	$(RLDIR)/emacs_keymap.hh $(RLDIR)/vi_keymap.hh \
 	$(RLDIR)/util.cc $(RLDIR)/kill.cc $(RLDIR)/undo.cc \
 	$(RLDIR)/macro.cc $(RLDIR)/input.cc $(RLDIR)/callback.cc \
@@ -317,12 +317,11 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc $(SHDIR)/mailstat.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
 	$(SHDIR)/shmatch.cc $(SHDIR)/oslib.cc $(SHDIR)/stringlist.cc \
-	$(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc $(SHDIR)/timers.cc \
-	$(SHDIR)/zcatfd.cc $(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc \
-	$(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc \
-	$(SHDIR)/casemod.cc $(SHDIR)/input_avail.cc \
-	$(SHDIR)/fnxform.cc $(SHDIR)/unicode.cc $(SHDIR)/shmbchar.cc \
-	$(TLDIR)/tilde.cc
+	$(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/zgetline.cc \
+	$(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc \
+	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
+	$(SHDIR)/unicode.cc $(SHDIR)/shmbchar.cc $(TLDIR)/tilde.cc
 @ALT_ARRAY_IMPL_TRUE@am__objects_1 = array2.$(OBJEXT)
 @ALT_ARRAY_IMPL_FALSE@am__objects_2 = array.$(OBJEXT)
 @JOB_CONTROL_TRUE@am__objects_3 = jobs.$(OBJEXT)
@@ -395,13 +394,12 @@ am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	$(SHDIR)/fmtumax.$(OBJEXT) $(SHDIR)/shmatch.$(OBJEXT) \
 	$(SHDIR)/oslib.$(OBJEXT) $(SHDIR)/stringlist.$(OBJEXT) \
 	$(SHDIR)/stringvec.$(OBJEXT) $(SHDIR)/strvis.$(OBJEXT) \
-	$(SHDIR)/timers.$(OBJEXT) $(SHDIR)/zcatfd.$(OBJEXT) \
-	$(SHDIR)/zmapfd.$(OBJEXT) $(SHDIR)/winsize.$(OBJEXT) \
-	$(SHDIR)/zgetline.$(OBJEXT) $(SHDIR)/uconvert.$(OBJEXT) \
-	$(SHDIR)/ufuncs.$(OBJEXT) $(SHDIR)/casemod.$(OBJEXT) \
-	$(SHDIR)/input_avail.$(OBJEXT) $(SHDIR)/fnxform.$(OBJEXT) \
-	$(SHDIR)/unicode.$(OBJEXT) $(SHDIR)/shmbchar.$(OBJEXT) \
-	$(TLDIR)/tilde.$(OBJEXT)
+	$(SHDIR)/zcatfd.$(OBJEXT) $(SHDIR)/zmapfd.$(OBJEXT) \
+	$(SHDIR)/winsize.$(OBJEXT) $(SHDIR)/zgetline.$(OBJEXT) \
+	$(SHDIR)/uconvert.$(OBJEXT) $(SHDIR)/ufuncs.$(OBJEXT) \
+	$(SHDIR)/casemod.$(OBJEXT) $(SHDIR)/input_avail.$(OBJEXT) \
+	$(SHDIR)/fnxform.$(OBJEXT) $(SHDIR)/unicode.$(OBJEXT) \
+	$(SHDIR)/shmbchar.$(OBJEXT) $(TLDIR)/tilde.$(OBJEXT)
 bash_OBJECTS = $(am_bash_OBJECTS)
 bash_LDADD = $(LDADD)
 bash_DEPENDENCIES = lib/gnulib/libgnu.a
@@ -515,23 +513,23 @@ am__depfiles_remade = $(BLTDIR)/$(DEPDIR)/alias_def.Po \
 	$(SHDIR)/$(DEPDIR)/shquote.Po $(SHDIR)/$(DEPDIR)/spell.Po \
 	$(SHDIR)/$(DEPDIR)/stringlist.Po \
 	$(SHDIR)/$(DEPDIR)/stringvec.Po $(SHDIR)/$(DEPDIR)/strtrans.Po \
-	$(SHDIR)/$(DEPDIR)/strvis.Po $(SHDIR)/$(DEPDIR)/timers.Po \
-	$(SHDIR)/$(DEPDIR)/timeval.Po $(SHDIR)/$(DEPDIR)/uconvert.Po \
-	$(SHDIR)/$(DEPDIR)/ufuncs.Po $(SHDIR)/$(DEPDIR)/unicode.Po \
-	$(SHDIR)/$(DEPDIR)/winsize.Po $(SHDIR)/$(DEPDIR)/zcatfd.Po \
-	$(SHDIR)/$(DEPDIR)/zgetline.Po $(SHDIR)/$(DEPDIR)/zmapfd.Po \
-	$(SHDIR)/$(DEPDIR)/zread.Po $(TLDIR)/$(DEPDIR)/tilde.Po \
-	./$(DEPDIR)/alias.Po ./$(DEPDIR)/array.Po \
-	./$(DEPDIR)/array2.Po ./$(DEPDIR)/arrayfunc.Po \
-	./$(DEPDIR)/assoc.Po ./$(DEPDIR)/bashhist.Po \
-	./$(DEPDIR)/bashline.Po ./$(DEPDIR)/bracecomp.Po \
-	./$(DEPDIR)/braces.Po ./$(DEPDIR)/copy_cmd.Po \
-	./$(DEPDIR)/dispose_cmd.Po ./$(DEPDIR)/error.Po \
-	./$(DEPDIR)/eval.Po ./$(DEPDIR)/execute_cmd.Po \
-	./$(DEPDIR)/expr.Po ./$(DEPDIR)/findcmd.Po \
-	./$(DEPDIR)/flags.Po ./$(DEPDIR)/general.Po \
-	./$(DEPDIR)/hashcmd.Po ./$(DEPDIR)/hashlib.Po \
-	./$(DEPDIR)/input.Po ./$(DEPDIR)/jobs.Po ./$(DEPDIR)/locale.Po \
+	$(SHDIR)/$(DEPDIR)/strvis.Po $(SHDIR)/$(DEPDIR)/timeval.Po \
+	$(SHDIR)/$(DEPDIR)/uconvert.Po $(SHDIR)/$(DEPDIR)/ufuncs.Po \
+	$(SHDIR)/$(DEPDIR)/unicode.Po $(SHDIR)/$(DEPDIR)/winsize.Po \
+	$(SHDIR)/$(DEPDIR)/zcatfd.Po $(SHDIR)/$(DEPDIR)/zgetline.Po \
+	$(SHDIR)/$(DEPDIR)/zmapfd.Po $(SHDIR)/$(DEPDIR)/zread.Po \
+	$(TLDIR)/$(DEPDIR)/tilde.Po ./$(DEPDIR)/alias.Po \
+	./$(DEPDIR)/array.Po ./$(DEPDIR)/array2.Po \
+	./$(DEPDIR)/arrayfunc.Po ./$(DEPDIR)/assoc.Po \
+	./$(DEPDIR)/bashhist.Po ./$(DEPDIR)/bashline.Po \
+	./$(DEPDIR)/bracecomp.Po ./$(DEPDIR)/braces.Po \
+	./$(DEPDIR)/copy_cmd.Po ./$(DEPDIR)/dispose_cmd.Po \
+	./$(DEPDIR)/error.Po ./$(DEPDIR)/eval.Po \
+	./$(DEPDIR)/execute_cmd.Po ./$(DEPDIR)/expr.Po \
+	./$(DEPDIR)/findcmd.Po ./$(DEPDIR)/flags.Po \
+	./$(DEPDIR)/general.Po ./$(DEPDIR)/hashcmd.Po \
+	./$(DEPDIR)/hashlib.Po ./$(DEPDIR)/input.Po \
+	./$(DEPDIR)/jobs.Po ./$(DEPDIR)/locale.Po \
 	./$(DEPDIR)/mailcheck.Po ./$(DEPDIR)/make_cmd.Po \
 	./$(DEPDIR)/mksyntax.Po ./$(DEPDIR)/nojobs.Po \
 	./$(DEPDIR)/parse.Po ./$(DEPDIR)/parser.Po \
@@ -1903,16 +1901,15 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
 	include/shmbutil.hh include/shtty.hh include/stat-time.hh \
 	include/systimes.hh include/typemax.hh include/unionwait.hh \
-	include/timer.hh pathnames.hh include/nonstd/string_view.hpp \
-	$(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4) $(DEFSRC) $(BLTDIR)/builtins.cc \
-	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc \
-	$(BLTDIR)/evalfile.cc $(BLTDIR)/getopt.cc \
-	$(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh \
-	$(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
-	$(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc $(RLDIR)/rltty.cc \
-	$(RLDIR)/complete.cc $(RLDIR)/bind.cc $(RLDIR)/isearch.cc \
-	$(RLDIR)/display.cc $(RLDIR)/signals.cc \
+	pathnames.hh include/nonstd/string_view.hpp $(am__append_1) \
+	$(am__append_2) $(am__append_3) $(am__append_4) $(DEFSRC) \
+	$(BLTDIR)/builtins.cc $(BLTDIR)/common.cc \
+	$(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
+	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc \
+	$(BLTDIR)/getopt.hh $(RLDIR)/readline.cc $(RLDIR)/funmap.cc \
+	$(RLDIR)/keymaps.cc $(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc \
+	$(RLDIR)/rltty.cc $(RLDIR)/complete.cc $(RLDIR)/bind.cc \
+	$(RLDIR)/isearch.cc $(RLDIR)/display.cc $(RLDIR)/signals.cc \
 	$(RLDIR)/emacs_keymap.hh $(RLDIR)/vi_keymap.hh \
 	$(RLDIR)/util.cc $(RLDIR)/kill.cc $(RLDIR)/undo.cc \
 	$(RLDIR)/macro.cc $(RLDIR)/input.cc $(RLDIR)/callback.cc \
@@ -1934,12 +1931,11 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc $(SHDIR)/mailstat.cc \
 	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
 	$(SHDIR)/shmatch.cc $(SHDIR)/oslib.cc $(SHDIR)/stringlist.cc \
-	$(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc $(SHDIR)/timers.cc \
-	$(SHDIR)/zcatfd.cc $(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc \
-	$(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc \
-	$(SHDIR)/casemod.cc $(SHDIR)/input_avail.cc \
-	$(SHDIR)/fnxform.cc $(SHDIR)/unicode.cc $(SHDIR)/shmbchar.cc \
-	$(TLDIR)/tilde.cc
+	$(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc $(SHDIR)/zcatfd.cc \
+	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/zgetline.cc \
+	$(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc \
+	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
+	$(SHDIR)/unicode.cc $(SHDIR)/shmbchar.cc $(TLDIR)/tilde.cc
 AM_YFLAGS = -d
 AM_CPPFLAGS = -I$(srcdir)/lib/gnulib -I$(builddir)/lib/gnulib \
 	-I$(srcdir)/include -I$(srcdir)/lib/tilde \
@@ -2314,8 +2310,6 @@ $(SHDIR)/stringvec.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/strvis.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
-$(SHDIR)/timers.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
-	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/zcatfd.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/zmapfd.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
@@ -2497,7 +2491,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/stringvec.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strtrans.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/strvis.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/timers.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/timeval.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/uconvert.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/ufuncs.Po@am__quote@ # am--include-marker
@@ -3060,7 +3053,6 @@ distclean: distclean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/stringvec.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strtrans.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strvis.Po
-	-rm -f $(SHDIR)/$(DEPDIR)/timers.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/timeval.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/uconvert.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/ufuncs.Po
@@ -3267,7 +3259,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/stringvec.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strtrans.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/strvis.Po
-	-rm -f $(SHDIR)/$(DEPDIR)/timers.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/timeval.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/uconvert.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/ufuncs.Po

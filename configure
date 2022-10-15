@@ -709,6 +709,8 @@ GL_COND_OBJ_WCWIDTH_FALSE
 GL_COND_OBJ_WCWIDTH_TRUE
 GL_COND_OBJ_WCSWIDTH_FALSE
 GL_COND_OBJ_WCSWIDTH_TRUE
+GL_COND_OBJ_WCRTOMB_FALSE
+GL_COND_OBJ_WCRTOMB_TRUE
 NEXT_AS_FIRST_DIRECTIVE_WCHAR_H
 NEXT_WCHAR_H
 GL_COND_OBJ_WAITPID_FALSE
@@ -767,10 +769,6 @@ GL_GNULIB_SOCKET
 HAVE_SYS_RANDOM_H
 NEXT_AS_FIRST_DIRECTIVE_SYS_RANDOM_H
 NEXT_SYS_RANDOM_H
-GL_COND_OBJ_STRTOULL_FALSE
-GL_COND_OBJ_STRTOULL_TRUE
-GL_COND_OBJ_STRTOLL_FALSE
-GL_COND_OBJ_STRTOLL_TRUE
 GL_COND_OBJ_STRSIGNAL_FALSE
 GL_COND_OBJ_STRSIGNAL_TRUE
 GL_COND_OBJ_STRNLEN_FALSE
@@ -821,6 +819,8 @@ GL_COND_OBJ_REWINDDIR_FALSE
 GL_COND_OBJ_REWINDDIR_TRUE
 GL_COND_OBJ_RENAME_FALSE
 GL_COND_OBJ_RENAME_TRUE
+GL_COND_OBJ_REGEX_FALSE
+GL_COND_OBJ_REGEX_TRUE
 GL_COND_OBJ_READLINK_FALSE
 GL_COND_OBJ_READLINK_TRUE
 GL_COND_OBJ_READDIR_FALSE
@@ -2127,6 +2127,7 @@ enable_nls
 with_libintl_prefix
 enable_cross_guesses
 enable_assert
+with_included_regex
 '
       ac_precious_vars='build_alias
 host_alias
@@ -2894,6 +2895,10 @@ Optional Packages:
   --without-libiconv-prefix     don't search for libiconv in includedir and libdir
   --with-libintl-prefix[=DIR]  search for libintl in DIR/include and DIR/lib
   --without-libintl-prefix     don't search for libintl in includedir and libdir
+  --without-included-regex
+                          don't compile regex; this is the default on systems
+                          with recent-enough versions of the GNU C Library
+                          (use with caution on other systems).
 
 Some influential environment variables:
   DEBUGGER_START_FILE
@@ -4785,6 +4790,8 @@ as_fn_append ac_func_c_list " nl_langinfo HAVE_NL_LANGINFO"
 as_fn_append ac_func_c_list " openat HAVE_OPENAT"
 as_fn_append ac_func_c_list " pipe HAVE_PIPE"
 as_fn_append ac_func_c_list " readlink HAVE_READLINK"
+as_fn_append ac_header_c_list " malloc.h malloc_h HAVE_MALLOC_H"
+as_fn_append ac_func_c_list " iswctype HAVE_ISWCTYPE"
 as_fn_append ac_func_c_list " link HAVE_LINK"
 as_fn_append ac_func_c_list " secure_getenv HAVE_SECURE_GETENV"
 as_fn_append ac_func_c_list " getuid HAVE_GETUID"
@@ -4805,6 +4812,7 @@ as_fn_append ac_header_c_list " sys/wait.h sys_wait_h HAVE_SYS_WAIT_H"
 as_fn_append ac_func_c_list " localtime_r HAVE_LOCALTIME_R"
 as_fn_append ac_func_c_list " times HAVE_TIMES"
 as_fn_append ac_func_c_list " vasnprintf HAVE_VASNPRINTF"
+as_fn_append ac_func_c_list " wcrtomb HAVE_WCRTOMB"
 as_fn_append ac_func_c_list " wcwidth HAVE_WCWIDTH"
 as_fn_append ac_func_c_list " wcswidth HAVE_WCSWIDTH"
 as_fn_append ac_func_c_list " wmempcpy HAVE_WMEMPCPY"
@@ -9732,6 +9740,7 @@ fi
   # Code from module double-slash-root:
   # Code from module dup:
   # Code from module dup2:
+  # Code from module dynarray:
   # Code from module eloop-threshold:
   # Code from module errno:
   # Code from module error:
@@ -9833,6 +9842,7 @@ fi
   # Code from module readlink:
   # Code from module realloc-gnu:
   # Code from module realloc-posix:
+  # Code from module regex:
   # Code from module rename:
   # Code from module rewinddir:
   # Code from module rmdir:
@@ -9876,8 +9886,6 @@ fi
   # Code from module strnlen:
   # Code from module strnlen1:
   # Code from module strsignal:
-  # Code from module strtoll:
-  # Code from module strtoull:
   # Code from module sys_random:
   # Code from module sys_socket:
   # Code from module sys_stat:
@@ -9912,6 +9920,7 @@ fi
   # Code from module vsnprintf:
   # Code from module waitpid:
   # Code from module wchar:
+  # Code from module wcrtomb:
   # Code from module wcswidth:
   # Code from module wctype-h:
   # Code from module wcwidth:
@@ -30982,8 +30991,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:30985: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:30986: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:30994: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:30995: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -31009,7 +31018,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:31012: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:31021: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -31163,7 +31172,7 @@ fi
 
         fi
       fi
-      echo "$as_me:31166: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:31175: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -34659,8 +34668,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:34662: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:34663: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:34671: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:34672: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -34686,7 +34695,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:34689: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:34698: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -34840,7 +34849,7 @@ fi
 
         fi
       fi
-      echo "$as_me:34843: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:34852: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -35068,8 +35077,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:35071: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:35072: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:35080: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:35081: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -35095,7 +35104,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:35098: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:35107: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -35249,7 +35258,7 @@ fi
 
         fi
       fi
-      echo "$as_me:35252: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:35261: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -37643,6 +37652,8 @@ printf "%s\n" "#define PROMOTED_MODE_T $gl_cv_promoted_mode_t" >>confdefs.h
   if test $REPLACE_MALLOC_FOR_MALLOC_POSIX = 1; then
     REPLACE_REALLOC_FOR_REALLOC_POSIX=1
   fi
+
+
 
 
 
@@ -40650,6 +40661,7 @@ printf "%s\n" "#define HAVE_DECL_WCSDUP $ac_have_decl" >>confdefs.h
 
 
 
+
   ac_fn_check_decl "$LINENO" "wcwidth" "ac_cv_have_decl_wcwidth" "
     #include <wchar.h>
 
@@ -42414,6 +42426,7 @@ fi
 
 
 printf "%s\n" "#define GNULIB_TEST_DUP2 1" >>confdefs.h
+
 
 
 
@@ -51565,6 +51578,460 @@ printf "%s\n" "#define GNULIB_TEST_REALLOC_POSIX 1" >>confdefs.h
 
 
 
+# Check whether --with-included-regex was given.
+if test ${with_included_regex+y}
+then :
+  withval=$with_included_regex;
+fi
+
+
+  case $with_included_regex in #(
+  yes|no) ac_use_included_regex=$with_included_regex
+        ;;
+  '')
+    # If the system regex support is good enough that it passes the
+    # following run test, then default to *not* using the included regex.c.
+    # If cross compiling, assume the test would fail and use the included
+    # regex.c.
+
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for working re_compile_pattern" >&5
+printf %s "checking for working re_compile_pattern... " >&6; }
+if test ${gl_cv_func_re_compile_pattern_working+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test "$cross_compiling" = yes
+then :
+  case "$host_os" in
+                   # Guess no on native Windows.
+           mingw*) gl_cv_func_re_compile_pattern_working="guessing no" ;;
+                   # Otherwise obey --enable-cross-guesses.
+           *)      gl_cv_func_re_compile_pattern_working="$gl_cross_guess_normal" ;;
+         esac
+
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <regex.h>
+
+            #include <locale.h>
+            #include <limits.h>
+            #include <string.h>
+
+            #if defined M_CHECK_ACTION || HAVE_DECL_ALARM
+            # include <signal.h>
+            # include <unistd.h>
+            #endif
+
+            #if HAVE_MALLOC_H
+            # include <malloc.h>
+            #endif
+
+            #ifdef M_CHECK_ACTION
+            /* Exit with distinguishable exit code.  */
+            static void sigabrt_no_core (int sig) { raise (SIGTERM); }
+            #endif
+
+int
+main (void)
+{
+int result = 0;
+            static struct re_pattern_buffer regex;
+            unsigned char folded_chars[UCHAR_MAX + 1];
+            int i;
+            const char *s;
+            struct re_registers regs;
+
+            /* Some builds of glibc go into an infinite loop on this
+               test.  Use alarm to force death, and mallopt to avoid
+               malloc recursion in diagnosing the corrupted heap. */
+#if HAVE_DECL_ALARM
+            signal (SIGALRM, SIG_DFL);
+            alarm (2);
+#endif
+#ifdef M_CHECK_ACTION
+            signal (SIGABRT, sigabrt_no_core);
+            mallopt (M_CHECK_ACTION, 2);
+#endif
+
+            if (setlocale (LC_ALL, "en_US.UTF-8"))
+              {
+                {
+                  /* https://sourceware.org/ml/libc-hacker/2006-09/msg00008.html
+                     This test needs valgrind to catch the bug on Debian
+                     GNU/Linux 3.1 x86, but it might catch the bug better
+                     on other platforms and it shouldn't hurt to try the
+                     test here.  */
+                  static char const pat[] = "insert into";
+                  static char const data[] =
+                    "\xFF\0\x12\xA2\xAA\xC4\xB1,K\x12\xC4\xB1*\xACK";
+                  re_set_syntax (RE_SYNTAX_GREP | RE_HAT_LISTS_NOT_NEWLINE
+                                 | RE_ICASE);
+                  memset (&regex, 0, sizeof regex);
+                  s = re_compile_pattern (pat, sizeof pat - 1, &regex);
+                  if (s)
+                    result |= 1;
+                  else
+                    {
+                      if (re_search (&regex, data, sizeof data - 1,
+                                     0, sizeof data - 1, &regs)
+                          != -1)
+                        result |= 1;
+                      regfree (&regex);
+                    }
+                }
+
+                {
+                  /* This test is from glibc bug 15078.
+                     The test case is from Andreas Schwab in
+                     <https://sourceware.org/ml/libc-alpha/2013-01/msg00967.html>.
+                     */
+                  static char const pat[] = "[^x]x";
+                  static char const data[] =
+                    /* <U1000><U103B><U103D><U1014><U103A><U102F><U1015><U103A> */
+                    "\xe1\x80\x80"
+                    "\xe1\x80\xbb"
+                    "\xe1\x80\xbd"
+                    "\xe1\x80\x94"
+                    "\xe1\x80\xba"
+                    "\xe1\x80\xaf"
+                    "\xe1\x80\x95"
+                    "\xe1\x80\xba"
+                    "x";
+                  re_set_syntax (0);
+                  memset (&regex, 0, sizeof regex);
+                  s = re_compile_pattern (pat, sizeof pat - 1, &regex);
+                  if (s)
+                    result |= 1;
+                  else
+                    {
+                      i = re_search (&regex, data, sizeof data - 1,
+                                     0, sizeof data - 1, 0);
+                      if (i != 0 && i != 21)
+                        result |= 1;
+                      regfree (&regex);
+                    }
+                }
+
+                if (! setlocale (LC_ALL, "C"))
+                  return 1;
+              }
+
+            /* This test is from glibc bug 3957, reported by Andrew Mackey.  */
+            re_set_syntax (RE_SYNTAX_EGREP | RE_HAT_LISTS_NOT_NEWLINE);
+            memset (&regex, 0, sizeof regex);
+            s = re_compile_pattern ("a[^x]b", 6, &regex);
+            if (s)
+              result |= 2;
+            else
+              {
+                /* This should fail, but succeeds for glibc-2.5.  */
+                if (re_search (&regex, "a\nb", 3, 0, 3, &regs) != -1)
+                  result |= 2;
+                regfree (&regex);
+              }
+
+            /* This regular expression is from Spencer ere test number 75
+               in grep-2.3.  */
+            re_set_syntax (RE_SYNTAX_POSIX_EGREP);
+            memset (&regex, 0, sizeof regex);
+            for (i = 0; i <= UCHAR_MAX; i++)
+              folded_chars[i] = i;
+            regex.translate = folded_chars;
+            s = re_compile_pattern ("a[[:]:]]b\n", 11, &regex);
+            /* This should fail with _Invalid character class name_ error.  */
+            if (!s)
+              {
+                result |= 4;
+                regfree (&regex);
+              }
+
+            /* Ensure that [b-a] is diagnosed as invalid, when
+               using RE_NO_EMPTY_RANGES. */
+            re_set_syntax (RE_SYNTAX_POSIX_EGREP | RE_NO_EMPTY_RANGES);
+            memset (&regex, 0, sizeof regex);
+            s = re_compile_pattern ("a[b-a]", 6, &regex);
+            if (s == 0)
+              {
+                result |= 8;
+                regfree (&regex);
+              }
+
+            /* This should succeed, but does not for glibc-2.1.3.  */
+            memset (&regex, 0, sizeof regex);
+            s = re_compile_pattern ("{1", 2, &regex);
+            if (s)
+              result |= 8;
+            else
+              regfree (&regex);
+
+            /* The following example is derived from a problem report
+               against gawk from Jorge Stolfi <stolfi@ic.unicamp.br>.  */
+            memset (&regex, 0, sizeof regex);
+            s = re_compile_pattern ("[an\371]*n", 7, &regex);
+            if (s)
+              result |= 8;
+            else
+              {
+                /* This should match, but does not for glibc-2.2.1.  */
+                if (re_match (&regex, "an", 2, 0, &regs) != 2)
+                  result |= 8;
+                else
+                  {
+                    free (regs.start);
+                    free (regs.end);
+                  }
+                regfree (&regex);
+              }
+
+            memset (&regex, 0, sizeof regex);
+            s = re_compile_pattern ("x", 1, &regex);
+            if (s)
+              result |= 8;
+            else
+              {
+                /* glibc-2.2.93 does not work with a negative RANGE argument.  */
+                if (re_search (&regex, "wxy", 3, 2, -2, &regs) != 1)
+                  result |= 8;
+                else
+                  {
+                    free (regs.start);
+                    free (regs.end);
+                  }
+                regfree (&regex);
+              }
+
+            /* The version of regex.c in older versions of gnulib
+               ignored RE_ICASE.  Detect that problem too.  */
+            re_set_syntax (RE_SYNTAX_EMACS | RE_ICASE);
+            memset (&regex, 0, sizeof regex);
+            s = re_compile_pattern ("x", 1, &regex);
+            if (s)
+              result |= 16;
+            else
+              {
+                if (re_search (&regex, "WXY", 3, 0, 3, &regs) < 0)
+                  result |= 16;
+                else
+                  {
+                    free (regs.start);
+                    free (regs.end);
+                  }
+                regfree (&regex);
+              }
+
+            /* Catch a bug reported by Vin Shelton in
+               https://lists.gnu.org/r/bug-coreutils/2007-06/msg00089.html
+               */
+            re_set_syntax (RE_SYNTAX_POSIX_BASIC
+                           & ~RE_CONTEXT_INVALID_DUP
+                           & ~RE_NO_EMPTY_RANGES);
+            memset (&regex, 0, sizeof regex);
+            s = re_compile_pattern ("[[:alnum:]_-]\\\\+\$", 16, &regex);
+            if (s)
+              result |= 32;
+            else
+              regfree (&regex);
+
+            /* REG_STARTEND was added to glibc on 2004-01-15.
+               Reject older versions.  */
+            if (! REG_STARTEND)
+              result |= 64;
+
+            /* Matching with the compiled form of this regexp would provoke
+               an assertion failure prior to glibc-2.28:
+                 regexec.c:1375: pop_fail_stack: Assertion 'num >= 0' failed
+               With glibc-2.28, compilation fails and reports the invalid
+               back reference.  */
+            re_set_syntax (RE_SYNTAX_POSIX_EGREP);
+            memset (&regex, 0, sizeof regex);
+            s = re_compile_pattern ("0|()0|\\\\1|0", 10, &regex);
+            if (!s)
+              {
+                memset (&regs, 0, sizeof regs);
+                i = re_search (&regex, "x", 1, 0, 1, &regs);
+                if (i != -1)
+                  result |= 64;
+                if (0 <= i)
+                  {
+                    free (regs.start);
+                    free (regs.end);
+                  }
+                regfree (&regex);
+              }
+            else
+              {
+                if (strcmp (s, "Invalid back reference"))
+                  result |= 64;
+              }
+
+            /* glibc bug 11053.  */
+            re_set_syntax (RE_SYNTAX_POSIX_BASIC);
+            memset (&regex, 0, sizeof regex);
+            static char const pat_sub2[] = "\\\\(a*\\\\)*a*\\\\1";
+            s = re_compile_pattern (pat_sub2, sizeof pat_sub2 - 1, &regex);
+            if (s)
+              result |= 64;
+            else
+              {
+                memset (&regs, 0, sizeof regs);
+                static char const data[] = "a";
+                int datalen = sizeof data - 1;
+                i = re_search (&regex, data, datalen, 0, datalen, &regs);
+                if (i != 0)
+                  result |= 64;
+                else if (regs.num_regs < 2)
+                  result |= 64;
+                else if (! (regs.start[0] == 0 && regs.end[0] == 1))
+                  result |= 64;
+                else if (! (regs.start[1] == 0 && regs.end[1] == 0))
+                  result |= 64;
+                regfree (&regex);
+                free (regs.start);
+                free (regs.end);
+              }
+
+#if 0
+            /* It would be nice to reject hosts whose regoff_t values are too
+               narrow (including glibc on hosts with 64-bit ptrdiff_t and
+               32-bit int), but we should wait until glibc implements this
+               feature.  Otherwise, support for equivalence classes and
+               multibyte collation symbols would always be broken except
+               when compiling --without-included-regex.   */
+            if (sizeof (regoff_t) < sizeof (ptrdiff_t)
+                || sizeof (regoff_t) < sizeof (ssize_t))
+              result |= 64;
+#endif
+
+            return result;
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_re_compile_pattern_working=yes
+else $as_nop
+  gl_cv_func_re_compile_pattern_working=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_re_compile_pattern_working" >&5
+printf "%s\n" "$gl_cv_func_re_compile_pattern_working" >&6; }
+    case "$gl_cv_func_re_compile_pattern_working" in #(
+      *yes) ac_use_included_regex=no;; #(
+      *no) ac_use_included_regex=yes;;
+    esac
+    ;;
+  *) as_fn_error $? "Invalid value for --with-included-regex: $with_included_regex" "$LINENO" 5
+    ;;
+  esac
+
+  if test $ac_use_included_regex = yes; then
+
+printf "%s\n" "#define _REGEX_INCLUDE_LIMITS_H 1" >>confdefs.h
+
+
+printf "%s\n" "#define _REGEX_LARGE_OFFSETS 1" >>confdefs.h
+
+
+printf "%s\n" "#define re_syntax_options rpl_re_syntax_options" >>confdefs.h
+
+
+printf "%s\n" "#define re_set_syntax rpl_re_set_syntax" >>confdefs.h
+
+
+printf "%s\n" "#define re_compile_pattern rpl_re_compile_pattern" >>confdefs.h
+
+
+printf "%s\n" "#define re_compile_fastmap rpl_re_compile_fastmap" >>confdefs.h
+
+
+printf "%s\n" "#define re_search rpl_re_search" >>confdefs.h
+
+
+printf "%s\n" "#define re_search_2 rpl_re_search_2" >>confdefs.h
+
+
+printf "%s\n" "#define re_match rpl_re_match" >>confdefs.h
+
+
+printf "%s\n" "#define re_match_2 rpl_re_match_2" >>confdefs.h
+
+
+printf "%s\n" "#define re_set_registers rpl_re_set_registers" >>confdefs.h
+
+
+printf "%s\n" "#define re_comp rpl_re_comp" >>confdefs.h
+
+
+printf "%s\n" "#define re_exec rpl_re_exec" >>confdefs.h
+
+
+printf "%s\n" "#define regcomp rpl_regcomp" >>confdefs.h
+
+
+printf "%s\n" "#define regexec rpl_regexec" >>confdefs.h
+
+
+printf "%s\n" "#define regerror rpl_regerror" >>confdefs.h
+
+
+printf "%s\n" "#define regfree rpl_regfree" >>confdefs.h
+
+  fi
+
+
+     if test $ac_use_included_regex = yes; then
+  GL_COND_OBJ_REGEX_TRUE=
+  GL_COND_OBJ_REGEX_FALSE='#'
+else
+  GL_COND_OBJ_REGEX_TRUE='#'
+  GL_COND_OBJ_REGEX_FALSE=
+fi
+:
+    if test -z "${GL_COND_OBJ_REGEX_TRUE}" && test -z "${GL_COND_OBJ_REGEX_FALSE}"; then
+    GL_COND_OBJ_REGEX_TRUE='#'
+    GL_COND_OBJ_REGEX_FALSE='#'
+  fi
+
+  if test -z "$GL_COND_OBJ_REGEX_TRUE"; then :
+
+
+
+
+
+
+
+  ac_fn_c_check_header_compile "$LINENO" "libintl.h" "ac_cv_header_libintl_h" "$ac_includes_default"
+if test "x$ac_cv_header_libintl_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBINTL_H 1" >>confdefs.h
+
+fi
+
+
+  ac_fn_check_decl "$LINENO" "isblank" "ac_cv_have_decl_isblank" "#include <ctype.h>
+" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_isblank" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_ISBLANK $ac_have_decl" >>confdefs.h
+
+
+
+fi
+
+
 
 
 
@@ -54617,226 +55084,6 @@ printf "%s\n" "#define GNULIB_TEST_STRSIGNAL 1" >>confdefs.h
 
 
 
-  ac_fn_c_check_func "$LINENO" "strtoll" "ac_cv_func_strtoll"
-if test "x$ac_cv_func_strtoll" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRTOLL 1" >>confdefs.h
-
-fi
-
-  if test $ac_cv_func_strtoll = yes; then
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether strtoll works" >&5
-printf %s "checking whether strtoll works... " >&6; }
-if test ${gl_cv_func_strtoll_works+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  if test "$cross_compiling" = yes
-then :
-  case "$host_os" in
-                    # Guess no on native Windows.
-            mingw*) gl_cv_func_strtoll_works="guessing no" ;;
-            *)      gl_cv_func_strtoll_works="$gl_cross_guess_normal" ;;
-          esac
-
-else $as_nop
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <stdlib.h>
-int
-main (void)
-{
-int result = 0;
-              char *term;
-              /* This test fails on Minix and native Windows.  */
-              {
-                const char input[] = "0x";
-                (void) strtoll (input, &term, 16);
-                if (term != input + 1)
-                  result |= 1;
-              }
-              return result;
-
-  ;
-  return 0;
-}
-
-_ACEOF
-if ac_fn_c_try_run "$LINENO"
-then :
-  gl_cv_func_strtoll_works=yes
-else $as_nop
-  gl_cv_func_strtoll_works=no
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_strtoll_works" >&5
-printf "%s\n" "$gl_cv_func_strtoll_works" >&6; }
-    case "$gl_cv_func_strtoll_works" in
-      *yes) ;;
-      *)    REPLACE_STRTOLL=1 ;;
-    esac
-  else
-    HAVE_STRTOLL=0
-  fi
-
-
-     if test $HAVE_STRTOLL = 0 || test $REPLACE_STRTOLL = 1; then
-  GL_COND_OBJ_STRTOLL_TRUE=
-  GL_COND_OBJ_STRTOLL_FALSE='#'
-else
-  GL_COND_OBJ_STRTOLL_TRUE='#'
-  GL_COND_OBJ_STRTOLL_FALSE=
-fi
-:
-    if test -z "${GL_COND_OBJ_STRTOLL_TRUE}" && test -z "${GL_COND_OBJ_STRTOLL_FALSE}"; then
-    GL_COND_OBJ_STRTOLL_TRUE='#'
-    GL_COND_OBJ_STRTOLL_FALSE='#'
-  fi
-
-  if test -z "$GL_COND_OBJ_STRTOLL_TRUE"; then :
-
-
-  :
-
-
-fi
-
-
-
-
-
-
-
-
-
-          GL_GNULIB_STRTOLL=1
-
-
-
-
-
-printf "%s\n" "#define GNULIB_TEST_STRTOLL 1" >>confdefs.h
-
-
-
-
-
-
-  ac_fn_c_check_func "$LINENO" "strtoull" "ac_cv_func_strtoull"
-if test "x$ac_cv_func_strtoull" = xyes
-then :
-  printf "%s\n" "#define HAVE_STRTOULL 1" >>confdefs.h
-
-fi
-
-  if test $ac_cv_func_strtoull = yes; then
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether strtoull works" >&5
-printf %s "checking whether strtoull works... " >&6; }
-if test ${gl_cv_func_strtoull_works+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  if test "$cross_compiling" = yes
-then :
-  case "$host_os" in
-                    # Guess no on native Windows.
-            mingw*) gl_cv_func_strtoull_works="guessing no" ;;
-            *)      gl_cv_func_strtoull_works="$gl_cross_guess_normal" ;;
-          esac
-
-else $as_nop
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <stdlib.h>
-int
-main (void)
-{
-int result = 0;
-              char *term;
-              /* This test fails on Minix and native Windows.  */
-              {
-                const char input[] = "0x";
-                (void) strtoull (input, &term, 16);
-                if (term != input + 1)
-                  result |= 1;
-              }
-              return result;
-
-  ;
-  return 0;
-}
-
-_ACEOF
-if ac_fn_c_try_run "$LINENO"
-then :
-  gl_cv_func_strtoull_works=yes
-else $as_nop
-  gl_cv_func_strtoull_works=no
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_strtoull_works" >&5
-printf "%s\n" "$gl_cv_func_strtoull_works" >&6; }
-    case "$gl_cv_func_strtoull_works" in
-      *yes) ;;
-      *)    REPLACE_STRTOULL=1 ;;
-    esac
-  else
-    HAVE_STRTOULL=0
-  fi
-
-
-     if test $HAVE_STRTOULL = 0 || test $REPLACE_STRTOULL = 1; then
-  GL_COND_OBJ_STRTOULL_TRUE=
-  GL_COND_OBJ_STRTOULL_FALSE='#'
-else
-  GL_COND_OBJ_STRTOULL_TRUE='#'
-  GL_COND_OBJ_STRTOULL_FALSE=
-fi
-:
-    if test -z "${GL_COND_OBJ_STRTOULL_TRUE}" && test -z "${GL_COND_OBJ_STRTOULL_FALSE}"; then
-    GL_COND_OBJ_STRTOULL_TRUE='#'
-    GL_COND_OBJ_STRTOULL_FALSE='#'
-  fi
-
-  if test -z "$GL_COND_OBJ_STRTOULL_TRUE"; then :
-
-
-  :
-
-
-fi
-
-
-
-
-
-
-
-
-
-          GL_GNULIB_STRTOULL=1
-
-
-
-
-
-printf "%s\n" "#define GNULIB_TEST_STRTOULL 1" >>confdefs.h
-
-
-
-
-
-
 
 
 
@@ -55751,6 +55998,406 @@ printf "%s\n" "#define GNULIB_TEST_WAITPID 1" >>confdefs.h
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        if case "$host_os" in
+       mingw*) true ;;
+       *) test $ac_cv_func_mbsinit = yes ;;
+     esac \
+    && test $ac_cv_func_mbrtowc = yes; then
+
+
+
+
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether mbrtowc handles incomplete characters" >&5
+printf %s "checking whether mbrtowc handles incomplete characters... " >&6; }
+if test ${gl_cv_func_mbrtowc_incomplete_state+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+                  case "$host_os" in
+                     # Guess no on AIX and OSF/1.
+        aix* | osf*) gl_cv_func_mbrtowc_incomplete_state="guessing no" ;;
+                     # Guess yes otherwise.
+        *)           gl_cv_func_mbrtowc_incomplete_state="guessing yes" ;;
+      esac
+      if test $LOCALE_JA != none; then
+        if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  if (setlocale (LC_ALL, "$LOCALE_JA") != NULL)
+    {
+      const char input[] = "B\217\253\344\217\251\316er"; /* "Büßer" */
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, input + 1, 1, &state) == (size_t)(-2))
+        if (mbsinit (&state))
+          return 2;
+    }
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_incomplete_state=yes
+else $as_nop
+  gl_cv_func_mbrtowc_incomplete_state=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+      else
+        if test $LOCALE_FR_UTF8 != none; then
+          if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  if (setlocale (LC_ALL, "$LOCALE_FR_UTF8") != NULL)
+    {
+      const char input[] = "B\303\274\303\237er"; /* "Büßer" */
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, input + 1, 1, &state) == (size_t)(-2))
+        if (mbsinit (&state))
+          return 2;
+    }
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_incomplete_state=yes
+else $as_nop
+  gl_cv_func_mbrtowc_incomplete_state=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+        fi
+      fi
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_mbrtowc_incomplete_state" >&5
+printf "%s\n" "$gl_cv_func_mbrtowc_incomplete_state" >&6; }
+
+
+
+
+     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether mbrtowc works as well as mbtowc" >&5
+printf %s "checking whether mbrtowc works as well as mbtowc... " >&6; }
+if test ${gl_cv_func_mbrtowc_sanitycheck+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+                  case "$host_os" in
+                    # Guess no on Solaris 8.
+        solaris2.8) gl_cv_func_mbrtowc_sanitycheck="guessing no" ;;
+                    # Guess yes otherwise.
+        *)          gl_cv_func_mbrtowc_sanitycheck="guessing yes" ;;
+      esac
+      if test $LOCALE_ZH_CN != none; then
+        if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
+int main ()
+{
+  /* This fails on Solaris 8:
+     mbrtowc returns 2, and sets wc to 0x00F0.
+     mbtowc returns 4 (correct) and sets wc to 0x5EDC.  */
+  if (setlocale (LC_ALL, "$LOCALE_ZH_CN") != NULL)
+    {
+      char input[] = "B\250\271\201\060\211\070er"; /* "Büßer" */
+      mbstate_t state;
+      wchar_t wc;
+
+      memset (&state, '\0', sizeof (mbstate_t));
+      if (mbrtowc (&wc, input + 3, 6, &state) != 4
+          && mbtowc (&wc, input + 3, 6) == 4)
+        return 2;
+    }
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_mbrtowc_sanitycheck=yes
+else $as_nop
+  gl_cv_func_mbrtowc_sanitycheck=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+      fi
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_mbrtowc_sanitycheck" >&5
+printf "%s\n" "$gl_cv_func_mbrtowc_sanitycheck" >&6; }
+
+    REPLACE_MBSTATE_T=0
+    case "$gl_cv_func_mbrtowc_incomplete_state" in
+      *yes) ;;
+      *) REPLACE_MBSTATE_T=1 ;;
+    esac
+    case "$gl_cv_func_mbrtowc_sanitycheck" in
+      *yes) ;;
+      *) REPLACE_MBSTATE_T=1 ;;
+    esac
+  else
+    REPLACE_MBSTATE_T=1
+  fi
+
+
+
+  if test $ac_cv_func_wcrtomb = no; then
+    HAVE_WCRTOMB=0
+    ac_fn_check_decl "$LINENO" "wcrtomb" "ac_cv_have_decl_wcrtomb" "
+      #include <wchar.h>
+
+" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_wcrtomb" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_WCRTOMB $ac_have_decl" >>confdefs.h
+
+    if test $ac_cv_have_decl_wcrtomb = yes; then
+                        REPLACE_WCRTOMB=1
+    fi
+  else
+                        if test $REPLACE_WCRTOMB = 0; then
+
+
+
+
+
+             { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether wcrtomb works in the C locale" >&5
+printf %s "checking whether wcrtomb works in the C locale... " >&6; }
+if test ${gl_cv_func_wcrtomb_works+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test "$cross_compiling" = yes
+then :
+  case "$host_os" in
+                               # Guess no on Android.
+              linux*-android*) gl_cv_func_wcrtomb_works="guessing no";;
+                               # Guess yes otherwise.
+              *)               gl_cv_func_wcrtomb_works="guessing yes";;
+            esac
+
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <string.h>
+#include <stdlib.h>
+#include <wchar.h>
+int main ()
+{
+  mbstate_t state;
+  char out[64];
+  int count;
+  memset (&state, 0, sizeof (state));
+  out[0] = 'x';
+  count = wcrtomb (out, L'a', &state);
+  return !(count == 1 && out[0] == 'a');
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_wcrtomb_works=yes
+else $as_nop
+  gl_cv_func_wcrtomb_works=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_wcrtomb_works" >&5
+printf "%s\n" "$gl_cv_func_wcrtomb_works" >&6; }
+      case "$gl_cv_func_wcrtomb_works" in
+        *yes) ;;
+        *)
+printf "%s\n" "#define WCRTOMB_C_LOCALE_BUG 1" >>confdefs.h
+
+           REPLACE_WCRTOMB=1 ;;
+      esac
+    fi
+    if test $REPLACE_WCRTOMB = 0; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether wcrtomb return value is correct" >&5
+printf %s "checking whether wcrtomb return value is correct... " >&6; }
+if test ${gl_cv_func_wcrtomb_retval+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+                              case "$host_os" in
+            # Guess no on AIX 4, OSF/1, Solaris, native Windows.
+            aix4* | osf* | solaris* | mingw*) gl_cv_func_wcrtomb_retval="guessing no" ;;
+            # Guess yes otherwise.
+            *)                                gl_cv_func_wcrtomb_retval="guessing yes" ;;
+          esac
+          if test $LOCALE_FR != none || test $LOCALE_FR_UTF8 != none || test $LOCALE_JA != none || test $LOCALE_ZH_CN != none; then
+            if test "$cross_compiling" = yes
+then :
+  :
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <locale.h>
+#include <string.h>
+#include <wchar.h>
+#include <stdlib.h>
+int main ()
+{
+  int result = 0;
+  if (setlocale (LC_ALL, "$LOCALE_FR") != NULL)
+    {
+      if (wcrtomb (NULL, 0, NULL) != 1)
+        result |= 1;
+    }
+  if (setlocale (LC_ALL, "$LOCALE_FR_UTF8") != NULL)
+    {
+      if (wcrtomb (NULL, 0, NULL) != 1)
+        result |= 2;
+      {
+        wchar_t wc = (wchar_t) 0xBADFACE;
+        if (mbtowc (&wc, "\303\274", 2) == 2)
+          if (wcrtomb (NULL, wc, NULL) != 1)
+            result |= 2;
+      }
+    }
+  if (setlocale (LC_ALL, "$LOCALE_JA") != NULL)
+    {
+      if (wcrtomb (NULL, 0, NULL) != 1)
+        result |= 4;
+    }
+  if (setlocale (LC_ALL, "$LOCALE_ZH_CN") != NULL)
+    {
+      if (wcrtomb (NULL, 0, NULL) != 1)
+        result |= 8;
+    }
+  return result;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"
+then :
+  gl_cv_func_wcrtomb_retval=yes
+else $as_nop
+  gl_cv_func_wcrtomb_retval=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+          fi
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $gl_cv_func_wcrtomb_retval" >&5
+printf "%s\n" "$gl_cv_func_wcrtomb_retval" >&6; }
+      case "$gl_cv_func_wcrtomb_retval" in
+        *yes) ;;
+        *)
+printf "%s\n" "#define WCRTOMB_RETVAL_BUG 1" >>confdefs.h
+
+           REPLACE_WCRTOMB=1 ;;
+      esac
+    fi
+  fi
+
+
+     if test $HAVE_WCRTOMB = 0 || test $REPLACE_WCRTOMB = 1; then
+  GL_COND_OBJ_WCRTOMB_TRUE=
+  GL_COND_OBJ_WCRTOMB_FALSE='#'
+else
+  GL_COND_OBJ_WCRTOMB_TRUE='#'
+  GL_COND_OBJ_WCRTOMB_FALSE=
+fi
+:
+    if test -z "${GL_COND_OBJ_WCRTOMB_TRUE}" && test -z "${GL_COND_OBJ_WCRTOMB_FALSE}"; then
+    GL_COND_OBJ_WCRTOMB_TRUE='#'
+    GL_COND_OBJ_WCRTOMB_FALSE='#'
+  fi
+
+  if test -z "$GL_COND_OBJ_WCRTOMB_TRUE"; then :
+
+
+  :
+
+
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          GL_GNULIB_WCRTOMB=1
+
+
+
+
+
+printf "%s\n" "#define GNULIB_TEST_WCRTOMB 1" >>confdefs.h
 
 
 

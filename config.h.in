@@ -534,12 +534,6 @@
 /* Define to 1 when the gnulib module strsignal should be tested. */
 #undef GNULIB_TEST_STRSIGNAL
 
-/* Define to 1 when the gnulib module strtoll should be tested. */
-#undef GNULIB_TEST_STRTOLL
-
-/* Define to 1 when the gnulib module strtoull should be tested. */
-#undef GNULIB_TEST_STRTOULL
-
 /* Define to 1 when the gnulib module time_r should be tested. */
 #undef GNULIB_TEST_TIME_R
 
@@ -557,6 +551,9 @@
 
 /* Define to 1 when the gnulib module waitpid should be tested. */
 #undef GNULIB_TEST_WAITPID
+
+/* Define to 1 when the gnulib module wcrtomb should be tested. */
+#undef GNULIB_TEST_WCRTOMB
 
 /* Define to 1 when the gnulib module wcswidth should be tested. */
 #undef GNULIB_TEST_WCSWIDTH
@@ -789,6 +786,10 @@
    don't. */
 #undef HAVE_DECL_INET_NTOP
 
+/* Define to 1 if you have the declaration of `isblank', and to 0 if you
+   don't. */
+#undef HAVE_DECL_ISBLANK
+
 /* Define to 1 if you have the declaration of `iswblank', and to 0 if you
    don't. */
 #undef HAVE_DECL_ISWBLANK
@@ -864,6 +865,10 @@
 /* Define to 1 if you have the declaration of `vsnprintf', and to 0 if you
    don't. */
 #undef HAVE_DECL_VSNPRINTF
+
+/* Define to 1 if you have the declaration of `wcrtomb', and to 0 if you
+   don't. */
+#undef HAVE_DECL_WCRTOMB
 
 /* Define to 1 if you have the declaration of `wcsdup', and to 0 if you don't.
    */
@@ -1145,6 +1150,9 @@
 /* Define to 1 if you have the <libgen.h> header file. */
 #undef HAVE_LIBGEN_H
 
+/* Define to 1 if you have the <libintl.h> header file. */
+#undef HAVE_LIBINTL_H
+
 /* Define to 1 if the bcrypt library is guaranteed to be present. */
 #undef HAVE_LIB_BCRYPT
 
@@ -1168,6 +1176,9 @@
 
 /* Define to 1 if you have the `lstat' function. */
 #undef HAVE_LSTAT
+
+/* Define to 1 if you have the <malloc.h> header file. */
+#undef HAVE_MALLOC_H
 
 /* Define if malloc, realloc, and calloc set errno on allocation failure. */
 #undef HAVE_MALLOC_POSIX
@@ -1479,12 +1490,6 @@
 
 /* Define to 1 if you have the `strsignal' function. */
 #undef HAVE_STRSIGNAL
-
-/* Define to 1 if you have the `strtoll' function. */
-#undef HAVE_STRTOLL
-
-/* Define to 1 if you have the `strtoull' function. */
-#undef HAVE_STRTOULL
 
 /* Define to 1 if the system has the type `struct addrinfo'. */
 #undef HAVE_STRUCT_ADDRINFO
@@ -2349,6 +2354,12 @@
    broken. */
 #undef WCONTINUED_BROKEN
 
+/* Define if the wcrtomb function does not work in the C locale. */
+#undef WCRTOMB_C_LOCALE_BUG
+
+/* Define if the wcrtomb function has an incorrect return value. */
+#undef WCRTOMB_RETVAL_BUG
+
 /* Offset of exit status in wait status word */
 #undef WEXITSTATUS_OFFSET
 
@@ -2429,6 +2440,13 @@
 /* Define to 1 in order to get the POSIX compatible declarations of socket
    functions. */
 #undef _POSIX_PII_SOCKET
+
+/* Define if you want <regex.h> to include <limits.h>, so that it consistently
+   overrides <limits.h>'s RE_DUP_MAX. */
+#undef _REGEX_INCLUDE_LIMITS_H
+
+/* Define if you want regoff_t to be at least as wide POSIX requires. */
+#undef _REGEX_LARGE_OFFSETS
 
 /* Number of bits in a timestamp, on hosts where this is settable. */
 #undef _TIME_BITS
@@ -2927,6 +2945,51 @@
 /* Define as the type of the result of subtracting two pointers, if the system
    doesn't define it. */
 #undef ptrdiff_t
+
+/* Define to rpl_re_comp if the replacement should be used. */
+#undef re_comp
+
+/* Define to rpl_re_compile_fastmap if the replacement should be used. */
+#undef re_compile_fastmap
+
+/* Define to rpl_re_compile_pattern if the replacement should be used. */
+#undef re_compile_pattern
+
+/* Define to rpl_re_exec if the replacement should be used. */
+#undef re_exec
+
+/* Define to rpl_re_match if the replacement should be used. */
+#undef re_match
+
+/* Define to rpl_re_match_2 if the replacement should be used. */
+#undef re_match_2
+
+/* Define to rpl_re_search if the replacement should be used. */
+#undef re_search
+
+/* Define to rpl_re_search_2 if the replacement should be used. */
+#undef re_search_2
+
+/* Define to rpl_re_set_registers if the replacement should be used. */
+#undef re_set_registers
+
+/* Define to rpl_re_set_syntax if the replacement should be used. */
+#undef re_set_syntax
+
+/* Define to rpl_re_syntax_options if the replacement should be used. */
+#undef re_syntax_options
+
+/* Define to rpl_regcomp if the replacement should be used. */
+#undef regcomp
+
+/* Define to rpl_regerror if the replacement should be used. */
+#undef regerror
+
+/* Define to rpl_regexec if the replacement should be used. */
+#undef regexec
+
+/* Define to rpl_regfree if the replacement should be used. */
+#undef regfree
 
 /* Define to the equivalent of the C99 'restrict' keyword, or to
    nothing if this is not supported.  Do not define if restrict is

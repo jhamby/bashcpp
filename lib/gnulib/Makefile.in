@@ -65,14 +65,13 @@
 #  mbschr \
 #  mktime \
 #  nl_langinfo \
+#  regex \
 #  rename \
 #  setlocale \
 #  snprintf \
 #  strerror_r-posix \
 #  strnlen \
 #  strsignal \
-#  strtoll \
-#  strtoull \
 #  times \
 #  timespec \
 #  tmpfile \
@@ -218,27 +217,27 @@ host_triplet = @host@
 @GL_COND_OBJ_READ_TRUE@am__append_59 = read.c
 @GL_COND_OBJ_READDIR_TRUE@am__append_60 = readdir.c
 @GL_COND_OBJ_READLINK_TRUE@am__append_61 = readlink.c
-@GL_COND_OBJ_RENAME_TRUE@am__append_62 = rename.c
-@GL_COND_OBJ_REWINDDIR_TRUE@am__append_63 = rewinddir.c
-@GL_COND_OBJ_RMDIR_TRUE@am__append_64 = rmdir.c
-@GL_COND_OBJ_SECURE_GETENV_TRUE@am__append_65 = secure_getenv.c
-@GL_COND_OBJ_SETLOCALE_TRUE@am__append_66 = setlocale.c
-@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__append_67 = setlocale-lock.c
-@GL_COND_OBJ_STAT_TRUE@am__append_68 = stat.c
-@GL_COND_OBJ_STDIO_READ_TRUE@am__append_69 = stdio-read.c
-@GL_COND_OBJ_STDIO_WRITE_TRUE@am__append_70 = stdio-write.c
-@GL_COND_OBJ_STRDUP_TRUE@am__append_71 = strdup.c
-@GL_COND_OBJ_STRERROR_TRUE@am__append_72 = strerror.c
-@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__append_73 = strerror-override.c
-@GL_COND_OBJ_STRNLEN_TRUE@am__append_74 = strnlen.c
-@GL_COND_OBJ_STRSIGNAL_TRUE@am__append_75 = strsignal.c
-@GL_COND_OBJ_STRTOLL_TRUE@am__append_76 = strtoll.c
-@GL_COND_OBJ_STRTOULL_TRUE@am__append_77 = strtoull.c
-@GL_COND_OBJ_TIME_R_TRUE@am__append_78 = time_r.c
-@GL_COND_OBJ_TIMES_TRUE@am__append_79 = times.c
-@GL_COND_OBJ_TMPFILE_TRUE@am__append_80 = tmpfile.c
-@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__append_81 = uniwidth/width.c
-@GL_COND_OBJ_WAITPID_TRUE@am__append_82 = waitpid.c
+@GL_COND_OBJ_REGEX_TRUE@am__append_62 = regex.c
+@GL_COND_OBJ_RENAME_TRUE@am__append_63 = rename.c
+@GL_COND_OBJ_REWINDDIR_TRUE@am__append_64 = rewinddir.c
+@GL_COND_OBJ_RMDIR_TRUE@am__append_65 = rmdir.c
+@GL_COND_OBJ_SECURE_GETENV_TRUE@am__append_66 = secure_getenv.c
+@GL_COND_OBJ_SETLOCALE_TRUE@am__append_67 = setlocale.c
+@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__append_68 = setlocale-lock.c
+@GL_COND_OBJ_STAT_TRUE@am__append_69 = stat.c
+@GL_COND_OBJ_STDIO_READ_TRUE@am__append_70 = stdio-read.c
+@GL_COND_OBJ_STDIO_WRITE_TRUE@am__append_71 = stdio-write.c
+@GL_COND_OBJ_STRDUP_TRUE@am__append_72 = strdup.c
+@GL_COND_OBJ_STRERROR_TRUE@am__append_73 = strerror.c
+@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__append_74 = strerror-override.c
+@GL_COND_OBJ_STRNLEN_TRUE@am__append_75 = strnlen.c
+@GL_COND_OBJ_STRSIGNAL_TRUE@am__append_76 = strsignal.c
+@GL_COND_OBJ_TIME_R_TRUE@am__append_77 = time_r.c
+@GL_COND_OBJ_TIMES_TRUE@am__append_78 = times.c
+@GL_COND_OBJ_TMPFILE_TRUE@am__append_79 = tmpfile.c
+@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__append_80 = uniwidth/width.c
+@GL_COND_OBJ_WAITPID_TRUE@am__append_81 = waitpid.c
+@GL_COND_OBJ_WCRTOMB_TRUE@am__append_82 = wcrtomb.c
 @GL_COND_OBJ_WCSWIDTH_TRUE@am__append_83 = wcswidth.c
 @GL_COND_OBJ_WCWIDTH_TRUE@am__append_84 = wcwidth.c
 @GL_COND_OBJ_WINDOWS_MUTEX_TRUE@am__append_85 = windows-mutex.c
@@ -332,11 +331,11 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/raise.m4 $(top_srcdir)/m4/rawmemchr.m4 \
 	$(top_srcdir)/m4/read.m4 $(top_srcdir)/m4/readdir.m4 \
 	$(top_srcdir)/m4/readlink.m4 $(top_srcdir)/m4/realloc.m4 \
-	$(top_srcdir)/m4/rename.m4 $(top_srcdir)/m4/rewinddir.m4 \
-	$(top_srcdir)/m4/rmdir.m4 $(top_srcdir)/m4/safe-read.m4 \
-	$(top_srcdir)/m4/safe-write.m4 $(top_srcdir)/m4/save-cwd.m4 \
-	$(top_srcdir)/m4/secure_getenv.m4 $(top_srcdir)/m4/servent.m4 \
-	$(top_srcdir)/m4/setlocale.m4 \
+	$(top_srcdir)/m4/regex.m4 $(top_srcdir)/m4/rename.m4 \
+	$(top_srcdir)/m4/rewinddir.m4 $(top_srcdir)/m4/rmdir.m4 \
+	$(top_srcdir)/m4/safe-read.m4 $(top_srcdir)/m4/safe-write.m4 \
+	$(top_srcdir)/m4/save-cwd.m4 $(top_srcdir)/m4/secure_getenv.m4 \
+	$(top_srcdir)/m4/servent.m4 $(top_srcdir)/m4/setlocale.m4 \
 	$(top_srcdir)/m4/setlocale_null.m4 \
 	$(top_srcdir)/m4/signal_h.m4 $(top_srcdir)/m4/size_max.m4 \
 	$(top_srcdir)/m4/snprintf.m4 $(top_srcdir)/m4/socketlib.m4 \
@@ -349,7 +348,6 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/strdup.m4 $(top_srcdir)/m4/strerror.m4 \
 	$(top_srcdir)/m4/strerror_r.m4 $(top_srcdir)/m4/string_h.m4 \
 	$(top_srcdir)/m4/strnlen.m4 $(top_srcdir)/m4/strsignal.m4 \
-	$(top_srcdir)/m4/strtoll.m4 $(top_srcdir)/m4/strtoull.m4 \
 	$(top_srcdir)/m4/sys_random_h.m4 \
 	$(top_srcdir)/m4/sys_socket_h.m4 \
 	$(top_srcdir)/m4/sys_stat_h.m4 $(top_srcdir)/m4/sys_time_h.m4 \
@@ -365,12 +363,13 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/visibility.m4 $(top_srcdir)/m4/vsnprintf.m4 \
 	$(top_srcdir)/m4/waitpid.m4 $(top_srcdir)/m4/warn-on-use.m4 \
 	$(top_srcdir)/m4/wchar_h.m4 $(top_srcdir)/m4/wchar_t.m4 \
-	$(top_srcdir)/m4/wcswidth.m4 $(top_srcdir)/m4/wctype_h.m4 \
-	$(top_srcdir)/m4/wcwidth.m4 $(top_srcdir)/m4/wint_t.m4 \
-	$(top_srcdir)/m4/wmemchr.m4 $(top_srcdir)/m4/wmempcpy.m4 \
-	$(top_srcdir)/m4/write.m4 $(top_srcdir)/m4/xsize.m4 \
-	$(top_srcdir)/m4/year2038.m4 $(top_srcdir)/m4/zzgnulib.m4 \
-	$(top_srcdir)/m4/bash-rules.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/wcrtomb.m4 $(top_srcdir)/m4/wcswidth.m4 \
+	$(top_srcdir)/m4/wctype_h.m4 $(top_srcdir)/m4/wcwidth.m4 \
+	$(top_srcdir)/m4/wint_t.m4 $(top_srcdir)/m4/wmemchr.m4 \
+	$(top_srcdir)/m4/wmempcpy.m4 $(top_srcdir)/m4/write.m4 \
+	$(top_srcdir)/m4/xsize.m4 $(top_srcdir)/m4/year2038.m4 \
+	$(top_srcdir)/m4/zzgnulib.m4 $(top_srcdir)/m4/bash-rules.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(noinst_HEADERS) \
@@ -390,15 +389,18 @@ am__DEPENDENCIES_1 =
 am__libgnu_a_SOURCES_DIST = openat-priv.h openat-proc.c \
 	basename-lgpl.c btowc.c c-ctype.h c-ctype.c \
 	canonicalize-lgpl.c chdir-long.c cloexec.c close.c closedir.c \
-	dirfd.c dirname-lgpl.c stripslash.c dup.c dup2.c error.c \
-	euidaccess.c exitfail.c faccessat.c fchdir.c fcntl.c fd-hook.c \
-	fd-safer-flag.c dup-safer-flag.c fdopendir.c \
-	filenamecat-lgpl.c float.c itold.c fpurge.c free.c fstat.c \
-	fstatat.c full-read.h full-read.c full-write.h full-write.c \
-	getaddrinfo.c gai_strerror.c getcwd.c getcwd-lgpl.c \
-	getdtablesize.c getgroups.c getlogin_r.c getprogname.h \
-	getprogname.c getrandom.c gettext.h gettimeofday.c glob.c \
-	globfree.c glob_pattern_p.c group-member.c hard-locale.c idx.h \
+	dirfd.c dirname-lgpl.c stripslash.c dup.c dup2.c \
+	malloc/dynarray_at_failure.c malloc/dynarray_emplace_enlarge.c \
+	malloc/dynarray_finalize.c malloc/dynarray_resize.c \
+	malloc/dynarray_resize_clear.c error.c euidaccess.c exitfail.c \
+	faccessat.c fchdir.c fcntl.c fd-hook.c fd-safer-flag.c \
+	dup-safer-flag.c fdopendir.c filenamecat-lgpl.c float.c \
+	itold.c fpurge.c free.c fstat.c fstatat.c full-read.h \
+	full-read.c full-write.h full-write.c getaddrinfo.c \
+	gai_strerror.c getcwd.c getcwd-lgpl.c getdtablesize.c \
+	getgroups.c getlogin_r.c getprogname.h getprogname.c \
+	getrandom.c gettext.h gettimeofday.c glob.c globfree.c \
+	glob_pattern_p.c group-member.c hard-locale.c idx.h \
 	inet_ntop.c isblank.c iswblank.c iswdigit.c iswxdigit.c \
 	localcharset.c localeconv.c localename.c localename-table.c \
 	glthread/lock.h glthread/lock.c lstat.c malloca.c mbchar.c \
@@ -406,7 +408,7 @@ am__libgnu_a_SOURCES_DIST = openat-priv.h openat-proc.c \
 	mbuiter.h mbuiter.c memchr.c mempcpy.c memrchr.c minmax.h \
 	mkdir.c msvc-inval.c msvc-nothrow.c nl_langinfo.c \
 	nl_langinfo-lock.c open.c openat.c openat-die.c opendir.c \
-	pipe.c raise.c rawmemchr.c read.c readdir.c readlink.c \
+	pipe.c raise.c rawmemchr.c read.c readdir.c readlink.c regex.c \
 	rename.c rewinddir.c rmdir.c safe-read.c safe-write.c \
 	save-cwd.c malloc/scratch_buffer_dupfree.c \
 	malloc/scratch_buffer_grow.c \
@@ -415,12 +417,12 @@ am__libgnu_a_SOURCES_DIST = openat-priv.h openat-proc.c \
 	setlocale.c setlocale_null.c setlocale-lock.c size_max.h \
 	sockets.h sockets.c stat.c stat-time.c stdio-read.c \
 	stdio-write.c strdup.c strerror.c strerror-override.c \
-	strnlen.c strnlen1.h strnlen1.c strsignal.c strtoll.c \
-	strtoull.c sys_socket.c tempname.c glthread/threadlib.c \
-	time_r.c times.c timespec.c glthread/tls.h glthread/tls.c \
-	tmpdir.h tmpdir.c tmpfile.c unistd.c dup-safer.c fd-safer.c \
-	pipe-safer.c uniwidth/width.c waitpid.c wcswidth.c wctype-h.c \
-	wcwidth.c windows-mutex.c windows-once.c windows-recmutex.c \
+	strnlen.c strnlen1.h strnlen1.c strsignal.c sys_socket.c \
+	tempname.c glthread/threadlib.c time_r.c times.c timespec.c \
+	glthread/tls.h glthread/tls.c tmpdir.h tmpdir.c tmpfile.c \
+	unistd.c dup-safer.c fd-safer.c pipe-safer.c uniwidth/width.c \
+	waitpid.c wcrtomb.c wcswidth.c wctype-h.c wcwidth.c \
+	windows-mutex.c windows-once.c windows-recmutex.c \
 	windows-rwlock.c windows-tls.c wmemchr.c wmempcpy.c write.c \
 	xsize.h xsize.c
 @GL_COND_OBJ_BTOWC_TRUE@am__objects_1 = libgnu_a-btowc.$(OBJEXT)
@@ -433,6 +435,7 @@ am__libgnu_a_SOURCES_DIST = openat-priv.h openat-proc.c \
 @GL_COND_OBJ_DIRFD_TRUE@am__objects_6 = libgnu_a-dirfd.$(OBJEXT)
 @GL_COND_OBJ_DUP_TRUE@am__objects_7 = libgnu_a-dup.$(OBJEXT)
 @GL_COND_OBJ_DUP2_TRUE@am__objects_8 = libgnu_a-dup2.$(OBJEXT)
+am__dirstamp = $(am__leading_dot)dirstamp
 @GL_COND_OBJ_ERROR_TRUE@am__objects_9 = libgnu_a-error.$(OBJEXT)
 @GL_COND_OBJ_EUIDACCESS_TRUE@am__objects_10 =  \
 @GL_COND_OBJ_EUIDACCESS_TRUE@	libgnu_a-euidaccess.$(OBJEXT)
@@ -477,7 +480,6 @@ am__libgnu_a_SOURCES_DIST = openat-priv.h openat-proc.c \
 @GL_COND_OBJ_ISWXDIGIT_TRUE@	libgnu_a-iswxdigit.$(OBJEXT)
 @GL_COND_OBJ_LOCALECONV_TRUE@am__objects_38 =  \
 @GL_COND_OBJ_LOCALECONV_TRUE@	libgnu_a-localeconv.$(OBJEXT)
-am__dirstamp = $(am__leading_dot)dirstamp
 @GL_COND_OBJ_LSTAT_TRUE@am__objects_39 = libgnu_a-lstat.$(OBJEXT)
 @GL_COND_OBJ_MBRLEN_TRUE@am__objects_40 = libgnu_a-mbrlen.$(OBJEXT)
 @GL_COND_OBJ_MBRTOWC_TRUE@am__objects_41 = libgnu_a-mbrtowc.$(OBJEXT)
@@ -506,34 +508,33 @@ am__dirstamp = $(am__leading_dot)dirstamp
 @GL_COND_OBJ_READDIR_TRUE@am__objects_60 = libgnu_a-readdir.$(OBJEXT)
 @GL_COND_OBJ_READLINK_TRUE@am__objects_61 =  \
 @GL_COND_OBJ_READLINK_TRUE@	libgnu_a-readlink.$(OBJEXT)
-@GL_COND_OBJ_RENAME_TRUE@am__objects_62 = libgnu_a-rename.$(OBJEXT)
-@GL_COND_OBJ_REWINDDIR_TRUE@am__objects_63 =  \
+@GL_COND_OBJ_REGEX_TRUE@am__objects_62 = libgnu_a-regex.$(OBJEXT)
+@GL_COND_OBJ_RENAME_TRUE@am__objects_63 = libgnu_a-rename.$(OBJEXT)
+@GL_COND_OBJ_REWINDDIR_TRUE@am__objects_64 =  \
 @GL_COND_OBJ_REWINDDIR_TRUE@	libgnu_a-rewinddir.$(OBJEXT)
-@GL_COND_OBJ_RMDIR_TRUE@am__objects_64 = libgnu_a-rmdir.$(OBJEXT)
-@GL_COND_OBJ_SECURE_GETENV_TRUE@am__objects_65 = libgnu_a-secure_getenv.$(OBJEXT)
-@GL_COND_OBJ_SETLOCALE_TRUE@am__objects_66 =  \
+@GL_COND_OBJ_RMDIR_TRUE@am__objects_65 = libgnu_a-rmdir.$(OBJEXT)
+@GL_COND_OBJ_SECURE_GETENV_TRUE@am__objects_66 = libgnu_a-secure_getenv.$(OBJEXT)
+@GL_COND_OBJ_SETLOCALE_TRUE@am__objects_67 =  \
 @GL_COND_OBJ_SETLOCALE_TRUE@	libgnu_a-setlocale.$(OBJEXT)
-@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__objects_67 = libgnu_a-setlocale-lock.$(OBJEXT)
-@GL_COND_OBJ_STAT_TRUE@am__objects_68 = libgnu_a-stat.$(OBJEXT)
-@GL_COND_OBJ_STDIO_READ_TRUE@am__objects_69 =  \
+@GL_COND_OBJ_SETLOCALE_LOCK_TRUE@am__objects_68 = libgnu_a-setlocale-lock.$(OBJEXT)
+@GL_COND_OBJ_STAT_TRUE@am__objects_69 = libgnu_a-stat.$(OBJEXT)
+@GL_COND_OBJ_STDIO_READ_TRUE@am__objects_70 =  \
 @GL_COND_OBJ_STDIO_READ_TRUE@	libgnu_a-stdio-read.$(OBJEXT)
-@GL_COND_OBJ_STDIO_WRITE_TRUE@am__objects_70 =  \
+@GL_COND_OBJ_STDIO_WRITE_TRUE@am__objects_71 =  \
 @GL_COND_OBJ_STDIO_WRITE_TRUE@	libgnu_a-stdio-write.$(OBJEXT)
-@GL_COND_OBJ_STRDUP_TRUE@am__objects_71 = libgnu_a-strdup.$(OBJEXT)
-@GL_COND_OBJ_STRERROR_TRUE@am__objects_72 =  \
+@GL_COND_OBJ_STRDUP_TRUE@am__objects_72 = libgnu_a-strdup.$(OBJEXT)
+@GL_COND_OBJ_STRERROR_TRUE@am__objects_73 =  \
 @GL_COND_OBJ_STRERROR_TRUE@	libgnu_a-strerror.$(OBJEXT)
-@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__objects_73 = libgnu_a-strerror-override.$(OBJEXT)
-@GL_COND_OBJ_STRNLEN_TRUE@am__objects_74 = libgnu_a-strnlen.$(OBJEXT)
-@GL_COND_OBJ_STRSIGNAL_TRUE@am__objects_75 =  \
+@GL_COND_OBJ_STRERROR_OVERRIDE_TRUE@am__objects_74 = libgnu_a-strerror-override.$(OBJEXT)
+@GL_COND_OBJ_STRNLEN_TRUE@am__objects_75 = libgnu_a-strnlen.$(OBJEXT)
+@GL_COND_OBJ_STRSIGNAL_TRUE@am__objects_76 =  \
 @GL_COND_OBJ_STRSIGNAL_TRUE@	libgnu_a-strsignal.$(OBJEXT)
-@GL_COND_OBJ_STRTOLL_TRUE@am__objects_76 = libgnu_a-strtoll.$(OBJEXT)
-@GL_COND_OBJ_STRTOULL_TRUE@am__objects_77 =  \
-@GL_COND_OBJ_STRTOULL_TRUE@	libgnu_a-strtoull.$(OBJEXT)
-@GL_COND_OBJ_TIME_R_TRUE@am__objects_78 = libgnu_a-time_r.$(OBJEXT)
-@GL_COND_OBJ_TIMES_TRUE@am__objects_79 = libgnu_a-times.$(OBJEXT)
-@GL_COND_OBJ_TMPFILE_TRUE@am__objects_80 = libgnu_a-tmpfile.$(OBJEXT)
-@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__objects_81 = uniwidth/libgnu_a-width.$(OBJEXT)
-@GL_COND_OBJ_WAITPID_TRUE@am__objects_82 = libgnu_a-waitpid.$(OBJEXT)
+@GL_COND_OBJ_TIME_R_TRUE@am__objects_77 = libgnu_a-time_r.$(OBJEXT)
+@GL_COND_OBJ_TIMES_TRUE@am__objects_78 = libgnu_a-times.$(OBJEXT)
+@GL_COND_OBJ_TMPFILE_TRUE@am__objects_79 = libgnu_a-tmpfile.$(OBJEXT)
+@LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE@am__objects_80 = uniwidth/libgnu_a-width.$(OBJEXT)
+@GL_COND_OBJ_WAITPID_TRUE@am__objects_81 = libgnu_a-waitpid.$(OBJEXT)
+@GL_COND_OBJ_WCRTOMB_TRUE@am__objects_82 = libgnu_a-wcrtomb.$(OBJEXT)
 @GL_COND_OBJ_WCSWIDTH_TRUE@am__objects_83 =  \
 @GL_COND_OBJ_WCSWIDTH_TRUE@	libgnu_a-wcswidth.$(OBJEXT)
 @GL_COND_OBJ_WCWIDTH_TRUE@am__objects_84 = libgnu_a-wcwidth.$(OBJEXT)
@@ -553,10 +554,14 @@ am_libgnu_a_OBJECTS = libgnu_a-openat-proc.$(OBJEXT) \
 	libgnu_a-cloexec.$(OBJEXT) $(am__objects_4) $(am__objects_5) \
 	$(am__objects_6) libgnu_a-dirname-lgpl.$(OBJEXT) \
 	libgnu_a-stripslash.$(OBJEXT) $(am__objects_7) \
-	$(am__objects_8) $(am__objects_9) $(am__objects_10) \
-	libgnu_a-exitfail.$(OBJEXT) $(am__objects_11) \
-	$(am__objects_12) $(am__objects_13) libgnu_a-fd-hook.$(OBJEXT) \
-	libgnu_a-fd-safer-flag.$(OBJEXT) \
+	$(am__objects_8) malloc/libgnu_a-dynarray_at_failure.$(OBJEXT) \
+	malloc/libgnu_a-dynarray_emplace_enlarge.$(OBJEXT) \
+	malloc/libgnu_a-dynarray_finalize.$(OBJEXT) \
+	malloc/libgnu_a-dynarray_resize.$(OBJEXT) \
+	malloc/libgnu_a-dynarray_resize_clear.$(OBJEXT) \
+	$(am__objects_9) $(am__objects_10) libgnu_a-exitfail.$(OBJEXT) \
+	$(am__objects_11) $(am__objects_12) $(am__objects_13) \
+	libgnu_a-fd-hook.$(OBJEXT) libgnu_a-fd-safer-flag.$(OBJEXT) \
 	libgnu_a-dup-safer-flag.$(OBJEXT) $(am__objects_14) \
 	libgnu_a-filenamecat-lgpl.$(OBJEXT) $(am__objects_15) \
 	$(am__objects_16) $(am__objects_17) $(am__objects_18) \
@@ -584,28 +589,27 @@ am_libgnu_a_OBJECTS = libgnu_a-openat-proc.$(OBJEXT) \
 	$(am__objects_56) $(am__objects_57) $(am__objects_58) \
 	$(am__objects_59) $(am__objects_60) $(am__objects_61) \
 	$(am__objects_62) $(am__objects_63) $(am__objects_64) \
-	libgnu_a-safe-read.$(OBJEXT) libgnu_a-safe-write.$(OBJEXT) \
-	libgnu_a-save-cwd.$(OBJEXT) \
+	$(am__objects_65) libgnu_a-safe-read.$(OBJEXT) \
+	libgnu_a-safe-write.$(OBJEXT) libgnu_a-save-cwd.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_dupfree.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_grow.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_grow_preserve.$(OBJEXT) \
 	malloc/libgnu_a-scratch_buffer_set_array_size.$(OBJEXT) \
-	$(am__objects_65) $(am__objects_66) \
-	libgnu_a-setlocale_null.$(OBJEXT) $(am__objects_67) \
-	libgnu_a-sockets.$(OBJEXT) $(am__objects_68) \
-	libgnu_a-stat-time.$(OBJEXT) $(am__objects_69) \
-	$(am__objects_70) $(am__objects_71) $(am__objects_72) \
-	$(am__objects_73) $(am__objects_74) \
-	libgnu_a-strnlen1.$(OBJEXT) $(am__objects_75) \
-	$(am__objects_76) $(am__objects_77) \
+	$(am__objects_66) $(am__objects_67) \
+	libgnu_a-setlocale_null.$(OBJEXT) $(am__objects_68) \
+	libgnu_a-sockets.$(OBJEXT) $(am__objects_69) \
+	libgnu_a-stat-time.$(OBJEXT) $(am__objects_70) \
+	$(am__objects_71) $(am__objects_72) $(am__objects_73) \
+	$(am__objects_74) $(am__objects_75) \
+	libgnu_a-strnlen1.$(OBJEXT) $(am__objects_76) \
 	libgnu_a-sys_socket.$(OBJEXT) libgnu_a-tempname.$(OBJEXT) \
-	glthread/libgnu_a-threadlib.$(OBJEXT) $(am__objects_78) \
-	$(am__objects_79) libgnu_a-timespec.$(OBJEXT) \
+	glthread/libgnu_a-threadlib.$(OBJEXT) $(am__objects_77) \
+	$(am__objects_78) libgnu_a-timespec.$(OBJEXT) \
 	glthread/libgnu_a-tls.$(OBJEXT) libgnu_a-tmpdir.$(OBJEXT) \
-	$(am__objects_80) libgnu_a-unistd.$(OBJEXT) \
+	$(am__objects_79) libgnu_a-unistd.$(OBJEXT) \
 	libgnu_a-dup-safer.$(OBJEXT) libgnu_a-fd-safer.$(OBJEXT) \
-	libgnu_a-pipe-safer.$(OBJEXT) $(am__objects_81) \
-	$(am__objects_82) $(am__objects_83) \
+	libgnu_a-pipe-safer.$(OBJEXT) $(am__objects_80) \
+	$(am__objects_81) $(am__objects_82) $(am__objects_83) \
 	libgnu_a-wctype-h.$(OBJEXT) $(am__objects_84) \
 	$(am__objects_85) $(am__objects_86) $(am__objects_87) \
 	$(am__objects_88) $(am__objects_89) $(am__objects_90) \
@@ -708,7 +712,10 @@ am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
 	./$(DEPDIR)/libgnu_a-rawmemchr.Po ./$(DEPDIR)/libgnu_a-read.Po \
 	./$(DEPDIR)/libgnu_a-readdir.Po \
 	./$(DEPDIR)/libgnu_a-readlink.Po \
-	./$(DEPDIR)/libgnu_a-realloc.Po ./$(DEPDIR)/libgnu_a-rename.Po \
+	./$(DEPDIR)/libgnu_a-realloc.Po \
+	./$(DEPDIR)/libgnu_a-regcomp.Po ./$(DEPDIR)/libgnu_a-regex.Po \
+	./$(DEPDIR)/libgnu_a-regex_internal.Po \
+	./$(DEPDIR)/libgnu_a-regexec.Po ./$(DEPDIR)/libgnu_a-rename.Po \
 	./$(DEPDIR)/libgnu_a-rewinddir.Po \
 	./$(DEPDIR)/libgnu_a-rmdir.Po \
 	./$(DEPDIR)/libgnu_a-safe-read.Po \
@@ -732,9 +739,6 @@ am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
 	./$(DEPDIR)/libgnu_a-strnlen.Po \
 	./$(DEPDIR)/libgnu_a-strnlen1.Po \
 	./$(DEPDIR)/libgnu_a-strsignal.Po \
-	./$(DEPDIR)/libgnu_a-strtol.Po ./$(DEPDIR)/libgnu_a-strtoll.Po \
-	./$(DEPDIR)/libgnu_a-strtoul.Po \
-	./$(DEPDIR)/libgnu_a-strtoull.Po \
 	./$(DEPDIR)/libgnu_a-sys_socket.Po \
 	./$(DEPDIR)/libgnu_a-tempname.Po \
 	./$(DEPDIR)/libgnu_a-time_r.Po ./$(DEPDIR)/libgnu_a-times.Po \
@@ -744,6 +748,7 @@ am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
 	./$(DEPDIR)/libgnu_a-vasnprintf.Po \
 	./$(DEPDIR)/libgnu_a-vsnprintf.Po \
 	./$(DEPDIR)/libgnu_a-waitpid.Po \
+	./$(DEPDIR)/libgnu_a-wcrtomb.Po \
 	./$(DEPDIR)/libgnu_a-wcswidth.Po \
 	./$(DEPDIR)/libgnu_a-wctype-h.Po \
 	./$(DEPDIR)/libgnu_a-wcwidth.Po \
@@ -758,6 +763,12 @@ am__depfiles_remade = ./$(DEPDIR)/alloca.Po \
 	glthread/$(DEPDIR)/libgnu_a-lock.Po \
 	glthread/$(DEPDIR)/libgnu_a-threadlib.Po \
 	glthread/$(DEPDIR)/libgnu_a-tls.Po \
+	malloc/$(DEPDIR)/libgnu_a-dynarray-skeleton.Po \
+	malloc/$(DEPDIR)/libgnu_a-dynarray_at_failure.Po \
+	malloc/$(DEPDIR)/libgnu_a-dynarray_emplace_enlarge.Po \
+	malloc/$(DEPDIR)/libgnu_a-dynarray_finalize.Po \
+	malloc/$(DEPDIR)/libgnu_a-dynarray_resize.Po \
+	malloc/$(DEPDIR)/libgnu_a-dynarray_resize_clear.Po \
 	malloc/$(DEPDIR)/libgnu_a-scratch_buffer_dupfree.Po \
 	malloc/$(DEPDIR)/libgnu_a-scratch_buffer_grow.Po \
 	malloc/$(DEPDIR)/libgnu_a-scratch_buffer_grow_preserve.Po \
@@ -2040,22 +2051,23 @@ noinst_LIBRARIES = libgnu.a
 noinst_LTLIBRARIES = 
 EXTRA_DIST = alloca.c alloca.in.h arpa_inet.in.h assert.in.h verify.h \
 	assure.h attribute.h basename-lgpl.h chdir-long.h cloexec.h \
-	dirent-private.h ctype.in.h dirent.in.h dirname.h \
-	eloop-threshold.h errno.in.h error.h exitfail.h at-func.c \
-	fcntl.in.h fd-hook.h filename.h filenamecat.h flexmember.h \
-	float.in.h fnmatch.c fnmatch_loop.c fnmatch.in.h stdio-impl.h \
-	stat-w32.c stat-w32.h at-func.c full-write.c glob_internal.h \
-	glob-libc.h glob.in.h hard-locale.h intprops-internal.h \
-	intprops.h inttypes.in.h langinfo.in.h cdefs.h libc-config.h \
-	limits.in.h localcharset.h locale.in.h localename-table.h \
-	localename.h malloc.c malloc.c malloca.h mbchar.h \
-	lc-charset-dispatch.c lc-charset-dispatch.h \
+	dirent-private.h ctype.in.h dirent.in.h dirname.h dynarray.h \
+	malloc/dynarray-skeleton.c malloc/dynarray.h eloop-threshold.h \
+	errno.in.h error.h exitfail.h at-func.c fcntl.in.h fd-hook.h \
+	filename.h filenamecat.h flexmember.h float.in.h fnmatch.c \
+	fnmatch_loop.c fnmatch.in.h stdio-impl.h stat-w32.c stat-w32.h \
+	at-func.c full-write.c glob_internal.h glob-libc.h glob.in.h \
+	hard-locale.h intprops-internal.h intprops.h inttypes.in.h \
+	langinfo.in.h cdefs.h libc-config.h limits.in.h localcharset.h \
+	locale.in.h localename-table.h localename.h malloc.c malloc.c \
+	malloca.h mbchar.h lc-charset-dispatch.c lc-charset-dispatch.h \
 	mbrtowc-impl-utf8.h mbrtowc-impl.h mbtowc-lock.c mbtowc-lock.h \
 	windows-initguard.h mbsrtowcs-impl.h mbsrtowcs-state.c \
 	mbtowc-impl.h memchr.valgrind mktime-internal.h mktime.c \
 	msvc-inval.h msvc-nothrow.h netdb.in.h netinet_in.in.h \
 	windows-initguard.h openat.h dirent-private.h pathmax.h \
 	rawmemchr.valgrind dirent-private.h realloc.c realloc.c \
+	regcomp.c regex.h regex_internal.c regex_internal.h regexec.c \
 	dirent-private.h root-uid.h safe-read.h sys-limits.h \
 	safe-read.c safe-write.h sys-limits.h same-inode.h save-cwd.h \
 	malloc/scratch_buffer.h scratch_buffer.h setlocale_null.h \
@@ -2064,11 +2076,11 @@ EXTRA_DIST = alloca.c alloca.in.h arpa_inet.in.h assert.in.h verify.h \
 	stat-w32.h stat-time.h stdalign.in.h intprops-internal.h \
 	stdckdint.in.h stddef.in.h stdint.in.h stdio.in.h stdlib.in.h \
 	streq.h strerror-override.h strerror_r.c string.in.h siglist.h \
-	strtol.c strtol.c strtoul.c sys_random.in.h sys_socket.in.h \
-	sys_stat.in.h sys_time.in.h sys_times.in.h sys_types.in.h \
-	sys_uio.in.h sys_wait.in.h tempname.h thread-optim.h time.in.h \
-	timespec.h unistd.in.h unistd--.h unistd-safer.h unitypes.in.h \
-	localcharset.h uniwidth.in.h unictype/bitmap.h uniwidth/cjk.h \
+	sys_random.in.h sys_socket.in.h sys_stat.in.h sys_time.in.h \
+	sys_times.in.h sys_types.in.h sys_uio.in.h sys_wait.in.h \
+	tempname.h thread-optim.h time.in.h timespec.h unistd.in.h \
+	unistd--.h unistd-safer.h unitypes.in.h localcharset.h \
+	uniwidth.in.h unictype/bitmap.h uniwidth/cjk.h \
 	uniwidth/width0.h uniwidth/width2.h unlocked-io.h asnprintf.c \
 	float+.h printf-args.c printf-args.h printf-parse.c \
 	printf-parse.h vasnprintf.c vasnprintf.h verify.h vsnprintf.c \
@@ -2077,9 +2089,10 @@ EXTRA_DIST = alloca.c alloca.in.h arpa_inet.in.h assert.in.h verify.h \
 	windows-recmutex.h windows-initguard.h windows-rwlock.h \
 	windows-tls.h wmemchr-impl.h xalloc-oversized.h
 BUILT_SOURCES = $(ALLOCA_H) arpa/inet.h $(ASSERT_H) ctype.h dirent.h \
-	$(ERRNO_H) fcntl.h $(FLOAT_H) $(FNMATCH_H) $(GLOB_H) \
-	glob-libc.gl.h inttypes.h langinfo.h $(LIMITS_H) locale.h \
-	netdb.h $(NETINET_IN_H) malloc/scratch_buffer.gl.h signal.h \
+	malloc/dynarray.gl.h malloc/dynarray-skeleton.gl.h $(ERRNO_H) \
+	fcntl.h $(FLOAT_H) $(FNMATCH_H) $(GLOB_H) glob-libc.gl.h \
+	inttypes.h langinfo.h $(LIMITS_H) locale.h netdb.h \
+	$(NETINET_IN_H) malloc/scratch_buffer.gl.h signal.h \
 	$(STDALIGN_H) $(STDCKDINT_H) $(STDDEF_H) $(STDINT_H) stdio.h \
 	stdlib.h string.h sys/random.h sys/socket.h sys/stat.h \
 	sys/time.h sys/times.h sys/types.h sys/uio.h sys/wait.h time.h \
@@ -2088,8 +2101,10 @@ BUILT_SOURCES = $(ALLOCA_H) arpa/inet.h $(ASSERT_H) ctype.h dirent.h \
 SUFFIXES = 
 MOSTLYCLEANFILES = core *.stackdump alloca.h alloca.h-t arpa/inet.h \
 	arpa/inet.h-t assert.h assert.h-t ctype.h ctype.h-t dirent.h \
-	dirent.h-t errno.h errno.h-t fcntl.h fcntl.h-t float.h \
-	float.h-t fnmatch.h fnmatch.h-t glob.h glob.h-t glob-libc.gl.h \
+	dirent.h-t malloc/dynarray.gl.h malloc/dynarray.gl.h-t \
+	malloc/dynarray-skeleton.gl.h malloc/dynarray-skeleton.gl.h-t \
+	errno.h errno.h-t fcntl.h fcntl.h-t float.h float.h-t \
+	fnmatch.h fnmatch.h-t glob.h glob.h-t glob-libc.gl.h \
 	glob-libc.gl.h-t inttypes.h inttypes.h-t langinfo.h \
 	langinfo.h-t limits.h limits.h-t locale.h locale.h-t netdb.h \
 	netdb.h-t netinet/in.h netinet/in.h-t \
@@ -2114,43 +2129,46 @@ libgnu_a_SOURCES = openat-priv.h openat-proc.c basename-lgpl.c \
 	$(am__append_1) c-ctype.h c-ctype.c $(am__append_2) \
 	$(am__append_3) cloexec.c $(am__append_4) $(am__append_5) \
 	$(am__append_6) dirname-lgpl.c stripslash.c $(am__append_7) \
-	$(am__append_8) $(am__append_9) $(am__append_10) exitfail.c \
-	$(am__append_11) $(am__append_12) $(am__append_13) fd-hook.c \
-	fd-safer-flag.c dup-safer-flag.c $(am__append_14) \
-	filenamecat-lgpl.c $(am__append_15) $(am__append_16) \
-	$(am__append_17) $(am__append_18) $(am__append_19) \
-	$(am__append_20) full-read.h full-read.c full-write.h \
-	full-write.c $(am__append_21) $(am__append_22) \
-	$(am__append_23) $(am__append_24) $(am__append_25) \
-	$(am__append_26) $(am__append_27) getprogname.h getprogname.c \
-	$(am__append_28) gettext.h $(am__append_29) $(am__append_30) \
-	$(am__append_31) $(am__append_32) hard-locale.c idx.h \
-	$(am__append_33) $(am__append_34) $(am__append_35) \
-	$(am__append_36) $(am__append_37) localcharset.c \
-	$(am__append_38) localename.c localename-table.c \
-	glthread/lock.h glthread/lock.c $(am__append_39) malloca.c \
-	mbchar.c $(am__append_40) $(am__append_41) mbschr.c \
-	$(am__append_42) $(am__append_43) $(am__append_44) mbuiter.h \
-	mbuiter.c $(am__append_45) $(am__append_46) $(am__append_47) \
-	minmax.h $(am__append_48) $(am__append_49) $(am__append_50) \
-	$(am__append_51) $(am__append_52) $(am__append_53) \
-	$(am__append_54) openat-die.c $(am__append_55) \
-	$(am__append_56) $(am__append_57) $(am__append_58) \
-	$(am__append_59) $(am__append_60) $(am__append_61) \
-	$(am__append_62) $(am__append_63) $(am__append_64) safe-read.c \
+	$(am__append_8) malloc/dynarray_at_failure.c \
+	malloc/dynarray_emplace_enlarge.c malloc/dynarray_finalize.c \
+	malloc/dynarray_resize.c malloc/dynarray_resize_clear.c \
+	$(am__append_9) $(am__append_10) exitfail.c $(am__append_11) \
+	$(am__append_12) $(am__append_13) fd-hook.c fd-safer-flag.c \
+	dup-safer-flag.c $(am__append_14) filenamecat-lgpl.c \
+	$(am__append_15) $(am__append_16) $(am__append_17) \
+	$(am__append_18) $(am__append_19) $(am__append_20) full-read.h \
+	full-read.c full-write.h full-write.c $(am__append_21) \
+	$(am__append_22) $(am__append_23) $(am__append_24) \
+	$(am__append_25) $(am__append_26) $(am__append_27) \
+	getprogname.h getprogname.c $(am__append_28) gettext.h \
+	$(am__append_29) $(am__append_30) $(am__append_31) \
+	$(am__append_32) hard-locale.c idx.h $(am__append_33) \
+	$(am__append_34) $(am__append_35) $(am__append_36) \
+	$(am__append_37) localcharset.c $(am__append_38) localename.c \
+	localename-table.c glthread/lock.h glthread/lock.c \
+	$(am__append_39) malloca.c mbchar.c $(am__append_40) \
+	$(am__append_41) mbschr.c $(am__append_42) $(am__append_43) \
+	$(am__append_44) mbuiter.h mbuiter.c $(am__append_45) \
+	$(am__append_46) $(am__append_47) minmax.h $(am__append_48) \
+	$(am__append_49) $(am__append_50) $(am__append_51) \
+	$(am__append_52) $(am__append_53) $(am__append_54) \
+	openat-die.c $(am__append_55) $(am__append_56) \
+	$(am__append_57) $(am__append_58) $(am__append_59) \
+	$(am__append_60) $(am__append_61) $(am__append_62) \
+	$(am__append_63) $(am__append_64) $(am__append_65) safe-read.c \
 	safe-write.c save-cwd.c malloc/scratch_buffer_dupfree.c \
 	malloc/scratch_buffer_grow.c \
 	malloc/scratch_buffer_grow_preserve.c \
-	malloc/scratch_buffer_set_array_size.c $(am__append_65) \
-	$(am__append_66) setlocale_null.c $(am__append_67) size_max.h \
-	sockets.h sockets.c $(am__append_68) stat-time.c \
-	$(am__append_69) $(am__append_70) $(am__append_71) \
-	$(am__append_72) $(am__append_73) $(am__append_74) strnlen1.h \
-	strnlen1.c $(am__append_75) $(am__append_76) $(am__append_77) \
-	sys_socket.c tempname.c glthread/threadlib.c $(am__append_78) \
-	$(am__append_79) timespec.c glthread/tls.h glthread/tls.c \
-	tmpdir.h tmpdir.c $(am__append_80) unistd.c dup-safer.c \
-	fd-safer.c pipe-safer.c $(am__append_81) $(am__append_82) \
+	malloc/scratch_buffer_set_array_size.c $(am__append_66) \
+	$(am__append_67) setlocale_null.c $(am__append_68) size_max.h \
+	sockets.h sockets.c $(am__append_69) stat-time.c \
+	$(am__append_70) $(am__append_71) $(am__append_72) \
+	$(am__append_73) $(am__append_74) $(am__append_75) strnlen1.h \
+	strnlen1.c $(am__append_76) sys_socket.c tempname.c \
+	glthread/threadlib.c $(am__append_77) $(am__append_78) \
+	timespec.c glthread/tls.h glthread/tls.c tmpdir.h tmpdir.c \
+	$(am__append_79) unistd.c dup-safer.c fd-safer.c pipe-safer.c \
+	$(am__append_80) $(am__append_81) $(am__append_82) \
 	$(am__append_83) wctype-h.c $(am__append_84) $(am__append_85) \
 	$(am__append_86) $(am__append_87) $(am__append_88) \
 	$(am__append_89) $(am__append_90) $(am__append_91) \
@@ -2158,12 +2176,13 @@ libgnu_a_SOURCES = openat-priv.h openat-proc.c basename-lgpl.c \
 libgnu_a_CFLAGS = $(AM_CFLAGS) $(GL_CFLAG_GNULIB_WARNINGS)
 libgnu_a_LIBADD = $(gl_LIBOBJS) @ALLOCA@
 libgnu_a_DEPENDENCIES = $(gl_LIBOBJS) @ALLOCA@
-EXTRA_libgnu_a_SOURCES = alloca.c at-func.c fnmatch.c fnmatch_loop.c \
-	stat-w32.c at-func.c full-write.c malloc.c malloc.c \
-	lc-charset-dispatch.c mbtowc-lock.c mbsrtowcs-state.c mktime.c \
-	realloc.c realloc.c safe-read.c snprintf.c stat-w32.c \
-	strerror_r.c strtol.c strtol.c strtoul.c asnprintf.c \
-	printf-args.c printf-parse.c vasnprintf.c vsnprintf.c
+EXTRA_libgnu_a_SOURCES = alloca.c malloc/dynarray-skeleton.c at-func.c \
+	fnmatch.c fnmatch_loop.c stat-w32.c at-func.c full-write.c \
+	malloc.c malloc.c lc-charset-dispatch.c mbtowc-lock.c \
+	mbsrtowcs-state.c mktime.c realloc.c realloc.c regcomp.c \
+	regex_internal.c regexec.c safe-read.c snprintf.c stat-w32.c \
+	strerror_r.c asnprintf.c printf-args.c printf-parse.c \
+	vasnprintf.c vsnprintf.c
 
 # Use this preprocessor expression to decide whether #include_next works.
 # Do not rely on a 'configure'-time test for this, since the expression
@@ -2252,6 +2271,22 @@ clean-noinstLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+malloc/$(am__dirstamp):
+	@$(MKDIR_P) malloc
+	@: > malloc/$(am__dirstamp)
+malloc/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) malloc/$(DEPDIR)
+	@: > malloc/$(DEPDIR)/$(am__dirstamp)
+malloc/libgnu_a-dynarray_at_failure.$(OBJEXT): malloc/$(am__dirstamp) \
+	malloc/$(DEPDIR)/$(am__dirstamp)
+malloc/libgnu_a-dynarray_emplace_enlarge.$(OBJEXT):  \
+	malloc/$(am__dirstamp) malloc/$(DEPDIR)/$(am__dirstamp)
+malloc/libgnu_a-dynarray_finalize.$(OBJEXT): malloc/$(am__dirstamp) \
+	malloc/$(DEPDIR)/$(am__dirstamp)
+malloc/libgnu_a-dynarray_resize.$(OBJEXT): malloc/$(am__dirstamp) \
+	malloc/$(DEPDIR)/$(am__dirstamp)
+malloc/libgnu_a-dynarray_resize_clear.$(OBJEXT):  \
+	malloc/$(am__dirstamp) malloc/$(DEPDIR)/$(am__dirstamp)
 glthread/$(am__dirstamp):
 	@$(MKDIR_P) glthread
 	@: > glthread/$(am__dirstamp)
@@ -2260,12 +2295,6 @@ glthread/$(DEPDIR)/$(am__dirstamp):
 	@: > glthread/$(DEPDIR)/$(am__dirstamp)
 glthread/libgnu_a-lock.$(OBJEXT): glthread/$(am__dirstamp) \
 	glthread/$(DEPDIR)/$(am__dirstamp)
-malloc/$(am__dirstamp):
-	@$(MKDIR_P) malloc
-	@: > malloc/$(am__dirstamp)
-malloc/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) malloc/$(DEPDIR)
-	@: > malloc/$(DEPDIR)/$(am__dirstamp)
 malloc/libgnu_a-scratch_buffer_dupfree.$(OBJEXT):  \
 	malloc/$(am__dirstamp) malloc/$(DEPDIR)/$(am__dirstamp)
 malloc/libgnu_a-scratch_buffer_grow.$(OBJEXT): malloc/$(am__dirstamp) \
@@ -2286,6 +2315,8 @@ uniwidth/$(DEPDIR)/$(am__dirstamp):
 	@: > uniwidth/$(DEPDIR)/$(am__dirstamp)
 uniwidth/libgnu_a-width.$(OBJEXT): uniwidth/$(am__dirstamp) \
 	uniwidth/$(DEPDIR)/$(am__dirstamp)
+malloc/libgnu_a-dynarray-skeleton.$(OBJEXT): malloc/$(am__dirstamp) \
+	malloc/$(DEPDIR)/$(am__dirstamp)
 
 libgnu.a: $(libgnu_a_OBJECTS) $(libgnu_a_DEPENDENCIES) $(EXTRA_libgnu_a_DEPENDENCIES) 
 	$(AM_V_at)-rm -f libgnu.a
@@ -2402,6 +2433,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-readdir.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-readlink.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-realloc.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-regcomp.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-regex.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-regex_internal.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-regexec.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-rename.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-rewinddir.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-rmdir.Po@am__quote@ # am--include-marker
@@ -2427,10 +2462,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strnlen.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strnlen1.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strsignal.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strtol.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strtoll.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strtoul.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-strtoull.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-sys_socket.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-tempname.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-time_r.Po@am__quote@ # am--include-marker
@@ -2442,6 +2473,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-vasnprintf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-vsnprintf.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-waitpid.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-wcrtomb.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-wcswidth.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-wctype-h.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgnu_a-wcwidth.Po@am__quote@ # am--include-marker
@@ -2457,6 +2489,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@glthread/$(DEPDIR)/libgnu_a-lock.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@glthread/$(DEPDIR)/libgnu_a-threadlib.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@glthread/$(DEPDIR)/libgnu_a-tls.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@malloc/$(DEPDIR)/libgnu_a-dynarray-skeleton.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@malloc/$(DEPDIR)/libgnu_a-dynarray_at_failure.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@malloc/$(DEPDIR)/libgnu_a-dynarray_emplace_enlarge.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@malloc/$(DEPDIR)/libgnu_a-dynarray_finalize.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@malloc/$(DEPDIR)/libgnu_a-dynarray_resize.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@malloc/$(DEPDIR)/libgnu_a-dynarray_resize_clear.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@malloc/$(DEPDIR)/libgnu_a-scratch_buffer_dupfree.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@malloc/$(DEPDIR)/libgnu_a-scratch_buffer_grow.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@malloc/$(DEPDIR)/libgnu_a-scratch_buffer_grow_preserve.Po@am__quote@ # am--include-marker
@@ -2688,6 +2726,76 @@ libgnu_a-dup2.obj: dup2.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dup2.c' object='libgnu_a-dup2.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-dup2.obj `if test -f 'dup2.c'; then $(CYGPATH_W) 'dup2.c'; else $(CYGPATH_W) '$(srcdir)/dup2.c'; fi`
+
+malloc/libgnu_a-dynarray_at_failure.o: malloc/dynarray_at_failure.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray_at_failure.o -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray_at_failure.Tpo -c -o malloc/libgnu_a-dynarray_at_failure.o `test -f 'malloc/dynarray_at_failure.c' || echo '$(srcdir)/'`malloc/dynarray_at_failure.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray_at_failure.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray_at_failure.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray_at_failure.c' object='malloc/libgnu_a-dynarray_at_failure.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray_at_failure.o `test -f 'malloc/dynarray_at_failure.c' || echo '$(srcdir)/'`malloc/dynarray_at_failure.c
+
+malloc/libgnu_a-dynarray_at_failure.obj: malloc/dynarray_at_failure.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray_at_failure.obj -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray_at_failure.Tpo -c -o malloc/libgnu_a-dynarray_at_failure.obj `if test -f 'malloc/dynarray_at_failure.c'; then $(CYGPATH_W) 'malloc/dynarray_at_failure.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray_at_failure.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray_at_failure.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray_at_failure.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray_at_failure.c' object='malloc/libgnu_a-dynarray_at_failure.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray_at_failure.obj `if test -f 'malloc/dynarray_at_failure.c'; then $(CYGPATH_W) 'malloc/dynarray_at_failure.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray_at_failure.c'; fi`
+
+malloc/libgnu_a-dynarray_emplace_enlarge.o: malloc/dynarray_emplace_enlarge.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray_emplace_enlarge.o -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray_emplace_enlarge.Tpo -c -o malloc/libgnu_a-dynarray_emplace_enlarge.o `test -f 'malloc/dynarray_emplace_enlarge.c' || echo '$(srcdir)/'`malloc/dynarray_emplace_enlarge.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray_emplace_enlarge.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray_emplace_enlarge.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray_emplace_enlarge.c' object='malloc/libgnu_a-dynarray_emplace_enlarge.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray_emplace_enlarge.o `test -f 'malloc/dynarray_emplace_enlarge.c' || echo '$(srcdir)/'`malloc/dynarray_emplace_enlarge.c
+
+malloc/libgnu_a-dynarray_emplace_enlarge.obj: malloc/dynarray_emplace_enlarge.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray_emplace_enlarge.obj -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray_emplace_enlarge.Tpo -c -o malloc/libgnu_a-dynarray_emplace_enlarge.obj `if test -f 'malloc/dynarray_emplace_enlarge.c'; then $(CYGPATH_W) 'malloc/dynarray_emplace_enlarge.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray_emplace_enlarge.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray_emplace_enlarge.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray_emplace_enlarge.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray_emplace_enlarge.c' object='malloc/libgnu_a-dynarray_emplace_enlarge.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray_emplace_enlarge.obj `if test -f 'malloc/dynarray_emplace_enlarge.c'; then $(CYGPATH_W) 'malloc/dynarray_emplace_enlarge.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray_emplace_enlarge.c'; fi`
+
+malloc/libgnu_a-dynarray_finalize.o: malloc/dynarray_finalize.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray_finalize.o -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray_finalize.Tpo -c -o malloc/libgnu_a-dynarray_finalize.o `test -f 'malloc/dynarray_finalize.c' || echo '$(srcdir)/'`malloc/dynarray_finalize.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray_finalize.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray_finalize.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray_finalize.c' object='malloc/libgnu_a-dynarray_finalize.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray_finalize.o `test -f 'malloc/dynarray_finalize.c' || echo '$(srcdir)/'`malloc/dynarray_finalize.c
+
+malloc/libgnu_a-dynarray_finalize.obj: malloc/dynarray_finalize.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray_finalize.obj -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray_finalize.Tpo -c -o malloc/libgnu_a-dynarray_finalize.obj `if test -f 'malloc/dynarray_finalize.c'; then $(CYGPATH_W) 'malloc/dynarray_finalize.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray_finalize.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray_finalize.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray_finalize.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray_finalize.c' object='malloc/libgnu_a-dynarray_finalize.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray_finalize.obj `if test -f 'malloc/dynarray_finalize.c'; then $(CYGPATH_W) 'malloc/dynarray_finalize.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray_finalize.c'; fi`
+
+malloc/libgnu_a-dynarray_resize.o: malloc/dynarray_resize.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray_resize.o -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray_resize.Tpo -c -o malloc/libgnu_a-dynarray_resize.o `test -f 'malloc/dynarray_resize.c' || echo '$(srcdir)/'`malloc/dynarray_resize.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray_resize.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray_resize.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray_resize.c' object='malloc/libgnu_a-dynarray_resize.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray_resize.o `test -f 'malloc/dynarray_resize.c' || echo '$(srcdir)/'`malloc/dynarray_resize.c
+
+malloc/libgnu_a-dynarray_resize.obj: malloc/dynarray_resize.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray_resize.obj -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray_resize.Tpo -c -o malloc/libgnu_a-dynarray_resize.obj `if test -f 'malloc/dynarray_resize.c'; then $(CYGPATH_W) 'malloc/dynarray_resize.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray_resize.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray_resize.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray_resize.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray_resize.c' object='malloc/libgnu_a-dynarray_resize.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray_resize.obj `if test -f 'malloc/dynarray_resize.c'; then $(CYGPATH_W) 'malloc/dynarray_resize.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray_resize.c'; fi`
+
+malloc/libgnu_a-dynarray_resize_clear.o: malloc/dynarray_resize_clear.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray_resize_clear.o -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray_resize_clear.Tpo -c -o malloc/libgnu_a-dynarray_resize_clear.o `test -f 'malloc/dynarray_resize_clear.c' || echo '$(srcdir)/'`malloc/dynarray_resize_clear.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray_resize_clear.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray_resize_clear.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray_resize_clear.c' object='malloc/libgnu_a-dynarray_resize_clear.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray_resize_clear.o `test -f 'malloc/dynarray_resize_clear.c' || echo '$(srcdir)/'`malloc/dynarray_resize_clear.c
+
+malloc/libgnu_a-dynarray_resize_clear.obj: malloc/dynarray_resize_clear.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray_resize_clear.obj -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray_resize_clear.Tpo -c -o malloc/libgnu_a-dynarray_resize_clear.obj `if test -f 'malloc/dynarray_resize_clear.c'; then $(CYGPATH_W) 'malloc/dynarray_resize_clear.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray_resize_clear.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray_resize_clear.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray_resize_clear.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray_resize_clear.c' object='malloc/libgnu_a-dynarray_resize_clear.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray_resize_clear.obj `if test -f 'malloc/dynarray_resize_clear.c'; then $(CYGPATH_W) 'malloc/dynarray_resize_clear.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray_resize_clear.c'; fi`
 
 libgnu_a-error.o: error.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-error.o -MD -MP -MF $(DEPDIR)/libgnu_a-error.Tpo -c -o libgnu_a-error.o `test -f 'error.c' || echo '$(srcdir)/'`error.c
@@ -3697,6 +3805,20 @@ libgnu_a-readlink.obj: readlink.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-readlink.obj `if test -f 'readlink.c'; then $(CYGPATH_W) 'readlink.c'; else $(CYGPATH_W) '$(srcdir)/readlink.c'; fi`
 
+libgnu_a-regex.o: regex.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-regex.o -MD -MP -MF $(DEPDIR)/libgnu_a-regex.Tpo -c -o libgnu_a-regex.o `test -f 'regex.c' || echo '$(srcdir)/'`regex.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-regex.Tpo $(DEPDIR)/libgnu_a-regex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='regex.c' object='libgnu_a-regex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-regex.o `test -f 'regex.c' || echo '$(srcdir)/'`regex.c
+
+libgnu_a-regex.obj: regex.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-regex.obj -MD -MP -MF $(DEPDIR)/libgnu_a-regex.Tpo -c -o libgnu_a-regex.obj `if test -f 'regex.c'; then $(CYGPATH_W) 'regex.c'; else $(CYGPATH_W) '$(srcdir)/regex.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-regex.Tpo $(DEPDIR)/libgnu_a-regex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='regex.c' object='libgnu_a-regex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-regex.obj `if test -f 'regex.c'; then $(CYGPATH_W) 'regex.c'; else $(CYGPATH_W) '$(srcdir)/regex.c'; fi`
+
 libgnu_a-rename.o: rename.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-rename.o -MD -MP -MF $(DEPDIR)/libgnu_a-rename.Tpo -c -o libgnu_a-rename.o `test -f 'rename.c' || echo '$(srcdir)/'`rename.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-rename.Tpo $(DEPDIR)/libgnu_a-rename.Po
@@ -4047,34 +4169,6 @@ libgnu_a-strsignal.obj: strsignal.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strsignal.obj `if test -f 'strsignal.c'; then $(CYGPATH_W) 'strsignal.c'; else $(CYGPATH_W) '$(srcdir)/strsignal.c'; fi`
 
-libgnu_a-strtoll.o: strtoll.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoll.o -MD -MP -MF $(DEPDIR)/libgnu_a-strtoll.Tpo -c -o libgnu_a-strtoll.o `test -f 'strtoll.c' || echo '$(srcdir)/'`strtoll.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoll.Tpo $(DEPDIR)/libgnu_a-strtoll.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoll.c' object='libgnu_a-strtoll.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoll.o `test -f 'strtoll.c' || echo '$(srcdir)/'`strtoll.c
-
-libgnu_a-strtoll.obj: strtoll.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoll.obj -MD -MP -MF $(DEPDIR)/libgnu_a-strtoll.Tpo -c -o libgnu_a-strtoll.obj `if test -f 'strtoll.c'; then $(CYGPATH_W) 'strtoll.c'; else $(CYGPATH_W) '$(srcdir)/strtoll.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoll.Tpo $(DEPDIR)/libgnu_a-strtoll.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoll.c' object='libgnu_a-strtoll.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoll.obj `if test -f 'strtoll.c'; then $(CYGPATH_W) 'strtoll.c'; else $(CYGPATH_W) '$(srcdir)/strtoll.c'; fi`
-
-libgnu_a-strtoull.o: strtoull.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoull.o -MD -MP -MF $(DEPDIR)/libgnu_a-strtoull.Tpo -c -o libgnu_a-strtoull.o `test -f 'strtoull.c' || echo '$(srcdir)/'`strtoull.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoull.Tpo $(DEPDIR)/libgnu_a-strtoull.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoull.c' object='libgnu_a-strtoull.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoull.o `test -f 'strtoull.c' || echo '$(srcdir)/'`strtoull.c
-
-libgnu_a-strtoull.obj: strtoull.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoull.obj -MD -MP -MF $(DEPDIR)/libgnu_a-strtoull.Tpo -c -o libgnu_a-strtoull.obj `if test -f 'strtoull.c'; then $(CYGPATH_W) 'strtoull.c'; else $(CYGPATH_W) '$(srcdir)/strtoull.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoull.Tpo $(DEPDIR)/libgnu_a-strtoull.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoull.c' object='libgnu_a-strtoull.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoull.obj `if test -f 'strtoull.c'; then $(CYGPATH_W) 'strtoull.c'; else $(CYGPATH_W) '$(srcdir)/strtoull.c'; fi`
-
 libgnu_a-sys_socket.o: sys_socket.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-sys_socket.o -MD -MP -MF $(DEPDIR)/libgnu_a-sys_socket.Tpo -c -o libgnu_a-sys_socket.o `test -f 'sys_socket.c' || echo '$(srcdir)/'`sys_socket.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-sys_socket.Tpo $(DEPDIR)/libgnu_a-sys_socket.Po
@@ -4285,6 +4379,20 @@ libgnu_a-waitpid.obj: waitpid.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-waitpid.obj `if test -f 'waitpid.c'; then $(CYGPATH_W) 'waitpid.c'; else $(CYGPATH_W) '$(srcdir)/waitpid.c'; fi`
 
+libgnu_a-wcrtomb.o: wcrtomb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-wcrtomb.o -MD -MP -MF $(DEPDIR)/libgnu_a-wcrtomb.Tpo -c -o libgnu_a-wcrtomb.o `test -f 'wcrtomb.c' || echo '$(srcdir)/'`wcrtomb.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-wcrtomb.Tpo $(DEPDIR)/libgnu_a-wcrtomb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wcrtomb.c' object='libgnu_a-wcrtomb.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-wcrtomb.o `test -f 'wcrtomb.c' || echo '$(srcdir)/'`wcrtomb.c
+
+libgnu_a-wcrtomb.obj: wcrtomb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-wcrtomb.obj -MD -MP -MF $(DEPDIR)/libgnu_a-wcrtomb.Tpo -c -o libgnu_a-wcrtomb.obj `if test -f 'wcrtomb.c'; then $(CYGPATH_W) 'wcrtomb.c'; else $(CYGPATH_W) '$(srcdir)/wcrtomb.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-wcrtomb.Tpo $(DEPDIR)/libgnu_a-wcrtomb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wcrtomb.c' object='libgnu_a-wcrtomb.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-wcrtomb.obj `if test -f 'wcrtomb.c'; then $(CYGPATH_W) 'wcrtomb.c'; else $(CYGPATH_W) '$(srcdir)/wcrtomb.c'; fi`
+
 libgnu_a-wcswidth.o: wcswidth.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-wcswidth.o -MD -MP -MF $(DEPDIR)/libgnu_a-wcswidth.Tpo -c -o libgnu_a-wcswidth.o `test -f 'wcswidth.c' || echo '$(srcdir)/'`wcswidth.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-wcswidth.Tpo $(DEPDIR)/libgnu_a-wcswidth.Po
@@ -4467,6 +4575,20 @@ libgnu_a-alloca.obj: alloca.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-alloca.obj `if test -f 'alloca.c'; then $(CYGPATH_W) 'alloca.c'; else $(CYGPATH_W) '$(srcdir)/alloca.c'; fi`
 
+malloc/libgnu_a-dynarray-skeleton.o: malloc/dynarray-skeleton.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray-skeleton.o -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray-skeleton.Tpo -c -o malloc/libgnu_a-dynarray-skeleton.o `test -f 'malloc/dynarray-skeleton.c' || echo '$(srcdir)/'`malloc/dynarray-skeleton.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray-skeleton.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray-skeleton.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray-skeleton.c' object='malloc/libgnu_a-dynarray-skeleton.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray-skeleton.o `test -f 'malloc/dynarray-skeleton.c' || echo '$(srcdir)/'`malloc/dynarray-skeleton.c
+
+malloc/libgnu_a-dynarray-skeleton.obj: malloc/dynarray-skeleton.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT malloc/libgnu_a-dynarray-skeleton.obj -MD -MP -MF malloc/$(DEPDIR)/libgnu_a-dynarray-skeleton.Tpo -c -o malloc/libgnu_a-dynarray-skeleton.obj `if test -f 'malloc/dynarray-skeleton.c'; then $(CYGPATH_W) 'malloc/dynarray-skeleton.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray-skeleton.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) malloc/$(DEPDIR)/libgnu_a-dynarray-skeleton.Tpo malloc/$(DEPDIR)/libgnu_a-dynarray-skeleton.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='malloc/dynarray-skeleton.c' object='malloc/libgnu_a-dynarray-skeleton.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o malloc/libgnu_a-dynarray-skeleton.obj `if test -f 'malloc/dynarray-skeleton.c'; then $(CYGPATH_W) 'malloc/dynarray-skeleton.c'; else $(CYGPATH_W) '$(srcdir)/malloc/dynarray-skeleton.c'; fi`
+
 libgnu_a-at-func.o: at-func.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-at-func.o -MD -MP -MF $(DEPDIR)/libgnu_a-at-func.Tpo -c -o libgnu_a-at-func.o `test -f 'at-func.c' || echo '$(srcdir)/'`at-func.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-at-func.Tpo $(DEPDIR)/libgnu_a-at-func.Po
@@ -4607,6 +4729,48 @@ libgnu_a-realloc.obj: realloc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-realloc.obj `if test -f 'realloc.c'; then $(CYGPATH_W) 'realloc.c'; else $(CYGPATH_W) '$(srcdir)/realloc.c'; fi`
 
+libgnu_a-regcomp.o: regcomp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-regcomp.o -MD -MP -MF $(DEPDIR)/libgnu_a-regcomp.Tpo -c -o libgnu_a-regcomp.o `test -f 'regcomp.c' || echo '$(srcdir)/'`regcomp.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-regcomp.Tpo $(DEPDIR)/libgnu_a-regcomp.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='regcomp.c' object='libgnu_a-regcomp.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-regcomp.o `test -f 'regcomp.c' || echo '$(srcdir)/'`regcomp.c
+
+libgnu_a-regcomp.obj: regcomp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-regcomp.obj -MD -MP -MF $(DEPDIR)/libgnu_a-regcomp.Tpo -c -o libgnu_a-regcomp.obj `if test -f 'regcomp.c'; then $(CYGPATH_W) 'regcomp.c'; else $(CYGPATH_W) '$(srcdir)/regcomp.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-regcomp.Tpo $(DEPDIR)/libgnu_a-regcomp.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='regcomp.c' object='libgnu_a-regcomp.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-regcomp.obj `if test -f 'regcomp.c'; then $(CYGPATH_W) 'regcomp.c'; else $(CYGPATH_W) '$(srcdir)/regcomp.c'; fi`
+
+libgnu_a-regex_internal.o: regex_internal.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-regex_internal.o -MD -MP -MF $(DEPDIR)/libgnu_a-regex_internal.Tpo -c -o libgnu_a-regex_internal.o `test -f 'regex_internal.c' || echo '$(srcdir)/'`regex_internal.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-regex_internal.Tpo $(DEPDIR)/libgnu_a-regex_internal.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='regex_internal.c' object='libgnu_a-regex_internal.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-regex_internal.o `test -f 'regex_internal.c' || echo '$(srcdir)/'`regex_internal.c
+
+libgnu_a-regex_internal.obj: regex_internal.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-regex_internal.obj -MD -MP -MF $(DEPDIR)/libgnu_a-regex_internal.Tpo -c -o libgnu_a-regex_internal.obj `if test -f 'regex_internal.c'; then $(CYGPATH_W) 'regex_internal.c'; else $(CYGPATH_W) '$(srcdir)/regex_internal.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-regex_internal.Tpo $(DEPDIR)/libgnu_a-regex_internal.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='regex_internal.c' object='libgnu_a-regex_internal.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-regex_internal.obj `if test -f 'regex_internal.c'; then $(CYGPATH_W) 'regex_internal.c'; else $(CYGPATH_W) '$(srcdir)/regex_internal.c'; fi`
+
+libgnu_a-regexec.o: regexec.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-regexec.o -MD -MP -MF $(DEPDIR)/libgnu_a-regexec.Tpo -c -o libgnu_a-regexec.o `test -f 'regexec.c' || echo '$(srcdir)/'`regexec.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-regexec.Tpo $(DEPDIR)/libgnu_a-regexec.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='regexec.c' object='libgnu_a-regexec.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-regexec.o `test -f 'regexec.c' || echo '$(srcdir)/'`regexec.c
+
+libgnu_a-regexec.obj: regexec.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-regexec.obj -MD -MP -MF $(DEPDIR)/libgnu_a-regexec.Tpo -c -o libgnu_a-regexec.obj `if test -f 'regexec.c'; then $(CYGPATH_W) 'regexec.c'; else $(CYGPATH_W) '$(srcdir)/regexec.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-regexec.Tpo $(DEPDIR)/libgnu_a-regexec.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='regexec.c' object='libgnu_a-regexec.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-regexec.obj `if test -f 'regexec.c'; then $(CYGPATH_W) 'regexec.c'; else $(CYGPATH_W) '$(srcdir)/regexec.c'; fi`
+
 libgnu_a-snprintf.o: snprintf.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-snprintf.o -MD -MP -MF $(DEPDIR)/libgnu_a-snprintf.Tpo -c -o libgnu_a-snprintf.o `test -f 'snprintf.c' || echo '$(srcdir)/'`snprintf.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-snprintf.Tpo $(DEPDIR)/libgnu_a-snprintf.Po
@@ -4634,34 +4798,6 @@ libgnu_a-strerror_r.obj: strerror_r.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strerror_r.c' object='libgnu_a-strerror_r.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strerror_r.obj `if test -f 'strerror_r.c'; then $(CYGPATH_W) 'strerror_r.c'; else $(CYGPATH_W) '$(srcdir)/strerror_r.c'; fi`
-
-libgnu_a-strtol.o: strtol.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtol.o -MD -MP -MF $(DEPDIR)/libgnu_a-strtol.Tpo -c -o libgnu_a-strtol.o `test -f 'strtol.c' || echo '$(srcdir)/'`strtol.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtol.Tpo $(DEPDIR)/libgnu_a-strtol.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtol.c' object='libgnu_a-strtol.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtol.o `test -f 'strtol.c' || echo '$(srcdir)/'`strtol.c
-
-libgnu_a-strtol.obj: strtol.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtol.obj -MD -MP -MF $(DEPDIR)/libgnu_a-strtol.Tpo -c -o libgnu_a-strtol.obj `if test -f 'strtol.c'; then $(CYGPATH_W) 'strtol.c'; else $(CYGPATH_W) '$(srcdir)/strtol.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtol.Tpo $(DEPDIR)/libgnu_a-strtol.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtol.c' object='libgnu_a-strtol.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtol.obj `if test -f 'strtol.c'; then $(CYGPATH_W) 'strtol.c'; else $(CYGPATH_W) '$(srcdir)/strtol.c'; fi`
-
-libgnu_a-strtoul.o: strtoul.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoul.o -MD -MP -MF $(DEPDIR)/libgnu_a-strtoul.Tpo -c -o libgnu_a-strtoul.o `test -f 'strtoul.c' || echo '$(srcdir)/'`strtoul.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoul.Tpo $(DEPDIR)/libgnu_a-strtoul.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoul.c' object='libgnu_a-strtoul.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoul.o `test -f 'strtoul.c' || echo '$(srcdir)/'`strtoul.c
-
-libgnu_a-strtoul.obj: strtoul.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-strtoul.obj -MD -MP -MF $(DEPDIR)/libgnu_a-strtoul.Tpo -c -o libgnu_a-strtoul.obj `if test -f 'strtoul.c'; then $(CYGPATH_W) 'strtoul.c'; else $(CYGPATH_W) '$(srcdir)/strtoul.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libgnu_a-strtoul.Tpo $(DEPDIR)/libgnu_a-strtoul.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='strtoul.c' object='libgnu_a-strtoul.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -c -o libgnu_a-strtoul.obj `if test -f 'strtoul.c'; then $(CYGPATH_W) 'strtoul.c'; else $(CYGPATH_W) '$(srcdir)/strtoul.c'; fi`
 
 libgnu_a-asnprintf.o: asnprintf.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgnu_a_CFLAGS) $(CFLAGS) -MT libgnu_a-asnprintf.o -MD -MP -MF $(DEPDIR)/libgnu_a-asnprintf.Tpo -c -o libgnu_a-asnprintf.o `test -f 'asnprintf.c' || echo '$(srcdir)/'`asnprintf.c
@@ -5051,6 +5187,10 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-readdir.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-readlink.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-realloc.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-regcomp.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-regex.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-regex_internal.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-regexec.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rename.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rewinddir.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rmdir.Po
@@ -5076,10 +5216,6 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-strnlen.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strnlen1.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strsignal.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtol.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoll.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoul.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoull.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-sys_socket.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-tempname.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-time_r.Po
@@ -5091,6 +5227,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-vasnprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-vsnprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-waitpid.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-wcrtomb.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wcswidth.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wctype-h.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wcwidth.Po
@@ -5106,6 +5243,12 @@ distclean: distclean-recursive
 	-rm -f glthread/$(DEPDIR)/libgnu_a-lock.Po
 	-rm -f glthread/$(DEPDIR)/libgnu_a-threadlib.Po
 	-rm -f glthread/$(DEPDIR)/libgnu_a-tls.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray-skeleton.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray_at_failure.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray_emplace_enlarge.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray_finalize.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray_resize.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray_resize_clear.Po
 	-rm -f malloc/$(DEPDIR)/libgnu_a-scratch_buffer_dupfree.Po
 	-rm -f malloc/$(DEPDIR)/libgnu_a-scratch_buffer_grow.Po
 	-rm -f malloc/$(DEPDIR)/libgnu_a-scratch_buffer_grow_preserve.Po
@@ -5257,6 +5400,10 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-readdir.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-readlink.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-realloc.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-regcomp.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-regex.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-regex_internal.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-regexec.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rename.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rewinddir.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-rmdir.Po
@@ -5282,10 +5429,6 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-strnlen.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strnlen1.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-strsignal.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtol.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoll.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoul.Po
-	-rm -f ./$(DEPDIR)/libgnu_a-strtoull.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-sys_socket.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-tempname.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-time_r.Po
@@ -5297,6 +5440,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/libgnu_a-vasnprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-vsnprintf.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-waitpid.Po
+	-rm -f ./$(DEPDIR)/libgnu_a-wcrtomb.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wcswidth.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wctype-h.Po
 	-rm -f ./$(DEPDIR)/libgnu_a-wcwidth.Po
@@ -5312,6 +5456,12 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f glthread/$(DEPDIR)/libgnu_a-lock.Po
 	-rm -f glthread/$(DEPDIR)/libgnu_a-threadlib.Po
 	-rm -f glthread/$(DEPDIR)/libgnu_a-tls.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray-skeleton.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray_at_failure.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray_emplace_enlarge.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray_finalize.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray_resize.Po
+	-rm -f malloc/$(DEPDIR)/libgnu_a-dynarray_resize_clear.Po
 	-rm -f malloc/$(DEPDIR)/libgnu_a-scratch_buffer_dupfree.Po
 	-rm -f malloc/$(DEPDIR)/libgnu_a-scratch_buffer_grow.Po
 	-rm -f malloc/$(DEPDIR)/libgnu_a-scratch_buffer_grow_preserve.Po
@@ -5463,6 +5613,25 @@ dirent.h: dirent.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(ARG_NONNULL_H
 	      -e '/definition of _GL_ARG_NONNULL/r $(ARG_NONNULL_H)' \
 	      -e '/definition of _GL_WARN_ON_USE/r $(WARN_ON_USE_H)' \
 	      $(srcdir)/dirent.in.h > $@-t
+	$(AM_V_at)mv $@-t $@
+
+malloc/dynarray.gl.h: malloc/dynarray.h
+	$(AM_V_GEN)$(MKDIR_P) 'malloc'
+	$(AM_V_at)$(SED_HEADER_STDOUT) \
+	  -e '/libc_hidden_proto/d' \
+	  $(srcdir)/malloc/dynarray.h > $@-t
+	$(AM_V_at)mv $@-t $@
+
+malloc/dynarray-skeleton.gl.h: malloc/dynarray-skeleton.c
+	$(AM_V_GEN)$(MKDIR_P) 'malloc'
+	$(AM_V_at)$(SED_HEADER_STDOUT) \
+	      -e 's|<malloc/dynarray\.h>|<malloc/dynarray.gl.h>|g' \
+	      -e 's|__attribute_maybe_unused__|_GL_ATTRIBUTE_MAYBE_UNUSED|g' \
+	      -e 's|__attribute_nonnull__|_GL_ATTRIBUTE_NONNULL|g' \
+	      -e 's|__attribute_warn_unused_result__|_GL_ATTRIBUTE_NODISCARD|g' \
+	      -e 's|__glibc_likely|_GL_LIKELY|g' \
+	      -e 's|__glibc_unlikely|_GL_UNLIKELY|g' \
+	      $(srcdir)/malloc/dynarray-skeleton.c > $@-t
 	$(AM_V_at)mv $@-t $@
 
 # We need the following in order to create <errno.h> when the system

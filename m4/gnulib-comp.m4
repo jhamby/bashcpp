@@ -72,6 +72,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module double-slash-root:
   # Code from module dup:
   # Code from module dup2:
+  # Code from module dynarray:
   # Code from module eloop-threshold:
   # Code from module errno:
   # Code from module error:
@@ -173,6 +174,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module readlink:
   # Code from module realloc-gnu:
   # Code from module realloc-posix:
+  # Code from module regex:
   # Code from module rename:
   # Code from module rewinddir:
   # Code from module rmdir:
@@ -216,8 +218,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module strnlen:
   # Code from module strnlen1:
   # Code from module strsignal:
-  # Code from module strtoll:
-  # Code from module strtoull:
   # Code from module sys_random:
   # Code from module sys_socket:
   # Code from module sys_stat:
@@ -250,6 +250,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module vsnprintf:
   # Code from module waitpid:
   # Code from module wchar:
+  # Code from module wcrtomb:
   # Code from module wcswidth:
   # Code from module wctype-h:
   # Code from module wcwidth:
@@ -354,6 +355,7 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_DUP2
   ])
   gl_UNISTD_MODULE_INDICATOR([dup2])
+  AC_PROG_MKDIR_P
   gl_HEADER_ERRNO_H
   gl_CONDITIONAL_HEADER([errno.h])
   AC_PROG_MKDIR_P
@@ -742,6 +744,11 @@ AC_DEFUN([gl_INIT],
     AC_LIBOBJ([realloc])
   fi
   gl_STDLIB_MODULE_INDICATOR([realloc-posix])
+  gl_REGEX
+  gl_CONDITIONAL([GL_COND_OBJ_REGEX], [test $ac_use_included_regex = yes])
+  AM_COND_IF([GL_COND_OBJ_REGEX], [
+    gl_PREREQ_REGEX
+  ])
   gl_FUNC_RENAME
   gl_CONDITIONAL([GL_COND_OBJ_RENAME], [test $REPLACE_RENAME = 1])
   gl_STDIO_MODULE_INDICATOR([rename])
@@ -893,20 +900,6 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_STRSIGNAL
   ])
   gl_STRING_MODULE_INDICATOR([strsignal])
-  gl_FUNC_STRTOLL
-  gl_CONDITIONAL([GL_COND_OBJ_STRTOLL],
-                 [test $HAVE_STRTOLL = 0 || test $REPLACE_STRTOLL = 1])
-  AM_COND_IF([GL_COND_OBJ_STRTOLL], [
-    gl_PREREQ_STRTOLL
-  ])
-  gl_STDLIB_MODULE_INDICATOR([strtoll])
-  gl_FUNC_STRTOULL
-  gl_CONDITIONAL([GL_COND_OBJ_STRTOULL],
-                 [test $HAVE_STRTOULL = 0 || test $REPLACE_STRTOULL = 1])
-  AM_COND_IF([GL_COND_OBJ_STRTOULL], [
-    gl_PREREQ_STRTOULL
-  ])
-  gl_STDLIB_MODULE_INDICATOR([strtoull])
   gl_SYS_RANDOM_H
   gl_SYS_RANDOM_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
@@ -1003,6 +996,13 @@ AC_DEFUN([gl_INIT],
   gl_WCHAR_H
   gl_WCHAR_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
+  gl_FUNC_WCRTOMB
+  gl_CONDITIONAL([GL_COND_OBJ_WCRTOMB],
+                 [test $HAVE_WCRTOMB = 0 || test $REPLACE_WCRTOMB = 1])
+  AM_COND_IF([GL_COND_OBJ_WCRTOMB], [
+    gl_PREREQ_WCRTOMB
+  ])
+  gl_WCHAR_MODULE_INDICATOR([wcrtomb])
   gl_FUNC_WCSWIDTH
   gl_CONDITIONAL([GL_COND_OBJ_WCSWIDTH],
                  [test $HAVE_WCSWIDTH = 0 || test $REPLACE_WCSWIDTH = 1])
@@ -1251,6 +1251,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/dup-safer.c
   lib/dup.c
   lib/dup2.c
+  lib/dynarray.h
   lib/eloop-threshold.h
   lib/errno.in.h
   lib/error.c
@@ -1336,6 +1337,13 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/localename.h
   lib/lstat.c
   lib/malloc.c
+  lib/malloc/dynarray-skeleton.c
+  lib/malloc/dynarray.h
+  lib/malloc/dynarray_at_failure.c
+  lib/malloc/dynarray_emplace_enlarge.c
+  lib/malloc/dynarray_finalize.c
+  lib/malloc/dynarray_resize.c
+  lib/malloc/dynarray_resize_clear.c
   lib/malloc/scratch_buffer.h
   lib/malloc/scratch_buffer_dupfree.c
   lib/malloc/scratch_buffer_grow.c
@@ -1397,6 +1405,12 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/readdir.c
   lib/readlink.c
   lib/realloc.c
+  lib/regcomp.c
+  lib/regex.c
+  lib/regex.h
+  lib/regex_internal.c
+  lib/regex_internal.h
+  lib/regexec.c
   lib/rename.c
   lib/rewinddir.c
   lib/rmdir.c
@@ -1446,10 +1460,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/strnlen1.c
   lib/strnlen1.h
   lib/strsignal.c
-  lib/strtol.c
-  lib/strtoll.c
-  lib/strtoul.c
-  lib/strtoull.c
   lib/sys-limits.h
   lib/sys_random.in.h
   lib/sys_socket.c
@@ -1491,6 +1501,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/waitpid.c
   lib/warn-on-use.h
   lib/wchar.in.h
+  lib/wcrtomb.c
   lib/wcswidth-impl.h
   lib/wcswidth.c
   lib/wctype-h.c
@@ -1645,6 +1656,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/readdir.m4
   m4/readlink.m4
   m4/realloc.m4
+  m4/regex.m4
   m4/rename.m4
   m4/rewinddir.m4
   m4/rmdir.m4
@@ -1678,8 +1690,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/string_h.m4
   m4/strnlen.m4
   m4/strsignal.m4
-  m4/strtoll.m4
-  m4/strtoull.m4
   m4/sys_random_h.m4
   m4/sys_socket_h.m4
   m4/sys_stat_h.m4
@@ -1708,6 +1718,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/warn-on-use.m4
   m4/wchar_h.m4
   m4/wchar_t.m4
+  m4/wcrtomb.m4
   m4/wcswidth.m4
   m4/wctype_h.m4
   m4/wcwidth.m4

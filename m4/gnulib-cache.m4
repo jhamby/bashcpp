@@ -56,14 +56,13 @@
 #  mbschr \
 #  mktime \
 #  nl_langinfo \
+#  regex \
 #  rename \
 #  setlocale \
 #  snprintf \
 #  strerror_r-posix \
 #  strnlen \
 #  strsignal \
-#  strtoll \
-#  strtoull \
 #  times \
 #  timespec \
 #  tmpfile \
@@ -94,14 +93,13 @@ gl_MODULES([
   mbschr
   mktime
   nl_langinfo
+  regex
   rename
   setlocale
   snprintf
   strerror_r-posix
   strnlen
   strsignal
-  strtoll
-  strtoull
   times
   timespec
   tmpfile
