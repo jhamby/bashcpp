@@ -426,15 +426,13 @@ AC_FUNC_STRCOLL
 AC_CHECK_FUNCS([arc4random asprintf bcopy confstr dprintf dup2 eaccess faccessat fchdir ftruncate \
 		getaddrinfo getcwd getdtablesize fnmatch getentropy getgroups gethostbyname \
 		gethostname getpeername getpwent getpwnam getpwuid \
-		getrandom getrlimit getrusage getservbyname getservent \
-		gettimeofday group_member imaxdiv inet_aton \
+		getrandom getrlimit getrusage getservbyname getservent gettimeofday group_member \
 		iswlower iswupper towlower towupper iswctype kill killpg locale_charset \
 		localeconv localtime_r lstat mbrlen mbrtowc mbschr mbsnrtowcs mkdir mkdtemp \
 		mkfifo mknod mkstemp mmap nl_langinfo pathconf pselect putenv random \
 		readlink regcomp regexec rename select setdtablesize setenv setitimer \
 		setlocale setpgid setregid setresgid setresuid setvbuf socket stpcpy strcasecmp \
-		strcasestr strchrnul strerror strncasecmp strnlen \
-		strsignal strtoimax strtoumax sysconf tcgetattr \
+		strcasestr strchrnul strerror strncasecmp strnlen strsignal sysconf tcgetattr \
 		times ttyname tzset ulimit uname vfprintf waitpid wcrtomb wcscoll \
 		wcswidth wctype wcwidth])
 

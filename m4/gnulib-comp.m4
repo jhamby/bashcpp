@@ -70,7 +70,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module dirfd:
   # Code from module dirname-lgpl:
   # Code from module double-slash-root:
-  # Code from module dprintf:
   # Code from module dup:
   # Code from module dup2:
   # Code from module eloop-threshold:
@@ -93,14 +92,8 @@ AC_DEFUN([gl_EARLY],
   # Code from module float:
   # Code from module fnmatch:
   # Code from module fnmatch-h:
-  # Code from module fpieee:
-  AC_REQUIRE([gl_FP_IEEE])
-  # Code from module fpucw:
   # Code from module fpurge:
   # Code from module free-posix:
-  # Code from module frexp-nolibm:
-  # Code from module frexpl-nolibm:
-  # Code from module fseterr:
   # Code from module fstat:
   # Code from module fstatat:
   # Code from module full-read:
@@ -127,10 +120,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module intprops:
   # Code from module inttypes-incomplete:
   # Code from module isblank:
-  # Code from module isnand-nolibm:
-  # Code from module isnanf-nolibm:
-  # Code from module isnanl:
-  # Code from module isnanl-nolibm:
   # Code from module iswblank:
   # Code from module iswdigit:
   # Code from module iswxdigit:
@@ -138,8 +127,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module largefile:
   AC_REQUIRE([gl_YEAR2038_EARLY])
   AC_REQUIRE([AC_SYS_LARGEFILE])
-  # Code from module ldexp:
-  # Code from module ldexpl:
   # Code from module libc-config:
   # Code from module limits-h:
   # Code from module localcharset:
@@ -151,7 +138,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module malloc-gnu:
   # Code from module malloc-posix:
   # Code from module malloca:
-  # Code from module math:
   # Code from module mbchar:
   # Code from module mbrlen:
   # Code from module mbrtowc:
@@ -165,8 +151,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module memrchr:
   # Code from module minmax:
   # Code from module mkdir:
-  # Code from module mkfifo:
-  # Code from module mknod:
   # Code from module mktime:
   # Code from module msvc-inval:
   # Code from module msvc-nothrow:
@@ -182,11 +166,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module opendir:
   # Code from module pathmax:
   # Code from module pipe-posix:
-  # Code from module printf-frexp:
-  # Code from module printf-frexpl:
-  # Code from module printf-safe:
-  # Code from module pselect:
-  # Code from module pthread_sigmask:
   # Code from module raise:
   # Code from module rawmemchr:
   # Code from module read:
@@ -204,13 +183,10 @@ AC_DEFUN([gl_EARLY],
   # Code from module save-cwd:
   # Code from module scratch_buffer:
   # Code from module secure_getenv:
-  # Code from module select:
   # Code from module servent:
   # Code from module setlocale:
   # Code from module setlocale-null:
   # Code from module signal-h:
-  # Code from module signbit:
-  # Code from module sigprocmask:
   # Code from module size_max:
   # Code from module snippet/_Noreturn:
   # Code from module snippet/arg-nonnull:
@@ -220,7 +196,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module socketlib:
   # Code from module sockets:
   # Code from module socklen:
-  # Code from module sprintf-posix:
   # Code from module ssize_t:
   # Code from module stat:
   # Code from module stat-time:
@@ -232,21 +207,18 @@ AC_DEFUN([gl_EARLY],
   # Code from module stdint:
   # Code from module stdio:
   # Code from module stdlib:
-  # Code from module strcase:
-  # Code from module strcasestr:
-  # Code from module strcasestr-simple:
   # Code from module strdup-posix:
   # Code from module streq:
   # Code from module strerror:
   # Code from module strerror-override:
   # Code from module strerror_r-posix:
   # Code from module string:
-  # Code from module strings:
   # Code from module strnlen:
   # Code from module strnlen1:
   # Code from module strsignal:
+  # Code from module strtoll:
+  # Code from module strtoull:
   # Code from module sys_random:
-  # Code from module sys_select:
   # Code from module sys_socket:
   # Code from module sys_stat:
   # Code from module sys_time:
@@ -275,8 +247,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module vararrays:
   # Code from module vasnprintf:
   # Code from module verify:
-  # Code from module vfprintf-posix:
-  # Code from module vprintf-posix:
+  # Code from module vsnprintf:
   # Code from module waitpid:
   # Code from module wchar:
   # Code from module wcswidth:
@@ -371,8 +342,6 @@ AC_DEFUN([gl_INIT],
   ])
   gl_DIRENT_MODULE_INDICATOR([dirfd])
   gl_DOUBLE_SLASH_ROOT
-  gl_FUNC_DPRINTF
-  gl_STDIO_MODULE_INDICATOR([dprintf])
   gl_FUNC_DUP
   gl_CONDITIONAL([GL_COND_OBJ_DUP], [test $REPLACE_DUP = 1])
   AM_COND_IF([GL_COND_OBJ_DUP], [
@@ -459,18 +428,6 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_FREE
   ])
   gl_STDLIB_MODULE_INDICATOR([free-posix])
-  gl_FUNC_FREXP_NO_LIBM
-  if test $gl_func_frexp_no_libm != yes; then
-    AC_LIBOBJ([frexp])
-  fi
-  gl_MATH_MODULE_INDICATOR([frexp])
-  gl_FUNC_FREXPL_NO_LIBM
-  if test $HAVE_DECL_FREXPL = 0 || test $gl_func_frexpl_no_libm = no; then
-    AC_LIBOBJ([frexpl])
-  fi
-  gl_MATH_MODULE_INDICATOR([frexpl])
-  gl_FUNC_FSETERR
-  gl_CONDITIONAL([GL_COND_OBJ_FSETERR], [test $ac_cv_func___fseterr = no])
   gl_FUNC_FSTAT
   gl_CONDITIONAL([GL_COND_OBJ_FSTAT], [test $REPLACE_FSTAT = 1])
   AM_COND_IF([GL_COND_OBJ_FSTAT], [
@@ -575,30 +532,6 @@ AC_DEFUN([gl_INIT],
   gl_CONDITIONAL([GL_COND_OBJ_ISBLANK], [test $HAVE_ISBLANK = 0])
   gl_MODULE_INDICATOR([isblank])
   gl_CTYPE_MODULE_INDICATOR([isblank])
-  gl_FUNC_ISNAND_NO_LIBM
-  if test $gl_func_isnand_no_libm != yes; then
-    AC_LIBOBJ([isnand])
-    gl_PREREQ_ISNAND
-  fi
-  gl_FUNC_ISNANF_NO_LIBM
-  if test $gl_func_isnanf_no_libm != yes; then
-    AC_LIBOBJ([isnanf])
-    gl_PREREQ_ISNANF
-  fi
-  gl_FUNC_ISNANL
-  m4_ifdef([gl_ISNAN], [
-    AC_REQUIRE([gl_ISNAN])
-  ])
-  if test $HAVE_ISNANL = 0 || test $REPLACE_ISNAN = 1; then
-    AC_LIBOBJ([isnanl])
-    gl_PREREQ_ISNANL
-  fi
-  gl_MATH_MODULE_INDICATOR([isnanl])
-  gl_FUNC_ISNANL_NO_LIBM
-  if test $gl_func_isnanl_no_libm != yes; then
-    AC_LIBOBJ([isnanl])
-    gl_PREREQ_ISNANL
-  fi
   gl_FUNC_ISWBLANK
   gl_CONDITIONAL([GL_COND_OBJ_ISWBLANK],
                  [! { test $HAVE_ISWCNTRL = 0 || test $REPLACE_ISWCNTRL = 1; } && { test $HAVE_ISWBLANK = 0 || test $REPLACE_ISWBLANK = 1; }])
@@ -615,11 +548,6 @@ AC_DEFUN([gl_INIT],
   gl_LANGINFO_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
   AC_REQUIRE([gl_LARGEFILE])
-  gl_FUNC_LDEXP
-  gl_FUNC_LDEXPL
-  gl_CONDITIONAL([GL_COND_OBJ_LDEXPL],
-                 [test $HAVE_DECL_LDEXPL = 0 || test $gl_func_ldexpl = no])
-  gl_MATH_MODULE_INDICATOR([ldexpl])
   gl___INLINE
   gl_LIMITS_H
   gl_CONDITIONAL_HEADER([limits.h])
@@ -658,9 +586,6 @@ AC_DEFUN([gl_INIT],
   fi
   gl_STDLIB_MODULE_INDICATOR([malloc-posix])
   gl_MALLOCA
-  gl_MATH_H
-  gl_MATH_H_REQUIRE_DEFAULTS
-  AC_PROG_MKDIR_P
   gl_MBCHAR
   gl_FUNC_MBRLEN
   gl_CONDITIONAL([GL_COND_OBJ_MBRLEN],
@@ -727,14 +652,6 @@ AC_DEFUN([gl_INIT],
   gl_FUNC_MKDIR
   gl_CONDITIONAL([GL_COND_OBJ_MKDIR], [test $REPLACE_MKDIR = 1])
   gl_SYS_STAT_MODULE_INDICATOR([mkdir])
-  gl_FUNC_MKFIFO
-  gl_CONDITIONAL([GL_COND_OBJ_MKFIFO],
-                 [test $HAVE_MKFIFO = 0 || test $REPLACE_MKFIFO = 1])
-  gl_UNISTD_MODULE_INDICATOR([mkfifo])
-  gl_FUNC_MKNOD
-  gl_CONDITIONAL([GL_COND_OBJ_MKNOD],
-                 [test $HAVE_MKNOD = 0 || test $REPLACE_MKNOD = 1])
-  gl_UNISTD_MODULE_INDICATOR([mknod])
   gl_FUNC_MKTIME
   if test $REPLACE_MKTIME = 1; then
     AC_LIBOBJ([mktime])
@@ -786,20 +703,6 @@ AC_DEFUN([gl_INIT],
   gl_FUNC_PIPE
   gl_CONDITIONAL([GL_COND_OBJ_PIPE], [test $HAVE_PIPE = 0])
   gl_UNISTD_MODULE_INDICATOR([pipe])
-  gl_FUNC_PRINTF_FREXP
-  gl_FUNC_PRINTF_FREXPL
-  m4_divert_text([INIT_PREPARE], [gl_printf_safe=yes])
-  gl_FUNC_PSELECT
-  gl_CONDITIONAL([GL_COND_OBJ_PSELECT],
-                 [test $HAVE_PSELECT = 0 || test $REPLACE_PSELECT = 1])
-  gl_SYS_SELECT_MODULE_INDICATOR([pselect])
-  gl_FUNC_PTHREAD_SIGMASK
-  gl_CONDITIONAL([GL_COND_OBJ_PTHREAD_SIGMASK],
-                 [test $HAVE_PTHREAD_SIGMASK = 0 || test $REPLACE_PTHREAD_SIGMASK = 1])
-  AM_COND_IF([GL_COND_OBJ_PTHREAD_SIGMASK], [
-    gl_PREREQ_PTHREAD_SIGMASK
-  ])
-  gl_SIGNAL_MODULE_INDICATOR([pthread_sigmask])
   gl_FUNC_RAISE
   gl_CONDITIONAL([GL_COND_OBJ_RAISE],
                  [test $HAVE_RAISE = 0 || test $REPLACE_RAISE = 1])
@@ -858,9 +761,6 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_SECURE_GETENV
   ])
   gl_STDLIB_MODULE_INDICATOR([secure_getenv])
-  gl_FUNC_SELECT
-  gl_CONDITIONAL([GL_COND_OBJ_SELECT], [test $REPLACE_SELECT = 1])
-  gl_SYS_SELECT_MODULE_INDICATOR([select])
   gl_SERVENT
   gl_FUNC_SETLOCALE
   gl_CONDITIONAL([GL_COND_OBJ_SETLOCALE], [test $REPLACE_SETLOCALE = 1])
@@ -878,15 +778,6 @@ AC_DEFUN([gl_INIT],
   gl_SIGNAL_H
   gl_SIGNAL_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
-  gl_SIGNBIT
-  gl_CONDITIONAL([GL_COND_OBJ_SIGNBIT3], [test $REPLACE_SIGNBIT = 1])
-  gl_MATH_MODULE_INDICATOR([signbit])
-  gl_SIGNALBLOCKING
-  gl_CONDITIONAL([GL_COND_OBJ_SIGPROCMASK], [test $HAVE_POSIX_SIGNALBLOCKING = 0])
-  AM_COND_IF([GL_COND_OBJ_SIGPROCMASK], [
-    gl_PREREQ_SIGPROCMASK
-  ])
-  gl_SIGNAL_MODULE_INDICATOR([sigprocmask])
   gl_SIZE_MAX
   gl_FUNC_SNPRINTF
   gl_STDIO_MODULE_INDICATOR([snprintf])
@@ -894,8 +785,6 @@ AC_DEFUN([gl_INIT],
   AC_REQUIRE([gl_SOCKETLIB])
   AC_REQUIRE([gl_SOCKETS])
   gl_TYPE_SOCKLEN_T
-  gl_FUNC_SPRINTF_POSIX
-  gl_STDIO_MODULE_INDICATOR([sprintf-posix])
   gt_TYPE_SSIZE_T
   gl_FUNC_STAT
   gl_CONDITIONAL([GL_COND_OBJ_STAT], [test $REPLACE_STAT = 1])
@@ -962,26 +851,6 @@ AC_DEFUN([gl_INIT],
   gl_STDLIB_H
   gl_STDLIB_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
-  gl_STRCASE
-  gl_CONDITIONAL([GL_COND_OBJ_STRCASECMP], [test $HAVE_STRCASECMP = 0])
-  AM_COND_IF([GL_COND_OBJ_STRCASECMP], [
-    gl_PREREQ_STRCASECMP
-  ])
-  gl_CONDITIONAL([GL_COND_OBJ_STRNCASECMP], [test $HAVE_STRNCASECMP = 0])
-  AM_COND_IF([GL_COND_OBJ_STRNCASECMP], [
-    gl_PREREQ_STRNCASECMP
-  ])
-  gl_FUNC_STRCASESTR
-  if test $HAVE_STRCASESTR = 0 || test $REPLACE_STRCASESTR = 1; then
-    AC_LIBOBJ([strcasestr])
-    gl_PREREQ_STRCASESTR
-  fi
-  gl_FUNC_STRCASESTR_SIMPLE
-  if test $HAVE_STRCASESTR = 0 || test $REPLACE_STRCASESTR = 1; then
-    AC_LIBOBJ([strcasestr])
-    gl_PREREQ_STRCASESTR
-  fi
-  gl_STRING_MODULE_INDICATOR([strcasestr])
   gl_FUNC_STRDUP_POSIX
   gl_CONDITIONAL([GL_COND_OBJ_STRDUP], [test $REPLACE_STRDUP = 1])
   AM_COND_IF([GL_COND_OBJ_STRDUP], [
@@ -1010,9 +879,6 @@ AC_DEFUN([gl_INIT],
   gl_STRING_H
   gl_STRING_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
-  gl_STRINGS_H
-  gl_STRINGS_H_REQUIRE_DEFAULTS
-  AC_PROG_MKDIR_P
   gl_FUNC_STRNLEN
   gl_CONDITIONAL([GL_COND_OBJ_STRNLEN],
                  [test $HAVE_DECL_STRNLEN = 0 || test $REPLACE_STRNLEN = 1])
@@ -1027,11 +893,22 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_STRSIGNAL
   ])
   gl_STRING_MODULE_INDICATOR([strsignal])
+  gl_FUNC_STRTOLL
+  gl_CONDITIONAL([GL_COND_OBJ_STRTOLL],
+                 [test $HAVE_STRTOLL = 0 || test $REPLACE_STRTOLL = 1])
+  AM_COND_IF([GL_COND_OBJ_STRTOLL], [
+    gl_PREREQ_STRTOLL
+  ])
+  gl_STDLIB_MODULE_INDICATOR([strtoll])
+  gl_FUNC_STRTOULL
+  gl_CONDITIONAL([GL_COND_OBJ_STRTOULL],
+                 [test $HAVE_STRTOULL = 0 || test $REPLACE_STRTOULL = 1])
+  AM_COND_IF([GL_COND_OBJ_STRTOULL], [
+    gl_PREREQ_STRTOULL
+  ])
+  gl_STDLIB_MODULE_INDICATOR([strtoull])
   gl_SYS_RANDOM_H
   gl_SYS_RANDOM_H_REQUIRE_DEFAULTS
-  AC_PROG_MKDIR_P
-  gl_SYS_SELECT_H
-  gl_SYS_SELECT_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
   gl_SYS_SOCKET_H
   gl_SYS_SOCKET_H_REQUIRE_DEFAULTS
@@ -1118,12 +995,8 @@ AC_DEFUN([gl_INIT],
   AC_C_VARARRAYS
   AC_REQUIRE([AC_C_RESTRICT])
   gl_FUNC_VASNPRINTF
-  gl_FUNC_VFPRINTF_POSIX
-  gl_STDIO_MODULE_INDICATOR([vfprintf-posix])
-  gl_MODULE_INDICATOR([vfprintf-posix])
-  gl_FUNC_VPRINTF_POSIX
-  gl_STDIO_MODULE_INDICATOR([vprintf-posix])
-  gl_MODULE_INDICATOR([vprintf-posix])
+  gl_FUNC_VSNPRINTF
+  gl_STDIO_MODULE_INDICATOR([vsnprintf])
   gl_FUNC_WAITPID
   gl_CONDITIONAL([GL_COND_OBJ_WAITPID], [test $HAVE_WAITPID = 0])
   gl_SYS_WAIT_MODULE_INDICATOR([waitpid])
@@ -1374,7 +1247,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/dirfd.c
   lib/dirname-lgpl.c
   lib/dirname.h
-  lib/dprintf.c
   lib/dup-safer-flag.c
   lib/dup-safer.c
   lib/dup.c
@@ -1405,13 +1277,8 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/fnmatch.c
   lib/fnmatch.in.h
   lib/fnmatch_loop.c
-  lib/fpucw.h
   lib/fpurge.c
   lib/free.c
-  lib/frexp.c
-  lib/frexpl.c
-  lib/fseterr.c
-  lib/fseterr.h
   lib/fstat.c
   lib/fstatat.c
   lib/full-read.c
@@ -1450,13 +1317,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/intprops.h
   lib/inttypes.in.h
   lib/isblank.c
-  lib/isnan.c
-  lib/isnand-nolibm.h
-  lib/isnand.c
-  lib/isnanf-nolibm.h
-  lib/isnanf.c
-  lib/isnanl-nolibm.h
-  lib/isnanl.c
   lib/iswblank.c
   lib/iswdigit.c
   lib/iswxdigit.c
@@ -1464,7 +1324,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/langinfo.in.h
   lib/lc-charset-dispatch.c
   lib/lc-charset-dispatch.h
-  lib/ldexpl.c
   lib/libc-config.h
   lib/limits.in.h
   lib/localcharset.c
@@ -1484,8 +1343,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/malloc/scratch_buffer_set_array_size.c
   lib/malloca.c
   lib/malloca.h
-  lib/math.c
-  lib/math.in.h
   lib/mbchar.c
   lib/mbchar.h
   lib/mbrlen.c
@@ -1509,8 +1366,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/memrchr.c
   lib/minmax.h
   lib/mkdir.c
-  lib/mkfifo.c
-  lib/mknod.c
   lib/mktime-internal.h
   lib/mktime.c
   lib/msvc-inval.c
@@ -1533,14 +1388,8 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/pipe.c
   lib/printf-args.c
   lib/printf-args.h
-  lib/printf-frexp.c
-  lib/printf-frexp.h
-  lib/printf-frexpl.c
-  lib/printf-frexpl.h
   lib/printf-parse.c
   lib/printf-parse.h
-  lib/pselect.c
-  lib/pthread_sigmask.c
   lib/raise.c
   lib/rawmemchr.c
   lib/rawmemchr.valgrind
@@ -1561,22 +1410,16 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/save-cwd.h
   lib/scratch_buffer.h
   lib/secure_getenv.c
-  lib/select.c
   lib/setlocale-lock.c
   lib/setlocale.c
   lib/setlocale_null.c
   lib/setlocale_null.h
   lib/siglist.h
   lib/signal.in.h
-  lib/signbitd.c
-  lib/signbitf.c
-  lib/signbitl.c
-  lib/sigprocmask.c
   lib/size_max.h
   lib/snprintf.c
   lib/sockets.c
   lib/sockets.h
-  lib/sprintf.c
   lib/stat-time.c
   lib/stat-time.h
   lib/stat-w32.c
@@ -1591,9 +1434,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/stdio-write.c
   lib/stdio.in.h
   lib/stdlib.in.h
-  lib/str-two-way.h
-  lib/strcasecmp.c
-  lib/strcasestr.c
   lib/strdup.c
   lib/streq.h
   lib/strerror-override.c
@@ -1601,16 +1441,17 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/strerror.c
   lib/strerror_r.c
   lib/string.in.h
-  lib/strings.in.h
   lib/stripslash.c
-  lib/strncasecmp.c
   lib/strnlen.c
   lib/strnlen1.c
   lib/strnlen1.h
   lib/strsignal.c
+  lib/strtol.c
+  lib/strtoll.c
+  lib/strtoul.c
+  lib/strtoull.c
   lib/sys-limits.h
   lib/sys_random.in.h
-  lib/sys_select.in.h
   lib/sys_socket.c
   lib/sys_socket.in.h
   lib/sys_stat.in.h
@@ -1645,8 +1486,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/vasnprintf.c
   lib/vasnprintf.h
   lib/verify.h
-  lib/vfprintf.c
-  lib/vprintf.c
+  lib/vsnprintf.c
   lib/w32sock.h
   lib/waitpid.c
   lib/warn-on-use.h
@@ -1696,7 +1536,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/dirent_h.m4
   m4/dirfd.m4
   m4/double-slash-root.m4
-  m4/dprintf.m4
   m4/dup.m4
   m4/dup2.m4
   m4/eealloc.m4
@@ -1704,8 +1543,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/error.m4
   m4/euidaccess.m4
   m4/exponentd.m4
-  m4/exponentf.m4
-  m4/exponentl.m4
   m4/extensions.m4
   m4/extern-inline.m4
   m4/faccessat.m4
@@ -1719,12 +1556,8 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/float_h.m4
   m4/fnmatch.m4
   m4/fnmatch_h.m4
-  m4/fpieee.m4
   m4/fpurge.m4
   m4/free.m4
-  m4/frexp.m4
-  m4/frexpl.m4
-  m4/fseterr.m4
   m4/fstat.m4
   m4/fstatat.m4
   m4/getaddrinfo.m4
@@ -1752,17 +1585,12 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/inttypes.m4
   m4/inttypes_h.m4
   m4/isblank.m4
-  m4/isnand.m4
-  m4/isnanf.m4
-  m4/isnanl.m4
   m4/iswblank.m4
   m4/iswdigit.m4
   m4/iswxdigit.m4
   m4/langinfo_h.m4
   m4/largefile.m4
   m4/lcmessage.m4
-  m4/ldexp.m4
-  m4/ldexpl.m4
   m4/libunistring-base.m4
   m4/limits-h.m4
   m4/localcharset.m4
@@ -1790,8 +1618,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/memrchr.m4
   m4/minmax.m4
   m4/mkdir.m4
-  m4/mkfifo.m4
-  m4/mknod.m4
   m4/mktime.m4
   m4/mmap-anon.m4
   m4/mode_t.m4
@@ -1811,12 +1637,8 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/pathmax.m4
   m4/pid_t.m4
   m4/pipe.m4
-  m4/printf-frexp.m4
-  m4/printf-frexpl.m4
   m4/printf.m4
-  m4/pselect.m4
   m4/pthread_rwlock_rdlock.m4
-  m4/pthread_sigmask.m4
   m4/raise.m4
   m4/rawmemchr.m4
   m4/read.m4
@@ -1830,20 +1652,16 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/safe-write.m4
   m4/save-cwd.m4
   m4/secure_getenv.m4
-  m4/select.m4
   m4/servent.m4
   m4/setlocale.m4
   m4/setlocale_null.m4
   m4/signal_h.m4
-  m4/signalblocking.m4
-  m4/signbit.m4
   m4/size_max.m4
   m4/snprintf.m4
   m4/socketlib.m4
   m4/sockets.m4
   m4/socklen.m4
   m4/sockpfaf.m4
-  m4/sprintf-posix.m4
   m4/ssize_t.m4
   m4/stat-time.m4
   m4/stat.m4
@@ -1854,17 +1672,15 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/stdint_h.m4
   m4/stdio_h.m4
   m4/stdlib_h.m4
-  m4/strcase.m4
-  m4/strcasestr.m4
   m4/strdup.m4
   m4/strerror.m4
   m4/strerror_r.m4
   m4/string_h.m4
-  m4/strings_h.m4
   m4/strnlen.m4
   m4/strsignal.m4
+  m4/strtoll.m4
+  m4/strtoull.m4
   m4/sys_random_h.m4
-  m4/sys_select_h.m4
   m4/sys_socket_h.m4
   m4/sys_stat_h.m4
   m4/sys_time_h.m4
@@ -1886,9 +1702,8 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/unlocked-io.m4
   m4/vararrays.m4
   m4/vasnprintf.m4
-  m4/vfprintf-posix.m4
   m4/visibility.m4
-  m4/vprintf-posix.m4
+  m4/vsnprintf.m4
   m4/waitpid.m4
   m4/warn-on-use.m4
   m4/wchar_h.m4

@@ -40,7 +40,6 @@
 #  assert \
 #  c-ctype \
 #  canonicalize-lgpl \
-#  dprintf \
 #  dup2 \
 #  faccessat \
 #  fnmatch \
@@ -51,32 +50,25 @@
 #  getcwd \
 #  gettimeofday \
 #  glob \
-#  ldexpl \
 #  lstat \
 #  mbrlen \
 #  mbrtowc \
 #  mbschr \
-#  mkfifo \
-#  mknod \
 #  mktime \
 #  nl_langinfo \
-#  pselect \
 #  rename \
 #  setlocale \
 #  snprintf \
-#  sprintf-posix \
-#  stdio \
-#  strcase \
-#  strcasestr \
 #  strerror_r-posix \
 #  strnlen \
 #  strsignal \
+#  strtoll \
+#  strtoull \
 #  times \
 #  timespec \
 #  tmpfile \
 #  unlocked-io \
-#  vfprintf-posix \
-#  vprintf-posix \
+#  vsnprintf \
 #  waitpid \
 #  wcswidth
 
@@ -86,7 +78,6 @@ gl_MODULES([
   assert
   c-ctype
   canonicalize-lgpl
-  dprintf
   dup2
   faccessat
   fnmatch
@@ -97,32 +88,25 @@ gl_MODULES([
   getcwd
   gettimeofday
   glob
-  ldexpl
   lstat
   mbrlen
   mbrtowc
   mbschr
-  mkfifo
-  mknod
   mktime
   nl_langinfo
-  pselect
   rename
   setlocale
   snprintf
-  sprintf-posix
-  stdio
-  strcase
-  strcasestr
   strerror_r-posix
   strnlen
   strsignal
+  strtoll
+  strtoull
   times
   timespec
   tmpfile
   unlocked-io
-  vfprintf-posix
-  vprintf-posix
+  vsnprintf
   waitpid
   wcswidth
 ])

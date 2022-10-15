@@ -72,7 +72,6 @@
 #  undef fputc
 #  define fputc(x,y) fputc_unlocked (x,y)
 # else
-#error unexpected!
 #  define fputc_unlocked(x,y) fputc (x,y)
 # endif
 
@@ -80,7 +79,6 @@
 #  undef fputs
 #  define fputs(x,y) fputs_unlocked (x,y)
 # else
-#error unexpected!
 #  define fputs_unlocked(x,y) fputs (x,y)
 # endif
 

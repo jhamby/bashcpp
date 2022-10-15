@@ -1,10 +1,11 @@
-/* Inline functions for <math.h>.
-
-   Copyright (C) 2012-2022 Free Software Foundation, Inc.
+/* Function to parse an 'unsigned long long int' from text.
+   Copyright (C) 1995-1997, 1999, 2009-2022 Free Software Foundation, Inc.
+   NOTE: The canonical source of this file is maintained with the GNU C
+   Library.  Bugs can be reported to bug-glibc@gnu.org.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
-   published by the Free Software Foundation; either version 2.1 of the
+   published by the Free Software Foundation, either version 3 of the
    License, or (at your option) any later version.
 
    This file is distributed in the hope that it will be useful,
@@ -15,8 +16,11 @@
    You should have received a copy of the GNU Lesser General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
+#define QUAD 1
 
-#define _GL_MATH_INLINE _GL_EXTERN_INLINE
-#include "math.h"
-typedef int dummy;
+#include "strtoul.c"
+
+#ifdef _LIBC
+strong_alias (__strtoull_internal, __strtouq_internal)
+weak_alias (strtoull, strtouq)
+#endif
