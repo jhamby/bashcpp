@@ -270,6 +270,8 @@ AC_DEFUN([gl_EARLY],
   # Code from module unitypes:
   # Code from module uniwidth/base:
   # Code from module uniwidth/width:
+  # Code from module unlocked-io:
+  # Code from module unlocked-io-internal:
   # Code from module vararrays:
   # Code from module vasnprintf:
   # Code from module verify:
@@ -1102,6 +1104,17 @@ AC_DEFUN([gl_INIT],
   gl_LIBUNISTRING_LIBHEADER([0.9.11], [uniwidth.h])
   AC_PROG_MKDIR_P
   gl_LIBUNISTRING_MODULE([0.9.11], [uniwidth/width])
+  AC_DEFINE([GNULIB_STDIO_SINGLE_THREAD], [1],
+    [Define to 1 if you want the FILE stream functions getc, putc, etc.
+     to use unlocked I/O if available, throughout the package.
+     Unlocked I/O can improve performance, sometimes dramatically.
+     But unlocked I/O is safe only in single-threaded programs,
+     as well as in multithreaded programs for which you can guarantee that
+     every FILE stream, including stdin, stdout, stderr, is used only
+     in a single thread.])
+  AC_DEFINE([USE_UNLOCKED_IO], [GNULIB_STDIO_SINGLE_THREAD],
+    [An alias of GNULIB_STDIO_SINGLE_THREAD.])
+  gl_FUNC_GLIBC_UNLOCKED_IO
   AC_C_VARARRAYS
   AC_REQUIRE([AC_C_RESTRICT])
   gl_FUNC_VASNPRINTF
@@ -1628,6 +1641,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/uniwidth/width.c
   lib/uniwidth/width0.h
   lib/uniwidth/width2.h
+  lib/unlocked-io.h
   lib/vasnprintf.c
   lib/vasnprintf.h
   lib/verify.h
@@ -1869,6 +1883,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/tmpfile.m4
   m4/unistd-safer.m4
   m4/unistd_h.m4
+  m4/unlocked-io.m4
   m4/vararrays.m4
   m4/vasnprintf.m4
   m4/vfprintf-posix.m4

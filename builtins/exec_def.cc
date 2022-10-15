@@ -44,14 +44,7 @@
 #include "bashtypes.hh"
 #include "posixstat.hh"
 
-#include <cerrno>
-#include <csignal>
-
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
-
-#include <cstdio>
 
 #include "bashintl.hh"
 

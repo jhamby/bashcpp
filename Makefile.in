@@ -238,7 +238,7 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/timespec.m4 $(top_srcdir)/m4/tls.m4 \
 	$(top_srcdir)/m4/tmpdir.m4 $(top_srcdir)/m4/tmpfile.m4 \
 	$(top_srcdir)/m4/unistd-safer.m4 $(top_srcdir)/m4/unistd_h.m4 \
-	$(top_srcdir)/m4/vasnprintf.m4 \
+	$(top_srcdir)/m4/unlocked-io.m4 $(top_srcdir)/m4/vasnprintf.m4 \
 	$(top_srcdir)/m4/vfprintf-posix.m4 \
 	$(top_srcdir)/m4/visibility.m4 \
 	$(top_srcdir)/m4/vprintf-posix.m4 $(top_srcdir)/m4/waitpid.m4 \

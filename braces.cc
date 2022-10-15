@@ -24,30 +24,9 @@
 
 #if defined(BRACE_EXPANSION)
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
 #include "bashintl.hh"
 
-#ifndef SHELL
-#define SHELL
-#endif
-
-#if defined(SHELL)
 #include "shell.hh"
-#else
-#if defined(TEST)
-typedef char *WORD_DESC;
-typedef char **WORD_LIST;
-#define _(X) X
-#endif /* TEST */
-#endif /* SHELL */
-
-#include "chartypes.hh"
-#include "general.hh"
-#include "shmbutil.hh"
-#include "typemax.hh" /* INTMAX_MIN, INTMAX_MAX */
 
 #define brace_whitespace(c) (!(c) || (c) == ' ' || (c) == '\t' || (c) == '\n')
 
@@ -489,7 +468,7 @@ expand_seqterm (char *text, size_t tlen)
     {
       rhs_t = ST_INT;
       errno = 0;
-      tr = strtoimax (rhs, &ep, 10);
+      tr = strtoll (rhs, &ep, 10);
       if (errno == ERANGE || (ep && *ep != 0 && *ep != '.'))
         rhs_t = ST_BAD; /* invalid */
     }
@@ -510,7 +489,7 @@ expand_seqterm (char *text, size_t tlen)
       oep = ep;
       errno = 0;
       if (ep && *ep == '.' && ep[1] == '.' && ep[2])
-        incr = strtoimax (ep + 2, &ep, 10);
+        incr = strtoll (ep + 2, &ep, 10);
       if (*ep != 0 || errno == ERANGE)
         rhs_t = ST_BAD; /* invalid incr or overflow */
       tlen -= ep - oep;

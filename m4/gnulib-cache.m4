@@ -74,6 +74,7 @@
 #  times \
 #  timespec \
 #  tmpfile \
+#  unlocked-io \
 #  vfprintf-posix \
 #  vprintf-posix \
 #  waitpid \
@@ -119,6 +120,7 @@ gl_MODULES([
   times
   timespec
   tmpfile
+  unlocked-io
   vfprintf-posix
   vprintf-posix
   waitpid

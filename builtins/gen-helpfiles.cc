@@ -34,9 +34,6 @@
 
 #include "posixstat.hh"
 
-#include <cerrno>
-#include <cstdio>
-
 #include "builtins.hh"
 
 #define whitespace(c) (((c) == ' ') || ((c) == '\t'))

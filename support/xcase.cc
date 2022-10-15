@@ -20,15 +20,15 @@
 
 #include "config.h"
 
+// Use unlocked I/O, if available.
+#include "unlocked-io.h"
+
 #include <cstdlib>
-#include <cstdio>
 #include <cstring>
 #include <cctype>
 #include <cerrno>
 
-#if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 
 extern int optind;
 

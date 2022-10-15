@@ -69,6 +69,7 @@
 #  times \
 #  timespec \
 #  tmpfile \
+#  unlocked-io \
 #  vfprintf-posix \
 #  vprintf-posix \
 #  waitpid \
@@ -3537,6 +3538,13 @@ endif
 EXTRA_DIST += unictype/bitmap.h uniwidth/cjk.h uniwidth/width0.h uniwidth/width2.h
 
 ## end   gnulib module uniwidth/width
+
+## begin gnulib module unlocked-io-internal
+
+
+EXTRA_DIST += unlocked-io.h
+
+## end   gnulib module unlocked-io-internal
 
 ## begin gnulib module vasnprintf
 

@@ -295,7 +295,7 @@ legal_number (const char *string, int64_t *result)
     *result = 0;
 
   errno = 0;
-  value = strtoimax (string, &ep, 10);
+  value = strtoll (string, &ep, 10);
   if (errno || ep == string)
     return false; /* errno is set on overflow or underflow */
 

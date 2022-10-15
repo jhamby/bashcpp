@@ -31,12 +31,6 @@
 
 #if defined(ARRAY_VARS)
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include <cstdio>
-
 #include "array.hh"
 #include "builtins/common.hh"
 #include "shell.hh"

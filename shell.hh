@@ -21,17 +21,11 @@
 #if !defined(_SHELL_H_)
 #define _SHELL_H_
 
-#include "bashtypes.hh"
-#include "chartypes.hh"
+#include "general.hh"
 
 #if defined(HAVE_PWD_H)
 #include <pwd.h>
 #endif
-
-#include <cerrno>
-#include <csignal>
-#include <cstdio>
-#include <cstdlib>
 
 #include <algorithm>
 #include <map>
@@ -44,9 +38,6 @@
 
 // Use gnulib or system version.
 #include <unistd.h>
-
-#include "bashintl.hh"
-#include "general.hh"
 
 #include "alias.hh"
 #include "builtins.hh"
@@ -3838,7 +3829,24 @@ protected:
   void dispose_partial_redirects ();
   void dispose_exec_redirects ();
 
-  int execute_shell_function (SHELL_VAR *, WORD_LIST *);
+  /* A convenience routine for use by other parts of the shell to execute
+     a particular shell function. */
+  int
+  execute_shell_function (SHELL_VAR *var, WORD_LIST *words)
+  {
+    fd_bitmap *bitmap = new fd_bitmap ();
+    try
+      {
+        int ret = execute_function (var, words, 0, bitmap, false, false);
+        delete bitmap;
+        return ret;
+      }
+    catch (const std::exception &)
+      {
+        delete bitmap;
+        throw;
+      }
+  }
 
   int execute_in_subshell (COMMAND *, bool, int, int, fd_bitmap *);
 

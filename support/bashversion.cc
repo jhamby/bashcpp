@@ -20,13 +20,7 @@
 
 #include "config.h"
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "bashtypes.hh"
 #include "conftypes.hh"
@@ -56,7 +50,7 @@ static const char *progname;
 static void
 usage ()
 {
-  std::fprintf (stderr, "%s: usage: %s [-hrvpmlsx]\n", progname, progname);
+  fprintf (stderr, "%s: usage: %s [-hrvpmlsx]\n", progname, progname);
 }
 
 int
@@ -66,19 +60,19 @@ main (int argc, char **argv)
   char dv[128];
   char *rv = nullptr;
 
-  if ((progname = std::strrchr (argv[0], '/')))
+  if ((progname = strrchr (argv[0], '/')))
     progname++;
   else
     progname = argv[0];
 
   oflags = 0;
-  while ((opt = ::getopt (argc, argv, "hrvmpslx")) != EOF)
+  while ((opt = getopt (argc, argv, "hrvmpslx")) != EOF)
     {
       switch (opt)
         {
         case 'h':
           usage ();
-          std::exit (0);
+          exit (0);
         case 'r':
           oflags |= RFLAG; /* release */
           break;
@@ -102,7 +96,7 @@ main (int argc, char **argv)
           break;
         default:
           usage ();
-          std::exit (2);
+          exit (2);
         }
     }
 
@@ -112,7 +106,7 @@ main (int argc, char **argv)
   if (argc > 0)
     {
       usage ();
-      std::exit (2);
+      exit (2);
     }
 
   /* default behavior */
@@ -121,27 +115,27 @@ main (int argc, char **argv)
 
   if (oflags & (RFLAG | VFLAG))
     {
-      std::strcpy (dv, bash::dist_version);
-      rv = std::strchr (dv, '.');
+      strcpy (dv, bash::dist_version);
+      rv = strchr (dv, '.');
       if (rv)
         *rv++ = '\0';
       else
         rv = const_cast<char *> ("00");
     }
   if (oflags & RFLAG)
-    std::printf ("%s\n", dv);
+    printf ("%s\n", dv);
   else if (oflags & VFLAG)
-    std::printf ("%s\n", rv);
+    printf ("%s\n", rv);
   else if (oflags & MFLAG)
-    std::printf ("%s\n", MACHTYPE);
+    printf ("%s\n", MACHTYPE);
   else if (oflags & PFLAG)
-    std::printf ("%d\n", bash::patch_level);
+    printf ("%d\n", bash::patch_level);
   else if (oflags & SFLAG)
-    std::printf ("%s\n", bash::shell_version_string ());
+    printf ("%s\n", bash::shell_version_string ());
   else if (oflags & LFLAG)
     bash::show_shell_version (0);
   else if (oflags & XFLAG)
     bash::show_shell_version (1);
 
-  std::exit (0);
+  exit (0);
 }

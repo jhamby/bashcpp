@@ -22,17 +22,9 @@
 
 #include "config.h"
 
-#include <cerrno>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <inttypes.h>
+#include "general.hh"
 
-#include "chartypes.hh"
-
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 
 #include "syntax.hh"
 

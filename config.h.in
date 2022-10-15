@@ -272,6 +272,14 @@
    whether the gnulib module snprintf shall be considered present. */
 #undef GNULIB_SNPRINTF
 
+/* Define to 1 if you want the FILE stream functions getc, putc, etc. to use
+   unlocked I/O if available, throughout the package. Unlocked I/O can improve
+   performance, sometimes dramatically. But unlocked I/O is safe only in
+   single-threaded programs, as well as in multithreaded programs for which
+   you can guarantee that every FILE stream, including stdin, stdout, stderr,
+   is used only in a single thread. */
+#undef GNULIB_STDIO_SINGLE_THREAD
+
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module strerror shall be considered present. */
 #undef GNULIB_STRERROR
@@ -743,6 +751,10 @@
    */
 #undef HAVE_DECL_ALARM
 
+/* Define to 1 if you have the declaration of `clearerr_unlocked', and to 0 if
+   you don't. */
+#undef HAVE_DECL_CLEARERR_UNLOCKED
+
 /* Define to 1 if you have the declaration of `copysign', and to 0 if you
    don't. */
 #undef HAVE_DECL_COPYSIGN
@@ -783,13 +795,45 @@
    don't. */
 #undef HAVE_DECL_FDOPENDIR
 
+/* Define to 1 if you have the declaration of `feof_unlocked', and to 0 if you
+   don't. */
+#undef HAVE_DECL_FEOF_UNLOCKED
+
+/* Define to 1 if you have the declaration of `ferror_unlocked', and to 0 if
+   you don't. */
+#undef HAVE_DECL_FERROR_UNLOCKED
+
+/* Define to 1 if you have the declaration of `fflush_unlocked', and to 0 if
+   you don't. */
+#undef HAVE_DECL_FFLUSH_UNLOCKED
+
+/* Define to 1 if you have the declaration of `fgets_unlocked', and to 0 if
+   you don't. */
+#undef HAVE_DECL_FGETS_UNLOCKED
+
 /* Define to 1 if you have the declaration of `fpurge', and to 0 if you don't.
    */
 #undef HAVE_DECL_FPURGE
 
+/* Define to 1 if you have the declaration of `fputc_unlocked', and to 0 if
+   you don't. */
+#undef HAVE_DECL_FPUTC_UNLOCKED
+
+/* Define to 1 if you have the declaration of `fputs_unlocked', and to 0 if
+   you don't. */
+#undef HAVE_DECL_FPUTS_UNLOCKED
+
+/* Define to 1 if you have the declaration of `fread_unlocked', and to 0 if
+   you don't. */
+#undef HAVE_DECL_FREAD_UNLOCKED
+
 /* Define to 1 if you have the declaration of `freeaddrinfo', and to 0 if you
    don't. */
 #undef HAVE_DECL_FREEADDRINFO
+
+/* Define to 1 if you have the declaration of `fwrite_unlocked', and to 0 if
+   you don't. */
+#undef HAVE_DECL_FWRITE_UNLOCKED
 
 /* Define to 1 if you have the declaration of `gai_strerror', and to 0 if you
    don't. */
@@ -807,9 +851,17 @@
    don't. */
 #undef HAVE_DECL_GETADDRINFO
 
+/* Define to 1 if you have the declaration of `getchar_unlocked', and to 0 if
+   you don't. */
+#undef HAVE_DECL_GETCHAR_UNLOCKED
+
 /* Define to 1 if you have the declaration of `getcwd', and to 0 if you don't.
    */
 #undef HAVE_DECL_GETCWD
+
+/* Define to 1 if you have the declaration of `getc_unlocked', and to 0 if you
+   don't. */
+#undef HAVE_DECL_GETC_UNLOCKED
 
 /* Define to 1 if you have the declaration of `getdtablesize', and to 0 if you
    don't. */
@@ -866,6 +918,14 @@
 /* Define to 1 if you have the declaration of `program_invocation_short_name',
    and to 0 if you don't. */
 #undef HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME
+
+/* Define to 1 if you have the declaration of `putchar_unlocked', and to 0 if
+   you don't. */
+#undef HAVE_DECL_PUTCHAR_UNLOCKED
+
+/* Define to 1 if you have the declaration of `putc_unlocked', and to 0 if you
+   don't. */
+#undef HAVE_DECL_PUTC_UNLOCKED
 
 /* Define to 1 if you have the declaration of `snprintf', and to 0 if you
    don't. */
@@ -2493,6 +2553,9 @@
 # undef _XOPEN_SOURCE
 #endif
 
+
+/* An alias of GNULIB_STDIO_SINGLE_THREAD. */
+#undef USE_UNLOCKED_IO
 
 /* Define if the native Windows multithreading API can be used. */
 #undef USE_WINDOWS_THREADS

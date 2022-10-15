@@ -234,8 +234,8 @@ Readline::readline_internal_setup ()
       if (!rl_prompt.empty () && !rl_already_prompted)
         {
           std::string nprompt = _rl_strip_prompt (rl_prompt);
-          std::fprintf (_rl_out_stream, "%s", nprompt.c_str ());
-          std::fflush (_rl_out_stream);
+          fprintf (_rl_out_stream, "%s", nprompt.c_str ());
+          fflush (_rl_out_stream);
         }
     }
   else
@@ -459,7 +459,7 @@ Readline::readline_internal_charloop ()
             return 0;
 
           // XXX the original setjmp code continues at the top of try block
-          std::abort ();
+          abort ();
         }
 
 #if defined(READLINE_CALLBACKS)

@@ -24,22 +24,11 @@
 #if !defined(_EXTERNS_H_)
 #define _EXTERNS_H_
 
-#include <cerrno>
-#include <cstdio>
-#include <cstring>
-#include <ctime>
-
-#include <algorithm>
-#include <string>
-#include <vector>
-
 #include "bashtypes.hh"
 #include "general.hh"
 #include "posixstat.hh"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 namespace bash
 {

@@ -22,6 +22,8 @@
 #define _GENERAL_H_
 
 #include "bashtypes.hh"
+
+#include "bashintl.hh"
 #include "chartypes.hh"
 
 #if defined(HAVE_SYS_RESOURCE_H) && defined(RLIMTYPE)

@@ -44,16 +44,9 @@
 
 #include "config.h"
 
-#include <cerrno>
-#include <cstdio>
-
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "bashintl.hh"
-
-#include <csignal>
 
 #include "common.hh"
 #include "jobs.hh"

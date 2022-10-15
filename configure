@@ -10286,6 +10286,8 @@ fi
   # Code from module unitypes:
   # Code from module uniwidth/base:
   # Code from module uniwidth/width:
+  # Code from module unlocked-io:
+  # Code from module unlocked-io-internal:
   # Code from module vararrays:
   # Code from module vasnprintf:
   # Code from module verify:
@@ -32034,8 +32036,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:32037: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:32038: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:32039: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:32040: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -32061,7 +32063,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:32064: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:32066: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -32215,7 +32217,7 @@ fi
 
         fi
       fi
-      echo "$as_me:32218: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:32220: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -36446,8 +36448,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:36449: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:36450: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:36451: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:36452: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -36473,7 +36475,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:36476: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:36478: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -36627,7 +36629,7 @@ fi
 
         fi
       fi
-      echo "$as_me:36630: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:36632: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -36855,8 +36857,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:36858: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:36859: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:36860: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:36861: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -36882,7 +36884,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:36885: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:36887: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -37036,7 +37038,7 @@ fi
 
         fi
       fi
-      echo "$as_me:37039: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:37041: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -43962,6 +43964,123 @@ q
     LIBUNISTRING_VERSION_MINOR=`echo "$LIBUNISTRING_VERSION" | sed -n -e "$gl_libunistring_sed_extract_minor"`
     LIBUNISTRING_VERSION_SUBMINOR=`echo "$LIBUNISTRING_VERSION" | sed -n -e "$gl_libunistring_sed_extract_subminor"`
   fi
+
+ac_fn_check_decl "$LINENO" "clearerr_unlocked" "ac_cv_have_decl_clearerr_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_clearerr_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_CLEARERR_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "feof_unlocked" "ac_cv_have_decl_feof_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_feof_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_FEOF_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "ferror_unlocked" "ac_cv_have_decl_ferror_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_ferror_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_FERROR_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "fflush_unlocked" "ac_cv_have_decl_fflush_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_fflush_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_FFLUSH_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "fgets_unlocked" "ac_cv_have_decl_fgets_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_fgets_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_FGETS_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "fputc_unlocked" "ac_cv_have_decl_fputc_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_fputc_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_FPUTC_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "fputs_unlocked" "ac_cv_have_decl_fputs_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_fputs_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_FPUTS_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "fread_unlocked" "ac_cv_have_decl_fread_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_fread_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_FREAD_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "fwrite_unlocked" "ac_cv_have_decl_fwrite_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_fwrite_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_FWRITE_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "getc_unlocked" "ac_cv_have_decl_getc_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_getc_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_GETC_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "getchar_unlocked" "ac_cv_have_decl_getchar_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_getchar_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_GETCHAR_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "putc_unlocked" "ac_cv_have_decl_putc_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_putc_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_PUTC_UNLOCKED $ac_have_decl" >>confdefs.h
+
+ac_fn_check_decl "$LINENO" "putchar_unlocked" "ac_cv_have_decl_putchar_unlocked" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+if test "x$ac_cv_have_decl_putchar_unlocked" = xyes
+then :
+  ac_have_decl=1
+else $as_nop
+  ac_have_decl=0
+fi
+printf "%s\n" "#define HAVE_DECL_PUTCHAR_UNLOCKED $ac_have_decl" >>confdefs.h
 
 
 
@@ -63419,6 +63538,29 @@ fi
     LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_TRUE='#'
     LIBUNISTRING_COMPILE_UNIWIDTH_WIDTH_FALSE='#'
   fi
+
+
+
+printf "%s\n" "#define GNULIB_STDIO_SINGLE_THREAD 1" >>confdefs.h
+
+
+printf "%s\n" "#define USE_UNLOCKED_IO GNULIB_STDIO_SINGLE_THREAD" >>confdefs.h
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

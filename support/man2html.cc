@@ -67,9 +67,11 @@
 
 #define NROFF 0
 
+// Use unlocked I/O, if available.
+#include "unlocked-io.h"
+
 #include <cctype>
 #include <cerrno>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 

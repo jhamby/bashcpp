@@ -3844,9 +3844,8 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
           if (async)
             subshell_environment |= SUBSHELL_ASYNC;
 
-          /* We need to do this before piping to handle some really
-             pathological cases where one of the pipe file descriptors
-             is < 2. */
+          // We need to do this before piping to handle some really
+          // pathological cases where one of the pipe file descriptors is < 2.
           if (fds_to_close)
             close_fd_bitmap (*fds_to_close);
 
@@ -3856,6 +3855,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
 
           do_piping (pipe_in, pipe_out);
           pipe_in = pipe_out = NO_PIPE;
+
 #if defined(COPROCESS_SUPPORT)
           coproc_closeall ();
 #endif
@@ -3921,7 +3921,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
 
   char *lastarg = nullptr;
 
-  // begin_unwind_frame ("simple-command");
+  // XXX begin_unwind_frame ("simple-command");
 
   if (echo_command_at_execute && (cmdflags & CMD_COMMAND_BUILTIN) == 0)
     xtrace_print_word_list (words, 1);
@@ -3959,6 +3959,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
       last_command_exit_value = EXECUTION_FAILURE;
       throw bash_exception (ERREXIT);
     }
+
   tempenv_assign_error = false; /* don't care about this any more */
 
   /* This is where we handle the command builtin as a pseudo-reserved word
@@ -4011,8 +4012,8 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
   std::string &lastarg = lastword->word->word;
 
   /* Initialize variables here so goto doesn't skip over construction. */
-  char *command_line = nullptr;
-  char *temp;
+  const char *command_line = nullptr;
+  const char *temp;
   int old_builtin;
 
 #if defined(JOB_CONTROL)
@@ -4030,9 +4031,9 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
      If they do, find out whether this word is a candidate for a running
      job. */
   if (job_control && !already_forked && !async && !first_word_quoted
-      && !words->next () && !words->word->word.empty () && !simple_command->redirects
-      && pipe_in == NO_PIPE && pipe_out == NO_PIPE
-      && (temp = get_string_value ("auto_resume")))
+      && !words->next () && !words->word->word.empty ()
+      && !simple_command->redirects && pipe_in == NO_PIPE
+      && pipe_out == NO_PIPE && (temp = get_string_value ("auto_resume")))
     {
       int job, started_status;
 
@@ -4061,7 +4062,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
 
 run_builtin:
   /* Remember the name of this command globally. */
-  this_command_name = words->word->word;
+  this_command_name = savestring (words->word->word);
 
   QUIT;
 
@@ -4110,9 +4111,11 @@ run_builtin:
 
           if (!async)
             subshell_level++;
+
           execute_subshell_builtin_or_function (
               words, simple_command->redirects, builtin, func, pipe_in,
               pipe_out, async, fds_to_close, cmdflags);
+
           subshell_level--;
         }
       else
@@ -4129,8 +4132,8 @@ run_builtin:
                     case EX_REDIRFAIL:
                     case EX_BADASSIGN:
                     case EX_EXPFAIL:
-                      /* These errors cause non-interactive posix mode shells
-                       * to exit */
+                      // These errors cause non-interactive posix mode shells
+                      // to exit
                       if (posixly_correct && builtin_is_special
                           && !interactive_shell)
                         {
@@ -4152,6 +4155,7 @@ run_builtin:
                   if (builtin_is_special)
                     special_builtin_failed = true;
                 }
+
               /* In POSIX mode, if there are assignment statements preceding
                  a special builtin, they persist after the builtin
                  completes. */
@@ -4172,7 +4176,8 @@ run_builtin:
         }
     }
 
-  if (autocd && interactive && words->word && is_dirname (words->word->word.c_str ()))
+  if (autocd && interactive && words->word
+      && is_dirname (words->word->word.c_str ()))
     {
       words = new WORD_LIST (make_word ("--"), words);
       words = new WORD_LIST (make_word ("cd"), words);
@@ -4194,6 +4199,7 @@ execute_from_filesystem:
   if (!already_forked && (cmdflags & CMD_NO_FORK) && fifos_pending () > 0)
     cmdflags &= ~CMD_NO_FORK;
 #endif
+
   result = execute_disk_command (words, simple_command->redirects,
                                  command_line, pipe_in, pipe_out, async,
                                  fds_to_close, cmdflags);
@@ -4678,25 +4684,6 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   return result;
 }
 
-/* A convenience routine for use by other parts of the shell to execute
-   a particular shell function. */
-int
-Shell::execute_shell_function (SHELL_VAR *var, WORD_LIST *words)
-{
-  fd_bitmap *bitmap;
-
-  bitmap = new_fd_bitmap (FD_BITMAP_DEFAULT_SIZE);
-  begin_unwind_frame ("execute-shell-function");
-  add_unwind_protect_ptr (dispose_fd_bitmap, bitmap);
-
-  int ret = execute_function (var, words, 0, bitmap, false, false);
-
-  dispose_fd_bitmap (bitmap);
-  discard_unwind_frame ("execute-shell-function");
-
-  return ret;
-}
-
 /* Execute a shell builtin or function in a subshell environment.  This
    routine does not return; it only calls exit().  If BUILTIN is non-null,
    it points to a function to call to execute a shell builtin; otherwise
@@ -4924,10 +4911,6 @@ Shell::execute_builtin_or_function (WORD_LIST *words,
 void
 setup_async_signals ()
 {
-#if defined(__BEOS__)
-  set_signal_handler (SIGHUP, SIG_IGN); /* they want csh-like behavior */
-#endif
-
 #if defined(JOB_CONTROL)
   if (job_control == 0)
 #endif

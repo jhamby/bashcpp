@@ -62,12 +62,7 @@
 
 #if defined(READLINE)
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
-
-#include <cerrno>
-#include <cstdio>
 
 #include "history.hh"
 #include "readline.hh"

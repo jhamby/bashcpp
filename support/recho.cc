@@ -26,7 +26,8 @@
 
 #include "config.h"
 
-#include <cstdio>
+// Use unlocked I/O, if available.
+#include "unlocked-io.h"
 
 static void strprint (const char *str);
 

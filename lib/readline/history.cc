@@ -57,7 +57,7 @@ History::history_get_time (const HIST_ENTRY *hist)
 
   errno = 0;
 
-  time_t t = static_cast<time_t> (std::strtol (ts + 1, nullptr, 10));
+  time_t t = static_cast<time_t> (strtoull (ts + 1, nullptr, 10));
   if (errno == ERANGE)
     return 0;
 
@@ -69,12 +69,8 @@ History::hist_inittime ()
 {
   char ts[32], *ret;
 
-  time_t t = ::time (nullptr);
-#if defined(HAVE_VSNPRINTF) /* assume snprintf if vsnprintf exists */
-  std::snprintf (ts, sizeof (ts) - 1, "X%lu", static_cast<unsigned long> (t));
-#else
-  std::sprintf (ts, "X%lu", static_cast<unsigned long> (t));
-#endif
+  time_t t = time (nullptr);
+  snprintf (ts, sizeof (ts) - 1, "X%lu", static_cast<uint64_t> (t));
   ret = savestring (ts);
   ret[0] = history_comment_char;
 
@@ -127,7 +123,7 @@ History::add_history_time (const char *string)
    the old entry so you can dispose of the data.  In the case of an
    invalid WHICH, nullptr is returned. */
 HIST_ENTRY *
-History::replace_history_entry (unsigned int which, const std::string &line,
+History::replace_history_entry (size_t which, string_view line,
                                 histdata_t data)
 {
   HIST_ENTRY *temp, *old_value;
@@ -146,7 +142,7 @@ History::replace_history_entry (unsigned int which, const std::string &line,
    end of the current line first.  This can be used to construct multi-line
    history entries while reading lines from the history file. */
 void
-History::_hs_append_history_line (unsigned int which, const char *line)
+History::_hs_append_history_line (size_t which, const char *line)
 {
   HIST_ENTRY *hent = the_history[which];
   hent->line.push_back ('\n');
@@ -160,8 +156,7 @@ History::_hs_append_history_line (unsigned int which, const char *line)
    WHICH >= 0 means to replace that particular history entry's data, as
    long as it matches OLD. */
 void
-History::_hs_replace_history_data (unsigned int which, histdata_t old,
-                                   histdata_t new_)
+History::_hs_replace_history_data (size_t, histdata_t old, histdata_t new_)
 {
   if (which < static_cast<unsigned int> (-2) || which >= the_history.size ()
       || the_history.empty ())
@@ -241,7 +236,7 @@ History::remove_history_range (unsigned int first, unsigned int last)
 
 /* Stifle the history list, remembering only MAX number of lines. */
 void
-History::stifle_history (unsigned int max)
+History::stifle_history (size_t max)
 {
   // Rearrange history if we were already in ring buffer mode and changed size.
   if (history_stifled && max != history_max_entries)

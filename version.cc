@@ -20,7 +20,9 @@
 
 #include "config.h"
 
-#include <cstdio>
+// Use unlocked I/O, if available.
+#include "unlocked-io.h"
+
 #include <sstream>
 #include <string>
 

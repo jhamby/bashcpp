@@ -83,6 +83,7 @@
 #  times \
 #  timespec \
 #  tmpfile \
+#  unlocked-io \
 #  vfprintf-posix \
 #  vprintf-posix \
 #  waitpid \
@@ -390,7 +391,7 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/timespec.m4 $(top_srcdir)/m4/tls.m4 \
 	$(top_srcdir)/m4/tmpdir.m4 $(top_srcdir)/m4/tmpfile.m4 \
 	$(top_srcdir)/m4/unistd-safer.m4 $(top_srcdir)/m4/unistd_h.m4 \
-	$(top_srcdir)/m4/vasnprintf.m4 \
+	$(top_srcdir)/m4/unlocked-io.m4 $(top_srcdir)/m4/vasnprintf.m4 \
 	$(top_srcdir)/m4/vfprintf-posix.m4 \
 	$(top_srcdir)/m4/visibility.m4 \
 	$(top_srcdir)/m4/vprintf-posix.m4 $(top_srcdir)/m4/waitpid.m4 \
@@ -2445,13 +2446,14 @@ EXTRA_DIST = alloca.c alloca.in.h arpa_inet.in.h assert.in.h verify.h \
 	sys_uio.in.h sys_wait.in.h tempname.h thread-optim.h time.in.h \
 	timespec.h unistd.in.h unistd--.h unistd-safer.h unitypes.in.h \
 	localcharset.h uniwidth.in.h unictype/bitmap.h uniwidth/cjk.h \
-	uniwidth/width0.h uniwidth/width2.h asnprintf.c float+.h \
-	printf-args.c printf-args.h printf-parse.c printf-parse.h \
-	vasnprintf.c vasnprintf.h verify.h vfprintf.c vprintf.c \
-	wchar.in.h wcswidth-impl.h wctype.in.h windows-initguard.h \
-	windows-mutex.h windows-once.h windows-initguard.h \
-	windows-recmutex.h windows-initguard.h windows-rwlock.h \
-	windows-tls.h wmemchr-impl.h xalloc-oversized.h
+	uniwidth/width0.h uniwidth/width2.h unlocked-io.h asnprintf.c \
+	float+.h printf-args.c printf-args.h printf-parse.c \
+	printf-parse.h vasnprintf.c vasnprintf.h verify.h vfprintf.c \
+	vprintf.c wchar.in.h wcswidth-impl.h wctype.in.h \
+	windows-initguard.h windows-mutex.h windows-once.h \
+	windows-initguard.h windows-recmutex.h windows-initguard.h \
+	windows-rwlock.h windows-tls.h wmemchr-impl.h \
+	xalloc-oversized.h
 BUILT_SOURCES = $(ALLOCA_H) arpa/inet.h $(ASSERT_H) ctype.h dirent.h \
 	$(ERRNO_H) fcntl.h $(FLOAT_H) $(FNMATCH_H) $(GLOB_H) \
 	glob-libc.gl.h inttypes.h langinfo.h $(LIMITS_H) locale.h \

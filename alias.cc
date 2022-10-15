@@ -23,12 +23,6 @@
 
 #if defined(ALIAS)
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include <cstdio>
-
 #include "alias.hh"
 #include "chartypes.hh"
 #include "shell.hh"

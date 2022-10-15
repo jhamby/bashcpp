@@ -26,7 +26,9 @@
 
 #include "config.h"
 
-#include <cstdio> /* puts */
+// Use unlocked I/O, if available.
+#include "unlocked-io.h"
+
 #include <cstdlib>
 #include <cstring>
 

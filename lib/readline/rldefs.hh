@@ -29,6 +29,8 @@
 #include "config-bot.hh"
 #include "config-top.hh"
 
+#include <sys/types.h>
+
 // First, include common C++ wrappers for standard C headers.
 #include <cerrno>
 #include <climits>
@@ -38,6 +40,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <cwctype>
+
+// Now, include system or Gnulib headers.
+#include <stdint.h>
+#include <string.h>
+#include <unistd.h> /* for _POSIX_VERSION */
 
 // Include Gnulib versions of C type functions.
 #include "c-ctype.h"
@@ -68,6 +75,9 @@ using nonstd::to_string_view;
 }
 #endif
 
+// Prefer unlocked I/O where available (include after other files).
+#include "unlocked-io.h"
+
 // Fake C++11 keywords for older C++ compilers.
 #if !defined(nullptr) && __cplusplus < 201103L
 #define noexcept throw ()
@@ -75,16 +85,6 @@ using nonstd::to_string_view;
 #define nullptr NULL
 #define constexpr const
 #endif
-
-#if defined(HAVE_INTTYPES_H)
-#include <inttypes.h>
-#endif
-
-#if defined(HAVE_STDINT_H)
-#include <stdint.h>
-#endif
-
-#include <unistd.h> /* for _POSIX_VERSION */
 
 #if defined(_POSIX_VERSION) && !defined(TERMIOS_MISSING)
 #define TERMIOS_TTY_DRIVER

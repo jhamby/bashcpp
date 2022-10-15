@@ -21,30 +21,46 @@
 #if !defined(_BASHTYPES_H_)
 #define _BASHTYPES_H_
 
-#include "config-top.hh"
 #include "config-bot.hh"
+#include "config-top.hh"
 
 #include <sys/types.h>
 
-// Include the gnulib or system header first.
-#include <inttypes.h>
+// First, include common C++ wrappers for standard C headers.
+#include <cerrno>
+#include <climits>
+#include <csignal>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cwctype>
 
-#if defined(HAVE_STDINT_H)
+// Now, include either Gnulib overrides or system headers.
 #include <stdint.h>
-#endif
+#include <string.h>
+#include <unistd.h> /* for _POSIX_VERSION */
+
+// Include Gnulib versions of C type functions.
+#include "c-ctype.h"
+
+// Next, include some common C++ library headers.
+#include <algorithm>
+#include <exception>
+#include <string>
+#include <vector>
 
 // Use C++17 std::string_view or our own lite version.
 #if __cplusplus >= 201703L
-#include <string_view>
 #include <nonstd/string_view.hpp>
+#include <string_view>
 namespace bash
 {
-using std::string_view;
 using nonstd::to_string;
 using nonstd::to_string_view;
+using std::string_view;
 }
 #else
-#include <string.h>
 #include <nonstd/string_view.hpp>
 namespace bash
 {
@@ -53,6 +69,9 @@ using nonstd::to_string;
 using nonstd::to_string_view;
 }
 #endif
+
+// Prefer unlocked I/O where available (include after other files).
+#include "unlocked-io.h"
 
 // Fake C++11 keywords for older C++ compilers.
 #if !defined(nullptr) && __cplusplus < 201103L
