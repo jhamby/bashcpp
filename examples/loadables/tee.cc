@@ -22,16 +22,21 @@
 
 #include "config.h"
 
-#include "bashtypes.hh"
-#include "posixstat.hh"
-
-#include <signal.h>
-#include <unistd.h>
-
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
+
+namespace bash
+{
+
+// Loadable class for "tee".
+class ShellLoadable : public Shell
+{
+public:
+  int tee_builtin (WORD_LIST *);
+
+private:
+};
 
 typedef struct flist
 {
@@ -44,13 +49,10 @@ static FLIST *tee_flist;
 
 #define TEE_BUFSIZE 8192
 
-extern int interrupt_immediately;
-
-extern char *strerror ();
+// extern int interrupt_immediately;
 
 int
-tee_builtin (list)
-WORD_LIST *list;
+ShellLoadable::tee_builtin (WORD_LIST *list)
 {
   int opt, append, nointr, rval, fd, fflags;
   int n, nr, nw;
@@ -75,7 +77,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -151,23 +153,20 @@ WORD_LIST *list;
     }
 
   QUIT;
-  return (rval);
+  return rval;
 }
 
-char *tee_doc[]
+static const char *const tee_doc[]
     = { "Duplicate standard output.",
         "",
         "Copy standard input to standard output, making a copy in each",
         "filename argument.  If the `-a' option is given, the specified",
         "files are appended to, otherwise they are overwritten.  If the",
         "`-i' option is supplied, tee ignores interrupts.",
-        (char *)NULL };
+        nullptr };
 
-struct builtin tee_struct = {
-  "tee",                  /* builtin name */
-  tee_builtin,            /* function implementing the builtin */
-  BUILTIN_ENABLED,        /* initial flags for builtin */
-  tee_doc,                /* array of long documentation strings. */
-  "tee [-ai] [file ...]", /* usage synopsis; becomes short_doc */
-  0                       /* reserved for internal use */
-};
+Shell::builtin tee_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::tee_builtin),
+    tee_doc, "tee [-ai] [file ...]", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

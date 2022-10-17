@@ -29,12 +29,24 @@
 
 #include "chartypes.hh"
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
-static void munge_list (list) WORD_LIST *list;
+namespace bash
+{
+
+// Loadable class for "head".
+class ShellLoadable : public Shell
+{
+public:
+  int head_builtin (WORD_LIST *);
+
+private:
+};
+
+static void
+munge_list (WORD_LIST *list)
 {
   WORD_LIST *l, *nl;
   WORD_DESC *wd;
@@ -56,9 +68,7 @@ static void munge_list (list) WORD_LIST *list;
 }
 
 static int
-file_head (fp, cnt)
-FILE *fp;
-int cnt;
+file_head (FILE *fp, int cnt)
 {
   int ch;
 
@@ -75,12 +85,11 @@ int cnt;
             break;
         }
     }
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 int
-head_builtin (list)
-WORD_LIST *list;
+ShellLoadable::head_builtin (WORD_LIST *list)
 {
   int nline, opt, rval;
   WORD_LIST *l;
@@ -101,21 +110,21 @@ WORD_LIST *list;
           if (nline <= 0)
             {
               builtin_error ("bad line count: %s", list_optarg);
-              return (EX_USAGE);
+              return EX_USAGE;
             }
           break;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
 
   if (list == 0)
-    return (file_head (stdin, nline));
+    return file_head (stdin, nline);
 
-  for (rval = EXECUTION_SUCCESS, opt = 1, l = list; l; l = l->next)
+  for (rval = EXECUTION_SUCCESS, opt = 1, l = list; l; l = l->next ())
     {
       fp = fopen (l->word->word, "r");
       if (fp == NULL)
@@ -123,7 +132,7 @@ WORD_LIST *list;
           builtin_error ("%s: %s", l->word->word, strerror (errno));
           continue;
         }
-      if (list->next) /* more than one file */
+      if (list->next ()) /* more than one file */
         {
           printf ("%s==> %s <==\n", opt ? "" : "\n", l->word->word);
           opt = 0;
@@ -132,22 +141,19 @@ WORD_LIST *list;
       fclose (fp);
     }
 
-  return (rval);
+  return rval;
 }
 
-char *head_doc[]
+static const char *const head_doc[]
     = { "Display lines from beginning of file.",
         "",
         "Copy the first N lines from the input files to the standard output.",
         "N is supplied as an argument to the `-n' option.  If N is not given,",
         "the first ten lines are copied.",
-        (char *)NULL };
+        nullptr };
 
-struct builtin head_struct = {
-  "head",                     /* builtin name */
-  head_builtin,               /* function implementing the builtin */
-  BUILTIN_ENABLED,            /* initial flags for builtin */
-  head_doc,                   /* array of long documentation strings. */
-  "head [-n num] [file ...]", /* usage synopsis; becomes short_doc */
-  0                           /* reserved for internal use */
-};
+Shell::builtin head_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::head_builtin),
+    head_doc, "head [-n num] [file ...]", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

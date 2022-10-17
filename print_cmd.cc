@@ -148,7 +148,7 @@ Shell::indirection_level_string ()
     }
   else
     memcpy (ps4_firstc, ps4_str.data (),
-                 static_cast<size_t> (ps4_firstc_len + 1)); // include '\0'
+            static_cast<size_t> (ps4_firstc_len + 1)); // include '\0'
 #else
   ps4_firstc[0] = ps4_str[0];
   ps4_firstc[ps4_firstc_len = 1] = '\0';
@@ -162,8 +162,7 @@ Shell::indirection_level_string ()
         indirection_string.append (ps4_firstc);
     }
 
-  indirection_string.append (ps4 + ps4_firstc_len);
-  delete[] ps4;
+  indirection_string.append (ps4_str, static_cast<size_t> (ps4_firstc_len));
   return indirection_string;
 }
 
@@ -176,7 +175,7 @@ Shell::xtrace_print_assignment (const char *name, const char *value,
   CHECK_XTRACE_FP;
 
   if (xflags)
-    fprintf (xtrace_fp, "%s", indirection_level_string ());
+    fprintf (xtrace_fp, "%s", indirection_level_string ().c_str ());
 
   /* VALUE should not be NULL when this is called. */
   if (*value == '\0' || assign_list)
@@ -209,7 +208,7 @@ Shell::xtrace_print_word_list (WORD_LIST *list, int xtflags)
   CHECK_XTRACE_FP;
 
   if (xtflags & 1)
-    fprintf (xtrace_fp, "%s", indirection_level_string ());
+    fprintf (xtrace_fp, "%s", indirection_level_string ().c_str ());
 
   for (w = list; w; w = w->next ())
     {
@@ -298,9 +297,8 @@ void
 Shell::xtrace_print_select_command_head (FOR_SELECT_COM *select_command)
 {
   CHECK_XTRACE_FP;
-  fprintf (xtrace_fp, "%s", indirection_level_string ());
-  fprintf (xtrace_fp, "select %s in ",
-                select_command->name->word.c_str ());
+  fprintf (xtrace_fp, "%s", indirection_level_string ().c_str ());
+  fprintf (xtrace_fp, "select %s in ", select_command->name->word.c_str ());
   xtrace_print_word_list (select_command->map_list, 2);
 }
 #endif /* SELECT_COMMAND */
@@ -346,7 +344,7 @@ void
 Shell::xtrace_print_case_command_head (CASE_COM *case_command)
 {
   CHECK_XTRACE_FP;
-  fprintf (xtrace_fp, "%s", indirection_level_string ());
+  fprintf (xtrace_fp, "%s", indirection_level_string ().c_str ());
   fprintf (xtrace_fp, "case %s in\n", case_command->word->word.c_str ());
 }
 
@@ -461,31 +459,31 @@ Shell::print_cond_node (COND_COM *cond)
   if (cond->flags & CMD_INVERT_RETURN)
     cprintf ("! ");
 
-  if (cond->type == COND_EXPR)
+  if (cond->cond_type == COND_EXPR)
     {
       cprintf ("( ");
       print_cond_node (cond->left);
       cprintf (" )");
     }
-  else if (cond->type == COND_AND)
+  else if (cond->cond_type == COND_AND)
     {
       print_cond_node (cond->left);
       cprintf (" && ");
       print_cond_node (cond->right);
     }
-  else if (cond->type == COND_OR)
+  else if (cond->cond_type == COND_OR)
     {
       print_cond_node (cond->left);
       cprintf (" || ");
       print_cond_node (cond->right);
     }
-  else if (cond->type == COND_UNARY)
+  else if (cond->cond_type == COND_UNARY)
     {
       cprintf ("%s", cond->op->word.c_str ());
       cprintf (" ");
       print_cond_node (cond->left);
     }
-  else if (cond->type == COND_BINARY)
+  else if (cond->cond_type == COND_BINARY)
     {
       print_cond_node (cond->left);
       cprintf (" ");
@@ -493,7 +491,7 @@ Shell::print_cond_node (COND_COM *cond)
       cprintf (" ");
       print_cond_node (cond->right);
     }
-  else if (cond->type == COND_TERM)
+  else if (cond->cond_type == COND_TERM)
     {
       cprintf ("%s", cond->op->word.c_str ()); // need to add quoting here
     }
@@ -524,7 +522,7 @@ Shell::xtrace_print_cond_term (cond_com_type type, bool invert, WORD_DESC *op,
 {
   CHECK_XTRACE_FP;
   the_printed_command.clear ();
-  fprintf (xtrace_fp, "%s", indirection_level_string ());
+  fprintf (xtrace_fp, "%s", indirection_level_string ().c_str ());
   fprintf (xtrace_fp, "[[ ");
 
   if (invert)
@@ -556,12 +554,11 @@ Shell::xtrace_print_arith_cmd (WORD_LIST *list)
   WORD_LIST *w;
 
   CHECK_XTRACE_FP;
-  fprintf (xtrace_fp, "%s", indirection_level_string ());
+  fprintf (xtrace_fp, "%s", indirection_level_string ().c_str ());
   fprintf (xtrace_fp, "(( ");
 
   for (w = list; w; w = w->next ())
-    fprintf (xtrace_fp, "%s%s", w->word->word.c_str (),
-                  w->next () ? " " : "");
+    fprintf (xtrace_fp, "%s%s", w->word->word.c_str (), w->next () ? " " : "");
 
   fprintf (xtrace_fp, " ))\n");
 
@@ -681,7 +678,7 @@ Shell::print_heredoc_header (REDIRECT *redirect)
   if (redirect->rflags & REDIR_VARASSIGN)
     cprintf ("{%s}", redirect->redirector.r.filename->word.c_str ());
   else if (redirect->redirector.r.dest != 0)
-    cprintf ("%ld", static_cast<long> (redirect->redirector.r.dest));
+    cprintf ("%d", redirect->redirector.r.dest);
 
   /* If the here document delimiter is quoted, single-quote it. */
   if (redirect->redirectee.r.filename->flags & W_QUOTED)
@@ -701,10 +698,10 @@ Shell::print_redirection (REDIRECT *redirect)
   WORD_DESC *redirectee, *redir_word;
 
   redirectee = redirect->redirectee.r.filename;
-  redir_fd = static_cast<int> (redirect->redirectee.r.dest);
+  redir_fd = redirect->redirectee.r.dest;
 
   redir_word = redirect->redirector.r.filename;
-  redirector = static_cast<int> (redirect->redirector.r.dest);
+  redirector = redirect->redirector.r.dest;
 
   switch (redirect->instruction)
     {
@@ -928,10 +925,9 @@ Shell::print_function_def (FUNCTION_DEF *func)
    line. flags & FUNC_EXTERNAL means convert from internal to external form.
   */
 std::string
-Shell::named_function_string (string_view name, COMMAND *command,
+Shell::named_function_string (const char *name, COMMAND *command,
                               print_flags flags)
 {
-  char *result;
   int old_indent, old_amount;
   COMMAND *cmdcopy;
   REDIRECT *func_redirects;
@@ -945,7 +941,8 @@ Shell::named_function_string (string_view name, COMMAND *command,
 
   if (name && *name)
     {
-      if (find_reserved_word (name) >= 0)
+      STRING_TOKEN_MAP::iterator it = word_token_map.find (name);
+      if (it != word_token_map.end ())
         cprintf ("function ");
       cprintf ("%s ", name);
     }
@@ -993,28 +990,18 @@ Shell::named_function_string (string_view name, COMMAND *command,
   else
     newline ("}");
 
-  result = the_printed_command.data ();
+  std::string result (the_printed_command);
 
   if ((flags & FUNC_MULTILINE) == 0)
     {
-#if 0
-      int i;
-      for (i = 0; result[i]; i++)
-	if (result[i] == '\n')
-	  {
-	    strcpy (result + i, result + i + 1);
-	    --i;
-	  }
-#else
       if (result[2] == '\n') /* XXX -- experimental */
-        memmove (result + 2, result + 3, strlen (result) - 2);
-#endif
+        result.erase (2, 1);
     }
 
   delete cmdcopy;
 
   if (flags & FUNC_EXTERNAL)
-    result = remove_quoted_escapes (result);
+    return remove_quoted_escapes (result);
 
   return result;
 }

@@ -22,16 +22,24 @@
 
 #include "config.h"
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
-extern char *ttyname ();
+namespace bash
+{
+
+// Loadable class for "tty".
+class ShellLoadable : public Shell
+{
+public:
+  int tty_builtin (WORD_LIST *);
+
+private:
+};
 
 int
-tty_builtin (list)
-WORD_LIST *list;
+ShellLoadable::tty_builtin (WORD_LIST *list)
 {
   int opt, sflag;
   char *t;
@@ -48,7 +56,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -57,25 +65,20 @@ WORD_LIST *list;
   QUIT;
   if (sflag == 0)
     puts (t ? t : "not a tty");
-  return (t ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+  return t ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
 }
 
-char *tty_doc[]
+static const char *const tty_doc[]
     = { "Display terminal name.",
         "",
         "tty writes the name of the terminal that is opened for standard",
         "input to standard output.  If the `-s' option is supplied, nothing",
         "is written; the exit status determines whether or not the standard",
         "input is connected to a tty.",
-        (char *)NULL };
+        nullptr };
 
-/* The standard structure describing a builtin command.  bash keeps an array
-   of these structures. */
-struct builtin tty_struct = {
-  "tty",           /* builtin name */
-  tty_builtin,     /* function implementing the builtin */
-  BUILTIN_ENABLED, /* initial flags for builtin */
-  tty_doc,         /* array of long documentation strings. */
-  "tty [-s]",      /* usage synopsis; becomes short_doc */
-  0                /* reserved for internal use */
-};
+Shell::builtin tty_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::tty_builtin),
+    tty_doc, "tty [-s]", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

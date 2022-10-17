@@ -21,34 +21,10 @@
 
 #include <sys/types.h>
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 #include "bashintl.hh"
 #include "loadables.hh"
 
-#include "bashansi.h"
-#include "loadables.h"
-#include "bashintl.h"
-
-#ifndef errno
-extern int errno;
-#endif
-
-#if defined (PRI_MACROS_BROKEN)
-#  undef PRIdMAX
-#endif
-
-#if !defined (PRIdMAX)
-#  if HAVE_LONG_LONG
-#    define PRIdMAX     "lld"
-#  else
-#    define PRIdMAX     "ld"
-#  endif
-#endif
-
-#if defined (HAVE_LONG_DOUBLE) && HAVE_DECL_STRTOLD && !defined(STRTOLD_BROKEN)
+#if defined(HAVE_LONG_DOUBLE) && HAVE_DECL_STRTOLD && !defined(STRTOLD_BROKEN)
 typedef long double floatmax_t;
 #define FLOATMAX_CONV "L"
 #define strtofltmax strtold
@@ -62,8 +38,21 @@ typedef double floatmax_t;
 #define FLOATMAX_FMT "%g"
 #define FLOATMAX_WFMT "%0.f"
 #endif
-static floatmax_t getfloatmax PARAMS ((const char *));
-static char *genformat PARAMS ((floatmax_t, floatmax_t, floatmax_t));
+
+namespace bash
+{
+
+// Loadable class for "seq".
+class ShellLoadable : public Shell
+{
+public:
+  int seq_builtin (WORD_LIST *);
+
+private:
+};
+
+static floatmax_t getfloatmax (const char *);
+static char *genformat (floatmax_t, floatmax_t, floatmax_t);
 
 #define MAX(a, b) (((a) < (b)) ? (b) : (a))
 
@@ -81,7 +70,8 @@ static char const terminator[] = "\n";
 static char decimal_point;
 
 /* Pretty much the same as the version in builtins/printf.def */
-static floatmax_t getfloatmax (arg) const char *arg;
+static floatmax_t
+getfloatmax (const char *arg)
 {
   floatmax_t ret;
   char *ep;
@@ -103,7 +93,7 @@ static floatmax_t getfloatmax (arg) const char *arg;
   if (ret == -0.0)
     ret = 0.0;
 
-  return (ret);
+  return ret;
 }
 
 /* If FORMAT is a valid printf format for a double argument, return
@@ -179,7 +169,8 @@ long_double_format (char const *fmt)
 }
 
 /* Return the number of digits following the decimal point in NUMBUF */
-static int getprec (numbuf) const char *numbuf;
+static int
+getprec (const char *numbuf)
 {
   int p;
   char *dp;
@@ -193,15 +184,14 @@ static int getprec (numbuf) const char *numbuf;
 
 /* Return the default format given FIRST, INCR, and LAST.  */
 static char *
-genformat (first, incr, last)
-floatmax_t first, incr, last;
+genformat (floatmax_t first, floatmax_t incr, floatmax_t last)
 {
   static char buf[6 + 2 * INT_STRLEN_BOUND (int)];
   int wfirst, wlast, width;
   int iprec, fprec, lprec, prec;
 
   if (equal_width == 0)
-    return (FLOATMAX_FMT);
+    return FLOATMAX_FMT;
 
   /* OK, we have to figure out the largest number of decimal places. This is
      a little more expensive than using the original strings. */
@@ -238,8 +228,9 @@ floatmax_t first, incr, last;
   return buf;
 }
 
-int print_fltseq (fmt, first, last, incr) const char *fmt;
-floatmax_t first, last, incr;
+int
+print_fltseq (const char *fmt, floatmax_t first, floatmax_t last,
+              floatmax_t incr)
 {
   int n;
   floatmax_t next;
@@ -252,22 +243,21 @@ floatmax_t first, last, incr;
     {
       QUIT;
       if (*s && fputs (s, stdout) == EOF)
-        return (sh_chkwrite (EXECUTION_FAILURE));
+        return sh_chkwrite (EXECUTION_FAILURE);
       if (printf (fmt, next) < 0)
-        return (sh_chkwrite (EXECUTION_FAILURE));
+        return sh_chkwrite (EXECUTION_FAILURE);
       s = separator;
       n++;
     }
 
   if (n > 0 && fputs (terminator, stdout) == EOF)
-    return (sh_chkwrite (EXECUTION_FAILURE));
-  return (sh_chkwrite (EXECUTION_SUCCESS));
+    return sh_chkwrite (EXECUTION_FAILURE);
+  return sh_chkwrite (EXECUTION_SUCCESS);
 }
 
 /* must be <= INT_STRLEN_BOUND(int64_t) */
 int
-width_needed (num)
-int64_t num;
+width_needed (int64_t num)
 {
   int ret;
 
@@ -281,8 +271,7 @@ int64_t num;
 }
 
 int
-print_intseq (ifirst, ilast, iincr)
-int64_t ifirst, ilast, iincr;
+print_intseq (int64_t ifirst, int64_t ilast, int64_t iincr)
 {
   char intwfmt[6 + INT_STRLEN_BOUND (int) + sizeof (PRIdMAX)];
   const char *s;
@@ -308,19 +297,18 @@ int64_t ifirst, ilast, iincr;
       QUIT;
       /* The leading %s is for the separator */
       if (printf (equal_width ? intwfmt : "%s%" PRIdMAX, s, i) < 0)
-        return (sh_chkwrite (EXECUTION_FAILURE));
+        return sh_chkwrite (EXECUTION_FAILURE);
       s = separator;
       next = i + iincr;
     }
 
   if (fputs (terminator, stdout) == EOF)
-    return (sh_chkwrite (EXECUTION_FAILURE));
-  return (sh_chkwrite (EXECUTION_SUCCESS));
+    return sh_chkwrite (EXECUTION_FAILURE);
+  return sh_chkwrite (EXECUTION_SUCCESS);
 }
 
 int
-seq_builtin (list)
-WORD_LIST *list;
+ShellLoadable::seq_builtin (WORD_LIST *list)
 {
   floatmax_t first, last, incr;
   int64_t ifirst, ilast, iincr;
@@ -369,7 +357,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -377,7 +365,7 @@ WORD_LIST *list;
   if (list == 0)
     {
       builtin_usage ();
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   for (nargs = 1, l = list; l->next; l = l->next)
@@ -385,14 +373,14 @@ WORD_LIST *list;
   if (nargs > 3)
     {
       builtin_usage ();
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   /* LAST */
   conversion_error = 0;
   last = getfloatmax (last_str = l->word->word);
   if (conversion_error)
-    return (EXECUTION_FAILURE);
+    return EXECUTION_FAILURE;
 
   /* FIRST LAST */
   if (nargs > 1)
@@ -400,7 +388,7 @@ WORD_LIST *list;
       conversion_error = 0;
       first = getfloatmax (first_str = list->word->word);
       if (conversion_error)
-        return (EXECUTION_FAILURE);
+        return EXECUTION_FAILURE;
     }
 
   /* FIRST INCR LAST */
@@ -409,11 +397,11 @@ WORD_LIST *list;
       conversion_error = 0;
       incr = getfloatmax (incr_str = list->next->word->word);
       if (conversion_error)
-        return (EXECUTION_FAILURE);
+        return EXECUTION_FAILURE;
       if (incr == 0.0)
         {
           builtin_error ("zero %screment", (first < last) ? "in" : "de");
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
     }
 
@@ -423,7 +411,7 @@ WORD_LIST *list;
   if ((incr < 0.0 && first < last) || (incr > 0 && first > last))
     {
       builtin_error ("incorrect %screment", (first < last) ? "in" : "de");
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   /* validate format here */
@@ -432,7 +420,7 @@ WORD_LIST *list;
       fmtstr = long_double_format (fmtstr);
       freefmt = 1;
       if (fmtstr == 0)
-        return (EXECUTION_FAILURE);
+        return EXECUTION_FAILURE;
     }
 
   if (fmtstr != NULL && equal_width)
@@ -453,7 +441,7 @@ WORD_LIST *list;
       ilast = (int64_t)last;
       iincr = (int64_t)incr;
 
-      return (print_intseq (ifirst, ilast, iincr));
+      return print_intseq (ifirst, ilast, iincr);
     }
 
   decimal_point = locale_decpoint ();
@@ -468,7 +456,7 @@ WORD_LIST *list;
 }
 
 /* Taken largely from GNU seq. */
-char *seq_doc[] = {
+static const char *const seq_doc[] = {
   "Print numbers from FIRST to LAST, in steps of INCREMENT.",
   "",
   "-f FORMAT    use printf style floating-point FORMAT",
@@ -484,13 +472,12 @@ char *seq_doc[] = {
   "FORMAT must be suitable for printing one argument of type 'double';",
   "it defaults to %.PRECf if FIRST, INCREMENT, and LAST are all fixed point",
   "decimal numbers with maximum precision PREC, and to %g otherwise.",
-  (char *)NULL
+  nullptr
 };
 
-struct builtin seq_struct
-    = { "seq",
-        seq_builtin,
-        BUILTIN_ENABLED,
-        seq_doc,
-        "seq [-f format] [-s separator] [-w] [FIRST [INCR]] LAST",
-        0 };
+Shell::builtin seq_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::seq_builtin),
+    seq_doc, "seq [-f format] [-s separator] [-w] [FIRST [INCR]] LAST",
+    nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

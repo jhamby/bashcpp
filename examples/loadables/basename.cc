@@ -22,29 +22,35 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
+namespace bash
+{
+
+// Loadable class for "basename".
+class ShellLoadable : public Shell
+{
+public:
+  int basename_builtin (WORD_LIST *);
+
+private:
+};
+
 int
-basename_builtin (list)
-WORD_LIST *list;
+ShellLoadable::basename_builtin (WORD_LIST *list)
 {
   int slen, sufflen, off;
   char *string, *suffix, *fn;
 
   if (no_options (list))
-    return (EX_USAGE);
+    return EX_USAGE;
   list = loptend;
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   string = list->word->word;
@@ -58,7 +64,7 @@ WORD_LIST *list;
   if (list->next)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   slen = strlen (string);
@@ -73,7 +79,7 @@ WORD_LIST *list;
   if (slen == 0)
     {
       fputs ("/\n", stdout);
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   /* (3) If there are any trailing slash characters in string, they
@@ -106,24 +112,19 @@ WORD_LIST *list;
         }
     }
   printf ("%s\n", fn);
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
-char *basename_doc[]
+const char *const basename_doc[]
     = { "Return non-directory portion of pathname.",
         "",
         "The STRING is converted to a filename corresponding to the last",
         "pathname component in STRING.  If the suffix string SUFFIX is",
         "supplied, it is removed.",
-        (char *)NULL };
+        nullptr };
 
-/* The standard structure describing a builtin command.  bash keeps an array
-   of these structures. */
-struct builtin basename_struct = {
-  "basename",                 /* builtin name */
-  basename_builtin,           /* function implementing the builtin */
-  BUILTIN_ENABLED,            /* initial flags for builtin */
-  basename_doc,               /* array of long documentation strings. */
-  "basename string [suffix]", /* usage synopsis */
-  0                           /* reserved for internal use */
-};
+Shell::builtin basename_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::basename_builtin),
+    basename_doc, "basename string [suffix]", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

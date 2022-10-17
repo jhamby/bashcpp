@@ -86,7 +86,7 @@ uconvert (char *s, long *ip, long *up, char **ep)
     {
       if (*p == DECIMAL) /* decimal point */
         break;
-      if (std::isdigit (*p) == 0)
+      if (c_isdigit (*p) == 0)
         RETURN (0);
       ipart = (ipart * 10) + (*p - '0');
     }
@@ -101,7 +101,7 @@ uconvert (char *s, long *ip, long *up, char **ep)
   /* Look for up to six digits past a decimal point. */
   for (n = 0; n < 6 && p[n]; n++)
     {
-      if (std::isdigit (p[n]) == 0)
+      if (c_isdigit (p[n]) == 0)
         {
           if (ep)
             {
@@ -122,7 +122,7 @@ uconvert (char *s, long *ip, long *up, char **ep)
   if (ep)
     {
       p += n;
-      while (std::isdigit (*p))
+      while (c_isdigit (*p))
         p++;
     }
 

@@ -121,10 +121,8 @@ Shell::command_builtin (WORD_LIST *list)
   (CMD_NO_FUNCTIONS | CMD_INHIBIT_EXPANSION | CMD_COMMAND_BUILTIN             \
    | (use_standard_path ? CMD_STDPATH : 0))
 
-#ifdef DEBUG
-  itrace ("command_builtin: running execute_command for `%s'",
-          list->word->word);
-#endif
+  internal_debug ("command_builtin: running execute_command for `%s'",
+                  list->word->word);
 
   /* We don't want this to be reparsed (consider command echo 'foo &'), so
      just make a simple_command structure and call execute_command with it. */

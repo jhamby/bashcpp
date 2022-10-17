@@ -22,14 +22,25 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include <fcntl.h>
 
 #include "loadables.hh"
 #include "shmbutil.hh"
+
+namespace bash
+{
+
+// Loadable class for "cut".
+class ShellLoadable : public Shell
+{
+public:
+  int lcut_builtin (WORD_LIST *);
+  int cut_builtin (WORD_LIST *);
+
+private:
+};
 
 #define CUT_ARRAY_DEFAULT "CUTFIELDS"
 
@@ -58,19 +69,18 @@ struct cutop
   struct cutpos *poslist;
 };
 
-static int poscmp (a, b) void *a, *b;
+static int
+poscmp (void *a, void *b)
 {
   struct cutpos *p1, *p2;
 
   p1 = (struct cutpos *)a;
   p2 = (struct cutpos *)b;
-  return (p1->startpos - p2->startpos);
+  return p1->startpos - p2->startpos;
 }
 
 static int
-getlist (arg, opp)
-char *arg;
-struct cutpos **opp;
+getlist (const char *arg, struct cutpos **opp)
 {
   char *ntok, *ltok, *larg;
   int s, e;
@@ -143,10 +153,7 @@ struct cutpos **opp;
 }
 
 static int
-cutbytes (v, line, ops)
-SHELL_VAR *v;
-char *line;
-struct cutop *ops;
+cutbytes (SHELL_VAR *v, char *line, struct cutop *ops)
 {
   arrayind_t ind;
   char *buf, *bmap;
@@ -194,10 +201,7 @@ struct cutop *ops;
 }
 
 static int
-cutchars (v, line, ops)
-SHELL_VAR *v;
-char *line;
-struct cutop *ops;
+cutchars (SHELL_VAR *v, char *line, struct cutop *ops)
 {
   arrayind_t ind;
   char *buf, *bmap;
@@ -206,9 +210,9 @@ struct cutop *ops;
   int i, b, n, s, e;
 
   if (MB_CUR_MAX == 1)
-    return (cutbytes (v, line, ops));
+    return cutbytes (v, line, ops);
   if (locale_utf8locale && utf8_mbsmbchar (line) == 0)
-    return (cutbytes (v, line, ops));
+    return cutbytes (v, line, ops);
 
   llen = strlen (line);
   wbuf = (wchar_t *)xmalloc ((llen + 1) * sizeof (wchar_t));
@@ -217,7 +221,7 @@ struct cutop *ops;
   if (MB_INVALIDCH (wlen))
     {
       free (wbuf);
-      return (cutbytes (v, line, ops));
+      return cutbytes (v, line, ops);
     }
 
   bmap = xmalloc (llen + 1);
@@ -269,10 +273,7 @@ struct cutop *ops;
    bitmap approach as cut{bytes,chars} and assign them to the array variable
    V or print them on stdout. This function obeys SFLAG. */
 static int
-cutfields (v, line, ops)
-SHELL_VAR *v;
-char *line;
-struct cutop *ops;
+cutfields (SHELL_VAR *v, char *line, struct cutop *ops)
 {
   arrayind_t ind;
   char *buf, *bmap, *field, **fields, delim[2];
@@ -359,10 +360,7 @@ struct cutop *ops;
 }
 
 static int
-cutline (v, line, ops)
-SHELL_VAR *v;
-char *line;
-struct cutop *ops;
+cutline (SHELL_VAR *v, char *line, struct cutop *ops)
 {
   int rval;
 
@@ -373,14 +371,11 @@ struct cutop *ops;
   else
     rval = cutfields (v, line, ops);
 
-  return (rval >= 0 ? EXECUTION_SUCCESS : EXECUTION_FAILURE);
+  return rval >= 0 ? EXECUTION_SUCCESS : EXECUTION_FAILURE;
 }
 
 static int
-cutfile (v, list, ops)
-SHELL_VAR *v;
-WORD_LIST *list;
-struct cutop *ops;
+cutfile (SHELL_VAR *v, WORD_LIST *list, struct cutop *ops)
 {
   int fd, unbuffered_read;
   char *line, *b;
@@ -402,7 +397,7 @@ struct cutop *ops;
       if (fd < 0)
         {
           file_error (l->word->word);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
 
 #ifndef __CYGWIN__
@@ -412,12 +407,12 @@ struct cutop *ops;
 #endif
 
       while ((n = zgetline (fd, &line, &llen, '\n', unbuffered_read)) != -1)
-	{
-	  QUIT;
-	  if (line[n] == '\n')
-	    line[n] = '\0';		/* cutline expects no newline terminator */
-	  cutline (v, line, ops);	/* can modify line */
-	}
+        {
+          QUIT;
+          if (line[n] == '\n')
+            line[n] = '\0';       /* cutline expects no newline terminator */
+          cutline (v, line, ops); /* can modify line */
+        }
       if (fd > 0)
         close (fd);
 
@@ -434,9 +429,7 @@ struct cutop *ops;
 #define OPTSET(x) ((cutflags & (x)) ? 1 : 0)
 
 static int
-cut_internal (which, list)
-int which; /* not used yet */
-WORD_LIST *list;
+cut_internal (int which, WORD_LIST *list)
 {
   int opt, rval, cutflags, delim, npos;
   char *array_name, *cutstring, *list_arg;
@@ -474,7 +467,7 @@ WORD_LIST *list;
           if (delim == 0 || list_optarg[1])
             {
               builtin_error ("delimiter must be a single non-null character");
-              return (EX_USAGE);
+              return EX_USAGE;
             }
           break;
         case 'f':
@@ -489,7 +482,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -497,26 +490,26 @@ WORD_LIST *list;
   if (array_name && (legal_identifier (array_name) == 0))
     {
       sh_invalidid (array_name);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (list == 0 && which == 0)
     {
       builtin_error ("string argument required");
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   /* options are mutually exclusive and one is required */
   if ((OPTSET (BFLAG) + OPTSET (CFLAG) + OPTSET (FFLAG)) != 1)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   if ((npos = getlist (list_arg, &poslist)) < 0)
     {
       free (poslist);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (array_name)
@@ -526,12 +519,12 @@ WORD_LIST *list;
         {
           if (v && readonly_p (v))
             err_readonly (array_name);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
       else if (array_p (v) == 0)
         {
           builtin_error ("%s: not an indexed array", array_name);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
       if (invisible_p (v))
         VUNSETATTR (v, att_invisible);
@@ -552,31 +545,29 @@ WORD_LIST *list;
       if (cutstring == 0 || *cutstring == 0)
         {
           free (poslist);
-          return (EXECUTION_SUCCESS);
+          return EXECUTION_SUCCESS;
         }
       rval = cutline (v, cutstring, &op);
     }
   else
     rval = cutfile (v, list, &op);
 
-  return (rval);
+  return rval;
 }
 
 int
-lcut_builtin (list)
-WORD_LIST *list;
+ShellLoadable::lcut_builtin (WORD_LIST *list)
 {
-  return (cut_internal (0, list));
+  return cut_internal (0, list);
 }
 
 int
-cut_builtin (list)
-WORD_LIST *list;
+ShellLoadable::cut_builtin (WORD_LIST *list)
 {
-  return (cut_internal (1, list));
+  return cut_internal (1, list);
 }
 
-char *lcut_doc[] = {
+const char *const lcut_doc[] = {
   "Extract selected fields from a string.",
   "",
   "Select portions of LINE (as specified by LIST) and assign them to",
@@ -589,23 +580,16 @@ char *lcut_doc[] = {
   "Columns correspond to bytes (-b), characters (-c), or fields (-f). The",
   "field delimiter is specified by -d (default TAB). Column numbering",
   "starts at 1.",
-  (char *)NULL
+  nullptr
 };
 
-struct builtin lcut_struct = {
-  "lcut",          /* builtin name */
-  lcut_builtin,    /* function implementing the builtin */
-  BUILTIN_ENABLED, /* initial flags for builtin */
-  lcut_doc,        /* array of long documentation strings. */
-  "lcut [-a ARRAY] [-b LIST] [-c LIST] [-f LIST] [-d CHAR] [-sn] line", /* usage
-                                                                           synopsis;
-                                                                           becomes
-                                                                           short_doc
-                                                                         */
-  0 /* reserved for internal use */
-};
+Shell::builtin lcut_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::lcut_builtin),
+    lcut_doc,
+    "lcut [-a ARRAY] [-b LIST] [-c LIST] [-f LIST] [-d CHAR] [-sn] line",
+    nullptr, BUILTIN_ENABLED);
 
-char *cut_doc[] = {
+const char *const cut_doc[] = {
   "Extract selected fields from each line of a file.",
   "",
   "Select portions of each line (as specified by LIST) from each FILE",
@@ -619,16 +603,13 @@ char *cut_doc[] = {
   "Columns correspond to bytes (-b), characters (-c), or fields (-f). The",
   "field delimiter is specified by -d (default TAB). Column numbering",
   "starts at 1.",
-  (char *)NULL
+  nullptr
 };
 
-struct builtin cut_struct
-    = {
-        "cut",           /* builtin name */
-        cut_builtin,     /* function implementing the builtin */
-        BUILTIN_ENABLED, /* initial flags for builtin */
-        cut_doc,         /* array of long documentation strings. */
-        "cut [-a ARRAY] [-b LIST] [-c LIST] [-f LIST] [-d CHAR] [-sn] [file "
-        "...]", /* usage synopsis; becomes short_doc */
-        0       /* reserved for internal use */
-      };
+Shell::builtin cut_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::cut_builtin),
+    cut_doc,
+    "cut [-a ARRAY] [-b LIST] [-c LIST] [-f LIST] [-d CHAR] [-sn] [file ...]",
+    nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

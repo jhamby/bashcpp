@@ -20,6 +20,15 @@
 namespace bash
 {
 
+// Loadable class for "mypid".
+class ShellLoadable : public Shell
+{
+public:
+  int enable_mypid_builtin (WORD_LIST *);
+
+private:
+};
+
 #define INIT_DYNAMIC_VAR(var, val, gfunc, afunc)                              \
   do                                                                          \
     {                                                                         \
@@ -35,7 +44,7 @@ namespace bash
 static SHELL_VAR *
 assign_mypid (SHELL_VAR *self, char *value, arrayind_t unused, char *key)
 {
-  return (self);
+  return self;
 }
 
 static SHELL_VAR *
@@ -51,11 +60,11 @@ get_mypid (SHELL_VAR *var)
 
   VSETATTR (var, att_integer);
   var_setvalue (var, p);
-  return (var);
+  return var;
 }
 
 int
-enable_mypid_builtin (WORD_LIST *list)
+ShellLoadable::enable_mypid_builtin (WORD_LIST *list)
 {
   INIT_DYNAMIC_VAR ("MYPID", (char *)NULL, get_mypid, assign_mypid);
 
@@ -68,14 +77,14 @@ enable_mypid_builtin_unload (char *s)
   unbind_variable ("MYPID");
 }
 
-char const *enable_mypid_doc[]
+static const char *const enable_mypid_doc[]
     = { "Enable $MYPID.", "",
         "Enables use of the ${MYPID} dynamic variable.  ",
-        "It will yield the current pid of a subshell.", (char *)0 };
+        "It will yield the current pid of a subshell.", nullptr };
 
-struct builtin enable_mypid_struct
-    = { "enable_mypid",   enable_mypid_builtin,
-        BUILTIN_ENABLED,  (char **)(void *)enable_mypid_doc,
-        "enable_mypid N", 0 };
+Shell::builtin enable_mypid_struct (static_cast<Shell::sh_builtin_func_t> (
+                                        &ShellLoadable::enable_mypid_builtin),
+                                    enable_mypid_doc, "enable_mypid N",
+                                    nullptr, BUILTIN_ENABLED);
 
 } // namespace bash

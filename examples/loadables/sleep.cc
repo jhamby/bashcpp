@@ -37,19 +37,24 @@
 #endif
 #endif
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "chartypes.hh"
-
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
+namespace bash
+{
+
+// Loadable class for "sleep".
+class ShellLoadable : public Shell
+{
+public:
+  int sleep_builtin (WORD_LIST *);
+
+private:
+};
+
 int
-sleep_builtin (list)
-WORD_LIST *list;
+ShellLoadable::sleep_builtin (WORD_LIST *list)
 {
   long sec, usec;
   char *ep;
@@ -59,17 +64,17 @@ WORD_LIST *list;
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   /* Skip over `--' */
   if (list->word && ISOPTION (list->word->word, '-'))
-    list = list->next;
+    list = list->next ();
 
-  if (*list->word->word == '-' || list->next)
+  if (*list->word->word == '-' || list->next ())
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   r = uconvert (list->word->word, &sec, &usec, &ep);
@@ -79,23 +84,22 @@ WORD_LIST *list;
     {
       fsleep (sec, usec);
       QUIT;
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   builtin_error ("%s: bad sleep interval", list->word->word);
-  return (EXECUTION_FAILURE);
+  return EXECUTION_FAILURE;
 }
 
-static char *sleep_doc[] = {
+static const char *const sleep_doc[] = {
   "Suspend execution for specified period.",
   ""
   "sleep suspends execution for a minimum of SECONDS[.FRACTION] seconds.",
-  (char *)NULL
+  nullptr
 };
 
-struct builtin sleep_struct = { "sleep",
-                                sleep_builtin,
-                                BUILTIN_ENABLED,
-                                sleep_doc,
-                                "sleep seconds[.fraction]",
-                                0 };
+Shell::builtin sleep_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::sleep_builtin),
+    sleep_doc, "sleep seconds[.fraction]", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

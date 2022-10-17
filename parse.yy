@@ -194,14 +194,14 @@ redirection: '>' WORD
                 }
         | NUMBER '>' WORD
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir ($3);
                   $$ = REDIRECT_PTR (
                       source, r_output_direction, redir, REDIR_NOFLAGS);
                 }
         | NUMBER '<' WORD
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir ($3);
                   $$ = REDIRECT_PTR (
                       source, r_input_direction, redir, REDIR_NOFLAGS);
@@ -229,7 +229,7 @@ redirection: '>' WORD
                 }
         | NUMBER GREATER_GREATER WORD
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir ($3);
                   $$ = REDIRECT_PTR (
                       source, r_appending_to, redir, REDIR_NOFLAGS);
@@ -250,7 +250,7 @@ redirection: '>' WORD
                 }
         | NUMBER GREATER_BAR WORD
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir ($3);
                   $$ = REDIRECT_PTR (
                       source, r_output_force, redir, REDIR_NOFLAGS);
@@ -271,7 +271,7 @@ redirection: '>' WORD
                 }
         | NUMBER LESS_GREATER WORD
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir ($3);
                   $$ = REDIRECT_PTR (
                       source, r_input_output, redir, REDIR_NOFLAGS);
@@ -293,7 +293,7 @@ redirection: '>' WORD
                 }
         | NUMBER LESS_LESS WORD
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir ($3);
                   $$ = REDIRECT_PTR (
                       source, r_reading_until, redir, REDIR_NOFLAGS);
@@ -317,7 +317,7 @@ redirection: '>' WORD
                 }
         | NUMBER LESS_LESS_MINUS WORD
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir ($3);
                   $$ = REDIRECT_PTR (
                       source, r_deblank_reading_until, redir, REDIR_NOFLAGS);
@@ -340,7 +340,7 @@ redirection: '>' WORD
                 }
         | NUMBER LESS_LESS_LESS WORD
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir ($3);
                   $$ = REDIRECT_PTR (
                       source, r_reading_string, redir, REDIR_NOFLAGS);
@@ -355,42 +355,42 @@ redirection: '>' WORD
         | LESS_AND NUMBER
                 {
                   REDIRECTEE source (0);
-                  REDIRECTEE redir ($2);
+                  REDIRECTEE redir (static_cast<int> ($2));
                   $$ = REDIRECT_PTR (
                       source, r_duplicating_input, redir, REDIR_NOFLAGS);
                 }
         | NUMBER LESS_AND NUMBER
                 {
-                  REDIRECTEE source ($1);
-                  REDIRECTEE redir ($3);
+                  REDIRECTEE source (static_cast<int> ($1));
+                  REDIRECTEE redir (static_cast<int> ($3));
                   $$ = REDIRECT_PTR (
                       source, r_duplicating_input, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD LESS_AND NUMBER
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir ($3);
+                  REDIRECTEE redir (static_cast<int> ($3));
                   $$ = REDIRECT_PTR (
                       source, r_duplicating_input, redir, REDIR_VARASSIGN);
                 }
         | GREATER_AND NUMBER
                 {
                   REDIRECTEE source (1);
-                  REDIRECTEE redir ($2);
+                  REDIRECTEE redir (static_cast<int> ($2));
                   $$ = REDIRECT_PTR (
                       source, r_duplicating_output, redir, REDIR_NOFLAGS);
                 }
         | NUMBER GREATER_AND NUMBER
                 {
-                  REDIRECTEE source ($1);
-                  REDIRECTEE redir ($3);
+                  REDIRECTEE source (static_cast<int> ($1));
+                  REDIRECTEE redir (static_cast<int> ($3));
                   $$ = REDIRECT_PTR (
                       source, r_duplicating_output, redir, REDIR_NOFLAGS);
                 }
         | REDIR_WORD GREATER_AND NUMBER
                 {
                   REDIRECTEE source ($1);
-                  REDIRECTEE redir ($3);
+                  REDIRECTEE redir (static_cast<int> ($3));
                   $$ = REDIRECT_PTR (
                       source, r_duplicating_output, redir, REDIR_VARASSIGN);
                 }
@@ -403,7 +403,7 @@ redirection: '>' WORD
                 }
         | NUMBER LESS_AND WORD
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir ($3);
                   $$ = REDIRECT_PTR (
                       source, r_duplicating_input_word, redir, REDIR_NOFLAGS);
@@ -425,7 +425,7 @@ redirection: '>' WORD
                 }
         | NUMBER GREATER_AND WORD
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir ($3);
                   $$ = REDIRECT_PTR (
                       source, r_duplicating_output_word, redir, REDIR_NOFLAGS);
@@ -447,7 +447,7 @@ redirection: '>' WORD
                 }
         | NUMBER GREATER_AND '-'
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir (0);
                   $$ = REDIRECT_PTR (
                       source, r_close_this, redir, REDIR_NOFLAGS);
@@ -468,7 +468,7 @@ redirection: '>' WORD
                 }
         | NUMBER LESS_AND '-'
                 {
-                  REDIRECTEE source ($1);
+                  REDIRECTEE source (static_cast<int> ($1));
                   REDIRECTEE redir (0);
                   $$ = REDIRECT_PTR (
                       source, r_close_this, redir, REDIR_NOFLAGS);

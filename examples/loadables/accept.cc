@@ -1,5 +1,4 @@
-/* accept - listen for and accept a remote network connection on a given port
- */
+// accept - listen for and accept a remote network connection on a given port
 
 /*
    Copyright (C) 2020 Free Software Foundation, Inc.
@@ -21,29 +20,29 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
+#include "shell.hh"
 
-#include "bashtypes.hh"
-#include "typemax.hh"
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <unistd.h>
+#include "loadables.hh"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-#include "loadables.hh"
+namespace bash
+{
 
-static int accept_bind_variable (char *, int);
+// Loadable class for "accept".
+class ShellLoadable : public Shell
+{
+public:
+  int accept_builtin (WORD_LIST *);
+
+private:
+  int accept_bind_variable (const char *, int);
+};
 
 int
-accept_builtin (list)
-WORD_LIST *list;
+ShellLoadable::accept_builtin (WORD_LIST *list)
 {
   SHELL_VAR *v;
   int64_t iport;
@@ -62,24 +61,24 @@ WORD_LIST *list;
   while ((opt = internal_getopt (list, "b:r:t:v:")) != -1)
     {
       switch (opt)
-	{
-	case 'b':
-	  bindaddr = list_optarg;
-	  break;
-	case 'r':
-	  rhostvar = list_optarg;
-	  break;
-	case 't':
-	  tmoutarg = list_optarg;
-	  break;
-	case 'v':
-	  fdvar = list_optarg;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return (EX_USAGE);
-	}
+        {
+        case 'b':
+          bindaddr = list_optarg;
+          break;
+        case 'r':
+          rhostvar = list_optarg;
+          break;
+        case 't':
+          tmoutarg = list_optarg;
+          break;
+        case 'v':
+          fdvar = list_optarg;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
 
   list = loptend;
@@ -92,7 +91,7 @@ WORD_LIST *list;
       if (opt == 0 || ival < 0 || uval < 0)
         {
           builtin_error ("%s: invalid timeout specification", tmoutarg);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
       timeval.tv_sec = ival;
       timeval.tv_usec = uval;
@@ -102,14 +101,14 @@ WORD_LIST *list;
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   if (legal_number (list->word->word, &iport) == 0 || iport < 0
       || iport > TYPE_MAXIMUM (unsigned short))
     {
       builtin_error ("%s: invalid port number", list->word->word);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   uport = (unsigned short)iport;
 
@@ -123,36 +122,38 @@ WORD_LIST *list;
   if ((servsock = socket (AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0)
     {
       builtin_error ("cannot create socket: %s", strerror (errno));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   memset ((char *)&server, 0, sizeof (server));
   server.sin_family = AF_INET;
-  server.sin_port = htons(uport);
-  server.sin_addr.s_addr = bindaddr ? inet_addr (bindaddr) : htonl(INADDR_ANY);
+  server.sin_port = htons (uport);
+  server.sin_addr.s_addr
+      = bindaddr ? inet_addr (bindaddr) : htonl (INADDR_ANY);
 
   if (server.sin_addr.s_addr == INADDR_NONE)
     {
       builtin_error ("invalid address: %s", strerror (errno));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   opt = 1;
   setsockopt (servsock, SOL_SOCKET, SO_REUSEADDR, (void *)&opt, sizeof (opt));
-  setsockopt (servsock, SOL_SOCKET, SO_LINGER, (void *)&linger, sizeof (linger));
+  setsockopt (servsock, SOL_SOCKET, SO_LINGER, (void *)&linger,
+              sizeof (linger));
 
   if (bind (servsock, (struct sockaddr *)&server, sizeof (server)) < 0)
     {
       builtin_error ("socket bind failure: %s", strerror (errno));
       close (servsock);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (listen (servsock, 1) < 0)
     {
       builtin_error ("listen failure: %s", strerror (errno));
       close (servsock);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (tmoutarg)
@@ -164,12 +165,12 @@ WORD_LIST *list;
 
       opt = select (servsock + 1, &iofds, 0, 0, &timeval);
       if (opt < 0)
-	builtin_error ("select failure: %s", strerror (errno));
+        builtin_error ("select failure: %s", strerror (errno));
       if (opt <= 0)
-	{
-	  close (servsock);
-	  return (EXECUTION_FAILURE);
-	}
+        {
+          close (servsock);
+          return EXECUTION_FAILURE;
+        }
     }
 
   clientlen = sizeof (client);
@@ -178,7 +179,7 @@ WORD_LIST *list;
     {
       builtin_error ("client accept failure: %s", strerror (errno));
       close (servsock);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   close (servsock);
@@ -192,56 +193,53 @@ WORD_LIST *list;
         builtin_error ("%s: cannot set variable", rhostvar);
     }
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
-static int
-accept_bind_variable (varname, intval)
-char *varname;
-int intval;
+int
+ShellLoadable::accept_bind_variable (const char *varname, int intval)
 {
   SHELL_VAR *v;
   char ibuf[INT_STRLEN_BOUND (int) + 1], *p;
 
   p = fmtulong (intval, 10, ibuf, sizeof (ibuf), 0);
-  v = builtin_bind_variable (varname, p, 0);		/* XXX */
-  if (v == 0 || readonly_p (v) || noassign_p (v))
+  v = builtin_bind_variable (varname, p, 0); /* XXX */
+  if (v == nullptr || v->readonly () || v->noassign ())
     builtin_error ("%s: cannot set variable", varname);
-  return (v != 0);
+  return v != nullptr;
 }
 
-char *accept_doc[] = {
-	"Accept a network connection on a specified port.",
-	""
-	"This builtin allows a bash script to act as a TCP/IP server.",
-	"",
-	"Options, if supplied, have the following meanings:",
-	"    -b address    use ADDRESS as the IP address to listen on; the",
-	"                  default is INADDR_ANY",
-	"    -t timeout    wait TIMEOUT seconds for a connection. TIMEOUT may",
-	"                  be a decimal number including a fractional portion",
-	"    -v varname    store the numeric file descriptor of the connected",
-	"                  socket into VARNAME. The default VARNAME is ACCEPT_FD",
-	"    -r rhost      store the IP address of the remote host into the shell",
-	"                  variable RHOST, in dotted-decimal notation",
-	"",
-	"If successful, the shell variable ACCEPT_FD, or the variable named by the",
-	"-v option, will be set to the fd of the connected socket, suitable for",
-	"use as 'read -u$ACCEPT_FD'. RHOST, if supplied, will hold the IP address",
-	"of the remote client. The return status is 0.",
-	"",
-	"On failure, the return status is 1 and ACCEPT_FD (or VARNAME) and RHOST,",
-	"if supplied, will be unset.",
-	"",
-	"The server socket fd will be closed before accept returns.",
-	(char *) NULL
+const char *const accept_doc[] = {
+  "Accept a network connection on a specified port.",
+  ""
+  "This builtin allows a bash script to act as a TCP/IP server.",
+  "",
+  "Options, if supplied, have the following meanings:",
+  "    -b address    use ADDRESS as the IP address to listen on; the",
+  "                  default is INADDR_ANY",
+  "    -t timeout    wait TIMEOUT seconds for a connection. TIMEOUT may",
+  "                  be a decimal number including a fractional portion",
+  "    -v varname    store the numeric file descriptor of the connected",
+  "                  socket into VARNAME. The default VARNAME is ACCEPT_FD",
+  "    -r rhost      store the IP address of the remote host into the shell",
+  "                  variable RHOST, in dotted-decimal notation",
+  "",
+  "If successful, the shell variable ACCEPT_FD, or the variable named by the",
+  "-v option, will be set to the fd of the connected socket, suitable for",
+  "use as 'read -u$ACCEPT_FD'. RHOST, if supplied, will hold the IP address",
+  "of the remote client. The return status is 0.",
+  "",
+  "On failure, the return status is 1 and ACCEPT_FD (or VARNAME) and RHOST,",
+  "if supplied, will be unset.",
+  "",
+  "The server socket fd will be closed before accept returns.",
+  nullptr
 };
 
-struct builtin accept_struct = {
-	"accept",		/* builtin name */
-	accept_builtin,		/* function implementing the builtin */
-	BUILTIN_ENABLED,	/* initial flags for builtin */
-	accept_doc,		/* array of long documentation strings. */
-	"accept [-b address] [-t timeout] [-v varname] [-r addrvar ] port",		/* usage synopsis; becomes short_doc */
-	0			/* reserved for internal use */
-};
+Shell::builtin accept_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::accept_builtin),
+    accept_doc,
+    "accept [-b address] [-t timeout] [-v varname] [-r addrvar ] port",
+    nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

@@ -286,7 +286,7 @@ Shell::bind_builtin (WORD_LIST *list)
 
       if (nlen < olen) /* fewer bind -x bindings */
         for (d = olen - nlen, i = 0; i < olen && d > 0; i++)
-          if (nlen == 0 || strvec_search (nbindings, obindings[i]) >= 0)
+          if (nlen == 0 || strvec_search (nbindings, obindings[i]) < 0)
             {
               unbind_unix_command (obindings[i]);
               d--;

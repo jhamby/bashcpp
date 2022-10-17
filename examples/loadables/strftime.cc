@@ -22,14 +22,6 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "bashtypes.hh"
-#include "posixtime.hh"
-
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
@@ -37,9 +29,17 @@
 namespace bash
 {
 
+// Loadable class for "strftime".
+class ShellLoadable : public Shell
+{
+public:
+  int strftime_builtin (WORD_LIST *);
+
+private:
+};
+
 int
-strftime_builtin (list)
-WORD_LIST *list;
+ShellLoadable::strftime_builtin (WORD_LIST *list)
 {
   char *format, *tbuf;
   size_t tbsize, tsize;
@@ -49,20 +49,20 @@ WORD_LIST *list;
   int64_t i;
 
   if (no_options (list))
-    return (EX_USAGE);
+    return EX_USAGE;
   list = loptend;
 
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   format = list->word->word;
   if (format == 0 || *format == 0)
     {
       printf ("\n");
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   list = list->next;
@@ -73,7 +73,7 @@ WORD_LIST *list;
       if (n == 0 || i < 0 || i != (time_t)i)
         {
           sh_invalidnum (list->word->word);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
       else
         secs = i;
@@ -101,30 +101,22 @@ WORD_LIST *list;
     printf ("%s\n", tbuf);
   free (tbuf);
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 /* An array of strings forming the `long' documentation for a builtin xxx,
    which is printed by `help xxx'.  It must end with a NULL. */
-char *strftime_doc[]
+static const char *const strftime_doc[]
     = { "Display formatted time.",
         "",
         "Converts date and time format to a string and displays it on the",
         "standard output.  If the optional second argument is supplied, it",
         "is used as the number of seconds since the epoch to use in the",
         "conversion, otherwise the current time is used.",
-        (char *)NULL };
+        nullptr };
 
-/* The standard structure describing a builtin command.  bash keeps an array
-   of these structures.  The flags must include BUILTIN_ENABLED so the
-   builtin can be used. */
-struct builtin strftime_struct = {
-  "strftime",                  /* builtin name */
-  strftime_builtin,            /* function implementing the builtin */
-  BUILTIN_ENABLED,             /* initial flags for builtin */
-  strftime_doc,                /* array of long documentation strings. */
-  "strftime format [seconds]", /* usage synopsis; becomes short_doc */
-  0                            /* reserved for internal use */
-};
+Shell::builtin strftime_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::strftime_builtin),
+    strftime_doc, "strftime format [seconds]", nullptr, BUILTIN_ENABLED);
 
 } // namespace bash

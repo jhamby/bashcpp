@@ -29,14 +29,15 @@ namespace bash
 /* Flags describing various things about a builtin. */
 enum builtin_flags
 {
-  BUILTIN_ENABLED = 0x01,    /* This builtin is enabled. */
-  BUILTIN_DELETED = 0x02,    /* This has been deleted with enable -d. */
-  STATIC_BUILTIN = 0x04,     /* This builtin is not dynamically loaded. */
-  SPECIAL_BUILTIN = 0x08,    /* This is a Posix `special' builtin. */
-  ASSIGNMENT_BUILTIN = 0x10, /* This builtin takes assignment statements. */
+  BUILTIN_ENABLED = 0x01,    // This builtin is enabled.
+  BUILTIN_DELETED = 0x02,    // This has been deleted with enable -d.
+  STATIC_BUILTIN = 0x04,     // This builtin is not dynamically loaded.
+  SPECIAL_BUILTIN = 0x08,    // This is a Posix `special' builtin.
+  ASSIGNMENT_BUILTIN = 0x10, // This builtin takes assignment statements.
   POSIX_BUILTIN
-  = 0x20, /* This builtin is special in the Posix command search order. */
-  LOCALVAR_BUILTIN = 0x40 /* This builtin creates local variables */
+  = 0x20, // This builtin is special in the Posix command search order.
+  LOCALVAR_BUILTIN = 0x40, // This builtin creates local variables.
+  ARRAYREF_BUILTIN = 0x80  // This builtin takes array references as arguments.
 };
 
 static inline builtin_flags

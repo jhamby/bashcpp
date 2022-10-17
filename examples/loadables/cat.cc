@@ -27,9 +27,20 @@
 #include "builtins.hh"
 #include "shell.hh"
 
+namespace bash
+{
+
+// Loadable class for "cat".
+class ShellLoadable : public Shell
+{
+public:
+  int cat_builtin (WORD_LIST *);
+
+private:
+};
+
 static int
-fcopy (fd)
-int fd;
+fcopy (int fd)
 {
   char buf[1024], *s;
   int n, w, e;
@@ -51,15 +62,13 @@ int fd;
 }
 
 int
-cat_main (argc, argv)
-int argc;
-char **argv;
+cat_main (int argc, char **argv)
 {
   int i, fd, r;
   char *s;
 
   if (argc == 1)
-    return (fcopy (0));
+    return fcopy (0);
 
   for (i = r = 1; i < argc; i++)
     {
@@ -83,12 +92,11 @@ char **argv;
       if (fd != 0)
         close (fd);
     }
-  return (r);
+  return r;
 }
 
 int
-cat_builtin (list)
-WORD_LIST *list;
+ShellLoadable::cat_builtin (WORD_LIST *list)
 {
   char **v;
   int c, r;
@@ -100,13 +108,16 @@ WORD_LIST *list;
   return r;
 }
 
-char *cat_doc[]
+static const char *const cat_doc[]
     = { "Display files.",
         "",
         "Read each FILE and display it on the standard output.   If any",
         "FILE is `-' or if no FILE argument is given, the standard input",
         "is read.",
-        (char *)0 };
+        nullptr };
 
-struct builtin cat_struct = { "cat",   cat_builtin,          BUILTIN_ENABLED,
-                              cat_doc, "cat [-] [file ...]", 0 };
+Shell::builtin cat_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::cat_builtin),
+    cat_doc, "cat [-] [file ...]", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

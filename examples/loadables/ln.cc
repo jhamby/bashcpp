@@ -30,12 +30,23 @@
 
 #include "posixstat.hh"
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
-typedef int unix_link_syscall_t PARAMS ((const char *, const char *));
+namespace bash
+{
+
+// Loadable class for "ln".
+class ShellLoadable : public Shell
+{
+public:
+  int ln_builtin (WORD_LIST *);
+
+private:
+};
+
+typedef int unix_link_syscall_t (const char *, const char *);
 
 #define LN_SYMLINK 0x01
 #define LN_UNLINK 0x02
@@ -45,8 +56,7 @@ static unix_link_syscall_t *linkfn;
 static int dolink ();
 
 int
-ln_builtin (list)
-WORD_LIST *list;
+ShellLoadable::ln_builtin (WORD_LIST *list)
 {
   int rval, opt, flags;
   WORD_LIST *l;
@@ -72,7 +82,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -80,16 +90,16 @@ WORD_LIST *list;
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   linkfn = (flags & LN_SYMLINK) ? symlink : link;
 
   if (list->next == 0) /* ln target, equivalent to ln target . */
-    return (dolink (list->word->word, ".", flags));
+    return dolink (list->word->word, ".", flags);
 
   if (list->next->next == 0) /* ln target source */
-    return (dolink (list->word->word, list->next->word->word, flags));
+    return dolink (list->word->word, list->next->word->word, flags);
 
   /* ln target1 target2 ... directory */
 
@@ -102,13 +112,13 @@ WORD_LIST *list;
   if (stat (sdir, &sb) < 0)
     {
       builtin_error ("%s", sdir);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   if (S_ISDIR (sb.st_mode) == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   for (rval = EXECUTION_SUCCESS; list != l; list = list->next)
@@ -118,8 +128,7 @@ WORD_LIST *list;
 }
 
 static char *
-mkdirpath (dir, file)
-char *dir, *file;
+mkdirpath (char *dir, char *file)
 {
   int dlen, flen;
   char *ret;
@@ -136,18 +145,11 @@ char *dir, *file;
   return ret;
 }
 
-#if defined(HAVE_LSTAT)
 #define LSTAT lstat
 #define LSTAT_OR_STAT_IF(c, f, b) ((c) ? lstat ((f), (b)) : stat ((f), (b)))
-#else
-#define LSTAT stat
-#define LSTAT_OR_STAT_IF(c, f, b) (stat ((f), (b)))
-#endif
 
 static int
-dolink (src, dst, flags)
-char *src, *dst;
-int flags;
+dolink (char *src, char *dst, int flags)
 {
   struct stat ssb, dsb;
   int exists;
@@ -160,13 +162,13 @@ int flags;
       if (stat (src, &ssb) != 0)
         {
           builtin_error ("%s: %s", src, strerror (errno));
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
       if (S_ISDIR (ssb.st_mode))
         {
           errno = EISDIR;
           builtin_error ("%s: %s", src, strerror (errno));
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
     }
 
@@ -192,7 +194,7 @@ int flags;
     {
       builtin_error ("%s: cannot unlink: %s", dst, strerror (errno));
       FREE (dst_path);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   /* Perform the link. */
@@ -200,14 +202,14 @@ int flags;
     {
       builtin_error ("cannot link %s to %s: %s", dst, src, strerror (errno));
       FREE (dst_path);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   FREE (dst_path);
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
-char *ln_doc[]
+static const char *const ln_doc[]
     = { "Link files.",
         "",
         "Create a new directory entry with the same modes as the original",
@@ -215,18 +217,11 @@ char *ln_doc[]
         "the link to occur.  The -s option means to create a symbolic link.",
         "By default, ln makes hard links.  Specifying -n or its synonym -h",
         "causes ln to not resolve symlinks in the target file or directory.",
-        (char *)NULL };
+        nullptr };
 
-/* The standard structure describing a builtin command.  bash keeps an array
-   of these structures. */
-struct builtin ln_struct = {
-  "ln",            /* builtin name */
-  ln_builtin,      /* function implementing the builtin */
-  BUILTIN_ENABLED, /* initial flags for builtin */
-  ln_doc,          /* array of long documentation strings. */
-  "ln [-fhns] file1 [file2] OR ln [-fhns] file ... directory", /* usage
-                                                                  synopsis;
-                                                                  becomes
-                                                                  short_doc */
-  0 /* reserved for internal use */
-};
+Shell::builtin ln_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::ln_builtin),
+    hello_doc, "ln [-fhns] file1 [file2] OR ln [-fhns] file ... directory",
+    nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

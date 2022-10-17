@@ -74,12 +74,12 @@ input_avail (int fd)
   FD_SET (fd, &exceptfds);
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
-  result = ::select (fd + 1, &readfds, nullptr, &exceptfds, &timeout);
+  result = select (fd + 1, &readfds, nullptr, &exceptfds, &timeout);
   return (result <= 0) ? 0 : 1;
 #elif defined(FIONREAD)
   errno = 0;
   int chars_avail = 0;
-  result = ::ioctl (fd, FIONREAD, &chars_avail);
+  result = ioctl (fd, FIONREAD, &chars_avail);
   if (result == -1 && errno == EIO)
     return -1;
   return chars_avail;

@@ -616,6 +616,16 @@ class BashParser : public bash::parser
   virtual void error (const std::string &) override;
 };
 
+struct sh_getopt_state_t
+{
+  char *gs_optarg;
+  char *gs_nextchar;
+  int gs_optind;
+  int gs_curopt;
+  int gs_charindex;
+  int gs_flags;
+};
+
 // This char array size is assumed by subst.cc and elsewhere.
 #define SYNSIZE 256
 
@@ -623,7 +633,7 @@ class BashParser : public bash::parser
 class SimpleState
 {
 public:
-  // Initialize with default values (defined in shell.c).
+  // Initialize with default values (defined in shell.cc).
   SimpleState ();
 
 #if defined(PREFER_POSIX_SPAWN)
@@ -986,6 +996,26 @@ protected:
 
   remember_args_flags changed_dollar_vars;
 
+  // Variables from builtins/getopt.cc.
+
+  /* Index in ARGV of the next element to be scanned.
+     This is used for communication to and from the caller
+     and for communication between successive calls to `sh_getopt'.
+
+     On entry to `sh_getopt', zero means this is the first call; initialize.
+
+     When `sh_getopt' returns EOF, this is the index of the first of the
+     non-option elements that the caller should itself scan.
+
+     Otherwise, `sh_optind' communicates from one call to the next
+     how much of ARGV has been scanned so far. */
+
+  /* XXX 1003.2 says this must be 1 before any call.  */
+  int sh_optind;
+
+  /* Index of the current argument. */
+  int sh_curopt;
+
   /* ************************************************************** */
   /*		Bash Variables (8-bit bool/char types)		    */
   /* ************************************************************** */
@@ -1006,7 +1036,20 @@ public:
 protected:
   // Back to protected access.
 
+  int sh_charindex;
+
+  /* Callers store zero here to inhibit the error message
+     for unrecognized options. */
+  bool sh_opterr;
+
+  /* Set to an option character which was unrecognized. */
+  char sh_optopt;
+
+  /* Set to 1 when we see an invalid option; public so getopts can reset it. */
+  bool sh_badopt;
+
   /* Variables used to keep track of the characters in IFS. */
+
   bool ifs_cmap[UCHAR_MAX + 1];
   bool ifs_is_set;
   bool ifs_is_null;
@@ -1213,8 +1256,7 @@ protected:
   char histexp_flag;
 #endif /* BANG_HISTORY */
 
-  /* Non-zero means that we allow comments to appear in interactive commands.
-   */
+  // Non-zero means that we allow comments to appear in interactive commands.
   char interactive_comments;
 
 #if defined(RESTRICTED_SHELL)
@@ -1577,6 +1619,7 @@ protected:
 
   friend class EvalFileUnwindHandler;
   friend class EvalStringUnwindHandler;
+  friend class ExecFunctionUnwindHandler;
 
   // typedefs moved from general.h so they can become method pointers to Shell.
 
@@ -1784,7 +1827,7 @@ public:
 
   // other functions moved from builtins/common.hh
 
-  /* functions from cd_def.cc */
+  /* functions from builtins/cd_def.cc */
 
   int bindpwd (bool);
   int setpwd (const char *);
@@ -1794,24 +1837,31 @@ public:
   int cdxattr (char *, char **);
   void resetxattr ();
 
-  /* Functions from exit_def.cc */
+  /* Functions from builtins/exit_def.cc */
 
   void bash_logout ();
 
-  /* Functions from getopts_def.cc */
+  /* Functions from builtins/getopt.cc */
+
+  int sh_getopt (int, char *const *, const char *);
+  void sh_getopt_restore_state (char **);
+  sh_getopt_state_t *sh_getopt_save_istate ();
+  void sh_getopt_restore_istate (sh_getopt_state_t *);
+
+  /* Functions from builtins/getopts_def.cc */
 
   void getopts_reset (int);
 
-  /* Functions from help_def.cc */
+  /* Functions from builtins/help_def.cc */
 
   void builtin_help ();
 
-  /* Functions from read_def.cc */
+  /* Functions from builtins/read_def.cc */
 
   void read_tty_cleanup ();
   int read_tty_modified ();
 
-  /* Functions from set_def.cc */
+  /* Functions from builtins/set_def.cc */
 
   int minus_o_option_value (const char *);
   void list_minus_o_opts (int, int);
@@ -1827,7 +1877,7 @@ public:
   char *get_current_options ();
   void set_current_options (const char *);
 
-  /* Functions from shopt_def.cc */
+  /* Functions from builtins/shopt_def.cc */
 
   enum shopt_flags
   {
@@ -1913,6 +1963,7 @@ public:
   void sh_invalidid (const char *);
   void sh_invalidnum (const char *);
   void sh_invalidsig (const char *);
+  void sh_noassign (const char *);
   void sh_erange (const char *, const char *);
   void sh_badpid (const char *);
   void sh_badjob (const char *);
@@ -2014,10 +2065,6 @@ public:
 
   // This function is now defined in the generated builtins.cc.
   void initialize_shell_builtins ();
-
-#if defined(ARRAY_VARS)
-  int set_expand_once (int, int);
-#endif
 
   /* Keeps track of the current working directory. */
 
@@ -2175,6 +2222,13 @@ public:
 
   WORD_DESC *
   make_word (string_view string)
+  {
+    WORD_DESC *temp = new WORD_DESC (string);
+    return make_word_flags (temp, string);
+  }
+
+  WORD_DESC *
+  make_word (const char *string)
   {
     WORD_DESC *temp = new WORD_DESC (string);
     return make_word_flags (temp, string);
@@ -2390,7 +2444,7 @@ public:
 
   void print_function_def (FUNCTION_DEF *);
 
-  std::string named_function_string (string_view, COMMAND *, print_flags);
+  std::string named_function_string (const char *, COMMAND *, print_flags);
 
   void print_deferred_heredocs (const char *);
 
@@ -3879,7 +3933,11 @@ protected:
   int execute_null_command (REDIRECT *, int, int, bool);
   void fix_assignment_words (WORD_LIST *);
   int execute_simple_command (SIMPLE_COM *, int, int, bool, fd_bitmap *);
+
   int execute_builtin (sh_builtin_func_t, WORD_LIST *, int, bool);
+  int execute_builtin2 (sh_builtin_func_t, WORD_LIST *, int, bool);
+  int execute_builtin3 (sh_builtin_func_t, WORD_LIST *, int, bool);
+
   int execute_function (SHELL_VAR *, WORD_LIST *, int, fd_bitmap *, bool,
                         bool);
 
@@ -3888,7 +3946,8 @@ protected:
 
   void execute_subshell_builtin_or_function (WORD_LIST *, REDIRECT *,
                                              sh_builtin_func_t, SHELL_VAR *,
-                                             int, int, bool, fd_bitmap *, int);
+                                             int, int, bool, fd_bitmap *, int)
+      __attribute__ ((__noreturn__));
 
   int execute_disk_command (WORD_LIST *, REDIRECT *, string_view, int, int,
                             bool, fd_bitmap *, int);
@@ -3985,6 +4044,10 @@ protected:
     delete[] temp;
     return ret;
   }
+
+#if defined(ARRAY_VARS)
+  void fix_arrayref_words (WORD_LIST *);
+#endif
 
   /* Functions from findcmd.cc */
 
@@ -4130,6 +4193,7 @@ protected:
   }
 
   /* Functions from trap.cc */
+
   void run_pending_traps ();
   void initialize_traps ();
 #ifdef DEBUG
@@ -4549,6 +4613,13 @@ protected:
     return ret;
   }
 
+  const char *
+  TRAP_STRING (int s)
+  {
+    return (signal_is_trapped (s) && !signal_is_ignored (s)) ? trap_list[s]
+                                                             : nullptr;
+  }
+
   // definitions moved from subst.hh
 
   // Remove backslashes which are quoting backquotes from STRING (in place).
@@ -4961,12 +5032,12 @@ protected:
 #endif
 
 #if defined(ARRAY_VARS)
-  char *extract_array_assignment_list (string_view, int *);
+  std::string extract_array_assignment_list (string_view, int *);
 #endif
 
 #if defined(COND_COMMAND)
-  char *remove_backslashes (string_view);
-  char *cond_expand_word (WORD_DESC *, int);
+  std::string remove_backslashes (string_view);
+  std::string cond_expand_word (WORD_DESC *, int);
   void cond_error (parser::token_kind_type, const parser::symbol_type &);
 #endif
 
@@ -4977,7 +5048,7 @@ protected:
 #endif
 
 #if defined(READLINE)
-  unsigned int char_is_quoted (string_view, int); /* rl_linebuf_func_t */
+  size_t char_is_quoted (string_view, int); /* rl_linebuf_func_t */
   bool unclosed_pair (string_view, int, string_view);
   WORD_LIST *split_at_delims (string_view, int, string_view, int, sd_flags,
                               int *, int *);
@@ -4987,9 +5058,9 @@ protected:
 
   // private methods from subst.cc
 
-  char *string_extract (const char *, size_t *, const char *, sx_flags);
+  std::string string_extract (string_view, size_t *, string_view, sx_flags);
 
-  char *string_extract_double_quoted (const char *, size_t *, sx_flags);
+  std::string string_extract_double_quoted (string_view, size_t *, sx_flags);
 
   size_t skip_double_quoted (string_view, size_t, size_t, sx_flags);
 
@@ -5127,14 +5198,15 @@ protected:
 
   VAR_CONTEXT *new_var_context (string_view, int);
   void dispose_var_context (VAR_CONTEXT *);
-  // VAR_CONTEXT *push_var_context (string_view, int, HASH_TABLE *);
+  VAR_CONTEXT *push_var_context (string_view, int, HASH_TABLE<SHELL_VAR *> *);
   void pop_var_context ();
-  // VAR_CONTEXT *push_scope (int, HASH_TABLE *);
-  int pop_scope (int);
+
+  VAR_CONTEXT *push_scope (int, HASH_TABLE<SHELL_VAR *> *);
+  int pop_scope (bool);
 
   void clear_dollar_vars ();
 
-  // void push_context (string_view, bool, HASH_TABLE *);
+  void push_context (string_view, bool, HASH_TABLE<SHELL_VAR *> *);
   void pop_context ();
   void push_dollar_vars ();
   void pop_dollar_vars ();
@@ -5962,7 +6034,7 @@ protected:
 
   /* The name of the command that is currently being executed.
      `test' needs this, for example. */
-  const char *this_command_name;
+  string_view this_command_name;
 
   SHELL_VAR *this_shell_function;
 
@@ -5998,6 +6070,7 @@ protected:
   /* private variables from subst.cc */
 
   /* Variables used to keep track of the characters in IFS. */
+
   SHELL_VAR *ifs_var;
   const char *ifs_value;
 
@@ -6255,6 +6328,20 @@ protected:
   // Will go away when there is fully-implemented support for multiple coprocs.
   Coproc sh_coproc;
 #endif
+
+  // Variables from builtins/getopt.cc
+
+  // For communication from `sh_getopt' to the caller. When `sh_getopt' finds
+  // an option that takes an argument, the argument value is returned here.
+  char *sh_optarg;
+
+  /* The next char to be scanned in the option-element
+     in which the last option character we returned was found.
+     This allows us to pick up the scan where we left off.
+
+     If this is zero, or a null string, it means resume the scan
+     by advancing to the next ARGV-element.  */
+  char *nextchar;
 
   // Buffer for buffered input.
   char localbuf[1024];

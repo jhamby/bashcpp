@@ -22,13 +22,23 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include <fcntl.h>
 
 #include "loadables.hh"
+
+namespace bash
+{
+
+// Loadable class for "fdflags".
+class ShellLoadable : public Shell
+{
+public:
+  int fdflags_builtin (WORD_LIST *);
+
+private:
+};
 
 #ifndef FD_CLOEXEC
 #define FD_CLOEXEC 1
@@ -276,7 +286,7 @@ getmaxfd ()
 }
 
 int
-fdflags_builtin (WORD_LIST *list)
+ShellLoadable::fdflags_builtin (WORD_LIST *list)
 {
   int opt, maxfd, i, num, verbose, setflag;
   char *setspec;
@@ -299,14 +309,14 @@ fdflags_builtin (WORD_LIST *list)
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
 
   /* Maybe we could provide some default here, but we don't yet. */
   if (list == 0 && setflag)
-    return (EXECUTION_SUCCESS);
+    return EXECUTION_SUCCESS;
 
   if (list == 0)
     {
@@ -314,15 +324,15 @@ fdflags_builtin (WORD_LIST *list)
       if (maxfd < 0)
         {
           builtin_error ("can't get max fd: %s", strerror (errno));
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
       for (i = 0; i < maxfd; i++)
         printone (i, 0, verbose);
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   opt = EXECUTION_SUCCESS;
-  for (l = list; l; l = l->next)
+  for (l = list; l; l = l->next ())
     {
       if (legal_number (l->word->word, &inum) == 0 || inum < 0)
         {
@@ -337,10 +347,10 @@ fdflags_builtin (WORD_LIST *list)
         printone (num, 1, verbose);
     }
 
-  return (opt);
+  return opt;
 }
 
-char *fdflags_doc[] = {
+const char *const fdflags_doc[] = {
   "Display and modify file descriptor flags.",
   "",
   "Display or, if the -s option is supplied, set flags for each file",
@@ -354,18 +364,12 @@ char *fdflags_doc[] = {
   "",
   "If no file descriptor arguments are supplied, the displayed information",
   "consists of the status of flags for each of the shell's open files.",
-  (char *)NULL
+  nullptr
 };
 
-/* The standard structure describing a builtin command.  bash keeps an array
-   of these structures.  The flags must include BUILTIN_ENABLED so the
-   builtin can be used. */
-struct builtin fdflags_struct = {
-  "fdflags",       /* builtin name */
-  fdflags_builtin, /* function implementing the builtin */
-  BUILTIN_ENABLED, /* initial flags for builtin */
-  fdflags_doc,     /* array of long documentation strings. */
-  "fdflags [-v] [-s flags_string] [fd ...]", /* usage synopsis; becomes
-                                                short_doc */
-  0                                          /* reserved for internal use */
-};
+Shell::builtin fdflags_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::fdflags_builtin),
+    fdflags_doc, "fdflags [-v] [-s flags_string] [fd ...]", nullptr,
+    BUILTIN_ENABLED);
+
+} // namespace bash

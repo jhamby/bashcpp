@@ -92,7 +92,7 @@ DEFSRC = $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc $(BLTDIR)/break_def.cc \
 
 bash_SOURCES += $(DEFSRC) $(BLTDIR)/builtins.cc \
 	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
-	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh
+	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc
 
 # programs for generating sources and used by the test cases
 noinst_PROGRAMS = mkbuiltins psize mksignames mksyntax

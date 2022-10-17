@@ -26,26 +26,36 @@
 #include <unistd.h>
 #endif
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
+namespace bash
+{
+
+// Loadable class for "dirname".
+class ShellLoadable : public Shell
+{
+public:
+  int dirname_builtin (WORD_LIST *);
+
+private:
+};
+
 int
-dirname_builtin (list)
-WORD_LIST *list;
+ShellLoadable::dirname_builtin (WORD_LIST *list)
 {
   int slen;
   char *string;
 
   if (no_options (list))
-    return (EX_USAGE);
+    return EX_USAGE;
   list = loptend;
 
-  if (list == 0 || list->next)
+  if (list == nullptr || list->next ())
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   string = list->word->word;
@@ -61,7 +71,7 @@ WORD_LIST *list;
   if (slen == 0)
     {
       fputs ("/\n", stdout);
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   /* (3) If there are any trailing slash characters in string, they
@@ -82,7 +92,7 @@ WORD_LIST *list;
   if (slen < 0)
     {
       fputs (".\n", stdout);
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   /* (7) If there are any trailing slash characters in string, they
@@ -95,22 +105,17 @@ WORD_LIST *list;
   /* (8) If the remaining string is empty, string shall be set to a single
          slash character. */
   printf ("%s\n", (slen == 0) ? "/" : string);
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
-char *dirname_doc[]
+const char *dirname_doc[]
     = { "Display directory portion of pathname.", "",
         "The STRING is converted to the name of the directory containing",
         "the filename corresponding to the last pathname component in STRING.",
-        (char *)NULL };
+        nullptr };
 
-/* The standard structure describing a builtin command.  bash keeps an array
-   of these structures. */
-struct builtin dirname_struct = {
-  "dirname",        /* builtin name */
-  dirname_builtin,  /* function implementing the builtin */
-  BUILTIN_ENABLED,  /* initial flags for builtin */
-  dirname_doc,      /* array of long documentation strings. */
-  "dirname string", /* usage synopsis */
-  0                 /* reserved for internal use */
-};
+Shell::builtin dirname_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::dirname_builtin),
+    dirname_doc, "dirname string", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

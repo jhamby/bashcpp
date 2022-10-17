@@ -22,12 +22,23 @@
 
 #include "config.h"
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
 #include <dirent.h>
+
+namespace bash
+{
+
+// Loadable class for "rm".
+class ShellLoadable : public Shell
+{
+public:
+  int rm_builtin (WORD_LIST *);
+
+private:
+};
 
 static int rm_file (const char *fname);
 
@@ -55,8 +66,10 @@ _remove_directory (const char *dirname)
           int fnsize;
 #endif
 
-	  QUIT;
-          if (*dp->d_name == '.' && (dp->d_name[1] == 0 || (dp->d_name[1] == '.' && dp->d_name[2] == 0)))
+          QUIT;
+          if (*dp->d_name == '.'
+              && (dp->d_name[1] == 0
+                  || (dp->d_name[1] == '.' && dp->d_name[2] == 0)))
             continue;
 
 #ifdef __GNUC__
@@ -72,7 +85,7 @@ _remove_directory (const char *dirname)
 #ifndef __GNUC__
           free (fname);
 #endif
-	   QUIT;
+          QUIT;
         }
 
       closedir (dir);
@@ -109,8 +122,7 @@ rm_file (const char *fname)
 }
 
 int
-rm_builtin (list)
-WORD_LIST *list;
+ShellLoadable::rm_builtin (WORD_LIST *list)
 {
   const char *name;
   WORD_LIST *l;
@@ -132,11 +144,11 @@ WORD_LIST *list;
           force = 1;
           break;
         case 'i':
-          return (EX_DISKFALLBACK);
+          return EX_DISKFALLBACK;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -146,32 +158,27 @@ WORD_LIST *list;
       if (force == 0)
         {
           builtin_usage ();
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
-  for (l = list; l; l = l->next)
+  for (l = list; l; l = l->next ())
     {
       QUIT;
-      if (rm_file(l->word->word) && force == 0)
-	rval = EXECUTION_FAILURE;
+      if (rm_file (l->word->word.c_str ()) && force == 0)
+        rval = EXECUTION_FAILURE;
     }
 
   return rval;
 }
 
-char *rm_doc[]
+const char *const rm_doc[]
     = { "Remove files.", "", "rm removes the files specified as arguments.",
-        (char *)NULL };
+        nullptr };
 
-/* The standard structure describing a builtin command.  bash keeps an array
-   of these structures. */
-struct builtin rm_struct = {
-  "rm",                /* builtin name */
-  rm_builtin,          /* function implementing the builtin */
-  BUILTIN_ENABLED,     /* initial flags for builtin */
-  rm_doc,              /* array of long documentation strings. */
-  "rm [-rf] file ...", /* usage synopsis; becomes short_doc */
-  0                    /* reserved for internal use */
-};
+Shell::builtin rm_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::rm_builtin), rm_doc,
+    "rm [-rf] file ...", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

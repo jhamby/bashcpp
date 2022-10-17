@@ -58,8 +58,8 @@ Shell::builtin_error_prolog ()
   if (!interactive_shell)
     fprintf (stderr, _ ("line %d: "), executing_line_number ());
 
-  if (this_command_name && *this_command_name)
-    fprintf (stderr, "%s: ", this_command_name);
+  if (!this_command_name.empty ())
+    fprintf (stderr, "%s: ", to_string (this_command_name).c_str ());
 }
 
 void
@@ -93,8 +93,10 @@ Shell::builtin_warning (const char *format, ...)
 void
 Shell::builtin_usage ()
 {
-  if (this_command_name && *this_command_name)
-    fprintf (stderr, _ ("%s: usage: "), this_command_name);
+  if (!this_command_name.empty ())
+    fprintf (stderr, _ ("%s: usage: "),
+             to_string (this_command_name).c_str ());
+
   fprintf (stderr, "%s\n", _ (current_builtin->short_doc));
   fflush (stderr);
 }
@@ -201,6 +203,12 @@ void
 Shell::sh_readonly (const char *s)
 {
   builtin_error (_ ("%s: readonly variable"), s);
+}
+
+void
+Shell::sh_noassign (const char *s)
+{
+  internal_error (_ ("%s: cannot assign"), s); /* XXX */
 }
 
 void
@@ -373,7 +381,7 @@ Shell::shift_args (int times)
 int
 Shell::number_of_args ()
 {
-#ifdef DEBUG
+#if 0
   WORD_LIST *list;
   int n;
 
@@ -718,12 +726,12 @@ Shell::display_signal_list (WORD_LIST *list, int forcecols)
             {
               sh_invalidsig (list->word->word);
               result = EXECUTION_FAILURE;
-              list = (WORD_LIST *)list->next;
+              list = list->next ();
               continue;
             }
           printf ("%d\n", signum);
         }
-      list = (WORD_LIST *)list->next;
+      list = list->next ();
     }
   return result;
 }
@@ -749,6 +757,7 @@ builtin_help ()
 /*								    */
 /* **************************************************************** */
 
+/* Assign NAME=VALUE, passing FLAGS to the assignment functions. */
 SHELL_VAR *
 Shell::builtin_bind_variable (const char *name, const char *value, int flags)
 {

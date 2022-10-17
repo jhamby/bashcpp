@@ -25,18 +25,26 @@
 
 #include "config.h"
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
-extern char **export_env;
+namespace bash
+{
+
+// Loadable class for "printenv".
+class ShellLoadable : public Shell
+{
+public:
+  int printenv_builtin (WORD_LIST *);
+
+private:
+};
 
 int
-printenv_builtin (list)
-WORD_LIST *list;
+ShellLoadable::printenv_builtin (WORD_LIST *list)
 {
-  register char **envp;
+  char **envp;
   int opt;
   SHELL_VAR *var;
 
@@ -48,7 +56,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -59,13 +67,13 @@ WORD_LIST *list;
       maybe_make_export_env (); /* this allows minimal code */
       for (envp = export_env; *envp; envp++)
         printf ("%s\n", *envp);
-      return (EXECUTION_SUCCESS);
+      return EXECUTION_SUCCESS;
     }
 
   /* printenv varname */
   var = find_variable (list->word->word);
   if (var == 0 || (exported_p (var) == 0))
-    return (EXECUTION_FAILURE);
+    return EXECUTION_FAILURE;
 
   if (function_p (var))
     print_var_function (var);
@@ -73,13 +81,15 @@ WORD_LIST *list;
     print_var_value (var, 0);
 
   printf ("\n");
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
-char *printenv_doc[]
+static const char *const printenv_doc[]
     = { "Display environment.", "",
-        "Print names and values of environment variables", (char *)NULL };
+        "Print names and values of environment variables", nullptr };
 
-struct builtin printenv_struct
-    = { "printenv",   printenv_builtin,     BUILTIN_ENABLED,
-        printenv_doc, "printenv [varname]", 0 };
+Shell::builtin printenv_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::printenv_builtin),
+    printenv_doc, "printenv [varname]", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

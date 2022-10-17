@@ -152,7 +152,7 @@ SimpleState::SimpleState ()
       rseed (1), rseed32 (1073741823), last_command_subst_pid (NO_PID),
       current_command_subst_pid (NO_PID), eof_encountered_limit (10),
       word_top (-1), indentation_amount (4), xtrace_fd (-1), xattrfd (-1),
-      array_needs_making (true),
+      sh_opterr (true), sh_optopt ('?'), array_needs_making (true),
 #if defined(JOB_CONTROL)
       job_control (true),
 #endif
@@ -361,7 +361,7 @@ Shell::run_shell (int argc, char **argv, char **env)
       arg_index++;
     }
 
-  this_command_name = nullptr;
+  this_command_name = string_view ();
 
   /* First, let the outside world know about our interactive status.
      A shell is interactive if the `-i' flag was given, or if all of

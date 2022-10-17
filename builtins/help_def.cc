@@ -54,7 +54,8 @@
 #include "pathexp.hh"
 #include "shell.hh"
 
-#include "glob.hh"
+#include <glob.h>
+
 #include "strmatch.hh"
 
 namespace bash
@@ -113,16 +114,17 @@ Shell::help_builtin (WORD_LIST *list)
 
   /* We should consider making `help bash' do something. */
 
-  if (glob_pattern_p (list->word->word) == 1)
+  // XXX: this has to be updated to use Gnulib's 2-arg glob_pattern_p ().
+  if (glob_pattern_p (list->word->word.c_str ()) == 1)
     {
       printf ("%s", ngettext ("Shell commands matching keyword `",
                               "Shell commands matching keywords `",
-                              (list->next ? 2 : 1)));
+                              (list->next () ? 2 : 1)));
       print_word_list (list, ", ");
       printf ("%s", _ ("'\n\n"));
     }
 
-  for (match_found = 0, pattern = ""; list; list = (WORD_LIST *)list->next)
+  for (match_found = 0, pattern = ""; list; list = list->next ())
     {
       pattern = list->word->word;
       plen = strlen (pattern);

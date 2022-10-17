@@ -22,19 +22,6 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "posixstat.hh"
-#include "posixtime.hh"
-
-#include <cerrno>
-#include <grp.h>
-#include <pwd.h>
-#include <sys/types.h>
-
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
@@ -58,23 +45,32 @@
 
 #define ST_END 16
 
+namespace bash
+{
+
+// Loadable class for "stat".
+class ShellLoadable : public Shell
+{
+public:
+  int stat_builtin (WORD_LIST *);
+
+private:
+};
+
 static char *arraysubs[]
     = { "name",    "device", "inode", "type",  "nlink", "uid",
         "gid",     "rdev",   "size",  "atime", "mtime", "ctime",
         "blksize", "blocks", "link",  "perms", 0 };
 
-#define DEFTIMEFMT	"%a %b %e %k:%M:%S %Z %Y"
+#define DEFTIMEFMT "%a %b %e %k:%M:%S %Z %Y"
 #ifndef TIMELEN_MAX
-#  define TIMELEN_MAX 128
+#define TIMELEN_MAX 128
 #endif
 
 static char *stattime (time_t, const char *);
 
 static int
-getstat (fname, flags, sp)
-     const char *fname;
-     int flags;
-     struct stat *sp;
+getstat (const char *fname, int flags, struct stat *sp)
 {
   int64_t lfd;
   int fd, r;
@@ -100,9 +96,7 @@ getstat (fname, flags, sp)
 }
 
 static char *
-statlink (fname, sp)
-char *fname;
-struct stat *sp;
+statlink (const char *fname, struct stat *sp)
 {
 #if defined(HAVE_READLINK)
   char linkbuf[PATH_MAX];
@@ -112,16 +106,15 @@ struct stat *sp;
       && (n = readlink (fname, linkbuf, PATH_MAX)) > 0)
     {
       linkbuf[n] = '\0';
-      return (savestring (linkbuf));
+      return savestring (linkbuf);
     }
   else
 #endif
-    return (savestring (fname));
+    return savestring (fname);
 }
 
 static char *
-octalperms (m)
-int m;
+octalperms (int m)
 {
   int operms;
   char *ret;
@@ -162,8 +155,7 @@ int m;
 }
 
 static char *
-statperms (m)
-int m;
+statperms (int m)
 {
   char ubits[4], gbits[4], obits[4]; /* u=rwx,g=rwx,o=rwx */
   int i;
@@ -209,8 +201,7 @@ int m;
 }
 
 static char *
-statmode (mode)
-int mode;
+statmode (int mode)
 {
   char *modestr, *m;
 
@@ -248,13 +239,11 @@ int mode;
 #endif
 
   *m = '\0';
-  return (modestr);
+  return modestr;
 }
 
 static char *
-stattime (t, timefmt)
-     time_t t;
-     const char *timefmt;
+stattime (time_t t, const char *timefmt)
 {
   char *tbuf, *ret;
   const char *fmt;
@@ -274,12 +263,8 @@ stattime (t, timefmt)
 }
 
 static char *
-statval (which, fname, flags, fmt, sp)
-     int which;
-     char *fname;
-     int flags;
-     char *fmt;
-     struct stat *sp;
+statval (int which, const char *fname, int flags, const char *fmt,
+         struct stat *sp)
 {
   int temp;
 
@@ -292,7 +277,7 @@ statval (which, fname, flags, fmt, sp)
     case ST_INO:
       return itos (sp->st_ino);
     case ST_MODE:
-      return (statmode (sp->st_mode));
+      return statmode (sp->st_mode);
     case ST_NLINK:
       return itos (sp->st_nlink);
     case ST_UID:
@@ -304,17 +289,17 @@ statval (which, fname, flags, fmt, sp)
     case ST_SIZE:
       return itos (sp->st_size);
     case ST_ATIME:
-      return ((flags & 2) ? stattime (sp->st_atime, fmt) : itos (sp->st_atime));
+      return (flags & 2) ? stattime (sp->st_atime, fmt) : itos (sp->st_atime);
     case ST_MTIME:
-      return ((flags & 2) ? stattime (sp->st_mtime, fmt) : itos (sp->st_mtime));
+      return (flags & 2) ? stattime (sp->st_mtime, fmt) : itos (sp->st_mtime);
     case ST_CTIME:
-      return ((flags & 2) ? stattime (sp->st_ctime, fmt) : itos (sp->st_ctime));
+      return (flags & 2) ? stattime (sp->st_ctime, fmt) : itos (sp->st_ctime);
     case ST_BLKSIZE:
       return itos (sp->st_blksize);
     case ST_BLOCKS:
       return itos (sp->st_blocks);
     case ST_CHASELINK:
-      return (statlink (fname, sp));
+      return statlink (fname, sp);
     case ST_PERMS:
       temp = sp->st_mode & (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID);
       return (flags & 2) ? statperms (temp) : octalperms (temp);
@@ -324,13 +309,8 @@ statval (which, fname, flags, fmt, sp)
 }
 
 static int
-loadstat (vname, var, fname, flags, fmt, sp)
-     char *vname;
-     SHELL_VAR *var;
-     char *fname;
-     int flags;
-     char *fmt;
-     struct stat *sp;
+loadstat (const char *vname, SHELL_VAR *var, const char *fname, int flags,
+          const char *fmt, struct stat *sp)
 {
   int i;
   char *key, *value;
@@ -346,8 +326,7 @@ loadstat (vname, var, fname, flags, fmt, sp)
 }
 
 int
-stat_builtin (list)
-WORD_LIST *list;
+ShellLoadable::stat_builtin (WORD_LIST *list)
 {
   int opt, flags;
   char *aname, *fname, *timefmt;
@@ -362,39 +341,38 @@ WORD_LIST *list;
   while ((opt = internal_getopt (list, "A:F:Ll")) != -1)
     {
       switch (opt)
-	{
-	case 'A':
-	  aname = list_optarg;
-	  break;
-	case 'L':
-	  flags |= 1;		/* operate on links rather than resolving them */
-	  break;
-	case 'l':
-	  flags |= 2;
-	  break;
-	case 'F':
-	  timefmt = list_optarg;
-	  break;
-	CASE_HELPOPT;
-	default:
-	  builtin_usage ();
-	  return (EX_USAGE);
-	}
+        {
+        case 'A':
+          aname = list_optarg;
+          break;
+        case 'L':
+          flags |= 1; /* operate on links rather than resolving them */
+          break;
+        case 'l':
+          flags |= 2;
+          break;
+        case 'F':
+          timefmt = list_optarg;
+          break;
+          CASE_HELPOPT;
+        default:
+          builtin_usage ();
+          return EX_USAGE;
+        }
     }
 
   if (legal_identifier (aname) == 0)
     {
       sh_invalidid (aname);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   list = loptend;
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
-
 
 #if 0
   unbind_variable (aname);
@@ -404,53 +382,47 @@ WORD_LIST *list;
   if (getstat (fname, flags, &st) < 0)
     {
       builtin_error ("%s: cannot stat: %s", fname, strerror (errno));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
   v = find_or_make_array_variable (aname, 3);
   if (v == 0)
     {
       builtin_error ("%s: cannot create variable", aname);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   if (loadstat (aname, v, fname, flags, timefmt, &st) < 0)
     {
       builtin_error ("%s: cannot assign file status information", aname);
       unbind_variable (aname);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
 /* An array of strings forming the `long' documentation for a builtin xxx,
    which is printed by `help xxx'.  It must end with a NULL.  By convention,
    the first line is a short description. */
-char *stat_doc[] = {
-	"Load an associative array with file status information.",
-	"",
-	"Take a filename and load the status information returned by a",
-	"stat(2) call on that file into the associative array specified",
-	"by the -A option.  The default array name is STAT.",
-	"",
-	"If the -L option is supplied, stat does not resolve symbolic links",
-	"and reports information about the link itself.  The -l option results",
-	"in longer-form listings for some of the fields. When -l is used,",
-	"the -F option supplies a format string passed to strftime(3) to",
-	"display the file time information.",
-	"The exit status is 0 unless the stat fails or assigning the array",
-	"is unsuccessful.",
-	(char *)NULL
+static const char *const stat_doc[] = {
+  "Load an associative array with file status information.",
+  "",
+  "Take a filename and load the status information returned by a",
+  "stat(2) call on that file into the associative array specified",
+  "by the -A option.  The default array name is STAT.",
+  "",
+  "If the -L option is supplied, stat does not resolve symbolic links",
+  "and reports information about the link itself.  The -l option results",
+  "in longer-form listings for some of the fields. When -l is used,",
+  "the -F option supplies a format string passed to strftime(3) to",
+  "display the file time information.",
+  "The exit status is 0 unless the stat fails or assigning the array",
+  "is unsuccessful.",
+  nullptr
 };
 
-/* The standard structure describing a builtin command.  bash keeps an array
-   of these structures.  The flags must include BUILTIN_ENABLED so the
-   builtin can be used. */
-struct builtin stat_struct = {
-  "stat",                       /* builtin name */
-  stat_builtin,                 /* function implementing the builtin */
-  BUILTIN_ENABLED,              /* initial flags for builtin */
-  stat_doc,                     /* array of long documentation strings. */
-  "stat [-lL] [-A aname] file", /* usage synopsis; becomes short_doc */
-  0                             /* reserved for internal use */
-};
+Shell::builtin stat_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::stat_builtin),
+    stat_doc, "stat [-lL] [-A aname] file", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

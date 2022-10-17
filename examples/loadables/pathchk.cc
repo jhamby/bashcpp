@@ -46,15 +46,9 @@
 
 #include <sys/types.h>
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#if defined(HAVE_LIMITS_H)
 #include <limits.h>
-#endif
+#include <unistd.h>
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "maxpath.hh"
@@ -85,13 +79,22 @@
 #define NAME_MAX_FOR(p) NAME_MAX
 #endif
 
-extern char *strerror ();
+namespace bash
+{
+
+// Loadable class for "pathchk".
+class ShellLoadable : public Shell
+{
+public:
+  int pathchk_builtin (WORD_LIST *);
+
+private:
+};
 
 static int validate_path ();
 
 int
-pathchk_builtin (list)
-WORD_LIST *list;
+ShellLoadable::pathchk_builtin (WORD_LIST *list)
 {
   int retval, pflag, opt;
 
@@ -106,7 +109,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -114,35 +117,28 @@ WORD_LIST *list;
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
-  for (retval = 0; list; list = list->next)
+  for (retval = 0; list; list = list->next ())
     retval |= validate_path (list->word->word, pflag);
 
-  return (retval ? EXECUTION_FAILURE : EXECUTION_SUCCESS);
+  return retval ? EXECUTION_FAILURE : EXECUTION_SUCCESS;
 }
 
-char *pathchk_doc[] = {
+static const char *const pathchk_doc[] = {
   "Check pathnames for validity.",
   "",
   "Check each pathname argument for validity (i.e., it may be used to",
   "create or access a file without causing syntax errors) and portability",
   "(i.e., no filename truncation will result).  If the `-p' option is",
   "supplied, more extensive portability checks are performed.",
-  (char *)NULL
+  nullptr
 };
 
-/* The standard structure describing a builtin command.  bash keeps an array
-   of these structures. */
-struct builtin pathchk_struct = {
-  "pathchk",                   /* builtin name */
-  pathchk_builtin,             /* function implementing the builtin */
-  BUILTIN_ENABLED,             /* initial flags for builtin */
-  pathchk_doc,                 /* array of long documentation strings. */
-  "pathchk [-p] pathname ...", /* usage synopsis */
-  0                            /* reserved for internal use */
-};
+Shell::builtin pathchk_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::pathchk_builtin),
+    pathchk_doc, "pathchk [-p] pathname ...", nullptr, BUILTIN_ENABLED);
 
 /* The remainder of this file is stolen shamelessly from `pathchk.c' in
    the sh-utils-1.12 distribution, by
@@ -171,7 +167,8 @@ static char const portable_chars[256]
 
 /* If PATH contains only portable characters, return 1, else 0.  */
 
-static int portable_chars_only (path) const char *path;
+static int
+portable_chars_only (const char *path)
 {
   const char *p;
 
@@ -191,8 +188,9 @@ static int portable_chars_only (path) const char *path;
 #define SAFE_STAT(name, buf) stat (name, buf)
 #else
 #define SAFE_STAT(name, buf) safe_stat (name, buf)
-static inline int safe_stat (name, buf) const char *name;
-struct stat *buf;
+
+static inline int
+safe_stat (const char *name, struct stat *buf)
 {
   int ret;
 
@@ -207,7 +205,8 @@ struct stat *buf;
 /* Return 1 if PATH is a usable leading directory, 0 if not,
    2 if it doesn't exist.  */
 
-static int dir_ok (path) const char *path;
+static int
+dir_ok (const char *path)
 {
   struct stat stats;
 
@@ -236,13 +235,6 @@ static int dir_ok (path) const char *path;
   return 1;
 }
 
-static char *
-xstrdup (s)
-char *s;
-{
-  return (savestring (s));
-}
-
 /* Make sure that
    strlen (PATH) <= PATH_MAX
    && strlen (each-existing-directory-in-PATH) <= NAME_MAX
@@ -258,13 +250,11 @@ char *s;
    Return 0 if all of these tests are successful, 1 if any fail. */
 
 static int
-validate_path (path, portability)
-char *path;
-int portability;
+validate_path (const char *path, bool portability)
 {
   int path_max;
-  int last_elem; /* Nonzero if checking last element of path. */
-  int exists;    /* 2 if the path element exists.  */
+  int last_elem;  /* Nonzero if checking last element of path. */
+  int exists = 0; /* 2 if the path element exists.  */
   char *slash;
   char *parent; /* Last existing leading directory so far.  */
 
@@ -273,11 +263,6 @@ int portability;
 
   if (*path == '\0')
     return 0;
-
-#ifdef lint
-  /* Suppress `used before initialized' warning.  */
-  exists = 0;
-#endif
 
   /* Figure out the parent of the first element in PATH.  */
   parent = xstrdup (*path == '/' ? "/" : ".");
@@ -361,3 +346,5 @@ int portability;
 
   return 0;
 }
+
+} // namespace bash

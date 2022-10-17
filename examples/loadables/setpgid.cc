@@ -20,28 +20,30 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "bashtypes.hh"
-#include "posixtime.hh"
-
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
-
-#include "bashgetopt.hh"
 
 #if !defined(_POSIX_VERSION)
 #define setpgid(pid, pgrp) setpgrp (pid, pgrp)
 #endif
 
-int
-setpgid_builtin (list)
-WORD_LIST *list;
+namespace bash
 {
-  register WORD_LIST *wl;
+
+// Loadable class for "setpgid".
+class ShellLoadable : public Shell
+{
+public:
+  int setpgid_builtin (WORD_LIST *);
+
+private:
+};
+
+int
+ShellLoadable::setpgid_builtin (WORD_LIST *list)
+{
+  WORD_LIST *wl;
   int64_t pid_arg, pgid_arg;
   pid_t pid, pgid;
   char *pidstr, *pgidstr;
@@ -52,7 +54,7 @@ WORD_LIST *list;
   if (wl == 0 || wl->next == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   pidstr = wl->word ? wl->word->word : 0;
@@ -61,30 +63,30 @@ WORD_LIST *list;
   if (pidstr == 0 || pgidstr == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   if (legal_number (pidstr, &pid_arg) == 0)
     {
       builtin_error ("%s: pid argument must be numeric", pidstr);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   if (pid_arg < 0)
     {
       builtin_error ("%s: negative pid  values not allowed", pidstr);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   pid = pid_arg;
 
   if (legal_number (pgidstr, &pgid_arg) == 0)
     {
       builtin_error ("%s: pgrp argument must be numeric", pgidstr);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   if (pgid_arg < 0)
     {
       builtin_error ("%s: negative pgrp values not allowed", pgidstr);
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   pgid = pgid_arg;
 
@@ -92,23 +94,22 @@ WORD_LIST *list;
   if (setpgid (pid, pgid) < 0)
     {
       builtin_error ("setpgid failed: %s", strerror (errno));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
-const char *setpgid_doc[]
+static const char *const setpgid_doc[]
     = { "invoke the setpgid(2) system call",
         "",
         "Arguments:",
         "   pid : numeric process identifier, >= 0",
         "   pgrpid: numeric process group identifier, >=0",
         "See the setpgid(2) manual page.",
-        (const char *)NULL };
+        nullptr };
 
-struct builtin setpgid_struct = { "setpgid",
-                                  setpgid_builtin,
-                                  BUILTIN_ENABLED,
-                                  (char **)setpgid_doc,
-                                  "setpgid pid pgrpid",
-                                  0 };
+Shell::builtin setpgid_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::setpgid_builtin),
+    setpgid_doc, "setpgid pid pgrpid", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

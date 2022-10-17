@@ -38,24 +38,24 @@
 
 #include "config.h"
 
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include <stdio.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
-extern char *sh_realpath ();
+namespace bash
+{
+
+// Loadable class for "realpath".
+class ShellLoadable : public Shell
+{
+public:
+  int realpath_builtin (WORD_LIST *);
+
+private:
+};
 
 int
-realpath_builtin (list)
-WORD_LIST *list;
+ShellLoadable::realpath_builtin (WORD_LIST *list)
 {
   int opt, cflag, vflag, sflag, es;
   char *r, realbuf[PATH_MAX], *p;
@@ -64,7 +64,7 @@ WORD_LIST *list;
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   vflag = cflag = sflag = 0;
@@ -85,7 +85,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
 
@@ -94,7 +94,7 @@ WORD_LIST *list;
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   for (es = EXECUTION_SUCCESS; list; list = list->next)
@@ -125,7 +125,7 @@ WORD_LIST *list;
   return es;
 }
 
-char *realpath_doc[] = {
+static const char *const realpath_doc[] = {
   "Display pathname in canonical form.",
   "",
   "Display the canonicalized version of each PATHNAME argument, resolving",
@@ -133,14 +133,12 @@ char *realpath_doc[] = {
   "exists.  The -s option produces no output; the exit status determines the",
   "validity of each PATHNAME.  The -v option produces verbose output.  The",
   "exit status is 0 if each PATHNAME was resolved; non-zero otherwise.",
-  (char *)NULL
+  nullptr
 };
 
-struct builtin realpath_struct = {
-  "realpath",       /* builtin name */
-  realpath_builtin, /* function implementing the builtin */
-  BUILTIN_ENABLED,  /* initial flags for builtin */
-  realpath_doc,     /* array of long documentation strings */
-  "realpath [-csv] pathname [pathname...]", /* usage synopsis */
-  0                                         /* reserved for internal use */
-};
+Shell::builtin realpath_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::realpath_builtin),
+    realpath_doc, "realpath [-csv] pathname [pathname...]", nullptr,
+    BUILTIN_ENABLED);
+
+} // namespace bash

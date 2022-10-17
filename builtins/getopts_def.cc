@@ -69,7 +69,6 @@
 #include "bashintl.hh"
 
 #include "common.hh"
-#include "getopt.hh"
 #include "shell.hh"
 
 namespace bash

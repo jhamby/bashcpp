@@ -22,14 +22,24 @@
 
 #include "config.h"
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
+namespace bash
+{
+
+// Loadable class for "whoami".
+class ShellLoadable : public Shell
+{
+public:
+  int whoami_builtin (WORD_LIST *);
+
+private:
+};
+
 int
-whoami_builtin (list)
-WORD_LIST *list;
+ShellLoadable::whoami_builtin (WORD_LIST *list)
 {
   int opt;
 
@@ -41,24 +51,27 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
   if (list)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   if (current_user.user_name == 0)
     get_current_user_info ();
   printf ("%s\n", current_user.user_name);
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
-char *whoami_doc[]
-    = { "Print user name", "", "Display name of current user.", (char *)NULL };
+static const char *const whoami_doc[]
+    = { "Print user name", "", "Display name of current user.", nullptr };
 
-struct builtin whoami_struct
-    = { "whoami", whoami_builtin, BUILTIN_ENABLED, whoami_doc, "whoami", 0 };
+Shell::builtin whoami_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::whoami_builtin),
+    whoami_doc, "whoami", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

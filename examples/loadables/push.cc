@@ -1,6 +1,5 @@
 /*
  * push - anyone remember TOPS-20?
- *
  */
 
 /*
@@ -23,15 +22,25 @@
 
 #include "config.h"
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "jobs.hh"
 #include "shell.hh"
 
+namespace bash
+{
+
+// Loadable class for "push".
+class ShellLoadable : public Shell
+{
+public:
+  int push_builtin (WORD_LIST *);
+
+private:
+};
+
 int
-push_builtin (list)
-WORD_LIST *list;
+ShellLoadable::push_builtin (WORD_LIST *list)
 {
   pid_t pid;
   int xstatus, opt;
@@ -45,7 +54,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -54,7 +63,7 @@ WORD_LIST *list;
   if (pid == -1)
     {
       builtin_error ("cannot fork: %s", strerror (errno));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   else if (pid == 0)
     {
@@ -84,18 +93,21 @@ WORD_LIST *list;
     {
       stop_pipeline (0, (COMMAND *)NULL);
       xstatus = wait_for (pid, 0);
-      return (xstatus);
+      return xstatus;
     }
 }
 
-char *push_doc[]
+static const char *const push_doc[]
     = { "Create child shell.",
         "",
         "Create a child that is an exact duplicate of the running shell",
         "and wait for it to exit.  The $SHLVL, $!, $$, and $PPID variables",
         "are adjusted in the child.  The return value is the exit status",
         "of the child.",
-        (char *)NULL };
+        nullptr };
 
-struct builtin push_struct
-    = { "push", push_builtin, BUILTIN_ENABLED, push_doc, "push", 0 };
+Shell::builtin push_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::push_builtin),
+    push_doc, "push", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

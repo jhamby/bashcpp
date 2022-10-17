@@ -21,28 +21,12 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "bashtypes.hh"
-
-#include <csignal>
-
-#include "bashintl.hh"
-
-#include "trap.hh"
+#include "shell.hh"
 
 #include "builtins.hh"
 #include "builtins/common.hh"
-#include "flags.hh"
-#include "input.hh" /* for save_token_state, restore_token_state */
-#include "jobs.hh"
-#include "parser.hh"
-#include "shell.hh"
 
 #include "builtext.hh"
-#include "signames.hh"
 
 #if defined(READLINE)
 #include "readline.hh"
@@ -55,8 +39,6 @@ void
 Shell::initialize_traps ()
 {
   int i;
-
-  initialize_signames ();
 
   trap_list[EXIT_TRAP] = trap_list[DEBUG_TRAP] = trap_list[ERROR_TRAP]
       = trap_list[RETURN_TRAP] = nullptr;

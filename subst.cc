@@ -36,7 +36,6 @@
 #include "typemax.hh"
 
 #include "builtins/common.hh"
-#include "builtins/getopt.hh"
 
 #include "builtext.hh"
 

@@ -22,18 +22,21 @@
 
 #include "config.h"
 
-#include "bashansi.hh"
-#include "bashtypes.hh"
-#include "posixstat.hh"
-
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
+
+namespace bash
+{
+
+// Loadable class for "mkdir".
+class ShellLoadable : public Shell
+{
+public:
+  int mkdir_builtin (WORD_LIST *);
+
+private:
+};
 
 #define ISOCTAL(c) ((c) >= '0' && (c) <= '7')
 
@@ -44,8 +47,7 @@ static int make_path ();
 static int original_umask;
 
 int
-mkdir_builtin (list)
-WORD_LIST *list;
+ShellLoadable::mkdir_builtin (WORD_LIST *list)
 {
   int opt, pflag, mflag, omode, rval, nmode, parent_mode;
   char *mode;
@@ -67,14 +69,14 @@ WORD_LIST *list;
         CASE_HELPOPT;
       default:
         builtin_usage ();
-        return (EX_USAGE);
+        return EX_USAGE;
       }
   list = loptend;
 
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   if (mode == NULL)
@@ -85,7 +87,7 @@ WORD_LIST *list;
       if (omode < 0)
         {
           builtin_error ("invalid file mode: %s", mode);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
     }
   else /* symbolic mode */
@@ -95,7 +97,7 @@ WORD_LIST *list;
       if (omode < 0)
         {
           builtin_error ("invalid file mode: %s", mode);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
     }
 
@@ -130,10 +132,7 @@ WORD_LIST *list;
    this changes the process's umask; make sure that all paths leading to a
    return reset it to ORIGINAL_UMASK */
 static int
-make_path (path, user_mode, nmode, parent_mode)
-char *path;
-int user_mode;
-int nmode, parent_mode;
+make_path (const char *path, int user_mode, int nmode, int parent_mode)
 {
   int oumask;
   struct stat sb;
@@ -216,28 +215,27 @@ int nmode, parent_mode;
   return 0;
 }
 
-char *mkdir_doc[] = {
-	"Create directories.",
-	"",
-	"Make directories.  Create the directories named as arguments, in",
-	"the order specified, using mode rwxrwxrwx as modified by the current",
-	"umask (see `help umask').  The -m option causes the file permission",
-	"bits of the final directory to be MODE.  The MODE argument may be",
-	"an octal number or a symbolic mode like that used by chmod(1).  If",
-	"a symbolic mode is used, the operations are interpreted relative to",
-	"an initial mode of \"a=rwx\".  The -p option causes any required",
-	"intermediate directories in PATH to be created.  The directories",
-	"are created with permission bits of rwxrwxrwx as modified by the current",
-	"umask, plus write and search permissions for the owner.  mkdir",
-	"returns 0 if the directories are created successfully, and non-zero",
-	"if an error occurs.",
-	(char *)NULL
+static const char *const mkdir_doc[] = {
+  "Create directories.",
+  "",
+  "Make directories.  Create the directories named as arguments, in",
+  "the order specified, using mode rwxrwxrwx as modified by the current",
+  "umask (see `help umask').  The -m option causes the file permission",
+  "bits of the final directory to be MODE.  The MODE argument may be",
+  "an octal number or a symbolic mode like that used by chmod(1).  If",
+  "a symbolic mode is used, the operations are interpreted relative to",
+  "an initial mode of \"a=rwx\".  The -p option causes any required",
+  "intermediate directories in PATH to be created.  The directories",
+  "are created with permission bits of rwxrwxrwx as modified by the current",
+  "umask, plus write and search permissions for the owner.  mkdir",
+  "returns 0 if the directories are created successfully, and non-zero",
+  "if an error occurs.",
+  nullptr
 };
 
-struct builtin mkdir_struct
-    = { "mkdir",
-        mkdir_builtin,
-        BUILTIN_ENABLED,
-        mkdir_doc,
-        "mkdir [-p] [-m mode] directory [directory ...]",
-        0 };
+Shell::builtin mkdir_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::mkdir_builtin),
+    mkdir_doc, "mkdir [-p] [-m mode] directory [directory ...]", nullptr,
+    BUILTIN_ENABLED);
+
+} // namespace bash

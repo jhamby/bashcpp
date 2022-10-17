@@ -25,60 +25,10 @@
 #endif
 
 #include "bashintl.hh"
-#include "getopt.hh"
 #include "shell.hh"
 
 namespace bash
 {
-
-#if 0
-/* For communication from `sh_getopt' to the caller.
-   When `sh_getopt' finds an option that takes an argument,
-   the argument value is returned here. */
-char *sh_optarg = 0;
-
-/* Index in ARGV of the next element to be scanned.
-   This is used for communication to and from the caller
-   and for communication between successive calls to `sh_getopt'.
-
-   On entry to `sh_getopt', zero means this is the first call; initialize.
-
-   When `sh_getopt' returns EOF, this is the index of the first of the
-   non-option elements that the caller should itself scan.
-
-   Otherwise, `sh_optind' communicates from one call to the next
-   how much of ARGV has been scanned so far.  */
-
-/* XXX 1003.2 says this must be 1 before any call.  */
-int sh_optind = 0;
-
-/* Index of the current argument. */
-static int sh_curopt;
-
-/* The next char to be scanned in the option-element
-   in which the last option character we returned was found.
-   This allows us to pick up the scan where we left off.
-
-   If this is zero, or a null string, it means resume the scan
-   by advancing to the next ARGV-element.  */
-
-static char *nextchar;
-static int sh_charindex;
-
-/* Callers store zero here to inhibit the error message
-   for unrecognized options.  */
-
-int sh_opterr = 1;
-
-/* Set to an option character which was unrecognized.
-   This must be initialized on some systems to avoid linking in the
-   system's own getopt implementation.  */
-
-int sh_optopt = '?';
-
-/* Set to 1 when we see an invalid option; public so getopts can reset it. */
-int sh_badopt = 0;
-#endif
 
 /* Scan elements of ARGV (whose length is ARGC) for option characters
    given in OPTSTRING.
@@ -113,7 +63,7 @@ int sh_badopt = 0;
   fprintf (stderr, _ ("%s: option requires an argument -- %c\n"), argv[0], x)
 
 int
-sh_getopt (int argc, char *const *argv, const char *optstring)
+Shell::sh_getopt (int argc, char *const *argv, const char *optstring)
 {
   sh_optarg = 0;
 
@@ -131,10 +81,10 @@ sh_getopt (int argc, char *const *argv, const char *optstring)
   if (sh_optind == 0)
     {
       sh_optind = 1;
-      nextchar = (char *)NULL;
+      nextchar = nullptr;
     }
 
-  if (nextchar == 0 || *nextchar == '\0')
+  if (nextchar == nullptr || *nextchar == '\0')
     {
       /* If we have done all the ARGV-elements, stop the scan. */
       if (sh_optind >= argc)
@@ -171,13 +121,13 @@ sh_getopt (int argc, char *const *argv, const char *optstring)
   sh_optopt = c;
 
   /* Increment `sh_optind' when we start to process its last character.  */
-  if (nextchar == 0 || *nextchar == '\0')
+  if (nextchar == nullptr || *nextchar == '\0')
     {
       sh_optind++;
-      nextchar = (char *)NULL;
+      nextchar = nullptr;
     }
 
-  if ((sh_badopt = (temp == NULL || c == ':')))
+  if ((sh_badopt = (temp == nullptr || c == ':')))
     {
       if (sh_opterr)
         BADOPT (c);
@@ -208,24 +158,22 @@ sh_getopt (int argc, char *const *argv, const char *optstring)
         /* We already incremented `sh_optind' once;
            increment it again when taking next ARGV-elt as argument.  */
         sh_optarg = argv[sh_optind++];
-      nextchar = (char *)NULL;
+      nextchar = nullptr;
     }
   return c;
 }
 
 void
-sh_getopt_restore_state (char **argv)
+Shell::sh_getopt_restore_state (char **argv)
 {
   if (nextchar)
     nextchar = argv[sh_curopt] + sh_charindex;
 }
 
 sh_getopt_state_t *
-sh_getopt_save_istate ()
+Shell::sh_getopt_save_istate ()
 {
-  sh_getopt_state_t *ret;
-
-  ret = sh_getopt_alloc_istate ();
+  sh_getopt_state_t *ret = new sh_getopt_state_t ();
 
   ret->gs_optarg = sh_optarg;
   ret->gs_optind = sh_optind;
@@ -238,7 +186,7 @@ sh_getopt_save_istate ()
 }
 
 void
-sh_getopt_restore_istate (sh_getopt_state_t *state)
+Shell::sh_getopt_restore_istate (sh_getopt_state_t *state)
 {
   sh_optarg = state->gs_optarg;
   sh_optind = state->gs_optind;
@@ -246,20 +194,8 @@ sh_getopt_restore_istate (sh_getopt_state_t *state)
   nextchar = state->gs_nextchar; /* XXX - probably not usable */
   sh_charindex = state->gs_charindex;
 
-  sh_getopt_dispose_istate (state);
+  delete state;
 }
-
-#if 0
-void
-sh_getopt_debug_restore_state (char **argv)
-{
-  if (nextchar && nextchar != argv[sh_curopt] + sh_charindex)
-    {
-      itrace("sh_getopt_debug_restore_state: resetting nextchar");
-      nextchar = argv[sh_curopt] + sh_charindex;
-    }
-}
-#endif
 
 #ifdef TEST
 

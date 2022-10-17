@@ -31,36 +31,44 @@
 #include "common.hh"
 #include "shell.hh"
 
+namespace bash
+{
+
+// Loadable class for "unlink".
+class ShellLoadable : public Shell
+{
+public:
+  int unlink_builtin (WORD_LIST *);
+
+private:
+};
+
 int
-unlink_builtin (list)
-WORD_LIST *list;
+ShellLoadable::unlink_builtin (WORD_LIST *list)
 {
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   if (unlink (list->word->word) != 0)
     {
       builtin_error ("%s: cannot unlink: %s", list->word->word,
                      strerror (errno));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
-char *unlink_doc[]
+static const char *const unlink_doc[]
     = { "Remove a directory entry.", "",
         "Forcibly remove a directory entry, even if it's a directory.",
-        (char *)NULL };
+        nullptr };
 
-struct builtin unlink_struct = {
-  "unlink",        /* builtin name */
-  unlink_builtin,  /* function implementing the builtin */
-  BUILTIN_ENABLED, /* initial flags for builtin */
-  unlink_doc,      /* array of long documentation strings. */
-  "unlink name",   /* usage synopsis; becomes short_doc */
-  0                /* reserved for internal use */
-};
+Shell::builtin unlink_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::unlink_builtin),
+    unlink_doc, "unlink name", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

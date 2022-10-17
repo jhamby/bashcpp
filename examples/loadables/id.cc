@@ -32,23 +32,27 @@
 #include <grp.h>
 #include <pwd.h>
 
-#include <cstdio>
-
 #ifdef HAVE_LIMITS_H
 #include <limits.h>
 #else
 #include <sys/param.h>
 #endif
 
-#if !defined(HAVE_GETPW_DECLS)
-extern struct passwd *getpwuid ();
-#endif
-extern struct group *getgrgid ();
-
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
+
+namespace bash
+{
+
+// Loadable class for "id".
+class ShellLoadable : public Shell
+{
+public:
+  int id_builtin (WORD_LIST *);
+
+private:
+};
 
 #define ID_ALLGROUPS 0x001 /* -G */
 #define ID_GIDONLY 0x002   /* -g */
@@ -73,8 +77,7 @@ static int id_prgroups ();
 static int id_prall ();
 
 int
-id_builtin (list)
-WORD_LIST *list;
+ShellLoadable::id_builtin (WORD_LIST *list)
 {
   int opt;
   char *user;
@@ -144,8 +147,7 @@ WORD_LIST *list;
 }
 
 static int
-inituser (uname)
-char *uname;
+inituser (char *uname)
 {
   struct passwd *pwd;
 
@@ -172,8 +174,7 @@ char *uname;
 
 /* Print the name or value of user ID UID. */
 static int
-id_pruser (uid)
-int uid;
+id_pruser (int uid)
 {
   struct passwd *pwd = NULL;
   int r;
@@ -196,8 +197,7 @@ int uid;
 /* Print the name or value of group ID GID. */
 
 static int
-id_prgrp (gid)
-int gid;
+id_prgrp (int gid)
 {
   struct group *grp = NULL;
   int r;
@@ -219,8 +219,7 @@ int gid;
 }
 
 static int
-id_prgroups (uname)
-char *uname;
+id_prgroups (char *uname)
 {
   int *glist, ng, i, r;
 
@@ -254,8 +253,7 @@ char *uname;
 }
 
 static int
-id_prall (uname)
-char *uname;
+id_prall (char *uname)
 {
   int r, i, ng, *glist;
   struct passwd *pwd;
@@ -324,15 +322,15 @@ char *uname;
   return r;
 }
 
-char *id_doc[] = { "Display information about user."
-                   "",
-                   "Return information about user identity", (char *)NULL };
+static const char *const id_doc[]
+    = { "Display information about user."
+        "",
+        "Return information about user identity", nullptr };
 
-struct builtin id_struct = {
-  "id",
-  id_builtin,
-  BUILTIN_ENABLED,
-  id_doc,
-  "id [user]\n\tid -G [-n] [user]\n\tid -g [-nr] [user]\n\tid -u [-nr] [user]",
-  0
-};
+Shell::builtin id_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::id_builtin), id_doc,
+    "id [user]\n\tid -G [-n] [user]\n\tid -g [-nr] [user]\n\tid -u [-nr] "
+    "[user]",
+    nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

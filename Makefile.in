@@ -291,15 +291,14 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(BLTDIR)/mapfile_def.cc $(BLTDIR)/builtins.cc \
 	$(BLTDIR)/common.cc $(BLTDIR)/evalstring.cc \
 	$(BLTDIR)/evalfile.cc $(BLTDIR)/getopt.cc \
-	$(BLTDIR)/bashgetopt.cc $(BLTDIR)/getopt.hh \
-	$(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
-	$(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc $(RLDIR)/rltty.cc \
-	$(RLDIR)/complete.cc $(RLDIR)/bind.cc $(RLDIR)/isearch.cc \
-	$(RLDIR)/display.cc $(RLDIR)/signals.cc \
-	$(RLDIR)/emacs_keymap.hh $(RLDIR)/vi_keymap.hh \
-	$(RLDIR)/util.cc $(RLDIR)/kill.cc $(RLDIR)/undo.cc \
-	$(RLDIR)/macro.cc $(RLDIR)/input.cc $(RLDIR)/callback.cc \
-	$(RLDIR)/terminal.cc $(RLDIR)/history.cc \
+	$(BLTDIR)/bashgetopt.cc $(RLDIR)/readline.cc \
+	$(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc $(RLDIR)/vi_mode.cc \
+	$(RLDIR)/parens.cc $(RLDIR)/rltty.cc $(RLDIR)/complete.cc \
+	$(RLDIR)/bind.cc $(RLDIR)/isearch.cc $(RLDIR)/display.cc \
+	$(RLDIR)/signals.cc $(RLDIR)/emacs_keymap.hh \
+	$(RLDIR)/vi_keymap.hh $(RLDIR)/util.cc $(RLDIR)/kill.cc \
+	$(RLDIR)/undo.cc $(RLDIR)/macro.cc $(RLDIR)/input.cc \
+	$(RLDIR)/callback.cc $(RLDIR)/terminal.cc $(RLDIR)/history.cc \
 	$(RLDIR)/histsearch.cc $(RLDIR)/histexpand.cc \
 	$(RLDIR)/histfile.cc $(RLDIR)/nls.cc $(RLDIR)/search.cc \
 	$(RLDIR)/shell.cc $(RLDIR)/tilde.cc $(RLDIR)/text.cc \
@@ -1906,10 +1905,10 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(BLTDIR)/builtins.cc $(BLTDIR)/common.cc \
 	$(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
 	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc \
-	$(BLTDIR)/getopt.hh $(RLDIR)/readline.cc $(RLDIR)/funmap.cc \
-	$(RLDIR)/keymaps.cc $(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc \
-	$(RLDIR)/rltty.cc $(RLDIR)/complete.cc $(RLDIR)/bind.cc \
-	$(RLDIR)/isearch.cc $(RLDIR)/display.cc $(RLDIR)/signals.cc \
+	$(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
+	$(RLDIR)/vi_mode.cc $(RLDIR)/parens.cc $(RLDIR)/rltty.cc \
+	$(RLDIR)/complete.cc $(RLDIR)/bind.cc $(RLDIR)/isearch.cc \
+	$(RLDIR)/display.cc $(RLDIR)/signals.cc \
 	$(RLDIR)/emacs_keymap.hh $(RLDIR)/vi_keymap.hh \
 	$(RLDIR)/util.cc $(RLDIR)/kill.cc $(RLDIR)/undo.cc \
 	$(RLDIR)/macro.cc $(RLDIR)/input.cc $(RLDIR)/callback.cc \

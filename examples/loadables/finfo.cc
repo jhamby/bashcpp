@@ -41,8 +41,19 @@
 
 #include "builtins.hh"
 #include "common.hh"
-#include "getopt.hh"
 #include "shell.hh"
+
+namespace bash
+{
+
+// Loadable class for "finfo".
+class ShellLoadable : public Shell
+{
+public:
+  int finfo_builtin (WORD_LIST *);
+
+private:
+};
 
 extern char **make_builtin_argv ();
 
@@ -84,8 +95,7 @@ static int pmask;
 #define OPTIONS "acdgiflmnopsuACGMP:U"
 
 static int
-octal (s)
-char *s;
+octal (char *s)
 {
   int r;
 
@@ -96,9 +106,7 @@ char *s;
 }
 
 static int
-finfo_main (argc, argv)
-int argc;
-char **argv;
+finfo_main (int argc, char **argv)
 {
   register int i;
   int mode, flags, opt;
@@ -108,7 +116,7 @@ char **argv;
   if (argc == 1)
     {
       builtin_usage ();
-      return (1);
+      return 1;
     }
   flags = 0;
   while ((opt = sh_getopt (argc, argv, OPTIONS)) != EOF)
@@ -175,7 +183,7 @@ char **argv;
           break;
         default:
           builtin_usage ();
-          return (1);
+          return 1;
         }
     }
 
@@ -185,18 +193,17 @@ char **argv;
   if (argc == 0)
     {
       builtin_usage ();
-      return (1);
+      return 1;
     }
 
   for (i = 0; i < argc; i++)
     opt = flags ? printsome (argv[i], flags) : printfinfo (argv[i]);
 
-  return (opt);
+  return opt;
 }
 
 static struct stat *
-getstat (f)
-char *f;
+getstat (char *f)
 {
   static struct stat st;
   int fd, r;
@@ -207,7 +214,7 @@ char *f;
       if ((legal_number (f + 8, &lfd) == 0) || (int)lfd != lfd)
         {
           builtin_error ("%s: invalid fd", f + 8);
-          return ((struct stat *)0);
+          return (struct stat *)0;
         }
       fd = lfd;
       r = fstat (fd, &st);
@@ -221,29 +228,28 @@ char *f;
   if (r < 0)
     {
       builtin_error ("%s: cannot stat: %s", f, strerror (errno));
-      return ((struct stat *)0);
+      return (struct stat *)0;
     }
-  return (&st);
+  return &st;
 }
 
 static int
-printfinfo (f)
-char *f;
+printfinfo (char *f)
 {
   struct stat *st;
 
   st = getstat (f);
-  return (st ? printst (st) : 1);
+  return st ? printst (st) : 1;
 }
 
 static int
-getperm (m)
-int m;
+getperm (int m)
 {
-  return (m & (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID));
+  return m & (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID);
 }
 
-static void perms (m) int m;
+static void
+perms (int m)
 {
   char ubits[4], gbits[4], obits[4]; /* u=rwx,g=rwx,o=rwx */
   int i;
@@ -285,7 +291,8 @@ static void perms (m) int m;
   printf ("u=%s,g=%s,o=%s", ubits, gbits, obits);
 }
 
-static void printmode (mode) int mode;
+static void
+printmode (int mode)
 {
   if (S_ISBLK (mode))
     printf ("S_IFBLK ");
@@ -310,8 +317,7 @@ static void printmode (mode) int mode;
 }
 
 static int
-printst (st)
-struct stat *st;
+printst (struct stat *st)
 {
   struct passwd *pw;
   struct group *gr;
@@ -343,13 +349,11 @@ struct stat *st;
   printf ("File last modify time: %s", ctime (&st->st_mtime));
   printf ("File last status change time: %s", ctime (&st->st_ctime));
   fflush (stdout);
-  return (0);
+  return 0;
 }
 
 static int
-printsome (f, flags)
-char *f;
-int flags;
+printsome (char *f, int flags)
 {
   struct stat *st;
   struct passwd *pw;
@@ -359,7 +363,7 @@ int flags;
 
   st = getstat (f);
   if (st == NULL)
-    return (1);
+    return 1;
 
   /* Print requested info */
   if (flags & OPT_ATIME)
@@ -439,13 +443,11 @@ int flags;
   else if (flags & OPT_SIZE)
     printf ("%ld\n", (long)st->st_size);
 
-  return (0);
+  return 0;
 }
 
-#ifndef NOBUILTIN
 int
-finfo_builtin (list)
-WORD_LIST *list;
+ShellLoadable::finfo_builtin (WORD_LIST *list)
 {
   int c, r;
   char **v;
@@ -458,7 +460,7 @@ WORD_LIST *list;
   return r;
 }
 
-static char *finfo_doc[] = {
+static const char *const finfo_doc[] = {
   "Display information about file attributes.",
   "",
   "Display information about each FILE.  Only single operators should",
@@ -486,193 +488,12 @@ static char *finfo_doc[] = {
   "	-s	file size in bytes",
   "	-u	uid of owner",
   "	-U	user name of owner",
-  (char *)0
+  nullptr
 };
 
-struct builtin finfo_struct = { "finfo",
-                                finfo_builtin,
-                                BUILTIN_ENABLED,
-                                finfo_doc,
-                                "finfo [-acdgiflmnopsuACGMPU] file [file...]",
-                                0 };
-#endif
+Shell::builtin finfo_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::finfo_builtin),
+    finfo_doc, "finfo [-acdgiflmnopsuACGMPU] file [file...]", nullptr,
+    BUILTIN_ENABLED);
 
-#ifdef NOBUILTIN
-#if defined(PREFER_STDARG)
-#include <stdarg.h>
-#else
-#if defined(PREFER_VARARGS)
-#include <varargs.h>
-#endif
-#endif
-
-char *this_command_name;
-
-main (argc, argv) int argc;
-char **argv;
-{
-  this_command_name = argv[0];
-  exit (finfo_main (argc, argv));
-}
-
-void
-builtin_usage ()
-{
-  fprintf (stderr, "%s: usage: %s [-%s] [file ...]\n", prog, prog, OPTIONS);
-}
-
-#ifndef HAVE_STRERROR
-char *
-strerror (e)
-int e;
-{
-  static char ebuf[40];
-  extern int sys_nerr;
-  extern char *sys_errlist[];
-
-  if (e < 0 || e > sys_nerr)
-    {
-      sprintf (ebuf, "Unknown error code %d", e);
-      return (&ebuf[0]);
-    }
-  return (sys_errlist[e]);
-}
-#endif
-
-char *
-xmalloc (s)
-size_t s;
-{
-  char *ret;
-  extern char *malloc ();
-
-  ret = malloc (s);
-  if (ret)
-    return (ret);
-  fprintf (stderr, "%s: cannot malloc %d bytes\n", prog, s);
-  exit (1);
-}
-
-char *
-base_pathname (p)
-char *p;
-{
-  char *t;
-
-  if (t = strrchr (p, '/'))
-    return (++t);
-  return (p);
-}
-
-int
-legal_number (string, result)
-char *string;
-long *result;
-{
-  int sign;
-  long value;
-
-  sign = 1;
-  value = 0;
-
-  if (result)
-    *result = 0;
-
-  /* Skip leading whitespace characters. */
-  while (whitespace (*string))
-    string++;
-
-  if (!*string)
-    return (0);
-
-  /* We allow leading `-' or `+'. */
-  if (*string == '-' || *string == '+')
-    {
-      if (!digit (string[1]))
-        return (0);
-
-      if (*string == '-')
-        sign = -1;
-
-      string++;
-    }
-
-  while (digit (*string))
-    {
-      if (result)
-        value = (value * 10) + digit_value (*string);
-      string++;
-    }
-
-  /* Skip trailing whitespace, if any. */
-  while (whitespace (*string))
-    string++;
-
-  /* Error if not at end of string. */
-  if (*string)
-    return (0);
-
-  if (result)
-    *result = value * sign;
-
-  return (1);
-}
-
-int sh_optind;
-char *sh_optarg;
-int sh_opterr;
-
-extern int optind;
-extern char *optarg;
-
-int
-sh_getopt (c, v, o)
-int c;
-char **v, *o;
-{
-  int r;
-
-  r = getopt (c, v, o);
-  sh_optind = optind;
-  sh_optarg = optarg;
-  return r;
-}
-
-#if defined(USE_VARARGS)
-void
-#if defined(PREFER_STDARG)
-builtin_error (const char *format, ...)
-#else
-    builtin_error (format, va_alist) const char *format;
-va_dcl
-#endif
-{
-  va_list args;
-
-  if (this_command_name && *this_command_name)
-    fprintf (stderr, "%s: ", this_command_name);
-
-#if defined(PREFER_STDARG)
-  va_start (args, format);
-#else
-  va_start (args);
-#endif
-
-  vfprintf (stderr, format, args);
-  va_end (args);
-  fprintf (stderr, "\n");
-}
-#else
-void builtin_error (format, arg1, arg2, arg3, arg4, arg5) char *format, *arg1,
-    *arg2, *arg3, *arg4, *arg5;
-{
-  if (this_command_name && *this_command_name)
-    fprintf (stderr, "%s: ", this_command_name);
-
-  fprintf (stderr, format, arg1, arg2, arg3, arg4, arg5);
-  fprintf (stderr, "\n");
-  fflush (stderr);
-}
-#endif /* !USE_VARARGS */
-
-#endif
+} // namespace bash

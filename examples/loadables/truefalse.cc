@@ -25,28 +25,44 @@
 #include "common.hh"
 #include "shell.hh"
 
+namespace bash
+{
+
+// Loadable class for "true" and "false".
+class ShellLoadable : public Shell
+{
+public:
+  int true_builtin (WORD_LIST *);
+  int false_builtin (WORD_LIST *);
+
+private:
+};
+
 int
-true_builtin (list)
-WORD_LIST *list;
+ShellLoadable::true_builtin (WORD_LIST *list)
 {
   return EXECUTION_SUCCESS;
 }
 
 int
-false_builtin (list)
-WORD_LIST *list;
+ShellLoadable::false_builtin (WORD_LIST *list)
 {
   return EXECUTION_FAILURE;
 }
 
-static char *true_doc[] = { "Exit successfully.", "",
-                            "Return a successful result.", (char *)NULL };
+static const char *const true_doc[]
+    = { "Exit successfully.", "", "Return a successful result.", nullptr };
 
-static char *false_doc[] = { "Exit unsuccessfully.", "",
-                             "Return an unsuccessful result.", (char *)NULL };
+static const char *const false_doc[]
+    = { "Exit unsuccessfully.", "", "Return an unsuccessful result.",
+        nullptr };
 
-struct builtin true_struct
-    = { "true", true_builtin, BUILTIN_ENABLED, true_doc, "true", 0 };
+Shell::builtin true_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::true_builtin),
+    true_doc, "true", nullptr, BUILTIN_ENABLED);
 
-struct builtin false_struct
-    = { "false", false_builtin, BUILTIN_ENABLED, false_doc, "false", 0 };
+Shell::builtin false_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::false_builtin),
+    false_doc, "false", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

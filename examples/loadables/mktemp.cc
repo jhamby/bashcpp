@@ -20,17 +20,24 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
 #include "loadables.hh"
+
+namespace bash
+{
+
+// Loadable class for "mktemp".
+class ShellLoadable : public Shell
+{
+public:
+  int mktemp_builtin (WORD_LIST *);
+
+private:
+};
 
 #define DEFAULT_PREFIX "shtmp"
 
 int
-mktemp_builtin (list)
-WORD_LIST *list;
+mktemp_builtin (WORD_LIST *list)
 {
   WORD_LIST *l;
   int rval, opt, fd, mflags, base_mflags;
@@ -66,7 +73,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -77,14 +84,14 @@ WORD_LIST *list;
         {
           if (qflag == 0)
             sh_invalidid (varname);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
       v = find_variable (varname);
       if (v && readonly_p (v))
         {
           if (qflag == 0)
             sh_readonly (varname);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
     }
 
@@ -171,10 +178,10 @@ WORD_LIST *list;
         list = list->next;
     }
 
-  return (rval);
+  return rval;
 }
 
-char *mktemp_doc[] = {
+static const char *const mktemp_doc[] = {
   "Make unique temporary file name",
   "",
   "Take each supplied filename template and overwrite a portion of it",
@@ -197,15 +204,13 @@ char *mktemp_doc[] = {
   "The return status is true if the file or directory was created "
   "successfully;",
   "false if an error occurs or VAR is invalid or readonly.",
-
-  (char *)NULL
+  nullptr
 };
 
-struct builtin mktemp_struct = {
-  "mktemp",        /* builtin name */
-  mktemp_builtin,  /* function implementing the builtin */
-  BUILTIN_ENABLED, /* initial flags for builtin */
-  mktemp_doc,      /* array of long documentation strings. */
-  "mktemp [-d] [-q] [-t prefix] [-u] [-v varname] [template] ...",
-  0 /* reserved for internal use */
-};
+Shell::builtin mktemp_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::mktemp_builtin),
+    mktemp_doc,
+    "mktemp [-d] [-q] [-t prefix] [-u] [-v varname] [template] ...", nullptr,
+    BUILTIN_ENABLED);
+
+} // namespace bash

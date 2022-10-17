@@ -23,9 +23,19 @@
 
 #include "config.h"
 
-#include <cstdio>
-
 #include "loadables.hh"
+
+namespace bash
+{
+
+// Loadable class for "hello".
+class ShellLoadable : public Shell
+{
+public:
+  int hello_builtin (WORD_LIST *);
+
+private:
+};
 
 /* A builtin `xxx' is normally implemented with an `xxx_builtin' function.
    If you're converting a command that uses the normal Unix argc/argv
@@ -44,8 +54,7 @@
    A builtin command returns EXECUTION_SUCCESS for success and
    EXECUTION_FAILURE to indicate failure. */
 int
-hello_builtin (list)
-WORD_LIST *list;
+ShellLoadable::hello_builtin (WORD_LIST *list)
 {
   printf ("hello world\n");
   fflush (stdout);
@@ -53,15 +62,15 @@ WORD_LIST *list;
 }
 
 int
-hello_builtin_load (s)
-char *s;
+hello_builtin_load (char *s)
 {
   printf ("hello builtin loaded\n");
   fflush (stdout);
   return (1);
 }
 
-void hello_builtin_unload (s) char *s;
+void
+hello_builtin_unload (char *s)
 {
   printf ("hello builtin unloaded\n");
   fflush (stdout);
@@ -70,18 +79,12 @@ void hello_builtin_unload (s) char *s;
 /* An array of strings forming the `long' documentation for a builtin xxx,
    which is printed by `help xxx'.  It must end with a NULL.  By convention,
    the first line is a short description. */
-char *hello_doc[]
+static const char *const hello_doc[]
     = { "Sample builtin.", "",
-        "this is the long doc for the sample hello builtin", (char *)NULL };
+        "this is the long doc for the sample hello builtin", nullptr };
 
-/* The standard structure describing a builtin command.  bash keeps an array
-   of these structures.  The flags must include BUILTIN_ENABLED so the
-   builtin can be used. */
-struct builtin hello_struct = {
-  "hello",         /* builtin name */
-  hello_builtin,   /* function implementing the builtin */
-  BUILTIN_ENABLED, /* initial flags for builtin */
-  hello_doc,       /* array of long documentation strings. */
-  "hello",         /* usage synopsis; becomes short_doc */
-  0                /* reserved for internal use */
-};
+Shell::builtin hello_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::hello_builtin),
+    hello_doc, "hello", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

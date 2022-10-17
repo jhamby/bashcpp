@@ -15,11 +15,24 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bashgetopt.hh"
+#include "config.h"
+
 #include "bashtypes.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
+
+namespace bash
+{
+
+// Loadable class for "asort".
+class ShellLoadable : public Shell
+{
+public:
+  int asort_builtin (WORD_LIST *);
+
+private:
+};
 
 typedef struct sort_element
 {
@@ -188,7 +201,7 @@ sort_inplace (SHELL_VAR *var)
 }
 
 int
-asort_builtin (WORD_LIST *list)
+ShellLoadable::asort_builtin (WORD_LIST *list)
 {
   SHELL_VAR *var, *var2;
   char *word;
@@ -215,7 +228,7 @@ asort_builtin (WORD_LIST *list)
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -280,7 +293,7 @@ asort_builtin (WORD_LIST *list)
   return EXECUTION_SUCCESS;
 }
 
-char *asort_doc[] = {
+const char *asort_doc[] = {
   "Sort arrays in-place.",
   "",
   "Options:",
@@ -297,13 +310,12 @@ char *asort_doc[] = {
   "Exit status:",
   "Return value is zero unless an error happened (like invalid variable name",
   "or readonly array).",
-  (char *)NULL
+  nullptr
 };
 
-struct builtin asort_struct
-    = { "asort",
-        asort_builtin,
-        BUILTIN_ENABLED,
-        asort_doc,
-        "asort [-nr] array ...  or  asort [-nr] -i dest source",
-        0 };
+Shell::builtin asort_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::asort_builtin),
+    asort_doc, "asort [-nr] array ...  or  asort [-nr] -i dest source",
+    nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

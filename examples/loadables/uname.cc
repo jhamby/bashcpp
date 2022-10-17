@@ -40,7 +40,6 @@ struct utsname
 };
 #endif
 
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
@@ -53,13 +52,24 @@ struct utsname
 
 #define FLAG_ALL 0x1f
 
+namespace bash
+{
+
+// Loadable class for "uname".
+class ShellLoadable : public Shell
+{
+public:
+  int uname_builtin (WORD_LIST *);
+
+private:
+};
+
 static void uprint ();
 
 static int uname_flags;
 
 int
-uname_builtin (list)
-WORD_LIST *list;
+ShellLoadable::uname_builtin (WORD_LIST *list)
 {
   int opt, r;
   struct utsname uninfo;
@@ -92,7 +102,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
@@ -100,7 +110,7 @@ WORD_LIST *list;
   if (list)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   if (uname_flags == 0)
@@ -111,11 +121,11 @@ WORD_LIST *list;
   if (uname (&uninfo) < 0)
     {
       builtin_error ("cannot get system name: %s", strerror (errno));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
 #else
   builtin_error ("cannot get system information: uname(2) not available");
-  return (EXECUTION_FAILURE);
+  return EXECUTION_FAILURE;
 #endif
 
   uprint (FLAG_SYSNAME, uninfo.sysname);
@@ -124,11 +134,11 @@ WORD_LIST *list;
   uprint (FLAG_VERSION, uninfo.version);
   uprint (FLAG_MACHINE, uninfo.machine);
 
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
-static void uprint (flag, info) int flag;
-char *info;
+static void
+uprint (int flag, char *info)
 {
   if (uname_flags & flag)
     {
@@ -137,9 +147,12 @@ char *info;
     }
 }
 
-char *uname_doc[] = { "Display system information.", "",
-                      "Display information about the system hardware and OS.",
-                      (char *)NULL };
+static const char *const uname_doc[]
+    = { "Display system information.", "",
+        "Display information about the system hardware and OS.", nullptr };
 
-struct builtin uname_struct = { "uname",   uname_builtin,     BUILTIN_ENABLED,
-                                uname_doc, "uname [-amnrsv]", 0 };
+Shell::builtin uname_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::uname_builtin),
+    uname_doc, "uname [-amnrsv]", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

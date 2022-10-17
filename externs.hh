@@ -202,14 +202,6 @@ uitos (uint64_t i)
   return fmtumax (i, 10, FL_UNSIGNED);
 }
 
-/* declarations for functions defined in lib/sh/mbscasecmp.c */
-
-char *mbscasecmp (const char *, const char *);
-
-/* declarations for functions defined in lib/sh/mbschr.c */
-
-char *mbschr (const char *, int);
-
 /* declarations for functions defined in lib/sh/netconn.c */
 
 bool isnetconn (int);
@@ -459,6 +451,29 @@ bool ansic_shouldquote (string_view);
 std::string ansiexpand (string_view, size_t, size_t);
 
 /* declarations for functions defined in lib/sh/strvec.cc */
+
+/* Cons up a new array of words. The words are taken from LIST, which is a
+   WORD_LIST *. If IP is non-null, it gets the number of words in the returned
+   array. STARTING_INDEX says where to start filling in the returned array; it
+   can be used to reserve space at the beginning of the array. */
+static inline char **
+strvec_from_word_list (WORD_LIST *list, size_t starting_index, size_t *ip)
+{
+  size_t count = list->size ();
+  char **array = new char *[1 + count + starting_index];
+
+  memset (array, 0, starting_index * sizeof (char *));
+
+  for (count = starting_index; list; count++, list = list->next ())
+    array[count] = savestring (list->word->word);
+
+  array[count] = nullptr;
+
+  if (ip)
+    *ip = count;
+
+  return array;
+}
 
 static inline void
 strvec_dispose (char **array)

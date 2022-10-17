@@ -24,43 +24,48 @@
 
 #include "bashtypes.hh"
 
-#include "bashansi.hh"
-#include "bashgetopt.hh"
 #include "builtext.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
-int print_builtin ();
+namespace bash
+{
+
+// Loadable class for "print".
+class ShellLoadable : public Shell
+{
+public:
+  int print_builtin (WORD_LIST *);
+
+private:
+};
+
 static int printargs ();
 
 static FILE *ofp;
 
 extern char *this_command_name;
 
-static char *print_doc[]
+static const char *const print_doc[]
     = { "Display arguments.",
         "",
         "Output the arguments.  The -f option means to use the argument as a",
         "format string as would be supplied to printf(1).  The rest of the",
         "options are as in ksh.",
-        (char *)NULL };
+        nullptr };
 
-struct builtin print_struct
-    = { "print",
-        print_builtin,
-        BUILTIN_ENABLED,
-        print_doc,
-        "print [-Rnprs] [-u unit] [-f format] [arguments]",
-        (char *)0 };
+Shell::builtin print_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::print_builtin),
+    print_doc, "print [-Rnprs] [-u unit] [-f format] [arguments]", nullptr,
+    BUILTIN_ENABLED);
 
 #ifndef ISOPTION
 #define ISOPTION(s, c) (s[0] == '-' && s[2] == '\0' && s[1] == c)
 #endif
 
 int
-print_builtin (list)
-WORD_LIST *list;
+ShellLoadable::print_builtin (WORD_LIST *list)
 {
   int c, r, nflag, raw, ofd, sflag;
   int64_t lfd;
@@ -114,7 +119,7 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
 
@@ -133,7 +138,7 @@ opt_end:
       r = printf_builtin (nlist);
       nlist->next = (WORD_LIST *)NULL;
       dispose_words (nlist);
-      return (r);
+      return r;
     }
 
   if (raw)
@@ -147,7 +152,7 @@ opt_end:
       if (nflag == 0)
         fprintf (ofp, "\n");
       fflush (ofp);
-      return (0);
+      return 0;
     }
 
   r = printargs (list, ofp);
@@ -159,9 +164,7 @@ opt_end:
 }
 
 static int
-printargs (list, ofp)
-WORD_LIST *list;
-FILE *ofp;
+printargs (WORD_LIST *list, FILE *ofp)
 {
   WORD_LIST *l;
   char *ostr;
@@ -169,14 +172,17 @@ FILE *ofp;
 
   for (sawc = 0, l = list; l; l = l->next)
     {
-      ostr = ansicstr (l->word->word, strlen (l->word->word), 0, &sawc, (int *)0);
+      ostr = ansicstr (l->word->word, strlen (l->word->word), 0, &sawc,
+                       (int *)0);
       if (ostr)
-	fprintf (ofp, "%s", ostr);
+        fprintf (ofp, "%s", ostr);
       free (ostr);
       if (sawc)
-        return (0);
+        return 0;
       if (l->next)
         fprintf (ofp, " ");
     }
-  return (1);
+  return 1;
 }
+
+} // namespace bash

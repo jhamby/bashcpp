@@ -22,18 +22,21 @@
 
 #include "config.h"
 
-#include "bashansi.hh"
-#include "bashtypes.hh"
-#include "posixstat.hh"
-
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
+
+namespace bash
+{
+
+// Loadable class for "mkfifo".
+class ShellLoadable : public Shell
+{
+public:
+  int mkfifo_builtin (WORD_LIST *);
+
+private:
+};
 
 #define ISOCTAL(c) ((c) >= '0' && (c) <= '7')
 
@@ -42,8 +45,7 @@ extern int parse_symbolic_mode ();
 static int original_umask;
 
 int
-mkfifo_builtin (list)
-WORD_LIST *list;
+mkfifo_builtin (WORD_LIST *list)
 {
   int opt, mflag, omode, rval, nmode, basemode;
   char *mode;
@@ -63,14 +65,14 @@ WORD_LIST *list;
         CASE_HELPOPT;
       default:
         builtin_usage ();
-        return (EX_USAGE);
+        return EX_USAGE;
       }
   list = loptend;
 
   if (list == 0)
     {
       builtin_usage ();
-      return (EX_USAGE);
+      return EX_USAGE;
     }
 
   basemode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
@@ -82,7 +84,7 @@ WORD_LIST *list;
       if (omode < 0)
         {
           builtin_error ("invalid file mode: %s", mode);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
     }
   else /* symbolic mode */
@@ -92,7 +94,7 @@ WORD_LIST *list;
       if (omode < 0)
         {
           builtin_error ("invalid file mode: %s", mode);
-          return (EXECUTION_FAILURE);
+          return EXECUTION_FAILURE;
         }
     }
 
@@ -116,7 +118,7 @@ WORD_LIST *list;
   return rval;
 }
 
-char *mkfifo_doc[]
+const char *mkfifo_doc[]
     = { "Create FIFOs (named pipes).",
         "",
         "Make FIFOs.  Create the FIFOs named as arguments, in",
@@ -128,11 +130,11 @@ char *mkfifo_doc[]
         "an initial mode of \"a=rw\".  mkfifo returns 0 if the FIFOs are",
         "umask, plus write and search permissions for the owner.  mkdir",
         "created successfully, and non-zero if an error occurs.",
-        (char *)NULL };
+        nullptr };
 
-struct builtin mkfifo_struct = { "mkfifo",
-                                 mkfifo_builtin,
-                                 BUILTIN_ENABLED,
-                                 mkfifo_doc,
-                                 "mkfifo [-m mode] fifo_name [fifo_name ...]",
-                                 0 };
+Shell::builtin mkfifo_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::mkfifo_builtin),
+    mkfifo_doc, "mkfifo [-m mode] fifo_name [fifo_name ...]", nullptr,
+    BUILTIN_ENABLED);
+
+} // namespace bash

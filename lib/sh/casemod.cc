@@ -31,11 +31,8 @@
 
 #include "chartypes.hh"
 #include "shmbutil.hh"
-#include "typemax.hh"
-
 #include "strmatch.hh"
-
-#include "externs.hh"
+#include "typemax.hh"
 
 namespace bash
 {

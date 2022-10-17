@@ -56,7 +56,7 @@ falarm (unsigned int secs, unsigned int usecs)
   it.it_value.tv_sec = secs;
   it.it_value.tv_usec = usecs;
 
-  if (::setitimer (ITIMER_REAL, &it, &oit) < 0)
+  if (setitimer (ITIMER_REAL, &it, &oit) < 0)
     return static_cast<unsigned int> (-1);
 
   /* Backwards compatibility with alarm(3) */
@@ -69,14 +69,14 @@ int
 falarm (unsigned int secs, unsigned int usecs)
 {
   if (secs == 0 && usecs == 0)
-    return ::alarm (0);
+    return alarm (0);
 
   if (secs == 0 || usecs >= 500000)
     {
       secs++;
       usecs = 0;
     }
-  return ::alarm (secs);
+  return alarm (secs);
 }
 #endif /* !HAVE_SETITIMER */
 
@@ -113,10 +113,10 @@ fsleep (unsigned int secs, unsigned int usecs)
   do
     {
 #if defined(HAVE_PSELECT)
-      r = ::pselect (0, nullptr, nullptr, nullptr, &ts, &blocked_sigs);
+      r = pselect (0, nullptr, nullptr, nullptr, &ts, &blocked_sigs);
 #else
       sigprocmask (SIG_SETMASK, &blocked_sigs, &prevmask);
-      r = ::select (0, nullptr, nullptr, nullptr, &tv);
+      r = select (0, nullptr, nullptr, nullptr, &tv);
       sigprocmask (SIG_SETMASK, &prevmask, NULL);
 #endif
       e = errno;
@@ -134,7 +134,7 @@ fsleep (long sec, long usec)
 {
   if (usec >= 500000) /* round */
     sec++;
-  return ::sleep (sec);
+  return sleep (sec);
 }
 #endif /* !HAVE_TIMEVAL || !HAVE_SELECT */
 

@@ -22,258 +22,85 @@
 
 #include "bashtypes.hh"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
 #include "shell.hh"
 
 namespace bash
 {
 
-/* Copy the chain of words in LIST.  Return a pointer to
-   the new chain. */
-WORD_LIST *
-copy_word_list (WORD_LIST *list)
+/* Copy the chain of words in LIST into the new object. */
+WORD_LIST::WORD_LIST (const WORD_LIST &w)
+    : GENERIC_LIST (w.next_), word (w.word)
 {
-  WORD_LIST *new_list, *tl;
+  if (word)
+    word = new WORD_DESC (*word);
 
-  for (new_list = tl = nullptr; list; list = list->next ())
+  // Recursively clone the remaining list items.
+  WORD_LIST *next_word = next ();
+  if (next_word)
+    set_next (new WORD_LIST (*next_word));
+}
+
+/* Copy the chain of case clauses into the new object. */
+PATTERN_LIST::PATTERN_LIST (const PATTERN_LIST &p)
+    : GENERIC_LIST (p.next_), patterns (p.patterns), action (p.action),
+      flags (p.flags)
+{
+  if (patterns)
+    patterns = new WORD_LIST (*patterns);
+
+  if (action)
+    action = action->clone ();
+
+  // Recursively clone the remaining clauses.
+  PATTERN_LIST *next_clause = next ();
+  if (next_clause)
+    set_next (new PATTERN_LIST (*next_clause));
+}
+
+REDIRECT::REDIRECT (const REDIRECT &other)
+    : GENERIC_LIST (other.next_), here_doc_eof (other.here_doc_eof),
+      redirector (other.redirector), redirectee (other.redirectee),
+      rflags (other.rflags), flags (other.flags),
+      instruction (other.instruction)
+{
+  if (rflags & REDIR_VARASSIGN)
+    redirector.r.filename = new WORD_DESC (*(redirector.r.filename));
+
+  switch (instruction)
     {
-      if (new_list == 0)
-        new_list = tl = make_word_list (copy_word (list->word), new_list);
-      else
-        {
-          tl->next = make_word_list (copy_word (list->word), nullptr);
-          tl = tl->next ());
-        }
+    case r_reading_until:
+    case r_deblank_reading_until:
+    case r_reading_string:
+    case r_appending_to:
+    case r_output_direction:
+    case r_input_direction:
+    case r_inputa_direction:
+    case r_err_and_out:
+    case r_append_err_and_out:
+    case r_input_output:
+    case r_output_force:
+    case r_duplicating_input_word:
+    case r_duplicating_output_word:
+    case r_move_input_word:
+    case r_move_output_word:
+      redirectee.r.filename = new WORD_DESC (*(redirectee.r.filename));
+      break;
+    case r_duplicating_input:
+    case r_duplicating_output:
+    case r_move_input:
+    case r_move_output:
+    case r_close_this:
+      break;
     }
 
-  return new_list;
-}
-
-static PATTERN_LIST *
-copy_case_clause (PATTERN_LIST *clause)
-{
-  PATTERN_LIST *new_clause;
-
-  new_clause = (PATTERN_LIST *)xmalloc (sizeof (PATTERN_LIST));
-  new_clause->patterns = copy_word_list (clause->patterns);
-  new_clause->action = copy_command (clause->action);
-  new_clause->flags = clause->flags;
-  return new_clause;
-}
-
-static PATTERN_LIST *
-copy_case_clauses (PATTERN_LIST *clauses)
-{
-  PATTERN_LIST *new_list, *new_clause;
-
-  for (new_list = (PATTERN_LIST *)NULL; clauses; clauses = clauses->next)
-    {
-      new_clause = copy_case_clause (clauses);
-      new_clause->next = new_list;
-      new_list = new_clause;
-    }
-  return REVERSE_LIST (new_list, PATTERN_LIST *);
-}
-
-REDIRECT *
-copy_redirects (REDIRECT *list)
-{
-  REDIRECT *new_list, *temp;
-
-  for (new_list = nullptr; list; list = list->next ())
-    {
-      temp = new REDIRECT (*list);
-      temp->set_next (new_list);
-      new_list = temp;
-    }
-  return new_list->reverse ();
-}
-
-static FOR_COM *
-copy_for_command (FOR_COM *com)
-{
-  FOR_COM *new_for;
-
-  new_for = (FOR_COM *)xmalloc (sizeof (FOR_COM));
-  new_for->flags = com->flags;
-  new_for->line = com->line;
-  new_for->name = copy_word (com->name);
-  new_for->map_list = copy_word_list (com->map_list);
-  new_for->action = copy_command (com->action);
-  return new_for;
-}
-
-#if defined(ARITH_FOR_COMMAND)
-static ARITH_FOR_COM *
-copy_arith_for_command (ARITH_FOR_COM *com)
-{
-  ARITH_FOR_COM *new_arith_for;
-
-  new_arith_for = (ARITH_FOR_COM *)xmalloc (sizeof (ARITH_FOR_COM));
-  new_arith_for->flags = com->flags;
-  new_arith_for->line = com->line;
-  new_arith_for->init = copy_word_list (com->init);
-  new_arith_for->test = copy_word_list (com->test);
-  new_arith_for->step = copy_word_list (com->step);
-  new_arith_for->action = copy_command (com->action);
-  return new_arith_for;
-}
-#endif /* ARITH_FOR_COMMAND */
-
-static GROUP_COM *
-copy_group_command (GROUP_COM *com)
-{
-  GROUP_COM *new_group;
-
-  new_group = (GROUP_COM *)xmalloc (sizeof (GROUP_COM));
-  new_group->command = copy_command (com->command);
-  return new_group;
-}
-
-static SUBSHELL_COM *
-copy_subshell_command (SUBSHELL_COM *com)
-{
-  SUBSHELL_COM *new_subshell;
-
-  new_subshell = (SUBSHELL_COM *)xmalloc (sizeof (SUBSHELL_COM));
-  new_subshell->command = copy_command (com->command);
-  new_subshell->flags = com->flags;
-  new_subshell->line = com->line;
-  return new_subshell;
-}
-
-static COPROC_COM *
-copy_coproc_command (COPROC_COM *com)
-{
-  COPROC_COM *new_coproc;
-
-  new_coproc = (COPROC_COM *)xmalloc (sizeof (COPROC_COM));
-  new_coproc->name = savestring (com->name);
-  new_coproc->command = copy_command (com->command);
-  new_coproc->flags = com->flags;
-  return new_coproc;
-}
-
-static CASE_COM *
-copy_case_command (CASE_COM *com)
-{
-  CASE_COM *new_case;
-
-  new_case = (CASE_COM *)xmalloc (sizeof (CASE_COM));
-  new_case->flags = com->flags;
-  new_case->line = com->line;
-  new_case->word = copy_word (com->word);
-  new_case->clauses = copy_case_clauses (com->clauses);
-  return new_case;
-}
-
-static WHILE_COM *
-copy_while_command (WHILE_COM *com)
-{
-  WHILE_COM *new_while;
-
-  new_while = (WHILE_COM *)xmalloc (sizeof (WHILE_COM));
-  new_while->flags = com->flags;
-  new_while->test = copy_command (com->test);
-  new_while->action = copy_command (com->action);
-  return new_while;
-}
-
-static IF_COM *
-copy_if_command (IF_COM *com)
-{
-  IF_COM *new_if;
-
-  new_if = (IF_COM *)xmalloc (sizeof (IF_COM));
-  new_if->flags = com->flags;
-  new_if->test = copy_command (com->test);
-  new_if->true_case = copy_command (com->true_case);
-  new_if->false_case
-      = com->false_case ? copy_command (com->false_case) : com->false_case;
-  return new_if;
-}
-
-#if defined(DPAREN_ARITHMETIC)
-static ARITH_COM *
-copy_arith_command (ARITH_COM *com)
-{
-  ARITH_COM *new_arith;
-
-  new_arith = (ARITH_COM *)xmalloc (sizeof (ARITH_COM));
-  new_arith->flags = com->flags;
-  new_arith->exp = copy_word_list (com->exp);
-  new_arith->line = com->line;
-
-  return new_arith;
-}
-#endif
-
-#if defined(COND_COMMAND)
-static COND_COM *
-copy_cond_command (COND_COM *com)
-{
-  COND_COM *new_cond;
-
-  new_cond = (COND_COM *)xmalloc (sizeof (COND_COM));
-  new_cond->flags = com->flags;
-  new_cond->line = com->line;
-  new_cond->type = com->type;
-  new_cond->op = com->op ? copy_word (com->op) : com->op;
-  new_cond->left
-      = com->left ? copy_cond_command (com->left) : (COND_COM *)NULL;
-  new_cond->right
-      = com->right ? copy_cond_command (com->right) : (COND_COM *)NULL;
-
-  return new_cond;
-}
-#endif
-
-static SIMPLE_COM *
-copy_simple_command (SIMPLE_COM *com)
-{
-  SIMPLE_COM *new_simple;
-
-  new_simple = (SIMPLE_COM *)xmalloc (sizeof (SIMPLE_COM));
-  new_simple->flags = com->flags;
-  new_simple->words = copy_word_list (com->words);
-  new_simple->redirects
-      = com->redirects ? copy_redirects (com->redirects) : (REDIRECT *)NULL;
-  new_simple->line = com->line;
-  return new_simple;
-}
-
-FUNCTION_DEF *
-copy_function_def_contents (FUNCTION_DEF *old, FUNCTION_DEF *new_def)
-{
-  new_def->name = copy_word (old->name);
-  new_def->command = old->command ? copy_command (old->command) : old->command;
-  new_def->flags = old->flags;
-  new_def->line = old->line;
-  new_def->source_file
-      = old->source_file ? savestring (old->source_file) : old->source_file;
-  return new_def;
-}
-
-FUNCTION_DEF *
-copy_function_def (FUNCTION_DEF *com)
-{
-  FUNCTION_DEF *new_def;
-
-  new_def = (FUNCTION_DEF *)xmalloc (sizeof (FUNCTION_DEF));
-  new_def = copy_function_def_contents (com, new_def);
-  return new_def;
+  // Recursively clone the remaining redirections.
+  REDIRECT *next_redirection = next ();
+  if (next_redirection)
+    set_next (new REDIRECT (*next_redirection));
 }
 
 /* Copy the command structure in COMMAND.  Return a pointer to the
    copy.  Don't forget to call delete on the returned copy. */
-COMMAND *
-COMMAND::clone ()
-{
-  return new COMMAND (*this);
-}
 
 COMMAND *
 CONNECTION::clone ()

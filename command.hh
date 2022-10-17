@@ -261,6 +261,8 @@ public:
   {
   }
   WORD_DESC (const WORD_DESC &w) : word (w.word), flags (w.flags) {}
+
+  // single character constructor
   WORD_DESC (char token) : flags (W_NOFLAGS) { word = token; }
 
 #if __cplusplus >= 201103L
@@ -293,7 +295,7 @@ public:
   {
   }
 
-  WORD_LIST (const WORD_LIST &w) : GENERIC_LIST (w.next_), word (w.word) {}
+  WORD_LIST (const WORD_LIST &w);
 
 #if __cplusplus >= 201103L
   WORD_LIST (WORD_LIST &&w)
@@ -365,14 +367,13 @@ struct WORD_LIST_PTR
 class REDIRECTEE
 {
 public:
-  // C++03-compatible constructors.
-  REDIRECTEE (int64_t dest_) { r.dest = dest_; }
+  REDIRECTEE (int dest_) { r.dest = dest_; }
   REDIRECTEE (WORD_DESC &filename_) { r.filename = &filename_; }
   REDIRECTEE (WORD_DESC_PTR ptr) { r.filename = ptr.value; }
 
   union redirectee_t
   {
-    int64_t dest;        /* Place to redirect REDIRECTOR to, or ... */
+    int dest;            /* Place to redirect REDIRECTOR to, or ... */
     WORD_DESC *filename; /* filename to redirect to. */
   } r;
 };
@@ -389,43 +390,8 @@ public:
   {
   }
 
-  // Shallow copy constructor.
-  REDIRECT (const REDIRECT &other)
-      : GENERIC_LIST (), here_doc_eof (other.here_doc_eof),
-        redirector (other.redirector), redirectee (other.redirectee),
-        rflags (other.rflags), flags (other.flags),
-        instruction (other.instruction)
-  {
-    if (other.rflags & REDIR_VARASSIGN)
-      redirector.r.filename = new WORD_DESC (*(other.redirector.r.filename));
-
-    switch (other.instruction)
-      {
-      case r_reading_until:
-      case r_deblank_reading_until:
-      case r_reading_string:
-      case r_appending_to:
-      case r_output_direction:
-      case r_input_direction:
-      case r_inputa_direction:
-      case r_err_and_out:
-      case r_append_err_and_out:
-      case r_input_output:
-      case r_output_force:
-      case r_duplicating_input_word:
-      case r_duplicating_output_word:
-      case r_move_input_word:
-      case r_move_output_word:
-        redirectee.r.filename = new WORD_DESC (*(other.redirectee.r.filename));
-        break;
-      case r_duplicating_input:
-      case r_duplicating_output:
-      case r_move_input:
-      case r_move_output:
-      case r_close_this:
-        break;
-      }
-  }
+  // Deep copy constructor.
+  REDIRECT (const REDIRECT &other);
 
   // Non-virtual destructor should be safe here with the static_cast.
   ~REDIRECT () noexcept
@@ -490,6 +456,7 @@ public:
   r_instruction instruction; /* What to do with the information. */
 };
 
+// Wrapper class used by the parser code.
 struct REDIRECT_PTR
 {
   REDIRECT_PTR () : value (nullptr) {}
@@ -619,7 +586,7 @@ protected:
 public:
   virtual ~COMMAND () noexcept; /* virtual base class destructor */
 
-  virtual COMMAND *clone (); // return a copy of the command
+  virtual COMMAND *clone () = 0; // return a copy of the command
 
   virtual void print (Shell *) = 0;
 
@@ -637,7 +604,7 @@ private:
   COMMAND &operator= (const COMMAND &);
 };
 
-// This wrapper is used for all command types.
+// This wrapper is used by the parser code for all command types.
 struct COMMAND_PTR
 {
   COMMAND_PTR () : value (nullptr) {}
@@ -658,17 +625,22 @@ struct COMMAND_PTR
 class CONNECTION : public COMMAND
 {
 public:
-  // Constructor that uses the first
+  // Constructor that uses the line number of the first command.
   CONNECTION (COMMAND *com1, COMMAND *com2, int con_)
       : COMMAND (cm_connection, com1->line), first (com1), second (com2),
         connector (con_)
   {
   }
 
+  CONNECTION (const CONNECTION &other)
+      : COMMAND (other.type, other.line), connector (other.connector)
+  {
+    first = other.first ? other.first->clone () : nullptr;
+    second = other.second ? other.second->clone () : nullptr;
+  }
+
   virtual ~CONNECTION () noexcept override; /* virtual base class destructor */
-
   virtual COMMAND *clone () override; // return a new deep copy of the command
-
   virtual void print (Shell *) override;
 
   COMMAND *first;  /* Pointer to the first command. */
@@ -719,6 +691,8 @@ public:
     delete action;
   }
 
+  PATTERN_LIST (const PATTERN_LIST &);
+
   PATTERN_LIST *
   append (PATTERN_LIST *new_item)
   {
@@ -749,6 +723,7 @@ public:
   pattern_flags flags;
 };
 
+// Wrapper class used by the parser code.
 struct PATTERN_LIST_PTR
 {
   PATTERN_LIST_PTR () : value (nullptr) {}
@@ -772,6 +747,12 @@ public:
   CASE_COM (WORD_DESC *word_, PATTERN_LIST *clauses_, int line_)
       : COMMAND (cm_case, line_), word (word_), clauses (clauses_)
   {
+  }
+
+  CASE_COM (const CASE_COM &other) : COMMAND (other.type, other.line)
+  {
+    word = other.word ? new WORD_DESC (*other.word) : nullptr;
+    clauses = other.clauses ? new PATTERN_LIST (*other.clauses) : nullptr;
   }
 
   virtual ~CASE_COM () noexcept override;
@@ -798,6 +779,14 @@ public:
   {
   }
 
+  FOR_SELECT_COM (const FOR_SELECT_COM &other)
+      : COMMAND (other.type, other.line)
+  {
+    name = other.name ? new WORD_DESC (*other.name) : nullptr;
+    map_list = other.map_list ? new WORD_LIST (*other.map_list) : nullptr;
+    action = other.action ? other.action->clone () : nullptr;
+  }
+
   virtual ~FOR_SELECT_COM () noexcept override;
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
@@ -806,9 +795,9 @@ public:
 
   WORD_DESC *name;     /* The variable name to get mapped over. */
   WORD_LIST *map_list; /* The things to map over.  This is never nullptr. */
-  COMMAND *action;     /* The action to execute.
-                          During execution, NAME is bound to successive
-                          members of MAP_LIST. */
+
+  COMMAND *action; /* The action to execute. During execution, NAME is bound to
+                      successive members of MAP_LIST. */
 };
 
 class ARITH_FOR_COM : public COMMAND
@@ -821,6 +810,14 @@ public:
   {
   }
 
+  ARITH_FOR_COM (const ARITH_FOR_COM &other) : COMMAND (other.type, other.line)
+  {
+    init = other.init ? new WORD_LIST (*other.init) : nullptr;
+    test = other.test ? new WORD_LIST (*other.test) : nullptr;
+    step = other.step ? new WORD_LIST (*other.step) : nullptr;
+    action = other.action ? other.action->clone () : nullptr;
+  }
+
   virtual ~ARITH_FOR_COM () noexcept override;
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
@@ -828,6 +825,7 @@ public:
   WORD_LIST *init;
   WORD_LIST *test;
   WORD_LIST *step;
+
   COMMAND *action;
 };
 
@@ -842,6 +840,13 @@ public:
       : COMMAND (cm_if, test_->line), test (test_), true_case (true_case_),
         false_case (false_case_)
   {
+  }
+
+  IF_COM (const IF_COM &other) : COMMAND (other.type, other.line)
+  {
+    test = other.test ? other.test->clone () : nullptr;
+    true_case = other.true_case ? other.true_case->clone () : nullptr;
+    false_case = other.false_case ? other.false_case->clone () : nullptr;
   }
 
   virtual ~IF_COM () noexcept override;
@@ -865,6 +870,13 @@ public:
   {
   }
 
+  UNTIL_WHILE_COM (const UNTIL_WHILE_COM &other)
+      : COMMAND (other.type, other.line)
+  {
+    test = other.test ? other.test->clone () : nullptr;
+    action = other.action ? other.action->clone () : nullptr;
+  }
+
   virtual ~UNTIL_WHILE_COM () noexcept override;
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
@@ -879,8 +891,13 @@ public:
 class ARITH_COM : public COMMAND
 {
 public:
-  // Contruct a new ARITH_COM, wrapping the specified WORD_LIST.
+  // Construct a new ARITH_COM, wrapping the specified WORD_LIST.
   ARITH_COM (WORD_LIST *exp_) : COMMAND (cm_arith, 0), exp (exp_) {}
+
+  ARITH_COM (const ARITH_COM &other) : COMMAND (other.type, other.line)
+  {
+    exp = other.exp ? new WORD_LIST (*other.exp) : nullptr;
+  }
 
   virtual ~ARITH_COM () noexcept override;
   virtual COMMAND *clone () override;
@@ -912,6 +929,14 @@ public:
   {
   }
 
+  COND_COM (const COND_COM &other)
+      : COMMAND (other.type, other.line), cond_type (other.cond_type)
+  {
+    op = other.op ? new WORD_DESC (*other.op) : nullptr;
+    left = other.left ? new COND_COM (*other.left) : nullptr;
+    right = other.right ? new COND_COM (*other.right) : nullptr;
+  }
+
   virtual ~COND_COM () noexcept override;
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
@@ -928,21 +953,38 @@ class SIMPLE_COM : public COMMAND
 public:
   SIMPLE_COM (ELEMENT, COMMAND *);
 
+  SIMPLE_COM (const SIMPLE_COM &other) : COMMAND (other.type, other.line)
+  {
+    words = other.words ? new WORD_LIST (*other.words) : nullptr;
+    simple_redirects = other.simple_redirects
+                           ? new REDIRECT (*other.simple_redirects)
+                           : nullptr;
+  }
+
   virtual ~SIMPLE_COM () noexcept override;
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
 
   virtual bool control_structure () override; // not a control structure
 
-  WORD_LIST *words;           /* The program name, the arguments,
-                                 variable assignments, etc. */
-  REDIRECT *simple_redirects; // Redirections to perform.
+  // The program name, the arguments, variable assignments, etc.
+  WORD_LIST *words;
+
+  // Redirections to perform (separate from 'redirects' in parent class)
+  REDIRECT *simple_redirects;
 };
 
 /* The "function definition" command. */
 class FUNCTION_DEF : public COMMAND
 {
 public:
+  FUNCTION_DEF (const FUNCTION_DEF &other)
+      : COMMAND (other.type, other.line), source_file (other.source_file)
+  {
+    name = other.name ? new WORD_DESC (*other.name) : nullptr;
+    command = other.command ? other.command->clone () : nullptr;
+  }
+
   virtual ~FUNCTION_DEF () noexcept override;
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
@@ -963,6 +1005,11 @@ public:
   {
   }
 
+  GROUP_COM (const GROUP_COM &other) : COMMAND (other.type, other.line)
+  {
+    command = other.command ? other.command->clone () : nullptr;
+  }
+
   virtual ~GROUP_COM () noexcept override;
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
@@ -978,6 +1025,11 @@ public:
       : COMMAND (cm_subshell, command_->line), command (command_)
   {
     flags |= CMD_WANT_SUBSHELL; // set the appropriate flags
+  }
+
+  SUBSHELL_COM (const SUBSHELL_COM &other) : COMMAND (other.type, other.line)
+  {
+    command = other.command ? other.command->clone () : nullptr;
   }
 
   virtual ~SUBSHELL_COM () noexcept override;
@@ -1022,6 +1074,12 @@ public:
     flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
   }
 
+  COPROC_COM (const COPROC_COM &other)
+      : COMMAND (other.type, other.line), name (other.name)
+  {
+    command = other.command ? other.command->clone () : nullptr;
+  }
+
   virtual ~COPROC_COM () noexcept override;
   virtual COMMAND *clone () override;
   virtual void print (Shell *) override;
@@ -1043,7 +1101,7 @@ enum cmd_err_type
   CMDERR_LAST = 3
 };
 
-/* Declarations for functions needed by the parser. */
+/* Declarations for global functions needed by the parser. */
 COMMAND *connect_async_list (COMMAND *, COMMAND *, int);
 
 } // namespace bash

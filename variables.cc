@@ -32,12 +32,6 @@
 #endif /* !__QNXNTO__ */
 #endif /* __QNX__ */
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "chartypes.hh"
-
 #if defined(HAVE_PWD_H)
 #include <pwd.h>
 #endif
@@ -48,7 +42,6 @@
 
 #include "builtext.hh"
 #include "builtins/common.hh"
-#include "builtins/getopt.hh"
 
 #if defined(PROGRAMMABLE_COMPLETION)
 #include "pcomplete.hh"

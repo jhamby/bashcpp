@@ -20,41 +20,50 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
 #include "builtins.hh"
 #include "common.hh"
 #include "shell.hh"
 
+namespace bash
+{
+
+// Loadable class for "logname".
+class ShellLoadable : public Shell
+{
+public:
+  int logname_builtin (WORD_LIST *);
+
+private:
+};
+
 int
-logname_builtin (list)
-WORD_LIST *list;
+ShellLoadable::logname_builtin (WORD_LIST *list)
 {
   char *np;
 
   if (no_options (list))
-    return (EX_USAGE);
+    return EX_USAGE;
 
   np = getlogin ();
-  if (np == 0)
+  if (np == nullptr)
     {
       builtin_error ("cannot find username: %s", strerror (errno));
-      return (EXECUTION_FAILURE);
+      return EXECUTION_FAILURE;
     }
   printf ("%s\n", np);
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
-char *logname_doc[]
+const char *logname_doc[]
     = { "Display user login name.",
         "",
         "Write the current user's login name to the standard output",
         "and exit.  logname ignores the LOGNAME and USER variables.",
         "logname ignores any non-option arguments.",
-        (char *)NULL };
+        nullptr };
 
-struct builtin logname_struct = { "logname",       logname_builtin,
-                                  BUILTIN_ENABLED, logname_doc,
-                                  "logname",       0 };
+Shell::builtin logname_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::logname_builtin),
+    logname_doc, "logname", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

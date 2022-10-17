@@ -4,15 +4,22 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
 #include "loadables.hh"
 
+namespace bash
+{
+
+// Loadable class for "template".
+class ShellLoadable : public Shell
+{
+public:
+  int template_builtin (WORD_LIST *);
+
+private:
+};
+
 int
-template_builtin (list)
-WORD_LIST *list;
+ShellLoadable::template_builtin (WORD_LIST *list)
 {
   int opt, rval;
 
@@ -25,38 +32,36 @@ WORD_LIST *list;
           CASE_HELPOPT;
         default:
           builtin_usage ();
-          return (EX_USAGE);
+          return EX_USAGE;
         }
     }
   list = loptend;
 
-  return (rval);
+  return rval;
 }
 
 /* Called when `template' is enabled and loaded from the shared object.  If
    this function returns 0, the load fails. */
 int
-template_builtin_load (name)
-char *name;
+template_builtin_load (const char *name)
 {
-  return (1);
+  return 1;
 }
 
 /* Called when `template' is disabled. */
-void template_builtin_unload (name) char *name;
+void
+template_builtin_unload (const char *name)
 {
 }
 
-char *template_doc[] = { "Short description.",
-                         ""
-                         "Longer description of builtin and usage.",
-                         (char *)NULL };
+static const char *const template_doc[]
+    = { "Short description.",
+        ""
+        "Longer description of builtin and usage.",
+        nullptr };
 
-struct builtin template_struct = {
-  "template",       /* builtin name */
-  template_builtin, /* function implementing the builtin */
-  BUILTIN_ENABLED,  /* initial flags for builtin */
-  template_doc,     /* array of long documentation strings. */
-  "template",       /* usage synopsis; becomes short_doc */
-  0                 /* reserved for internal use */
-};
+Shell::builtin template_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::template_builtin),
+    template_doc, "template", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

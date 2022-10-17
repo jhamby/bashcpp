@@ -20,32 +20,36 @@
 
 #include "config.h"
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-#include "bashgetopt.hh"
 #include "builtins.hh"
 #include "shell.hh"
 
+namespace bash
+{
+
+// Loadable class for "sync".
+class ShellLoadable : public Shell
+{
+public:
+  int sync_builtin (WORD_LIST *);
+
+private:
+};
+
 int
-sync_builtin (list)
-WORD_LIST *list;
+ShellLoadable::sync_builtin (WORD_LIST *list)
 {
   sync ();
-  return (EXECUTION_SUCCESS);
+  return EXECUTION_SUCCESS;
 }
 
-char *sync_doc[] = { "Sync disks.",
-                     ""
-                     "Force completion of pending disk writes",
-                     (char *)NULL };
+static const char *const sync_doc[]
+    = { "Sync disks.",
+        ""
+        "Force completion of pending disk writes",
+        nullptr };
 
-struct builtin sync_struct = {
-  "sync",          /* builtin name */
-  sync_builtin,    /* function implementing the builtin */
-  BUILTIN_ENABLED, /* initial flags for builtin */
-  sync_doc,        /* array of long documentation strings. */
-  "sync",          /* usage synopsis; becomes short_doc */
-  0                /* reserved for internal use */
-};
+Shell::builtin sync_struct (
+    static_cast<Shell::sh_builtin_func_t> (&ShellLoadable::sync_builtin),
+    sync_doc, "sync", nullptr, BUILTIN_ENABLED);
+
+} // namespace bash

@@ -966,7 +966,7 @@ namespace bash {
   case 12: // redirection: NUMBER '>' WORD
 #line 196 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (yystack_[0].value.as < WORD_DESC_PTR > ());
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_output_direction, redir, REDIR_NOFLAGS);
@@ -977,7 +977,7 @@ namespace bash {
   case 13: // redirection: NUMBER '<' WORD
 #line 203 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (yystack_[0].value.as < WORD_DESC_PTR > ());
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_input_direction, redir, REDIR_NOFLAGS);
@@ -1021,7 +1021,7 @@ namespace bash {
   case 17: // redirection: NUMBER GREATER_GREATER WORD
 #line 231 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (yystack_[0].value.as < WORD_DESC_PTR > ());
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_appending_to, redir, REDIR_NOFLAGS);
@@ -1054,7 +1054,7 @@ namespace bash {
   case 20: // redirection: NUMBER GREATER_BAR WORD
 #line 252 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (yystack_[0].value.as < WORD_DESC_PTR > ());
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_output_force, redir, REDIR_NOFLAGS);
@@ -1087,7 +1087,7 @@ namespace bash {
   case 23: // redirection: NUMBER LESS_GREATER WORD
 #line 273 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (yystack_[0].value.as < WORD_DESC_PTR > ());
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_input_output, redir, REDIR_NOFLAGS);
@@ -1121,7 +1121,7 @@ namespace bash {
   case 26: // redirection: NUMBER LESS_LESS WORD
 #line 295 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (yystack_[0].value.as < WORD_DESC_PTR > ());
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_reading_until, redir, REDIR_NOFLAGS);
@@ -1157,7 +1157,7 @@ namespace bash {
   case 29: // redirection: NUMBER LESS_LESS_MINUS WORD
 #line 319 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (yystack_[0].value.as < WORD_DESC_PTR > ());
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_deblank_reading_until, redir, REDIR_NOFLAGS);
@@ -1192,7 +1192,7 @@ namespace bash {
   case 32: // redirection: NUMBER LESS_LESS_LESS WORD
 #line 342 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (yystack_[0].value.as < WORD_DESC_PTR > ());
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_reading_string, redir, REDIR_NOFLAGS);
@@ -1215,7 +1215,7 @@ namespace bash {
 #line 356 "../bashcpp/parse.yy"
                 {
                   REDIRECTEE source (0);
-                  REDIRECTEE redir (yystack_[0].value.as < int64_t > ());
+                  REDIRECTEE redir (static_cast<int> (yystack_[0].value.as < int64_t > ()));
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_duplicating_input, redir, REDIR_NOFLAGS);
                 }
@@ -1225,8 +1225,8 @@ namespace bash {
   case 35: // redirection: NUMBER LESS_AND NUMBER
 #line 363 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
-                  REDIRECTEE redir (yystack_[0].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
+                  REDIRECTEE redir (static_cast<int> (yystack_[0].value.as < int64_t > ()));
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_duplicating_input, redir, REDIR_NOFLAGS);
                 }
@@ -1237,7 +1237,7 @@ namespace bash {
 #line 370 "../bashcpp/parse.yy"
                 {
                   REDIRECTEE source (yystack_[2].value.as < WORD_DESC_PTR > ());
-                  REDIRECTEE redir (yystack_[0].value.as < int64_t > ());
+                  REDIRECTEE redir (static_cast<int> (yystack_[0].value.as < int64_t > ()));
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_duplicating_input, redir, REDIR_VARASSIGN);
                 }
@@ -1248,7 +1248,7 @@ namespace bash {
 #line 377 "../bashcpp/parse.yy"
                 {
                   REDIRECTEE source (1);
-                  REDIRECTEE redir (yystack_[0].value.as < int64_t > ());
+                  REDIRECTEE redir (static_cast<int> (yystack_[0].value.as < int64_t > ()));
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_duplicating_output, redir, REDIR_NOFLAGS);
                 }
@@ -1258,8 +1258,8 @@ namespace bash {
   case 38: // redirection: NUMBER GREATER_AND NUMBER
 #line 384 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
-                  REDIRECTEE redir (yystack_[0].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
+                  REDIRECTEE redir (static_cast<int> (yystack_[0].value.as < int64_t > ()));
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_duplicating_output, redir, REDIR_NOFLAGS);
                 }
@@ -1270,7 +1270,7 @@ namespace bash {
 #line 391 "../bashcpp/parse.yy"
                 {
                   REDIRECTEE source (yystack_[2].value.as < WORD_DESC_PTR > ());
-                  REDIRECTEE redir (yystack_[0].value.as < int64_t > ());
+                  REDIRECTEE redir (static_cast<int> (yystack_[0].value.as < int64_t > ()));
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_duplicating_output, redir, REDIR_VARASSIGN);
                 }
@@ -1291,7 +1291,7 @@ namespace bash {
   case 41: // redirection: NUMBER LESS_AND WORD
 #line 405 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (yystack_[0].value.as < WORD_DESC_PTR > ());
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_duplicating_input_word, redir, REDIR_NOFLAGS);
@@ -1325,7 +1325,7 @@ namespace bash {
   case 44: // redirection: NUMBER GREATER_AND WORD
 #line 427 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (yystack_[0].value.as < WORD_DESC_PTR > ());
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_duplicating_output_word, redir, REDIR_NOFLAGS);
@@ -1359,7 +1359,7 @@ namespace bash {
   case 47: // redirection: NUMBER GREATER_AND '-'
 #line 449 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (0);
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_close_this, redir, REDIR_NOFLAGS);
@@ -1392,7 +1392,7 @@ namespace bash {
   case 50: // redirection: NUMBER LESS_AND '-'
 #line 470 "../bashcpp/parse.yy"
                 {
-                  REDIRECTEE source (yystack_[2].value.as < int64_t > ());
+                  REDIRECTEE source (static_cast<int> (yystack_[2].value.as < int64_t > ()));
                   REDIRECTEE redir (0);
                   yylhs.value.as < REDIRECT_PTR > () = REDIRECT_PTR (
                       source, r_close_this, redir, REDIR_NOFLAGS);
