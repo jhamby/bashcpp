@@ -300,12 +300,12 @@ Shell::sh_chkwrite (int s)
    in the list in *IP, if IP is non-null.  A convenience function for
    loadable builtins; also used by `test'. */
 char **
-Shell::make_builtin_argv (WORD_LIST *list, int *ip)
+Shell::make_builtin_argv (WORD_LIST *list, size_t *ip)
 {
   char **argv;
 
-  argv = strvec_from_word_list (list, 0, 1, ip);
-  argv[0] = (char *)this_command_name;
+  argv = strvec_from_word_list (list, 1, ip);
+  argv[0] = savestring (this_command_name);
   return argv;
 }
 

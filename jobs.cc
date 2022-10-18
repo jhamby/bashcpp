@@ -24,13 +24,6 @@
 
 #include "config.h"
 
-#include "bashtypes.hh"
-#include "trap.hh"
-
-#include <unistd.h>
-
-#include "posixtime.hh"
-
 #if defined(HAVE_SYS_FILE_H)
 #include <sys/file.h>
 #endif
@@ -54,10 +47,6 @@
 
 #if defined(READLINE)
 #include "readline.hh"
-#endif
-
-#if !defined(HAVE_KILLPG)
-extern "C" int killpg (pid_t, int);
 #endif
 
 #if !defined(DEFAULT_CHILD_MAX)
@@ -97,14 +86,6 @@ enum delete_job_flags
 #else
 #define getpgid(p) getpgrp (p)
 #endif /* !GETPGRP_VOID */
-
-/* If the system needs it, REINSTALL_SIGCHLD_HANDLER will reinstall the
-   handler for SIGCHLD. */
-#if defined(MUST_REINSTALL_SIGHANDLERS)
-#define REINSTALL_SIGCHLD_HANDLER signal (SIGCHLD, sigchld_handler)
-#else
-#define REINSTALL_SIGCHLD_HANDLER
-#endif /* !MUST_REINSTALL_SIGHANDLERS */
 
 /* Some systems let waitpid(2) tell callers about stopped children. */
 #if !defined(WCONTINUED) || defined(WCONTINUED_BROKEN)
@@ -1825,7 +1806,7 @@ list_all_jobs (int format)
    anything else with it.  ASYNC_P says what to do with the tty.  If
    non-zero, then don't give it away. */
 pid_t
-make_child (char *command, int flags)
+Shell::make_child (string_view command, make_child_flags flags)
 {
   int async_p, forksleep;
   sigset_t set, oset, termset, chldset, oset_copy;
@@ -1833,7 +1814,7 @@ make_child (char *command, int flags)
   SigHandler *oterm;
 
   sigemptyset (&oset_copy);
-  sigprocmask (SIG_BLOCK, (sigset_t *)NULL, &oset_copy);
+  sigprocmask (SIG_BLOCK, nullptr, &oset_copy);
   sigaddset (&oset_copy, SIGTERM);
 
   /* Block SIGTERM here and unblock in child after fork resets the
@@ -1869,7 +1850,7 @@ make_child (char *command, int flags)
     {
       /* bash-4.2 */
       /* keep SIGTERM blocked until we reset the handler to SIG_IGN */
-      sigprocmask (SIG_SETMASK, &oset_copy, (sigset_t *)NULL);
+      sigprocmask (SIG_SETMASK, &oset_copy, nullptr);
       /* If we can't create any children, try to reap some dead ones. */
       waitchld (-1, 0);
 
@@ -1882,7 +1863,7 @@ make_child (char *command, int flags)
 
       if (interrupt_state)
         break;
-      sigprocmask (SIG_SETMASK, &set, (sigset_t *)NULL);
+      sigprocmask (SIG_SETMASK, &set, nullptr);
     }
 
   if (pid != 0)
@@ -2056,7 +2037,7 @@ make_child (char *command, int flags)
       /* Unblock SIGTERM, SIGINT, and SIGCHLD unless creating a pipeline, in
          which case SIGCHLD remains blocked until all commands in the pipeline
          have been created (execute_cmd.c:execute_pipeline()). */
-      sigprocmask (SIG_SETMASK, &oset, (sigset_t *)NULL);
+      sigprocmask (SIG_SETMASK, &oset, nullptr);
     }
 
   return pid;
@@ -4007,7 +3988,7 @@ notify_of_job_status ()
         }
     }
   if (old_ttou != 0)
-    sigprocmask (SIG_SETMASK, &oset, (sigset_t *)NULL);
+    sigprocmask (SIG_SETMASK, &oset, nullptr);
   else
     queue_sigchld--;
 }
@@ -4278,7 +4259,7 @@ give_terminal_to (pid_t pgrp, int force)
         }
       else
         terminal_pgrp = pgrp;
-      sigprocmask (SIG_SETMASK, &oset, (sigset_t *)NULL);
+      sigprocmask (SIG_SETMASK, &oset, nullptr);
     }
 
   if (r == -1)

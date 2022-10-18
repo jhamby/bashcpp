@@ -48,7 +48,6 @@
 
 #include "bashintl.hh"
 
-#include "findcmd.hh"
 #include "shell.hh"
 
 #if defined(JOB_CONTROL)
@@ -63,35 +62,25 @@
 namespace bash
 {
 
-#if 0
-extern REDIRECT *redirection_undo_list;
-extern char *exec_argv0;
-
-int no_exit_on_failed_exec;
-#endif
-
 /* If the user wants this to look like a login shell, then
    prepend a `-' onto NAME and return the new name. */
-static char *
+static inline char *
 mkdashname (const char *name)
 {
-  char *ret;
-
-  ret = (char *)xmalloc (2 + strlen (name));
-  ret[0] = '-';
-  strcpy (ret + 1, name);
-  return ret;
+  size_t len = strlen (name);
+  char *new_name = new char[len + 2];
+  new_name[0] = '-';
+  memcpy (new_name + 1, name, len + 1);
+  return new_name;
 }
 
 int
 Shell::exec_builtin (WORD_LIST *list)
 {
-  int exit_value = EXECUTION_FAILURE;
-  int cleanenv, login, opt, orig_job_control;
-  char *argv0, *command, **args, **env, *newname, *com2;
-
-  cleanenv = login = 0;
-  exec_argv0 = argv0 = (char *)NULL;
+  int opt;
+  bool cleanenv = false;
+  bool login = false;
+  const char *argv0 = nullptr;
 
   reset_internal_getopt ();
   while ((opt = internal_getopt (list, "cla:")) != -1)
@@ -99,13 +88,13 @@ Shell::exec_builtin (WORD_LIST *list)
       switch (opt)
         {
         case 'c':
-          cleanenv = 1;
+          cleanenv = true;
           break;
         case 'l':
-          login = 1;
+          login = true;
           break;
         case 'a':
-          argv0 = list_optarg;
+          argv0 = list_optarg.c_str ();
           break;
           CASE_HELPOPT;
         default:
@@ -116,28 +105,32 @@ Shell::exec_builtin (WORD_LIST *list)
   list = loptend;
 
   /* First, let the redirections remain. */
-  dispose_redirects (redirection_undo_list);
-  redirection_undo_list = (REDIRECT *)NULL;
+  delete redirection_undo_list;
+  redirection_undo_list = nullptr;
 
-  if (list == 0)
+  if (list == nullptr)
     return EXECUTION_SUCCESS;
 
 #if defined(RESTRICTED_SHELL)
   if (restricted)
     {
-      sh_restricted ((char *)NULL);
+      sh_restricted (nullptr);
       return EXECUTION_FAILURE;
     }
 #endif /* RESTRICTED_SHELL */
 
-  args = strvec_from_word_list (list, 1, 0, (int *)NULL);
-  env = (char **)0;
+  char **args = strvec_from_word_list (list, 0, nullptr);
+  char **env = nullptr;
 
   /* A command with a slash anywhere in its name is not looked up in $PATH. */
-  command
-      = absolute_program (args[0]) ? args[0] : search_for_command (args[0], 1);
+  char *command = absolute_program (args[0])
+                      ? args[0]
+                      : search_for_command (args[0], CMDSRCH_HASH);
 
-  if (command == 0)
+  char *com2;
+  int exit_value = EXECUTION_FAILURE;
+  bool orig_job_control = false;
+  if (command == nullptr)
     {
       if (file_isdir (args[0]))
         {
@@ -162,7 +155,7 @@ Shell::exec_builtin (WORD_LIST *list)
   if (com2)
     {
       if (command != args[0])
-        free (command);
+        delete[] command;
       command = com2;
     }
 
@@ -174,8 +167,8 @@ Shell::exec_builtin (WORD_LIST *list)
     }
   else if (login)
     {
-      newname = mkdashname (args[0]);
-      free (args[0]);
+      char *newname = mkdashname (args[0]);
+      delete[] args[0];
       args[0] = newname;
     }
 
@@ -185,13 +178,13 @@ Shell::exec_builtin (WORD_LIST *list)
      and are in a subshell, we don't want to decrement the shell level,
      since we are `increasing' the level */
 
-  if (cleanenv == 0 && (subshell_environment & SUBSHELL_PAREN) == 0)
+  if (!cleanenv && (subshell_environment & SUBSHELL_PAREN) == 0)
     adjust_shell_level (-1);
 
   if (cleanenv)
     {
-      env = strvec_create (1);
-      env[0] = (char *)0;
+      env = new char *[1];
+      env[0] = nullptr;
     }
   else
     {
@@ -200,7 +193,7 @@ Shell::exec_builtin (WORD_LIST *list)
     }
 
 #if defined(HISTORY)
-  if (interactive_shell && subshell_environment == 0)
+  if (interactive_shell && !subshell_environment)
     maybe_save_shell_history ();
 #endif /* HISTORY */
 
@@ -208,8 +201,9 @@ Shell::exec_builtin (WORD_LIST *list)
 
 #if defined(JOB_CONTROL)
   orig_job_control = job_control; /* XXX - was also interactive_shell */
-  if (subshell_environment == 0)
+  if (!subshell_environment)
     end_job_control ();
+
   if (interactive || job_control)
     default_tty_job_signals (); /* undo initialize_job_signals */
 #endif                          /* JOB_CONTROL */
@@ -224,13 +218,13 @@ Shell::exec_builtin (WORD_LIST *list)
   /* We have to set this to NULL because shell_execve has called realloc()
      to stuff more items at the front of the array, which may have caused
      the memory to be freed by realloc().  We don't want to free it twice. */
-  args = (char **)NULL;
-  if (cleanenv == 0)
+  args = nullptr;
+  if (!cleanenv)
     adjust_shell_level (1);
 
   if (exit_value == EX_NOTFOUND) /* no duplicate error message */
     goto failed_exec;
-  else if (executable_file (command) == 0)
+  else if (!executable_file (command))
     {
       builtin_error (_ ("%s: cannot execute: %s"), command, strerror (errno));
       exit_value = EX_NOEXEC; /* As per Posix.2, 3.14.6 */
@@ -252,7 +246,7 @@ failed_exec:
     strvec_dispose (env);
 
   initialize_traps ();
-  initialize_signals (1);
+  initialize_signals ();
 
 #if defined(JOB_CONTROL)
   if (orig_job_control)

@@ -20,9 +20,8 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
+#include <fnmatch.h>
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 
 #include "bashintl.hh"
 #include "bashtypes.hh"
@@ -31,7 +30,6 @@
 
 #include "chartypes.hh"
 #include "shmbutil.hh"
-#include "strmatch.hh"
 #include "typemax.hh"
 
 namespace bash

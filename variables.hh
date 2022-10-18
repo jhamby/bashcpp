@@ -498,12 +498,15 @@ struct array_eltstate_t
 enum av_flags
 {
   AV_NOFLAGS = 0,
-  AV_ALLOWALL = 0x001,
+  AV_ALLOWALL = 0x001, // treat a[@] like $@ and a[*] like $*
   AV_QUOTED = 0x002,
   AV_USEIND = 0x004,
-  AV_USEVAL = 0x008,    /* XXX - should move this */
-  AV_ASSIGNRHS = 0x010, /* no splitting, special case ${a[@]} */
-  AV_NOEXPAND = 0x020   /* don't run assoc subscripts through word expansion */
+  AV_USEVAL = 0x008,    // XXX - should move this
+  AV_ASSIGNRHS = 0x010, // no splitting, special case ${a[@]}
+  AV_NOEXPAND = 0x020,  // don't run assoc subscripts through word expansion
+  AV_ONEWORD = 0x040,   // not used yet
+  AV_ATSTARKEYS
+  = 0x080 // accept a[@] and a[*] but use them as keys, not special values
 };
 
 /* Flags for valid_array_reference. Value 1 is reserved for skipsubscript() */

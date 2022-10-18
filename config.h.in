@@ -202,16 +202,16 @@
 #undef GNULIB_CANONICALIZE_LGPL
 
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
-   whether the gnulib module faccessat shall be considered present. */
-#undef GNULIB_FACCESSAT
-
-/* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module fdopendir shall be considered present. */
 #undef GNULIB_FDOPENDIR
 
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module fd-safer-flag shall be considered present. */
 #undef GNULIB_FD_SAFER_FLAG
+
+/* Define to a C preprocessor expression that evaluates to 1 or 0, depending
+   whether the gnulib module fnmatch-gnu shall be considered present. */
+#undef GNULIB_FNMATCH_GNU
 
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module fscanf shall be considered present. */
@@ -299,9 +299,6 @@
 
 /* Define to 1 when the gnulib module euidaccess should be tested. */
 #undef GNULIB_TEST_EUIDACCESS
-
-/* Define to 1 when the gnulib module faccessat should be tested. */
-#undef GNULIB_TEST_FACCESSAT
 
 /* Define to 1 when the gnulib module fchdir should be tested. */
 #undef GNULIB_TEST_FCHDIR
@@ -576,9 +573,6 @@
 /* Define to compile in support for multibyte characters, or undefine to
    remove this support. */
 #undef HANDLE_MULTIBYTE
-
-/* Define to 1 if you have the `access' function. */
-#undef HAVE_ACCESS
 
 /* Define to 1 if you have 'alloca' after including <alloca.h>, a header that
    may be supplied by this distribution. */

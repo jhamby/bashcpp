@@ -2750,7 +2750,7 @@ Shell::cond_term ()
   else if (cond_token == parser::token::WORD)
     {
       WORD_DESC *word = symbol.value.as<WORD_DESC_PTR> ().value;
-      if (test_unop (word->word))
+      if (test_unop (word->word.c_str ()))
         {
           parser::symbol_type sym2 (read_token (READ));
           if (sym2.kind () == parser::symbol_kind::S_WORD)
@@ -2792,7 +2792,8 @@ Shell::cond_term ()
           /* tok = cond_skip_newlines (); ? */
           parser::symbol_type sym2 (read_token (READ));
           if (sym2.kind () == parser::symbol_kind::S_WORD
-              && test_binop (sym2.value.as<WORD_DESC_PTR> ().value->word))
+              && test_binop (
+                  sym2.value.as<WORD_DESC_PTR> ().value->word.c_str ()))
             {
               op = sym2.value.as<WORD_DESC_PTR> ().value;
               if (op->word == "=" || op->word == "==")

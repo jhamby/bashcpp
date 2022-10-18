@@ -21,14 +21,11 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
 #include "bashtypes.hh"
 #include "posixstat.hh"
 
-#include "findcmd.hh"
 #include "flags.hh"
 #include "hashcmd.hh"
 #include "shell.hh"

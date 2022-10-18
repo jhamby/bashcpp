@@ -56,7 +56,6 @@
 
 #include "builtins.hh"
 #include "common.hh"
-#include "findcmd.hh"
 #include "flags.hh"
 #include "shell.hh"
 

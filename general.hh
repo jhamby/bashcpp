@@ -77,6 +77,7 @@ public:
 
 class sigalarm_interrupt : public std::exception
 {
+public:
   virtual const char *what () const noexcept override;
 };
 
@@ -84,6 +85,7 @@ class sigalarm_interrupt : public std::exception
 
 class wait_interrupt : public std::exception
 {
+public:
   virtual const char *what () const noexcept override;
 };
 
@@ -91,6 +93,7 @@ class wait_interrupt : public std::exception
 
 class return_exception : public std::exception
 {
+public:
   virtual const char *what () const noexcept override;
 };
 
@@ -98,43 +101,51 @@ class return_exception : public std::exception
 
 class subst_expand_error : public std::exception
 {
+public:
   virtual const char *what () const noexcept override;
 };
 
 class subst_expand_fatal : public subst_expand_error
 {
+public:
   virtual const char *what () const noexcept override;
 };
 
 class extract_string_error : public std::exception
 {
+public:
   virtual const char *what () const noexcept override;
 };
 
 class extract_string_fatal : public extract_string_error
 {
+public:
   virtual const char *what () const noexcept override;
 };
 
 class matched_pair_error : public std::exception
 {
+public:
   virtual const char *what () const noexcept override;
 };
 
 class parse_error : public std::exception
 {
+public:
   virtual const char *what () const noexcept override;
 };
 
 #if defined(ALIAS)
 class read_again_exception : public std::exception
 {
+public:
   virtual const char *what () const noexcept override;
 };
 #endif
 
 class invalid_nameref_value : public std::exception
 {
+public:
   virtual const char *what () const noexcept override;
 };
 
@@ -145,6 +156,15 @@ public:
   virtual const char *what () const noexcept override;
 
   int return_catch_value;
+};
+
+class test_exit_exception : public std::exception
+{
+public:
+  test_exit_exception (int value) : test_error_return (value) {}
+  virtual const char *what () const noexcept override;
+
+  int test_error_return;
 };
 
 /* Global inline functions, previously C preprocessor macros. */
@@ -213,7 +233,7 @@ protected:
   GENERIC_LIST () {}
 
   // Constructor that initializes the next element.
-  GENERIC_LIST (GENERIC_LIST *next) : next_ (next) {}
+  explicit GENERIC_LIST (GENERIC_LIST *next) : next_ (next) {}
 
   // Children call this, then cast the result to their derived type.
   GENERIC_LIST *
@@ -424,6 +444,7 @@ utf8_mblen (string_view s, size_t n)
 /* Some defines for calling file status functions. */
 enum file_stat_flags
 {
+  FS_NONE = 0,
   FS_EXISTS = 0x01,
   FS_EXECABLE = 0x02,
   FS_EXEC_PREFERRED = 0x04,
@@ -432,6 +453,13 @@ enum file_stat_flags
   FS_NODIRS = 0x20,
   FS_READABLE = 0x40
 };
+
+static inline file_stat_flags
+operator| (const file_stat_flags &a, const file_stat_flags &b)
+{
+  return static_cast<file_stat_flags> (static_cast<uint32_t> (a)
+                                       | static_cast<uint32_t> (b));
+}
 
 /* Default maximum for move_to_high_fd */
 constexpr int HIGH_FD_MAX = 256;

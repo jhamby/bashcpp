@@ -41,8 +41,8 @@
 #  c-ctype \
 #  canonicalize-lgpl \
 #  dup2 \
-#  faccessat \
-#  fnmatch \
+#  euidaccess \
+#  fnmatch-gnu \
 #  fpurge \
 #  full-read \
 #  full-write \
@@ -78,8 +78,8 @@ gl_MODULES([
   c-ctype
   canonicalize-lgpl
   dup2
-  faccessat
-  fnmatch
+  euidaccess
+  fnmatch-gnu
   fpurge
   full-read
   full-write

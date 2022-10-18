@@ -487,6 +487,15 @@ strvec_dispose (char **array)
   delete[] array;
 }
 
+/* Return the length of ARRAY, a NULL terminated array of char *. */
+static inline size_t
+strvec_len (char **array)
+{
+  size_t i;
+  for (i = 0; array[i]; i++);
+  return i;
+}
+
 /* declarations for functions defined in lib/sh/timeval.cc */
 
 void timeval_to_secs (struct timeval *tvp, time_t *sp, int *sfp);

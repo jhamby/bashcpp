@@ -60,13 +60,7 @@
 
 #include <unistd.h>
 
-#include "bashintl.hh"
-
-#include "common.hh"
-#include "findcmd.hh"
-#include "flags.hh"
 #include "shell.hh"
-#include "trap.hh"
 
 namespace bash
 {

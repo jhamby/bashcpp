@@ -50,6 +50,9 @@ struct ARRAY_ELEMENT
 
 typedef int (*sh_ae_map_func_t) (ARRAY_ELEMENT *, void *);
 
+/* Flags for array_shift */
+#define AS_DISPOSE 0x01
+
 struct ARRAY
 {
 #ifndef ALT_ARRAY_IMPLEMENTATION
@@ -102,6 +105,18 @@ struct ARRAY
   shift_element (string_view v)
   {
     return rshift (1, v);
+  }
+
+  void
+  push (string_view v)
+  {
+    (void)rshift (1, v);
+  }
+
+  void
+  pop ()
+  {
+    (void)shift (1, AS_DISPOSE);
   }
 
 #else // ALT_ARRAY_IMPLEMENTATION
@@ -259,9 +274,6 @@ std::string array_to_kvpair (ARRAY *, bool);
 std::string array_to_assign (ARRAY *, bool);
 std::string array_to_string (ARRAY *, string_view, bool);
 ARRAY *array_from_string (char *, char *);
-
-/* Flags for array_shift */
-#define AS_DISPOSE 0x01
 
 /* Convenience */
 

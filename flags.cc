@@ -25,8 +25,10 @@
 #include <unistd.h>
 #endif
 
-#include "flags.hh"
 #include "shell.hh"
+
+namespace bash
+{
 
 /* **************************************************************** */
 /*								    */
@@ -34,53 +36,50 @@
 /*								    */
 /* **************************************************************** */
 
-const struct flags_alist shell_flags[] = {
+// Called during startup
+void
+Shell::initialize_flags ()
+{
   /* Standard sh flags. */
-  { 'a', &mark_modified_vars },
+  shell_flags.push_back (flags_alist ('a', &mark_modified_vars));
 #if defined(JOB_CONTROL)
-  { 'b', &asynchronous_notification },
+  shell_flags.push_back (flags_alist ('b', &asynchronous_notification));
 #endif /* JOB_CONTROL */
-  { 'e', &errexit_flag },
-  { 'f', &disallow_filename_globbing },
-  { 'h', &hashing_enabled },
-  { 'i', &forced_interactive },
-  { 'k', &place_keywords_in_env },
+  shell_flags.push_back (flags_alist ('e', &errexit_flag));
+  shell_flags.push_back (flags_alist ('f', &disallow_filename_globbing));
+  shell_flags.push_back (flags_alist ('h', &hashing_enabled));
+  shell_flags.push_back (flags_alist ('i', &forced_interactive));
+  shell_flags.push_back (flags_alist ('k', &place_keywords_in_env));
 #if defined(JOB_CONTROL)
-  { 'm', &jobs_m_flag },
+  shell_flags.push_back (flags_alist ('m', &jobs_m_flag));
 #endif /* JOB_CONTROL */
-  { 'n', &read_but_dont_execute },
-  { 'p', &privileged_mode },
+  shell_flags.push_back (flags_alist ('n', &read_but_dont_execute));
+  shell_flags.push_back (flags_alist ('p', &privileged_mode));
 #if defined(RESTRICTED_SHELL)
-  { 'r', &restricted },
+  shell_flags.push_back (flags_alist ('r', &restricted));
 #endif /* RESTRICTED_SHELL */
-  { 't', &just_one_command },
-  { 'u', &unbound_vars_is_error },
-  { 'v', &verbose_flag },
-  { 'x', &echo_command_at_execute },
+  shell_flags.push_back (flags_alist ('t', &just_one_command));
+  shell_flags.push_back (flags_alist ('u', &unbound_vars_is_error));
+  shell_flags.push_back (flags_alist ('v', &verbose_flag));
+  shell_flags.push_back (flags_alist ('x', &echo_command_at_execute));
 
 /* New flags that control non-standard things. */
-#if 0
-  { 'l', &lexical_scoping },
-#endif
 #if defined(BRACE_EXPANSION)
-  { 'B', &brace_expansion },
+  shell_flags.push_back (flags_alist ('B', &brace_expansion));
 #endif
-  { 'C', &noclobber },
-  { 'E', &error_trace_mode },
+  shell_flags.push_back (flags_alist ('C', &noclobber));
+  shell_flags.push_back (flags_alist ('E', &error_trace_mode));
 #if defined(BANG_HISTORY)
-  { 'H', &histexp_flag },
+  shell_flags.push_back (flags_alist ('H', &histexp_flag));
 #endif /* BANG_HISTORY */
-  { 'P', &no_symbolic_links },
-  { 'T', &function_trace_mode },
-  { 0, (char *)NULL }
-};
-
-#define NUM_SHELL_FLAGS (sizeof (shell_flags) / sizeof (struct flags_alist))
+  shell_flags.push_back (flags_alist ('P', &no_symbolic_links));
+  shell_flags.push_back (flags_alist ('T', &function_trace_mode));
+}
 
 char optflags[NUM_SHELL_FLAGS + 4] = { '+' };
 
 char *
-find_flag (int name)
+Shell::find_flag (int name)
 {
   int i;
   for (i = 0; shell_flags[i].name; i++)
@@ -95,7 +94,7 @@ find_flag (int name)
    FLAG_ERROR if there is no flag FLAG.  ON_OR_OFF must be either
    FLAG_ON or FLAG_OFF. */
 char
-change_flag (int flag, int on_or_off)
+Shell::change_flag (int flag, int on_or_off)
 {
   char *value, old_value;
 
@@ -252,3 +251,5 @@ Shell::initialize_flags ()
   optflags[++i] = ';';
   optflags[i + 1] = '\0';
 }
+
+} // namespace bash

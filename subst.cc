@@ -39,7 +39,7 @@
 
 #include "builtext.hh"
 
-#include "strmatch.hh"
+#include <fnmatch.h>
 
 namespace bash
 {

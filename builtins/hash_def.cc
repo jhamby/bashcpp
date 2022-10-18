@@ -46,17 +46,10 @@
 
 #include "bashtypes.hh"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
-
-#include <errno.h>
-
-#include "bashintl.hh"
 
 #include "builtins.hh"
 #include "common.hh"
-#include "findcmd.hh"
 #include "flags.hh"
 #include "hashcmd.hh"
 #include "shell.hh"

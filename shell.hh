@@ -36,16 +36,18 @@
 #include <sys/file.h>
 #endif
 
-// Use gnulib or system version.
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "alias.hh"
 #include "builtins.hh"
 #include "command.hh"
 #include "externs.hh"
+#include "flags.hh"
 #include "jobs.hh"
 #include "maxpath.hh"
 #include "parser.hh"
+#include "pathexp.hh"
 #include "pathnames.hh"
 #include "posixstat.hh"
 #include "quit.hh"
@@ -607,6 +609,22 @@ operator| (const binary_test_flags &a, const binary_test_flags &b)
                                          | static_cast<uint32_t> (b));
 }
 
+/* Flags for search_for_command */
+enum cmd_search_flags
+{
+  CMDSRCH_NOFLAGS = 0,
+  CMDSRCH_HASH = 0x01,
+  CMDSRCH_STDPATH = 0x02,
+  CMDSRCH_TEMPENV = 0x04
+};
+
+static inline cmd_search_flags
+operator| (const cmd_search_flags &a, const cmd_search_flags &b)
+{
+  return static_cast<cmd_search_flags> (static_cast<uint32_t> (a)
+                                        | static_cast<uint32_t> (b));
+}
+
 // Data type for token lookup.
 typedef std::map<string_view, parser::token_kind_type> STRING_TOKEN_MAP;
 
@@ -637,7 +655,7 @@ public:
   SimpleState ();
 
 #if defined(PREFER_POSIX_SPAWN)
-  SimpleState (int fd); // TODO: Load initial values from pipe
+  explicit SimpleState (int fd); // TODO: Load initial values from pipe
 #endif
 
   // Start of protected variables, ordered by decreasing alignment.
@@ -989,9 +1007,6 @@ protected:
   // List index used by builtins/bashgetopt.cc.
   int getopt_sp;
 
-  /* Non-zero means disable filename globbing. */
-  int disallow_filename_globbing;
-
   int xattrfd;
 
   remember_args_flags changed_dollar_vars;
@@ -1022,6 +1037,9 @@ protected:
 
 public:
   // The following are accessed by the parser.
+
+  /* Non-zero means disable filename globbing. */
+  char disallow_filename_globbing;
 
   /* A flag denoting whether or not ignoreeof is set. */
   char ignoreeof;
@@ -1671,6 +1689,27 @@ protected:
   typedef int (Shell::*sh_cget_func_t) ();      /* sh_ivoidfunc_t */
   typedef int (Shell::*sh_cunget_func_t) (int); /* sh_intfunc_t */
 
+  /* Filename completion ignore.  Used to implement the "fignore" facility of
+     tcsh, GLOBIGNORE (like ksh-93 FIGNORE), and EXECIGNORE.
+
+     It is passed a NULL-terminated vector of (char *)'s that must be
+     free()'d if they are deleted.  The first element (names[0]) is the
+     least-common-denominator string of the matching patterns (i.e.
+     u<TAB> produces names[0] = "und", names[1] = "under.c", names[2] =
+     "undun.c", name[3] = NULL).  */
+  typedef int (Shell::*sh_iv_item_func_t) (STRINGLIST &);
+
+  struct ignorevar
+  {
+    explicit ignorevar (const char *name_) : varname (name_) {}
+
+    const char *varname;  // FIGNORE, GLOBIGNORE, or EXECIGNORE
+    STRINGLIST ignores;   // Store the ignore strings here
+    char *last_ignoreval; // Last value of variable - cached for speed
+    sh_iv_item_func_t
+        item_func; // Called when each item is parsed from $`varname'
+  };
+
 public:
   // public function typedefs for global setopt struct
   typedef int (Shell::*setopt_set_func_t) (int, const char *);
@@ -1975,7 +2014,8 @@ public:
   void sh_ttyerror (int);
   int sh_chkwrite (int);
 
-  char **make_builtin_argv (WORD_LIST *, int *);
+  STRINGLIST *make_builtin_argv (WORD_LIST *);
+
   void remember_args (WORD_LIST *, bool);
   void shift_args (int);
   int number_of_args ();
@@ -2175,10 +2215,21 @@ public:
     return rval;
   }
 
+  /* Functions from findcmd.cc */
+
+  char *_find_user_command_internal (string_view, int);
+  char *find_user_command_internal (string_view, int);
+  char *find_user_command_in_path (string_view, char *, int);
+  char *find_in_path_element (string_view, char *, int, int, struct stat *);
+  char *find_absolute_program (string_view, int);
+
+  char *get_next_path_element (char *, int *);
+
   /* Functions from flags.cc */
 
   int change_flag (int, int);
   void initialize_flags ();
+  void reset_shell_flags ();
 
   /* callback from lib/sh/getenv.cc */
   char *getenv (const char *);
@@ -2906,12 +2957,14 @@ protected:
 #endif
 
   /* Declarations for functions defined in locale.cc */
+
   void set_default_locale ();
   void set_default_locale_vars ();
-  bool set_locale_var (string_view, string_view);
-  int set_lang (string_view, string_view);
+  bool set_locale_var (const char *, const char *);
+  int set_lang (const char *, const char *);
   void set_default_lang ();
-  string_view get_locale_var (string_view);
+  const char *get_locale_var (const char *);
+
   std::string localetrans (string_view);
   std::string locale_expand (string_view, int);
 
@@ -3328,13 +3381,21 @@ protected:
 
   std::string sh_modcase (string_view, string_view, sh_modcase_flags);
 
-  /* use faccessat () from gnulib or OS */
+  /* from lib/sh/eaccess.cc */
 
+  // Wrapper for euidaccess with special /dev/fd handling.
   int
   sh_eaccess (const char *path, int mode)
   {
-    return faccessat (AT_FDCWD, path, mode, AT_EACCESS);
+    if (path_is_devfd (path))
+      return sh_stataccess (path, mode);
+    else
+      return euidaccess (path, mode);
   }
+
+  static bool path_is_devfd (const char *path);
+  static int sh_stat (const char *path, struct stat *finfo);
+  int sh_stataccess (const char *path, int mode);
 
   /* from lib/sh/makepath.cc */
 
@@ -3679,6 +3740,21 @@ protected:
     return ttfd_cbreak (0, &tt);
   }
 
+  /* from lib/sh/stringlist.cc */
+
+  STRINGLIST *
+  strlist_from_word_list (WORD_LIST *list, size_t start_index)
+  {
+    size_t slen = list->size ();
+    STRINGLIST *ret = new STRINGLIST (slen + start_index);
+    for (size_t i = start_index; i < start_index + slen; i++)
+      {
+        (*ret)[i] = savestring (list->word->word);
+        list = list->next ();
+      }
+    return ret;
+  }
+
   /* from lib/sh/strtrans.cc */
 
   std::string ansicstr (string_view, int, bool *);
@@ -3875,8 +3951,28 @@ protected:
   void print_formatted_time (FILE *, const char *, time_t, int, time_t, int,
                              time_t, int, int);
 
-  int shell_execve (char *, char **, char **);
-  void setup_async_signals ();
+  int shell_execve (const char *, char **, char **);
+
+  void
+  setup_async_signals ()
+  {
+#if defined(JOB_CONTROL)
+    if (!job_control)
+#endif
+      {
+        /* Make sure we get the original signal dispositions now so we don't
+           confuse the trap builtin later if the subshell tries to use it to
+           reset SIGINT/SIGQUIT.  Don't call set_signal_ignored; that sets
+           the value of original_signals to SIG_IGN. Posix interpretation 751.
+         */
+        get_original_signal (SIGINT);
+        set_signal_handler (SIGINT, SIG_IGN);
+
+        get_original_signal (SIGQUIT);
+        set_signal_handler (SIGQUIT, SIG_IGN);
+      }
+  }
+
   void async_redirect_stdin ();
 
   void undo_partial_redirects ();
@@ -3902,6 +3998,10 @@ protected:
       }
   }
 
+#if !defined(HAVE_HASH_BANG_EXEC)
+  int execute_shell_script (char *, ssize_t, const char *, char **, char **);
+#endif
+
   int execute_in_subshell (COMMAND *, bool, int, int, fd_bitmap *);
 
   int time_command (COMMAND *, bool, int, int, fd_bitmap *);
@@ -3910,8 +4010,6 @@ protected:
 
 #if defined(SELECT_COMMAND)
   int displen (const char *);
-  int print_index_and_element (int, int, WORD_LIST *);
-  void indent (int, int);
   void print_select_list (WORD_LIST *, int, int);
   string_view select_query (WORD_LIST *, const char *, bool);
   int execute_select_command (FOR_SELECT_COM *);
@@ -3934,23 +4032,24 @@ protected:
   void fix_assignment_words (WORD_LIST *);
   int execute_simple_command (SIMPLE_COM *, int, int, bool, fd_bitmap *);
 
-  int execute_builtin (sh_builtin_func_t, WORD_LIST *, int, bool);
-  int execute_builtin2 (sh_builtin_func_t, WORD_LIST *, int, bool);
-  int execute_builtin3 (sh_builtin_func_t, WORD_LIST *, int, bool);
+  int execute_builtin (sh_builtin_func_t, WORD_LIST *, cmd_flags, bool);
+  int execute_builtin2 (sh_builtin_func_t, WORD_LIST *, cmd_flags, bool);
+  int execute_builtin3 (sh_builtin_func_t, WORD_LIST *, cmd_flags, bool);
 
   int execute_function (SHELL_VAR *, WORD_LIST *, int, fd_bitmap *, bool,
                         bool);
 
   int execute_builtin_or_function (WORD_LIST *, sh_builtin_func_t, SHELL_VAR *,
-                                   REDIRECT *, fd_bitmap *, int);
+                                   REDIRECT *, fd_bitmap *, cmd_flags);
 
   void execute_subshell_builtin_or_function (WORD_LIST *, REDIRECT *,
                                              sh_builtin_func_t, SHELL_VAR *,
-                                             int, int, bool, fd_bitmap *, int)
+                                             int, int, bool, fd_bitmap *,
+                                             cmd_flags)
       __attribute__ ((__noreturn__));
 
   int execute_disk_command (WORD_LIST *, REDIRECT *, string_view, int, int,
-                            bool, fd_bitmap *, int);
+                            bool, fd_bitmap *, cmd_flags);
 
   void initialize_subshell ();
 
@@ -3973,7 +4072,6 @@ protected:
   }
 
 #if defined(COPROCESS_SUPPORT)
-  void coproc_setstatus (Coproc *, int);
   int execute_coproc (COPROC_COM *, int, int, fd_bitmap *);
 #endif
 
@@ -3986,11 +4084,9 @@ protected:
   Coproc *getcoprocbypid (pid_t);
   Coproc *getcoprocbyname (string_view);
 
-  void coproc_init (Coproc *);
   Coproc *coproc_alloc (string_view, pid_t);
   void coproc_dispose (Coproc *);
   void coproc_flush ();
-  void coproc_close (Coproc *);
   void coproc_closeall ();
   void coproc_reap ();
   pid_t coproc_active ();
@@ -3998,7 +4094,7 @@ protected:
   void coproc_checkfd (Coproc *, int);
   void coproc_fdchk (int);
 
-  void coproc_pidchk (pid_t, int);
+  void coproc_pidchk (pid_t, coproc_status);
 
   void coproc_setvars (Coproc *);
   void coproc_unsetvars (Coproc *);
@@ -4039,7 +4135,7 @@ protected:
     char *temp;
     int ret;
 
-    temp = search_for_command (pathname, 0);
+    temp = search_for_command (pathname, CMDSRCH_NOFLAGS);
     ret = temp ? file_isdir (temp) : file_isdir (pathname);
     delete[] temp;
     return ret;
@@ -4051,7 +4147,15 @@ protected:
 
   /* Functions from findcmd.cc */
 
-  char *search_for_command (const char *, int);
+  bool exec_name_should_ignore (const char *);
+  file_stat_flags file_status (const char *);
+  char *search_for_command (const char *, cmd_search_flags);
+
+  bool executable_file (const char *);
+  bool is_directory (const char *);
+  bool executable_or_directory (const char *);
+
+  char *find_path_file (const char *);
 
   /* Functions from mailcheck.cc */
 
@@ -4063,6 +4167,27 @@ protected:
   void remember_mail_dates ();
   void init_mail_dates ();
   void check_mail ();
+
+  /* Functions from pathexp.cc */
+
+  bool unquoted_glob_pattern_p (const char *);
+
+  /* PATHNAME can contain characters prefixed by CTLESC; this indicates
+     that the character is to be quoted.  We quote it here in the style
+     that the glob library recognizes.  If flags includes QGLOB_CVTNULL,
+     we change quoted null strings (pathname[0] == CTLNUL) into empty
+     strings (pathname[0] == 0).  If this is called after quote removal
+     is performed, (flags & QGLOB_CVTNULL) should be 0; if called when quote
+     removal has not been done (for example, before attempting to match a
+     pattern while executing a case statement), flags should include
+     QGLOB_CVTNULL.  If flags includes QGLOB_FILENAME, appropriate quoting
+     to match a filename should be performed. */
+  char *quote_string_for_globbing (const char *, qglob_flags);
+
+  /* Call the glob library to do globbing on PATHNAME. FLAGS is additional
+     flags to pass to QUOTE_STRING_FOR_GLOBBING, mostly having to do with
+     whether or not we've already performed quote removal. */
+  char **shell_glob_filename (const char *, qglob_flags);
 
   /* Functions from redir.cc */
 
@@ -4087,11 +4212,11 @@ protected:
 
   void run_shopt_alist ();
 
-  void execute_env_file (string_view);
+  void execute_env_file (const char *);
   void run_startup_files ();
-  int open_shell_script (string_view);
+  int open_shell_script (const char *);
   void set_bash_input ();
-  int run_one_command (string_view);
+  int run_one_command (const char *);
 
 #if defined(WORDEXP_OPTION)
   int run_wordexp (string_view);
@@ -5805,18 +5930,42 @@ protected:
 
   // Methods from test.cc.
 
-  bool test_binop (string_view);
+  bool test_binop (const char *);
 
-  bool unary_test (string_view, string_view);
-  bool binary_test (string_view, string_view, string_view, binary_test_flags);
+  bool unary_test (const char *, const char *);
+  bool binary_test (const char *, const char *, const char *,
+                    binary_test_flags);
 
-  int test_command (int, char **);
+  int test_command (STRINGLIST &);
+
+  void test_syntax_error (const char *, const char *)
+      __attribute__ ((__noreturn__));
+
+  void beyond () __attribute__ ((__noreturn__));
+  void integer_expected_error (const char *) __attribute__ ((__noreturn__));
+
+  bool unary_operator (STRINGLIST &, size_t &);
+  bool binary_operator (STRINGLIST &, size_t &);
+  bool two_arguments (STRINGLIST &, size_t &);
+  int three_arguments (STRINGLIST &, size_t &);
+  int posixtest (STRINGLIST &, size_t &);
+
+  bool expr (STRINGLIST &, size_t &);
+  bool term (STRINGLIST &, size_t &);
+  bool test_and (STRINGLIST &, size_t &);
+  bool test_or (STRINGLIST &, size_t &);
+
+  bool stat_mtime (const char *, struct stat *, struct timespec *);
+
+  bool filecomp (const char *, const char *, int);
+  bool arithcomp (const char *, const char *, int, binary_test_flags);
+  bool patcomp (const char *, const char *, int);
 
   // Return true if OP is one of the test command's unary operators.
   bool
-  test_unop (string_view op)
+  test_unop (const char *op)
   {
-    if (op.size () != 2 || op[0] != '-')
+    if (op[0] != '-' || (op[1] && op[2] != 0))
       return false;
 
     switch (op[1])
@@ -6328,6 +6477,17 @@ protected:
   // Will go away when there is fully-implemented support for multiple coprocs.
   Coproc sh_coproc;
 #endif
+
+  // Ignorevar structs
+
+  ignorevar execignore; // used by findcmd.cc
+  ignorevar fignore;    // used by bashline.cc
+  ignorevar globignore; // used by pathexp.cc
+  ignorevar histignore; // used by bashhist.cc
+
+  // Variables from flags.cc
+
+  std::vector<flags_alist> shell_flags;
 
   // Variables from builtins/getopt.cc
 

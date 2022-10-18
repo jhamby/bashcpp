@@ -31,29 +31,19 @@
 
 #include <unistd.h>
 
-#include "findcmd.hh" /* matching prototypes and declarations */
 #include "flags.hh"
 #include "hashcmd.hh"
 #include "hashlib.hh"
 #include "pathexp.hh"
 #include "shell.hh"
 
-#include "strmatch.hh"
+#include <fnmatch.h>
 
 namespace bash
 {
 
-/* Static functions defined and used in this file. */
-static char *_find_user_command_internal (const std::string &, int);
-static char *find_user_command_internal (const std::string &, int);
-static char *find_user_command_in_path (const std::string &, char *, int);
-static char *find_in_path_element (const std::string &, char *, int, int,
-                                   struct stat *);
-static char *find_absolute_program (const std::string &, int);
-
-static char *get_next_path_element (char *, int *);
-
 #if 0
+
 /* The file name which we would try to execute, except that it isn't
    possible to execute it.  This is the first file that matches the
    name that we are looking for while we are searching $PATH for a
@@ -73,7 +63,7 @@ bool dot_found_in_search = false;
 
 /* Set up EXECIGNORE; a blacklist of patterns that executable files should not
    match. */
-static struct ignorevar execignore = { "EXECIGNORE", NULL, 0, NULL, NULL };
+static struct ignorevar execignore = { "EXECIGNORE", nullptr, 0, nullptr, nullptr };
 #endif
 
 void
@@ -83,14 +73,14 @@ setup_exec_ignore ()
 }
 
 bool
-Shell::exec_name_should_ignore (const std::string &name)
+Shell::exec_name_should_ignore (const char *name)
 {
   struct ign *p;
 
   for (p = execignore.ignores; p && p->val; p++)
-    if (strmatch (p->val, name.c_str (), FNMATCH_EXTFLAG | FNM_CASEFOLD)
-        != FNM_NOMATCH)
+    if (fnmatch (p->val, name, FNMATCH_EXTFLAG | FNM_CASEFOLD) != FNM_NOMATCH)
       return true;
+
   return false;
 }
 
@@ -98,15 +88,15 @@ Shell::exec_name_should_ignore (const std::string &name)
    The EXISTS bit is non-zero if the file is found.
    The EXECABLE bit is non-zero the file is executable.
    Zero is returned if the file is not found. */
-int
-file_status (const std::string &name)
+file_stat_flags
+Shell::file_status (const char *name)
 {
   struct stat finfo;
   int r;
 
   /* Determine whether this file exists or not. */
   if (stat (name, &finfo) < 0)
-    return 0;
+    return FS_NONE;
 
   /* If the file is a directory, then it is not "executable" in the
      sense of the shell. */
@@ -115,62 +105,16 @@ file_status (const std::string &name)
 
   r = FS_EXISTS;
 
-#if defined(HAVE_EACCESS)
-  /* Use eaccess(2) if we have it to take things like ACLs and other
-     file access mechanisms into account.  eaccess uses the effective
+  /* Use euidaccess from OS or Gnulib to take things like ACLs and other
+     file access mechanisms into account.  euidaccess uses the effective
      user and group IDs, not the real ones.  We could use sh_eaccess,
      but we don't want any special treatment for /dev/fd. */
-  if (exec_name_should_ignore (name) == 0 && eaccess (name, X_OK) == 0)
+  if (exec_name_should_ignore (name) == 0 && euidaccess (name, X_OK) == 0)
     r |= FS_EXECABLE;
-  if (eaccess (name, R_OK) == 0)
+  if (euidaccess (name, R_OK) == 0)
     r |= FS_READABLE;
 
   return r;
-#else  /* !HAVE_EACCESS */
-
-  /* Find out if the file is actually executable.  By definition, the
-     only other criteria is that the file has an execute bit set that
-     we can use.  The same with whether or not a file is readable. */
-
-  /* Root only requires execute permission for any of owner, group or
-     others to be able to exec a file, and can read any file. */
-  if (current_user.euid == (uid_t)0)
-    {
-      r |= FS_READABLE;
-      if (exec_name_should_ignore (name) == 0 && (finfo.st_mode & S_IXUGO))
-        r |= FS_EXECABLE;
-      return r;
-    }
-
-  /* If we are the owner of the file, the owner bits apply. */
-  if (current_user.euid == finfo.st_uid)
-    {
-      if (exec_name_should_ignore (name) == 0 && (finfo.st_mode & S_IXUSR))
-        r |= FS_EXECABLE;
-      if (finfo.st_mode & S_IRUSR)
-        r |= FS_READABLE;
-    }
-
-  /* If we are in the owning group, the group permissions apply. */
-  else if (group_member (finfo.st_gid))
-    {
-      if (exec_name_should_ignore (name) == 0 && (finfo.st_mode & S_IXGRP))
-        r |= FS_EXECABLE;
-      if (finfo.st_mode & S_IRGRP)
-        r |= FS_READABLE;
-    }
-
-  /* Else we check whether `others' have permission to execute the file */
-  else
-    {
-      if (exec_name_should_ignore (name) == 0 && finfo.st_mode & S_IXOTH)
-        r |= FS_EXECABLE;
-      if (finfo.st_mode & S_IROTH)
-        r |= FS_READABLE;
-    }
-
-  return r;
-#endif /* !HAVE_EACCESS */
 }
 
 /* Return non-zero if FILE exists and is executable.
@@ -178,7 +122,7 @@ file_status (const std::string &name)
    executable file is; do not change this unless YOU know
    what an executable file is. */
 bool
-executable_file (const std::string &file)
+Shell::executable_file (const char *file)
 {
   int s;
 
@@ -191,13 +135,13 @@ executable_file (const std::string &file)
 }
 
 bool
-is_directory (const std::string &file)
+Shell::is_directory (const char *file)
 {
   return file_status (file) & FS_DIRECTORY;
 }
 
 bool
-executable_or_directory (const std::string &file)
+Shell::executable_or_directory (const char *file)
 {
   int s;
 
@@ -207,28 +151,28 @@ executable_or_directory (const std::string &file)
 
 /* Locate the executable file referenced by NAME, searching along
    the contents of the shell PATH variable.  Return a new string
-   which is the full pathname to the file, or NULL if the file
+   which is the full pathname to the file, or nullptr if the file
    couldn't be found.  If a file is found that isn't executable,
    and that is the only match, then return that. */
 char *
-find_user_command (const std::string &name)
+Shell::find_user_command (const char *name)
 {
   return find_user_command_internal (name, FS_EXEC_PREFERRED | FS_NODIRS);
 }
 
 /* Locate the file referenced by NAME, searching along the contents
    of the shell PATH variable.  Return a new string which is the full
-   pathname to the file, or NULL if the file couldn't be found.  This
+   pathname to the file, or nullptr if the file couldn't be found.  This
    returns the first readable file found; designed to be used to look
    for shell scripts or files to source. */
 char *
-find_path_file (const std::string &name)
+Shell::find_path_file (const char *name)
 {
   return find_user_command_internal (name, FS_READABLE);
 }
 
-static char *
-_find_user_command_internal (const std::string &name, int flags)
+char *
+Shell::_find_user_command_internal (const char *name, int flags)
 {
   char *path_list, *cmd;
   SHELL_VAR *var;
@@ -238,7 +182,7 @@ _find_user_command_internal (const std::string &name, int flags)
   if ((var = find_variable_tempenv ("PATH"))) /* XXX could be array? */
     path_list = value_cell (var);
   else
-    path_list = (char *)NULL;
+    path_list = nullptr;
 
   if (path_list == 0 || *path_list == '\0')
     return savestring (name);
@@ -248,8 +192,8 @@ _find_user_command_internal (const std::string &name, int flags)
   return cmd;
 }
 
-static char *
-find_user_command_internal (const std::string &name, int flags)
+char *
+Shell::find_user_command_internal (const char *name, int flags)
 {
 #ifdef __WIN32__
   char *res, *dotexe;
@@ -270,9 +214,10 @@ find_user_command_internal (const std::string &name, int flags)
 /* Return the next element from PATH_LIST, a colon separated list of
    paths.  PATH_INDEX_POINTER is the address of an index into PATH_LIST;
    the index is modified by this function.
-   Return the next element of PATH_LIST or NULL if there are no more. */
-static char *
-get_next_path_element (char *path_list, int *path_index_pointer)
+   Return the next element of PATH_LIST or nullptr if there are no more. */
+char *
+Shell::get_next_path_element (const char *path_list,
+                              size_t *path_index_pointer)
 {
   char *path;
 
@@ -297,14 +242,14 @@ get_next_path_element (char *path_list, int *path_index_pointer)
    If (FLAGS & CMDSRCH_STDPATH) is non-zero, we are running in a `command -p'
    environment and should use the Posix standard path.
    Returns a newly-allocated string. */
-std::string
-Shell::search_for_command (string_view pathname, int flags)
+char *
+Shell::search_for_command (const char *pathname, cmd_search_flags flags)
 {
   char *hashed_file, *command, *path_list;
   int temp_path, st;
   SHELL_VAR *path;
 
-  hashed_file = command = (char *)NULL;
+  hashed_file = command = nullptr;
 
   /* If PATH is in the temporary environment for this command, don't use the
      hash table to search for the full pathname. */
@@ -329,7 +274,7 @@ Shell::search_for_command (string_view pathname, int flags)
         {
           phash_remove (pathname);
           free (hashed_file);
-          hashed_file = (char *)NULL;
+          hashed_file = nullptr;
         }
     }
 
@@ -383,13 +328,13 @@ Shell::search_for_command (string_view pathname, int flags)
 }
 
 char *
-user_command_matches (const std::string &name, int flags, int state)
+Shell::user_command_matches (const char *name, int flags, int state)
 {
   int i;
   int path_index, name_len;
   char *path_list, *path_element, *match;
   struct stat dotinfo;
-  static char **match_list = NULL;
+  static char **match_list = nullptr;
   static int match_list_size = 0;
   static int match_index = 0;
 
@@ -412,13 +357,13 @@ user_command_matches (const std::string &name, int flags, int state)
       if (absolute_program (name))
         {
           match_list[0] = find_absolute_program (name, flags);
-          match_list[1] = (char *)NULL;
-          path_list = (char *)NULL;
+          match_list[1] = nullptr;
+          path_list = nullptr;
         }
       else
         {
           name_len = strlen (name);
-          file_to_lose_on = (char *)NULL;
+          file_to_lose_on = nullptr;
           dot_found_in_search = 0;
           if (stat (".", &dotinfo) < 0)
             dotinfo.st_dev = dotinfo.st_ino = 0; /* so same_file won't match */
@@ -447,9 +392,9 @@ user_command_matches (const std::string &name, int flags, int state)
             }
 
           match_list[match_index++] = match;
-          match_list[match_index] = (char *)NULL;
+          match_list[match_index] = nullptr;
           FREE (file_to_lose_on);
-          file_to_lose_on = (char *)NULL;
+          file_to_lose_on = nullptr;
         }
 
       /* We haven't returned any strings yet. */
@@ -464,8 +409,8 @@ user_command_matches (const std::string &name, int flags, int state)
   return match;
 }
 
-static char *
-find_absolute_program (const std::string &name, int flags)
+char *
+Shell::find_absolute_program (const char *name, int flags)
 {
   int st;
 
@@ -473,7 +418,7 @@ find_absolute_program (const std::string &name, int flags)
 
   /* If the file doesn't exist, quit now. */
   if ((st & FS_EXISTS) == 0)
-    return (char *)NULL;
+    return nullptr;
 
   /* If we only care about whether the file exists or not, return
      this filename.  Otherwise, maybe we care about whether this
@@ -481,12 +426,12 @@ find_absolute_program (const std::string &name, int flags)
   if ((flags & FS_EXISTS) || ((flags & FS_EXEC_ONLY) && (st & FS_EXECABLE)))
     return savestring (name);
 
-  return NULL;
+  return nullptr;
 }
 
-static char *
-find_in_path_element (const std::string &name, char *path, int flags,
-                      int name_len, struct stat *dotinfop)
+char *
+Shell::find_in_path_element (const char *name, const char *path, int flags,
+                             int name_len, struct stat *dotinfop)
 {
   int status;
   char *full_path, *xpath;
@@ -500,7 +445,7 @@ find_in_path_element (const std::string &name, char *path, int flags,
      found while searching PATH. */
   if (dot_found_in_search == 0 && *xpath == '.')
     dot_found_in_search
-        = same_file (".", xpath, dotinfop, (struct stat *)NULL);
+        = same_file (".", xpath, dotinfop, (struct stat *)nullptr);
 
   full_path = sh_makepath (xpath, name, 0);
 
@@ -515,7 +460,7 @@ find_in_path_element (const std::string &name, char *path, int flags,
   if ((status & FS_EXISTS) == 0)
     {
       free (full_path);
-      return (char *)NULL;
+      return nullptr;
     }
 
   /* The file exists.  If the caller simply wants the first file, here it is.
@@ -534,7 +479,7 @@ find_in_path_element (const std::string &name, char *path, int flags,
       && (((flags & FS_NODIRS) == 0) || ((status & FS_DIRECTORY) == 0)))
     {
       FREE (file_to_lose_on);
-      file_to_lose_on = (char *)NULL;
+      file_to_lose_on = nullptr;
       return full_path;
     }
 
@@ -553,7 +498,7 @@ find_in_path_element (const std::string &name, char *path, int flags,
       || ((flags & FS_READABLE) && (status & FS_READABLE) == 0))
     {
       free (full_path);
-      return (char *)NULL;
+      return nullptr;
     }
   else
     return full_path;
@@ -571,15 +516,16 @@ find_in_path_element (const std::string &name, char *path, int flags,
       FS_EXISTS:		The first file found will do.
       FS_NODIRS:		Don't find any directories.
 */
-static char *
-find_user_command_in_path (const std::string &name, char *path_list, int flags)
+char *
+Shell::find_user_command_in_path (const char *name, const char *path_list,
+                                  file_stat_flags flags)
 {
   char *full_path, *path;
   int path_index, name_len, rflags;
   struct stat dotinfo;
 
-  /* We haven't started looking, so we certainly haven't seen
-     a `.' as the directory path yet. */
+  // We haven't started looking, so we certainly haven't seen a `.' as the
+  // directory path yet.
   dot_found_in_search = 0;
 
   if (rflagsp)
@@ -594,7 +540,7 @@ find_user_command_in_path (const std::string &name, char *path_list, int flags)
   if (path_list == 0 || *path_list == '\0')
     return savestring (name); /* XXX */
 
-  file_to_lose_on = (char *)NULL;
+  file_to_lose_on = nullptr;
   name_len = strlen (name);
   if (stat (".", &dotinfo) < 0)
     dotinfo.st_dev = dotinfo.st_ino = 0;
@@ -628,20 +574,20 @@ find_user_command_in_path (const std::string &name, char *path_list, int flags)
           if (rflagsp)
             *rflagsp = rflags;
           FREE (file_to_lose_on);
-          return (full_path);
+          return full_path;
         }
     }
 
   /* We didn't find exactly what the user was looking for.  Return
-     the contents of FILE_TO_LOSE_ON which is NULL when the search
-     required an executable, or non-NULL if a file was found and the
+     the contents of FILE_TO_LOSE_ON which is nullptr when the search
+     required an executable, or non-nullptr if a file was found and the
      search would accept a non-executable as a last resort.  If the
      caller specified FS_NODIRS, and file_to_lose_on is a directory,
-     return NULL. */
+     return nullptr. */
   if (file_to_lose_on && (flags & FS_NODIRS) && file_isdir (file_to_lose_on))
     {
       free (file_to_lose_on);
-      file_to_lose_on = (char *)NULL;
+      file_to_lose_on = nullptr;
     }
 
   return file_to_lose_on;
@@ -650,9 +596,9 @@ find_user_command_in_path (const std::string &name, char *path_list, int flags)
 /* External interface to find a command given a $PATH.  Separate from
    find_user_command_in_path to allow future customization. */
 char *
-find_in_path (const std::string &name, char *path_list, int flags)
+Shell::find_in_path (const char *name, const char *path_list, int flags)
 {
-  return (find_user_command_in_path (name, path_list, flags, (int *)0));
+  return find_user_command_in_path (name, path_list, flags, (int *)0);
 }
 
 } // namespace bash

@@ -165,6 +165,13 @@ return_catch_exception::what () const noexcept
   return "return_catch_exception";
 }
 
+// Return the type of the test_exit_exception exception.
+const char *
+test_exit_exception::what () const noexcept
+{
+  return "test_exit_exception";
+}
+
 /* Do whatever is necessary to initialize `Posix mode'.  This currently
    modifies the following variables which are controlled via shopt:
       interactive_comments

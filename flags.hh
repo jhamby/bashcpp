@@ -32,6 +32,7 @@ const char FLAG_UNKNOWN = 0;
 /* The thing that we build the array of flags out of. */
 struct flags_alist
 {
+  flags_alist (char name_, char *value_) : name (name_), value (value_) {}
   char name;
   char *value;
 };

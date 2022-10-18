@@ -80,7 +80,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module exitfail:
   # Code from module extensions:
   # Code from module extern-inline:
-  # Code from module faccessat:
   # Code from module fchdir:
   # Code from module fcntl:
   # Code from module fcntl-h:
@@ -92,6 +91,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module flexmember:
   # Code from module float:
   # Code from module fnmatch:
+  # Code from module fnmatch-gnu:
   # Code from module fnmatch-h:
   # Code from module fpurge:
   # Code from module free-posix:
@@ -374,14 +374,6 @@ AC_DEFUN([gl_INIT],
   ])
   gl_UNISTD_MODULE_INDICATOR([euidaccess])
   AC_REQUIRE([gl_EXTERN_INLINE])
-  gl_FUNC_FACCESSAT
-  gl_CONDITIONAL([GL_COND_OBJ_FACCESSAT],
-                 [test $HAVE_FACCESSAT = 0 || test $REPLACE_FACCESSAT = 1])
-  AM_COND_IF([GL_COND_OBJ_FACCESSAT], [
-    gl_PREREQ_FACCESSAT
-  ])
-  gl_MODULE_INDICATOR([faccessat])
-  gl_UNISTD_MODULE_INDICATOR([faccessat])
   gl_FUNC_FCHDIR
   gl_CONDITIONAL([GL_COND_OBJ_FCHDIR], [test $HAVE_FCHDIR = 0])
   AM_COND_IF([GL_COND_OBJ_FCHDIR], [
@@ -416,6 +408,12 @@ AC_DEFUN([gl_INIT],
     gl_PREREQ_FNMATCH
   fi
   gl_FNMATCH_MODULE_INDICATOR([fnmatch])
+  gl_FUNC_FNMATCH_GNU
+  if test $HAVE_FNMATCH = 0 || test $REPLACE_FNMATCH = 1; then
+    AC_LIBOBJ([fnmatch])
+    gl_PREREQ_FNMATCH
+  fi
+  gl_MODULE_INDICATOR([fnmatch-gnu])
   gl_FNMATCH_H
   gl_FNMATCH_H_REQUIRE_DEFAULTS
   gl_CONDITIONAL_HEADER([fnmatch.h])
@@ -1259,7 +1257,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/euidaccess.c
   lib/exitfail.c
   lib/exitfail.h
-  lib/faccessat.c
   lib/fchdir.c
   lib/fcntl.c
   lib/fcntl.in.h
@@ -1556,7 +1553,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/exponentd.m4
   m4/extensions.m4
   m4/extern-inline.m4
-  m4/faccessat.m4
   m4/fchdir.m4
   m4/fcntl-o.m4
   m4/fcntl.m4

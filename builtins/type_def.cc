@@ -53,15 +53,8 @@
 #include "bashtypes.hh"
 #include "posixstat.hh"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
 
-#include "bashintl.hh"
-
-#include "findcmd.hh"
-#include "hashcmd.hh"
-#include "parser.hh"
 #include "shell.hh"
 
 #if defined(ALIAS)

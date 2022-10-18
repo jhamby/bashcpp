@@ -22,22 +22,6 @@
 
 #include <sys/stat.h>
 
-#if defined(TIME_H_DEFINES_STRUCT_TIMESPEC)
-#include <ctime>
-#elif defined(SYS_TIME_H_DEFINES_STRUCT_TIMESPEC)
-#include <sys/time.h>
-#elif defined(PTHREAD_H_DEFINES_STRUCT_TIMESPEC)
-#include <pthread.h>
-#endif
-
-#ifndef HAVE_STRUCT_TIMESPEC
-struct timespec
-{
-  time_t tv_sec;
-  long int tv_nsec;
-};
-#endif
-
 /* STAT_TIMESPEC (ST, ST_XTIM) is the ST_XTIM member for *ST of type
    struct timespec, if available.  If not, then STAT_TIMESPEC_NS (ST,
    ST_XTIM) is the nanosecond component of the ST_XTIM member for *ST,
@@ -157,7 +141,7 @@ get_stat_mtime (struct stat const *st)
 }
 
 static inline int
-timespec_cmp (struct timespec a, struct timespec b)
+timespec_cmp (struct timespec &a, struct timespec &b)
 {
   return (a.tv_sec < b.tv_sec
               ? -1

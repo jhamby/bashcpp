@@ -48,10 +48,9 @@
 #include "flags.hh"
 #include "shell.hh"
 
-#include "findcmd.hh"
 #include "input.hh"
 
-#include "strmatch.hh"
+#include <fnmatch.h>
 
 #if !defined(HAVE_GETPW_DECLS)
 extern struct passwd *getpwuid ();
@@ -196,7 +195,8 @@ SimpleState::SimpleState ()
 Shell::Shell ()
     : SimpleState (), bashrc_file (const_cast<char *> (DEFAULT_BASHRC)),
       primary_prompt (PPROMPT), secondary_prompt (SPROMPT), source (0),
-      redir (0), old_winch (SIG_DFL)
+      redir (0), old_winch (SIG_DFL), execignore ("EXECIGNORE"),
+      fignore ("FIGNORE"), globignore ("GLOBIGNORE"), histignore ("HISTIGNORE")
 {
   // alloc this 4K read buffer from the heap to keep the class size small
   zread_lbuf = new char[ZBUFSIZ];
@@ -904,9 +904,9 @@ Shell::subshell_exit (int s)
          bash			YES
 */
 void
-Shell::execute_env_file (string_view env_file)
+Shell::execute_env_file (const char *env_file)
 {
-  if (!env_file.empty ())
+  if (env_file && *env_file)
     {
       std::string fn (
           expand_string_unsplit_to_string (env_file, Q_DOUBLE_QUOTES));
@@ -1245,7 +1245,7 @@ run_wordexp (char *words)
 /* Run one command, given as the argument to the -c option.  Tell
    parse_and_execute not to fork for a simple command. */
 int
-Shell::run_one_command (string_view command)
+Shell::run_one_command (const char *command)
 {
   try
     {
@@ -1354,7 +1354,7 @@ Shell::start_debugger ()
 }
 
 int
-Shell::open_shell_script (string_view script_name)
+Shell::open_shell_script (const char *script_name)
 {
   char sample[80];
   int sample_len;
@@ -1364,19 +1364,19 @@ Shell::open_shell_script (string_view script_name)
   ARRAY *funcname_a, *bash_source_a, *bash_lineno_a;
 #endif
 
-  std::string filename (to_string (script_name));
+  const char *filename = savestring (script_name);
 
-  int fd = open (filename.c_str (), O_RDONLY);
-  if ((fd < 0) && (errno == ENOENT) && (!absolute_program (filename.c_str ())))
+  int fd = open (filename, O_RDONLY);
+  if ((fd < 0) && (errno == ENOENT) && (!absolute_program (filename)))
     {
       int e = errno;
-      /* If it's not in the current directory, try looking through PATH
-         for it. */
-      std::string path_filename (find_path_file (script_name));
-      if (!path_filename.empty ())
+      // If it's not in the current directory, try looking through PATH for it.
+      const char *path_filename = find_path_file (script_name);
+      if (path_filename)
         {
+          delete[] filename;
           filename = path_filename;
-          fd = open (filename.c_str (), O_RDONLY);
+          fd = open (filename, O_RDONLY);
         }
       else
         errno = e;
@@ -1385,7 +1385,7 @@ Shell::open_shell_script (string_view script_name)
   if (fd < 0)
     {
       int e = errno;
-      file_error (filename.c_str ());
+      file_error (filename);
 #if defined(JOB_CONTROL)
       end_job_control (); /* just in case we were run as bash -i script */
 #endif
@@ -1402,14 +1402,14 @@ Shell::open_shell_script (string_view script_name)
       exec_argv0 = nullptr;
     }
 
-  if (file_isdir (filename.c_str ()))
+  if (file_isdir (filename))
     {
 #if defined(EISDIR)
       errno = EISDIR;
 #else
       errno = EINVAL;
 #endif
-      file_error (filename.c_str ());
+      file_error (filename);
 #if defined(JOB_CONTROL)
       end_job_control (); /* just in case we were run as bash -i script */
 #endif
@@ -1448,7 +1448,7 @@ Shell::open_shell_script (string_view script_name)
             {
 #if defined(EISDIR)
               errno = EISDIR;
-              file_error (filename.c_str ());
+              file_error (filename);
 #else
               internal_error (_ ("%s: Is a directory"), filename);
 #endif
@@ -1456,7 +1456,7 @@ Shell::open_shell_script (string_view script_name)
           else
             {
               errno = e;
-              file_error (filename.c_str ());
+              file_error (filename);
             }
 #if defined(JOB_CONTROL)
           end_job_control (); /* just in case we were run as bash -i script */
@@ -1467,8 +1467,7 @@ Shell::open_shell_script (string_view script_name)
                && (check_binary_file (sample,
                                       static_cast<size_t> (sample_len))))
         {
-          internal_error (_ ("%s: cannot execute binary file"),
-                          filename.c_str ());
+          internal_error (_ ("%s: cannot execute binary file"), filename);
 #if defined(JOB_CONTROL)
           end_job_control (); /* just in case we were run as bash -i script */
 #endif
@@ -1514,7 +1513,7 @@ Shell::open_shell_script (string_view script_name)
       default_input = stdin;
 #endif
     }
-  else if (forced_interactive && fd_is_tty == 0)
+  else if (forced_interactive && !fd_is_tty)
     /* But if a script is called with something like `bash -i scriptname',
        we need to do a non-interactive setup here, since we didn't do it
        before. */
@@ -1833,11 +1832,11 @@ Shell::show_shell_usage (FILE *fp, bool extra)
 
   if (extra)
     fprintf (fp, _ ("GNU bash, version %s-(%s)\n"),
-                  shell_version_string ().c_str (), MACHTYPE);
+             shell_version_string ().c_str (), MACHTYPE);
   fprintf (fp,
-                _ ("Usage:\t%s [GNU long option] [option] ...\n\t%s [GNU long "
-                   "option] [option] script-file ...\n"),
-                shell_name, shell_name);
+           _ ("Usage:\t%s [GNU long option] [option] ...\n\t%s [GNU long "
+              "option] [option] script-file ...\n"),
+           shell_name, shell_name);
   fputs (_ ("GNU long options:\n"), fp);
   for (std::vector<LongArg>::iterator it = long_args.begin ();
        it != long_args.end (); ++it)
@@ -1873,18 +1872,18 @@ Shell::show_shell_usage (FILE *fp, bool extra)
   if (extra)
     {
       fprintf (fp,
-                    _ ("Type `%s -c \"help set\"' for more information about "
-                       "shell options.\n"),
-                    shell_name);
+               _ ("Type `%s -c \"help set\"' for more information about shell "
+                  "options.\n"),
+               shell_name);
       fprintf (fp,
-                    _ ("Type `%s -c help' for more information about shell "
-                       "builtin commands.\n"),
-                    shell_name);
+               _ ("Type `%s -c help' for more information about shell builtin "
+                  "commands.\n"),
+               shell_name);
       fprintf (fp, _ ("Use the `bashbug' command to report bugs.\n"));
       fprintf (fp, "\n");
       fprintf (fp, _ ("bash home page: <http://www.gnu.org/software/bash>\n"));
       fprintf (fp, _ ("General help using GNU software: "
-                           "<http://www.gnu.org/gethelp/>\n"));
+                      "<http://www.gnu.org/gethelp/>\n"));
     }
 }
 

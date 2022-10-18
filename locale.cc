@@ -1,6 +1,6 @@
 /* locale.cc - Miscellaneous internationalization functions. */
 
-/* Copyright (C) 1996-2009,2012,2016,2020 Free Software Foundation, Inc.
+/* Copyright (C) 1996-2009,2012,2016-2021 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -73,7 +73,7 @@ Shell::set_default_locale ()
   // the man page says that it always returns 0 when passed nullptr.
   locale_shiftstates = mblen (nullptr, 0);
 #else
-  local_shiftstates = 0;
+  locale_shiftstates = 0;
 #endif
 }
 
@@ -83,7 +83,7 @@ Shell::set_default_locale ()
 void
 Shell::set_default_locale_vars ()
 {
-  char *val;
+  const char *val;
 
 #if defined(HAVE_SETLOCALE)
 
@@ -103,7 +103,7 @@ Shell::set_default_locale_vars ()
 #if defined(HANDLE_MULTIBYTE)
       locale_shiftstates = mblen (nullptr, 0);
 #else
-      local_shiftstates = 0;
+      locale_shiftstates = 0;
 #endif
 
       u32reset ();
@@ -216,7 +216,7 @@ Shell::set_locale_var (const char *var, const char *value)
 #if defined(HANDLE_MULTIBYTE)
       locale_shiftstates = mblen (nullptr, 0);
 #else
-      local_shiftstates = 0;
+      locale_shiftstates = 0;
 #endif
       u32reset ();
       return r;
@@ -244,7 +244,7 @@ Shell::set_locale_var (const char *var, const char *value)
 #if defined(HANDLE_MULTIBYTE)
           locale_shiftstates = mblen (nullptr, 0);
 #else
-          local_shiftstates = 0;
+          locale_shiftstates = 0;
 #endif
           u32reset ();
         }
@@ -316,7 +316,7 @@ Shell::set_lang (const char *, const char *value)
 void
 Shell::set_default_lang ()
 {
-  char *v;
+  const char *v;
 
   v = get_string_value ("LC_ALL");
   set_locale_var ("LC_ALL", v);
@@ -340,11 +340,7 @@ Shell::get_locale_var (const char *var)
   if (locale == nullptr || *locale == 0)
     locale = lang;
   if (locale == nullptr || *locale == 0)
-#if 0
-    locale = default_locale;	/* system-dependent; not really portable.  should it be "C"? */
-#else
     locale = "";
-#endif
     return locale;
 }
 
@@ -390,7 +386,7 @@ Shell::reset_locale_vars ()
 #if defined(HANDLE_MULTIBYTE)
   locale_shiftstates = mblen (nullptr, 0);
 #else
-  local_shiftstates = 0;
+  locale_shiftstates = 0;
 #endif
   u32reset ();
 #endif
@@ -417,13 +413,14 @@ Shell::localetrans (string_view string)
   if (locale == nullptr || locale[0] == '\0'
       || (locale[0] == 'C' && locale[1] == '\0') || STREQ (locale, "POSIX"))
     {
-      return string;
+      return to_string (string);
     }
 
   /* Now try to translate it. */
 
   const char *translated;
-  const char *original = string.c_str ();
+  std::string stringpp = to_string (string);
+  const char *original = stringpp.c_str ();
 
   if (default_domain && *default_domain)
     translated = dgettext (default_domain, original);
@@ -431,7 +428,7 @@ Shell::localetrans (string_view string)
     translated = original;
 
   if (translated == original) // gettext returns its argument if untranslatable
-    return string;
+    return stringpp;
   else
     return savestring (translated);
 }
@@ -467,13 +464,14 @@ mk_msgstr (string_view string, bool *foundnlp)
   return ret;
 }
 
+#if defined (TRANSLATABLE_STRINGS)
 // $"..." -- Translate STRING according to current locale using gettext (if
 // available) and return the result. The caller will take care of leaving the
 // quotes intact. The string will be left without the leading `$' by the
 // caller. If translation is performed, the translated string will be
 // double-quoted by the caller.
 std::string
-Shell::localeexpand (string_view string, int lineno)
+Shell::locale_expand (string_view string, int lineno)
 {
   /* If we're just dumping translatable strings, don't do anything with the
      string itself, but if we're dumping in `po' file format, convert it into
@@ -494,15 +492,16 @@ Shell::localeexpand (string_view string, int lineno)
                        lineno, t2, t.c_str ());
         }
       else
-        printf ("\"%s\"\n", string.c_str ());
+        printf ("\"%s\"\n", string);
 
-      return string;
+      return to_string (string);
     }
   else if (!string.empty ())
     return localetrans (string);
   else
-    return string;
+    return to_string (string);
 }
+#endif
 
 /* Set every character in the <blank> character class to be a shell break
    character for the lexical analyzer when the locale changes. */

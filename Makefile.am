@@ -43,11 +43,10 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	stringlib.cc locale.cc findcmd.cc redir.cc \
 	pcomplete.cc pcomplib.cc alias.hh array.hh assoc.hh bashintl.hh \
 	bashtypes.hh builtins.hh command.hh config-bot.hh config-top.hh \
-	conftypes.hh externs.hh findcmd.hh flags.hh \
+	conftypes.hh externs.hh flags.hh \
 	general.hh hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh \
 	patchlevel.hh pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh \
-	subst.hh syntax.hh trap.hh variables.hh \
-	include/chartypes.hh include/strmatch.hh \
+	subst.hh syntax.hh trap.hh variables.hh include/chartypes.hh \
 	include/maxpath.hh include/posixdir.hh include/posixselect.hh \
 	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
 	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
@@ -200,7 +199,7 @@ bash_SOURCES += $(RLDIR)/readline.cc $(RLDIR)/funmap.cc $(RLDIR)/keymaps.cc \
 	$(RLDIR)/rlshell.hh $(RLDIR)/rltty.hh $(RLDIR)/rlwinsize.hh \
 	$(RLDIR)/tcap.hh $(RLDIR)/tilde.hh
 
-bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc \
+bash_SOURCES += $(SHDIR)/clktck.cc $(SHDIR)/clock.cc $(SHDIR)/eaccess.cc \
 	$(SHDIR)/setlinebuf.cc $(SHDIR)/zread.cc \
 	$(SHDIR)/inet_aton.cc $(SHDIR)/netconn.cc $(SHDIR)/netopen.cc \
 	$(SHDIR)/timeval.cc $(SHDIR)/makepath.cc \

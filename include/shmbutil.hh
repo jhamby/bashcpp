@@ -235,8 +235,7 @@ advance_char_minus_one (std::string::const_iterator &it,
 }
 
 /* Advance one (possibly multibyte) character in the string _STR of length
-   _STRSIZE. FIXME: has reference to locale_utf8locale!
-   SPECIAL:  assume that _STR will be incremented by 1 after this call. */
+   _STRSIZE. SPECIAL: assume that _STR is incremented by 1 after this call. */
 #define ADVANCE_CHAR_P(_str, _strsize)                                        \
   do                                                                          \
     {                                                                         \

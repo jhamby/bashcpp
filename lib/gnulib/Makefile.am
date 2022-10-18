@@ -36,8 +36,8 @@
 #  c-ctype \
 #  canonicalize-lgpl \
 #  dup2 \
-#  faccessat \
-#  fnmatch \
+#  euidaccess \
+#  fnmatch-gnu \
 #  fpurge \
 #  full-read \
 #  full-write \
@@ -488,18 +488,6 @@ EXTRA_DIST += exitfail.h
 
 ## end   gnulib module exitfail
 
-## begin gnulib module faccessat
-
-if GL_COND_OBJ_FACCESSAT
-libgnu_a_SOURCES += faccessat.c
-endif
-
-EXTRA_DIST += at-func.c
-
-EXTRA_libgnu_a_SOURCES += at-func.c
-
-## end   gnulib module faccessat
-
 ## begin gnulib module fchdir
 
 if GL_COND_OBJ_FCHDIR
@@ -639,6 +627,15 @@ EXTRA_DIST += fnmatch.c fnmatch_loop.c
 EXTRA_libgnu_a_SOURCES += fnmatch.c fnmatch_loop.c
 
 ## end   gnulib module fnmatch
+
+## begin gnulib module fnmatch-gnu
+
+
+EXTRA_DIST += fnmatch.c
+
+EXTRA_libgnu_a_SOURCES += fnmatch.c
+
+## end   gnulib module fnmatch-gnu
 
 ## begin gnulib module fnmatch-h
 

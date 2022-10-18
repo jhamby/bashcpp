@@ -112,11 +112,7 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
-#endif
-
-#include "bashintl.hh"
 
 #include "shell.hh"
 
@@ -127,12 +123,9 @@ namespace bash
 int
 Shell::test_builtin (WORD_LIST *list)
 {
-  char **argv;
-  int argc, result;
-
   /* We let Matthew Bradburn and Kevin Braunsdorf's code do the
-     actual test command.  So turn the list of args into an array
-     of strings, since that is what their code wants. */
+     actual test command.  So turn the list of args into a vector
+     of char *, since that is what their code wants. */
   if (list == nullptr)
     {
       if (this_command_name[0] == '[' && !this_command_name[1])
@@ -144,9 +137,9 @@ Shell::test_builtin (WORD_LIST *list)
       return EXECUTION_FAILURE;
     }
 
-  argv = make_builtin_argv (list, &argc);
-  result = test_command (argc, argv);
-  delete[] argv;
+  STRINGLIST *args = make_builtin_argv (list);
+  int result = test_command (*args);
+  strlist_dispose (args);
 
   return result;
 }

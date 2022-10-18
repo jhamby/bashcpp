@@ -22,9 +22,9 @@
 
 #include "bashtypes.hh"
 
-#if defined(HAVE_UNISTD_H)
+#include <fnmatch.h>
+#include <glob.h>
 #include <unistd.h>
-#endif
 
 #include "flags.hh"
 #include "pathexp.hh"
@@ -33,23 +33,14 @@
 #include "bashintl.hh"
 #include "shmbutil.hh"
 
-#include "strmatch.hh"
-
-#if defined(USE_POSIX_GLOB_LIBRARY)
-#include <glob.h>
-typedef int posix_glob_errfunc_t (const char *, int);
-#else
-#include "glob.hh"
-#endif
-
 namespace bash
 {
 
+#if 0
 static bool glob_name_is_acceptable (const char *);
 static void ignore_globbed_names (char **, sh_ignore_func_t);
 static char *split_ignorespec (char *, int *);
 
-#if 0
 /* Control whether * matches .files in globbing. */
 bool glob_dot_filenames;
 
@@ -65,13 +56,15 @@ bool glob_star = false;
    it implements the rules in Posix 2.13.3, specifically that an unquoted
    slash cannot appear in a bracket expression. */
 bool
-unquoted_glob_pattern_p (const char *string)
+Shell::unquoted_glob_pattern_p (const char *string)
 {
   char c;
   const char *send;
   bool open;
 
+#ifdef HANDLE_MULTIBYTE
   DECLARE_MBSTATE;
+#endif
 
   open = false;
   send = string + strlen (string);
@@ -200,7 +193,7 @@ glob_char_p (const char *s)
    performed.  QGLOB_REGEXP means we're quoting for a Posix ERE (for
    [[ string =~ pat ]]) and that requires some special handling. */
 char *
-quote_string_for_globbing (const char *pathname, int qflags)
+quote_string_for_globbing (const char *pathname, qglob_flags qflags)
 {
   char *temp;
   int i, j;
@@ -380,7 +373,7 @@ endpat:
 }
 
 char *
-quote_globbing_chars (const char *string)
+Shell::quote_globbing_chars (const char *string)
 {
   size_t slen;
   char *temp, *t;
@@ -406,7 +399,7 @@ quote_globbing_chars (const char *string)
 
 /* Call the glob library to do globbing on PATHNAME. */
 char **
-shell_glob_filename (const char *pathname, int qflags)
+Shell::shell_glob_filename (const char *pathname, qglob_flags qflags)
 {
 #if defined(USE_POSIX_GLOB_LIBRARY)
   int i;
@@ -513,8 +506,8 @@ should_ignore_glob_matches ()
 }
 
 /* Return 0 if NAME matches a pattern in the globignore.ignores list. */
-static bool
-glob_name_is_acceptable (const char *name)
+bool
+Shell::glob_name_is_acceptable (const char *name)
 {
   struct ign *p;
   const char *n;
@@ -547,7 +540,7 @@ glob_name_is_acceptable (const char *name)
    be removed from NAMES. */
 
 static void
-ignore_globbed_names (char **names, sh_ignore_func_t *name_func)
+ignore_globbed_names (char **names, sh_ignore_func_t name_func)
 {
   char **newnames;
   int n, i;

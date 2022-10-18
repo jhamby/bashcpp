@@ -132,8 +132,7 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
 	$(top_srcdir)/m4/errno_h.m4 $(top_srcdir)/m4/error.m4 \
 	$(top_srcdir)/m4/euidaccess.m4 $(top_srcdir)/m4/exponentd.m4 \
 	$(top_srcdir)/m4/extensions.m4 \
-	$(top_srcdir)/m4/extern-inline.m4 \
-	$(top_srcdir)/m4/faccessat.m4 $(top_srcdir)/m4/fchdir.m4 \
+	$(top_srcdir)/m4/extern-inline.m4 $(top_srcdir)/m4/fchdir.m4 \
 	$(top_srcdir)/m4/fcntl-o.m4 $(top_srcdir)/m4/fcntl.m4 \
 	$(top_srcdir)/m4/fcntl_h.m4 $(top_srcdir)/m4/fdopendir.m4 \
 	$(top_srcdir)/m4/filenamecat.m4 $(top_srcdir)/m4/flexmember.m4 \
@@ -257,17 +256,17 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	locale.cc findcmd.cc redir.cc pcomplete.cc pcomplib.cc \
 	alias.hh array.hh assoc.hh bashintl.hh bashtypes.hh \
 	builtins.hh command.hh config-bot.hh config-top.hh \
-	conftypes.hh externs.hh findcmd.hh flags.hh general.hh \
-	hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh patchlevel.hh \
-	pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh subst.hh \
-	syntax.hh trap.hh variables.hh include/chartypes.hh \
-	include/strmatch.hh include/maxpath.hh include/posixdir.hh \
-	include/posixselect.hh include/posixstat.hh \
-	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
-	include/shmbutil.hh include/shtty.hh include/stat-time.hh \
-	include/systimes.hh include/typemax.hh include/unionwait.hh \
-	pathnames.hh include/nonstd/string_view.hpp array2.cc array.cc \
-	jobs.cc nojobs.cc $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc \
+	conftypes.hh externs.hh flags.hh general.hh hashcmd.hh \
+	hashlib.hh input.hh jobs.hh parser.hh patchlevel.hh pathexp.hh \
+	pcomplete.hh quit.hh shell.hh sig.hh subst.hh syntax.hh \
+	trap.hh variables.hh include/chartypes.hh include/maxpath.hh \
+	include/posixdir.hh include/posixselect.hh \
+	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
+	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
+	include/stat-time.hh include/systimes.hh include/typemax.hh \
+	include/unionwait.hh pathnames.hh \
+	include/nonstd/string_view.hpp array2.cc array.cc jobs.cc \
+	nojobs.cc $(BLTDIR)/alias_def.cc $(BLTDIR)/bind_def.cc \
 	$(BLTDIR)/break_def.cc $(BLTDIR)/builtin_def.cc \
 	$(BLTDIR)/caller_def.cc $(BLTDIR)/cd_def.cc \
 	$(BLTDIR)/colon_def.cc $(BLTDIR)/command_def.cc \
@@ -310,17 +309,18 @@ am__bash_SOURCES_DIST = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(RLDIR)/rldefs.hh $(RLDIR)/rlmbutil.hh $(RLDIR)/rlprivate.hh \
 	$(RLDIR)/rlshell.hh $(RLDIR)/rltty.hh $(RLDIR)/rlwinsize.hh \
 	$(RLDIR)/tcap.hh $(RLDIR)/tilde.hh $(SHDIR)/clktck.cc \
-	$(SHDIR)/clock.cc $(SHDIR)/setlinebuf.cc $(SHDIR)/zread.cc \
-	$(SHDIR)/inet_aton.cc $(SHDIR)/netconn.cc $(SHDIR)/netopen.cc \
-	$(SHDIR)/timeval.cc $(SHDIR)/makepath.cc $(SHDIR)/spell.cc \
-	$(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc $(SHDIR)/mailstat.cc \
-	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
-	$(SHDIR)/shmatch.cc $(SHDIR)/oslib.cc $(SHDIR)/stringlist.cc \
-	$(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc $(SHDIR)/zcatfd.cc \
-	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/zgetline.cc \
-	$(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc \
-	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
-	$(SHDIR)/unicode.cc $(SHDIR)/shmbchar.cc $(TLDIR)/tilde.cc
+	$(SHDIR)/clock.cc $(SHDIR)/eaccess.cc $(SHDIR)/setlinebuf.cc \
+	$(SHDIR)/zread.cc $(SHDIR)/inet_aton.cc $(SHDIR)/netconn.cc \
+	$(SHDIR)/netopen.cc $(SHDIR)/timeval.cc $(SHDIR)/makepath.cc \
+	$(SHDIR)/spell.cc $(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
+	$(SHDIR)/mailstat.cc $(SHDIR)/fmtulong.cc \
+	$(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc $(SHDIR)/shmatch.cc \
+	$(SHDIR)/oslib.cc $(SHDIR)/stringlist.cc $(SHDIR)/stringvec.cc \
+	$(SHDIR)/strvis.cc $(SHDIR)/zcatfd.cc $(SHDIR)/zmapfd.cc \
+	$(SHDIR)/winsize.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
+	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/input_avail.cc \
+	$(SHDIR)/fnxform.cc $(SHDIR)/unicode.cc $(SHDIR)/shmbchar.cc \
+	$(TLDIR)/tilde.cc
 @ALT_ARRAY_IMPL_TRUE@am__objects_1 = array2.$(OBJEXT)
 @ALT_ARRAY_IMPL_FALSE@am__objects_2 = array.$(OBJEXT)
 @JOB_CONTROL_TRUE@am__objects_3 = jobs.$(OBJEXT)
@@ -383,22 +383,23 @@ am_bash_OBJECTS = shell.$(OBJEXT) eval.$(OBJEXT) parse.$(OBJEXT) \
 	$(RLDIR)/text.$(OBJEXT) $(RLDIR)/misc.$(OBJEXT) \
 	$(RLDIR)/colors.$(OBJEXT) $(RLDIR)/parse-colors.$(OBJEXT) \
 	$(RLDIR)/mbutil.$(OBJEXT) $(SHDIR)/clktck.$(OBJEXT) \
-	$(SHDIR)/clock.$(OBJEXT) $(SHDIR)/setlinebuf.$(OBJEXT) \
-	$(SHDIR)/zread.$(OBJEXT) $(SHDIR)/inet_aton.$(OBJEXT) \
-	$(SHDIR)/netconn.$(OBJEXT) $(SHDIR)/netopen.$(OBJEXT) \
-	$(SHDIR)/timeval.$(OBJEXT) $(SHDIR)/makepath.$(OBJEXT) \
-	$(SHDIR)/spell.$(OBJEXT) $(SHDIR)/shquote.$(OBJEXT) \
-	$(SHDIR)/strtrans.$(OBJEXT) $(SHDIR)/mailstat.$(OBJEXT) \
-	$(SHDIR)/fmtulong.$(OBJEXT) $(SHDIR)/fmtullong.$(OBJEXT) \
-	$(SHDIR)/fmtumax.$(OBJEXT) $(SHDIR)/shmatch.$(OBJEXT) \
-	$(SHDIR)/oslib.$(OBJEXT) $(SHDIR)/stringlist.$(OBJEXT) \
-	$(SHDIR)/stringvec.$(OBJEXT) $(SHDIR)/strvis.$(OBJEXT) \
-	$(SHDIR)/zcatfd.$(OBJEXT) $(SHDIR)/zmapfd.$(OBJEXT) \
-	$(SHDIR)/winsize.$(OBJEXT) $(SHDIR)/zgetline.$(OBJEXT) \
-	$(SHDIR)/uconvert.$(OBJEXT) $(SHDIR)/ufuncs.$(OBJEXT) \
-	$(SHDIR)/casemod.$(OBJEXT) $(SHDIR)/input_avail.$(OBJEXT) \
-	$(SHDIR)/fnxform.$(OBJEXT) $(SHDIR)/unicode.$(OBJEXT) \
-	$(SHDIR)/shmbchar.$(OBJEXT) $(TLDIR)/tilde.$(OBJEXT)
+	$(SHDIR)/clock.$(OBJEXT) $(SHDIR)/eaccess.$(OBJEXT) \
+	$(SHDIR)/setlinebuf.$(OBJEXT) $(SHDIR)/zread.$(OBJEXT) \
+	$(SHDIR)/inet_aton.$(OBJEXT) $(SHDIR)/netconn.$(OBJEXT) \
+	$(SHDIR)/netopen.$(OBJEXT) $(SHDIR)/timeval.$(OBJEXT) \
+	$(SHDIR)/makepath.$(OBJEXT) $(SHDIR)/spell.$(OBJEXT) \
+	$(SHDIR)/shquote.$(OBJEXT) $(SHDIR)/strtrans.$(OBJEXT) \
+	$(SHDIR)/mailstat.$(OBJEXT) $(SHDIR)/fmtulong.$(OBJEXT) \
+	$(SHDIR)/fmtullong.$(OBJEXT) $(SHDIR)/fmtumax.$(OBJEXT) \
+	$(SHDIR)/shmatch.$(OBJEXT) $(SHDIR)/oslib.$(OBJEXT) \
+	$(SHDIR)/stringlist.$(OBJEXT) $(SHDIR)/stringvec.$(OBJEXT) \
+	$(SHDIR)/strvis.$(OBJEXT) $(SHDIR)/zcatfd.$(OBJEXT) \
+	$(SHDIR)/zmapfd.$(OBJEXT) $(SHDIR)/winsize.$(OBJEXT) \
+	$(SHDIR)/zgetline.$(OBJEXT) $(SHDIR)/uconvert.$(OBJEXT) \
+	$(SHDIR)/ufuncs.$(OBJEXT) $(SHDIR)/casemod.$(OBJEXT) \
+	$(SHDIR)/input_avail.$(OBJEXT) $(SHDIR)/fnxform.$(OBJEXT) \
+	$(SHDIR)/unicode.$(OBJEXT) $(SHDIR)/shmbchar.$(OBJEXT) \
+	$(TLDIR)/tilde.$(OBJEXT)
 bash_OBJECTS = $(am_bash_OBJECTS)
 bash_LDADD = $(LDADD)
 bash_DEPENDENCIES = lib/gnulib/libgnu.a
@@ -501,9 +502,9 @@ am__depfiles_remade = $(BLTDIR)/$(DEPDIR)/alias_def.Po \
 	$(RLDIR)/$(DEPDIR)/undo.Po $(RLDIR)/$(DEPDIR)/util.Po \
 	$(RLDIR)/$(DEPDIR)/vi_mode.Po $(SHDIR)/$(DEPDIR)/casemod.Po \
 	$(SHDIR)/$(DEPDIR)/clktck.Po $(SHDIR)/$(DEPDIR)/clock.Po \
-	$(SHDIR)/$(DEPDIR)/fmtullong.Po $(SHDIR)/$(DEPDIR)/fmtulong.Po \
-	$(SHDIR)/$(DEPDIR)/fmtumax.Po $(SHDIR)/$(DEPDIR)/fnxform.Po \
-	$(SHDIR)/$(DEPDIR)/inet_aton.Po \
+	$(SHDIR)/$(DEPDIR)/eaccess.Po $(SHDIR)/$(DEPDIR)/fmtullong.Po \
+	$(SHDIR)/$(DEPDIR)/fmtulong.Po $(SHDIR)/$(DEPDIR)/fmtumax.Po \
+	$(SHDIR)/$(DEPDIR)/fnxform.Po $(SHDIR)/$(DEPDIR)/inet_aton.Po \
 	$(SHDIR)/$(DEPDIR)/input_avail.Po \
 	$(SHDIR)/$(DEPDIR)/mailstat.Po $(SHDIR)/$(DEPDIR)/makepath.Po \
 	$(SHDIR)/$(DEPDIR)/netconn.Po $(SHDIR)/$(DEPDIR)/netopen.Po \
@@ -1891,17 +1892,17 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	locale.cc findcmd.cc redir.cc pcomplete.cc pcomplib.cc \
 	alias.hh array.hh assoc.hh bashintl.hh bashtypes.hh \
 	builtins.hh command.hh config-bot.hh config-top.hh \
-	conftypes.hh externs.hh findcmd.hh flags.hh general.hh \
-	hashcmd.hh hashlib.hh input.hh jobs.hh parser.hh patchlevel.hh \
-	pathexp.hh pcomplete.hh quit.hh shell.hh sig.hh subst.hh \
-	syntax.hh trap.hh variables.hh include/chartypes.hh \
-	include/strmatch.hh include/maxpath.hh include/posixdir.hh \
-	include/posixselect.hh include/posixstat.hh \
-	include/posixtime.hh include/posixwait.hh include/shmbchar.hh \
-	include/shmbutil.hh include/shtty.hh include/stat-time.hh \
-	include/systimes.hh include/typemax.hh include/unionwait.hh \
-	pathnames.hh include/nonstd/string_view.hpp $(am__append_1) \
-	$(am__append_2) $(am__append_3) $(am__append_4) $(DEFSRC) \
+	conftypes.hh externs.hh flags.hh general.hh hashcmd.hh \
+	hashlib.hh input.hh jobs.hh parser.hh patchlevel.hh pathexp.hh \
+	pcomplete.hh quit.hh shell.hh sig.hh subst.hh syntax.hh \
+	trap.hh variables.hh include/chartypes.hh include/maxpath.hh \
+	include/posixdir.hh include/posixselect.hh \
+	include/posixstat.hh include/posixtime.hh include/posixwait.hh \
+	include/shmbchar.hh include/shmbutil.hh include/shtty.hh \
+	include/stat-time.hh include/systimes.hh include/typemax.hh \
+	include/unionwait.hh pathnames.hh \
+	include/nonstd/string_view.hpp $(am__append_1) $(am__append_2) \
+	$(am__append_3) $(am__append_4) $(DEFSRC) \
 	$(BLTDIR)/builtins.cc $(BLTDIR)/common.cc \
 	$(BLTDIR)/evalstring.cc $(BLTDIR)/evalfile.cc \
 	$(BLTDIR)/getopt.cc $(BLTDIR)/bashgetopt.cc \
@@ -1924,17 +1925,18 @@ bash_SOURCES = shell.cc eval.cc parse.yy general.cc parser.cc \
 	$(RLDIR)/rldefs.hh $(RLDIR)/rlmbutil.hh $(RLDIR)/rlprivate.hh \
 	$(RLDIR)/rlshell.hh $(RLDIR)/rltty.hh $(RLDIR)/rlwinsize.hh \
 	$(RLDIR)/tcap.hh $(RLDIR)/tilde.hh $(SHDIR)/clktck.cc \
-	$(SHDIR)/clock.cc $(SHDIR)/setlinebuf.cc $(SHDIR)/zread.cc \
-	$(SHDIR)/inet_aton.cc $(SHDIR)/netconn.cc $(SHDIR)/netopen.cc \
-	$(SHDIR)/timeval.cc $(SHDIR)/makepath.cc $(SHDIR)/spell.cc \
-	$(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc $(SHDIR)/mailstat.cc \
-	$(SHDIR)/fmtulong.cc $(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc \
-	$(SHDIR)/shmatch.cc $(SHDIR)/oslib.cc $(SHDIR)/stringlist.cc \
-	$(SHDIR)/stringvec.cc $(SHDIR)/strvis.cc $(SHDIR)/zcatfd.cc \
-	$(SHDIR)/zmapfd.cc $(SHDIR)/winsize.cc $(SHDIR)/zgetline.cc \
-	$(SHDIR)/uconvert.cc $(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc \
-	$(SHDIR)/input_avail.cc $(SHDIR)/fnxform.cc \
-	$(SHDIR)/unicode.cc $(SHDIR)/shmbchar.cc $(TLDIR)/tilde.cc
+	$(SHDIR)/clock.cc $(SHDIR)/eaccess.cc $(SHDIR)/setlinebuf.cc \
+	$(SHDIR)/zread.cc $(SHDIR)/inet_aton.cc $(SHDIR)/netconn.cc \
+	$(SHDIR)/netopen.cc $(SHDIR)/timeval.cc $(SHDIR)/makepath.cc \
+	$(SHDIR)/spell.cc $(SHDIR)/shquote.cc $(SHDIR)/strtrans.cc \
+	$(SHDIR)/mailstat.cc $(SHDIR)/fmtulong.cc \
+	$(SHDIR)/fmtullong.cc $(SHDIR)/fmtumax.cc $(SHDIR)/shmatch.cc \
+	$(SHDIR)/oslib.cc $(SHDIR)/stringlist.cc $(SHDIR)/stringvec.cc \
+	$(SHDIR)/strvis.cc $(SHDIR)/zcatfd.cc $(SHDIR)/zmapfd.cc \
+	$(SHDIR)/winsize.cc $(SHDIR)/zgetline.cc $(SHDIR)/uconvert.cc \
+	$(SHDIR)/ufuncs.cc $(SHDIR)/casemod.cc $(SHDIR)/input_avail.cc \
+	$(SHDIR)/fnxform.cc $(SHDIR)/unicode.cc $(SHDIR)/shmbchar.cc \
+	$(TLDIR)/tilde.cc
 AM_YFLAGS = -d
 AM_CPPFLAGS = -I$(srcdir)/lib/gnulib -I$(builddir)/lib/gnulib \
 	-I$(srcdir)/include -I$(srcdir)/lib/tilde \
@@ -2271,6 +2273,8 @@ $(SHDIR)/clktck.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/clock.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
+$(SHDIR)/eaccess.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
+	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/setlinebuf.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
 	$(SHDIR)/$(DEPDIR)/$(am__dirstamp)
 $(SHDIR)/zread.$(OBJEXT): $(SHDIR)/$(am__dirstamp) \
@@ -2470,6 +2474,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/casemod.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/clktck.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/clock.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/eaccess.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/fmtullong.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/fmtulong.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(SHDIR)/$(DEPDIR)/fmtumax.Po@am__quote@ # am--include-marker
@@ -3032,6 +3037,7 @@ distclean: distclean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/casemod.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/clktck.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/clock.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/eaccess.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/fmtullong.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/fmtulong.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/fmtumax.Po
@@ -3238,6 +3244,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f $(SHDIR)/$(DEPDIR)/casemod.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/clktck.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/clock.Po
+	-rm -f $(SHDIR)/$(DEPDIR)/eaccess.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/fmtullong.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/fmtulong.Po
 	-rm -f $(SHDIR)/$(DEPDIR)/fmtumax.Po

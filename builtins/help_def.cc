@@ -54,9 +54,8 @@
 #include "pathexp.hh"
 #include "shell.hh"
 
+#include <fnmatch.h>
 #include <glob.h>
-
-#include "strmatch.hh"
 
 namespace bash
 {

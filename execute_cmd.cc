@@ -28,6 +28,7 @@
 #endif
 
 #include <fcntl.h>
+#include <fnmatch.h>
 
 #include "pathexp.hh"
 #include "posixstat.hh"
@@ -50,7 +51,6 @@
 #include "builtext.hh" /* list of builtins */
 #include "builtins/common.hh"
 
-#include "strmatch.hh"
 #include "tilde.hh"
 
 #if defined(BUFFERED_INPUT)
@@ -70,85 +70,13 @@ namespace bash
 
 /* Static functions defined and used in this file. */
 
-static void close_pipes (int, int);
-
 #if defined(COMMAND_TIMING)
 static void mkfmt (char *, int, bool, time_t, int);
-static void print_formatted_time (FILE *, const char *, time_t, int, time_t,
-                                  int, time_t, int, int);
 #endif
 
 static inline int builtin_status (int);
-
-#if 0
-static void do_piping (int, int);
-static void bind_lastarg (const char *);
-static int shell_control_structure (command_type);
-static void cleanup_redirects (void *);
-
-#if defined(JOB_CONTROL)
-static void restore_signal_mask (void *);
-#endif
-
-static int builtin_status (int);
-
-static char *getinterp (char *, int, int *);
-
-/* For catching RETURN in a function. */
-int return_catch_flag;
-int return_catch_value;
-procenv_t return_catch;
-
-/* When greater than zero, value is the `level' of builtins we are
-   currently executing (e.g. `eval echo a' would have it set to 2). */
-int executing_builtin = 0;
-
-/* Non-zero if we are executing a command list (a;b;c, etc.) */
-int executing_list = 0;
-
-/* Non-zero if failing commands in a command substitution should not exit the
-   shell even if -e is set.  Used to pass the CMD_IGNORE_RETURN flag down to
-   commands run in command substitutions by parse_and_execute. */
-int comsub_ignore_return = 0;
-
-/* Non-zero if we have just forked and are currently running in a subshell
-   environment. */
-int subshell_environment;
-
-/* Count of nested subshells, like SHLVL.  Available via $BASH_SUBSHELL */
-int subshell_level = 0;
-
-/* Currently-executing shell function. */
-SHELL_VAR *this_shell_function;
-
-/* If non-zero, matches in case and [[ ... ]] are case-insensitive */
-bool match_ignore_case = false;
-
-bool executing_command_builtin = false;
-
-struct stat SB;		/* used for debugging */
-
-static int special_builtin_failed;
-
-/* The line number that the currently executing function starts on. */
-static int function_line_number;
-
-static int connection_count;
-
-/* A sort of function nesting level counter */
-int funcnest = 0;
-int funcnest_max = 0;
-
-int evalnest = 0;
-int evalnest_max = EVALNEST_MAX;
-
-int sourcenest = 0;
-int sourcenest_max = SOURCENEST_MAX;
-
-bool from_return_trap = false;
-
-int lastpipe_opt = 0;
-#endif
+static inline char *getinterp (const char *, ssize_t, int *);
+static inline void coproc_close (Coproc *);
 
 /* A convenience macro to avoid resetting line_number_for_err_trap while
    running the ERR trap. */
@@ -1678,7 +1606,7 @@ Shell::coproc_alloc (string_view name, pid_t pid)
   Coproc *cp;
 
 #if MULTIPLE_COPROCS
-  cp = new Coproc;
+  cp = new Coproc ();
 #else
   cp = &sh_coproc;
 #endif
@@ -1797,7 +1725,7 @@ Shell::coproc_fdchk (int fd)
 #endif
 }
 
-static void
+static inline void
 coproc_setstatus (Coproc *cp, coproc_status status)
 {
   cp->c_lock = 4;
@@ -1810,7 +1738,7 @@ coproc_setstatus (Coproc *cp, coproc_status status)
 }
 
 void
-Shell::coproc_pidchk (pid_t pid, int status)
+Shell::coproc_pidchk (pid_t pid, coproc_status status)
 {
   Coproc *cp;
 
@@ -2846,7 +2774,7 @@ Shell::print_select_list (WORD_LIST *list, int max_elem_len, int indices_len)
           ind += rows;
           if (ind >= list_len)
             break;
-          indent (pos + elem_len, pos + max_elem_len);
+          bash::indent (pos + elem_len, pos + max_elem_len);
           pos += max_elem_len;
         }
       putc ('\n', stderr);
@@ -3120,6 +3048,7 @@ Shell::execute_case_command (CASE_COM *case_command)
 #define EXIT_CASE() goto exit_case_command
 
   PATTERN_LIST *clauses;
+  const char *word_cstr = word.c_str ();
   for (clauses = case_command->clauses; clauses; clauses = clauses->next ())
     {
       QUIT;
@@ -3131,7 +3060,7 @@ Shell::execute_case_command (CASE_COM *case_command)
           if (es && es->word && !es->word->word.empty ())
             {
               /* Convert quoted null strings into empty strings. */
-              int qflags = QGLOB_CVTNULL;
+              qglob_flags qflags = QGLOB_CVTNULL;
 
               /* We left CTLESC in place quoting CTLESC and CTLNUL after the
                  call to expand_word_leave_quoted; tell
@@ -3149,11 +3078,11 @@ Shell::execute_case_command (CASE_COM *case_command)
             }
 
           /* Since the pattern does not undergo quote removal (as per
-             Posix.2, section 3.9.4.3), the strmatch () call must be able
+             Posix.2, section 3.9.4.3), the fnmatch () call must be able
              to recognize backslashes as escape characters. */
-          bool match
-              = (strmatch (pattern, word, FNMATCH_EXTFLAG | FNMATCH_IGNCASE)
-                 != FNM_NOMATCH);
+          bool match = (fnmatch (pattern, word_cstr,
+                                 FNMATCH_EXTFLAG | FNMATCH_IGNCASE)
+                        != FNM_NOMATCH);
 
           delete[] pattern;
           delete es;
@@ -3415,14 +3344,16 @@ Shell::execute_cond_node (COND_COM *cond)
       if (varop && shell_compatibility_level > 51)
         {
           char oa = assoc_expand_once;
-          result = unary_test (cond->op->word, arg1) ? EXECUTION_SUCCESS
-                                                     : EXECUTION_FAILURE;
+          result = unary_test (cond->op->word.c_str (), arg1.c_str ())
+                       ? EXECUTION_SUCCESS
+                       : EXECUTION_FAILURE;
           assoc_expand_once = oa;
         }
       else
 #endif
-        result = unary_test (cond->op->word, arg1) ? EXECUTION_SUCCESS
-                                                   : EXECUTION_FAILURE;
+        result = unary_test (cond->op->word.c_str (), arg1.c_str ())
+                     ? EXECUTION_SUCCESS
+                     : EXECUTION_FAILURE;
     }
   else if (cond->cond_type == COND_BINARY)
     {
@@ -3475,7 +3406,8 @@ Shell::execute_cond_node (COND_COM *cond)
         {
           bool oe = extended_glob;
           extended_glob = true;
-          result = binary_test (cond->op->word, arg1, arg2,
+          result = binary_test (cond->op->word.c_str (), arg1.c_str (),
+                                arg2.c_str (),
                                 (TEST_PATMATCH | TEST_ARITHEXP | TEST_LOCALE))
                        ? EXECUTION_SUCCESS
                        : EXECUTION_FAILURE;
@@ -3846,7 +3778,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
     return EXECUTION_SUCCESS;
 #endif
 
-  int cmdflags = simple_command->flags;
+  cmd_flags cmdflags = simple_command->flags;
 
   bool first_word_quoted
       = simple_command->words ? (simple_command->words->word->flags & W_QUOTED)
@@ -4326,8 +4258,8 @@ builtin_status (int result)
 }
 
 int
-Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
-                        bool subshell)
+Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words,
+                        cmd_flags flags, bool subshell)
 {
   /* The eval builtin calls parse_and_execute, which does not know about
      the setting of flags, and always calls the execution functions with
@@ -4375,7 +4307,7 @@ Shell::execute_builtin (sh_builtin_func_t builtin, WORD_LIST *words, int flags,
 // This is execute_builtin, part 2 (after the eval_builtin try/catch block).
 int
 Shell::execute_builtin2 (sh_builtin_func_t builtin, WORD_LIST *words,
-                         int flags, bool subshell)
+                         cmd_flags flags, bool subshell)
 {
   /* The temporary environment for a builtin is supposed to apply to
      all commands executed by that builtin.  Currently, this is a
@@ -4470,7 +4402,7 @@ Shell::execute_builtin2 (sh_builtin_func_t builtin, WORD_LIST *words,
 // This is execute_builtin, part 3 (execute the builtin).
 int
 Shell::execute_builtin3 (sh_builtin_func_t builtin, WORD_LIST *words,
-                         int flags, bool subshell)
+                         cmd_flags flags, bool subshell)
 {
   executing_builtin++;
   executing_command_builtin |= (builtin == &Shell::command_builtin);
@@ -4503,69 +4435,135 @@ Shell::execute_builtin3 (sh_builtin_func_t builtin, WORD_LIST *words,
   return result;
 }
 
+#if defined(ARRAY_VARS)
+void
+Shell::restore_funcarray_state (func_array_state *fa)
+{
+  SHELL_VAR *nfv;
+  ARRAY *funcname_a;
+
+  fa->source_a->pop ();
+  fa->lineno_a->pop ();
+
+  GET_ARRAY_FROM_VAR ("FUNCNAME", nfv, funcname_a);
+  if (nfv == fa->funcname_v)
+    funcname_a->pop ();
+
+  delete fa;
+}
+#endif
+
 // Unwind handler class for execute_function () to restore the shell state
 // before returning or throwing.
 class ExecFunctionUnwindHandler
 {
 public:
   // Unwind handler constructor stores the state to be restored.
-  ExecFunctionUnwindHandler (Shell &s) : shell (s)
+  ExecFunctionUnwindHandler (bool subshell, Shell *s, SHELL_VAR *var,
+                             COMMAND *tc, sh_getopt_state_t *gs,
+                             const char *debug_trap, const char *error_trap,
+                             const char *return_trap)
   {
-    saved_line_number = s.line_number;
-    saved_line_number_for_err_trap = s.line_number_for_err_trap;
-    saved_function_line_number = s.function_line_number;
-    saved_return_catch_flag = s.return_catch_flag;
-    saved_this_shell_function = s.this_shell_function;
-    saved_funcnest = s.funcnest;
-    saved_loop_level = s.loop_level;
-
-    // function_trace_mode != 0 means that all functions inherit the DEBUG
-    // trap. If the function has the trace attribute set, it inherits the DEBUG
-    // trap.
-    if (s.debug_trap && (!var->trace () && s.function_trace_mode == 0))
+    if (!subshell)
       {
-        debug_trap_copy = savestring (debug_trap);
-        add_unwind_protect_ptr (xfree, debug_trap_copy);
-        add_unwind_protect_ptr (maybe_set_debug_trap, debug_trap_copy);
-      }
+        shell = s;
+        saved_var = var;
+        saved_command = tc;
+        saved_getopt_state = gs;
+        saved_line_number = s->line_number;
+        saved_line_number_for_err_trap = s->line_number_for_err_trap;
+        saved_function_line_number = s->function_line_number;
+        saved_return_catch_flag = s->return_catch_flag;
+        saved_this_shell_function = s->this_shell_function;
+        saved_funcnest = s->funcnest;
+        saved_loop_level = s->loop_level;
+        saved_debugging_mode = s->debugging_mode;
 
-    // error_trace_mode != 0 means that functions inherit the ERR trap.
-    if (error_trap && error_trace_mode == 0)
-      {
-        error_trap_copy = savestring (error_trap);
-        add_unwind_protect_ptr (xfree, error_trap_copy);
-        add_unwind_protect_ptr (maybe_set_error_trap, error_trap_copy);
-      }
+        // function_trace_mode != 0 means that all functions inherit the DEBUG
+        // trap. If the function has the trace attribute set, it inherits the
+        // DEBUG trap.
+        if (debug_trap && (!var->trace () && s->function_trace_mode == 0))
+          debug_trap_copy = savestring (debug_trap);
+        else
+          debug_trap_copy = nullptr;
 
-    // Shell functions inherit the RETURN trap if function tracing is on
-    // globally or on individually for this function.
-    if (s.return_trap
-        && (s.signal_in_progress (DEBUG_TRAP)
-            || (!var->trace () && s.function_trace_mode == 0)))
-      {
-        return_trap_copy = savestring (return_trap);
-        add_unwind_protect_ptr (xfree, return_trap_copy);
-        add_unwind_protect_ptr (maybe_set_return_trap, return_trap_copy);
+        // error_trace_mode != 0 means that functions inherit the ERR trap.
+        if (error_trap && s->error_trace_mode == 0)
+          error_trap_copy = savestring (error_trap);
+        else
+          error_trap_copy = nullptr;
+
+        // Shell functions inherit the RETURN trap if function tracing is on
+        // globally or on individually for this function.
+        if (return_trap
+            && (s->signal_in_progress (DEBUG_TRAP)
+                || (!var->trace () && s->function_trace_mode == 0)))
+          return_trap_copy = savestring (return_trap);
+        else
+          return_trap_copy = nullptr;
       }
   }
 
   // Destructor to delete temporary data and restore the original values.
   ~ExecFunctionUnwindHandler ()
   {
-    shell.loop_level = saved_loop_level;
-    shell.funcnest = saved_funcnest;
-    shell.this_shell_function = saved_this_shell_function;
-    shell.return_catch_flag = saved_return_catch_flag;
-    shell.function_line_number = saved_function_line_number;
-    shell.line_number_for_err_trap = saved_line_number_for_err_trap;
-    shell.line_number = saved_line_number;
+    if (shell)
+      {
+        if (saved_debugging_mode)
+          shell->pop_args ();
 
-    delete tc;
+#if defined(ARRAY_VARS)
+        if (fa_state)
+          shell->restore_funcarray_state (fa_state);
+#endif
+
+        shell->loop_level = saved_loop_level;
+        shell->funcnest = saved_funcnest;
+        shell->this_shell_function = saved_this_shell_function;
+        shell->return_catch_flag = saved_return_catch_flag;
+        shell->function_line_number = saved_function_line_number;
+        shell->line_number_for_err_trap = saved_line_number_for_err_trap;
+        shell->line_number = saved_line_number;
+
+        shell->pop_context ();
+
+        delete saved_command; /* XXX - C version doesn't do this? */
+
+        /* This has to be after the pop_context(), because the unwinding of
+           local variables may cause the restore of a local declaration of
+           OPTIND to force a getopts state reset. */
+        // If we have a local copy of OPTIND and it's at the right (current)
+        // context, then we restore getopt's internal state. If not, we just
+        // let it go. We know there is a local OPTIND if gs->gs_flags & 1.
+        // This is set below in execute_function() before the context is run.
+        if (saved_getopt_state->gs_flags & 1)
+          shell->sh_getopt_restore_istate (saved_getopt_state);
+        else
+          delete saved_getopt_state;
+      }
   }
 
+#if defined(ARRAY_VARS)
+  // Add this after construction, if we have array variables.
+  void
+  add_funcarray_state (func_array_state &fa)
+  {
+    fa_state = &fa;
+  }
+#endif
+
 private:
-  Shell &shell;
+  Shell *shell;
+  SHELL_VAR *saved_var;
+  COMMAND *saved_command;
   SHELL_VAR *saved_this_shell_function;
+  const char *debug_trap_copy;
+  const char *error_trap_copy;
+  const char *return_trap_copy;
+  sh_getopt_state_t *saved_getopt_state;
+#if defined(ARRAY_VARS)
+  func_array_state *fa_state;
+#endif
 
   int saved_line_number;
   int saved_line_number_for_err_trap;
@@ -4573,6 +4571,8 @@ private:
   int saved_return_catch_flag;
   int saved_funcnest;
   int saved_loop_level;
+
+  char saved_debugging_mode;
 };
 
 int
@@ -4631,71 +4631,43 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   const char *error_trap = TRAP_STRING (ERROR_TRAP);
   const char *return_trap = TRAP_STRING (RETURN_TRAP);
 
-  /* Be sure to free these copies, if created. */
-  char *debug_trap_copy = nullptr;
-  char *error_trap_copy = nullptr;
-  char *return_trap_copy = nullptr;
-
-  /* The order of the unwind protects for debug_trap, error_trap and
-     return_trap is important here!  unwind-protect commands are run
-     in reverse order of registration.  If this causes problems, take
-     out the xfree unwind-protect calls and live with the small memory leak.
-   */
+  // This handler will free memory and restore state on return or throw.
+  ExecFunctionUnwindHandler unwind_handler (
+      subshell, this, var, tc, gs, debug_trap, error_trap, return_trap);
 
   /* function_trace_mode != 0 means that all functions inherit the DEBUG
      trap. if the function has the trace attribute set, it inherits the DEBUG
      trap */
   if (debug_trap && (!var->trace () && function_trace_mode == 0))
-    {
-      if (!subshell)
-        {
-          debug_trap_copy = savestring (debug_trap);
-          add_unwind_protect_ptr (xfree, debug_trap_copy);
-          add_unwind_protect_ptr (maybe_set_debug_trap, debug_trap_copy);
-        }
-      restore_default_signal (DEBUG_TRAP);
-    }
+    restore_default_signal (DEBUG_TRAP);
 
   /* error_trace_mode != 0 means that functions inherit the ERR trap. */
   if (error_trap && error_trace_mode == 0)
-    {
-      if (!subshell)
-        {
-          error_trap_copy = savestring (error_trap);
-          add_unwind_protect_ptr (xfree, error_trap_copy);
-          add_unwind_protect_ptr (maybe_set_error_trap, error_trap_copy);
-        }
-      restore_default_signal (ERROR_TRAP);
-    }
+    restore_default_signal (ERROR_TRAP);
 
   /* Shell functions inherit the RETURN trap if function tracing is on
      globally or on individually for this function. */
   if (return_trap
       && (signal_in_progress (DEBUG_TRAP)
           || (!var->trace () && function_trace_mode == 0)))
-    {
-      if (!subshell)
-        {
-          return_trap_copy = savestring (return_trap);
-          add_unwind_protect_ptr (xfree, return_trap_copy);
-          add_unwind_protect_ptr (maybe_set_return_trap, return_trap_copy);
-        }
-      restore_default_signal (RETURN_TRAP);
-    }
+    restore_default_signal (RETURN_TRAP);
 
   funcnest++;
 
 #if defined(ARRAY_VARS)
   /* This is quite similar to the code in shell.cc and elsewhere. */
   FUNCTION_DEF *shell_fn = find_function_def (this_shell_function->name ());
-  const char *sfile = shell_fn ? shell_fn->source_file : "";
-  array_push (funcname_a, this_shell_function->name ());
 
-  array_push (bash_source_a, sfile);
-  lineno = GET_LINE_NUMBER ();
-  t = itos (lineno);
-  array_push (bash_lineno_a, t);
-  free (t);
+  std::string sfile;
+  if (shell_fn)
+    sfile = shell_fn->source_file;
+
+  funcname_a->push (this_shell_function->name ());
+  bash_source_a->push (sfile);
+
+  int lineno = GET_LINE_NUMBER ();
+  std::string t (itos (lineno));
+  bash_lineno_a->push (t);
 
   /* restore_funcarray_state() will delete this. */
   func_array_state *fa = new func_array_state ();
@@ -4707,7 +4679,7 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   fa->funcname_v = funcname_v;
 
   if (!subshell)
-    add_unwind_protect_ptr (restore_funcarray_state, fa);
+    unwind_handler.add_funcarray_state (*fa);
 #endif
 
   /* The temporary environment for a function is supposed to apply to
@@ -4718,15 +4690,11 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   if (debugging_mode || shell_compatibility_level <= 44)
     init_bash_argv ();
 
-  remember_args (w->next (), true);
+  remember_args (words->next (), true);
 
   /* Update BASH_ARGV and BASH_ARGC */
   if (debugging_mode)
-    {
-      push_args (w->next ());
-      if (!subshell)
-        add_unwind_protect (pop_args);
-    }
+    push_args (words->next ());
 
   /* Number of the line on which the function body starts. */
   line_number = function_line_number = tc->line;
@@ -4739,42 +4707,10 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   if (shell_compatibility_level > 43)
     loop_level = 0;
 
-#if 0
-{
-{
-          pop_context ();
-
-          /* This has to be after the pop_context(), because the unwinding of
-             local variables may cause the restore of a local declaration of
-             OPTIND to force a getopts state reset. */
-          // If we have a local copy of OPTIND and it's at the right (current)
-          // context, then we restore getopt's internal state. If not, we just
-          // let it go. We know there is a local OPTIND if gs->gs_flags & 1.
-          // This is set below in execute_function() before the context is run.
-          if (gs->gs_flags & 1)
-            sh_getopt_restore_istate (gs);
-          else
-            delete gs;
-        }
-    }
-#endif
-
-  from_return_trap = false;
-
   return_catch_flag++;
-  int return_val = setjmp_nosigs (return_catch);
   int result;
 
-  if (return_val)
-    {
-      result = return_catch_value;
-      /* Run the RETURN trap in the function's context. */
-      COMMAND *save_current = currently_executing_command;
-      if (!from_return_trap)
-        run_return_trap ();
-      currently_executing_command = save_current;
-    }
-  else
+  try
     {
       /* Run the debug trap here so we can trap at the start of a function's
          execution rather than the execution of the body's first command. */
@@ -4807,15 +4743,21 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
 #endif
       showing_function_line = false;
     }
+  catch (const return_catch_exception &e)
+    {
+      result = e.return_catch_value;
+      /* Run the RETURN trap in the function's context. */
+      COMMAND *save_current = currently_executing_command;
+      run_return_trap ();
+      currently_executing_command = save_current;
+    }
 
   // If we have a local copy of OPTIND, note it in the saved getopts state.
   SHELL_VAR *gv = find_variable ("OPTIND");
   if (gv && gv->context == variable_context)
     gs->gs_flags |= 1;
 
-  if (!subshell)
-    run_unwind_frame ("function_calling");
-  else
+  if (subshell)
     {
 #if defined(ARRAY_VARS)
       restore_funcarray_state (fa);
@@ -4848,10 +4790,8 @@ void
 Shell::execute_subshell_builtin_or_function (
     WORD_LIST *words, REDIRECT *redirects, sh_builtin_func_t builtin,
     SHELL_VAR *var, int pipe_in, int pipe_out, bool async,
-    fd_bitmap *fds_to_close, int flags)
+    fd_bitmap *fds_to_close, cmd_flags flags)
 {
-  int result, r, funcvalue;
-
 #if defined(JOB_CONTROL)
   bool jobs_hack = (builtin == &Shell::jobs_builtin)
                    && ((subshell_environment & SUBSHELL_ASYNC) == 0
@@ -4906,7 +4846,7 @@ Shell::execute_subshell_builtin_or_function (
        * up to main(). */
       try
         {
-          r = execute_builtin (builtin, words, flags, 1);
+          int r = execute_builtin (builtin, words, flags, true);
           fflush (stdout);
           if (r == EX_USAGE)
             r = EX_BADUSAGE;
@@ -4935,7 +4875,7 @@ Shell::execute_subshell_builtin_or_function (
     }
   else
     {
-      r = execute_function (var, words, flags, fds_to_close, async, true);
+      int r = execute_function (var, words, flags, fds_to_close, async, true);
       fflush (stdout);
       subshell_exit (r);
     }
@@ -4953,32 +4893,20 @@ int
 Shell::execute_builtin_or_function (WORD_LIST *words,
                                     sh_builtin_func_t builtin, SHELL_VAR *var,
                                     REDIRECT *redirects,
-                                    fd_bitmap *fds_to_close, int flags)
+                                    fd_bitmap *fds_to_close, cmd_flags flags)
 {
   int result;
   REDIRECT *saved_undo_list;
-#if defined(PROCESS_SUBSTITUTION)
-  int ofifo, nfifo, osize;
-  void *ofifo_list;
-#endif
 
 #if defined(PROCESS_SUBSTITUTION)
-  begin_unwind_frame ("saved_fifos");
-  /* If we return, we longjmp and don't get a chance to restore the old
-     fifo list, so we add an unwind protect to free it */
-  ofifo = num_fifos ();
-  ofifo_list = copy_fifo_list (&osize);
-  if (ofifo_list)
-    add_unwind_protect_ptr (xfree, ofifo_list);
+  int ofifo = num_fifos ();
+  fifo_vector ofifo_list = copy_fifo_list ();
 #endif
 
   if (do_redirections (redirects, RX_ACTIVE | RX_UNDOABLE) != 0)
     {
       undo_partial_redirects ();
       dispose_exec_redirects ();
-#if defined(PROCESS_SUBSTITUTION)
-      free (ofifo_list);
-#endif
       return EX_REDIRFAIL; /* was EXECUTION_FAILURE */
     }
 
@@ -4987,29 +4915,31 @@ Shell::execute_builtin_or_function (WORD_LIST *words,
   /* Calling the "exec" builtin changes redirections forever. */
   if (builtin == &Shell::exec_builtin)
     {
-      dispose_redirects (saved_undo_list);
+      delete saved_undo_list;
       saved_undo_list = exec_redirection_undo_list;
       exec_redirection_undo_list = nullptr;
     }
   else
     dispose_exec_redirects ();
 
-  if (saved_undo_list)
-    {
-      begin_unwind_frame ("saved-redirects");
-      add_unwind_protect_ptr (cleanup_redirects, saved_undo_list);
-    }
-
   redirection_undo_list = nullptr;
 
-  if (builtin)
-    result = execute_builtin (builtin, words, flags, 0);
-  else
-    result = execute_function (var, words, flags, fds_to_close, false, false);
+  try
+    {
+      if (builtin)
+        result = execute_builtin (builtin, words, flags, false);
+      else
+        result
+            = execute_function (var, words, flags, fds_to_close, false, false);
+    }
+  catch (const std::exception &)
+    {
+      cleanup_redirects (saved_undo_list);
+      throw;
+    }
 
   /* We do this before undoing the effects of any redirections. */
   fflush (stdout);
-  fpurge (stdout);
   if (ferror (stdout))
     clearerr (stdout);
 
@@ -5019,61 +4949,29 @@ Shell::execute_builtin_or_function (WORD_LIST *words,
      overwritten the shell and we wouldn't get here.  In this case, we
      want to behave as if the `command' builtin had not been specified
      and preserve the redirections. */
-  if (builtin == command_builtin && this_shell_builtin == exec_builtin)
+  if (builtin == &Shell::command_builtin
+      && this_shell_builtin == &Shell::exec_builtin)
     {
-      int discard;
-
-      discard = 0;
       if (saved_undo_list)
-        {
-          dispose_redirects (saved_undo_list);
-          discard = 1;
-        }
+        delete saved_undo_list;
+
       redirection_undo_list = exec_redirection_undo_list;
       saved_undo_list = exec_redirection_undo_list = nullptr;
-      if (discard)
-        discard_unwind_frame ("saved-redirects");
     }
 
   if (saved_undo_list)
-    {
-      redirection_undo_list = saved_undo_list;
-      discard_unwind_frame ("saved-redirects");
-    }
+    redirection_undo_list = saved_undo_list;
 
   undo_partial_redirects ();
 
 #if defined(PROCESS_SUBSTITUTION)
   /* Close any FIFOs created by this builtin or function. */
-  nfifo = num_fifos ();
+  int nfifo = num_fifos ();
   if (nfifo > ofifo)
-    close_new_fifos (ofifo_list, osize);
-  if (ofifo_list)
-    free (ofifo_list);
-  discard_unwind_frame ("saved_fifos");
+    close_new_fifos (ofifo_list);
 #endif
 
   return result;
-}
-
-void
-Shell::setup_async_signals ()
-{
-#if defined(JOB_CONTROL)
-  if (!job_control)
-#endif
-    {
-      /* Make sure we get the original signal dispositions now so we don't
-         confuse the trap builtin later if the subshell tries to use it to
-         reset SIGINT/SIGQUIT.  Don't call set_signal_ignored; that sets
-         the value of original_signals to SIG_IGN. Posix interpretation 751.
-       */
-      get_original_signal (SIGINT);
-      set_signal_handler (SIGINT, SIG_IGN);
-
-      get_original_signal (SIGQUIT);
-      set_signal_handler (SIGQUIT, SIG_IGN);
-    }
 }
 
 /* Name of a shell function to call when a command name is not found. */
@@ -5103,7 +5001,7 @@ int
 Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
                              string_view command_line, int pipe_in,
                              int pipe_out, bool async, fd_bitmap *fds_to_close,
-                             int cmdflags)
+                             cmd_flags cmdflags)
 {
   bool stdpath = (cmdflags & CMD_STDPATH); // use command -p path
   bool nofork = (cmdflags & CMD_NO_FORK); // Don't fork, just exec, if no pipes
@@ -5111,7 +5009,6 @@ Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
   const char *pathname = words->word->word.c_str ();
 
   char *command;
-  char *p = 0;
   int result = EXECUTION_SUCCESS;
 
 #if defined(RESTRICTED_SHELL)
@@ -5137,7 +5034,7 @@ Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
   //   command = search_for_command (pathname, stdpath ? CMDSRCH_STDPATH
   //                                                   : CMDSRCH_HASH);
   command = search_for_command (
-      pathname, CMDSRCH_HASH | (stdpath ? CMDSRCH_STDPATH : 0));
+      pathname, CMDSRCH_HASH | (stdpath ? CMDSRCH_STDPATH : CMDSRCH_NOFLAGS));
 
   QUIT;
 
@@ -5175,10 +5072,6 @@ Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
       /* Cancel traps, in trap.c. */
       restore_original_signals ();
       subshell_environment &= ~SUBSHELL_IGNTRAP;
-
-#if defined(JOB_CONTROL)
-      FREE (p);
-#endif
 
       /* restore_original_signals may have undone the work done
          by make_child to ensure that SIGINT and SIGQUIT are ignored
@@ -5232,15 +5125,15 @@ Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
       if (async)
         interactive = old_interactive;
 
-      if (command == 0)
+      if (command == nullptr)
         {
           SHELL_VAR *hookf = find_function (NOTFOUND_HOOK);
-          if (hookf == 0)
+          if (hookf == nullptr)
             {
               /* Make sure filenames are displayed using printable characters
                */
-              pathname = printable_filename (pathname, 0);
-              internal_error (_ ("%s: command not found"), pathname);
+              std::string printname (printable_filename (pathname, 0));
+              internal_error (_ ("%s: command not found"), printname.c_str ());
               exit (EX_NOTFOUND); /* Posix.2 says the exit status is 127 */
             }
 
@@ -5260,7 +5153,7 @@ Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
       /* Execve expects the command name to be in args[0].  So we
          leave it there, in the same format that the user used to
          type it in. */
-      char **args = strvec_from_word_list (words, 0, 0, nullptr);
+      char **args = strvec_from_word_list (words, 0, nullptr);
       exit (shell_execve (command, args, export_env));
     }
   else
@@ -5276,7 +5169,7 @@ Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
         unlink_fifo_list ();
 #endif
 #endif
-      FREE (command);
+      delete[] command;
       return result;
     }
 }
@@ -5289,16 +5182,20 @@ Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
 #if !defined(MSDOS) && !defined(__VMS)
 #define STRINGCHAR(ind)                                                       \
   (ind < sample_len && !whitespace (sample[ind]) && sample[ind] != '\n')
+#if !defined(HAVE_HASH_BANG_EXEC)
 #define WHITECHAR(ind) (ind < sample_len && whitespace (sample[ind]))
+#endif
 #else /* MSDOS || __VMS */
 #define STRINGCHAR(ind)                                                       \
   (ind < sample_len && !whitespace (sample[ind]) && sample[ind] != '\n'       \
    && sample[ind] != '\r')
+#if !defined(HAVE_HASH_BANG_EXEC)
 #define WHITECHAR(ind) (ind < sample_len && whitespace (sample[ind]))
+#endif
 #endif /* !MSDOS && !__VMS */
 
 static inline char *
-getinterp (char *sample, int sample_len, int *endp)
+getinterp (const char *sample, ssize_t sample_len, int *endp)
 {
   int i;
   char *execname;
@@ -5311,7 +5208,8 @@ getinterp (char *sample, int sample_len, int *endp)
   for (start = i; STRINGCHAR (i); i++)
     ;
 
-  execname = substring (sample, start, i);
+  execname = substring (sample, static_cast<size_t> (start),
+                        static_cast<size_t> (i));
 
   if (endp)
     *endp = i;
@@ -5328,20 +5226,19 @@ getinterp (char *sample, int sample_len, int *endp)
 
    The word immediately following the #! is the interpreter to execute.
    A single argument to the interpreter is allowed. */
-
 int
-Shell::execute_shell_script (char *sample, int sample_len, char *command,
-                             char **args, char **env)
+Shell::execute_shell_script (char *sample, ssize_t sample_len,
+                             const char *command, char **args, char **env)
 {
-  char *execname, *firstarg;
-  int i, start, size_increment, larry;
+  int i, start;
+  char *firstarg = nullptr;
 
   /* Find the name of the interpreter to exec. */
-  execname = getinterp (sample, sample_len, &i);
-  size_increment = 1;
+  std::string execname (getinterp (sample, sample_len, &i));
+  int size_increment = 1;
 
   /* Now the argument, if any. */
-  for (firstarg = nullptr, start = i; WHITECHAR (i); i++)
+  for (start = i; WHITECHAR (i); i++)
     ;
 
   /* If there is more text on the line, then it is an argument for the
@@ -5351,33 +5248,38 @@ Shell::execute_shell_script (char *sample, int sample_len, char *command,
     {
       for (start = i; STRINGCHAR (i); i++)
         ;
-      firstarg = substring ((char *)sample, start, i);
+      firstarg = substring (sample, static_cast<size_t> (start),
+                            static_cast<size_t> (i));
       size_increment = 2;
     }
 
-  larry = strvec_len (args) + size_increment;
-  args = strvec_resize (args, larry + 1);
+  int argc = static_cast<int> (strvec_len (args));
+  int larry = argc + size_increment;
+  char **new_args = new char *[static_cast<size_t> (larry + 1)];
+  memcpy (new_args + size_increment, args, static_cast<size_t> (argc + 1));
+  delete[] args;
+  args = new_args;
 
   for (i = larry - 1; i; i--)
     args[i] = args[i - size_increment];
 
-  args[0] = execname;
+  args[0] = const_cast<char *> (execname.c_str ());
   if (firstarg)
     {
       args[1] = firstarg;
-      args[2] = command;
+      args[2] = const_cast<char *> (command);
     }
   else
-    args[1] = command;
+    args[1] = const_cast<char *> (command);
 
   args[larry] = nullptr;
 
-  return shell_execve (execname, args, env);
+  return shell_execve (execname.c_str (), args, env);
 }
+#endif /* !HAVE_HASH_BANG_EXEC */
+
 #undef STRINGCHAR
 #undef WHITECHAR
-
-#endif /* !HAVE_HASH_BANG_EXEC */
 
 void
 Shell::initialize_subshell ()
@@ -5411,7 +5313,7 @@ Shell::initialize_subshell ()
      builtin.  Such variables are not supposed to be exported (empirical
      testing with sh and ksh).  Just throw it away; don't worry about a
      memory leak. */
-  if (vc_isbltnenv (shell_variables))
+  if (shell_variables->builtin_env ())
     shell_variables = shell_variables->down;
 
   /* XXX -- are there other things we should be resetting here? */
@@ -5447,11 +5349,11 @@ Shell::initialize_subshell ()
 /* Call execve (), handling interpreting shell scripts, and handling
    exec failures. */
 int
-Shell::shell_execve (char *command, char **args, char **env)
+Shell::shell_execve (const char *command, char **args, char **env)
 {
-  int larray, i, fd;
+  int i, fd;
   char sample[HASH_BANG_BUFSIZ];
-  int sample_len;
+  ssize_t sample_len;
 
   execve (command, args, env);
   i = errno; /* error from execve() */
@@ -5473,7 +5375,7 @@ Shell::shell_execve (char *command, char **args, char **env)
 #else
         internal_error (_ ("%s: is a directory"), command);
 #endif
-      else if (executable_file (command) == 0)
+      else if (!executable_file (command))
         {
           errno = i;
           file_error (command);
@@ -5500,22 +5402,16 @@ Shell::shell_execve (char *command, char **args, char **env)
             sample[sample_len - 1] = '\0';
           if (sample_len > 2 && sample[0] == '#' && sample[1] == '!')
             {
-              char *interp;
-              int ilen;
-
-              interp = getinterp (sample, sample_len, nullptr);
-              ilen = strlen (interp);
+              std::string interp (getinterp (sample, sample_len, nullptr));
+              size_t ilen = interp.size ();
               errno = i;
               if (interp[ilen - 1] == '\r')
                 {
-                  interp = (char *)xrealloc (interp, ilen + 2);
                   interp[ilen - 1] = '^';
-                  interp[ilen] = 'M';
-                  interp[ilen + 1] = '\0';
+                  interp.push_back ('M');
                 }
               sys_error (_ ("%s: %s: bad interpreter"), command,
-                         interp ? interp : "");
-              FREE (interp);
+                         interp.c_str ());
               return EX_NOEXEC;
             }
 #endif
@@ -5549,7 +5445,7 @@ Shell::shell_execve (char *command, char **args, char **env)
         return execute_shell_script (sample, sample_len, command, args, env);
       else
 #endif
-          if (check_binary_file (sample, sample_len))
+          if (check_binary_file (sample, static_cast<size_t> (sample_len)))
         {
           internal_error (_ ("%s: cannot execute binary file: %s"), command,
                           strerror (i));
@@ -5567,14 +5463,14 @@ Shell::shell_execve (char *command, char **args, char **env)
   set_sigint_handler ();
 
   /* Insert the name of this shell into the argument list. */
-  larray = strvec_len (args) + 1;
-  args = strvec_resize (args, larray + 1);
+  size_t larray = strvec_len (args) + 1;
+  char **new_args = new char *[larray + 1];
+  memcpy (new_args + 1, args, larray);
+  delete[] args;
+  args = new_args;
 
-  for (i = larray - 1; i; i--)
-    args[i] = args[i - 1];
-
-  args[0] = (char *)shell_name;
-  args[1] = command;
+  args[0] = const_cast<char *> (shell_name);
+  args[1] = const_cast<char *> (command);
   args[larray] = nullptr;
 
   if (args[0][0] == '-')
@@ -5589,14 +5485,15 @@ Shell::shell_execve (char *command, char **args, char **env)
     {
       /* Can't free subshell_argv[0]; that is shell_name. */
       for (i = 1; i < subshell_argc; i++)
-        free (subshell_argv[i]);
-      free (subshell_argv);
+        delete[] subshell_argv[i];
+
+      delete[] subshell_argv;
     }
 
   delete currently_executing_command; /* XXX */
   currently_executing_command = nullptr;
 
-  subshell_argc = larray;
+  subshell_argc = static_cast<int> (larray);
   subshell_argv = args;
   subshell_envp = env;
 
@@ -5607,18 +5504,16 @@ Shell::shell_execve (char *command, char **args, char **env)
 #endif
 
   throw bash_exception (FORCE_EOF);
-  /*NOTREACHED*/
 }
 
 int
 Shell::execute_intern_function (WORD_DESC *name, FUNCTION_DEF *funcdef)
 {
   SHELL_VAR *var;
-  char *t;
 
-  if (check_identifier (name, posixly_correct) == 0)
+  if (!check_identifier (name, posixly_correct))
     {
-      if (posixly_correct && interactive_shell == 0)
+      if (posixly_correct && !interactive_shell)
         {
           last_command_exit_value = EX_BADUSAGE;
           throw bash_exception (ERREXIT);
@@ -5626,17 +5521,15 @@ Shell::execute_intern_function (WORD_DESC *name, FUNCTION_DEF *funcdef)
       return EXECUTION_FAILURE;
     }
 
-  if (strchr (name->word, CTLESC)) /* WHY? */
+  if (name->word.find (CTLESC) != std::string::npos) /* WHY? */
     {
-      t = dequote_escapes (name->word);
-      free (name->word);
-      name->word = t;
+      name->word = dequote_escapes (name->word);
     }
 
   /* Posix interpretation 383 */
   if (posixly_correct && find_special_builtin (name->word))
     {
-      internal_error (_ ("`%s': is a special builtin"), name->word);
+      internal_error (_ ("`%s': is a special builtin"), name->word.c_str ());
       last_command_exit_value = EX_BADUSAGE;
       throw bash_exception (interactive_shell ? DISCARD : ERREXIT);
     }

@@ -1412,8 +1412,6 @@ HAVE_OPENAT
 HAVE_FCNTL
 GL_COND_OBJ_FCHDIR_FALSE
 GL_COND_OBJ_FCHDIR_TRUE
-GL_COND_OBJ_FACCESSAT_FALSE
-GL_COND_OBJ_FACCESSAT_TRUE
 LIB_EACCESS
 GL_COND_OBJ_EUIDACCESS_FALSE
 GL_COND_OBJ_EUIDACCESS_TRUE
@@ -4751,6 +4749,7 @@ as_fn_append ac_func_c_list " mempcpy HAVE_MEMPCPY"
 as_fn_append ac_header_c_list " fnmatch.h fnmatch_h HAVE_FNMATCH_H"
 as_fn_append ac_func_c_list " fnmatch HAVE_FNMATCH"
 as_fn_append ac_func_c_list " mbsrtowcs HAVE_MBSRTOWCS"
+gl_fnmatch_required=GNU
 as_fn_append ac_header_c_list " stdio_ext.h stdio_ext_h HAVE_STDIO_EXT_H"
 as_fn_append ac_func_c_list " fpurge HAVE_FPURGE"
 as_fn_append ac_func_c_list " __fpurge HAVE___FPURGE"
@@ -9748,7 +9747,6 @@ fi
   # Code from module exitfail:
   # Code from module extensions:
   # Code from module extern-inline:
-  # Code from module faccessat:
   # Code from module fchdir:
   # Code from module fcntl:
   # Code from module fcntl-h:
@@ -9760,6 +9758,7 @@ fi
   # Code from module flexmember:
   # Code from module float:
   # Code from module fnmatch:
+  # Code from module fnmatch-gnu:
   # Code from module fnmatch-h:
   # Code from module fpurge:
   # Code from module free-posix:
@@ -30991,8 +30990,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:30994: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:30995: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:30993: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:30994: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -31018,7 +31017,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:31021: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:31020: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -31172,7 +31171,7 @@ fi
 
         fi
       fi
-      echo "$as_me:31175: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:31174: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -34668,8 +34667,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:34671: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:34672: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:34670: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:34671: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -34695,7 +34694,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:34698: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:34697: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -34849,7 +34848,7 @@ fi
 
         fi
       fi
-      echo "$as_me:34852: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:34851: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -35077,8 +35076,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
         LIBS=$save_LIBS
         test $gl_pthread_api = yes && break
       done
-      echo "$as_me:35080: gl_pthread_api=$gl_pthread_api" >&5
-      echo "$as_me:35081: LIBPTHREAD=$LIBPTHREAD" >&5
+      echo "$as_me:35079: gl_pthread_api=$gl_pthread_api" >&5
+      echo "$as_me:35080: LIBPTHREAD=$LIBPTHREAD" >&5
 
       gl_pthread_in_glibc=no
       # On Linux with glibc >= 2.34, libc contains the fully functional
@@ -35104,7 +35103,7 @@ rm -rf conftest*
 
           ;;
       esac
-      echo "$as_me:35107: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
+      echo "$as_me:35106: gl_pthread_in_glibc=$gl_pthread_in_glibc" >&5
 
       # Test for libpthread by looking for pthread_kill. (Not pthread_self,
       # since it is defined as a macro on OSF/1.)
@@ -35258,7 +35257,7 @@ fi
 
         fi
       fi
-      echo "$as_me:35261: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
+      echo "$as_me:35260: LIBPMULTITHREAD=$LIBPMULTITHREAD" >&5
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether POSIX threads API is available" >&5
 printf %s "checking whether POSIX threads API is available... " >&6; }
@@ -42785,73 +42784,6 @@ printf "%s\n" "#define GNULIB_TEST_EUIDACCESS 1" >>confdefs.h
 
 
 
-
-
-  if test $ac_cv_func_faccessat = no; then
-    HAVE_FACCESSAT=0
-  else
-    case $gl_cv_func_lstat_dereferences_slashed_symlink in
-      *yes) ;;
-      *)    REPLACE_FACCESSAT=1 ;;
-    esac
-  fi
-
-
-     if test $HAVE_FACCESSAT = 0 || test $REPLACE_FACCESSAT = 1; then
-  GL_COND_OBJ_FACCESSAT_TRUE=
-  GL_COND_OBJ_FACCESSAT_FALSE='#'
-else
-  GL_COND_OBJ_FACCESSAT_TRUE='#'
-  GL_COND_OBJ_FACCESSAT_FALSE=
-fi
-:
-    if test -z "${GL_COND_OBJ_FACCESSAT_TRUE}" && test -z "${GL_COND_OBJ_FACCESSAT_FALSE}"; then
-    GL_COND_OBJ_FACCESSAT_TRUE='#'
-    GL_COND_OBJ_FACCESSAT_FALSE='#'
-  fi
-
-  if test -z "$GL_COND_OBJ_FACCESSAT_TRUE"; then :
-
-
-  ac_fn_c_check_func "$LINENO" "access" "ac_cv_func_access"
-if test "x$ac_cv_func_access" = xyes
-then :
-  printf "%s\n" "#define HAVE_ACCESS 1" >>confdefs.h
-
-fi
-
-
-
-fi
-
-
-printf "%s\n" "#define GNULIB_FACCESSAT 1" >>confdefs.h
-
-
-
-
-
-
-
-
-
-
-
-          GL_GNULIB_FACCESSAT=1
-
-
-
-
-
-printf "%s\n" "#define GNULIB_TEST_FACCESSAT 1" >>confdefs.h
-
-
-
-
-
-
-
-
   if test $ac_cv_have_decl_fchdir = no; then
     HAVE_DECL_FCHDIR=0
   fi
@@ -43883,6 +43815,32 @@ fi
 
 printf "%s\n" "#define GNULIB_TEST_FNMATCH 1" >>confdefs.h
 
+
+
+
+
+
+
+
+  if test $HAVE_FNMATCH = 0 || test $REPLACE_FNMATCH = 1; then
+
+
+
+
+
+
+
+
+  gl_LIBOBJS="$gl_LIBOBJS fnmatch.$ac_objext"
+
+
+
+
+
+  fi
+
+
+printf "%s\n" "#define GNULIB_FNMATCH_GNU 1" >>confdefs.h
 
 
 

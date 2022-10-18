@@ -252,18 +252,19 @@ operator~(const subshell_flags &a)
 class WORD_DESC
 {
 public:
-  WORD_DESC (string_view w, word_desc_flags f = W_NOFLAGS)
+  explicit WORD_DESC (string_view w, word_desc_flags f = W_NOFLAGS)
       : word (to_string (w)), flags (f)
   {
   }
-  WORD_DESC (const char *w, word_desc_flags f = W_NOFLAGS)
+  explicit WORD_DESC (const char *w, word_desc_flags f = W_NOFLAGS)
       : word (w), flags (f)
   {
   }
-  WORD_DESC (const WORD_DESC &w) : word (w.word), flags (w.flags) {}
+
+  explicit WORD_DESC (const WORD_DESC &w) : word (w.word), flags (w.flags) {}
 
   // single character constructor
-  WORD_DESC (char token) : flags (W_NOFLAGS) { word = token; }
+  explicit WORD_DESC (char token) : flags (W_NOFLAGS) { word = token; }
 
 #if __cplusplus >= 201103L
   WORD_DESC (WORD_DESC &&w)
@@ -287,10 +288,12 @@ struct WORD_DESC_PTR
 class WORD_LIST : public GENERIC_LIST
 {
 public:
-  WORD_LIST (WORD_DESC *word_) : GENERIC_LIST (nullptr), word (word_) {}
+  explicit WORD_LIST (WORD_DESC *word_) : GENERIC_LIST (nullptr), word (word_)
+  {
+  }
 
   // Constructor that takes another WORD_LIST to link to.
-  WORD_LIST (WORD_DESC *word_, WORD_LIST *next)
+  explicit WORD_LIST (WORD_DESC *word_, WORD_LIST *next)
       : GENERIC_LIST (next), word (word_)
   {
   }
@@ -345,7 +348,7 @@ struct WORD_LIST_PTR
   WORD_LIST_PTR (WORD_DESC *word) : value (new WORD_LIST (word)) {}
 
   // Constructor that takes another WORD_LIST to link to.
-  WORD_LIST_PTR (WORD_DESC_PTR word, WORD_LIST_PTR next)
+  explicit WORD_LIST_PTR (WORD_DESC_PTR word, WORD_LIST_PTR next)
       : value (new WORD_LIST (word.value, next.value))
   {
   }
@@ -367,9 +370,9 @@ struct WORD_LIST_PTR
 class REDIRECTEE
 {
 public:
-  REDIRECTEE (int dest_) { r.dest = dest_; }
-  REDIRECTEE (WORD_DESC &filename_) { r.filename = &filename_; }
-  REDIRECTEE (WORD_DESC_PTR ptr) { r.filename = ptr.value; }
+  explicit REDIRECTEE (int dest_) { r.dest = dest_; }
+  explicit REDIRECTEE (WORD_DESC &filename_) { r.filename = &filename_; }
+  explicit REDIRECTEE (WORD_DESC_PTR ptr) { r.filename = ptr.value; }
 
   union redirectee_t
   {
@@ -391,7 +394,7 @@ public:
   }
 
   // Deep copy constructor.
-  REDIRECT (const REDIRECT &other);
+  explicit REDIRECT (const REDIRECT &other);
 
   // Non-virtual destructor should be safe here with the static_cast.
   ~REDIRECT () noexcept
@@ -460,6 +463,7 @@ public:
 struct REDIRECT_PTR
 {
   REDIRECT_PTR () : value (nullptr) {}
+
   REDIRECT_PTR (REDIRECTEE source_, r_instruction instruction_,
                 REDIRECTEE dest_and_filename_, redir_flags flags_)
       : value (
@@ -632,7 +636,7 @@ public:
   {
   }
 
-  CONNECTION (const CONNECTION &other)
+  explicit CONNECTION (const CONNECTION &other)
       : COMMAND (other.type, other.line), connector (other.connector)
   {
     first = other.first ? other.first->clone () : nullptr;
@@ -727,6 +731,7 @@ public:
 struct PATTERN_LIST_PTR
 {
   PATTERN_LIST_PTR () : value (nullptr) {}
+
   PATTERN_LIST_PTR (PATTERN_LIST *value_) : value (value_) {}
   PATTERN_LIST_PTR (const PATTERN_LIST_PTR &other) : value (other.value) {}
 
@@ -749,7 +754,7 @@ public:
   {
   }
 
-  CASE_COM (const CASE_COM &other) : COMMAND (other.type, other.line)
+  explicit CASE_COM (const CASE_COM &other) : COMMAND (other.type, other.line)
   {
     word = other.word ? new WORD_DESC (*other.word) : nullptr;
     clauses = other.clauses ? new PATTERN_LIST (*other.clauses) : nullptr;
@@ -779,7 +784,7 @@ public:
   {
   }
 
-  FOR_SELECT_COM (const FOR_SELECT_COM &other)
+  explicit FOR_SELECT_COM (const FOR_SELECT_COM &other)
       : COMMAND (other.type, other.line)
   {
     name = other.name ? new WORD_DESC (*other.name) : nullptr;
@@ -810,7 +815,8 @@ public:
   {
   }
 
-  ARITH_FOR_COM (const ARITH_FOR_COM &other) : COMMAND (other.type, other.line)
+  explicit ARITH_FOR_COM (const ARITH_FOR_COM &other)
+      : COMMAND (other.type, other.line)
   {
     init = other.init ? new WORD_LIST (*other.init) : nullptr;
     test = other.test ? new WORD_LIST (*other.test) : nullptr;
@@ -842,7 +848,7 @@ public:
   {
   }
 
-  IF_COM (const IF_COM &other) : COMMAND (other.type, other.line)
+  explicit IF_COM (const IF_COM &other) : COMMAND (other.type, other.line)
   {
     test = other.test ? other.test->clone () : nullptr;
     true_case = other.true_case ? other.true_case->clone () : nullptr;
@@ -870,7 +876,7 @@ public:
   {
   }
 
-  UNTIL_WHILE_COM (const UNTIL_WHILE_COM &other)
+  explicit UNTIL_WHILE_COM (const UNTIL_WHILE_COM &other)
       : COMMAND (other.type, other.line)
   {
     test = other.test ? other.test->clone () : nullptr;
@@ -892,9 +898,10 @@ class ARITH_COM : public COMMAND
 {
 public:
   // Construct a new ARITH_COM, wrapping the specified WORD_LIST.
-  ARITH_COM (WORD_LIST *exp_) : COMMAND (cm_arith, 0), exp (exp_) {}
+  explicit ARITH_COM (WORD_LIST *exp_) : COMMAND (cm_arith, 0), exp (exp_) {}
 
-  ARITH_COM (const ARITH_COM &other) : COMMAND (other.type, other.line)
+  explicit ARITH_COM (const ARITH_COM &other)
+      : COMMAND (other.type, other.line)
   {
     exp = other.exp ? new WORD_LIST (*other.exp) : nullptr;
   }
@@ -929,7 +936,7 @@ public:
   {
   }
 
-  COND_COM (const COND_COM &other)
+  explicit COND_COM (const COND_COM &other)
       : COMMAND (other.type, other.line), cond_type (other.cond_type)
   {
     op = other.op ? new WORD_DESC (*other.op) : nullptr;
@@ -953,7 +960,8 @@ class SIMPLE_COM : public COMMAND
 public:
   SIMPLE_COM (ELEMENT, COMMAND *);
 
-  SIMPLE_COM (const SIMPLE_COM &other) : COMMAND (other.type, other.line)
+  explicit SIMPLE_COM (const SIMPLE_COM &other)
+      : COMMAND (other.type, other.line)
   {
     words = other.words ? new WORD_LIST (*other.words) : nullptr;
     simple_redirects = other.simple_redirects
@@ -978,7 +986,7 @@ public:
 class FUNCTION_DEF : public COMMAND
 {
 public:
-  FUNCTION_DEF (const FUNCTION_DEF &other)
+  explicit FUNCTION_DEF (const FUNCTION_DEF &other)
       : COMMAND (other.type, other.line), source_file (other.source_file)
   {
     name = other.name ? new WORD_DESC (*other.name) : nullptr;
@@ -1000,12 +1008,13 @@ class GROUP_COM : public COMMAND
 {
 public:
   // Contruct a new GROUP_COM, wrapping the specified command.
-  GROUP_COM (COMMAND *command_)
+  explicit GROUP_COM (COMMAND *command_)
       : COMMAND (cm_group, command_->line), command (command_)
   {
   }
 
-  GROUP_COM (const GROUP_COM &other) : COMMAND (other.type, other.line)
+  explicit GROUP_COM (const GROUP_COM &other)
+      : COMMAND (other.type, other.line)
   {
     command = other.command ? other.command->clone () : nullptr;
   }
@@ -1021,13 +1030,14 @@ public:
 class SUBSHELL_COM : public COMMAND
 {
 public:
-  SUBSHELL_COM (COMMAND *command_)
+  explicit SUBSHELL_COM (COMMAND *command_)
       : COMMAND (cm_subshell, command_->line), command (command_)
   {
     flags |= CMD_WANT_SUBSHELL; // set the appropriate flags
   }
 
-  SUBSHELL_COM (const SUBSHELL_COM &other) : COMMAND (other.type, other.line)
+  explicit SUBSHELL_COM (const SUBSHELL_COM &other)
+      : COMMAND (other.type, other.line)
   {
     command = other.command ? other.command->clone () : nullptr;
   }
@@ -1074,7 +1084,7 @@ public:
     flags |= (CMD_WANT_SUBSHELL | CMD_COPROC_SUBSHELL);
   }
 
-  COPROC_COM (const COPROC_COM &other)
+  explicit COPROC_COM (const COPROC_COM &other)
       : COMMAND (other.type, other.line), name (other.name)
   {
     command = other.command ? other.command->clone () : nullptr;
