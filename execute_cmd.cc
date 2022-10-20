@@ -1796,7 +1796,7 @@ Shell::coproc_setvars (Coproc *cp)
     {
       try
         {
-          v = find_var_nameref_for_create (cp->c_name, 1);
+          v = find_variable_nameref_for_create (cp->c_name, 1);
         }
       catch (const invalid_nameref_value &)
         {
@@ -1846,7 +1846,7 @@ Shell::coproc_setvars (Coproc *cp)
   namevar = cp->c_name;
   namevar += "_PID";
   t = itos (cp->c_pid);
-  (void)bind_variable (namevar, t, 0);
+  (void)bind_variable (namevar, t.c_str (), 0);
 }
 
 void
@@ -2435,7 +2435,7 @@ Shell::execute_for_command (FOR_SELECT_COM *for_command)
           this_command_name = string_view ();
 
           /* XXX - special ksh93 for command index variable handling */
-          SHELL_VAR *v = find_var_last_nameref (identifier, 1);
+          SHELL_VAR *v = find_variable_last_nameref (identifier, 1);
 
           if (v && v->nameref ())
             {
@@ -2450,7 +2450,7 @@ Shell::execute_for_command (FOR_SELECT_COM *for_command)
                 v = bind_variable_value (v, list->word->word, ASS_NAMEREF);
             }
           else
-            v = bind_variable (identifier, list->word->word, 0);
+            v = bind_variable (identifier, list->word->word.c_str (), 0);
 
           if (v == nullptr || v->readonly () || v->noassign ())
             {
@@ -2786,7 +2786,7 @@ Shell::print_select_list (WORD_LIST *list, int max_elem_len, int indices_len)
    If the number is between 1 and LIST_LEN, return that selection.  If EOF
    is read, return a null string.  If a blank line is entered, or an invalid
    number is entered, the loop is executed again. */
-string_view
+std::string *
 Shell::select_query (WORD_LIST *list, const char *prompt, bool print_menu)
 {
   select_cols = default_columns ();
@@ -2819,13 +2819,13 @@ Shell::select_query (WORD_LIST *list, const char *prompt, bool print_menu)
       if (r != EXECUTION_SUCCESS)
         {
           putchar ('\n');
-          return string_view ();
+          return nullptr;
         }
 
       const char *repl_string = get_string_value ("REPLY");
 
       if (repl_string == nullptr)
-        return string_view ();
+        return nullptr;
 
       if (*repl_string == '\0')
         {
@@ -2835,16 +2835,16 @@ Shell::select_query (WORD_LIST *list, const char *prompt, bool print_menu)
 
       int64_t reply;
       if (!legal_number (repl_string, &reply))
-        return string_view ();
+        return nullptr;
 
       if (reply < 1 || reply > static_cast<int64_t> (list->size ()))
-        return string_view ();
+        return nullptr;
 
       WORD_LIST *l;
       for (l = list; l && --reply; l = l->next ())
         ;
 
-      return to_string_view (l->word->word); /* XXX - can't be null? */
+      return &l->word->word;
     }
 }
 
@@ -2919,10 +2919,10 @@ Shell::execute_select_command (FOR_SELECT_COM *select_command)
             ps3_prompt = "#? ";
 
           QUIT;
-          string_view selection = select_query (list, ps3_prompt, show_menu);
+          std::string *selection = select_query (list, ps3_prompt, show_menu);
           QUIT;
 
-          if (selection.empty ())
+          if (selection == nullptr)
             {
               /* select_query returns EXECUTION_FAILURE if the read builtin
                  fails, so we want to return failure in this case. */
@@ -2930,7 +2930,7 @@ Shell::execute_select_command (FOR_SELECT_COM *select_command)
               break;
             }
 
-          SHELL_VAR *v = bind_variable (identifier, selection, 0);
+          SHELL_VAR *v = bind_variable (identifier, selection->c_str (), 0);
           if (v == nullptr || v->readonly () || v->noassign ())
             {
               if (v && v->readonly () && !interactive_shell && posixly_correct)
@@ -3898,7 +3898,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
         sh_exit (result);
       else
         {
-          bind_lastarg (string_view ());
+          bind_lastarg (nullptr);
           set_pipestatus_from_exit (result);
           return result;
         }
@@ -4217,7 +4217,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
 
 return_result:
   if (lastarg)
-    bind_lastarg (*lastarg);
+    bind_lastarg (lastarg->c_str ());
   delete[] command_line;
   delete words;
 

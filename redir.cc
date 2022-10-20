@@ -75,8 +75,6 @@ namespace bash
 static bool expandable_redirection_filename (REDIRECT *);
 
 #if 0
-bool expanding_redir;
-
 extern REDIRECT *redirection_undo_list;
 extern REDIRECT *exec_redirection_undo_list;
 

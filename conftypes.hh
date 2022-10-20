@@ -32,7 +32,7 @@ extern const int patch_level;
    `fat' binary, e.g. on Apple Rhapsody.  These values are used in multiple
    files, so they appear here. */
 #if !defined(__APPLE__)
-#define HOSTTYPE CONF_HOSTTYPE
+#define HOSTTYPE CONF_CPUTYPE
 #define OSTYPE CONF_OSTYPE
 #define MACHTYPE CONF_MACHTYPE
 #else /* __APPLE__ */

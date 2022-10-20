@@ -151,11 +151,18 @@ read_again_exception::what () const noexcept
 }
 #endif
 
-// Return the type of the parse_error exception.
+// Return the type of the invalid_nameref_value exception.
 const char *
 invalid_nameref_value::what () const noexcept
 {
   return "invalid_nameref_value";
+}
+
+// Return the type of the nameref_maxloop_value exception.
+const char *
+nameref_maxloop_value::what () const noexcept
+{
+  return "nameref_maxloop_value";
 }
 
 // Return the type of the return_catch_exception exception.
@@ -957,24 +964,22 @@ Shell::group_member (gid_t gid)
 }
 #endif /* !HAVE_GROUP_MEMBER */
 
-STRINGLIST *
+void
 Shell::get_group_list ()
 {
   if (group_vector)
-    return group_vector;
+    return;
 
   if (ngroups == 0)
     initialize_group_array ();
 
   if (ngroups <= 0)
-    return nullptr;
+    return;
 
   group_vector = new STRINGLIST ();
 
   for (int i = 0; i < ngroups; i++)
     group_vector->push_back (savestring (itos (group_array[i])));
-
-  return group_vector;
 }
 
 std::vector<gid_t> *

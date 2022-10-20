@@ -149,6 +149,12 @@ public:
   virtual const char *what () const noexcept override;
 };
 
+class nameref_maxloop_value : public std::exception
+{
+public:
+  virtual const char *what () const noexcept override;
+};
+
 class return_catch_exception : public std::exception
 {
 public:

@@ -28,25 +28,23 @@ namespace bash
 
 constexpr int FILENAME_HASH_BUCKETS = 256; /* must be power of two */
 
-// extern HASH_TABLE *hashed_filenames;
-
-struct PathData
+enum phash_flags
 {
-  char *path; /* The full pathname of the file. */
-  int flags;
+  HASH_NOFLAGS = 0,
+  HASH_RELPATH = 0x01, // this filename is a relative pathname.
+  HASH_CHKDOT = 0x02   // check `.' since it was earlier in $PATH.
 };
 
-#define HASH_RELPATH 0x01 /* this filename is a relative pathname. */
-#define HASH_CHKDOT 0x02  /* check `.' since it was earlier in $PATH */
+struct PATH_DATA
+{
+  PATH_DATA (const char *path_, phash_flags flags_)
+      : path (path_), flags (flags_)
+  {
+  }
 
-#define pathdata(x) ((PATH_DATA *)(x)->data)
-
-extern void phash_create (void);
-extern void phash_flush (void);
-
-extern void phash_insert (const char *, const char *, bool, int);
-extern int phash_remove (const char *);
-extern char *phash_search (const char *);
+  const char *path; /* The full pathname of the file. */
+  phash_flags flags;
+};
 
 } // namespace bash
 

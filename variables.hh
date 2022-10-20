@@ -37,6 +37,7 @@ namespace bash
 /* Flags for VAR_CONTEXT->flags. */
 enum vc_flags
 {
+  VC_NOFLAGS = 0,
   VC_HASLOCAL = 0x01,
   VC_HASTMPVAR = 0x02,
   VC_FUNCENV = 0x04, /* also function if name != NULL */
@@ -45,17 +46,32 @@ enum vc_flags
   VC_TEMPFLAGS = (VC_FUNCENV | VC_BLTNENV | VC_TEMPENV)
 };
 
+static inline vc_flags &
+operator|= (vc_flags &a, const vc_flags &b)
+{
+  a = static_cast<vc_flags> (static_cast<uint32_t> (a)
+                             | static_cast<uint32_t> (b));
+  return a;
+}
+
 class SHELL_VAR;
 
 /* A variable context. */
 struct VAR_CONTEXT
 {
-  std::string name; // empty string means global context
-  int scope;        // 0 means global context
-  vc_flags flags;
+  VAR_CONTEXT (string_view name_, vc_flags flags_, int scope_)
+      : name (to_string (name_)), flags (flags_), scope (scope_)
+  {
+  }
+
+  VAR_CONTEXT (vc_flags flags_, int scope_) : flags (flags_), scope (scope_) {}
+
+  std::string name;              // empty string means global context
   VAR_CONTEXT *up;               // previous function calls
   VAR_CONTEXT *down;             // down towards global context
   HASH_TABLE<SHELL_VAR *> table; // variables at this scope
+  vc_flags flags;
+  int scope; // 0 means global context
 
   /* Inline access methods. */
 
@@ -141,12 +157,26 @@ operator|= (var_att_flags &a, const var_att_flags &b)
   return a;
 }
 
+static inline var_att_flags
+operator| (const var_att_flags &a, const var_att_flags &b)
+{
+  return static_cast<var_att_flags> (static_cast<uint32_t> (a)
+                                     | static_cast<uint32_t> (b));
+}
+
 static inline var_att_flags &
 operator&= (var_att_flags &a, const var_att_flags &b)
 {
   a = static_cast<var_att_flags> (static_cast<uint32_t> (a)
                                   & static_cast<uint32_t> (b));
   return a;
+}
+
+static inline var_att_flags
+operator& (const var_att_flags &a, const var_att_flags &b)
+{
+  return static_cast<var_att_flags> (static_cast<uint32_t> (a)
+                                     & static_cast<uint32_t> (b));
 }
 
 static inline var_att_flags
@@ -158,10 +188,12 @@ operator~(const var_att_flags &a)
 /* Union of supported types for a shell variable. */
 union Value
 {
-  char *s;                    /* string value */
-  COMMAND *cmd;               /* function */
-  ARRAY *a;                   /* array */
-  HASH_TABLE<std::string> *h; /* associative array */
+  char *s;                     /* string value */
+  COMMAND *cmd;                /* function */
+  ARRAY *a;                    /* array */
+  HASH_TABLE<alias_t *> *ah;   /* hashed aliases */
+  HASH_TABLE<PATH_DATA *> *ph; /* hashed paths */
+  HASH_TABLE<SHELL_VAR *> *sh; /* associative array */
 };
 
 /* Forward declaration of shell class for callback functions. */
@@ -171,13 +203,22 @@ class Shell;
 class SHELL_VAR
 {
 public:
-  SHELL_VAR ();
+  /* Create a new shell variable with name NAME. */
+  SHELL_VAR (string_view name) : name_ (name) {}
 
-  typedef SHELL_VAR *(Shell::*sh_var_value_func_t) (SHELL_VAR *);
-  typedef SHELL_VAR *(Shell::*sh_var_assign_func_t) (SHELL_VAR *, string_view,
-                                                     arrayind_t, string_view);
+  /* Create a new shell variable and add it to the specified hash table. */
+  SHELL_VAR (string_view name, HASH_TABLE<SHELL_VAR *> &shash)
+      : name_ (name)
+  {
+    value_.sh = &shash;
+  }
 
-  std::string
+  typedef SHELL_VAR *(Shell::*value_func_t) (SHELL_VAR *);
+
+  typedef SHELL_VAR *(Shell::*assign_func_t) (SHELL_VAR *, string_view,
+                                              arrayind_t, string_view);
+
+  std::string &
   name ()
   {
     return name_;
@@ -225,16 +266,40 @@ public:
     value_.a = a;
   }
 
-  HASH_TABLE<std::string> *
-  hash_value ()
+  HASH_TABLE<alias_t *> *
+  alias_hash_value ()
   {
-    return value_.h;
+    return value_.ah;
+  }
+
+  HASH_TABLE<PATH_DATA *> *
+  phash_value ()
+  {
+    return value_.ph;
+  }
+
+  HASH_TABLE<SHELL_VAR *> *
+  assoc_value ()
+  {
+    return value_.sh;
   }
 
   void
-  set_hash_value (HASH_TABLE<std::string> *h)
+  set_alias_hash_value (HASH_TABLE<alias_t *> *h)
   {
-    value_.h = h;
+    value_.ah = h;
+  }
+
+  void
+  set_assoc_value (HASH_TABLE<SHELL_VAR *> *h)
+  {
+    value_.sh = h;
+  }
+
+  void
+  set_phash_value (HASH_TABLE<PATH_DATA *> *h)
+  {
+    value_.ph = h;
   }
 
   char *
@@ -242,6 +307,27 @@ public:
   {
     return value_.s;
   } /* so it can change later */
+
+  /* Set the string value of VAR to the string representation of VALUE.
+     Right now this takes an INT64_T because that's what itos needs. If
+     FORCE_ATTRIBUTE is set, force the integer attribute on. */
+  void
+  set_int_value (int64_t value, bool force_attribute)
+  {
+    std::string p (itos (value));
+    delete[] str_value ();
+    set_str_value (savestring (p));
+    if (force_attribute)
+      set_attr (att_integer);
+  }
+
+  void
+  set_string_value (string_view value)
+  {
+    char *p = savestring (value);
+    delete[] str_value ();
+    set_str_value (p);
+  }
 
   /* Inline access methods. */
 
@@ -378,40 +464,33 @@ public:
     attributes &= ~flags;
   }
 
-  std::string name_;                 // Symbol that the user types.
-  Value value_;                      // Value that is returned.
-  std::string exportstr;             // String for the environment.
-  sh_var_value_func_t dynamic_value; // Function called to return a `dynamic'
-                                     // value for a variable, like $SECONDS
-                                     // or $RANDOM.
-  sh_var_assign_func_t assign_func;  // Function called when this `special
-                                     // variable' is assigned a value in
-                                     // bind_variable.
-  var_att_flags attributes;          // export, readonly, array, invisible...
-  int context;                       // Which context this variable belongs to.
+  std::string name_;          // Symbol that the user types.
+  Value value_;               // Value that is returned.
+  std::string exportstr;      // String for the environment.
+  value_func_t dynamic_value; // Function called to return a `dynamic'
+                              // value for a variable, like $SECONDS
+                              // or $RANDOM.
+  assign_func_t assign_func;  // Function called when this `special
+                              // variable' is assigned a value in
+                              // bind_variable.
+  var_att_flags attributes;   // export, readonly, array, invisible...
+  int context;                // Which context this variable belongs to.
 };
 
 typedef std::vector<SHELL_VAR *> VARLIST;
 
 constexpr int NAMEREF_MAX = 8; /* only 8 levels of nameref indirection */
 
-#if 0
-/* Assigning variable values: lvalues */
-#define var_setvalue(var, str) ((var)->value.s = (str))
-#define var_setfunc(var, func) ((var)->value.f = (func))
-#define var_setarray(var, arr) ((var)->value.a = (arr))
-#define var_setassoc(var, arr) ((var)->value.h = (arr))
-#define var_setref(var, str) ((var)->value.s = (str))
-
 /* Make VAR be auto-exported. */
 #define set_auto_export(var)                                                  \
   do                                                                          \
     {                                                                         \
       (var)->attributes |= att_exported;                                      \
-      array_needs_making = 1;                                                 \
+      array_needs_making = true;                                              \
     }                                                                         \
   while (0)
 
+#if 0
 #define SETVARATTR(var, attr, undo)                                           \
   ((undo == 0) ? ((var)->attributes |= (attr))                                \
                : ((var)->attributes &= ~(attr)))

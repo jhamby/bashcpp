@@ -36,12 +36,17 @@ struct ARRAY_ELEMENT
 {
   // Construct a new array element with index and value.
   ARRAY_ELEMENT (arrayind_t ind_, string_view value_ = string_view ())
-      : ind (ind_), value (to_string (value_))
+      : ind (ind_), value (savestring (value_))
   {
   }
 
+  ~ARRAY_ELEMENT ()
+  {
+    delete[] value;
+  }
+
   arrayind_t ind;
-  std::string value;
+  char *value;
 
 #ifndef ALT_ARRAY_IMPLEMENTATION
   ARRAY_ELEMENT *next, *prev;
@@ -68,6 +73,7 @@ struct ARRAY
     delete head;
   }
 
+  // Clone the array elements.
   ARRAY (const ARRAY &);
 
   arrayind_t
@@ -239,7 +245,7 @@ struct ARRAY
 
   size_t rshift (size_t, string_view);
 
-  const std::string *reference (arrayind_t);
+  char *reference (arrayind_t);
 
   int insert (arrayind_t, string_view);
   ARRAY_ELEMENT *remove (arrayind_t);

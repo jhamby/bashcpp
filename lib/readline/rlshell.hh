@@ -74,9 +74,10 @@ public:
   virtual ~ReadlineShell ();
 
   virtual std::string sh_single_quote (string_view);
-  virtual void sh_set_lines_and_columns (unsigned int, unsigned int);
-  virtual const char *sh_get_env_value (const char *);
-  virtual string_view sh_get_home_dir ();
+
+  virtual void sh_set_lines_and_columns (uint32_t, uint32_t);
+  virtual const char *sh_get_env_value (string_view);
+  virtual const char *sh_get_home_dir ();
   virtual int sh_unset_nodelay_mode (int);
 };
 

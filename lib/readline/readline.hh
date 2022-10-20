@@ -2539,9 +2539,9 @@ private:
   _rl_get_locale_var (const char *v)
   {
     const char *lspec = sh_get_env_value ("LC_ALL");
-    if (lspec == nullptr || *lspec == 0)
+    if (lspec == nullptr || *lspec == '\0')
       lspec = sh_get_env_value (v);
-    if (lspec == nullptr || *lspec == 0)
+    if (lspec == nullptr || *lspec == '\0')
       lspec = sh_get_env_value ("LANG");
 
     return lspec;

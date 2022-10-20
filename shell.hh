@@ -44,6 +44,8 @@
 #include "command.hh"
 #include "externs.hh"
 #include "flags.hh"
+#include "hashcmd.hh"
+#include "hashlib.hh"
 #include "jobs.hh"
 #include "maxpath.hh"
 #include "parser.hh"
@@ -370,6 +372,13 @@ enum print_flags
   FUNC_EXTERNAL = 0x02
 };
 
+static inline print_flags
+operator| (const print_flags &a, const print_flags &b)
+{
+  return static_cast<print_flags> (static_cast<uint32_t> (a)
+                                   | static_cast<uint32_t> (b));
+}
+
 /* enum for sh_makepath function defined in lib/sh/makepath.c */
 enum mp_flags
 {
@@ -647,6 +656,24 @@ struct sh_getopt_state_t
 // This char array size is assumed by subst.cc and elsewhere.
 #define SYNSIZE 256
 
+/* flags for find_variable_internal */
+
+enum find_var_flags
+{
+  FV_NOFLAGS = 0,
+  FV_FORCETEMPENV = 0x01,
+  FV_SKIPINVISIBLE = 0x02,
+  FV_NODYNAMIC = 0x04
+};
+
+static inline find_var_flags &
+operator|= (find_var_flags &a, const find_var_flags &b)
+{
+  a = static_cast<find_var_flags> (static_cast<uint32_t> (a)
+                                   | static_cast<uint32_t> (b));
+  return a;
+}
+
 /* Simple shell state: variables that can be memcpy'd to subshells. */
 class SimpleState
 {
@@ -660,6 +687,15 @@ public:
 
   // Start of protected variables, ordered by decreasing alignment.
 protected:
+  /* ************************************************************** */
+  /*		Bash Variables (int64_t/uint64_t)		    */
+  /* ************************************************************** */
+
+  /* The value of $SECONDS.  This is the number of seconds since shell
+     invocation, or, the number of seconds since the last assignment + the
+     value of the last assignment. */
+  int64_t seconds_value_assigned;
+
   /* ************************************************************** */
   /*		Bash Variables (array/struct/ptr types)		    */
   /* ************************************************************** */
@@ -782,10 +818,10 @@ protected:
 #endif
 
   /* For catching RETURN in a function. */
-
   int return_catch_flag;
 
   /* variables from break.def/continue.def */
+
   int breaking;
   int continuing;
   int loop_level;
@@ -798,22 +834,25 @@ protected:
   int subshell_argc;
 
   /* The random number seed.  You can change this by setting RANDOM. */
+
   uint32_t rseed;
   uint32_t rseed32;
   uint32_t last_rand32;
   int last_random_value;
 
+  int seeded_subshell;
+
   /* Set to errno when a here document cannot be created for some reason.
      Used to print a reasonable error message. */
   int heredoc_errno;
 
-  /* variables from subst.c */
+  /* variables from subst.cc */
 
   /* Process ID of the last command executed within command substitution. */
   pid_t last_command_subst_pid;
   pid_t current_command_subst_pid;
 
-  /* variables from lib/sh/shtty.c */
+  /* variables from lib/sh/shtty.cc */
 
   // additional 32-bit variables
 
@@ -1528,9 +1567,7 @@ protected:
 
   bool here_doc_first_line;
 
-  bool eflag;
-
-  bool xattrflag; // O_XATTR support for openat
+  bool expanding_redir;
 
   // was the last entry the start of a here document?
   bool last_was_heredoc;
@@ -2690,7 +2727,7 @@ protected:
 
     for (ae = start; ae != end; ae = ae->next)
       {
-        if (!ae->value.empty ())
+        if (ae->value)
           {
             result += (quoted ? quote_string (ae->value) : ae->value);
             /*
@@ -2724,6 +2761,9 @@ protected:
 
   std::string make_array_variable_value (SHELL_VAR *, arrayind_t, string_view,
                                          string_view, int);
+
+  SHELL_VAR *make_new_array_variable (string_view);
+  SHELL_VAR *make_new_assoc_variable (string_view);
 
   SHELL_VAR *bind_array_variable (string_view, arrayind_t, string_view, int);
   SHELL_VAR *bind_array_element (SHELL_VAR *, arrayind_t, string_view, int);
@@ -4011,7 +4051,7 @@ protected:
 #if defined(SELECT_COMMAND)
   int displen (const char *);
   void print_select_list (WORD_LIST *, int, int);
-  string_view select_query (WORD_LIST *, const char *, bool);
+  std::string *select_query (WORD_LIST *, const char *, bool);
   int execute_select_command (FOR_SELECT_COM *);
 #endif
 #if defined(DPAREN_ARITHMETIC)
@@ -4054,7 +4094,7 @@ protected:
   void initialize_subshell ();
 
   void
-  bind_lastarg (string_view arg)
+  bind_lastarg (const char *arg)
   {
     SHELL_VAR *var;
 
@@ -5233,15 +5273,21 @@ protected:
 
   SHELL_VAR *set_if_not (string_view, string_view);
 
+  void make_funcname_visible (bool);
+
+  SHELL_VAR *init_funcname_var ();
+
   void set_pwd ();
   void set_ppid ();
-  void make_funcname_visible (bool);
 
   void initialize_shell_variables (char **, bool);
 
   void delete_all_variables (HASH_TABLE<SHELL_VAR *> *);
 
   void reinit_special_variables ();
+
+  SHELL_VAR *hash_lookup (string_view, HASH_TABLE<SHELL_VAR *> *);
+  FUNCTION_DEF *hash_lookup (string_view, HASH_TABLE<FUNCTION_DEF *> *);
 
   SHELL_VAR *var_lookup (string_view, VAR_CONTEXT *);
 
@@ -5251,11 +5297,11 @@ protected:
 
   SHELL_VAR *find_variable (string_view);
   SHELL_VAR *find_variable_noref (string_view);
-  SHELL_VAR *find_var_last_nameref (string_view, int);
-  SHELL_VAR *find_global_var_last_nameref (string_view, int);
-  SHELL_VAR *find_var_nameref (SHELL_VAR *);
-  SHELL_VAR *find_var_nameref_for_create (string_view, int);
-  SHELL_VAR *find_var_nameref_for_assignment (string_view, int);
+  SHELL_VAR *find_variable_last_nameref (string_view, int);
+  SHELL_VAR *find_global_variable_last_nameref (string_view, int);
+  SHELL_VAR *find_variable_nameref (SHELL_VAR *);
+  SHELL_VAR *find_variable_nameref_for_create (string_view, int);
+  SHELL_VAR *find_variable_nameref_for_assignment (string_view, int);
   /* SHELL_VAR *find_internal (string_view, int); */
   SHELL_VAR *find_tempenv (string_view);
   SHELL_VAR *find_no_tempenv (string_view);
@@ -5264,12 +5310,33 @@ protected:
   SHELL_VAR *find_shell (string_view);
   SHELL_VAR *find_no_invisible (string_view);
   SHELL_VAR *find_for_assignment (string_view);
-  char *nameref_transform_name (string_view, int);
+  char *nameref_transform_name (char *, assign_flags);
   //   SHELL_VAR *copy_variable (SHELL_VAR *);
   SHELL_VAR *make_local (string_view, int);
-  SHELL_VAR *bind_variable (string_view, string_view, int);
-  SHELL_VAR *bind_global (string_view, string_view, int);
+  SHELL_VAR *find_global_variable_noref (string_view);
+
+  SHELL_VAR *bind_variable (string_view, const char *, int);
+  SHELL_VAR *bind_global_variable (string_view, const char *, int);
   SHELL_VAR *bind_function (string_view, COMMAND *);
+  SHELL_VAR *find_variable_internal (string_view, find_var_flags);
+
+  SHELL_VAR *find_nameref_at_context (SHELL_VAR *, VAR_CONTEXT *);
+
+  SHELL_VAR *find_variable_nameref_context (SHELL_VAR *, VAR_CONTEXT *,
+                                            VAR_CONTEXT **);
+
+  SHELL_VAR *find_variable_last_nameref_context (SHELL_VAR *, VAR_CONTEXT *,
+                                                 VAR_CONTEXT **);
+
+  SHELL_VAR *find_var_nameref_for_create (string_view, int);
+  SHELL_VAR *find_var_nameref_for_assignment (string_view, int);
+
+  SHELL_VAR *find_variable_tempenv (string_view);
+  SHELL_VAR *find_variable_notempenv (string_view);
+  SHELL_VAR *find_global_variable (string_view);
+  SHELL_VAR *find_shell_variable (string_view);
+  SHELL_VAR *find_variable_no_invisible (string_view);
+  SHELL_VAR *find_variable_for_assignment (string_view);
 
   void bind_function_def (string_view, FUNCTION_DEF *, int);
 
@@ -5283,30 +5350,142 @@ protected:
   SHELL_VAR **all_exported ();
   SHELL_VAR **local_exported ();
   SHELL_VAR **all_local (int);
+
+  SHELL_VAR *null_assign (SHELL_VAR *, string_view, arrayind_t, string_view);
+  SHELL_VAR *get_self (SHELL_VAR *);
+
 #if defined(ARRAY_VARS)
+  SHELL_VAR *null_array_assign (SHELL_VAR *, string_view, arrayind_t,
+                                string_view);
+
   SHELL_VAR **all_array ();
+  SHELL_VAR *init_dynamic_array_var (string_view, SHELL_VAR::value_func_t,
+                                     SHELL_VAR::assign_func_t, var_att_flags);
+
+  SHELL_VAR *init_dynamic_assoc_var (string_view, SHELL_VAR::value_func_t,
+                                     SHELL_VAR::assign_func_t, var_att_flags);
 #endif
+
+  SHELL_VAR *assign_seconds (SHELL_VAR *, string_view, arrayind_t,
+                             string_view);
+
+  SHELL_VAR *get_seconds (SHELL_VAR *);
+  SHELL_VAR *init_seconds_var ();
+
+  SHELL_VAR *assign_random (SHELL_VAR *, string_view, arrayind_t, string_view);
+
+  SHELL_VAR *get_random (SHELL_VAR *);
+  SHELL_VAR *get_urandom (SHELL_VAR *);
+
+  SHELL_VAR *assign_lineno (SHELL_VAR *, string_view, arrayind_t, string_view);
+
+  SHELL_VAR *get_lineno (SHELL_VAR *);
+
+  SHELL_VAR *assign_subshell (SHELL_VAR *, string_view, arrayind_t,
+                              string_view);
+
+  SHELL_VAR *get_subshell (SHELL_VAR *);
+  SHELL_VAR *get_epochseconds (SHELL_VAR *);
+  SHELL_VAR *get_epochrealtime (SHELL_VAR *);
+  SHELL_VAR *get_bashpid (SHELL_VAR *);
+  SHELL_VAR *get_bash_argv0 (SHELL_VAR *);
+
+  SHELL_VAR *assign_bash_argv0 (SHELL_VAR *, string_view, arrayind_t,
+                                string_view);
+
+  SHELL_VAR *get_bash_command (SHELL_VAR *);
+
+#if defined(HISTORY)
+  SHELL_VAR *get_histcmd (SHELL_VAR *);
+#endif
+
+#if defined(READLINE)
+  SHELL_VAR *get_comp_wordbreaks (SHELL_VAR *);
+  SHELL_VAR *assign_comp_wordbreaks (SHELL_VAR *, string_view, arrayind_t,
+                                     string_view);
+#endif
+
+#if defined(PUSHD_AND_POPD) && defined(ARRAY_VARS)
+  SHELL_VAR *assign_dirstack (SHELL_VAR *, string_view, arrayind_t,
+                              string_view);
+  void set_dirstack_element (intmax_t, int, string_view);
+  SHELL_VAR *get_dirstack (SHELL_VAR *);
+  WORD_LIST *get_directory_stack (int);
+#endif
+
+#if defined(ARRAY_VARS)
+  SHELL_VAR *get_groupset (SHELL_VAR *);
+#if defined(DEBUGGER)
+  SHELL_VAR *get_bashargcv (SHELL_VAR *);
+#endif
+  SHELL_VAR *build_hashcmd (SHELL_VAR *);
+  SHELL_VAR *get_hashcmd (SHELL_VAR *);
+  SHELL_VAR *assign_hashcmd (SHELL_VAR *, string_view, arrayind_t,
+                             string_view);
+#if defined(ALIAS)
+  SHELL_VAR *build_aliasvar (SHELL_VAR *);
+  SHELL_VAR *get_aliasvar (SHELL_VAR *);
+
+  SHELL_VAR *assign_aliasvar (SHELL_VAR *, string_view, arrayind_t,
+                              string_view);
+#endif
+#endif
+
+  SHELL_VAR *get_funcname (SHELL_VAR *);
+
+  void phash_insert (string_view, string_view, bool, int);
+
   char **all_matching_prefix (string_view);
 
   char **add_or_supercede_exported_var (string_view, int);
 
-  const char *get_variable_value (SHELL_VAR *);
-  const char *get_string_value (const char *);
-  const char *make_variable_value (SHELL_VAR *, const char *, int);
+  char *get_variable_value (SHELL_VAR *);
+  char *get_string_value (string_view);
+  char *make_variable_value (SHELL_VAR *, string_view, assign_flags);
+
+  SHELL_VAR *make_local_variable (const char *, mkloc_var_flags);
 
   /* These five are virtual callbacks when Readline is used. */
 
-  void sh_set_lines_and_columns (unsigned int, unsigned int) RL_OVERRIDE;
-  const char *sh_get_env_value (const char *) RL_OVERRIDE;
+  void sh_set_lines_and_columns (uint32_t, uint32_t) RL_OVERRIDE;
+  const char *sh_get_env_value (string_view) RL_OVERRIDE;
   std::string sh_single_quote (string_view) RL_OVERRIDE;
-  string_view sh_get_home_dir () RL_OVERRIDE;
+  const char *sh_get_home_dir () RL_OVERRIDE;
   int sh_unset_nodelay_mode (int) RL_OVERRIDE;
 
   SHELL_VAR *bind_variable_value (SHELL_VAR *, string_view, int);
   SHELL_VAR *bind_int_variable (string_view, string_view, assign_flags);
   SHELL_VAR *bind_var_to_int (string_view, int64_t);
 
+  SHELL_VAR *bind_invalid_envvar (string_view, string_view, int);
+
+  SHELL_VAR *bind_variable_internal (string_view, string_view,
+                                     HASH_TABLE<SHELL_VAR *> *, hsearch_flags,
+                                     assign_flags);
+
+  char *find_user_command (const char *);
+
   int assign_in_env (WORD_DESC *, int);
+
+  void
+  initialize_shell_level ()
+  {
+    adjust_shell_level (1);
+  }
+
+  void set_machine_vars ();
+  void set_argv0 ();
+  void set_home_var ();
+  void uidset ();
+  void initialize_dynamic_variables ();
+
+  std::string get_bash_name ();
+
+  void set_shell_var ();
+
+#if defined(ARRAY_VARS)
+  void make_vers_array ();
+#endif
 
   int unbind_variable (string_view);
   int check_unbind_variable (string_view);
@@ -5373,10 +5552,7 @@ protected:
   void print_var_function (SHELL_VAR *);
 
 #if defined(ARRAY_VARS)
-  SHELL_VAR *make_new_array_variable (string_view);
   SHELL_VAR *make_local_array_variable (string_view, int);
-
-  SHELL_VAR *make_new_assoc_variable (string_view);
   SHELL_VAR *make_local_assoc_variable (string_view, int);
 
   void set_pipestatus_array (int *, int);
@@ -5652,7 +5828,7 @@ protected:
 
   void initialize_group_array ();
 
-  STRINGLIST *get_group_list ();
+  void get_group_list ();
   std::vector<gid_t> *get_group_array ();
 
   int default_columns ();
@@ -6060,6 +6236,9 @@ protected:
   /* The name of this shell, as taken from argv[0]. */
   const char *shell_name;
 
+  /* Allocated shell name, from assign_bash_argv0. */
+  char *allocated_shell_name;
+
   /* The name of the .(shell)rc file. */
   char *bashrc_file;
 
@@ -6155,7 +6334,9 @@ protected:
      shell variables that are marked for export. */
   char **export_env;
 
-  HASH_TABLE<SHELL_VAR *> *last_table_searched; /* hash_lookup sets this */
+  HASH_TABLE<SHELL_VAR *> *last_table_searched;      // hash_lookup sets this
+  HASH_TABLE<FUNCTION_DEF *> *last_fntable_searched; // hash_lookup sets this
+
   VAR_CONTEXT *last_context_searched;
 
   /* variables from common.cc */
@@ -6434,7 +6615,7 @@ protected:
   std::string token_buffer;
 
   // A pointer to the list of aliases that we have (lazy init).
-  HASH_TABLE<alias_t> *aliases;
+  HASH_TABLE<alias_t *> *aliases;
 
   std::vector<shopt_var_t> shopt_vars;
 
@@ -6502,6 +6683,10 @@ protected:
      If this is zero, or a null string, it means resume the scan
      by advancing to the next ARGV-element.  */
   char *nextchar;
+
+  // Variables from hashcmd.cc
+
+  HASH_TABLE<PATH_DATA *> *hashed_filenames;
 
   // Buffer for buffered input.
   char localbuf[1024];

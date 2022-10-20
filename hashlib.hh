@@ -35,6 +35,14 @@ namespace bash
 #define HASH_REHASH_MULTIPLIER 4
 #define HASH_REHASH_FACTOR 2
 
+// flags for search () and insert ().
+enum hsearch_flags
+{
+  HS_NOFLAGS = 0,
+  HS_NOSRCH = 0x01,
+  HS_CREATE = 0x02
+};
+
 // Key/value container for HASH_TABLE items. The destructor
 // will delete all entries in the list.
 template <class T> class BUCKET_CONTENTS : public GENERIC_LIST
@@ -42,9 +50,9 @@ template <class T> class BUCKET_CONTENTS : public GENERIC_LIST
 public:
   // Constructor to create an empty bucket with the specified key and
   // optional next element to link with.
-  BUCKET_CONTENTS (const std::string &key, uint32_t khash, T *data = nullptr,
-                   BUCKET_CONTENTS *nextbucket = nullptr)
-      : GENERIC_LIST (nextbucket), key_ (key), khash_ (khash), data_ (data)
+  BUCKET_CONTENTS (const std::string &key_, uint32_t khash_, T data_ = nullptr,
+                   BUCKET_CONTENTS next = nullptr)
+      : GENERIC_LIST (next), key (key_), khash (khash_), data (data_)
   {
   }
 
@@ -52,7 +60,7 @@ public:
   ~BUCKET_CONTENTS () noexcept
   {
     delete next ();
-    delete *data_;
+    delete data;
   }
 
   BUCKET_CONTENTS *
@@ -68,10 +76,10 @@ public:
     return static_cast<BUCKET_CONTENTS *> (next_);
   }
 
-  std::string key_;    // What we look up.
-  T *data_;            // What we really want.
-  size_t times_found_; // Number of times this item has been found.
-  uint32_t khash_;     // What key hashes to
+  std::string key;    // What we look up.
+  T data;             // What we really want.
+  size_t times_found; // Number of times this item has been found.
+  uint32_t khash;     // What key hashes to
 };
 
 template <class T> class HASH_TABLE
@@ -86,6 +94,9 @@ public:
 
   // Destructor deletes all of the objects in the hash table.
   ~HASH_TABLE () noexcept { flush (); }
+
+  // Clone the hash table.
+  explicit HASH_TABLE (const HASH_TABLE<T> &);
 
   // Empty the hash table, deleting the pointed-to elements.
   void
@@ -105,6 +116,12 @@ public:
   {
     return nentries;
   }
+
+  void insert (string_view, T);
+
+  BUCKET_CONTENTS<T> *search (string_view, hsearch_flags);
+
+  T find (string_view);
 
   std::vector<BUCKET_CONTENTS<T> *> buckets; // Where the data is kept.
   size_t nentries; // How many entries this table has.
@@ -164,35 +181,10 @@ private:
   uint32_t
   hash_bucket (const std::string &key)
   {
+    // This requires the bucket size to be a power of two.
     return hash_string (key) & (buckets.size () - 1);
   }
-
-  // flags for search () and insert ().
-  enum hash_flags
-  {
-    HASH_NOSRCH = 0x01,
-    HASH_CREATE = 0x02
-  };
 };
-
-/* Operations on tables as a whole */
-// extern HASH_TABLE *hash_create (int);
-// extern HASH_TABLE *hash_copy (HASH_TABLE *, sh_string_func_t *);
-// extern void hash_flush (HASH_TABLE *, sh_free_func_t *);
-// extern void hash_dispose (HASH_TABLE *);
-// extern void hash_walk (HASH_TABLE *, hash_wfunc *);
-
-/* Operations to extract information from or pieces of tables */
-// extern int hash_bucket (const char *, HASH_TABLE *);
-// extern int hash_size (HASH_TABLE *);
-
-/* Operations on hash table entries */
-// extern BUCKET_CONTENTS *hash_search (const char *, HASH_TABLE *, int);
-// extern BUCKET_CONTENTS *hash_insert (char *, HASH_TABLE *, int);
-// extern BUCKET_CONTENTS *hash_remove (const char *, HASH_TABLE *, int);
-
-/* Miscellaneous */
-// extern unsigned int hash_string (const char *);
 
 #if 0
 /* Redefine the function as a macro for speed. */
