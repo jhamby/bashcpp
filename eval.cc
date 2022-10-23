@@ -20,22 +20,7 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include <csignal>
-
-#include "bashintl.hh"
-
-#include "flags.hh"
-#include "parser.hh"
 #include "shell.hh"
-#include "trap.hh"
-
-#include "builtins/common.hh"
-
-#include "input.hh"
 
 namespace bash
 {
@@ -87,10 +72,9 @@ Shell::reader_loop ()
                   /* If the shell is interactive, expand and display $PS0 after
                      reading a command (possibly a list or pipeline) and before
                      executing it. */
-                  if (interactive && !ps0_prompt.empty ())
+                  if (interactive && ps0_prompt && !ps0_prompt->empty ())
                     {
-                      std::string ps0_string (
-                          decode_prompt_string (ps0_prompt));
+                      string ps0_string (decode_prompt_string (*ps0_prompt));
 
                       if (!ps0_string.empty ())
                         {
@@ -196,7 +180,7 @@ Shell::pretty_print_loop ()
               current_command = global_command;
               global_command = nullptr;
               posixly_correct = true; /* print posix-conformant */
-              std::string command_to_print;
+              string command_to_print;
               if (current_command
                   && !((command_to_print
                         = make_command_string (current_command))
@@ -251,9 +235,9 @@ alrm_catcher (int)
 void
 Shell::send_pwd_to_eterm ()
 {
-  const char *pwd = get_string_value ("PWD");
-  if (!pwd)
-    pwd = get_working_directory ("eterm");
+  const string *pwd_str = get_string_value ("PWD");
+  const char *pwd
+      = pwd_str ? pwd_str->c_str () : get_working_directory ("eterm");
 
   if (pwd)
     fprintf (stderr, "\032/%s\n", pwd);
@@ -262,7 +246,7 @@ Shell::send_pwd_to_eterm ()
 #if defined(ARRAY_VARS)
 /* Caller ensures that A has a non-zero number of elements */
 void
-Shell::execute_array_command (ARRAY *a, string_view tag)
+Shell::execute_array_command (ARRAY *a, const string &tag)
 {
   int argc = 0;
   char **argv = array_to_argv (a, &argc);
@@ -279,7 +263,6 @@ Shell::execute_array_command (ARRAY *a, string_view tag)
 void
 Shell::execute_prompt_command ()
 {
-  char *command_to_execute;
   SHELL_VAR *pcv;
 #if defined(ARRAY_VARS)
   ARRAY *pcmds;
@@ -299,9 +282,9 @@ Shell::execute_prompt_command ()
     return; /* currently don't allow associative arrays here */
 #endif
 
-  command_to_execute = pcv->str_value ();
-  if (command_to_execute && *command_to_execute)
-    execute_variable_command (command_to_execute, "PROMPT_COMMAND");
+  string *command_to_execute = pcv->str_value ();
+  if (command_to_execute && !(command_to_execute->empty ()))
+    execute_variable_command (*command_to_execute, "PROMPT_COMMAND");
 }
 
 /* Call the Bison-generated parser and return the status of the parse.
@@ -366,7 +349,7 @@ Shell::read_command ()
 
       if (tmout_var && tmout_var->is_set ())
         {
-          tmout_len = atoi (tmout_var->str_value ());
+          tmout_len = atoi (tmout_var->str_value ()->c_str ());
           if (tmout_len > 0)
             {
               old_alrm = set_signal_handler (SIGALRM, &alrm_catcher);

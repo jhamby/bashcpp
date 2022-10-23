@@ -23,6 +23,8 @@
 
 #include "shell.hh"
 
+#include "conftypes.hh"
+
 using std::make_pair;
 
 namespace bash
@@ -96,10 +98,10 @@ Shell::initialize_bash_input ()
    GET, UNGET, TYPE, NAME, and LOCATION. */
 void
 Shell::init_yy_io (sh_cget_func_t get, sh_cunget_func_t unget,
-                   stream_type type, string_view name, INPUT_STREAM location)
+                   stream_type type, const string &name, INPUT_STREAM location)
 {
   bash_input.type = type;
-  bash_input.name = to_string (name);
+  bash_input.name = name;
 
   /* XXX */
   bash_input.location = location;
@@ -223,11 +225,11 @@ Shell::yy_string_unget (int c)
 }
 
 void
-Shell::with_input_from_string (char *string, string_view name)
+Shell::with_input_from_string (char *str, const string &name)
 {
   INPUT_STREAM location;
 
-  location.string = string;
+  location.string = str;
   init_yy_io (&Shell::yy_string_get, &Shell::yy_string_unget, st_string, name,
               location);
 }
@@ -293,7 +295,7 @@ Shell::yy_stream_unget (int c)
 }
 
 void
-Shell::with_input_from_stream (FILE *stream, string_view name)
+Shell::with_input_from_stream (FILE *stream, const string &name)
 {
   INPUT_STREAM location;
 
@@ -492,7 +494,7 @@ Shell::clear_string_list_expander (alias_t *ap)
    If there is no more input, then we return nullptr.  If REMOVE_QUOTED_NEWLINE
    is non-zero, we remove unquoted \<newline> pairs.  This is used by
    read_secondary_line to read here documents. */
-const std::string *
+const string *
 Shell::read_a_line (bool remove_quoted_newline)
 {
   int c, peekc;
@@ -577,14 +579,14 @@ Shell::read_a_line (bool remove_quoted_newline)
    document.  REMOVE_QUOTED_NEWLINE is non-zero if we should remove
    newlines quoted with backslashes while reading the line.  It is
    non-zero unless the delimiter of the here document was quoted. */
-const std::string *
+const string *
 Shell::read_secondary_line (bool remove_quoted_newline)
 {
   prompt_string_pointer = &ps2_prompt;
   if (SHOULD_PROMPT ())
     prompt_again ();
 
-  const std::string *ret = read_a_line (remove_quoted_newline);
+  const string *ret = read_a_line (remove_quoted_newline);
 
 #if defined(HISTORY)
   if (ret && !ret->empty () && remember_on_history
@@ -901,7 +903,7 @@ Shell::shell_getc (bool remove_quoted_newline)
             maybe_add_history (shell_input_line);
           else
             {
-              std::string hdcs;
+              string hdcs;
               hdcs = history_delimiting_chars (shell_input_line);
               if (!hdcs.empty () && hdcs[0] == ';')
                 maybe_add_history (shell_input_line);
@@ -1095,7 +1097,7 @@ Shell::shell_ungetc (int c)
 
 /* Push S back into shell_input_line; updating shell_input_line_index */
 void
-Shell::shell_ungets (string_view s)
+Shell::shell_ungets (const string &s)
 {
   size_t slen = s.size ();
 
@@ -1103,7 +1105,7 @@ Shell::shell_ungets (string_view s)
     {
       /* Easy, just overwrite shell_input_line. This is preferred because it
         saves on set_line_mbstate () and other overhead like push_string */
-      shell_input_line = to_string (s);
+      shell_input_line = s;
       shell_input_line_index = 0;
       shell_input_line_terminator = 0;
     }
@@ -1126,7 +1128,7 @@ Shell::shell_ungets (string_view s)
       /* Harder case: pushing back input string that's longer than what we've
         consumed from shell_input_line so far. */
       internal_debug ("shell_ungets: not at end of shell_input_line");
-      shell_input_line.replace (0, shell_input_line_index, to_string (s));
+      shell_input_line.replace (0, shell_input_line_index, s);
       shell_input_line_index = 0;
     }
 
@@ -1150,18 +1152,18 @@ Shell::discard_until (int character)
 }
 
 void
-Shell::execute_variable_command (string_view command, string_view vname)
+Shell::execute_variable_command (const string &command, const string &vname)
 {
   sh_parser_state_t ps;
 
   save_parser_state (&ps);
-  const char *last_lastarg = get_string_value ("_");
+  const string *last_lastarg = get_string_value ("_");
 
   parse_and_execute (savestring (command), vname,
                      (SEVAL_NONINT | SEVAL_NOHIST));
 
   restore_parser_state (&ps);
-  bind_variable ("_", last_lastarg, 0);
+  bind_variable ("_", *last_lastarg, 0);
 
   if (token_to_read == '\n') /* reset_parser was called */
     token_to_read = parser::token::YYEOF;
@@ -1237,7 +1239,7 @@ Shell::gather_here_documents ()
    Special cases that disqualify:
      In a pattern list in a case statement (parser_state & PST_CASEPAT). */
 Shell::alias_expand_token_result
-Shell::alias_expand_token (string_view tokstr)
+Shell::alias_expand_token (const string &tokstr)
 {
   char *expanded;
   alias_t *ap;
@@ -1354,7 +1356,7 @@ Shell::time_command_acceptable ()
         preceded by one of `;', `\n', `||', `&&', or `&'.
 */
 parser::symbol_type
-Shell::special_case_tokens (string_view tokstr)
+Shell::special_case_tokens (const string &tokstr)
 {
   /* Posix grammar rule 6 */
   if ((last_read_token == parser::token::WORD) &&
@@ -1812,7 +1814,7 @@ tokword:
  * reprompting the user, if necessary, after reading a newline, and returning
  * correct error values if it reads EOF.
  */
-std::string
+string
 Shell::parse_matched_pair (
     int qc, /* `"' if this construct is within double quotes */
     int open, int close, pgroup_flags flags)
@@ -1835,7 +1837,7 @@ Shell::parse_matched_pair (
   /* RFLAGS is the set of flags we want to pass to recursive calls. */
   pgroup_flags rflags = (qc == '"') ? P_DQUOTE : (flags & P_DQUOTE);
 
-  std::string ret;
+  string ret;
 
   start_lineno = line_number;
   while (count)
@@ -1993,7 +1995,7 @@ Shell::parse_matched_pair (
         {
           if MBTEST (shellquote (ch))
             {
-              std::string nestret;
+              string nestret;
               dstack.push_back (static_cast<char> (ch));
 
               /* '', ``, or "" inside $(...) or other grouping construct. */
@@ -2021,7 +2023,7 @@ Shell::parse_matched_pair (
                 {
                   /* Translate $'...' here. */
                   /* PST_NOEXPAND */
-                  std::string ttrans
+                  string ttrans
                       = ansiexpand (nestret.begin (), nestret.end ());
                   nestret.clear ();
 
@@ -2067,7 +2069,7 @@ Shell::parse_matched_pair (
                 {
                   /* Locale expand $"..." here. */
                   /* PST_NOEXPAND */
-                  std::string ttrans = locale_expand (nestret, start_lineno);
+                  string ttrans = locale_expand (nestret, start_lineno);
 
                   /* If we're supposed to single-quote translated strings,
                     check whether the translated result is different from
@@ -2114,7 +2116,7 @@ Shell::parse_matched_pair (
       else if MBTEST (open == '"' && ch == '`')
         {
           // this call may throw matched_pair_error
-          std::string nestret = parse_matched_pair (0, '`', '`', rflags);
+          string nestret = parse_matched_pair (0, '`', '`', rflags);
           ret += nestret;
         }
       else if MBTEST (open != '`' && (tflags & LEX_WASDOL)
@@ -2122,7 +2124,7 @@ Shell::parse_matched_pair (
         /* check for $(), $[], or ${} inside quoted string. */
         {
         parse_dollar_word:
-          std::string nestret;
+          string nestret;
           if (open == ch) /* undo previous increment */
             count--;
           if (ch == '(')
@@ -2157,7 +2159,7 @@ Shell::parse_matched_pair (
 
 /* Parse a $(...) command substitution.  This reads input from the current
    input stream. */
-std::string
+string
 Shell::parse_comsub (int qc, int open, int close)
 {
   sh_parser_state_t ps;
@@ -2298,13 +2300,13 @@ Shell::parse_comsub (int qc, int open, int close)
   restore_parser_state (&ps);
   pushed_string_list = saved_strings;
 
-  std::string tcmd (print_comsub (parsed_command));
+  string tcmd (print_comsub (parsed_command));
 
   size_t retlen = tcmd.size ();
   if (tcmd[0] == '(') /* ) need a space to prevent arithmetic expansion */
     retlen++;
 
-  std::string ret;
+  string ret;
   ret.reserve (retlen + 1);
 
   if (tcmd[0] == '(')
@@ -2339,8 +2341,7 @@ Shell::xparse_dolparen (char *base, char *string, size_t *indp, sx_flags flags)
   int start_lineno = line_number;
 
   // itrace ("xparse_dolparen: size = %d shell_input_line = `%s' string=`%s'",
-  //         shell_input_line.size (), shell_input_line.c_str (),
-  //         to_string (string).c_str ());
+  //         shell_input_line.size (), shell_input_line.c_str (), string);
 
   if (*string == '\0')
     {
@@ -2607,7 +2608,7 @@ Shell::parse_dparen (int c)
 int
 Shell::parse_arith_cmd (char **ep, bool adddq)
 {
-  std::string ttok;
+  string ttok;
 
   try
     {
@@ -2626,7 +2627,7 @@ Shell::parse_arith_cmd (char **ep, bool adddq)
   if MBTEST (c != ')')
     rval = 0;
 
-  std::string tokstr;
+  string tokstr;
 
   /* if ADDDQ != 0 then (( ... )) -> "..." */
   if (rval == 1 && adddq) /* arith cmd, add double quotes */
@@ -2661,7 +2662,7 @@ Shell::cond_error (parser::token_kind_type token,
     parser_error (cond_lineno, _ ("unexpected EOF while looking for `]]'"));
   else if (cond_symbol.kind () != parser::symbol_kind::S_COND_ERROR)
     {
-      std::string etext (error_string_from_token (token, &cond_symbol));
+      string etext (error_string_from_token (token, &cond_symbol));
       if (!etext.empty ())
         {
           parser_error (cond_lineno,
@@ -2726,7 +2727,7 @@ Shell::cond_term ()
           if (term)
             delete term;
 
-          std::string etext (error_string_from_token (cond_token, &symbol));
+          string etext (error_string_from_token (cond_token, &symbol));
           if (!etext.empty ())
             {
               parser_error (lineno, _ ("unexpected token `%s', expected `)'"),
@@ -2764,8 +2765,7 @@ Shell::cond_term ()
           else
             {
               delete word;
-              std::string etext (
-                  error_string_from_token (cond_token, &symbol));
+              string etext (error_string_from_token (cond_token, &symbol));
               if (!etext.empty ())
                 {
                   parser_error (line_number,
@@ -2829,8 +2829,7 @@ Shell::cond_term ()
             }
           else
             {
-              std::string etext (
-                  error_string_from_token (current_token, &sym2));
+              string etext (error_string_from_token (current_token, &sym2));
               if (!etext.empty ())
                 {
                   parser_error (line_number,
@@ -2865,8 +2864,7 @@ Shell::cond_term ()
             }
           else
             {
-              std::string etext (
-                  error_string_from_token (current_token, &sym3));
+              string etext (error_string_from_token (current_token, &sym3));
               if (!etext.empty ())
                 {
                   parser_error (line_number,
@@ -2894,7 +2892,7 @@ Shell::cond_term ()
                       static_cast<char> (cond_token));
       else
         {
-          std::string etext (error_string_from_token (cond_token, &symbol));
+          string etext (error_string_from_token (cond_token, &symbol));
           if (!etext.empty ())
             {
               parser_error (line_number,
@@ -2915,11 +2913,11 @@ Shell::cond_term ()
 #if defined(ARRAY_VARS)
 // This is now called with a modifiable buffer.
 bool
-Shell::token_is_assignment (std::string &t)
+Shell::token_is_assignment (string &t)
 {
   t.push_back ('=');
 
-  size_t r = assignment (t.c_str (), (parser_state & PST_COMPASSIGN) != 0);
+  size_t r = assignment (t, (parser_state & PST_COMPASSIGN) != 0);
 
   t.erase (t.size () - 1, 1);
 
@@ -3013,7 +3011,7 @@ Shell::read_token_word (int character)
       if MBTEST (shellquote (character))
         {
           dstack.push_back (static_cast<char> (character));
-          std::string ttok;
+          string ttok;
           try
             {
               ttok = parse_matched_pair (character, character, character,
@@ -3035,7 +3033,7 @@ Shell::read_token_word (int character)
             quoted = true;
 
           dollar_present
-              |= (character == '"' && ttok.find ('$') != std::string::npos);
+              |= (character == '"' && ttok.find ('$') != string::npos);
           goto next_character;
         }
 
@@ -3050,7 +3048,7 @@ Shell::read_token_word (int character)
             goto got_character;
 
           dstack.push_back (static_cast<char> (character));
-          std::string ttok;
+          string ttok;
           try
             {
               ttok = parse_matched_pair (cd, '(', ')', P_NOFLAGS);
@@ -3078,7 +3076,7 @@ Shell::read_token_word (int character)
           if MBTEST (peek_char == '(')
             {
               dstack.push_back (peek_char);
-              std::string ttok;
+              string ttok;
               try
                 {
                   ttok = parse_matched_pair (cd, '(', ')', P_NOFLAGS);
@@ -3111,7 +3109,7 @@ Shell::read_token_word (int character)
                      || ((peek_char == '{' || peek_char == '[')
                          && character == '$')) /* ) ] } */
             {
-              std::string ttok;
+              string ttok;
               try
                 {
                   if (peek_char == '{')
@@ -3157,7 +3155,7 @@ Shell::read_token_word (int character)
               int first_line = line_number;
               dstack.push_back (peek_char);
 
-              std::string ttok;
+              string ttok;
               try
                 {
                   ttok = parse_matched_pair (peek_char, peek_char, peek_char,
@@ -3171,7 +3169,7 @@ Shell::read_token_word (int character)
                 }
               dstack.pop_back ();
 
-              std::string ttrans;
+              string ttrans;
               if (peek_char == '\'')
                 {
                   /* PST_NOEXPAND */
@@ -3226,7 +3224,7 @@ Shell::read_token_word (int character)
                           || (token_buffer.empty ()
                               && (parser_state & PST_COMPASSIGN))))
         {
-          std::string ttok;
+          string ttok;
           try
             {
               ttok = parse_matched_pair (cd, '[', ']', P_ARRAYSUB);
@@ -3250,7 +3248,7 @@ Shell::read_token_word (int character)
           char peek_char = static_cast<char> (shell_getc (true));
           if MBTEST (peek_char == '(')
             {
-              std::string ttok = parse_compound_assignment ();
+              string ttok = parse_compound_assignment ();
               token_buffer.push_back ('=');
               token_buffer.push_back ('(');
               token_buffer += ttok;
@@ -3386,7 +3384,7 @@ got_token:
 
   if (command_token_position (last_read_token))
     {
-      std::map<string_view, builtin>::iterator it
+      map<string_view, builtin>::iterator it
           = shell_builtins.find (token_buffer);
 
       if (it != shell_builtins.end ()
@@ -3402,7 +3400,7 @@ got_token:
              && (character == '<' || character == '>'))
     {
       /* can use token; already copied to the_word */
-      std::string token_plus_1 (token_buffer.substr (1));
+      string token_plus_1 (token_buffer.substr (1));
 
 #if defined(ARRAY_VARS)
       if (legal_identifier (token_plus_1)
@@ -3460,7 +3458,7 @@ got_token:
    history entry.  LINE is the line we're about to add; it helps
    make some more intelligent decisions in certain cases. */
 const char *
-Shell::history_delimiting_chars (string_view line)
+Shell::history_delimiting_chars (const string &line)
 {
   if ((parser_state & PST_HEREDOC) == 0)
     last_was_heredoc = false;
@@ -3569,10 +3567,10 @@ Shell::prompt_again ()
   if (!prompt_string_pointer)
     prompt_string_pointer = &ps1_prompt;
 
-  std::string temp_prompt;
+  string temp_prompt;
 
-  if (!prompt_string_pointer->empty ())
-    temp_prompt = decode_prompt_string (*prompt_string_pointer);
+  if (!(*prompt_string_pointer)->empty ())
+    temp_prompt = decode_prompt_string (**prompt_string_pointer);
 
   current_prompt_string = *prompt_string_pointer;
   prompt_string_pointer = &ps2_prompt;
@@ -3594,17 +3592,17 @@ Shell::prompt_again ()
    the first line of a potentially multi-line command, so we compensate
    here by returning one fewer when appropriate. */
 size_t
-Shell::prompt_history_number (string_view pmt)
+Shell::prompt_history_number (const string &pmt)
 {
   size_t ret = history_number ();
   if (ret == 1)
     return ret;
 
-  if (pmt == ps1_prompt) /* are we expanding $PS1? */
+  if (&pmt == ps1_prompt) /* are we expanding $PS1? */
     return ret;
-  else if (pmt == ps2_prompt && command_oriented_history == 0)
+  else if (&pmt == ps2_prompt && command_oriented_history == 0)
     return ret; /* not command oriented history */
-  else if (pmt == ps2_prompt && command_oriented_history
+  else if (&pmt == ps2_prompt && command_oriented_history
            && current_command_first_line_saved)
     return ret - 1;
   else
@@ -3644,8 +3642,8 @@ Shell::prompt_history_number (string_view pmt)
         \]	end a sequence of non-printing chars
 */
 #define PROMPT_GROWTH 48
-std::string
-Shell::decode_prompt_string (string_view string)
+string
+Shell::decode_prompt_string (const string &str)
 {
 #if defined(PROMPT_STRING_DECODE)
   size_t size;
@@ -3654,13 +3652,14 @@ Shell::decode_prompt_string (string_view string)
   time_t the_time;
   char octal_string[4];
   char timebuf[128];
-  const char *temp;
+  const string *temp;
+  const char *temp_cstr;
 
-  std::string result;
+  string result;
   result.reserve (PROMPT_GROWTH);
 
-  string_view::const_iterator it;
-  for (it = string.begin (); it != string.end (); ++it)
+  string::const_iterator it;
+  for (it = str.begin (); it != str.end (); ++it)
     {
       if (posixly_correct && *it == '!')
         {
@@ -3675,8 +3674,8 @@ Shell::decode_prompt_string (string_view string)
 #if !defined(HISTORY)
               result.push_back ("1");
 #else  /* HISTORY */
-              result += itos (
-                  static_cast<int64_t> (prompt_history_number (string)));
+              result
+                  += itos (static_cast<int64_t> (prompt_history_number (str)));
 #endif /* HISTORY */
               continue;
             }
@@ -3712,8 +3711,8 @@ Shell::decode_prompt_string (string_view string)
 
               if (n != -1)
                 {
-                  for (int i = 0;
-                       i < 3 && it != string.end () && isoctal (*it); i++)
+                  for (int i = 0; i < 3 && it != str.end () && isoctal (*it);
+                       i++)
                     ++it;
 
                   --it; // back up one
@@ -3760,13 +3759,12 @@ Shell::decode_prompt_string (string_view string)
                 now = localtime (&the_time);
 
                 // make a time format substring to pass to strftime ()
-                size_t start_pos = static_cast<size_t> (it - string.begin ());
-                size_t close_bracket = string.find ('}', start_pos);
-                it = (string.begin ()
-                      + static_cast<ptrdiff_t> (close_bracket));
+                size_t start_pos = static_cast<size_t> (it - str.begin ());
+                size_t close_bracket = str.find ('}', start_pos);
+                it = (str.begin () + static_cast<ptrdiff_t> (close_bracket));
 
-                std::string timefmt (to_string (
-                    string.substr (start_pos, (close_bracket - start_pos))));
+                string timefmt (
+                    str.substr (start_pos, (close_bracket - start_pos)));
                 if (timefmt.empty ())
                   timefmt = "%X"; // locale-specific current time
 
@@ -3781,7 +3779,7 @@ Shell::decode_prompt_string (string_view string)
                          second argument of Q_DOUBLE_QUOTES if we use this
                          function here. */
                       result += sh_backslash_quote_for_double_quotes (
-                          std::string (timebuf));
+                          string (timebuf));
                     else
                       result += timebuf;
                   }
@@ -3797,7 +3795,7 @@ Shell::decode_prompt_string (string_view string)
 
             case 's':
               {
-                std::string stemp (sh_strvis (base_pathname (shell_name)));
+                string stemp (sh_strvis (base_pathname (shell_name)));
 
                 // Try to quote anything the user can set in the file system
                 if (promptvars || posixly_correct)
@@ -3841,7 +3839,7 @@ Shell::decode_prompt_string (string_view string)
                 else
                   {
                     tlen = sizeof (t_string) - 1;
-                    strncpy (t_string, temp, tlen);
+                    strncpy (t_string, temp->c_str (), tlen);
                   }
                 t_string[tlen] = '\0';
 
@@ -3852,21 +3850,21 @@ Shell::decode_prompt_string (string_view string)
                   strcpy (t_string, temp);
 #endif
 
-                const char *t;
-                std::string dir_string;
+                const string *t;
+                string dir_string;
 
 #define ROOT_PATH(x) ((x)[0] == '/' && (x)[1] == 0)
 #define DOUBLE_SLASH_ROOT(x) ((x)[0] == '/' && (x)[1] == '/' && (x)[2] == 0)
                 /* Abbreviate \W as ~ if $PWD == $HOME */
                 if (c == 'W'
                     && (((t = get_string_value ("HOME")) == nullptr)
-                        || !STREQ (t, t_string)))
+                        || (*t) != t_string))
                   {
                     if (!ROOT_PATH (t_string) && !DOUBLE_SLASH_ROOT (t_string))
                       {
-                        t = strrchr (t_string, '/');
-                        if (t)
-                          memmove (t_string, t + 1, strlen (t)); // copy NULL
+                        const char *t2 = strrchr (t_string, '/');
+                        if (t2)
+                          memmove (t_string, t2 + 1, strlen (t2)); // copy NULL
                       }
                     dir_string = t_string;
                   }
@@ -3900,7 +3898,7 @@ Shell::decode_prompt_string (string_view string)
             case 'h':
             case 'H':
               {
-                std::string t_host (current_host_name);
+                string t_host (current_host_name);
                 if (c == 'h' && ((size = t_host.find ('.')) != t_host.npos))
                   t_host.resize (size);
                 if (promptvars || posixly_correct)
@@ -3917,8 +3915,8 @@ Shell::decode_prompt_string (string_view string)
               n = current_command_number;
               /* If we have already incremented current_command_number (PS4,
                  ${var@P}), compensate */
-              if (string != ps0_prompt && string != ps1_prompt
-                  && string != ps2_prompt)
+              if (&str != ps0_prompt && &str != ps1_prompt
+                  && &str != ps2_prompt)
                 n--;
               result += itos (n);
               break;
@@ -3927,8 +3925,8 @@ Shell::decode_prompt_string (string_view string)
 #if !defined(HISTORY)
               result.push_back ('1');
 #else  /* HISTORY */
-              result += itos (
-                  static_cast<int64_t> (prompt_history_number (string)));
+              result
+                  += itos (static_cast<int64_t> (prompt_history_number (str)));
 #endif /* HISTORY */
               break;
 
@@ -3944,9 +3942,9 @@ Shell::decode_prompt_string (string_view string)
 
             case 'l':
 #if defined(HAVE_TTYNAME)
-              temp = ttyname (fileno (stdin));
-              if (temp)
-                result += base_pathname (temp);
+              temp_cstr = ttyname (fileno (stdin));
+              if (temp_cstr)
+                result += base_pathname (temp_cstr);
               else
                 result += "tty";
 #else
@@ -4001,7 +3999,7 @@ Shell::decode_prompt_string (string_view string)
         }
     }
 #else  /* !PROMPT_STRING_DECODE */
-  std::string result (string);
+  string result (string);
 #endif /* !PROMPT_STRING_DECODE */
 
 #if __cplusplus >= 201103L
@@ -4048,25 +4046,25 @@ Shell::decode_prompt_string (string_view string)
 
 // Report a syntax error and restart the parser (called by Bison).
 void
-BashParser::error (const std::string &msg)
+BashParser::error (const string &msg)
 {
   the_shell->yyerror (msg);
 }
 
 // Report a syntax error and restart the parser. Call here for fatal errors.
 void
-Shell::yyerror (const std::string &msg)
+Shell::yyerror (const string &msg)
 {
   if ((the_shell->parser_state & PST_NOERROR) == 0)
     the_shell->report_syntax_error (msg.c_str ());
   the_shell->reset_parser ();
 }
 
-std::string
+string
 Shell::error_string_from_token (parser::token_kind_type token,
                                 const parser::symbol_type *symbol)
 {
-  std::string t (find_token_in_map (token, word_token_map));
+  string t (find_token_in_map (token, word_token_map));
   if (!t.empty ())
     return t;
 
@@ -4119,10 +4117,10 @@ Shell::error_string_from_token (parser::token_kind_type token,
   return t;
 }
 
-std::string
+string
 Shell::error_token_from_text ()
 {
-  const std::string &t = shell_input_line;
+  const string &t = shell_input_line;
   size_t i = shell_input_line_index;
   size_t token_end = 0;
 
@@ -4148,7 +4146,7 @@ Shell::error_token_from_text ()
   else if (i == 0 && token_end == 0) // one-character token
     return t.substr (i, 1);
 
-  return std::string ();
+  return string ();
 }
 
 void
@@ -4158,7 +4156,7 @@ Shell::print_offending_line ()
   while (token_end && shell_input_line[token_end - 1] == '\n')
     --token_end;
 
-  std::string msg (shell_input_line.substr (0, token_end));
+  string msg (shell_input_line.substr (0, token_end));
   parser_error (line_number, "`%s'", msg.c_str ());
 }
 
@@ -4179,7 +4177,7 @@ Shell::report_syntax_error (const char *message)
       return;
     }
 
-  std::string msg;
+  string msg;
 
   /* If the line of input we're reading is not null, try to find the
      objectionable token. First, try to figure out what token the
@@ -4310,7 +4308,8 @@ Shell::handle_eof_input_unit ()
 /* Take a string and run it through the shell parser, returning the
    resultant word list. Used by compound array assignment. */
 WORD_LIST *
-Shell::parse_string_to_word_list (string_view s, int flags, string_view whom)
+Shell::parse_string_to_word_list (const string &s, int flags,
+                                  const string &whom)
 {
   sh_parser_state_t ps;
   pstate_flags orig_parser_state = PST_NOFLAGS;
@@ -4364,7 +4363,7 @@ Shell::parse_string_to_word_list (string_view s, int flags, string_view whom)
       if (tok != parser::token::WORD && tok != parser::token::ASSIGNMENT_WORD)
         {
           line_number = orig_line_number + line_number - 1;
-          yyerror (std::string ()); /* does the right thing */
+          yyerror (string ()); /* does the right thing */
           delete wl;
           parse_string_error = true;
           break;
@@ -4396,7 +4395,7 @@ Shell::parse_string_to_word_list (string_view s, int flags, string_view whom)
   return wl->reverse ();
 }
 
-std::string
+string
 Shell::parse_compound_assignment ()
 {
   sh_parser_state_t ps;
@@ -4451,7 +4450,7 @@ Shell::parse_compound_assignment ()
             parser_error (orig_line_number,
                           _ ("unexpected EOF while looking for matching `)'"));
           else
-            yyerror (std::string ()); /* does the right thing */
+            yyerror (string ()); /* does the right thing */
 
           delete wl;
           parse_string_error = true;
@@ -4473,7 +4472,7 @@ Shell::parse_compound_assignment ()
         throw bash_exception (DISCARD);
     }
 
-  std::string ret;
+  string ret;
 
   if (wl)
     {

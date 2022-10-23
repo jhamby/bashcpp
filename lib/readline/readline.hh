@@ -2520,7 +2520,7 @@ private:
 
   char *_rl_init_locale ();
 
-  bool _rl_set_localevars (const char *, bool);
+  bool _rl_set_localevars (const std::string &, bool);
 
   /* Check for LC_ALL, LC_CTYPE, and LANG and use the first with a value
      to decide the defaults for 8-bit character input and output. Returns
@@ -2535,13 +2535,13 @@ private:
     return _rl_set_localevars (t, false);
   }
 
-  const char *
-  _rl_get_locale_var (const char *v)
+  const std::string *
+  _rl_get_locale_var (const std::string &v)
   {
-    const char *lspec = sh_get_env_value ("LC_ALL");
-    if (lspec == nullptr || *lspec == '\0')
+    const std::string *lspec = sh_get_env_value ("LC_ALL");
+    if (lspec == nullptr || lspec->empty ())
       lspec = sh_get_env_value (v);
-    if (lspec == nullptr || *lspec == '\0')
+    if (lspec == nullptr || lspec->empty ())
       lspec = sh_get_env_value ("LANG");
 
     return lspec;

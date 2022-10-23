@@ -29,40 +29,13 @@
 
 #if defined(ARRAY_VARS)
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "array.hh"
-#include "assoc.hh"
-#include "builtins/common.hh"
 #include "shell.hh"
 
 namespace bash
 {
 
-// static WordList *assoc_to_word_list_internal (HashTable *, int);
-
-/* assoc_create == hash_create */
-
-void
-assoc_dispose (HASH_TABLE *hash)
-{
-  if (hash)
-    {
-      hash_flush (hash, 0);
-      hash_dispose (hash);
-    }
-}
-
-void
-assoc_flush (HASH_TABLE *hash)
-{
-  hash_flush (hash, 0);
-}
-
 int
-assoc_insert (HASH_TABLE *hash, char *key, const char *value)
+assoc_insert (HASH_TABLE *hash, const char *key, const char *value)
 {
   BUCKET_CONTENTS *b;
 
@@ -294,7 +267,7 @@ assoc_patsub (HASH_TABLE *h, const char *pat, const char *rep, int mflags)
   if (wl == 0)
     return (char *)NULL;
 
-  for (save = wl; wl; wl = (WORD_LIST *)wl->next)
+  for (save = wl; wl; wl = wl->next ())
     {
       t = pat_subst (wl->word->word, pat, rep, mflags);
       FREE (wl->word->word);
@@ -325,7 +298,7 @@ assoc_modcase (HASH_TABLE *h, const char *pat, int modop, int mflags)
   if (wl == 0)
     return (char *)NULL;
 
-  for (save = wl; wl; wl = (WORD_LIST *)wl->next)
+  for (save = wl; wl; wl = wl->next ())
     {
       t = sh_modcase (wl->word->word, pat, modop);
       FREE (wl->word->word);
@@ -512,7 +485,7 @@ assoc_keys_to_word_list (HASH_TABLE *h)
   return assoc_to_word_list_internal (h, 1);
 }
 
-WORD_LIST *assoc_to_kvpair_list (h) HASH_TABLE *h;
+WORD_LIST *assoc_to_kvpair_list (HASH_TABLE *h)
 {
   WORD_LIST *list;
   int i;

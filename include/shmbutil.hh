@@ -122,8 +122,8 @@ MB_INVALIDCH (size_t size)
 // Advance the iterator by one (possibly multibyte) character.
 // The necessary state variables are passed by the caller.
 static inline void
-advance_char (string_view::const_iterator &it,
-              const string_view::const_iterator end, size_t locale_mb_cur_max,
+advance_char (std::string::const_iterator &it,
+              std::string::const_iterator end, size_t locale_mb_cur_max,
               bool locale_utf8locale, mbstate_t &state)
 {
   if (locale_mb_cur_max > 1)

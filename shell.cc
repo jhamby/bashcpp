@@ -26,31 +26,9 @@
 
 #include "config.h"
 
-#include "bashtypes.hh"
-
-#if defined(HAVE_SYS_FILE_H)
-#include <sys/file.h>
-#endif
-
-#include "posixstat.hh"
-#include "posixtime.hh"
-
-#if defined(HAVE_PWD_H)
-#include <pwd.h>
-#endif
-
-#include <unistd.h>
-
-#include "bashintl.hh"
-
-#include "builtins.hh"
-#include "builtins/common.hh"
-#include "flags.hh"
 #include "shell.hh"
 
-#include "input.hh"
-
-#include <fnmatch.h>
+#include "conftypes.hh"
 
 #if !defined(HAVE_GETPW_DECLS)
 extern struct passwd *getpwuid ();
@@ -361,7 +339,7 @@ Shell::run_shell (int argc, char **argv, char **env)
       arg_index++;
     }
 
-  this_command_name = string_view ();
+  this_command_name.clear ();
 
   /* First, let the outside world know about our interactive status.
      A shell is interactive if the `-i' flag was given, or if all of
@@ -418,20 +396,20 @@ Shell::run_shell (int argc, char **argv, char **env)
     {
       bool emacs_term, in_emacs;
 
-      const char *term = get_string_value ("TERM");
-      const char *emacs = get_string_value ("EMACS");
-      const char *inside_emacs = get_string_value ("INSIDE_EMACS");
+      const string *term = get_string_value ("TERM");
+      const string *emacs = get_string_value ("EMACS");
+      const string *inside_emacs = get_string_value ("INSIDE_EMACS");
 
       if (inside_emacs)
         {
-          emacs_term = strstr (inside_emacs, ",term:") != nullptr;
+          emacs_term = inside_emacs->find (",term:") != string::npos;
           in_emacs = true;
         }
       else if (emacs)
         {
           /* Infer whether we are in an older Emacs. */
-          emacs_term = strstr (emacs, " (term:") != nullptr;
-          in_emacs = emacs_term || STREQ (emacs, "t");
+          emacs_term = emacs->find (" (term:") != string::npos;
+          in_emacs = emacs_term || *emacs == "t";
         }
       else
         in_emacs = emacs_term = false;
@@ -439,12 +417,12 @@ Shell::run_shell (int argc, char **argv, char **env)
       /* Not sure any emacs terminal emulator sets TERM=emacs any more */
       if (term)
         {
-          no_line_editing |= STREQ (term, "emacs");
-          no_line_editing |= in_emacs && STREQ (term, "dumb");
+          no_line_editing |= *term == "emacs";
+          no_line_editing |= in_emacs && *term == "dumb";
 
           /* running_under_emacs == 2 for `eterm' */
-          running_under_emacs = in_emacs || STREQN (term, "emacs", 5);
-          running_under_emacs += emacs_term && STREQN (term, "eterm", 5);
+          running_under_emacs = in_emacs || term->find ("emacs") == 0;
+          running_under_emacs += emacs_term && term->find ("eterm") == 0;
         }
 
       if (running_under_emacs)
@@ -671,7 +649,7 @@ Shell::parse_long_options (char **argv, int arg_start, int arg_end)
           arg_string++;
         }
 
-      std::vector<LongArg>::const_iterator it;
+      vector<LongArg>::const_iterator it;
       string_view this_arg (arg_string + 1); // skip '-'
       bool found = false;
 
@@ -685,7 +663,7 @@ Shell::parse_long_options (char **argv, int arg_start, int arg_end)
                 *(*it).value.flag_ptr = 1;
               else if (argv[++arg_index] == nullptr)
                 {
-                  std::string name_cstr (to_string ((*it).name));
+                  string name_cstr (to_string ((*it).name));
                   report_error (_ ("%s: option requires an argument"),
                                 name_cstr.c_str ());
                   exit (EX_BADUSAGE);
@@ -908,8 +886,7 @@ Shell::execute_env_file (const char *env_file)
 {
   if (env_file && *env_file)
     {
-      std::string fn (
-          expand_string_unsplit_to_string (env_file, Q_DOUBLE_QUOTES));
+      string fn (expand_string_unsplit_to_string (env_file, Q_DOUBLE_QUOTES));
       if (!fn.empty ())
         maybe_execute_file (fn.c_str (), true);
     }
@@ -992,9 +969,9 @@ Shell::run_startup_files ()
       if (!posixly_correct && !act_like_sh && !privileged_mode && !sourced_env)
         {
           sourced_env = true;
-          const char *bash_env = get_string_value ("BASH_ENV");
+          const string *bash_env = get_string_value ("BASH_ENV");
           if (bash_env)
-            execute_env_file (bash_env);
+            execute_env_file (bash_env->c_str ());
         }
       return;
     }
@@ -1036,9 +1013,9 @@ Shell::run_startup_files ()
       else if (act_like_sh && !privileged_mode && !sourced_env)
         {
           sourced_env = true;
-          const char *env = get_string_value ("ENV");
+          const string *env = get_string_value ("ENV");
           if (env)
-            execute_env_file (env);
+            execute_env_file (env->c_str ());
         }
     }
   else /* bash --posix, sh --posix */
@@ -1047,9 +1024,9 @@ Shell::run_startup_files ()
       if (interactive_shell && !privileged_mode && !sourced_env)
         {
           sourced_env = true;
-          const char *env = get_string_value ("ENV");
+          const string *env = get_string_value ("ENV");
           if (env)
-            execute_env_file (env);
+            execute_env_file (env->c_str ());
         }
     }
 
@@ -1838,10 +1815,10 @@ Shell::show_shell_usage (FILE *fp, bool extra)
               "option] [option] script-file ...\n"),
            shell_name, shell_name);
   fputs (_ ("GNU long options:\n"), fp);
-  for (std::vector<LongArg>::iterator it = long_args.begin ();
+  for (vector<LongArg>::iterator it = long_args.begin ();
        it != long_args.end (); ++it)
     {
-      std::string name_str (to_string ((*it).name));
+      string name_str (to_string ((*it).name));
       fprintf (fp, "\t--%s\n", name_str.c_str ());
     }
 
@@ -1851,7 +1828,7 @@ Shell::show_shell_usage (FILE *fp, bool extra)
       fp);
 
   char *set_opts = nullptr;
-  std::map<string_view, builtin>::iterator it = shell_builtins.find ("set");
+  map<string_view, builtin>::iterator it = shell_builtins.find ("set");
   if (it != shell_builtins.end ())
     set_opts = savestring ((*it).second.short_doc);
 
@@ -1890,7 +1867,7 @@ Shell::show_shell_usage (FILE *fp, bool extra)
 void
 Shell::run_shopt_alist ()
 {
-  std::vector<STRING_INT_ALIST>::iterator it;
+  vector<STRING_INT_ALIST>::iterator it;
 
   for (it = shopt_alist.begin (); it != shopt_alist.end (); ++it)
     if (shopt_setopt ((*it).word, ((*it).token == '-')) != EXECUTION_SUCCESS)

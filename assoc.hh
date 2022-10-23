@@ -27,7 +27,15 @@
 namespace bash
 {
 
-const int ASSOC_HASH_BUCKETS = 1024;
+constexpr int ASSOC_HASH_BUCKETS = 1024;
+
+class SHELL_VAR;
+
+// Subclass of HASH_TABLE for associative arrays.
+class ASSOC_ARRAY : public HASH_TABLE<SHELL_VAR> {
+public:
+  ASSOC_ARRAY () : HASH_TABLE<SHELL_VAR> (ASSOC_HASH_BUCKETS) {}
+};
 
 #if 0
 void assoc_dispose (HASH_TABLE *);

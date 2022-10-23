@@ -45,6 +45,7 @@
 #  getcwd \
 #  gettimeofday \
 #  glob \
+#  group-member \
 #  lstat \
 #  mbrlen \
 #  mbrtowc \

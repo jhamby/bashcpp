@@ -20,27 +20,7 @@
 
 #include "config.h"
 
-#include "bashtypes.hh"
-
-#if defined(HAVE_SYS_PARAM_H)
-#include <sys/param.h>
-#endif
-
-#include "posixstat.hh"
-
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
 #include "shell.hh"
-
-#include "builtins/common.hh"
-
-#include "tilde.hh"
-
-#ifdef __CYGWIN__
-#include <sys/cygwin.h>
-#endif
 
 namespace bash
 {
@@ -338,7 +318,7 @@ legal_number (const char *string, int64_t *result)
    be used to allow values to be stored and indirectly referenced, but
    not used in assignments. */
 bool
-Shell::valid_nameref_value (string_view name, valid_array_flags flags)
+Shell::valid_nameref_value (const string &name, valid_array_flags flags)
 {
   if (name.empty ())
     return false;
@@ -356,7 +336,7 @@ Shell::valid_nameref_value (string_view name, valid_array_flags flags)
 }
 
 bool
-Shell::check_selfref (string_view name, string_view value)
+Shell::check_selfref (const string &name, const string &value)
 {
   if (name == value)
     return true;
@@ -364,7 +344,7 @@ Shell::check_selfref (string_view name, string_view value)
 #if defined(ARRAY_VARS)
   if (valid_array_reference (value, VA_NOFLAGS))
     {
-      std::string t = array_variable_name (value, 0, nullptr);
+      string t = array_variable_name (value, 0, nullptr);
       if (name == t)
         return true;
     }
@@ -403,9 +383,9 @@ Shell::check_identifier (WORD_DESC *word, bool check_word)
    essentially all characters except those which must be quoted to the
    parser (which disqualifies them from alias expansion anyway) and `/'. */
 bool
-Shell::legal_alias_name (string_view string)
+Shell::legal_alias_name (const string &string)
 {
-  string_view::iterator it;
+  string::const_iterator it;
   for (it = string.begin (); it != string.end (); ++it)
     if (shellbreak (*it) || shellxquote (*it) || shellexp (*it)
         || (*it == '/'))
@@ -418,12 +398,12 @@ Shell::legal_alias_name (string_view string)
    assignment and require an array subscript before the `=' to denote an
    assignment statement. */
 size_t
-Shell::assignment (string_view string, int flags)
+Shell::assignment (const string &str, int flags)
 {
-  if (string.empty ())
+  if (str.empty ())
     return 0;
 
-  unsigned char c = static_cast<unsigned char> (string[0]);
+  unsigned char c = static_cast<unsigned char> (str[0]);
 
 #if defined(ARRAY_VARS)
   /* If parser_state includes PST_COMPASSIGN, FLAGS will include 1, so we are
@@ -442,38 +422,34 @@ Shell::assignment (string_view string, int flags)
 #endif
     return 0;
 
-  string_view::iterator it;
-  for (it = string.begin (); it != string.end (); ++it)
+  size_t size = str.size ();
+  for (size_t indx = 0; indx < size; indx++)
     {
-      c = static_cast<unsigned char> (*it);
+      c = static_cast<unsigned char> (str[indx]);
 
       /* The following is safe.  Note that '=' at the start of a word
          is not an assignment statement. */
       if (c == '=')
-        return static_cast<size_t> (it - string.begin ());
+        return indx;
 
 #if defined(ARRAY_VARS)
       if (c == '[')
         {
-          string_view::iterator newit
-              = skipsubscript (string, it, (flags & 2) ? 1 : 0);
+          size_t newi = skipsubscript (str, indx, (flags & 2) ? 1 : 0);
+
           /* XXX - why not check for blank subscripts here, if we do in
              valid_array_reference? */
-          if (newit == string.end () || *(newit++) != ']')
+          if (str[newi++] != ']')
             return 0;
-          if (*newit == '+' && (newit + 1 != string.end ())
-              && *(newit + 1) == '=')
-            return static_cast<size_t> (newit + 1 - string.begin ());
-
-          return (*newit == '=')
-                     ? static_cast<size_t> (newit - string.begin ())
-                     : 0;
+          if (newi + 1 < size && str[newi] == '+' && str[newi + 1] == '=')
+            return newi + 1;
+          return (newi < size && str[newi] == '=') ? newi : 0;
         }
 #endif /* ARRAY_VARS */
 
       /* Check for `+=' */
-      if (c == '+' && (it + 1 != string.end ()) && *(it + 1) == '=')
-        return static_cast<size_t> (it + 1 - string.begin ());
+      if (c == '+' && indx + 1 < size && str[indx + 1] == '=')
+        return indx + 1;
 
       /* Variable names in assignment statements may contain only letters,
          digits, and `_'. */
@@ -652,23 +628,23 @@ Shell::full_pathname (const char *file)
 
 /* Return a pretty pathname.  If the first part of the pathname is
    the same as $HOME, then replace that with `~'.  */
-std::string
-Shell::polite_directory_format (string_view name)
+string
+Shell::polite_directory_format (const string &name)
 {
-  const char *home = get_string_value ("HOME");
-  size_t l = home ? strlen (home) : 0;
+  const string *home = get_string_value ("HOME");
+  size_t l = home ? home->size () : 0;
 
-  if (l > 1 && name.compare (0, l, home) == 0
+  if (l > 1 && name.compare (0, l, *home) == 0
       && (name.size () == l || name[l] == '/'))
     {
-      std::string tdir_buf;
+      string tdir_buf;
       tdir_buf.reserve (name.size () - l + 1);
       tdir_buf.push_back ('~');
-      tdir_buf.append (name.begin () + l, name.end ());
+      tdir_buf.append (name.begin () + static_cast<ssize_t> (l), name.end ());
       return tdir_buf;
     }
   else
-    return to_string (name);
+    return name;
 }
 
 /* Given a string containing units of information separated by colons,
@@ -730,7 +706,7 @@ extract_colon_unit (const char *string, size_t *p_index)
 char *
 Shell::bash_special_tilde_expansions (const char *text)
 {
-  const char *result = nullptr;
+  const string *result = nullptr;
 
   if (text[0] == '+' && text[1] == '\0')
     result = get_string_value ("PWD");
@@ -742,7 +718,7 @@ Shell::bash_special_tilde_expansions (const char *text)
     result = get_dirstack_from_string (text);
 #endif
 
-  return result ? savestring (result) : nullptr;
+  return result ? savestring (*result) : nullptr;
 }
 
 /* Initialize the tilde expander.  In Bash, we handle `~-' and `~+', as
@@ -933,37 +909,6 @@ Shell::initialize_group_array ()
     }
 }
 
-/* Return non-zero if GID is one that we have in our groups list. */
-#if !defined(HAVE_GROUP_MEMBER)
-int
-Shell::group_member (gid_t gid)
-{
-#if defined(HAVE_GETGROUPS)
-  int i;
-#endif
-
-  /* Short-circuit if possible, maybe saving a call to getgroups(). */
-  if (gid == current_user.gid || gid == current_user.egid)
-    return 1;
-
-#if defined(HAVE_GETGROUPS)
-  if (ngroups == 0)
-    initialize_group_array ();
-
-  /* In case of error, the user loses. */
-  if (ngroups <= 0)
-    return 0;
-
-  /* Search through the list looking for GID. */
-  for (i = 0; i < ngroups; i++)
-    if (gid == static_cast<gid_t> (group_array[i]))
-      return 1;
-#endif
-
-  return 0;
-}
-#endif /* !HAVE_GROUP_MEMBER */
-
 void
 Shell::get_group_list ()
 {
@@ -982,7 +927,7 @@ Shell::get_group_list ()
     group_vector->push_back (savestring (itos (group_array[i])));
 }
 
-std::vector<gid_t> *
+vector<gid_t> *
 Shell::get_group_array ()
 {
   if (group_iarray)
@@ -994,7 +939,7 @@ Shell::get_group_array ()
   if (ngroups <= 0)
     return nullptr;
 
-  group_iarray = new std::vector<gid_t> ();
+  group_iarray = new vector<gid_t> ();
 
   for (int i = 0; i < ngroups; i++)
     group_iarray->push_back (group_array[i]);
@@ -1011,7 +956,7 @@ Shell::get_group_array ()
 /* Return a value for PATH that is guaranteed to find all of the standard
    utilities.  This uses Posix.2 configuration variables, if present.  It
    uses a value defined in config.h as a last resort. */
-std::string
+string
 conf_standard_path ()
 {
 #if defined(_CS_PATH) && defined(HAVE_CONFSTR)
@@ -1041,10 +986,10 @@ int
 Shell::default_columns ()
 {
   int c = -1;
-  const char *v = get_string_value ("COLUMNS");
-  if (v && *v)
+  const string *v = get_string_value ("COLUMNS");
+  if (v && !v->empty ())
     {
-      c = atoi (v);
+      c = atoi (v->c_str ());
       if (c > 0)
         return c;
     }

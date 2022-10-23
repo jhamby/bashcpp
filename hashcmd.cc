@@ -21,13 +21,6 @@
 
 #include "config.h"
 
-#include <unistd.h>
-
-#include "bashtypes.hh"
-#include "posixstat.hh"
-
-#include "flags.hh"
-#include "hashcmd.hh"
 #include "shell.hh"
 
 namespace bash

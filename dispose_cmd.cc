@@ -20,12 +20,6 @@
 
 #include "config.h"
 
-#include "bashtypes.hh"
-
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
 #include "shell.hh"
 
 namespace bash

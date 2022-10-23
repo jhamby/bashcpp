@@ -20,28 +20,7 @@
 
 #include "config.h"
 
-#include "bashtypes.hh"
-
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "bashintl.hh"
-
 #include "shell.hh"
-
-#if defined(JOB_CONTROL)
-#include "jobs.hh"
-#endif /* JOB_CONTROL */
-
-#include "sig.hh"
-#include "trap.hh"
-
-#include "builtext.hh"
-
-#if defined(READLINE)
-#include "readline.hh"
-#endif
 
 // suppress warning for Linux's recursive macro for sigaction
 #if defined(__clang__)

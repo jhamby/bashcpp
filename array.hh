@@ -35,18 +35,13 @@ typedef int64_t arrayind_t;
 struct ARRAY_ELEMENT
 {
   // Construct a new array element with index and value.
-  ARRAY_ELEMENT (arrayind_t ind_, string_view value_ = string_view ())
-      : ind (ind_), value (savestring (value_))
+  ARRAY_ELEMENT (arrayind_t ind_, const std::string &value_ = std::string ())
+      : ind (ind_), value (value_)
   {
-  }
-
-  ~ARRAY_ELEMENT ()
-  {
-    delete[] value;
   }
 
   arrayind_t ind;
-  char *value;
+  std::string value;
 
 #ifndef ALT_ARRAY_IMPLEMENTATION
   ARRAY_ELEMENT *next, *prev;
@@ -245,7 +240,7 @@ struct ARRAY
 
   size_t rshift (size_t, string_view);
 
-  char *reference (arrayind_t);
+  std::string *reference (arrayind_t);
 
   int insert (arrayind_t, string_view);
   ARRAY_ELEMENT *remove (arrayind_t);

@@ -21,15 +21,8 @@
 #if !defined(_VARIABLES_H_)
 #define _VARIABLES_H_
 
-#include "array.hh"
-#include "assoc.hh"
-#include "command.hh"
-#include "shell.hh"
-
-/* Shell variables and functions are stored in hash tables. */
-#include "hashlib.hh"
-
-#include "conftypes.hh"
+using std::string;
+using std::vector;
 
 namespace bash
 {
@@ -59,17 +52,17 @@ class SHELL_VAR;
 /* A variable context. */
 struct VAR_CONTEXT
 {
-  VAR_CONTEXT (string_view name_, vc_flags flags_, int scope_)
-      : name (to_string (name_)), flags (flags_), scope (scope_)
+  VAR_CONTEXT (const string &name_, vc_flags flags_, int scope_)
+      : name (name_), flags (flags_), scope (scope_)
   {
   }
 
   VAR_CONTEXT (vc_flags flags_, int scope_) : flags (flags_), scope (scope_) {}
 
-  std::string name;              // empty string means global context
-  VAR_CONTEXT *up;               // previous function calls
-  VAR_CONTEXT *down;             // down towards global context
-  HASH_TABLE<SHELL_VAR *> table; // variables at this scope
+  string name;       // empty string means global context
+  VAR_CONTEXT *up;   // previous function calls
+  VAR_CONTEXT *down; // down towards global context
+  ASSOC_ARRAY table; // variables at this scope
   vc_flags flags;
   int scope; // 0 means global context
 
@@ -188,12 +181,12 @@ operator~(const var_att_flags &a)
 /* Union of supported types for a shell variable. */
 union Value
 {
-  char *s;                     /* string value */
-  COMMAND *cmd;                /* function */
-  ARRAY *a;                    /* array */
-  HASH_TABLE<alias_t *> *ah;   /* hashed aliases */
-  HASH_TABLE<PATH_DATA *> *ph; /* hashed paths */
-  HASH_TABLE<SHELL_VAR *> *sh; /* associative array */
+  string *s;                 /* string value */
+  COMMAND *cmd;              /* function */
+  ARRAY *a;                  /* array */
+  HASH_TABLE<alias_t> *ah;   /* hashed aliases */
+  HASH_TABLE<PATH_DATA> *ph; /* hashed paths */
+  HASH_TABLE<SHELL_VAR> *sh; /* associative array */
 };
 
 /* Forward declaration of shell class for callback functions. */
@@ -203,43 +196,52 @@ class Shell;
 class SHELL_VAR
 {
 public:
-  /* Create a new shell variable with name NAME. */
-  SHELL_VAR (string_view name) : name_ (name) {}
-
   /* Create a new shell variable and add it to the specified hash table. */
-  SHELL_VAR (string_view name, HASH_TABLE<SHELL_VAR *> &shash)
+  SHELL_VAR (const string &name, HASH_TABLE<SHELL_VAR> *shash = nullptr)
       : name_ (name)
   {
-    value_.sh = &shash;
+    value_.sh = shash;
   }
 
   typedef SHELL_VAR *(Shell::*value_func_t) (SHELL_VAR *);
 
-  typedef SHELL_VAR *(Shell::*assign_func_t) (SHELL_VAR *, string_view,
-                                              arrayind_t, string_view);
+  typedef SHELL_VAR *(Shell::*assign_func_t) (SHELL_VAR *, const string &,
+                                              arrayind_t, const string &);
 
-  std::string &
+  string &
   name ()
   {
     return name_;
   }
 
   void
-  set_name (string_view new_name)
+  set_name (const string &new_name)
   {
-    name_ = to_string (new_name);
+    name_ = new_name;
   }
 
-  char *
+  string *
   str_value ()
   {
     return value_.s;
   }
 
   void
-  set_str_value (char *s)
+  set_str_value (const string &s)
   {
-    value_.s = s;
+    if (!value_.s)
+      value_.s = new string ();
+
+    *(value_.s) = s;
+  }
+
+  void
+  set_str_value (const char *s)
+  {
+    if (!value_.s)
+      value_.s = new string ();
+
+    *(value_.s) = s;
   }
 
   COMMAND *
@@ -266,47 +268,41 @@ public:
     value_.a = a;
   }
 
-  HASH_TABLE<alias_t *> *
+  HASH_TABLE<alias_t> *
   alias_hash_value ()
   {
     return value_.ah;
   }
 
-  HASH_TABLE<PATH_DATA *> *
+  HASH_TABLE<PATH_DATA> *
   phash_value ()
   {
     return value_.ph;
   }
 
-  HASH_TABLE<SHELL_VAR *> *
+  HASH_TABLE<SHELL_VAR> *
   assoc_value ()
   {
     return value_.sh;
   }
 
   void
-  set_alias_hash_value (HASH_TABLE<alias_t *> *h)
+  set_alias_hash_value (HASH_TABLE<alias_t> *h)
   {
     value_.ah = h;
   }
 
   void
-  set_assoc_value (HASH_TABLE<SHELL_VAR *> *h)
+  set_assoc_value (HASH_TABLE<SHELL_VAR> *h)
   {
     value_.sh = h;
   }
 
   void
-  set_phash_value (HASH_TABLE<PATH_DATA *> *h)
+  set_phash_value (HASH_TABLE<PATH_DATA> *h)
   {
     value_.ph = h;
   }
-
-  char *
-  name_value ()
-  {
-    return value_.s;
-  } /* so it can change later */
 
   /* Set the string value of VAR to the string representation of VALUE.
      Right now this takes an INT64_T because that's what itos needs. If
@@ -314,19 +310,9 @@ public:
   void
   set_int_value (int64_t value, bool force_attribute)
   {
-    std::string p (itos (value));
-    delete[] str_value ();
-    set_str_value (savestring (p));
+    set_str_value (itos (value));
     if (force_attribute)
       set_attr (att_integer);
-  }
-
-  void
-  set_string_value (string_view value)
-  {
-    char *p = savestring (value);
-    delete[] str_value ();
-    set_str_value (p);
   }
 
   /* Inline access methods. */
@@ -449,7 +435,7 @@ public:
   bool
   is_null ()
   {
-    return value_.s && value_.s[0] == '\0';
+    return value_.s && value_.s->empty ();
   }
 
   void
@@ -464,9 +450,9 @@ public:
     attributes &= ~flags;
   }
 
-  std::string name_;          // Symbol that the user types.
+  string name_;               // Symbol that the user types.
   Value value_;               // Value that is returned.
-  std::string exportstr;      // String for the environment.
+  string exportstr;           // String for the environment.
   value_func_t dynamic_value; // Function called to return a `dynamic'
                               // value for a variable, like $SECONDS
                               // or $RANDOM.
@@ -477,7 +463,7 @@ public:
   int context;                // Which context this variable belongs to.
 };
 
-typedef std::vector<SHELL_VAR *> VARLIST;
+typedef vector<SHELL_VAR *> VARLIST;
 
 constexpr int NAMEREF_MAX = 8; /* only 8 levels of nameref indirection */
 
@@ -494,14 +480,6 @@ constexpr int NAMEREF_MAX = 8; /* only 8 levels of nameref indirection */
 #define SETVARATTR(var, attr, undo)                                           \
   ((undo == 0) ? ((var)->attributes |= (attr))                                \
                : ((var)->attributes &= ~(attr)))
-
-#define VSETATTR(var, attr) ((var)->attributes |= (attr))
-#define VUNSETATTR(var, attr) ((var)->attributes &= ~(attr))
-
-#define VGETFLAGS(var) ((var)->attributes)
-
-#define VSETFLAGS(var, flags) ((var)->attributes = (flags))
-#define VCLRFLAGS(var) ((var)->attributes = 0)
 
 /* Macros to perform various operations on `exportstr' member of a SHELL_VAR. */
 #define CLEAR_EXPORTSTR(var) (var)->exportstr = (char *)NULL
@@ -534,7 +512,7 @@ constexpr int NAMEREF_MAX = 8; /* only 8 levels of nameref indirection */
 #endif
 
 static inline bool
-ifsname (string_view s)
+ifsname (const string &s)
 {
   return s == "IFS";
 }
@@ -553,6 +531,13 @@ enum mkloc_var_flags
   MKLOC_INHERIT = 0x04
 };
 
+static inline mkloc_var_flags
+operator& (const mkloc_var_flags &a, const mkloc_var_flags &b)
+{
+  return static_cast<mkloc_var_flags> (static_cast<uint32_t> (a)
+                                       & static_cast<uint32_t> (b));
+}
+
 // Definitions previously in arrayfunc.hh.
 
 /* values for `type' field */
@@ -568,8 +553,8 @@ struct array_eltstate_t
 {
   av_type type; // assoc or indexed, says which fields are valid
   arrayind_t ind;
-  std::string key; // can be allocated memory
-  std::string value;
+  string key; // can be allocated memory
+  string value;
   short subtype; // `*', `@', or something else
 };
 

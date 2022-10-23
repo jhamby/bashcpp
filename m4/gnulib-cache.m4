@@ -50,6 +50,7 @@
 #  getcwd \
 #  gettimeofday \
 #  glob \
+#  group-member \
 #  lstat \
 #  mbrlen \
 #  mbrtowc \
@@ -87,6 +88,7 @@ gl_MODULES([
   getcwd
   gettimeofday
   glob
+  group-member
   lstat
   mbrlen
   mbrtowc

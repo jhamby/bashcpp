@@ -22,16 +22,7 @@
 
 #if defined(ARRAY_VARS)
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "bashintl.hh"
-
-#include "pathexp.hh"
 #include "shell.hh"
-
-#include "shmbutil.hh"
 
 #if defined(HAVE_MBSTR_H) && defined(HAVE_MBSCHR)
 #include <mbstr.h> /* mbschr */
@@ -85,13 +76,13 @@ const char *bash_badsub_errmsg = N_ ("bad array subscript");
 SHELL_VAR *
 Shell::convert_var_to_array (SHELL_VAR *var)
 {
-  char *oldval = var->str_value ();
+  std::string *oldval = var->str_value ();
 
   ARRAY *array = new ARRAY ();
   if (oldval)
-    array->insert (0, oldval);
+    array->insert (0, *oldval);
 
-  delete[] var->str_value ();
+  delete oldval;
   var->set_array_value (array);
 
   /* these aren't valid anymore */
@@ -115,15 +106,13 @@ Shell::convert_var_to_array (SHELL_VAR *var)
   return var;
 }
 
-/* Convert a shell variable to an array variable.  The original value is
+/* Convert a shell variable to an associative array. The original value is
    saved as array[0]. */
 SHELL_VAR *
 Shell::convert_var_to_assoc (SHELL_VAR *var)
 {
-  char *oldval;
-  HASH_TABLE *hash;
+  std::string *oldval = var->str_value ();
 
-  oldval = value_cell (var);
   hash = assoc_create (0);
   if (oldval)
     assoc_insert (hash, savestring ("0"), oldval);
@@ -147,7 +136,7 @@ Shell::convert_var_to_assoc (SHELL_VAR *var)
   /* Make sure it's not marked as an indexed array any more */
   var->unset_attr (att_array);
 
-  /* Since namerefs can't be array variables, turn off nameref attribute */
+  /* Since namerefs can't be assoc arrays, turn off nameref attribute */
   var->unset_attr (att_nameref);
 
   return var;

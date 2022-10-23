@@ -20,8 +20,7 @@
 
 #include "config.h"
 
-#include "bashtypes.hh"
-#include "chartypes.hh"
+#include "shell.hh"
 
 #if defined(HAVE_SYS_FILE_H)
 #include <sys/file.h>
@@ -29,41 +28,6 @@
 
 #include <fcntl.h>
 #include <fnmatch.h>
-
-#include "pathexp.hh"
-#include "posixstat.hh"
-#include "posixtime.hh"
-
-#if defined(HAVE_SYS_PARAM_H)
-#include <sys/param.h>
-#endif
-
-#if defined(HAVE_SYS_RESOURCE_H) && !defined(RLIMTYPE)
-#include <sys/resource.h>
-#endif
-
-#if defined(HAVE_SYS_TIMES_H) && defined(HAVE_TIMES)
-#include <sys/times.h>
-#endif
-
-#include "shell.hh"
-
-#include "builtext.hh" /* list of builtins */
-#include "builtins/common.hh"
-
-#include "tilde.hh"
-
-#if defined(BUFFERED_INPUT)
-#include "input.hh"
-#endif
-
-#if defined(ALIAS)
-#include "alias.hh"
-#endif
-
-#if defined(HAVE_MBSTR_H) && defined(HAVE_MBSCHR)
-#include <mbstr.h> /* mbschr */
-#endif
 
 namespace bash
 {
@@ -347,7 +311,7 @@ Shell::execute_command_internal (COMMAND *command, bool asynchronous,
         SET_LINE_NUMBER (command->line); /* XXX - save value? */
       /* Otherwise we defer setting line_number */
 
-      std::string tcmd (make_command_string (command));
+      string tcmd (make_command_string (command));
       make_child_flags fork_flags = asynchronous ? FORK_ASYNC : FORK_SYNC;
 
       pid_t paren_pid = make_child (tcmd, fork_flags);
@@ -963,7 +927,7 @@ Shell::print_formatted_time (FILE *fp, const char *format, time_t rs, int rsf,
   size_t len = strlen (format);
   size_t ssize = (len + 64) - (len % 64);
 
-  std::string str;
+  string str;
   str.reserve (ssize);
 
   for (const char *s = format; *s; s++)
@@ -1155,15 +1119,18 @@ Shell::time_command (COMMAND *command, bool asynchronous, int pipe_in,
 #endif
 
   const char *time_format = nullptr;
+  const string *time_str;
   if (posix_time)
     time_format = POSIX_TIMEFORMAT;
-  else if ((time_format = get_string_value ("TIMEFORMAT")) == nullptr)
+  else if ((time_str = get_string_value ("TIMEFORMAT")) == nullptr)
     {
       if (posixly_correct && nullcmd)
         time_format = "user\t%2lU\nsys\t%2lS";
       else
         time_format = BASH_TIMEFORMAT;
     }
+  else
+    time_format = time_str->c_str ();
 
   if (time_format && *time_format)
     print_formatted_time (stderr, time_format, rs, rsf, us, usf, ss, ssf, cpu);
@@ -1440,7 +1407,7 @@ Shell::execute_in_subshell (COMMAND *command, bool asynchronous, int pipe_in,
 
 struct cplist_t
 {
-  std::vector<Coproc *> list;
+  vector<Coproc *> list;
   int lock;
 };
 
@@ -1579,7 +1546,7 @@ Shell::getcoprocbypid (pid_t pid)
 }
 
 Coproc *
-Shell::getcoprocbyname (string_view name)
+Shell::getcoprocbyname (const string &name)
 {
 #if MULTIPLE_COPROCS
   return cpl_searchbyname (name);
@@ -1601,7 +1568,7 @@ coproc_init (Coproc *cp)
 }
 
 Coproc *
-Shell::coproc_alloc (string_view name, pid_t pid)
+Shell::coproc_alloc (const string &name, pid_t pid)
 {
   Coproc *cp;
 
@@ -1614,7 +1581,7 @@ Shell::coproc_alloc (string_view name, pid_t pid)
   cp->c_lock = 2;
 
   cp->c_pid = pid;
-  cp->c_name = to_string (name);
+  cp->c_name = name;
 #if MULTIPLE_COPROCS
   cpl_add (cp);
 #endif
@@ -1786,7 +1753,7 @@ Shell::coproc_setvars (Coproc *cp)
   if (!check_identifier (&w, true))
     return;
 
-  std::string t, namevar;
+  string t, namevar;
 
 #if defined(ARRAY_VARS)
   v = find_variable (cp->c_name);
@@ -1805,7 +1772,7 @@ Shell::coproc_setvars (Coproc *cp)
 
       if (v && v->nameref ())
         {
-          cp->c_name = v->name_value ();
+          cp->c_name = *(v->str_value ());
           v = make_new_array_variable (cp->c_name);
         }
     }
@@ -1813,7 +1780,7 @@ Shell::coproc_setvars (Coproc *cp)
   if (v && (v->readonly () || v->noassign ()))
     {
       if (v->readonly ())
-        err_readonly (cp->c_name);
+        err_readonly (cp->c_name.c_str ());
       return;
     }
 
@@ -1846,7 +1813,7 @@ Shell::coproc_setvars (Coproc *cp)
   namevar = cp->c_name;
   namevar += "_PID";
   t = itos (cp->c_pid);
-  (void)bind_variable (namevar, t.c_str (), 0);
+  (void)bind_variable (namevar, t, 0);
 }
 
 void
@@ -1855,7 +1822,7 @@ Shell::coproc_unsetvars (Coproc *cp)
   if (cp->c_name.empty ())
     return;
 
-  std::string namevar (cp->c_name);
+  string namevar (cp->c_name);
   namevar += "_PID";
 
   unbind_variable_noref (namevar);
@@ -1889,7 +1856,7 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
 
   // expand name without splitting - could make this dependent on a shopt
   // option
-  std::string name (expand_string_unsplit_to_string (command->name, 0));
+  string name (expand_string_unsplit_to_string (command->name, 0));
 
   /* Optional check -- could be relaxed */
   if (!legal_identifier (name))
@@ -1901,7 +1868,7 @@ Shell::execute_coproc (COPROC_COM *command, int pipe_in, int pipe_out,
     command->name = name;
 
   the_printed_command.clear ();
-  std::string tcmd (make_command_string (command));
+  string tcmd (make_command_string (command));
 
   int rpipe[2], wpipe[2];
   sh_openpipe (rpipe); /* 0 = parent read, 1 = child write */
@@ -2392,7 +2359,7 @@ Shell::execute_for_command (FOR_SELECT_COM *for_command)
 
   loop_level++;
 
-  std::string &identifier = for_command->name->word;
+  string &identifier = for_command->name->word;
   line_number = for_command->line; // for expansion error messages
 
   WORD_LIST *list = expand_words_no_vars (for_command->map_list);
@@ -2432,7 +2399,7 @@ Shell::execute_for_command (FOR_SELECT_COM *for_command)
             continue;
 #endif
 
-          this_command_name = string_view ();
+          this_command_name.clear ();
 
           /* XXX - special ksh93 for command index variable handling */
           SHELL_VAR *v = find_variable_last_nameref (identifier, 1);
@@ -2445,12 +2412,12 @@ Shell::execute_for_command (FOR_SELECT_COM *for_command)
                   v = nullptr;
                 }
               else if (v->readonly ())
-                err_readonly (v->name ());
+                err_readonly (v->name ().c_str ());
               else
                 v = bind_variable_value (v, list->word->word, ASS_NAMEREF);
             }
           else
-            v = bind_variable (identifier, list->word->word.c_str (), 0);
+            v = bind_variable (identifier, list->word->word, 0);
 
           if (v == nullptr || v->readonly () || v->noassign ())
             {
@@ -2527,8 +2494,8 @@ Shell::eval_arith_for_expr (WORD_LIST *l, bool *okp)
 {
   int64_t expresult;
 
-  std::string expr (l->next () ? string_list (l) : l->word->word);
-  std::string temp (expand_arith_string (expr, Q_DOUBLE_QUOTES | Q_ARITH));
+  string expr (l->next () ? string_list (l) : l->word->word);
+  string temp (expand_arith_string (expr, Q_DOUBLE_QUOTES | Q_ARITH));
   WORD_LIST *new_list = new WORD_LIST (make_word (temp), nullptr);
 
   if (echo_command_at_execute)
@@ -2786,7 +2753,7 @@ Shell::print_select_list (WORD_LIST *list, int max_elem_len, int indices_len)
    If the number is between 1 and LIST_LEN, return that selection.  If EOF
    is read, return a null string.  If a blank line is entered, or an invalid
    number is entered, the loop is executed again. */
-std::string *
+string *
 Shell::select_query (WORD_LIST *list, const char *prompt, bool print_menu)
 {
   select_cols = default_columns ();
@@ -2822,19 +2789,19 @@ Shell::select_query (WORD_LIST *list, const char *prompt, bool print_menu)
           return nullptr;
         }
 
-      const char *repl_string = get_string_value ("REPLY");
+      const string *repl_string = get_string_value ("REPLY");
 
       if (repl_string == nullptr)
         return nullptr;
 
-      if (*repl_string == '\0')
+      if (repl_string->empty ())
         {
           print_menu = true;
           continue;
         }
 
       int64_t reply;
-      if (!legal_number (repl_string, &reply))
+      if (!legal_number (repl_string->c_str (), &reply))
         return nullptr;
 
       if (reply < 1 || reply > static_cast<int64_t> (list->size ()))
@@ -2886,10 +2853,10 @@ Shell::execute_select_command (FOR_SELECT_COM *select_command)
     return EXECUTION_SUCCESS;
 #endif
 
-  this_command_name = string_view ();
+  this_command_name.clear ();
 
   loop_level++;
-  const std::string &identifier = select_command->name->word;
+  const string &identifier = select_command->name->word;
 
   /* command and arithmetic substitution, parameter and variable expansion,
      word splitting, pathname expansion, and quote removal. */
@@ -2914,12 +2881,12 @@ Shell::execute_select_command (FOR_SELECT_COM *select_command)
       while (1)
         {
           line_number = select_command->line;
-          const char *ps3_prompt = get_string_value ("PS3");
-          if (ps3_prompt == nullptr)
-            ps3_prompt = "#? ";
+          const string *ps3_prompt_str = get_string_value ("PS3");
+          const char *ps3_prompt
+              = ps3_prompt_str ? ps3_prompt_str->c_str () : "#? ";
 
           QUIT;
-          std::string *selection = select_query (list, ps3_prompt, show_menu);
+          string *selection = select_query (list, ps3_prompt, show_menu);
           QUIT;
 
           if (selection == nullptr)
@@ -2930,7 +2897,7 @@ Shell::execute_select_command (FOR_SELECT_COM *select_command)
               break;
             }
 
-          SHELL_VAR *v = bind_variable (identifier, selection->c_str (), 0);
+          SHELL_VAR *v = bind_variable (identifier, *selection, 0);
           if (v == nullptr || v->readonly () || v->noassign ())
             {
               if (v && v->readonly () && !interactive_shell && posixly_correct)
@@ -2969,8 +2936,8 @@ Shell::execute_select_command (FOR_SELECT_COM *select_command)
 
 #if defined(KSH_COMPATIBLE_SELECT)
           show_menu = false;
-          const char *reply_string = get_string_value ("REPLY");
-          if (reply_string && *reply_string == '\0')
+          const string *reply_string = get_string_value ("REPLY");
+          if (reply_string && reply_string->empty ())
             show_menu = true;
 #endif
         }
@@ -3036,7 +3003,7 @@ Shell::execute_case_command (CASE_COM *case_command)
      because we're not supposed to perform word splitting. */
   WORD_LIST *wlist = expand_word_leave_quoted (case_command->word, 0);
 
-  std::string word;
+  string word;
   if (wlist)
     word = dequote_string (string_list (wlist));
 
@@ -3257,8 +3224,8 @@ Shell::execute_arith_command (ARITH_COM *arith_command)
   this_command_name = "((";
   WORD_LIST *new_list = arith_command->exp;
 
-  std::string exp (new_list->next () ? string_list (new_list)
-                                     : new_list->word->word);
+  string exp (new_list->next () ? string_list (new_list)
+                                : new_list->word->word);
   exp = expand_arith_string (exp, Q_DOUBLE_QUOTES | Q_ARITH);
 
   /* If we're tracing, make a new word list with `((' at the front and `))'
@@ -3331,7 +3298,7 @@ Shell::execute_cond_node (COND_COM *cond)
 
       bool varop = (cond->op->word == "-v");
 
-      std::string arg1 (cond_expand_word (cond->left->op, varop ? 3 : 0));
+      string arg1 (cond_expand_word (cond->left->op, varop ? 3 : 0));
 
       if (ignore)
         comsub_ignore_return--;
@@ -3357,7 +3324,7 @@ Shell::execute_cond_node (COND_COM *cond)
     }
   else if (cond->cond_type == COND_BINARY)
     {
-      std::string &op = cond->op->word;
+      string &op = cond->op->word;
 
       bool patmatch = (op == "==" || op == "!=" || op == "=");
 
@@ -3381,8 +3348,8 @@ Shell::execute_cond_node (COND_COM *cond)
       if (ignore)
         comsub_ignore_return++;
 
-      std::string arg1 (cond_expand_word (cond->left->op, arith ? mode : 0));
-      std::string arg2 (cond_expand_word (cond->right->op, mode));
+      string arg1 (cond_expand_word (cond->left->op, arith ? mode : 0));
+      string arg2 (cond_expand_word (cond->right->op, mode));
 
       if (ignore)
         comsub_ignore_return--;
@@ -3500,7 +3467,7 @@ Shell::execute_null_command (REDIRECT *redirects, int pipe_in, int pipe_out,
       /* We have a null command, but we really want a subshell to take
          care of it.  Just fork, do piping and redirections, and exit. */
       make_child_flags fork_flags = async ? FORK_ASYNC : FORK_SYNC;
-      if (make_child (string_view (), fork_flags) == 0)
+      if (make_child (string (), fork_flags) == 0)
         {
           /* Cancel traps, in trap.c. */
           restore_original_signals (); /* XXX */
@@ -3626,7 +3593,7 @@ Shell::fix_assignment_words (WORD_LIST *words)
              && (strpbrk (w->word->word.c_str () + 1, "Aag") != nullptr))
 #else
     else if (w->word->word[0] == '-'
-             && w->word->word.find ('g', 1) != std::string::npos)
+             && w->word->word.find ('g', 1) != string::npos)
 #endif
       {
         if (b == nullptr)
@@ -3638,13 +3605,13 @@ Shell::fix_assignment_words (WORD_LIST *words)
               wcmd->word->flags |= W_ASSNBLTIN;
           }
         if ((wcmd->word->flags & W_ASSNBLTIN)
-            && w->word->word.find ('A', 1) != std::string::npos)
+            && w->word->word.find ('A', 1) != string::npos)
           assoc = true;
         else if ((wcmd->word->flags & W_ASSNBLTIN)
-                 && w->word->word.find ('a', 1) != std::string::npos)
+                 && w->word->word.find ('a', 1) != string::npos)
           array = true;
         if ((wcmd->word->flags & W_ASSNBLTIN)
-            && w->word->word.find ('g', 1) != std::string::npos)
+            && w->word->word.find ('g', 1) != string::npos)
           global = true;
       }
 }
@@ -3891,7 +3858,7 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
      no variable `$foo'. */
   if (words == nullptr)
     {
-      this_command_name = string_view ();
+      this_command_name.clear ();
       result = execute_null_command (simple_command->redirects, pipe_in,
                                      pipe_out, already_forked ? 0 : async);
       if (already_forked)
@@ -3903,8 +3870,6 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
           return result;
         }
     }
-
-  // XXX begin_unwind_frame ("simple-command");
 
   if (echo_command_at_execute && (cmdflags & CMD_COMMAND_BUILTIN) == 0)
     xtrace_print_word_list (words, 1);
@@ -3996,8 +3961,8 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
     }
 
   const char *command_line = nullptr;
-  const char *temp;
-  std::string *lastarg = nullptr;
+  const string *temp = nullptr;
+  string *lastarg = nullptr;
   int old_builtin = 0;
 
   // Start a try block to handle unwinding on errors.
@@ -4033,9 +3998,9 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
         {
           get_job_flags jflags = JM_STOPPED | JM_FIRSTMATCH;
 
-          if (STREQ (temp, "exact"))
+          if (*temp == "exact")
             jflags |= JM_EXACT;
-          else if (STREQ (temp, "substring"))
+          else if (*temp == "substring")
             jflags |= JM_SUBSTRING;
           else
             jflags |= JM_PREFIX;
@@ -4211,13 +4176,14 @@ Shell::execute_simple_command (SIMPLE_COM *simple_command, int pipe_in,
           executing_command_builtin = old_command_builtin;
         }
 
-      this_command_name = string_view (); /* points to freed memory now */
+      this_command_name.clear ();
       throw;
     }
 
 return_result:
   if (lastarg)
-    bind_lastarg (lastarg->c_str ());
+    bind_lastarg (*lastarg);
+
   delete[] command_line;
   delete words;
 
@@ -4227,7 +4193,7 @@ return_result:
       executing_command_builtin = old_command_builtin;
     }
 
-  this_command_name = string_view (); /* points to freed memory now */
+  this_command_name.clear ();
   return result;
 }
 
@@ -4372,7 +4338,7 @@ Shell::execute_builtin2 (sh_builtin_func_t builtin, WORD_LIST *words,
                     {
                       internal_error (
                           _ ("%s: maximum source nesting level exceeded (%d)"),
-                          to_string (this_command_name).c_str (), sourcenest);
+                          this_command_name.c_str (), sourcenest);
                       sourcenest = 0;
                       throw bash_exception (DISCARD);
                     }
@@ -4658,7 +4624,7 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   /* This is quite similar to the code in shell.cc and elsewhere. */
   FUNCTION_DEF *shell_fn = find_function_def (this_shell_function->name ());
 
-  std::string sfile;
+  string sfile;
   if (shell_fn)
     sfile = shell_fn->source_file;
 
@@ -4666,7 +4632,7 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
   bash_source_a->push (sfile);
 
   int lineno = GET_LINE_NUMBER ();
-  std::string t (itos (lineno));
+  string t (itos (lineno));
   bash_lineno_a->push (t);
 
   /* restore_funcarray_state() will delete this. */
@@ -4999,7 +4965,7 @@ Shell::execute_builtin_or_function (WORD_LIST *words,
    NOTE: callers expect this to fork or exit(). */
 int
 Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
-                             string_view command_line, int pipe_in,
+                             const string &command_line, int pipe_in,
                              int pipe_out, bool async, fd_bitmap *fds_to_close,
                              cmd_flags cmdflags)
 {
@@ -5132,7 +5098,7 @@ Shell::execute_disk_command (WORD_LIST *words, REDIRECT *redirects,
             {
               /* Make sure filenames are displayed using printable characters
                */
-              std::string printname (printable_filename (pathname, 0));
+              string printname (printable_filename (pathname, 0));
               internal_error (_ ("%s: command not found"), printname.c_str ());
               exit (EX_NOTFOUND); /* Posix.2 says the exit status is 127 */
             }
@@ -5234,7 +5200,7 @@ Shell::execute_shell_script (char *sample, ssize_t sample_len,
   char *firstarg = nullptr;
 
   /* Find the name of the interpreter to exec. */
-  std::string execname (getinterp (sample, sample_len, &i));
+  string execname (getinterp (sample, sample_len, &i));
   int size_increment = 1;
 
   /* Now the argument, if any. */
@@ -5402,7 +5368,7 @@ Shell::shell_execve (const char *command, char **args, char **env)
             sample[sample_len - 1] = '\0';
           if (sample_len > 2 && sample[0] == '#' && sample[1] == '!')
             {
-              std::string interp (getinterp (sample, sample_len, nullptr));
+              string interp (getinterp (sample, sample_len, nullptr));
               size_t ilen = interp.size ();
               errno = i;
               if (interp[ilen - 1] == '\r')
@@ -5521,7 +5487,7 @@ Shell::execute_intern_function (WORD_DESC *name, FUNCTION_DEF *funcdef)
       return EXECUTION_FAILURE;
     }
 
-  if (name->word.find (CTLESC) != std::string::npos) /* WHY? */
+  if (name->word.find (CTLESC) != string::npos) /* WHY? */
     {
       name->word = dequote_escapes (name->word);
     }

@@ -70,7 +70,7 @@ enum assign_flags
   ASS_CHKLOCAL = 0x0040,    // check local variable before assignment
   ASS_NOEXPAND = 0x0080,    // don't expand associative array subscripts
   ASS_NOEVAL = 0x0100,      // don't evaluate value as expression
-  ASS_NOLONGJMP = 0x0200,   // don't longjmp on fatal assignment error
+  ASS_NOTHROW = 0x0200,     // don't throw on fatal assignment error
   ASS_NOINVIS = 0x0400,     // don't resolve local invisible variables
   ASS_ALLOWALLSUB = 0x0800, // allow * and @ as associative array keys
   ASS_ONEWORD
