@@ -133,15 +133,15 @@ enum fmt_flags
   FL_UNSIGNED = 0x08  /* don't add any sign */
 };
 
-std::string fmtulong (unsigned long, int, fmt_flags);
+std::string fmtulong (unsigned long, int, fmt_flags = FL_NOFLAGS);
 
 /* Declarations for functions defined in lib/sh/fmtulong.c */
 
-std::string fmtullong (unsigned long long, int, fmt_flags);
+std::string fmtullong (unsigned long long, int, fmt_flags = FL_NOFLAGS);
 
 /* Declarations for functions defined in lib/sh/fmtumax.c */
 
-std::string fmtumax (uint64_t, int, fmt_flags);
+std::string fmtumax (uint64_t, int, fmt_flags = FL_NOFLAGS);
 
 /* Declarations for functions defined in lib/sh/fnxform.c */
 

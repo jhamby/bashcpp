@@ -1792,28 +1792,28 @@ Shell::coproc_setvars (Coproc *cp)
 
   t = itos (cp->c_rfd);
   ind = 0;
-  (void)bind_array_variable (cp->c_name, ind, t, 0);
+  (void)bind_array_variable (cp->c_name, ind, t);
 
   t = itos (cp->c_wfd);
   ind = 1;
-  (void)bind_array_variable (cp->c_name, ind, t, 0);
+  (void)bind_array_variable (cp->c_name, ind, t);
 #else
   namevar = cp->c_name;
   namevar += "_READ";
   t = itos (cp->c_rfd);
-  bind_variable (namevar, t, 0);
+  bind_variable (namevar, t);
   free (t);
   namevar = cp->c_name;
   namevar += "_WRITE";
   t = itos (cp->c_wfd);
-  bind_variable (namevar, t, 0);
+  bind_variable (namevar, t);
   free (t);
 #endif
 
   namevar = cp->c_name;
   namevar += "_PID";
   t = itos (cp->c_pid);
-  (void)bind_variable (namevar, t, 0);
+  (void)bind_variable (namevar, t);
 }
 
 void
@@ -2417,7 +2417,7 @@ Shell::execute_for_command (FOR_SELECT_COM *for_command)
                 v = bind_variable_value (v, list->word->word, ASS_NAMEREF);
             }
           else
-            v = bind_variable (identifier, list->word->word, 0);
+            v = bind_variable (identifier, list->word->word);
 
           if (v == nullptr || v->readonly () || v->noassign ())
             {
@@ -2897,7 +2897,7 @@ Shell::execute_select_command (FOR_SELECT_COM *select_command)
               break;
             }
 
-          SHELL_VAR *v = bind_variable (identifier, *selection, 0);
+          SHELL_VAR *v = bind_variable (identifier, *selection);
           if (v == nullptr || v->readonly () || v->noassign ())
             {
               if (v && v->readonly () && !interactive_shell && posixly_correct)
@@ -4568,7 +4568,7 @@ Shell::execute_function (SHELL_VAR *var, WORD_LIST *words, int flags,
 #endif
 
   /* Be sure to free this copy of the command. */
-  COMMAND *tc = var->cmd_value ()->clone ();
+  COMMAND *tc = var->func_value ()->clone ();
 
   if (tc && (flags & CMD_IGNORE_RETURN))
     tc->flags |= CMD_IGNORE_RETURN;
@@ -5509,7 +5509,7 @@ Shell::execute_intern_function (WORD_DESC *name, FUNCTION_DEF *funcdef)
     }
 
 #if defined(DEBUGGER)
-  bind_function_def (name->word, funcdef, 1);
+  bind_function_def (name->word, funcdef, true);
 #endif
 
   bind_function (name->word, funcdef->command);

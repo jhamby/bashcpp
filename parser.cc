@@ -1163,7 +1163,7 @@ Shell::execute_variable_command (const string &command, const string &vname)
                      (SEVAL_NONINT | SEVAL_NOHIST));
 
   restore_parser_state (&ps);
-  bind_variable ("_", *last_lastarg, 0);
+  bind_variable ("_", *last_lastarg);
 
   if (token_to_read == '\n') /* reset_parser was called */
     token_to_read = parser::token::YYEOF;

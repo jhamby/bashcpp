@@ -207,7 +207,7 @@ private:
 
   /* The `khash' equality check requires that strings that compare equally with
      strcmp hash to the same value. */
-  static uint32_t
+  static CONSTEXPR uint32_t
   hash_value (string_view key)
   {
     uint32_t i;

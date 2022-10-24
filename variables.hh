@@ -59,10 +59,10 @@ struct VAR_CONTEXT
 
   VAR_CONTEXT (vc_flags flags_, int scope_) : flags (flags_), scope (scope_) {}
 
-  string name;       // empty string means global context
-  VAR_CONTEXT *up;   // previous function calls
-  VAR_CONTEXT *down; // down towards global context
-  ASSOC_ARRAY table; // variables at this scope
+  string name;                 // empty string means global context
+  VAR_CONTEXT *up;             // previous function calls
+  VAR_CONTEXT *down;           // down towards global context
+  HASH_TABLE<SHELL_VAR> table; // variables at this scope
   vc_flags flags;
   int scope; // 0 means global context
 
@@ -182,11 +182,11 @@ operator~(const var_att_flags &a)
 union Value
 {
   string *s;                 /* string value */
-  COMMAND *cmd;              /* function */
+  COMMAND *func;             /* function */
   ARRAY *a;                  /* array */
   HASH_TABLE<alias_t> *ah;   /* hashed aliases */
   HASH_TABLE<PATH_DATA> *ph; /* hashed paths */
-  HASH_TABLE<SHELL_VAR> *sh; /* associative array */
+  ASSOC_ARRAY *sh;           /* associative array */
 };
 
 /* Forward declaration of shell class for callback functions. */
@@ -196,11 +196,56 @@ class Shell;
 class SHELL_VAR
 {
 public:
+  /* Create a new shell variable. */
+  SHELL_VAR (string_view name) : name_ (to_string (name)) {}
+
   /* Create a new shell variable and add it to the specified hash table. */
-  SHELL_VAR (const string &name, HASH_TABLE<SHELL_VAR> *shash = nullptr)
-      : name_ (name)
+  SHELL_VAR (string_view name, HASH_TABLE<SHELL_VAR> *table)
+      : name_ (to_string (name))
   {
-    value_.sh = shash;
+    BUCKET_CONTENTS<SHELL_VAR> *bucket = table->insert (name, HS_NOSRCH);
+    bucket->data = this;
+  }
+
+  ~SHELL_VAR ()
+  {
+    if (function ())
+      delete value_.func;
+    else if (array ())
+      delete value_.a;
+    else if (assoc ())
+      delete value_.sh; // XXX - what about aliases and paths?
+    else
+      delete value_.s;
+
+    delete[] exportstr;
+  }
+
+  void
+  dispose_value ()
+  {
+    if (function ())
+      {
+        delete value_.func;
+        value_.func = nullptr;
+      }
+    else if (array ())
+      {
+        delete value_.a;
+        value_.a = nullptr;
+      }
+    else if (assoc ())
+      {
+        delete value_.sh; // XXX - what about aliases and paths?
+        value_.sh = nullptr;
+      }
+    else
+      {
+        delete value_.s;
+        value_.s = nullptr;
+      }
+
+    invalidate_exportstr ();
   }
 
   typedef SHELL_VAR *(Shell::*value_func_t) (SHELL_VAR *);
@@ -227,33 +272,22 @@ public:
   }
 
   void
-  set_str_value (const string &s)
+  set_value (string *s)
   {
-    if (!value_.s)
-      value_.s = new string ();
-
-    *(value_.s) = s;
-  }
-
-  void
-  set_str_value (const char *s)
-  {
-    if (!value_.s)
-      value_.s = new string ();
-
-    *(value_.s) = s;
+    // assumes any previous value has been disposed
+    value_.s = s;
   }
 
   COMMAND *
-  cmd_value ()
+  func_value ()
   {
-    return value_.cmd;
+    return value_.func;
   }
 
   void
-  set_cmd_value (COMMAND *cmd)
+  set_func_value (COMMAND *func)
   {
-    value_.cmd = cmd;
+    value_.func = func;
   }
 
   ARRAY *
@@ -280,7 +314,7 @@ public:
     return value_.ph;
   }
 
-  HASH_TABLE<SHELL_VAR> *
+  ASSOC_ARRAY *
   assoc_value ()
   {
     return value_.sh;
@@ -293,7 +327,7 @@ public:
   }
 
   void
-  set_assoc_value (HASH_TABLE<SHELL_VAR> *h)
+  set_assoc_value (ASSOC_ARRAY *h)
   {
     value_.sh = h;
   }
@@ -310,9 +344,17 @@ public:
   void
   set_int_value (int64_t value, bool force_attribute)
   {
-    set_str_value (itos (value));
+    dispose_value ();
+    set_value (new string (itos (value)));
     if (force_attribute)
       set_attr (att_integer);
+  }
+
+  void
+  set_string_value (string_view value)
+  {
+    dispose_value ();
+    set_value (new string (to_string (value)));
   }
 
   /* Inline access methods. */
@@ -450,9 +492,19 @@ public:
     attributes &= ~flags;
   }
 
-  string name_;               // Symbol that the user types.
-  Value value_;               // Value that is returned.
-  string exportstr;           // String for the environment.
+  void
+  invalidate_exportstr ()
+  {
+    delete[] exportstr;
+    exportstr = nullptr;
+  }
+
+private:
+  string name_; // Symbol that the user types.
+  Value value_; // Value that is returned.
+
+public:
+  char *exportstr;            // Cached string for the environment.
   value_func_t dynamic_value; // Function called to return a `dynamic'
                               // value for a variable, like $SECONDS
                               // or $RANDOM.
@@ -551,11 +603,11 @@ enum av_type
 
 struct array_eltstate_t
 {
-  av_type type; // assoc or indexed, says which fields are valid
   arrayind_t ind;
-  string key; // can be allocated memory
+  string key;
   string value;
-  short subtype; // `*', `@', or something else
+  av_type type;     // assoc or indexed, says which fields are valid
+  uint16_t subtype; // `*', `@', or something else
 };
 
 /* Flags for array_value_internal and callers array_value/get_array_value */
@@ -573,6 +625,14 @@ enum av_flags
   = 0x080 // accept a[@] and a[*] but use them as keys, not special values
 };
 
+static inline av_flags &
+operator|= (av_flags &a, const av_flags &b)
+{
+  a = static_cast<av_flags> (static_cast<uint32_t> (a)
+                             | static_cast<uint32_t> (b));
+  return a;
+}
+
 /* Flags for valid_array_reference. Value 1 is reserved for skipsubscript() */
 enum valid_array_flags
 {
@@ -580,6 +640,14 @@ enum valid_array_flags
   VA_NOEXPAND = 0x001,
   VA_ONEWORD = 0x002
 };
+
+static inline valid_array_flags &
+operator|= (valid_array_flags &a, const valid_array_flags &b)
+{
+  a = static_cast<valid_array_flags> (static_cast<uint32_t> (a)
+                                      | static_cast<uint32_t> (b));
+  return a;
+}
 
 static inline valid_array_flags
 operator| (const valid_array_flags &a, const valid_array_flags &b)

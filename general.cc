@@ -318,7 +318,7 @@ legal_number (const char *string, int64_t *result)
    be used to allow values to be stored and indirectly referenced, but
    not used in assignments. */
 bool
-Shell::valid_nameref_value (const string &name, valid_array_flags flags)
+Shell::valid_nameref_value (const string &name, int flags)
 {
   if (name.empty ())
     return false;
@@ -344,8 +344,8 @@ Shell::check_selfref (const string &name, const string &value)
 #if defined(ARRAY_VARS)
   if (valid_array_reference (value, VA_NOFLAGS))
     {
-      string t = array_variable_name (value, 0, nullptr);
-      if (name == t)
+      string *t = array_variable_name (value, 0, nullptr);
+      if (&name == t)
         return true;
     }
 #endif

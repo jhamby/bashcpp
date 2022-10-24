@@ -54,6 +54,9 @@
 #include "parser.hh"
 #include "pathexp.hh"
 #include "pathnames.hh"
+#if defined(PROGRAMMABLE_COMPLETION)
+#include "pcomplete.hh"
+#endif
 #include "posixstat.hh"
 #include "quit.hh"
 #include "shtty.hh"
@@ -2768,8 +2771,8 @@ protected:
   SHELL_VAR *convert_var_to_array (SHELL_VAR *);
   SHELL_VAR *convert_var_to_assoc (SHELL_VAR *);
 
-  string make_array_variable_value (SHELL_VAR *, arrayind_t, const string &,
-                                    const string &, int);
+  string *make_array_variable_value (SHELL_VAR *, arrayind_t, const string &,
+                                     const string &, int);
 
   SHELL_VAR *make_new_array_variable (const string &);
 
@@ -2787,7 +2790,7 @@ protected:
   /* Create a new shell variable with name NAME and add it to the hash table
      TABLE. */
   SHELL_VAR *
-  make_new_variable (const string &name, ASSOC_ARRAY &table)
+  make_new_variable (string_view name, HASH_TABLE<SHELL_VAR> &table)
   {
     SHELL_VAR *entry = new SHELL_VAR (name);
 
@@ -2802,7 +2805,7 @@ protected:
   }
 
   SHELL_VAR *bind_array_variable (const string &, arrayind_t, const string &,
-                                  int);
+                                  assign_flags = ASS_NOFLAGS);
   SHELL_VAR *bind_array_element (SHELL_VAR *, arrayind_t, const string &, int);
   SHELL_VAR *assign_array_element (const string &, const string &, int,
                                    array_eltstate_t *);
@@ -2840,13 +2843,12 @@ protected:
 
   string array_keys (char *, int, int);
 
-  string array_variable_name (const string &, int, char **, int *);
   SHELL_VAR *array_variable_part (const string &, int, char **, int *);
 
   void init_eltstate (array_eltstate_t *);
   void flush_eltstate (array_eltstate_t *);
 
-  string array_variable_name (const string &, int, size_t *);
+  string *array_variable_name (const string &, int, size_t *);
 
   SHELL_VAR *bind_array_var_internal (SHELL_VAR *, arrayind_t, const string &,
                                       const string &, int);
@@ -4133,7 +4135,7 @@ protected:
   {
     SHELL_VAR *var;
 
-    var = bind_variable ("_", arg, 0);
+    var = bind_variable ("_", arg);
     if (var)
       var->unset_attr (att_exported);
   }
@@ -4263,6 +4265,10 @@ protected:
      flags to pass to QUOTE_STRING_FOR_GLOBBING, mostly having to do with
      whether or not we've already performed quote removal. */
   char **shell_glob_filename (const char *, qglob_flags);
+
+  /* Functions from pcomplete.cc */
+
+  void set_itemlist_dirty (ITEMLIST *);
 
   /* Functions from redir.cc */
 
@@ -5324,7 +5330,7 @@ protected:
      HASHED_VARS is a pointer to the hash table containing the list
      of interest. */
   SHELL_VAR *
-  hash_lookup (const string &name, HASH_TABLE<SHELL_VAR> *hashed_vars)
+  hash_lookup (string_view name, HASH_TABLE<SHELL_VAR> *hashed_vars)
   {
     BUCKET_CONTENTS<SHELL_VAR> *bucket;
     bucket = hashed_vars->search (name, HS_NOFLAGS);
@@ -5337,7 +5343,7 @@ protected:
   }
 
   FUNCTION_DEF *
-  hash_lookup (const string &name, HASH_TABLE<FUNCTION_DEF> *hashed_funcs)
+  hash_lookup (string_view name, HASH_TABLE<FUNCTION_DEF> *hashed_funcs)
   {
     BUCKET_CONTENTS<FUNCTION_DEF> *bucket;
     bucket = hashed_funcs->search (name, HS_NOFLAGS);
@@ -5345,7 +5351,7 @@ protected:
   }
 
   SHELL_VAR *
-  var_lookup (const string &name, VAR_CONTEXT *vcontext)
+  var_lookup (string_view name, VAR_CONTEXT *vcontext)
   {
     SHELL_VAR *v = nullptr;
     VAR_CONTEXT *vc;
@@ -5360,7 +5366,7 @@ protected:
   /* Look up the function entry whose name matches STRING.
      Returns the entry or nullptr. */
   SHELL_VAR *
-  find_function (const string &name)
+  find_function (string_view name)
   {
     return hash_lookup (name, shell_functions);
   }
@@ -5368,7 +5374,7 @@ protected:
   /* Find the function definition for the shell function named NAME.  Returns
      the entry or nullptr. */
   FUNCTION_DEF *
-  find_function_def (const string &name)
+  find_function_def (string_view name)
   {
 #if defined(DEBUGGER)
     return hash_lookup (name, shell_function_defs);
@@ -5377,34 +5383,36 @@ protected:
 #endif
   }
 
-  SHELL_VAR *find_function_var (const string &);
-
-  SHELL_VAR *find_variable (const string &);
-  SHELL_VAR *find_variable_noref (const string &);
-  SHELL_VAR *find_variable_last_nameref (const string &, int);
-  SHELL_VAR *find_global_variable_last_nameref (const string &, int);
-  SHELL_VAR *find_global_variable_noref (const string &);
+  SHELL_VAR *find_variable (string_view);
+  SHELL_VAR *find_variable_noref (string_view);
+  SHELL_VAR *find_variable_last_nameref (string_view, int);
+  SHELL_VAR *find_global_variable_last_nameref (string_view, int);
+  SHELL_VAR *find_global_variable_noref (string_view);
   SHELL_VAR *find_variable_nameref (SHELL_VAR *);
-  SHELL_VAR *find_variable_nameref_for_create (const string &, int);
-  SHELL_VAR *find_variable_nameref_for_assignment (const string &, int);
-  /* SHELL_VAR *find_internal (const string &, int); */
-  SHELL_VAR *find_tempenv (const string &);
-  SHELL_VAR *find_no_tempenv (const string &);
-  SHELL_VAR *find_global (const string &);
-  SHELL_VAR *find_global_noref (const string &);
-  SHELL_VAR *find_shell (const string &);
-  SHELL_VAR *find_no_invisible (const string &);
-  SHELL_VAR *find_for_assignment (const string &);
+  SHELL_VAR *find_variable_nameref_for_create (string_view, int);
+  SHELL_VAR *find_variable_nameref_for_assignment (string_view, int);
+  /* SHELL_VAR *find_internal (string_view, int); */
+  SHELL_VAR *find_tempenv (string_view);
+  SHELL_VAR *find_no_tempenv (string_view);
+  SHELL_VAR *find_global (string_view);
+  SHELL_VAR *find_global_noref (string_view);
+  SHELL_VAR *find_shell (string_view);
+  SHELL_VAR *find_no_invisible (string_view);
+  SHELL_VAR *find_for_assignment (string_view);
 
   const string &nameref_transform_name (const string &, assign_flags);
 
-  SHELL_VAR *make_local (const string &, int);
+  SHELL_VAR *make_local (string_view, int);
 
-  SHELL_VAR *bind_variable (string_view, string_view, int);
-  SHELL_VAR *bind_global_variable (string_view, string_view, int);
+  SHELL_VAR *bind_variable (const string &, const string &,
+                            assign_flags = ASS_NOFLAGS);
+
+  SHELL_VAR *bind_global_variable (string_view, string_view,
+                                   assign_flags = ASS_NOFLAGS);
+
   SHELL_VAR *bind_function (string_view, COMMAND *);
 
-  SHELL_VAR *find_variable_internal (const string &, find_var_flags);
+  SHELL_VAR *find_variable_internal (string_view, find_var_flags);
 
   SHELL_VAR *find_nameref_at_context (SHELL_VAR *, VAR_CONTEXT *);
 
@@ -5417,14 +5425,14 @@ protected:
   SHELL_VAR *find_var_nameref_for_create (const string &, int);
   SHELL_VAR *find_var_nameref_for_assignment (const string &, int);
 
-  SHELL_VAR *find_variable_tempenv (const string &);
-  SHELL_VAR *find_variable_notempenv (const string &);
-  SHELL_VAR *find_global_variable (const string &);
-  SHELL_VAR *find_shell_variable (const string &);
-  SHELL_VAR *find_variable_no_invisible (const string &);
-  SHELL_VAR *find_variable_for_assignment (const string &);
+  SHELL_VAR *find_variable_tempenv (string_view);
+  SHELL_VAR *find_variable_notempenv (string_view);
+  SHELL_VAR *find_global_variable (string_view);
+  SHELL_VAR *find_shell_variable (string_view);
+  SHELL_VAR *find_variable_no_invisible (string_view);
+  SHELL_VAR *find_variable_for_assignment (string_view);
 
-  void bind_function_def (const string &, FUNCTION_DEF *, int);
+  void bind_function_def (string_view, FUNCTION_DEF *, bool);
 
   SHELL_VAR **map_over (sh_var_map_func_t *, VAR_CONTEXT *);
   SHELL_VAR **map_over_funcs (sh_var_map_func_t *);
@@ -5529,7 +5537,7 @@ protected:
   string *get_variable_value (SHELL_VAR *);
   string *get_string_value (const string &);
 
-  string make_variable_value (SHELL_VAR *, const string &, assign_flags);
+  string *make_variable_value (SHELL_VAR *, const string &, assign_flags);
 
   SHELL_VAR *make_local_variable (const string &, mkloc_var_flags);
 
@@ -5543,17 +5551,52 @@ protected:
 
   SHELL_VAR *bind_variable_value (SHELL_VAR *, const string &, assign_flags);
   SHELL_VAR *bind_int_variable (const string &, const string &, assign_flags);
-  SHELL_VAR *bind_var_to_int (const string &, int64_t);
 
-  SHELL_VAR *bind_invalid_envvar (const string &, const string &, int);
+  SHELL_VAR *
+  bind_var_to_int (const string &var, int64_t val, assign_flags flags)
+  {
+    string p (fmtullong (static_cast<uint64_t> (val), 10));
+    return bind_int_variable (var, p, flags);
+  }
 
-  SHELL_VAR *bind_variable_internal (const string &, const string &,
-                                     ASSOC_ARRAY *, hsearch_flags,
-                                     assign_flags);
+  SHELL_VAR *bind_variable_internal (string_view, const string &,
+                                     HASH_TABLE<SHELL_VAR> *, hsearch_flags,
+                                     assign_flags = ASS_NOFLAGS);
 
-  SHELL_VAR *optimized_assignment (SHELL_VAR *, const string &, int);
+  void bind_tempenv_variable (const string &, const string &);
 
-  char *find_user_command (const string &);
+  SHELL_VAR *
+  bind_global_variable (string_view name, const string &value,
+                        assign_flags flags = ASS_NOFLAGS)
+  {
+    if (shell_variables == nullptr)
+      create_variable_tables ();
+
+    /* bind_variable_internal will handle nameref resolution in this case */
+    return bind_variable_internal (name, value, &global_variables->table,
+                                   HS_NOFLAGS, flags);
+  }
+
+  SHELL_VAR *
+  bind_invalid_envvar (string_view name, const string &value,
+                       assign_flags flags = ASS_NOFLAGS)
+  {
+    if (invalid_env == nullptr)
+      invalid_env = new HASH_TABLE<SHELL_VAR> (64); /* XXX */
+
+    return bind_variable_internal (name, value, invalid_env, HS_NOSRCH, flags);
+  }
+
+  /* right now we optimize appends to string variables */
+  SHELL_VAR *
+  optimized_assignment (SHELL_VAR *entry, const string &value)
+  {
+    string *var_str = entry->str_value ();
+    var_str->append (value);
+    return entry;
+  }
+
+  char *find_user_command (string_view);
 
   int assign_in_env (WORD_DESC *, assign_flags);
 
@@ -5614,15 +5657,15 @@ protected:
 
   VAR_CONTEXT *new_var_context (const string &, int);
   void dispose_var_context (VAR_CONTEXT *);
-  VAR_CONTEXT *push_var_context (const string &, int, ASSOC_ARRAY *);
+  VAR_CONTEXT *push_var_context (const string &, int, HASH_TABLE<SHELL_VAR> *);
   void pop_var_context ();
 
-  VAR_CONTEXT *push_scope (int, ASSOC_ARRAY *);
+  VAR_CONTEXT *push_scope (int, HASH_TABLE<SHELL_VAR> *);
   int pop_scope (bool);
 
   void clear_dollar_vars ();
 
-  void push_context (const string &, bool, ASSOC_ARRAY *);
+  void push_context (const string &, bool, HASH_TABLE<SHELL_VAR> *);
   void pop_context ();
   void push_dollar_vars ();
   void pop_dollar_vars ();
@@ -5895,7 +5938,7 @@ protected:
       *(posix_vars[i]) = bitmap[i];
   }
 
-  bool valid_nameref_value (const string &, valid_array_flags);
+  bool valid_nameref_value (const string &, int);
   bool check_selfref (const string &, const string &);
   bool check_identifier (WORD_DESC *, bool);
 
@@ -6421,6 +6464,8 @@ protected:
      the environment. */
   HASH_TABLE<SHELL_VAR> *shell_functions;
 
+  HASH_TABLE<SHELL_VAR> *invalid_env;
+
 #if defined(DEBUGGER)
   /* The table of shell function definitions that the user defined or that
      came from the environment. */
@@ -6429,7 +6474,7 @@ protected:
 
   /* The set of shell assignments which are made only in the environment
      for a single command. */
-  ASSOC_ARRAY *temporary_env;
+  HASH_TABLE<SHELL_VAR> *temporary_env;
 
   /* Some funky variables which are known about specially.  Here is where
      "$*", "$1", and all the cruft is kept. */
@@ -6521,6 +6566,8 @@ protected:
   /* A WORD_LIST of words to be expanded by expand_word_list_internal,
      without any leading variable assignments. */
   WORD_LIST *garglist;
+
+  ITEMLIST it_functions;
 
   /* variables from lib/sh/getenv.cc */
 

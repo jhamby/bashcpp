@@ -149,7 +149,7 @@ Shell::initialize_shell_variables (char **env, bool privmode)
             }
           else
             {
-              if ((temp_var = bind_invalid_envvar (name, string, 0)))
+              if ((temp_var = bind_invalid_envvar (name, string)))
                 {
                   temp_var->set_attr (att_exported | att_imported
                                       | att_invisible);
@@ -243,7 +243,7 @@ Shell::initialize_shell_variables (char **env, bool privmode)
               }
             if (legal_identifier (name))
               {
-                temp_var = bind_variable (name, string, 0);
+                temp_var = bind_variable (name, string);
                 if (temp_var)
                   {
                     temp_var->set_attr (att_exported | att_imported);
@@ -253,7 +253,7 @@ Shell::initialize_shell_variables (char **env, bool privmode)
               }
             else
               {
-                temp_var = bind_invalid_envvar (name, string, 0);
+                temp_var = bind_invalid_envvar (name, string);
                 if (temp_var)
                   temp_var->set_attr (att_exported | att_imported
                                       | att_invisible);
@@ -314,12 +314,12 @@ Shell::initialize_shell_variables (char **env, bool privmode)
     }
 
   if (current_user.euid == 0)
-    bind_variable ("PS4", "+ ", 0);
+    bind_variable ("PS4", "+ ");
   else
     set_if_not ("PS4", "+ ");
 
   /* Don't allow IFS to be imported from the environment. */
-  temp_var = bind_variable ("IFS", " \t\n", 0);
+  temp_var = bind_variable ("IFS", " \t\n");
   setifs (temp_var);
 
   /* Magic machine types.  Pretty convenient. */
@@ -343,18 +343,18 @@ Shell::initialize_shell_variables (char **env, bool privmode)
   set_argv0 ();
 
   /* Initialize the `getopts' stuff. */
-  temp_var = bind_variable ("OPTIND", "1", 0);
+  temp_var = bind_variable ("OPTIND", "1");
   temp_var->set_attr (att_integer);
 
   getopts_reset (0);
-  bind_variable ("OPTERR", "1", 0);
+  bind_variable ("OPTERR", "1");
   sh_opterr = true;
 
   if (login_shell == 1 && posixly_correct == 0)
     set_home_var ();
 
   // Get the full pathname to THIS shell, and set the BASH variable to it.
-  temp_var = bind_variable ("BASH", get_bash_name (), 0);
+  temp_var = bind_variable ("BASH", get_bash_name ());
 
   /* Make the exported environment variable SHELL be the user's login
      shell.  Note that the `tset' command looks at this variable
@@ -363,14 +363,14 @@ Shell::initialize_shell_variables (char **env, bool privmode)
   set_shell_var ();
 
   /* Make a variable called BASH_VERSION which contains the version info. */
-  bind_variable ("BASH_VERSION", shell_version_string (), 0);
+  bind_variable ("BASH_VERSION", shell_version_string ());
 
 #if defined(ARRAY_VARS)
   make_vers_array ();
 #endif
 
   if (command_execution_string)
-    bind_variable ("BASH_EXECUTION_STRING", command_execution_string, 0);
+    bind_variable ("BASH_EXECUTION_STRING", command_execution_string);
 
   /* Find out if we're supposed to be in Posix.2 mode via an
      environment variable. */
@@ -480,7 +480,7 @@ Shell::set_home_var ()
 
   temp_var = find_variable ("HOME");
   if (temp_var == nullptr)
-    temp_var = bind_variable ("HOME", sh_get_home_dir (), 0);
+    temp_var = bind_variable ("HOME", sh_get_home_dir ());
 #if 0
   temp_var->set_attr (att_exported);
 #endif
@@ -498,7 +498,7 @@ Shell::set_shell_var ()
     {
       if (current_user.shell == nullptr)
         get_current_user_info ();
-      temp_var = bind_variable ("SHELL", current_user.shell, 0);
+      temp_var = bind_variable ("SHELL", current_user.shell);
     }
 #if 0
   temp_var->set_attr (att_exported);
@@ -626,7 +626,7 @@ Shell::adjust_shell_level (int change)
       new_level[3] = '\0';
     }
 
-  temp_var = bind_variable ("SHLVL", new_level, 0);
+  temp_var = bind_variable ("SHLVL", new_level);
   set_auto_export (temp_var);
 }
 
@@ -657,7 +657,7 @@ Shell::set_pwd ()
         set_working_directory (current_dir);
       if (posixly_correct && current_dir)
         {
-          temp_var = bind_variable ("PWD", current_dir, 0);
+          temp_var = bind_variable ("PWD", current_dir);
           set_auto_export (temp_var);
         }
       free (current_dir);
@@ -666,7 +666,7 @@ Shell::set_pwd ()
            && same_file (home_string->c_str (), ".", nullptr, nullptr))
     {
       set_working_directory (home_string->c_str ());
-      temp_var = bind_variable ("PWD", *home_string, 0);
+      temp_var = bind_variable ("PWD", *home_string);
       set_auto_export (temp_var);
     }
   else
@@ -674,7 +674,7 @@ Shell::set_pwd ()
       char *working_dir = get_working_directory ("shell-init");
       if (working_dir)
         {
-          temp_var = bind_variable ("PWD", working_dir, 0);
+          temp_var = bind_variable ("PWD", working_dir);
           set_auto_export (temp_var);
           free (working_dir);
         }
@@ -692,7 +692,7 @@ Shell::set_pwd ()
   if (temp_var == nullptr || temp_var->str_value () == nullptr)
 #endif
     {
-      temp_var = bind_variable ("OLDPWD", string_view (), 0);
+      temp_var = bind_variable ("OLDPWD", string ());
       temp_var->set_attr (att_exported | att_invisible);
     }
 }
@@ -709,7 +709,7 @@ Shell::set_ppid ()
   if (temp_var)
     temp_var->unset_attr (att_readonly | att_exported);
 
-  temp_var = bind_variable ("PPID", name, 0);
+  temp_var = bind_variable ("PPID", name);
   temp_var->set_attr (att_readonly | att_integer);
 }
 
@@ -722,7 +722,7 @@ Shell::uidset ()
   v = find_variable ("UID");
   if (v == nullptr)
     {
-      v = bind_variable ("UID", b, 0);
+      v = bind_variable ("UID", b);
       v->set_attr (att_readonly | att_integer);
     }
 
@@ -732,7 +732,7 @@ Shell::uidset ()
   v = find_variable ("EUID");
   if (v == nullptr)
     {
-      v = bind_variable ("EUID", b, 0);
+      v = bind_variable ("EUID", b);
       v->set_attr (att_readonly | att_integer);
     }
 }
@@ -779,10 +779,10 @@ Shell::sh_set_lines_and_columns (uint32_t lines, uint32_t cols)
 #endif
 
   string v (inttostr (lines));
-  bind_variable ("LINES", v, 0);
+  bind_variable ("LINES", v);
 
   v = inttostr (cols);
-  bind_variable ("COLUMNS", v, 0);
+  bind_variable ("COLUMNS", v);
 }
 
 /* **************************************************************** */
@@ -881,7 +881,7 @@ Shell::print_var_function (SHELL_VAR *var)
 {
   if (var->function () && var->is_set ())
     {
-      string x (named_function_string (nullptr, var->cmd_value (),
+      string x (named_function_string (nullptr, var->func_value (),
                                        FUNC_MULTILINE | FUNC_EXTERNAL));
       printf ("%s", x.c_str ());
     }
@@ -929,7 +929,7 @@ Shell::print_var_function (SHELL_VAR *var)
 #define INIT_DYNAMIC_VAR(var, val, gfunc, afunc)                              \
   do                                                                          \
     {                                                                         \
-      v = bind_variable (var, (val), 0);                                      \
+      v = bind_variable (var, (val));                                         \
       v->dynamic_value = gfunc;                                               \
       v->assign_func = afunc;                                                 \
     }                                                                         \
@@ -1187,7 +1187,7 @@ Shell::get_epochrealtime (SHELL_VAR *var)
   snprintf (buf, sizeof (buf), "%u%c%06u", static_cast<unsigned> (tv.tv_sec),
             locale_decpoint (), static_cast<unsigned> (tv.tv_usec));
 
-  var->set_str_value (buf);
+  var->set_string_value (buf);
   return var;
 }
 
@@ -1202,7 +1202,7 @@ Shell::get_bashpid (SHELL_VAR *var)
 SHELL_VAR *
 Shell::get_bash_argv0 (SHELL_VAR *var)
 {
-  var->set_str_value (dollar_vars[0]);
+  var->set_string_value (dollar_vars[0]);
   return var;
 }
 
@@ -1236,7 +1236,7 @@ Shell::set_argv0 ()
 SHELL_VAR *
 Shell::get_bash_command (SHELL_VAR *var)
 {
-  var->set_str_value (the_printed_command_except_trap);
+  var->set_string_value (the_printed_command_except_trap);
   return var;
 }
 
@@ -1268,7 +1268,7 @@ Shell::get_comp_wordbreaks (SHELL_VAR *var)
       && !bash_readline_initialized)
     enable_hostname_completion (perform_hostname_completion);
 
-  var->set_str_value (rl_completer_word_break_characters);
+  var->set_string_value (rl_completer_word_break_characters);
   return var;
 }
 
@@ -1486,44 +1486,43 @@ Shell::initialize_dynamic_variables ()
 {
   SHELL_VAR *v = init_seconds_var ();
 
-  INIT_DYNAMIC_VAR ("BASH_ARGV0", string_view (), &Shell::get_bash_argv0,
+  INIT_DYNAMIC_VAR ("BASH_ARGV0", string (), &Shell::get_bash_argv0,
                     &Shell::assign_bash_argv0);
 
-  INIT_DYNAMIC_VAR ("BASH_COMMAND", string_view (), &Shell::get_bash_command,
+  INIT_DYNAMIC_VAR ("BASH_COMMAND", string (), &Shell::get_bash_command,
                     nullptr);
-  INIT_DYNAMIC_VAR ("BASH_SUBSHELL", string_view (), &Shell::get_subshell,
+  INIT_DYNAMIC_VAR ("BASH_SUBSHELL", string (), &Shell::get_subshell,
                     &Shell::assign_subshell);
 
-  INIT_DYNAMIC_VAR ("RANDOM", string_view (), &Shell::get_random,
+  INIT_DYNAMIC_VAR ("RANDOM", string (), &Shell::get_random,
                     &Shell::assign_random);
   v->set_attr (att_integer);
 
-  INIT_DYNAMIC_VAR ("SRANDOM", string_view (), &Shell::get_urandom, nullptr);
+  INIT_DYNAMIC_VAR ("SRANDOM", string (), &Shell::get_urandom, nullptr);
   v->set_attr (att_integer);
 
-  INIT_DYNAMIC_VAR ("LINENO", string_view (), &Shell::get_lineno,
+  INIT_DYNAMIC_VAR ("LINENO", string (), &Shell::get_lineno,
                     &Shell::assign_lineno);
   v->set_attr (att_regenerate);
 
-  INIT_DYNAMIC_VAR ("BASHPID", string_view (), &Shell::get_bashpid,
+  INIT_DYNAMIC_VAR ("BASHPID", string (), &Shell::get_bashpid,
                     &Shell::null_assign);
   v->set_attr (att_integer);
 
-  INIT_DYNAMIC_VAR ("EPOCHSECONDS", string_view (), &Shell::get_epochseconds,
+  INIT_DYNAMIC_VAR ("EPOCHSECONDS", string (), &Shell::get_epochseconds,
                     &Shell::null_assign);
   v->set_attr (att_regenerate);
-  INIT_DYNAMIC_VAR ("EPOCHREALTIME", string_view (), &Shell::get_epochrealtime,
+  INIT_DYNAMIC_VAR ("EPOCHREALTIME", string (), &Shell::get_epochrealtime,
                     &Shell::null_assign);
   v->set_attr (att_regenerate);
 
 #if defined(HISTORY)
-  INIT_DYNAMIC_VAR ("HISTCMD", string_view (), &Shell::get_histcmd, nullptr);
+  INIT_DYNAMIC_VAR ("HISTCMD", string (), &Shell::get_histcmd, nullptr);
   v->set_attr (att_integer);
 #endif
 
 #if defined(READLINE)
-  INIT_DYNAMIC_VAR ("COMP_WORDBREAKS", string_view (),
-                    &Shell::get_comp_wordbreaks,
+  INIT_DYNAMIC_VAR ("COMP_WORDBREAKS", string (), &Shell::get_comp_wordbreaks,
                     &Shell::assign_comp_wordbreaks);
 #endif
 
@@ -1579,7 +1578,7 @@ Shell::initialize_dynamic_variables ()
         shell_variables list
 */
 SHELL_VAR *
-Shell::find_variable_internal (const string &name, find_var_flags flags)
+Shell::find_variable_internal (string_view name, find_var_flags flags)
 {
   bool force_tempenv = (flags & FV_FORCETEMPENV);
 
@@ -1666,7 +1665,7 @@ Shell::find_variable_nameref (SHELL_VAR *v)
 
 // Resolve the chain of nameref variables for NAME.  XXX - could change later
 SHELL_VAR *
-Shell::find_variable_last_nameref (const string &name, int vflags)
+Shell::find_variable_last_nameref (string_view name, int vflags)
 {
   SHELL_VAR *v, *nv;
 
@@ -1695,7 +1694,7 @@ Shell::find_variable_last_nameref (const string &name, int vflags)
 
 // Resolve the chain of nameref variables for NAME.  XXX - could change later
 SHELL_VAR *
-Shell::find_global_variable_last_nameref (const string &name, int vflags)
+Shell::find_global_variable_last_nameref (string_view name, int vflags)
 {
   SHELL_VAR *v, *nv;
   int level;
@@ -1886,7 +1885,7 @@ Shell::nameref_transform_name (const string &name, assign_flags flags)
 
 /* Find a variable, forcing a search of the temporary environment first */
 SHELL_VAR *
-Shell::find_variable_tempenv (const string &name)
+Shell::find_variable_tempenv (string_view name)
 {
   SHELL_VAR *var = find_variable_internal (name, FV_FORCETEMPENV);
 
@@ -1898,7 +1897,7 @@ Shell::find_variable_tempenv (const string &name)
 
 /* Find a variable, not forcing a search of the temporary environment first */
 SHELL_VAR *
-Shell::find_variable_notempenv (const string &name)
+Shell::find_variable_notempenv (string_view name)
 {
   SHELL_VAR *var = find_variable_internal (name, FV_NOFLAGS);
 
@@ -1909,7 +1908,7 @@ Shell::find_variable_notempenv (const string &name)
 }
 
 SHELL_VAR *
-Shell::find_global_variable (const string &name)
+Shell::find_global_variable (string_view name)
 {
   SHELL_VAR *var = var_lookup (name, global_variables);
   if (var && var->nameref ())
@@ -1922,7 +1921,7 @@ Shell::find_global_variable (const string &name)
 }
 
 SHELL_VAR *
-Shell::find_global_variable_noref (const string &name)
+Shell::find_global_variable_noref (string_view name)
 {
   SHELL_VAR *var = var_lookup (name, global_variables);
 
@@ -1933,7 +1932,7 @@ Shell::find_global_variable_noref (const string &name)
 }
 
 SHELL_VAR *
-Shell::find_shell_variable (const string &name)
+Shell::find_shell_variable (string_view name)
 {
   SHELL_VAR *var;
 
@@ -1949,7 +1948,7 @@ Shell::find_shell_variable (const string &name)
 
 /* Look up the variable entry named NAME.  Returns the entry or nullptr. */
 SHELL_VAR *
-Shell::find_variable (const string &name)
+Shell::find_variable (string_view name)
 {
   last_table_searched = nullptr;
   find_var_flags flags = FV_NOFLAGS;
@@ -1968,7 +1967,7 @@ Shell::find_variable (const string &name)
    one found without att_invisible set; return 0 if no non-invisible instances
    found. */
 SHELL_VAR *
-Shell::find_variable_no_invisible (const string &name)
+Shell::find_variable_no_invisible (string_view name)
 {
   last_table_searched = nullptr;
   find_var_flags flags = FV_SKIPINVISIBLE;
@@ -1986,7 +1985,7 @@ Shell::find_variable_no_invisible (const string &name)
 /* Find the first instance of NAME in the variable context chain; return first
    one found even if att_invisible set. */
 SHELL_VAR *
-Shell::find_variable_for_assignment (const string &name)
+Shell::find_variable_for_assignment (string_view name)
 {
   last_table_searched = nullptr;
   find_var_flags flags = FV_NOFLAGS;
@@ -2002,7 +2001,7 @@ Shell::find_variable_for_assignment (const string &name)
 }
 
 SHELL_VAR *
-Shell::find_variable_noref (const string &name)
+Shell::find_variable_noref (string_view name)
 {
   find_var_flags flags = FV_NOFLAGS;
 
@@ -2189,7 +2188,7 @@ Shell::make_local_variable (const string &name, mkloc_var_flags flags)
          need to use copy_variable (currently unused) to do it for all
          possible variable values. */
       if (was_tmpvar)
-        new_var->set_str_value (*old_value);
+        new_var->set_string_value (*old_value);
       else if (localvar_inherit || (flags & MKLOC_INHERIT))
         {
           /* This may not make sense for nameref variables that are shadowing
@@ -2197,16 +2196,16 @@ Shell::make_local_variable (const string &name, mkloc_var_flags flags)
 #if defined(ARRAY_VARS)
           if (old_var->assoc ())
             new_var->set_assoc_value (
-                new HASH_TABLE<SHELL_VAR> (*old_var->assoc_value ()));
+                new ASSOC_ARRAY (*old_var->assoc_value ()));
           else if (old_var->array ())
             new_var->set_array_value (new ARRAY (*old_var->array_value ()));
           else if (old_var->str_value ())
 #else
           if (old_var->str_value ())
 #endif
-            new_var->set_str_value (*old_var->str_value ());
+            new_var->set_string_value (*old_var->str_value ());
           else
-            new_var->set_str_value (nullptr);
+            new_var->set_string_value (string_view ());
         }
 
       if (localvar_inherit || (flags & MKLOC_INHERIT))
@@ -2328,7 +2327,7 @@ Shell::make_local_assoc_variable (const string &name, mkloc_var_flags flags)
 }
 #endif
 
-string
+string *
 Shell::make_variable_value (SHELL_VAR *var, const string &value,
                             assign_flags flags)
 {
@@ -2379,7 +2378,7 @@ Shell::make_variable_value (SHELL_VAR *var, const string &value,
       if (flags & ASS_APPEND)
         rval += lval;
 
-      return itos (rval);
+      return new string (itos (rval));
     }
 #if defined(CASEMOD_ATTRS)
   else if ((flags & ASS_NOEVAL) == 0
@@ -2407,7 +2406,7 @@ Shell::make_variable_value (SHELL_VAR *var, const string &value,
           = var->capcase () ? CASE_CAPITALIZE
                             : (var->uppercase () ? CASE_UPPER : CASE_LOWER);
 
-      return sh_modcase (retval, nullptr, op);
+      return new string (sh_modcase (retval, nullptr, op));
     }
 #endif /* CASEMOD_ATTRS */
   else if (!value.empty ())
@@ -2419,58 +2418,31 @@ Shell::make_variable_value (SHELL_VAR *var, const string &value,
           if (oval)
             {
               size_t olen = oval->size ();
-              string retval;
-              retval.reserve (olen + value.size ());
-              retval = *oval;
+              string *retval = new string ();
+              retval->reserve (olen + value.size ());
+              *retval = *oval;
               if (olen)
-                retval += value;
+                *retval += value;
               return retval;
             }
           else
-            return value;
+            return new string (value);
         }
       else
-        return value;
+        return new string (value);
     }
   else
-    return string ();
-}
-
-/* right now we optimize appends to string variables */
-SHELL_VAR *
-Shell::optimized_assignment (SHELL_VAR *entry, const string &value, int aflags)
-{
-  size_t len, vlen;
-  char *v, *new_;
-
-  v = value_cell (entry);
-  len = STRLEN (v);
-  vlen = STRLEN (value);
-
-  new_ = xrealloc (v, len + vlen + 8); /* for now */
-  if (vlen == 1)
-    {
-      new_[len] = *value;
-      new_[len + 1] = '\0';
-    }
-  else
-    strcpy (new_ + len, value);
-
-  var_setvalue (entry, new_);
-  return entry;
+    return new string ();
 }
 
 /* Bind a variable NAME to VALUE in the HASH_TABLE TABLE, which may be the
    temporary environment (but usually is not).  HFLAGS controls how NAME
    is looked up in TABLE; AFLAGS controls how VALUE is assigned */
 SHELL_VAR *
-Shell::bind_variable_internal (const string &name, const string &value,
-                               HASH_TABLE<SHELL_VAR *> *table,
+Shell::bind_variable_internal (string_view name, const string &value,
+                               HASH_TABLE<SHELL_VAR> *table,
                                hsearch_flags hflags, assign_flags aflags)
 {
-  //   char *newval, *tname;
-  //   SHELL_VAR *entry, *tentry;
-
   SHELL_VAR *entry
       = (hflags & HS_NOSRCH) ? nullptr : hash_lookup (name, table);
 
@@ -2481,9 +2453,10 @@ Shell::bind_variable_internal (const string &name, const string &value,
       entry = find_global_variable (entry->name ());
       /* Let's see if we have a nameref referencing a variable that hasn't yet
          been created. */
-      if (entry == 0)
+      if (entry == nullptr)
         entry = find_variable_last_nameref (name, 0); /* XXX */
-      if (entry == 0)                                 /* just in case */
+
+      if (entry == nullptr) /* just in case */
         return entry;
     }
 
@@ -2491,36 +2464,37 @@ Shell::bind_variable_internal (const string &name, const string &value,
      declare -n ref' */
   if (entry && entry->invisible () && entry->nameref ())
     {
-      if ((aflags & ASS_FORCE) == 0 && value
-          && valid_nameref_value (value, 0) == 0)
+      if ((aflags & ASS_FORCE) == 0
+          && !valid_nameref_value (value, VA_NOFLAGS))
         {
-          sh_invalidid (value);
+          sh_invalidid (value.c_str ());
           return nullptr;
         }
       goto assign_value;
     }
   else if (entry && entry->nameref ())
     {
-      newval = nameref_cell (entry); /* XXX - newval can't be nullptr here */
-      if (valid_nameref_value (newval, 0) == 0)
+      string *newval = entry->str_value (); // XXX - can't be nullptr here
+      if (valid_nameref_value (*newval, VA_NOFLAGS) == 0)
         {
-          sh_invalidid (newval);
+          sh_invalidid (newval->c_str ());
           return nullptr;
         }
 #if defined(ARRAY_VARS)
       /* declare -n foo=x[2] ; foo=bar */
-      if (valid_array_reference (newval, 0))
+      if (valid_array_reference (*newval, 0))
         {
-          tname = array_variable_name (newval, 0, nullptr, nullptr);
-          if (tname && (tentry = find_variable_noref (tname))
+          string *tname = array_variable_name (*newval, 0, nullptr);
+          SHELL_VAR *tentry;
+          if (tname && (tentry = find_variable_noref (*tname))
               && tentry->nameref ())
             {
               /* nameref variables can't be arrays */
               internal_warning (_ ("%s: removing nameref attribute"),
-                                name_cell (tentry));
+                                tentry->name ().c_str ());
 
-              FREE (value_cell (tentry)); /* XXX - bash-4.3 compat */
-              var_setvalue (tentry, nullptr);
+              delete[] tentry->str_value (); /* XXX - bash-4.3 compat */
+              tentry->set_value (nullptr);
               tentry->unset_attr (att_nameref);
             }
           free (tname);
@@ -2531,7 +2505,7 @@ Shell::bind_variable_internal (const string &name, const string &value,
              assign_array_element will eventually do it itself based on
              newval and aflags. */
 
-          entry = assign_array_element (newval, value, aflags | ASS_NAMEREF,
+          entry = assign_array_element (*newval, value, aflags | ASS_NAMEREF,
                                         nullptr);
           if (entry == nullptr)
             return entry;
@@ -2539,15 +2513,14 @@ Shell::bind_variable_internal (const string &name, const string &value,
       else
 #endif
         {
-          entry = make_new_variable (newval, table);
-          var_setvalue (entry, make_variable_value (entry, value, aflags));
+          entry = make_new_variable (*newval, *table);
+          entry->set_value (make_variable_value (entry, value, aflags));
         }
     }
   else if (entry == nullptr)
     {
-      entry = make_new_variable (name, table);
-      var_setvalue (entry,
-                    make_variable_value (entry, value, aflags)); /* XXX */
+      entry = make_new_variable (name, *table);
+      entry->set_value (make_variable_value (entry, value, aflags)); /* XXX */
     }
   else if (entry->assign_func) /* array vars have assign functions now */
     {
@@ -2555,23 +2528,25 @@ Shell::bind_variable_internal (const string &name, const string &value,
           || entry->noassign ())
         {
           if (entry->readonly ())
-            err_readonly (name_cell (entry));
+            err_readonly (entry->name ().c_str ());
           return entry;
         }
 
-      INVALIDATE_EXPORTSTR (entry);
-      newval = (aflags & ASS_APPEND)
-                   ? make_variable_value (entry, value, aflags)
-                   : value;
+      entry->invalidate_exportstr ();
+      const string *newval = (aflags & ASS_APPEND)
+                                 ? make_variable_value (entry, value, aflags)
+                                 : &value;
+
       if (entry->assoc ())
-        entry = ((*this).*(entry->assign_func)) (entry, newval, -1,
-                                                 savestring ("0"));
+        entry = ((*this).*(entry->assign_func)) (entry, *newval, -1, "0");
       else if (entry->array ())
-        entry = ((*this).*(entry->assign_func)) (entry, newval, 0, 0);
+        entry = ((*this).*(entry->assign_func)) (entry, *newval, 0, nullptr);
       else
-        entry = ((*this).*(entry->assign_func)) (entry, newval, -1, 0);
-      if (newval != value)
-        free (newval);
+        entry = ((*this).*(entry->assign_func)) (entry, *newval, -1, nullptr);
+
+      if (newval != &value)
+        delete const_cast<string *> (newval);
+
       return entry;
     }
   else
@@ -2581,7 +2556,7 @@ Shell::bind_variable_internal (const string &name, const string &value,
           || entry->noassign ())
         {
           if (entry->readonly ())
-            err_readonly (name_cell (entry));
+            err_readonly (entry->name ().c_str ());
           return entry;
         }
 
@@ -2592,8 +2567,8 @@ Shell::bind_variable_internal (const string &name, const string &value,
          optimize appends to string variables. */
       if (can_optimize_assignment (entry, aflags))
         {
-          INVALIDATE_EXPORTSTR (entry);
-          optimized_assignment (entry, value, aflags);
+          entry->invalidate_exportstr ();
+          (void)optimized_assignment (entry, value);
 
           if (mark_modified_vars)
             entry->set_attr (att_exported);
@@ -2604,6 +2579,7 @@ Shell::bind_variable_internal (const string &name, const string &value,
           return entry;
         }
 
+      string *newval;
 #if defined(ARRAY_VARS)
       if (entry->assoc () || entry->array ())
         newval = make_array_variable_value (entry, 0, "0", value, aflags);
@@ -2612,7 +2588,7 @@ Shell::bind_variable_internal (const string &name, const string &value,
         newval = make_variable_value (entry, value, aflags); /* XXX */
 
       /* Invalidate any cached export string */
-      INVALIDATE_EXPORTSTR (entry);
+      entry->invalidate_exportstr ();
 
 #if defined(ARRAY_VARS)
       /* XXX -- this bears looking at again -- XXX */
@@ -2621,19 +2597,19 @@ Shell::bind_variable_internal (const string &name, const string &value,
          x[0]=b or `read x[0]'. */
       if (entry->assoc ())
         {
-          assoc_insert (assoc_cell (entry), savestring ("0"), newval);
-          free (newval);
+          entry->assoc_value ()->insert ("0", *newval);
+          delete newval;
         }
       else if (entry->array ())
         {
-          array_insert (array_cell (entry), 0, newval);
-          free (newval);
+          entry->array_value ()->insert (0, *newval);
+          delete newval;
         }
       else
 #endif
         {
-          FREE (value_cell (entry));
-          var_setvalue (entry, newval);
+          delete entry->str_value ();
+          entry->set_value (newval);
         }
     }
 
@@ -2649,7 +2625,8 @@ Shell::bind_variable_internal (const string &name, const string &value,
 /* Bind a variable NAME to VALUE. If we have a temporary environment, we bind
    there first, then we bind into shell_variables. */
 SHELL_VAR *
-Shell::bind_variable (const string &name, const string &value, int flags)
+Shell::bind_variable (const string &name, const string &value,
+                      assign_flags flags)
 {
   SHELL_VAR *v, *nv;
   VAR_CONTEXT *vc, *nvc;
@@ -2662,7 +2639,7 @@ Shell::bind_variable (const string &name, const string &value, int flags)
      shell_variables table.  This allows sourced scripts to modify values
      given to them in a temporary environment while modifying the variable
      value that the caller sees. */
-  if (temporary_env && value) /* XXX - can value be null here? */
+  if (temporary_env)
     bind_tempenv_variable (name, value);
 
   /* XXX -- handle local variables here. */
@@ -2670,82 +2647,59 @@ Shell::bind_variable (const string &name, const string &value, int flags)
     {
       if (vc->func_env () || vc->builtin_env ())
         {
-          v = hash_lookup (name, vc->table);
+          v = hash_lookup (name, &vc->table);
           nvc = vc;
           if (v && v->nameref ())
             {
-              /* This starts at the context where we found the nameref. If we
-                 want to start the name resolution over again at the original
-                 context, this is where we need to change it */
-              nv = find_variable_nameref_context (v, vc, &nvc);
-              if (nv == nullptr)
+              try
                 {
-                  nv = find_variable_last_nameref_context (v, vc, &nvc);
-                  if (nv && nv->nameref ())
+                  /* This starts at the context where we found the nameref. If
+                     we want to start the name resolution over again at the
+                     original context, this is where we need to change it */
+                  nv = find_variable_nameref_context (v, vc, &nvc);
+                  if (nv == nullptr)
                     {
-                      /* If this nameref variable doesn't have a value yet,
-                         set the value.  Otherwise, assign using the value as
-                         normal. */
-                      if (nameref_cell (nv) == 0)
-                        return (bind_variable_internal (nv->name, value,
-                                                        nvc->table, 0, flags));
+                      nv = find_variable_last_nameref_context (v, vc, &nvc);
+                      if (nv && nv->nameref ())
+                        {
+                          /* If this nameref variable doesn't have a value yet,
+                             set the value.  Otherwise, assign using the value
+                             as normal. */
+                          if (nv->str_value () == nullptr)
+                            return bind_variable_internal (nv->name (), value,
+                                                           &nvc->table,
+                                                           HS_NOFLAGS, flags);
 #if defined(ARRAY_VARS)
-                      else if (valid_array_reference (nameref_cell (nv), 0))
-                        return (assign_array_element (nameref_cell (nv), value,
-                                                      flags,
-                                                      (array_eltstate_t *)0));
-                      else
+                          else if (valid_array_reference (*nv->str_value (),
+                                                          0))
+                            return assign_array_element (
+                                *nv->str_value (), value, flags, nullptr);
+                          else
 #endif
-                        return bind_variable_internal (
-                            nameref_cell (nv), value, nvc->table, 0, flags);
-                    }
-                  else if (nv == &nameref_maxloop_value)
-                    {
-                      internal_warning (_ ("%s: circular name reference"),
-                                        v->name ().c_str ());
-                      return bind_global_variable (v->name, value, flags);
+                            return bind_variable_internal (*nv->str_value (),
+                                                           value, &nvc->table,
+                                                           HS_NOFLAGS, flags);
+                        }
                     }
                   else
                     v = nv;
                 }
-              else if (nv == &nameref_maxloop_value)
+              catch (const nameref_maxloop_value &)
                 {
                   internal_warning (_ ("%s: circular name reference"),
-                                    v->str_value ());
-                  return bind_global_variable (v->str_value (), value, flags);
+                                    v->str_value ()->c_str ());
+                  return bind_global_variable (*v->str_value (), value, flags);
                 }
-              else
-                v = nv;
             }
           if (v)
-            return bind_variable_internal (v->name, value, nvc->table, 0,
-                                           flags);
+            return bind_variable_internal (v->name (), value, &nvc->table,
+                                           HS_NOFLAGS, flags);
         }
     }
 
   /* bind_variable_internal will handle nameref resolution in this case */
-  return bind_variable_internal (name, value, global_variables->table, 0,
-                                 flags);
-}
-
-SHELL_VAR *
-Shell::bind_global_variable (const string &name, const string &value,
-                             int flags)
-{
-  if (shell_variables == 0)
-    create_variable_tables ();
-
-  /* bind_variable_internal will handle nameref resolution in this case */
-  return bind_variable_internal (name, value, global_variables->table, 0,
-                                 flags);
-}
-
-SHELL_VAR *
-Shell::bind_invalid_envvar (const string &name, const string &value, int flags)
-{
-  if (invalid_env == 0)
-    invalid_env = hash_create (64); /* XXX */
-  return bind_variable_internal (name, value, invalid_env, HASH_NOSRCH, flags);
+  return bind_variable_internal (name, value, &global_variables->table,
+                                 HS_NOFLAGS, flags);
 }
 
 /* Make VAR, a simple shell variable, have value VALUE.  Once assigned a
@@ -2764,45 +2718,45 @@ Shell::bind_variable_value (SHELL_VAR *var, const string &value,
     {
       /* If we're appending, we need the old value, so use
          make_variable_value */
-      char *t = (aflags & ASS_APPEND)
-                    ? make_variable_value (var, value, aflags)
-                    : value;
-      (*(var->assign_func)) (var, t, -1, 0);
-      if (t != value && t)
-        free (t);
+      string *t = (aflags & ASS_APPEND)
+                      ? make_variable_value (var, value, aflags)
+                      : const_cast<string *> (&value);
+      ((*this).*(var->assign_func)) (var, *t, -1, string ());
+      if (t != &value && t)
+        delete t;
     }
   else
     {
-      char *t = make_variable_value (var, value, aflags);
+      string *t = make_variable_value (var, value, aflags);
       if ((aflags & (ASS_NAMEREF | ASS_FORCE)) == ASS_NAMEREF
-          && check_selfref (name_cell (var), t, 0))
+          && check_selfref (var->name (), *t))
         {
           if (variable_context)
             internal_warning (_ ("%s: circular name reference"),
-                              name_cell (var));
+                              var->name ().c_str ());
           else
             {
               internal_error (
                   _ ("%s: nameref variable self references not allowed"),
-                  name_cell (var));
-              free (t);
+                  var->name ().c_str ());
+              delete t;
               if (invis)
                 var->set_attr (att_invisible); /* XXX */
               return nullptr;
             }
         }
-      if ((aflags & ASS_NAMEREF) && (valid_nameref_value (t, 0) == 0))
+      if ((aflags & ASS_NAMEREF) && !valid_nameref_value (*t, VA_NOFLAGS))
         {
-          free (t);
+          delete t;
           if (invis)
             var->set_attr (att_invisible); /* XXX */
           return nullptr;
         }
-      FREE (value_cell (var));
-      var_setvalue (var, t);
+      var->dispose_value ();
+      var->set_value (t);
     }
 
-  INVALIDATE_EXPORTSTR (var);
+  var->invalidate_exportstr ();
 
   if (mark_modified_vars)
     var->set_attr (att_exported);
@@ -2822,14 +2776,10 @@ Shell::bind_variable_value (SHELL_VAR *var, const string &value,
    since bind_variable() calls the evaluator for variables with the integer
    attribute set), we temporarily turn off the integer attribute for each
    variable we set here, then turn it back on after binding as necessary. */
-
 SHELL_VAR *
 Shell::bind_int_variable (const string &lhs, const string &rhs,
                           assign_flags flags)
 {
-  //   SHELL_VAR *v;
-  //   int isint, isarr, implicitarray, vflags, avflags;
-
   bool isint = false, isarr = false, implicitarray = false;
 
 #if defined(ARRAY_VARS)
@@ -2838,20 +2788,24 @@ Shell::bind_int_variable (const string &lhs, const string &rhs,
   if (flags & ASS_ONEWORD)
     vflags |= VA_ONEWORD;
 
+  SHELL_VAR *v = nullptr;
   if (valid_array_reference (lhs, vflags))
     {
       isarr = true;
-      avflags = 0;
+      av_flags avflags = AV_NOFLAGS;
+
       /* Common code to translate between assignment and reference flags. */
       if (flags & ASS_NOEXPAND)
         avflags |= AV_NOEXPAND;
+
       if (flags & ASS_ONEWORD)
         avflags |= AV_ONEWORD;
+
       v = array_variable_part (lhs, avflags, nullptr, nullptr);
     }
   else if (!legal_identifier (lhs))
     {
-      sh_invalidid (lhs);
+      sh_invalidid (lhs.c_str ());
       return nullptr;
     }
   else
@@ -2864,8 +2818,8 @@ Shell::bind_int_variable (const string &lhs, const string &rhs,
       v->unset_attr (att_integer);
 
 #if defined(ARRAY_VARS)
-      if (v->array () && isarr == 0)
-        implicitarray = 1;
+      if (v->array () && !isarr)
+        implicitarray = true;
 #endif
     }
 
@@ -2873,10 +2827,10 @@ Shell::bind_int_variable (const string &lhs, const string &rhs,
   if (isarr)
     v = assign_array_element (lhs, rhs, flags, nullptr);
   else if (implicitarray)
-    v = bind_array_variable (lhs, 0, rhs, 0); /* XXX - check on flags */
+    v = bind_array_variable (lhs, 0, rhs); /* XXX - check on flags */
   else
 #endif
-    v = bind_variable (lhs, rhs, 0); /* why not use bind_variable_value? */
+    v = bind_variable (lhs, rhs); /* why not use bind_variable_value? */
 
   if (v)
     {
@@ -2887,46 +2841,36 @@ Shell::bind_int_variable (const string &lhs, const string &rhs,
     }
 
   if (v && v->nameref ())
-    internal_warning (_ ("%s: assigning integer to name reference"), lhs);
+    internal_warning (_ ("%s: assigning integer to name reference"),
+                      lhs.c_str ());
 
   return v;
-}
-
-SHELL_VAR *
-Shell::bind_var_to_int (const string &var, int64_t val, assign_flags flags)
-{
-  char ibuf[INT_STRLEN_BOUND (int64_t) + 1], *p;
-
-  p = fmtulong (val, 10, ibuf, sizeof (ibuf), 0);
-  return bind_int_variable (var, p, flags);
 }
 
 /* Do a function binding to a variable.  You pass the name and
    the command to bind to.  This conses the name and command. */
 SHELL_VAR *
-Shell::bind_function (const string &name, COMMAND *value)
+Shell::bind_function (string_view name, COMMAND *value)
 {
-  SHELL_VAR *entry;
-
-  entry = find_function (name);
-  if (entry == 0)
+  SHELL_VAR *entry = find_function (name);
+  if (entry == nullptr)
     {
-      BUCKET_CONTENTS *elt;
+      BUCKET_CONTENTS<SHELL_VAR> *elt;
 
-      elt = hash_insert (savestring (name), shell_functions, HASH_NOSRCH);
-      entry = new_shell_variable (name);
-      elt->data = (void *)entry;
+      elt = shell_functions->insert (name, HS_NOSRCH);
+      entry = new SHELL_VAR (name);
+      elt->data = entry;
     }
   else
-    INVALIDATE_EXPORTSTR (entry);
+    entry->invalidate_exportstr ();
 
-  if (var_isset (entry))
-    dispose_command (function_cell (entry));
+  if (entry->is_set ())
+    delete entry->func_value ();
 
   if (value)
-    var_setfunc (entry, copy_command (value));
+    entry->set_func_value (value->clone ());
   else
-    var_setfunc (entry, 0);
+    entry->set_func_value (nullptr);
 
   entry->set_attr (att_function);
 
@@ -2947,55 +2891,51 @@ Shell::bind_function (const string &name, COMMAND *value)
 
 #if defined(DEBUGGER)
 /* Bind a function definition, which includes source file and line number
-   information in addition to the command, into the Function hash table.
-   If (FLAGS & 1), overwrite any existing definition. If FLAGS == 0, leave
+   information in addition to the command, into the function hash table.
+   If OVERWRITE is set, overwrite any existing definition. Otherwise, leave
    any existing definition alone. */
 void
-Shell::bind_function_def (const string &name, FUNCTION_DEF *value, int flags)
+Shell::bind_function_def (string_view name, FUNCTION_DEF *value,
+                          bool overwrite)
 {
-  FUNCTION_DEF *entry;
-  BUCKET_CONTENTS *elt;
-  COMMAND *cmd;
-
-  entry = find_function_def (name);
-  if (entry && (flags & 1))
+  BUCKET_CONTENTS<FUNCTION_DEF> *bucket;
+  bucket = shell_function_defs->search (name, HS_NOFLAGS);
+  if (bucket && overwrite)
     {
-      dispose_function_def_contents (entry);
-      entry = copy_function_def_contents (value, entry);
+      delete bucket->data;
+      bucket->data = static_cast<FUNCTION_DEF *> (value->clone ());
     }
-  else if (entry)
+  else if (bucket)
     return;
   else
     {
-      cmd = value->command;
-      value->command = 0;
-      entry = copy_function_def (value);
+      COMMAND *cmd = value->command;
+      value->command = nullptr;
+      FUNCTION_DEF *entry = static_cast<FUNCTION_DEF *> (value->clone ());
       value->command = cmd;
 
-      elt = hash_insert (savestring (name), shell_function_defs, HASH_NOSRCH);
-      elt->data = (void **)entry;
+      bucket = shell_function_defs->insert (name, HS_NOSRCH);
+      bucket->data = entry;
     }
 }
 #endif /* DEBUGGER */
 
 /* Add STRING, which is of the form foo=bar, to the temporary environment
-   HASH_TABLE (temporary_env).  The functions in execute_cmd.c are
+   HASH_TABLE (temporary_env). The functions in execute_cmd.cc are
    responsible for moving the main temporary env to one of the other
-   temporary environments.  The expansion code in subst.c calls this. */
+   temporary environments. The expansion code in subst.cc calls this. */
 int
 Shell::assign_in_env (WORD_DESC *word, assign_flags flags)
 {
-  int offset, aflags;
-  char *name, *temp, *value, *newname;
-  SHELL_VAR *var;
-  char *string;
+  char *name;
+  const char *newname;
 
-  string = word->word;
+  const string &str = word->word;
 
-  aflags = 0;
-  offset = assignment (string, 0);
-  newname = name = savestring (string);
-  value = nullptr;
+  assign_flags aflags = ASS_NOFLAGS;
+  size_t offset = assignment (str, 0);
+  newname = name = savestring (str);
+  string *value = nullptr;
 
   if (name[offset] == '=')
     {
@@ -3005,18 +2945,18 @@ Shell::assign_in_env (WORD_DESC *word, assign_flags flags)
       if (name[offset - 1] == '+')
         {
           name[offset - 1] = '\0';
-          aflags |= ASS_APPEND;
+          aflags = ASS_APPEND;
         }
 
-      if (legal_identifier (name) == 0)
+      if (!legal_identifier (name))
         {
           sh_invalidid (name);
-          free (name);
+          delete[] name;
           return 0;
         }
 
-      var = find_variable (name);
-      if (var == 0)
+      SHELL_VAR *var = find_variable (name);
+      if (var == nullptr)
         {
           var = find_variable_last_nameref (name, 1);
           /* If we're assigning a value to a nameref variable in the temp
@@ -3028,14 +2968,14 @@ Shell::assign_in_env (WORD_DESC *word, assign_flags flags)
              to allow array references here at all (newname will be used to
              create a variable directly below) */
           if (var && var->nameref ()
-              && valid_nameref_value (nameref_cell (var), 2))
+              && valid_nameref_value (*var->str_value (), 2))
             {
-              newname = nameref_cell (var);
-              var = 0; /* don't use it for append */
+              newname = var->str_value()->c_str ();
+              var = nullptr; /* don't use it for append */
             }
         }
       else
-        newname = name_cell (var); /* no-op if not nameref */
+        newname = var->name ().c_str (); /* no-op if not nameref */
 
       if (var && (var->readonly () || var->noassign ()))
         {
@@ -3044,43 +2984,36 @@ Shell::assign_in_env (WORD_DESC *word, assign_flags flags)
           delete[] name;
           return 0;
         }
-      temp = name + offset + 1;
 
-      value = expand_assignment_string_to_string (temp, 0);
+      char *temp = name + offset + 1;
+
+      value = new string (expand_assignment_string_to_string (temp, 0));
 
       if (var && (aflags & ASS_APPEND))
         {
-          if (value == 0)
-            {
-              value = new char[1]; /* like do_assignment_internal */
-              value[0] = '\0';
-            }
-          temp = make_variable_value (var, value, aflags);
-          delete[] value;
-          value = temp;
+          string *temp2 = make_variable_value (var, *value, aflags);
+          delete value;
+          value = temp2;
         }
     }
 
-  if (temporary_env == 0)
-    temporary_env = hash_create (TEMPENV_HASH_BUCKETS);
+  if (temporary_env == nullptr)
+    temporary_env = new HASH_TABLE<SHELL_VAR> (TEMPENV_HASH_BUCKETS);
 
-  var = hash_lookup (newname, temporary_env);
-  if (var == 0)
-    var = make_new_variable (newname, temporary_env);
+  SHELL_VAR *var = hash_lookup (newname, temporary_env);
+  if (var == nullptr)
+    var = make_new_variable (newname, *temporary_env);
   else
-    FREE (value_cell (var));
+    var->dispose_value ();
 
-  if (value == 0)
-    {
-      value = new char[1]; /* see above */
-      value[0] = '\0';
-    }
+  if (value == nullptr)
+    value = new string ();
 
-  var->set_str_value (value);
+  var->set_value (value);
   var->attributes |= (att_exported | att_tempvar);
   var->context = variable_context; /* XXX */
 
-  INVALIDATE_EXPORTSTR (var);
+  var->invalidate_exportstr ();
   var->exportstr = mk_env_string (newname, value, 0);
 
   array_needs_making = true;
@@ -3096,7 +3029,7 @@ Shell::assign_in_env (WORD_DESC *word, assign_flags flags)
   if (echo_command_at_execute)
     /* The Korn shell prints the `+ ' in front of assignment statements,
         so we do too. */
-    xtrace_print_assignment (name, value, 0, 1);
+    xtrace_print_assignment (name, value->c_str (), 0, 1);
 
   delete[] name;
   return 1;
@@ -3108,57 +3041,16 @@ Shell::assign_in_env (WORD_DESC *word, assign_flags flags)
 /*								    */
 /* **************************************************************** */
 
-/* Dispose of the information attached to VAR. */
-void
-Shell::dispose_variable_value (SHELL_VAR *var)
-{
-  if (function_p (var))
-    dispose_command (function_cell (var));
-#if defined(ARRAY_VARS)
-  else if (array_p (var))
-    array_dispose (array_cell (var));
-  else if (assoc_p (var))
-    assoc_dispose (assoc_cell (var));
-#endif
-  else if (var->nameref ())
-    FREE (nameref_cell (var));
-  else
-    FREE (value_cell (var));
-}
-
-void
-Shell::dispose_variable (void *arg)
-{
-  if (arg == 0)
-    return;
-
-  SHELL_VAR *var = (SHELL_VAR *)arg;
-  if (nofree_p (var) == 0)
-    dispose_variable_value (var);
-
-  FREE_EXPORTSTR (var);
-
-  free (var->name);
-
-  if (var->exported ())
-    array_needs_making = true;
-
-  free (var);
-}
-
 /* Unset the shell variable referenced by NAME.  Unsetting a nameref variable
    unsets the variable it resolves to but leaves the nameref alone. */
 int
 Shell::unbind_variable (const string &name)
 {
-  SHELL_VAR *v, *nv;
-  int r;
+  SHELL_VAR *v = var_lookup (name, shell_variables);
+  SHELL_VAR *nv = (v && v->nameref ()) ? find_variable_nameref (v) : nullptr;
 
-  v = var_lookup (name, shell_variables);
-  nv = (v && v->nameref ()) ? find_variable_nameref (v) : nullptr;
-
-  r = nv ? makunbound (nv->name, shell_variables)
-         : makunbound (name, shell_variables);
+  int r = nv ? makunbound (nv->name (), shell_variables)
+             : makunbound (name, shell_variables);
   return r;
 }
 
@@ -3166,9 +3058,7 @@ Shell::unbind_variable (const string &name)
 int
 Shell::unbind_nameref (const string &name)
 {
-  SHELL_VAR *v;
-
-  v = var_lookup (name, shell_variables);
+  SHELL_VAR *v = var_lookup (name, shell_variables);
   if (v && v->nameref ())
     return makunbound (name, shell_variables);
   return 0;
@@ -3178,9 +3068,7 @@ Shell::unbind_nameref (const string &name)
 int
 Shell::unbind_variable_noref (const string &name)
 {
-  SHELL_VAR *v;
-
-  v = var_lookup (name, shell_variables);
+  SHELL_VAR *v = var_lookup (name, shell_variables);
   if (v)
     return makunbound (name, shell_variables);
   return 0;
@@ -3193,6 +3081,7 @@ Shell::unbind_global_variable (const string &name)
   int r;
 
   v = var_lookup (name, global_variables);
+
   /* This starts at the current scope, just like find_global_variable; should
      we use find_global_variable_nameref here? */
   nv = (v && v->nameref ()) ? find_variable_nameref (v) : nullptr;
@@ -3205,9 +3094,7 @@ Shell::unbind_global_variable (const string &name)
 int
 Shell::unbind_global_variable_noref (const string &name)
 {
-  SHELL_VAR *v;
-
-  v = var_lookup (name, global_variables);
+  SHELL_VAR *v = var_lookup (name, global_variables);
   if (v)
     return makunbound (name, global_variables);
   return 0;
@@ -3216,10 +3103,8 @@ Shell::unbind_global_variable_noref (const string &name)
 int
 Shell::check_unbind_variable (const string &name)
 {
-  SHELL_VAR *v;
-
-  v = find_variable (name);
-  if (v && var->readonly ())
+  SHELL_VAR *v = find_variable (name);
+  if (v && v->readonly ())
     {
       internal_error (_ ("%s: cannot unset: readonly %s"), name, "variable");
       return -2;
@@ -3361,7 +3246,7 @@ Shell::makunbound (const string &name, VAR_CONTEXT *vc)
         VSETATTR (old_var, att_local);
         VSETATTR (old_var, att_invisible);
         var_setvalue (old_var, nullptr);
-        INVALIDATE_EXPORTSTR (old_var);
+        entry->invalidate_exportstr ();
 
         new_elt = hash_insert (savestring (old_var->name), v->table, 0);
         new_elt->data = (void *)old_var;
@@ -3803,7 +3688,7 @@ bind_tempenv_variable (const string &name, const string &value)
     {
       FREE (value_cell (var));
       var_setvalue (var, savestring (value));
-      INVALIDATE_EXPORTSTR (var);
+      entry->invalidate_exportstr ();
     }
 
   return var;
@@ -3817,8 +3702,8 @@ find_tempenv_variable (const string &name)
   return temporary_env ? hash_lookup (name, temporary_env) : nullptr;
 }
 
-char **tempvar_list;
-int tvlist_ind;
+// char **tempvar_list;
+// int tvlist_ind;
 
 /* Take a variable from an assignment statement preceding a posix special
    builtin (including `return') and create a global variable from it. This
@@ -4029,16 +3914,16 @@ flush_temporary_env ()
 /*								    */
 /* **************************************************************** */
 
-static inline string
-mk_env_string (const string &name, const string &value, int attributes)
+static inline char *
+mk_env_string (string_view name, string_view value, int attributes)
 {
   // XXX - continue merging from bash-5.2 here.
-  size_t name_len, value_len;
-  char *p, *q, *t;
-  bool isfunc, isarray;
+  // size_t name_len, value_len;
+  // char *p, *q, *t;
+  // bool isfunc, isarray;
 
-  name_len = strlen (name);
-  value_len = STRLEN (value);
+  size_t name_len = name.size ();
+  size_t value_len = value.size ();
 
   isfunc = attributes & att_function;
 #if defined(ARRAY_VARS) && defined(ARRAY_EXPORT)
@@ -4179,14 +4064,14 @@ make_env_array_from_var_list (SHELL_VAR **vars)
     {
 #if defined(__CYGWIN__)
       /* We don't use the exportstr stuff on Cygwin at all. */
-      INVALIDATE_EXPORTSTR (var);
+      entry->invalidate_exportstr ();
 #endif
 
       /* If the value is generated dynamically, generate it here. */
       if (regen_p (var) && var->dynamic_value)
         {
           var = (*(var->dynamic_value)) (var);
-          INVALIDATE_EXPORTSTR (var);
+          entry->invalidate_exportstr ();
         }
 
       if (var->exportstr)

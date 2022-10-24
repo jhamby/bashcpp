@@ -22,6 +22,7 @@
 #if !defined(_PCOMPLETE_H_)
 #define _PCOMPLETE_H_
 
+#include "externs.hh"
 #include "hashlib.hh"
 
 namespace bash
@@ -61,7 +62,7 @@ enum compspec_action_t
 /* Values for COMPSPEC options field. */
 enum compspec_option_t
 {
-  COPT_NONE = 0,
+  COPT_NOFLAGS = 0,
   COPT_RESERVED = (1 << 0), /* reserved for other use */
   COPT_DEFAULT = (1 << 1),
   COPT_FILENAMES = (1 << 2),
@@ -88,7 +89,7 @@ struct COMPSPEC
   char *command;
   char *lcommand;
   char *filterpat;
-  unsigned int refcount;
+  uint32_t refcount;
   compspec_action_t actions;
   compspec_option_t options;
 };
@@ -162,7 +163,6 @@ extern ITEMLIST it_variables;
 
 extern COMPSPEC *pcomp_curcs;
 extern const char *pcomp_curcmd;
-#endif
 
 /* Functions from pcomplib.cc */
 
@@ -196,6 +196,7 @@ extern char **programmable_completions (const std::string &,
 
 extern void pcomp_set_readline_variables (int, int);
 extern void pcomp_set_compspec_options (COMPSPEC *, int, int);
+#endif
 
 } // namespace bash
 

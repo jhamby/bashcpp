@@ -367,7 +367,7 @@ Shell::run_shell (int argc, char **argv, char **env)
    */
   if (posixly_correct)
     {
-      bind_variable ("POSIXLY_CORRECT", "y", 0);
+      bind_variable ("POSIXLY_CORRECT", "y");
       sv_strict_posix ("POSIXLY_CORRECT");
     }
 
@@ -502,7 +502,7 @@ Shell::run_shell (int argc, char **argv, char **env)
           /* If we are invoked as `sh', turn on Posix mode. */
           if (act_like_sh)
             {
-              bind_variable ("POSIXLY_CORRECT", "y", 0);
+              bind_variable ("POSIXLY_CORRECT", "y");
               sv_strict_posix ("POSIXLY_CORRECT");
             }
 

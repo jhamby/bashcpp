@@ -21,26 +21,7 @@
 
 #include "config.h"
 
-#include "bashtypes.hh"
-
-#if defined(HAVE_SYS_FILE_H)
-#include <sys/file.h>
-#endif
-
-#include <unistd.h>
-
-#include "bashintl.hh"
-
-#include "flags.hh"
-#include "input.hh"
-#include "parser.hh"
 #include "shell.hh"
-
-#if defined(JOB_CONTROL)
-#include "jobs.hh"
-#endif
-
-#include "shmbutil.hh"
 
 namespace bash
 {
@@ -70,7 +51,7 @@ Shell::make_arith_for_command (WORD_LIST *exprs, COMMAND *action, int lineno)
         s++;
       start = s;
       /* skip to the semicolon or EOS */
-      i = skip_to_delim (start, 0, ";", SD_NOJMP | SD_NOPROCSUB);
+      i = skip_to_delim (start, 0, ";", SD_NOTHROW | SD_NOPROCSUB);
       s = start + i;
 
       t = (i > 0) ? substring (start, 0, i) : (char *)NULL;
@@ -532,7 +513,7 @@ make_function_def (WORD_DESC *name, COMMAND *command, int lineno, int lstart)
     temp->source_file = (char *)(shell_initialized ? "main" : "environment");
 
 #if defined(DEBUGGER)
-  bind_function_def (name->word, temp, 0);
+  bind_function_def (name->word, temp, false);
 #endif
 
   temp->source_file = temp->source_file ? savestring (temp->source_file) : 0;

@@ -35,6 +35,8 @@ class SHELL_VAR;
 class ASSOC_ARRAY : public HASH_TABLE<SHELL_VAR> {
 public:
   ASSOC_ARRAY () : HASH_TABLE<SHELL_VAR> (ASSOC_HASH_BUCKETS) {}
+
+  void insert (string_view, string_view);
 };
 
 #if 0
