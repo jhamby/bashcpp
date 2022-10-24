@@ -55507,11 +55507,11 @@ printf "%s\n" "#define GNULIB_TEST_TMPFILE 1" >>confdefs.h
 
 
 
-            test $LIBUNISTRING_VERSION_MAJOR -lt 0 \
-            || { test $LIBUNISTRING_VERSION_MAJOR -eq 0 \
-                 && { test $LIBUNISTRING_VERSION_MINOR -lt 9 \
-                      || { test $LIBUNISTRING_VERSION_MINOR -eq 9 \
-                           && test $LIBUNISTRING_VERSION_SUBMINOR -lt 11
+            test $LIBUNISTRING_VERSION_MAJOR -lt 1 \
+            || { test $LIBUNISTRING_VERSION_MAJOR -eq 1 \
+                 && { test $LIBUNISTRING_VERSION_MINOR -lt 1 \
+                      || { test $LIBUNISTRING_VERSION_MINOR -eq 1 \
+                           && test $LIBUNISTRING_VERSION_SUBMINOR -lt 0
                          }
                     }
                }
