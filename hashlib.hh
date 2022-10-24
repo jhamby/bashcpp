@@ -216,8 +216,7 @@ private:
     for (i = FNV_OFFSET, it = key.begin (); it != key.end (); ++it)
       {
         // FNV-1a has the XOR first, traditional FNV-1 has the multiply first.
-        // Was i *= FNV_PRIME (TODO: test if the add + shift below is faster).
-        i += (i << 1) + (i << 4) + (i << 7) + (i << 8) + (i << 24);
+        i *= FNV_PRIME;
         i ^= static_cast<uint32_t> (*it);
       }
 
