@@ -210,10 +210,11 @@ private:
   static CONSTEXPR uint32_t
   hash_value (string_view key)
   {
-    uint32_t i;
+    // Initialize the variables to make C++17 happy.
+    uint32_t i = FNV_OFFSET;
+    string_view::iterator it = key.begin ();
 
-    string_view::iterator it;
-    for (i = FNV_OFFSET, it = key.begin (); it != key.end (); ++it)
+    for (; it != key.end (); ++it)
       {
         // FNV-1a has the XOR first, traditional FNV-1 has the multiply first.
         i *= FNV_PRIME;
