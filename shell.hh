@@ -774,9 +774,6 @@ protected:
   int sigchld;
   int queue_sigchld;
 
-  /* The number of shift states for this locale. */
-  int locale_shiftstates;
-
   subshell_flags subshell_environment;
 
   int shell_compatibility_level;

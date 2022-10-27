@@ -39,7 +39,7 @@
 namespace bash
 {
 
-static std::string mk_msgstr (string_view, bool *);
+static string mk_msgstr (string_view, bool *);
 
 #if defined(HAVE_LANGINFO_CODESET) || defined(HAVE_LOCALE_CHARSET)
 static bool locale_isutf8 ();
@@ -68,13 +68,6 @@ Shell::set_default_locale ()
 #else
   locale_utf8locale = locale_isutf8 (default_locale);
 #endif
-#if defined(HANDLE_MULTIBYTE)
-  // XXX calling mblen with nullptr isn't portable. e.g. on Solaris 10,
-  // the man page says that it always returns 0 when passed nullptr.
-  locale_shiftstates = mblen (nullptr, 0);
-#else
-  locale_shiftstates = 0;
-#endif
 }
 
 /* Set default values for LC_CTYPE, LC_COLLATE, LC_MESSAGES, LC_NUMERIC and
@@ -83,7 +76,7 @@ Shell::set_default_locale ()
 void
 Shell::set_default_locale_vars ()
 {
-  const char *val;
+  const string *val;
 
 #if defined(HAVE_SETLOCALE)
 
@@ -99,13 +92,6 @@ Shell::set_default_locale_vars ()
 #else
       locale_utf8locale = locale_isutf8 (lc_all);
 #endif
-
-#if defined(HANDLE_MULTIBYTE)
-      locale_shiftstates = mblen (nullptr, 0);
-#else
-      locale_shiftstates = 0;
-#endif
-
       u32reset ();
     }
 #endif
@@ -137,19 +123,19 @@ Shell::set_default_locale_vars ()
 #endif /* HAVE_SETLOCALE */
 
   val = get_string_value ("TEXTDOMAIN");
-  if (val && *val)
+  if (val && !val->empty ())
     {
       delete[] default_domain;
-      default_domain = savestring (val);
+      default_domain = savestring (*val);
       if (default_dir && *default_dir)
         bindtextdomain (default_domain, default_dir);
     }
 
   val = get_string_value ("TEXTDOMAINDIR");
-  if (val && *val)
+  if (val && !val->empty ())
     {
       delete[] default_dir;
-      default_dir = savestring (val);
+      default_dir = savestring (*val);
       if (default_domain && *default_domain)
         bindtextdomain (default_domain, default_dir);
     }
@@ -213,11 +199,6 @@ Shell::set_locale_var (const char *var, const char *value)
 #else
         locale_utf8locale = locale_isutf8 (lc_all);
 #endif
-#if defined(HANDLE_MULTIBYTE)
-      locale_shiftstates = mblen (nullptr, 0);
-#else
-      locale_shiftstates = 0;
-#endif
       u32reset ();
       return r;
 #else
@@ -240,11 +221,6 @@ Shell::set_locale_var (const char *var, const char *value)
             locale_utf8locale = locale_isutf8 ();
 #else
             locale_utf8locale = locale_isutf8 (x);
-#endif
-#if defined(HANDLE_MULTIBYTE)
-          locale_shiftstates = mblen (nullptr, 0);
-#else
-          locale_shiftstates = 0;
 #endif
           u32reset ();
         }
@@ -316,13 +292,15 @@ Shell::set_lang (const char *, const char *value)
 void
 Shell::set_default_lang ()
 {
-  const char *v;
+  const string *v;
 
   v = get_string_value ("LC_ALL");
-  set_locale_var ("LC_ALL", v);
+  if (v)
+    set_locale_var ("LC_ALL", v->c_str ());
 
   v = get_string_value ("LANG");
-  set_lang ("LANG", v);
+  if (v)
+    set_lang ("LANG", v->c_str ());
 }
 
 /* Get the value of one of the locale variables (LC_MESSAGES, LC_CTYPE).
@@ -336,12 +314,16 @@ Shell::get_locale_var (const char *var)
   locale = lc_all;
 
   if (locale == nullptr || *locale == 0)
-    locale = get_string_value (var); /* XXX - no mem leak */
+    {
+      string *locale_str = get_string_value (var); /* XXX - no mem leak */
+      if (locale_str)
+        locale = locale_str->c_str (); // XXX this is dubious for C++03
+    }
   if (locale == nullptr || *locale == 0)
     locale = lang;
   if (locale == nullptr || *locale == 0)
     locale = "";
-    return locale;
+  return locale;
 }
 
 /* Called to reset all of the locale variables to their appropriate values
@@ -383,11 +365,6 @@ Shell::reset_locale_vars ()
 #else
     locale_utf8locale = locale_isutf8 (x);
 #endif
-#if defined(HANDLE_MULTIBYTE)
-  locale_shiftstates = mblen (nullptr, 0);
-#else
-  locale_shiftstates = 0;
-#endif
   u32reset ();
 #endif
   return 1;
@@ -396,13 +373,13 @@ Shell::reset_locale_vars ()
 // Translate the contents of STRING, a $"..." quoted string, according
 // to the current locale.  In the `C' or `POSIX' locale, or if gettext()
 // is not available, the passed string is returned unchanged.
-std::string
-Shell::localetrans (string_view string)
+string
+Shell::localetrans (const string &str)
 {
   /* Don't try to translate null strings. */
-  if (string.empty ())
+  if (str.empty ())
     {
-      return std::string ();
+      return string ();
     }
 
   const char *locale = get_locale_var ("LC_MESSAGES");
@@ -413,13 +390,13 @@ Shell::localetrans (string_view string)
   if (locale == nullptr || locale[0] == '\0'
       || (locale[0] == 'C' && locale[1] == '\0') || STREQ (locale, "POSIX"))
     {
-      return to_string (string);
+      return str;
     }
 
   /* Now try to translate it. */
 
   const char *translated;
-  std::string stringpp = to_string (string);
+  string stringpp = str;
   const char *original = stringpp.c_str ();
 
   if (default_domain && *default_domain)
@@ -435,16 +412,16 @@ Shell::localetrans (string_view string)
 
 // Change a bash string into a string suitable for inclusion in a `po' file.
 // This backslash-escapes `"' and `\' and changes newlines into \\\n"\n".
-std::string
-mk_msgstr (string_view string, bool *foundnlp)
+string
+mk_msgstr (string_view str, bool *foundnlp)
 {
-  std::string ret;
-  ret.reserve (string.length () + 2);
+  string ret;
+  ret.reserve (str.length () + 2);
 
   ret.push_back ('"');
 
   string_view::iterator it;
-  for (it = string.begin (); it != string.end (); ++it)
+  for (it = str.begin (); it != str.end (); ++it)
     {
       if (*it == '\n') /* <NL> -> \n"<NL>" */
         {
@@ -464,14 +441,14 @@ mk_msgstr (string_view string, bool *foundnlp)
   return ret;
 }
 
-#if defined (TRANSLATABLE_STRINGS)
+#if defined(TRANSLATABLE_STRINGS)
 // $"..." -- Translate STRING according to current locale using gettext (if
 // available) and return the result. The caller will take care of leaving the
 // quotes intact. The string will be left without the leading `$' by the
 // caller. If translation is performed, the translated string will be
 // double-quoted by the caller.
-std::string
-Shell::locale_expand (string_view string, int lineno)
+string
+Shell::locale_expand (const string &str, int lineno)
 {
   /* If we're just dumping translatable strings, don't do anything with the
      string itself, but if we're dumping in `po' file format, convert it into
@@ -485,21 +462,21 @@ Shell::locale_expand (string_view string, int lineno)
       if (dump_po_strings)
         {
           bool foundnl = false;
-          std::string t = mk_msgstr (string, &foundnl);
+          string t = mk_msgstr (str, &foundnl);
           const char *t2 = foundnl ? "\"\"\n" : "";
 
-          printf ("#: %s:%d\nmsgid %s%s\nmsgstr \"\"\n", yy_input_name (),
-                       lineno, t2, t.c_str ());
+          printf ("#: %s:%d\nmsgid %s%s\nmsgstr \"\"\n",
+                  yy_input_name ().c_str (), lineno, t2, t.c_str ());
         }
       else
-        printf ("\"%s\"\n", string);
+        printf ("\"%s\"\n", str.c_str ());
 
-      return to_string (string);
+      return str;
     }
-  else if (!string.empty ())
-    return localetrans (string);
+  else if (!str.empty ())
+    return localetrans (str);
   else
-    return to_string (string);
+    return str;
 }
 #endif
 
