@@ -1791,7 +1791,7 @@ Shell::shell_reinitialize ()
   /* Delete all variables and functions.  They will be reinitialized when
      the environment is parsed. */
   delete_all_contexts (shell_variables);
-  delete_all_variables (shell_functions);
+  delete_all_variables (*shell_functions);
 
   reinit_special_variables ();
 

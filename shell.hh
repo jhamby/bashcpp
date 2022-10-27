@@ -274,15 +274,17 @@ enum token_t
 
 struct token_lvalue
 {
-  string tokstr;     /* possibly-rewritten lvalue if not nullptr */
-  int64_t tokval;    /* expression evaluated value */
+  token_lvalue () : tokval (-1), ind (-1) {}
+
+  char *tokstr;      /* possibly-rewritten lvalue if not nullptr */
   SHELL_VAR *tokvar; /* variable described by array or var reference */
+  int64_t tokval;    /* expression evaluated value */
   int64_t ind;       /* array index if not -1 */
 
   void
   init ()
   {
-    tokstr.clear ();
+    tokstr = nullptr;
     tokvar = nullptr;
     tokval = ind = -1;
   }
@@ -291,10 +293,10 @@ struct token_lvalue
 /* A struct defining a single expression context. */
 struct EXPR_CONTEXT
 {
-  string expression, tp, lasttp;
-  string tokstr;
+  char *expression, *tp, *lasttp;
+  char *tokstr;
   int64_t tokval;
-  struct token_lvalue lval;
+  token_lvalue lval;
   token_t curtok, lasttok;
   int noeval;
 };
@@ -2838,15 +2840,12 @@ protected:
   int valid_array_reference (const string &, int);
   int tokenize_array_reference (const string &, int, char **);
 
-  string array_value (const string &, int, int, array_eltstate_t *);
-  string get_array_value (const string &, int, array_eltstate_t *);
+  string *array_value (const string &, int, int, array_eltstate_t *);
+  string *get_array_value (const string &, int, array_eltstate_t *);
 
   string array_keys (char *, int, int);
 
   SHELL_VAR *array_variable_part (const string &, int, char **, int *);
-
-  void init_eltstate (array_eltstate_t *);
-  void flush_eltstate (array_eltstate_t *);
 
   string *array_variable_name (const string &, int, size_t *);
 
@@ -2899,12 +2898,12 @@ protected:
   int64_t exppower ();
   int64_t exp1 ();
   int64_t exp0 ();
-  int64_t expr_streval (const string &, int, struct lvalue *);
+  int64_t expr_streval (char *, int, token_lvalue *);
 
   void readtok ();
 
-  void evalerror (const string &);
-  int64_t strlong (const string &);
+  void evalerror (const char *) __attribute__ ((__noreturn__));
+  int64_t strlong (const char *);
 
   void pushexp ();
   void popexp ();
@@ -2912,7 +2911,7 @@ protected:
   void expr_bind_variable (const string &, const string &);
 
 #if defined(ARRAY_VARS)
-  int expr_skipsubscript (const string &, const string &);
+  size_t expr_skipsubscript (const char *, char *);
   void expr_bind_array_element (const string &, arrayind_t, const string &);
 #endif
 
@@ -5322,7 +5321,12 @@ protected:
 
   void initialize_shell_variables (char **, bool);
 
-  void delete_all_variables (HASH_TABLE<SHELL_VAR> *);
+  /* Delete the entire contents of the hash table. */
+  void
+  delete_all_variables (HASH_TABLE<SHELL_VAR> &hashed_vars)
+  {
+    hashed_vars.flush (); // destructor should match free_variable_hash_data
+  }
 
   void reinit_special_variables ();
 
@@ -5433,6 +5437,9 @@ protected:
   SHELL_VAR *find_variable_for_assignment (string_view);
 
   void bind_function_def (string_view, FUNCTION_DEF *, bool);
+
+  int unbind_global_variable (const string &);
+  int unbind_global_variable_noref (const string &);
 
   SHELL_VAR **map_over (sh_var_map_func_t *, VAR_CONTEXT *);
   SHELL_VAR **map_over_funcs (sh_var_map_func_t *);
@@ -6536,7 +6543,7 @@ protected:
   vector<EXPR_CONTEXT *> expr_stack;
 
   /* The current context for the expression being evaluated. */
-  EXPR_CONTEXT expr_current;
+  EXPR_CONTEXT this_expr;
 
   token_lvalue lastlval;
 

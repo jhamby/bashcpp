@@ -362,6 +362,7 @@ HASH_TABLE<T>::remove (string_view string)
           else
             buckets[index] = bucket->next ();
 
+          bucket->set_next (nullptr);
           nentries--;
           return bucket;
         }

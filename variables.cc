@@ -31,6 +31,9 @@ extern "C" char **environ;
 namespace bash
 {
 
+static inline char *mk_env_string (string_view, string_view,
+                                   var_att_flags = att_noflags);
+
 constexpr int VARIABLES_HASH_BUCKETS = 1024; /* must be power of two */
 constexpr int FUNCTIONS_HASH_BUCKETS = 512;
 constexpr int TEMPENV_HASH_BUCKETS = 4;
@@ -2970,7 +2973,7 @@ Shell::assign_in_env (WORD_DESC *word, assign_flags flags)
           if (var && var->nameref ()
               && valid_nameref_value (*var->str_value (), 2))
             {
-              newname = var->str_value()->c_str ();
+              newname = var->str_value ()->c_str ();
               var = nullptr; /* don't use it for append */
             }
         }
@@ -3014,7 +3017,7 @@ Shell::assign_in_env (WORD_DESC *word, assign_flags flags)
   var->context = variable_context; /* XXX */
 
   var->invalidate_exportstr ();
-  var->exportstr = mk_env_string (newname, value, 0);
+  var->exportstr = mk_env_string (newname, *value);
 
   array_needs_making = true;
 
@@ -3086,7 +3089,7 @@ Shell::unbind_global_variable (const string &name)
      we use find_global_variable_nameref here? */
   nv = (v && v->nameref ()) ? find_variable_nameref (v) : nullptr;
 
-  r = nv ? makunbound (nv->name, shell_variables)
+  r = nv ? makunbound (nv->name (), shell_variables)
          : makunbound (name, global_variables);
   return r;
 }
@@ -3121,29 +3124,19 @@ Shell::check_unbind_variable (const string &name)
 int
 Shell::unbind_func (const string &name)
 {
-  BUCKET_CONTENTS *elt;
-  SHELL_VAR *func;
-
-  elt = hash_remove (name, shell_functions, 0);
-
-  if (elt == 0)
+  BUCKET_CONTENTS<SHELL_VAR> *elt = shell_functions->remove (name);
+  if (elt == nullptr)
     return -1;
 
 #if defined(PROGRAMMABLE_COMPLETION)
   set_itemlist_dirty (&it_functions);
 #endif
 
-  func = (SHELL_VAR *)elt->data;
-  if (func)
-    {
-      if (func->exported ())
-        array_needs_making = true;
-      dispose_variable (func);
-    }
+  SHELL_VAR *func = elt->data;
+  if (func && func->exported ())
+    array_needs_making = true;
 
-  free (elt->key);
-  free (elt);
-
+  delete elt; // this also deletes the contained data.
   return 0;
 }
 
@@ -3151,21 +3144,11 @@ Shell::unbind_func (const string &name)
 int
 Shell::unbind_function_def (const string &name)
 {
-  BUCKET_CONTENTS *elt;
-  FUNCTION_DEF *funcdef;
-
-  elt = hash_remove (name, shell_function_defs, 0);
-
-  if (elt == 0)
+  BUCKET_CONTENTS<FUNCTION_DEF> *elt = shell_function_defs->remove (name);
+  if (elt == nullptr)
     return -1;
 
-  funcdef = (FUNCTION_DEF *)elt->data;
-  if (funcdef)
-    dispose_function_def (funcdef);
-
-  free (elt->key);
-  free (elt);
-
+  delete elt; // this also deletes the contained data.
   return 0;
 }
 #endif /* DEBUGGER */
@@ -3173,22 +3156,17 @@ Shell::unbind_function_def (const string &name)
 int
 Shell::delete_var (const string &name, VAR_CONTEXT *vc)
 {
-  BUCKET_CONTENTS *elt;
-  SHELL_VAR *old_var;
+  BUCKET_CONTENTS<SHELL_VAR> *elt;
   VAR_CONTEXT *v;
 
   for (elt = nullptr, v = vc; v; v = v->down)
-    if ((elt = hash_remove (name, v->table, 0)))
+    if ((elt = v->table.remove (name)))
       break;
 
-  if (elt == 0)
+  if (elt == nullptr)
     return -1;
 
-  old_var = (SHELL_VAR *)elt->data;
-  free (elt->key);
-  free (elt);
-
-  dispose_variable (old_var);
+  delete elt; // this also deletes the contained data.
   return 0;
 }
 
@@ -3199,19 +3177,17 @@ Shell::delete_var (const string &name, VAR_CONTEXT *vc)
 int
 Shell::makunbound (const string &name, VAR_CONTEXT *vc)
 {
-  BUCKET_CONTENTS *elt, *new_elt;
-  SHELL_VAR *old_var;
+  BUCKET_CONTENTS<SHELL_VAR> *elt;
   VAR_CONTEXT *v;
-  char *t;
 
   for (elt = nullptr, v = vc; v; v = v->down)
-    if ((elt = hash_remove (name, v->table, 0)))
+    if ((elt = v->table.remove (name)))
       break;
 
-  if (elt == 0)
+  if (elt == nullptr)
     return -1;
 
-  old_var = (SHELL_VAR *)elt->data;
+  SHELL_VAR *old_var = elt->data;
 
   if (old_var && old_var->exported ())
     array_needs_making = true;
@@ -3222,52 +3198,38 @@ Shell::makunbound (const string &name, VAR_CONTEXT *vc)
      must be done so that if the variable is subsequently assigned a new
      value inside the function, the `local' attribute is still present.
      We also need to add it back into the correct hash table. */
-  if (old_var && old_var->local ())
+  if (old_var && old_var->local ()
       && (old_var->context == variable_context
           || (localvar_unset && old_var->context < variable_context)))
-      {
-        if (nofree_p (old_var))
-          var_setvalue (old_var, nullptr);
-#if defined(ARRAY_VARS)
-        else if (array_p (old_var))
-          array_dispose (array_cell (old_var));
-        else if (assoc_p (old_var))
-          assoc_dispose (assoc_cell (old_var));
-#endif
-        else if (nameref_p (old_var))
-          FREE (nameref_cell (old_var));
-        else
-          FREE (value_cell (old_var));
-        /* Reset the attributes.  Preserve the export attribute if the variable
-           came from a temporary environment.  Make sure it stays local, and
-           make it invisible. */
-        old_var->attributes
-            = (exported_p (old_var) && tempvar_p (old_var)) ? att_exported : 0;
-        VSETATTR (old_var, att_local);
-        VSETATTR (old_var, att_invisible);
-        var_setvalue (old_var, nullptr);
-        entry->invalidate_exportstr ();
+    {
+      if (old_var->nofree ())
+        {
+          old_var->set_value (nullptr);
+          old_var->invalidate_exportstr ();
+        }
+      else
+        old_var->dispose_value ();
 
-        new_elt = hash_insert (savestring (old_var->name), v->table, 0);
-        new_elt->data = (void *)old_var;
-        stupidly_hack_special_variables (old_var->name);
+      /* Reset the attributes.  Preserve the export attribute if the variable
+         came from a temporary environment.  Make sure it stays local, and
+         make it invisible. */
+      old_var->attributes = (old_var->exported () && old_var->tempvar ())
+                                ? att_exported
+                                : att_noflags;
 
-        free (elt->key);
-        free (elt);
-        return 0;
-      }
+      old_var->set_attr (att_local | att_invisible);
 
-  /* Have to save a copy of name here, because it might refer to
-     old_var->name.  If so, stupidly_hack_special_variables will
-     reference freed memory. */
-  t = savestring (name);
+      BUCKET_CONTENTS<SHELL_VAR> *new_elt = v->table.insert (name, HS_NOFLAGS);
+      new_elt->data = old_var;
+      stupidly_hack_special_variables (name);
 
-  free (elt->key);
-  free (elt);
+      elt->data = nullptr;
+      delete elt;
+      return 0;
+    }
 
-  dispose_variable (old_var);
-  stupidly_hack_special_variables (t);
-  free (t);
+  delete elt;
+  stupidly_hack_special_variables (name);
 
   return 0;
 }
@@ -3279,33 +3241,14 @@ Shell::kill_all_local_variables ()
   VAR_CONTEXT *vc;
 
   for (vc = shell_variables; vc; vc = vc->down)
-    if (vc_isfuncenv (vc) && vc->scope == variable_context)
+    if (vc->func_env () && vc->scope == variable_context)
       break;
-  if (vc == 0)
+
+  if (vc == nullptr)
     return; /* XXX */
 
-  if (vc->table && vc_haslocals (vc))
-    {
-      delete_all_variables (vc->table);
-      hash_dispose (vc->table);
-    }
-  vc->table = nullptr;
-}
-
-void
-Shell::free_variable_hash_data (void *data)
-{
-  SHELL_VAR *var;
-
-  var = (SHELL_VAR *)data;
-  dispose_variable (var);
-}
-
-/* Delete the entire contents of the hash table. */
-void
-Shell::delete_all_variables (HASH_TABLE *hashed_vars)
-{
-  hash_flush (hashed_vars, free_variable_hash_data);
+  // XXX - hopefully this is equivalent to delete_all_variables ()
+  vc->table.flush ();
 }
 
 /* **************************************************************** */
@@ -3320,7 +3263,7 @@ Shell::delete_all_variables (HASH_TABLE *hashed_vars)
       entry = find_variable (name);                                           \
       if (!entry)                                                             \
         {                                                                     \
-          entry = bind_variable (name, "", 0);                                \
+          entry = bind_variable (name, string ());                            \
           if (entry)                                                          \
             entry->attributes |= att_invisible;                               \
         }                                                                     \
@@ -3330,12 +3273,12 @@ Shell::delete_all_variables (HASH_TABLE *hashed_vars)
 /* Make the variable associated with NAME be readonly.
    If NAME does not exist yet, create it. */
 void
-set_var_read_only (const string &name)
+Shell::set_var_read_only (const string &name)
 {
   SHELL_VAR *entry;
 
   FIND_OR_MAKE_VARIABLE (name, entry);
-  VSETATTR (entry, att_readonly);
+  entry->set_attr (att_readonly);
 }
 
 /* **************************************************************** */
@@ -3915,7 +3858,7 @@ flush_temporary_env ()
 /* **************************************************************** */
 
 static inline char *
-mk_env_string (string_view name, string_view value, int attributes)
+mk_env_string (string_view name, string_view value, var_att_flags attributes)
 {
   // XXX - continue merging from bash-5.2 here.
   // size_t name_len, value_len;

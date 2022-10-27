@@ -603,9 +603,14 @@ enum av_type
 
 struct array_eltstate_t
 {
-  arrayind_t ind;
+  array_eltstate_t (arrayind_t ind_ = INTMAX_MIN)
+      : ind (ind_), type (ARRAY_INVALID)
+  {
+  }
+
   string key;
   string value;
+  arrayind_t ind;
   av_type type;     // assoc or indexed, says which fields are valid
   uint16_t subtype; // `*', `@', or something else
 };

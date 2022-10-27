@@ -145,6 +145,13 @@ nameref_maxloop_value::what () const noexcept
   return "nameref_maxloop_value";
 }
 
+// Return the type of the eval_exception exception.
+const char *
+eval_exception::what () const noexcept
+{
+  return "eval_exception";
+}
+
 // Return the type of the return_catch_exception exception.
 const char *
 return_catch_exception::what () const noexcept

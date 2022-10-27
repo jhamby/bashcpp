@@ -273,10 +273,6 @@ Shell::reset_terminating_signals ()
 void
 Shell::top_level_cleanup ()
 {
-  /* Clean up string parser environment. */
-  while (parse_and_execute_level)
-    parse_and_execute_cleanup (-1);
-
 #if defined(PROCESS_SUBSTITUTION)
   unlink_fifo_list ();
 #endif /* PROCESS_SUBSTITUTION */
@@ -312,10 +308,6 @@ Shell::throw_to_top_level ()
   /* Run any traps set on SIGINT, mostly for interactive shells */
   if (signal_is_trapped (SIGINT) && signal_is_pending (SIGINT))
     run_interrupt_trap (1);
-
-  /* Clean up string parser environment. */
-  while (parse_and_execute_level)
-    parse_and_execute_cleanup (-1);
 
   if (running_trap > 0)
     {

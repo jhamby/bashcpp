@@ -77,6 +77,14 @@ enum assign_flags
   = 0x1000 // don't check array subscripts, assume higher level has done that
 };
 
+static inline assign_flags &
+operator|= (assign_flags &a, const assign_flags &b)
+{
+  a = static_cast<assign_flags> (static_cast<uint32_t> (a)
+                                 | static_cast<uint32_t> (b));
+  return a;
+}
+
 /* Flags for the string extraction functions. */
 enum sx_flags
 {

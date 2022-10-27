@@ -155,6 +155,12 @@ public:
   virtual const char *what () const noexcept override;
 };
 
+class eval_exception : public std::exception
+{
+public:
+  virtual const char *what () const noexcept override;
+};
+
 class return_catch_exception : public std::exception
 {
 public:

@@ -54,7 +54,7 @@ octvalue (char c)
   return c - '0';
 }
 
-static inline int
+static inline char
 todigit (char c)
 {
   return c - '0';

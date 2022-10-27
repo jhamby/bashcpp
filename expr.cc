@@ -1,6 +1,6 @@
 /* expr.cc -- arithmetic expression evaluation. */
 
-/* Copyright (C) 1990-2020 Free Software Foundation, Inc.
+/* Copyright (C) 1990-2021 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -68,17 +68,7 @@
 
 #include "config.h"
 
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-
-#include "bashintl.hh"
-#include "chartypes.hh"
-
-#include "flags.hh"
 #include "shell.hh"
-#include "subst.hh"
-#include "typemax.hh" /* INTMAX_MAX, INTMAX_MIN */
 
 namespace bash
 {
@@ -93,12 +83,11 @@ namespace bash
 #define MAX_EXPR_RECURSION_LEVEL 1024
 
 /* This should be the function corresponding to the operator with the
-   highest precedence. */
-#define EXP_HIGHEST expcomma
+   lowest precedence. */
+#define EXP_LOWEST expcomma
 
-#ifndef MAX_INT_LEN
-#define MAX_INT_LEN 32
-#endif
+// Standard error message to use when encountering an invalid array subscript
+extern const char *bash_badsub_errmsg;
 
 static int64_t ipow (int64_t base, int64_t exp);
 
@@ -110,7 +99,7 @@ Shell::pushexp ()
   if (expr_stack.size () >= MAX_EXPR_RECURSION_LEVEL)
     evalerror (_ ("expression recursion level exceeded"));
 
-  EXPR_CONTEXT *context = new EXPR_CONTEXT (expr_current);
+  EXPR_CONTEXT *context = new EXPR_CONTEXT (this_expr);
   expr_stack.push_back (context);
 }
 
@@ -123,12 +112,12 @@ Shell::popexp ()
     {
       /* See the comment at the top of evalexp() for an explanation of why
          this is done. */
-      expr_current.expression.clear ();
-      expr_current.lasttp.clear ();
+      this_expr.expression = nullptr;
+      this_expr.lasttp = nullptr;
       evalerror (_ ("recursion stack underflow"));
     }
 
-  expr_current = *(expr_stack.back ());
+  this_expr = *(expr_stack.back ());
   delete expr_stack.back ();
   expr_stack.pop_back ();
 }
@@ -142,11 +131,11 @@ Shell::expr_unwind ()
       delete context;
     }
 
-  expr_current.noeval = false; /* XXX */
+  this_expr.noeval = false; /* XXX */
 }
 
 void
-Shell::expr_bind_variable (string_view lhs, string_view rhs)
+Shell::expr_bind_variable (const string &lhs, const string &rhs)
 {
   SHELL_VAR *v;
   assign_flags aflags;
@@ -157,24 +146,26 @@ Shell::expr_bind_variable (string_view lhs, string_view rhs)
 #if defined(ARRAY_VARS)
   aflags
       = (assoc_expand_once && already_expanded) ? ASS_NOEXPAND : ASS_NOFLAGS;
+  aflags |= ASS_ALLOWALLSUB; // allow assoc[@]=value
 #else
   aflags = ASS_NOFLAGS;
 #endif
   v = bind_int_variable (lhs, rhs, aflags);
-  if (v && v->readonly () || v->noassign ())
+  if (v && (v->readonly () || v->noassign ()))
     throw bash_exception (FORCE_EOF); /* variable assignment error */
 
   stupidly_hack_special_variables (lhs);
 }
 
 #if defined(ARRAY_VARS)
-/* This is similar to the logic in arrayfunc.c:valid_array_subscript when
+/* This is similar to the logic in arrayfunc.cc:valid_array_reference when
    you pass VA_NOEXPAND. */
-int
+size_t
 Shell::expr_skipsubscript (const char *vp, char *cp)
 {
   bool isassoc = false;
   SHELL_VAR *entry = nullptr;
+
   if (assoc_expand_once & already_expanded)
     {
       *cp = '\0';
@@ -182,9 +173,9 @@ Shell::expr_skipsubscript (const char *vp, char *cp)
                 && entry->assoc ();
       *cp = '[';
     }
-  valid_array_flags flags = (isassoc && assoc_expand_once && already_expanded)
-                                ? VA_NOEXPAND
-                                : VA_NOFLAGS;
+
+  int flags
+      = (isassoc && assoc_expand_once && already_expanded) ? VA_NOEXPAND : 0;
 
   return skipsubscript (cp, 0, flags);
 }
@@ -192,20 +183,22 @@ Shell::expr_skipsubscript (const char *vp, char *cp)
 /* Rewrite tok, which is of the form vname[expression], to vname[ind], where
    IND is the already-calculated value of expression. */
 void
-Shell::expr_bind_array_element (string_view tok, arrayind_t ind,
-                                string_view rhs)
+Shell::expr_bind_array_element (const string &tok, arrayind_t ind,
+                                const string &rhs)
 {
-  std::string istr = fmtumax (ind, 10, FL_NOFLAGS);
-  char *vname = array_variable_name (tok.c_str (), 0, nullptr, nullptr);
+  string istr = fmtumax (static_cast<uint64_t> (ind), 10);
+  string *vname = array_variable_name (tok, 0, nullptr);
+  if (vname == nullptr)
+    return;
 
-  std::string lhs (vname);
+  string lhs (*vname);
+  delete vname;
   lhs.push_back ('[');
   lhs += istr;
   lhs.push_back (']');
 
   /*itrace("expr_bind_array_element: %s=%s", lhs, rhs);*/
   expr_bind_variable (lhs, rhs);
-  delete[] vname;
 }
 
 #endif /* ARRAY_VARS */
@@ -224,11 +217,11 @@ Shell::expr_bind_array_element (string_view tok, arrayind_t ind,
    safe to let the loop terminate when expr_depth == 0, without freeing up
    any of the expr_depth[0] stuff. */
 int64_t
-Shell::evalexp (string_view expr, eval_flags flags, bool *validp)
+Shell::evalexp (const string &expr, eval_flags flags, bool *validp)
 {
   try
     {
-      expr_current.noeval = 0;
+      this_expr.noeval = 0;
       already_expanded = (flags & EXP_EXPANDED);
 
       int64_t val = subexpr (expr);
@@ -238,54 +231,52 @@ Shell::evalexp (string_view expr, eval_flags flags, bool *validp)
 
       return val;
     }
-  catch (const bash_exception &e)
+  catch (const eval_exception &)
     {
-      expr_current.tokstr.clear ();
-      expr_current.expression.clear ();
+      delete[] this_expr.tokstr;
+      delete[] this_expr.expression;
+      this_expr.tokstr = nullptr;
+      this_expr.expression = nullptr;
 
       expr_unwind ();
 
       if (validp)
         *validp = false;
 
-      if (e.type != FORCE_EOF)
-        throw; // unexpected exception type
-
       return 0;
     }
 }
 
 int64_t
-Shell::subexpr (string_view expr)
+Shell::subexpr (const string &expr)
 {
-  int64_t val;
-  const char *p;
-
-  for (p = expr.c_str (); p && *p && cr_whitespace (*p); p++)
+  string::const_iterator it;
+  for (it = expr.begin (); it != expr.end () && cr_whitespace (*it); ++it)
     ;
 
-  if (*p == '\0')
+  if (it == expr.end ())
     return 0;
 
   pushexp ();
-  expr_current.expression = expr;
-  expr_current.tp = expr_current.expression;
+  this_expr.expression = savestring (expr);
+  this_expr.tp = this_expr.expression;
 
-  expr_current.curtok = expr_current.lasttok = NONE;
-  expr_current.tokstr = nullptr;
-  expr_current.tokval = 0;
-  expr_current.lval.init ();
-  lastlval = expr_current.lval;
+  this_expr.curtok = this_expr.lasttok = NONE;
+  this_expr.tokstr = nullptr;
+  this_expr.tokval = 0;
+  this_expr.lval.init ();
+  lastlval = this_expr.lval;
 
   readtok ();
 
-  val = EXP_HIGHEST ();
+  int64_t val = EXP_LOWEST ();
 
-  if (expr_current.curtok != NONE)
+  /*TAG:bash-5.3 make it clear that these are arithmetic syntax errors */
+  if (this_expr.curtok != NONE)
     evalerror (_ ("syntax error in expression"));
 
-  expr_current.tokstr.clear ();
-  expr_current.expression.clear ();
+  delete[] this_expr.tokstr;
+  delete[] this_expr.expression;
 
   popexp ();
 
@@ -298,7 +289,7 @@ Shell::expcomma ()
   int64_t value;
 
   value = expassign ();
-  while (expr_current.curtok == COMMA)
+  while (this_expr.curtok == COMMA)
     {
       readtok ();
       value = expassign ();
@@ -312,19 +303,16 @@ Shell::expassign ()
 {
   int64_t value;
   arrayind_t lind;
-#if defined(HAVE_IMAXDIV)
-  imaxdiv_t idiv;
-#endif
 
   value = expcond ();
-  if (expr_current.curtok == EQ || expr_current.curtok == OP_ASSIGN)
+  if (this_expr.curtok == EQ || this_expr.curtok == OP_ASSIGN)
     {
-      token_t op;
-      int64_t lvalue;
+      token_t op = NONE;
+      int64_t lvalue = 0;
 
-      bool special = (expr_current.curtok == OP_ASSIGN);
+      bool special = (this_expr.curtok == OP_ASSIGN);
 
-      if (expr_current.lasttok != STR)
+      if (this_expr.lasttok != STR)
         evalerror (_ ("attempted assignment to non-variable"));
 
       if (special)
@@ -333,12 +321,12 @@ Shell::expassign ()
           lvalue = value;
         }
 
-      if (expr_current.tokstr.empty ())
+      if (this_expr.tokstr == nullptr)
         evalerror (_ ("syntax error in variable assignment"));
 
-      std::string lhs (expr_current.tokstr);
+      string lhs = this_expr.tokstr;
       /* save ind in case rhs is string var and evaluation overwrites it */
-      lind = expr_current.lval.ind;
+      lind = this_expr.lval.ind;
       readtok ();
       value = expassign ();
 
@@ -346,11 +334,16 @@ Shell::expassign ()
         {
           if ((op == DIV || op == MOD) && value == 0)
             {
-              if (expr_current.noeval == 0)
+              if (this_expr.noeval == 0)
                 evalerror (_ ("division by 0"));
               else
                 value = 1;
             }
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
 
           switch (op)
             {
@@ -363,14 +356,7 @@ Shell::expassign ()
               if (lvalue == INTMAX_MIN && value == -1)
                 lvalue = (op == DIV) ? INTMAX_MIN : 0;
               else
-#if HAVE_IMAXDIV
-                {
-                  idiv = imaxdiv (lvalue, value);
-                  lvalue = (op == DIV) ? idiv.quot : idiv.rem;
-                }
-#else
                 lvalue = (op == DIV) ? lvalue / value : lvalue % value;
-#endif
               break;
             case PLUS:
               lvalue += value;
@@ -395,13 +381,17 @@ Shell::expassign ()
               break;
             default:
               evalerror (_ ("bug: bad expassign token"));
-              break;
+              /* NOTREACHED */
             }
           value = lvalue;
         }
 
-      std::string rhs = itos (value);
-      if (expr_current.noeval == 0)
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+      string rhs = itos (value);
+      if (this_expr.noeval == 0)
         {
 #if defined(ARRAY_VARS)
           if (lind != -1)
@@ -410,10 +400,11 @@ Shell::expassign ()
 #endif
             expr_bind_variable (lhs, rhs);
         }
-      if (expr_current.lval.tokstr == expr_current.tokstr)
-        expr_current.lval.init ();
+      if (this_expr.lval.tokstr == this_expr.tokstr)
+        this_expr.lval.init ();
 
-      expr_current.tokstr.clear (); /* For freeing on errors. */
+      delete[] this_expr.tokstr;
+      this_expr.tokstr = nullptr; /* For freeing on errors. */
     }
 
   return value;
@@ -427,41 +418,41 @@ Shell::expcond ()
   bool set_noeval = false;
 
   rval = cval = explor ();
-  if (expr_current.curtok == QUES) /* found conditional expr */
+  if (this_expr.curtok == QUES) /* found conditional expr */
     {
       if (cval == 0)
         {
           set_noeval = true;
-          expr_current.noeval++;
+          this_expr.noeval++;
         }
 
       readtok ();
-      if (expr_current.curtok == NONE || expr_current.curtok == COL)
+      if (this_expr.curtok == NONE || this_expr.curtok == COL)
         evalerror (_ ("expression expected"));
 
-      val1 = EXP_HIGHEST ();
+      val1 = EXP_LOWEST ();
 
       if (set_noeval)
-        expr_current.noeval--;
-      if (expr_current.curtok != COL)
+        this_expr.noeval--;
+      if (this_expr.curtok != COL)
         evalerror (_ ("`:' expected for conditional expression"));
 
       set_noeval = false;
       if (cval)
         {
           set_noeval = true;
-          expr_current.noeval++;
+          this_expr.noeval++;
         }
 
       readtok ();
-      if (expr_current.curtok == 0)
+      if (this_expr.curtok == 0)
         evalerror (_ ("expression expected"));
       val2 = expcond ();
 
       if (set_noeval)
-        expr_current.noeval--;
+        this_expr.noeval--;
       rval = cval ? val1 : val2;
-      expr_current.lasttok = COND;
+      this_expr.lasttok = COND;
     }
   return rval;
 }
@@ -470,24 +461,22 @@ Shell::expcond ()
 int64_t
 Shell::explor ()
 {
-  int64_t val1, val2;
+  int64_t val1 = expland ();
 
-  val1 = expland ();
-
-  while (expr_current.curtok == LOR)
+  while (this_expr.curtok == LOR)
     {
       bool set_noeval = false;
       if (val1 != 0)
         {
-          expr_current.noeval++;
+          this_expr.noeval++;
           set_noeval = true;
         }
       readtok ();
-      val2 = expland ();
+      int64_t val2 = expland ();
       if (set_noeval)
-        expr_current.noeval--;
+        this_expr.noeval--;
       val1 = val1 || val2;
-      expr_current.lasttok = LOR;
+      this_expr.lasttok = LOR;
     }
 
   return val1;
@@ -497,24 +486,22 @@ Shell::explor ()
 int64_t
 Shell::expland ()
 {
-  int64_t val1, val2;
+  int64_t val1 = expbor ();
 
-  val1 = expbor ();
-
-  while (expr_current.curtok == LAND)
+  while (this_expr.curtok == LAND)
     {
       bool set_noeval = false;
       if (val1 == 0)
         {
           set_noeval = true;
-          expr_current.noeval++;
+          this_expr.noeval++;
         }
       readtok ();
-      val2 = expbor ();
+      int64_t val2 = expbor ();
       if (set_noeval)
-        expr_current.noeval--;
+        this_expr.noeval--;
       val1 = val1 && val2;
-      expr_current.lasttok = LAND;
+      this_expr.lasttok = LAND;
     }
 
   return val1;
@@ -524,16 +511,14 @@ Shell::expland ()
 int64_t
 Shell::expbor ()
 {
-  int64_t val1, val2;
+  int64_t val1 = expbxor ();
 
-  val1 = expbxor ();
-
-  while (expr_current.curtok == BOR)
+  while (this_expr.curtok == BOR)
     {
       readtok ();
-      val2 = expbxor ();
+      int64_t val2 = expbxor ();
       val1 = val1 | val2;
-      expr_current.lasttok = NUM;
+      this_expr.lasttok = NUM;
     }
 
   return val1;
@@ -543,16 +528,14 @@ Shell::expbor ()
 int64_t
 Shell::expbxor ()
 {
-  int64_t val1, val2;
+  int64_t val1 = expband ();
 
-  val1 = expband ();
-
-  while (expr_current.curtok == BXOR)
+  while (this_expr.curtok == BXOR)
     {
       readtok ();
-      val2 = expband ();
+      int64_t val2 = expband ();
       val1 = val1 ^ val2;
-      expr_current.lasttok = NUM;
+      this_expr.lasttok = NUM;
     }
 
   return val1;
@@ -562,16 +545,14 @@ Shell::expbxor ()
 int64_t
 Shell::expband ()
 {
-  int64_t val1, val2;
+  int64_t val1 = exp5 ();
 
-  val1 = exp5 ();
-
-  while (expr_current.curtok == BAND)
+  while (this_expr.curtok == BAND)
     {
       readtok ();
-      val2 = exp5 ();
+      int64_t val2 = exp5 ();
       val1 = val1 & val2;
-      expr_current.lasttok = NUM;
+      this_expr.lasttok = NUM;
     }
 
   return val1;
@@ -580,21 +561,19 @@ Shell::expband ()
 int64_t
 Shell::exp5 ()
 {
-  int64_t val1, val2;
+  int64_t val1 = exp4 ();
 
-  val1 = exp4 ();
-
-  while ((expr_current.curtok == EQEQ) || (expr_current.curtok == NEQ))
+  while ((this_expr.curtok == EQEQ) || (this_expr.curtok == NEQ))
     {
-      token_t op = expr_current.curtok;
+      token_t op = this_expr.curtok;
 
       readtok ();
-      val2 = exp4 ();
+      int64_t val2 = exp4 ();
       if (op == EQEQ)
         val1 = (val1 == val2);
       else if (op == NEQ)
         val1 = (val1 != val2);
-      expr_current.lasttok = NUM;
+      this_expr.lasttok = NUM;
     }
   return val1;
 }
@@ -602,16 +581,14 @@ Shell::exp5 ()
 int64_t
 Shell::exp4 ()
 {
-  int64_t val1, val2;
-
-  val1 = expshift ();
-  while ((expr_current.curtok == LEQ) || (expr_current.curtok == GEQ)
-         || (expr_current.curtok == LT) || (expr_current.curtok == GT))
+  int64_t val1 = expshift ();
+  while ((this_expr.curtok == LEQ) || (this_expr.curtok == GEQ)
+         || (this_expr.curtok == LT) || (this_expr.curtok == GT))
     {
-      token_t op = expr_current.curtok;
+      token_t op = this_expr.curtok;
 
       readtok ();
-      val2 = expshift ();
+      int64_t val2 = expshift ();
 
       if (op == LEQ)
         val1 = val1 <= val2;
@@ -621,7 +598,7 @@ Shell::exp4 ()
         val1 = val1 < val2;
       else /* (op == GT) */
         val1 = val1 > val2;
-      expr_current.lasttok = NUM;
+      this_expr.lasttok = NUM;
     }
   return val1;
 }
@@ -630,22 +607,20 @@ Shell::exp4 ()
 int64_t
 Shell::expshift ()
 {
-  int64_t val1, val2;
+  int64_t val1 = exp3 ();
 
-  val1 = exp3 ();
-
-  while ((expr_current.curtok == LSH) || (expr_current.curtok == RSH))
+  while ((this_expr.curtok == LSH) || (this_expr.curtok == RSH))
     {
-      token_t op = expr_current.curtok;
+      token_t op = this_expr.curtok;
 
       readtok ();
-      val2 = exp3 ();
+      int64_t val2 = exp3 ();
 
       if (op == LSH)
         val1 = val1 << val2;
       else
         val1 = val1 >> val2;
-      expr_current.lasttok = NUM;
+      this_expr.lasttok = NUM;
     }
 
   return val1;
@@ -654,22 +629,20 @@ Shell::expshift ()
 int64_t
 Shell::exp3 ()
 {
-  int64_t val1, val2;
+  int64_t val1 = expmuldiv ();
 
-  val1 = expmuldiv ();
-
-  while ((expr_current.curtok == PLUS) || (expr_current.curtok == MINUS))
+  while ((this_expr.curtok == PLUS) || (this_expr.curtok == MINUS))
     {
-      token_t op = expr_current.curtok;
+      token_t op = this_expr.curtok;
 
       readtok ();
-      val2 = expmuldiv ();
+      int64_t val2 = expmuldiv ();
 
       if (op == PLUS)
         val1 += val2;
       else if (op == MINUS)
         val1 -= val2;
-      expr_current.lasttok = NUM;
+      this_expr.lasttok = NUM;
     }
   return val1;
 }
@@ -677,35 +650,29 @@ Shell::exp3 ()
 int64_t
 Shell::expmuldiv ()
 {
-  int64_t val1, val2;
-#if defined(HAVE_IMAXDIV)
-  imaxdiv_t idiv;
-#endif
+  int64_t val1 = exppower ();
 
-  val1 = exppower ();
-
-  while ((expr_current.curtok == MUL) || (expr_current.curtok == DIV)
-         || (expr_current.curtok == MOD))
+  while ((this_expr.curtok == MUL) || (this_expr.curtok == DIV)
+         || (this_expr.curtok == MOD))
     {
-      token_t op = expr_current.curtok;
+      token_t op = this_expr.curtok;
 
-      std::string &stp = expr_current.tp;
+      char *stp = this_expr.tp;
       readtok ();
 
-      val2 = exppower ();
+      int64_t val2 = exppower ();
 
       /* Handle division by 0 and twos-complement arithmetic overflow */
       if (((op == DIV) || (op == MOD)) && (val2 == 0))
         {
-          if (expr_current.noeval == 0)
+          if (this_expr.noeval == 0)
             {
-              std::string sltp (expr_current.lasttp);
-              expr_current.lasttp = stp;
-              while (!expr_current.lasttp.empty ()
-                     && whitespace (expr_current.lasttp[0]))
-                expr_current.lasttp.erase (0, 1);
+              this_expr.lasttp = stp;
+              if (stp)
+                while (*this_expr.lasttp && whitespace (*this_expr.lasttp))
+                  this_expr.lasttp++;
+
               evalerror (_ ("division by 0"));
-              expr_current.lasttp = sltp;
             }
           else
             val2 = 1;
@@ -721,15 +688,9 @@ Shell::expmuldiv ()
       if (op == MUL)
         val1 *= val2;
       else if (op == DIV || op == MOD)
-#if defined(HAVE_IMAXDIV)
-        {
-          idiv = imaxdiv (val1, val2);
-          val1 = (op == DIV) ? idiv.quot : idiv.rem;
-        }
-#else
         val1 = (op == DIV) ? val1 / val2 : val1 % val2;
-#endif
-      expr_current.lasttok = NUM;
+
+      this_expr.lasttok = NUM;
     }
   return val1;
 }
@@ -737,9 +698,7 @@ Shell::expmuldiv ()
 static inline int64_t
 ipow (int64_t base, int64_t exp)
 {
-  int64_t result;
-
-  result = 1;
+  int64_t result = 1;
   while (exp)
     {
       if (exp & 1)
@@ -753,14 +712,12 @@ ipow (int64_t base, int64_t exp)
 int64_t
 Shell::exppower ()
 {
-  int64_t val1, val2, c;
-
-  val1 = exp1 ();
-  while (expr_current.curtok == POWER)
+  int64_t val1 = exp1 ();
+  while (this_expr.curtok == POWER)
     {
       readtok ();
-      val2 = exppower (); /* exponentiation is right-associative */
-      expr_current.lasttok = NUM;
+      int64_t val2 = exppower (); /* exponentiation is right-associative */
+      this_expr.lasttok = NUM;
       if (val2 == 0)
         return 1;
       if (val2 < 0)
@@ -775,29 +732,29 @@ Shell::exp1 ()
 {
   int64_t val;
 
-  if (expr_current.curtok == NOT)
+  if (this_expr.curtok == NOT)
     {
       readtok ();
       val = !exp1 ();
-      expr_current.lasttok = NUM;
+      this_expr.lasttok = NUM;
     }
-  else if (expr_current.curtok == BNOT)
+  else if (this_expr.curtok == BNOT)
     {
       readtok ();
       val = ~exp1 ();
-      expr_current.lasttok = NUM;
+      this_expr.lasttok = NUM;
     }
-  else if (expr_current.curtok == MINUS)
+  else if (this_expr.curtok == MINUS)
     {
       readtok ();
       val = -exp1 ();
-      expr_current.lasttok = NUM;
+      this_expr.lasttok = NUM;
     }
-  else if (expr_current.curtok == PLUS)
+  else if (this_expr.curtok == PLUS)
     {
       readtok ();
       val = exp1 ();
-      expr_current.lasttok = NUM;
+      this_expr.lasttok = NUM;
     }
   else
     val = exp0 ();
@@ -809,91 +766,90 @@ int64_t
 Shell::exp0 ()
 {
   int64_t val = 0, v2;
-  char *vincdec;
   EXPR_CONTEXT ec;
 
   /* XXX - might need additional logic here to decide whether or not
            pre-increment or pre-decrement is legal at this point. */
-  if (expr_current.curtok == PREINC || expr_current.curtok == PREDEC)
+  if (this_expr.curtok == PREINC || this_expr.curtok == PREDEC)
     {
-      token_t stok = expr_current.lasttok = expr_current.curtok;
+      token_t stok = this_expr.lasttok = this_expr.curtok;
       readtok ();
-      if (expr_current.curtok != STR)
+      if (this_expr.curtok != STR)
         /* readtok() catches this */
         evalerror (
             _ ("identifier expected after pre-increment or pre-decrement"));
 
-      v2 = expr_current.tokval + ((stok == PREINC) ? 1 : -1);
-      vincdec = itos (v2);
-      if (expr_current.noeval == 0)
+      v2 = this_expr.tokval + ((stok == PREINC) ? 1 : -1);
+      string vincdec = itos (v2);
+      if (this_expr.noeval == 0)
         {
 #if defined(ARRAY_VARS)
-          if (expr_current.lval.ind != -1)
-            expr_bind_array_element (expr_current.lval.tokstr,
-                                     expr_current.lval.ind, vincdec);
+          if (this_expr.lval.ind != -1)
+            expr_bind_array_element (this_expr.lval.tokstr, this_expr.lval.ind,
+                                     vincdec);
           else
 #endif
-              if (!expr_current.tokstr.empty ())
-            expr_bind_variable (expr_current.tokstr, vincdec);
+              if (this_expr.tokstr)
+            expr_bind_variable (this_expr.tokstr, vincdec);
         }
-      delete[] vincdec;
       val = v2;
 
-      expr_current.curtok = NUM; /* make sure --x=7 is flagged as an error */
+      this_expr.curtok = NUM; /* make sure --x=7 is flagged as an error */
       readtok ();
     }
-  else if (expr_current.curtok == LPAR)
+  else if (this_expr.curtok == LPAR)
     {
       /* XXX - save curlval here?  Or entire expression context? */
       readtok ();
-      val = EXP_HIGHEST ();
+      val = EXP_LOWEST ();
 
-      if (expr_current.curtok != RPAR)
+      if (this_expr.curtok != RPAR)
         evalerror (_ ("missing `)'"));
 
       /* Skip over closing paren. */
       readtok ();
     }
-  else if ((expr_current.curtok == NUM) || (expr_current.curtok == STR))
+  else if ((this_expr.curtok == NUM) || (this_expr.curtok == STR))
     {
-      val = expr_current.tokval;
-      if (expr_current.curtok == STR)
+      val = this_expr.tokval;
+      if (this_expr.curtok == STR)
         {
-          ec = expr_current;
-          expr_current.tokstr.clear (); /* keep it from being freed */
-          expr_current.noeval = 1;
+          ec = this_expr;
+          this_expr.tokstr = nullptr; /* keep it from being freed */
+          this_expr.noeval = 1;
           readtok ();
-          token_t stok = expr_current.curtok;
+          token_t stok = this_expr.curtok;
 
           /* post-increment or post-decrement */
           if (stok == POSTINC || stok == POSTDEC)
             {
               /* restore certain portions of EC */
-              expr_current.tokstr = ec.tokstr;
-              expr_current.noeval = ec.noeval;
-              expr_current.lval = ec.lval;
-              expr_current.lasttok = STR; /* ec.curtok */
+              this_expr.tokstr = ec.tokstr;
+              this_expr.noeval = ec.noeval;
+              this_expr.lval = ec.lval;
+              this_expr.lasttok = STR; /* ec.curtok */
 
               v2 = val + ((stok == POSTINC) ? 1 : -1);
-              vincdec = itos (v2);
-              if (expr_current.noeval == 0)
+              string vincdec = itos (v2);
+              if (this_expr.noeval == 0)
                 {
 #if defined(ARRAY_VARS)
-                  if (expr_current.lval.ind != -1)
-                    expr_bind_array_element (expr_current.lval.tokstr,
-                                             expr_current.lval.ind, vincdec);
+                  if (this_expr.lval.ind != -1)
+                    expr_bind_array_element (this_expr.lval.tokstr,
+                                             this_expr.lval.ind, vincdec);
                   else
 #endif
-                    expr_bind_variable (expr_current.tokstr, vincdec);
+                    expr_bind_variable (this_expr.tokstr, vincdec);
                 }
-              delete[] vincdec;
-              expr_current.curtok
+              this_expr.curtok
                   = NUM; /* make sure x++=7 is flagged as an error */
             }
           else
             {
-              // copy contents of ec
-              expr_current = ec;
+              /* XXX - watch out for pointer aliasing issues here */
+              if (stok == STR) /* free new tokstr before old one is restored */
+                delete[] this_expr.tokstr;
+              this_expr = ec;
             }
         }
 
@@ -906,89 +862,94 @@ Shell::exp0 ()
 }
 
 int64_t
-Shell::expr_streval (std::string &tok, int e, struct lvalue *lvalue)
+Shell::expr_streval (char *tok, int e, token_lvalue *lvalue)
 {
   SHELL_VAR *v;
-  //   std::string &value;
-  //   int64_t tval;
 
-  /*itrace("expr_streval: %s: noeval = %d expanded=%d", tok, noeval,
-   * already_expanded);*/
+  // itrace("expr_streval: %s: noeval = %d expanded=%d", tok.c_str (),
+  //        this_expr.noeval, already_expanded);
+
   /* If we are suppressing evaluation, just short-circuit here instead of
      going through the rest of the evaluator. */
-  if (expr_current.noeval)
+  if (this_expr.noeval)
     return 0;
 
   size_t initial_depth = expr_stack.size ();
 
 #if defined(ARRAY_VARS)
-  int tflag = assoc_expand_once && already_expanded; /* for a start */
+  bool tflag = assoc_expand_once && already_expanded; /* for a start */
 #endif
 
   /* [[[[[ */
 #if defined(ARRAY_VARS)
   av_flags aflag = (tflag) ? AV_NOEXPAND : AV_NOFLAGS;
-  v = (e == ']')
-          ? array_variable_part (tok, tflag, nullptr, nullptr)
-          : find_variable (tok);
+  v = (e == ']') ? array_variable_part (tok, tflag, nullptr, nullptr)
+                 : find_variable (tok);
 #else
   v = find_variable (tok);
 #endif
-  if (v == 0 && e != ']')
+  if (v == nullptr && e != ']')
     v = find_variable_last_nameref (tok, 0);
 
-  if ((v == 0 || invisible_p (v)) && unbound_vars_is_error)
+  if ((v == nullptr || v->invisible ()) && unbound_vars_is_error)
     {
+      const char *value;
 #if defined(ARRAY_VARS)
-      value = (e == ']') ? array_variable_name (tok, tflag, (std::string &*)0,
-                                                (int *)0)
-                         : tok;
-#else
-      value = tok;
+      string *str_value = nullptr;
+      if (e == ']')
+        {
+          str_value = array_variable_name (tok, tflag, nullptr);
+          value = str_value ? str_value->c_str () : tok;
+        }
+      else
 #endif
+        value = tok;
 
       set_exit_status (EXECUTION_FAILURE);
       err_unboundvar (value);
 
 #if defined(ARRAY_VARS)
       if (e == ']')
-        FREE (value); /* array_variable_name returns new memory */
+        delete str_value; /* array_variable_name returns new memory */
 #endif
 
       if (no_throw_on_fatal_error && interactive_shell)
-        sh_longjmp (evalbuf, 1);
+        throw eval_exception ();
 
       if (interactive_shell)
         {
           expr_unwind ();
           top_level_cleanup ();
-          jump_to_top_level (DISCARD);
+          throw bash_exception (DISCARD);
         }
       else
-        jump_to_top_level (FORCE_EOF);
+        throw bash_exception (FORCE_EOF);
     }
 
+  string *value;
 #if defined(ARRAY_VARS)
-  ind = -1;
+  array_eltstate_t es (-1);
+
   /* If the second argument to get_array_value doesn't include AV_ALLOWALL,
      we don't allow references like array[@].  In this case, get_array_value
      is just like get_variable_value in that it does not return newly-allocated
      memory or quote the results.  AFLAG is set above and is either AV_NOEXPAND
-     or 0. */
-  value = (e == ']') ? get_array_value (tok, aflag, nullptr, &ind)
+     or AV_NOFLAGS. */
+  value = (e == ']') ? get_array_value (tok, aflag, &es)
                      : get_variable_value (v);
+  arrayind_t ind = es.ind;
 #else
   value = get_variable_value (v);
 #endif
 
-  if (expr_depth < initial_depth)
+  if (expr_stack.size () < initial_depth)
     {
-      if (no_longjmp_on_fatal_error && interactive_shell)
-        sh_longjmp (evalbuf, 1);
+      if (no_throw_on_fatal_error && interactive_shell)
+        throw eval_exception ();
       return 0;
     }
 
-  tval = (value && *value) ? subexpr (value) : 0;
+  int64_t tval = (value && !value->empty ()) ? subexpr (*value) : 0;
 
   if (lvalue)
     {
@@ -1006,7 +967,7 @@ Shell::expr_streval (std::string &tok, int e, struct lvalue *lvalue)
 }
 
 static inline bool
-_is_multiop (token_t c)
+_is_multiop (char c)
 {
   switch (c)
     {
@@ -1032,7 +993,7 @@ _is_multiop (token_t c)
 }
 
 static inline bool
-_is_arithop (token_t c)
+_is_arithop (char c)
 {
   switch (c)
     {
@@ -1068,13 +1029,12 @@ _is_arithop (token_t c)
 void
 Shell::readtok ()
 {
-  std::string &cp, *xp;
-  unsigned char c, c1;
-  int e;
-  struct lvalue lval;
+  char *cp, *xp;
+  char c, c1, e;
+  token_lvalue lval;
 
   /* Skip leading whitespace. */
-  cp = tp;
+  cp = this_expr.tp;
   c = e = 0;
   while (cp && (c = *cp) && (cr_whitespace (c)))
     cp++;
@@ -1084,17 +1044,18 @@ Shell::readtok ()
 
   if (c == '\0')
     {
-      lasttok = curtok;
-      curtok = 0;
-      tp = cp;
+      this_expr.lasttok = this_expr.curtok;
+      this_expr.curtok = NONE;
+      this_expr.tp = cp;
       return;
     }
-  lasttp = tp = cp - 1;
+
+  this_expr.lasttp = this_expr.tp = cp - 1;
 
   if (legal_variable_starter (c))
     {
       /* variable names not preceded with a dollar sign are shell variables. */
-      std::string &savecp;
+      char *savecp;
       EXPR_CONTEXT ec;
       int peektok;
 
@@ -1106,10 +1067,11 @@ Shell::readtok ()
 #if defined(ARRAY_VARS)
       if (c == '[')
         {
-          e = expr_skipsubscript (tp, cp); /* XXX - was skipsubscript */
-          if (cp[e] == ']')
+          // XXX - was skipsubscript
+          size_t pos = expr_skipsubscript (this_expr.tp, cp);
+          if (cp[pos] == ']')
             {
-              cp += e + 1;
+              cp += pos + 1;
               c = *cp;
               e = ']';
             }
@@ -1120,51 +1082,53 @@ Shell::readtok ()
 
       *cp = '\0';
       /* XXX - watch out for pointer aliasing issues here */
-      if (curlval.tokstr && curlval.tokstr == tokstr)
-        init_lvalue (&curlval);
+      if (this_expr.lval.tokstr && this_expr.lval.tokstr == this_expr.tokstr)
+        this_expr.lval.init ();
 
-      FREE (tokstr);
-      tokstr = savestring (tp);
+      delete[] this_expr.tokstr;
+      this_expr.tokstr = savestring (this_expr.tp);
       *cp = c;
 
       /* XXX - make peektok part of saved token state? */
-      SAVETOK (&ec);
-      tokstr = nullptr; /* keep it from being freed */
-      tp = savecp = cp;
-      noeval = 1;
-      curtok = STR;
+      ec = this_expr;
+      this_expr.tokstr = nullptr; /* keep it from being freed */
+      this_expr.tp = savecp = cp;
+      this_expr.noeval = 1;
+      this_expr.curtok = STR;
       readtok ();
-      peektok = curtok;
+      peektok = this_expr.curtok;
       if (peektok == STR) /* free new tokstr before old one is restored */
-        FREE (tokstr);
-      RESTORETOK (&ec);
+        delete[] this_expr.tokstr;
+      this_expr = ec;
       cp = savecp;
 
       /* The tests for PREINC and PREDEC aren't strictly correct, but they
          preserve old behavior if a construct like --x=9 is given. */
-      if (lasttok == PREINC || lasttok == PREDEC || peektok != EQ)
+      if (this_expr.lasttok == PREINC || this_expr.lasttok == PREDEC
+          || peektok != EQ)
         {
-          lastlval = curlval;
-          tokval = expr_streval (tokstr, e, &curlval);
+          lastlval = this_expr.lval;
+          this_expr.tokval
+              = expr_streval (this_expr.tokstr, e, &this_expr.lval);
         }
       else
-        tokval = 0;
+        this_expr.tokval = 0;
 
-      lasttok = curtok;
-      curtok = STR;
+      this_expr.lasttok = this_expr.curtok;
+      this_expr.curtok = STR;
     }
-  else if (DIGIT (c))
+  else if (c_isdigit (c))
     {
-      while (ISALNUM (c) || c == '#' || c == '@' || c == '_')
+      while (c_isalnum (c) || c == '#' || c == '@' || c == '_')
         c = *cp++;
 
       c = *--cp;
       *cp = '\0';
 
-      tokval = strlong (tp);
+      this_expr.tokval = strlong (this_expr.tp);
       *cp = c;
-      lasttok = curtok;
-      curtok = NUM;
+      this_expr.lasttok = this_expr.curtok;
+      this_expr.curtok = NUM;
     }
   else
     {
@@ -1205,12 +1169,18 @@ Shell::readtok ()
         c = LOR;
       else if ((c == '*') && (c1 == '*'))
         c = POWER;
-      else if ((c == '-' || c == '+') && c1 == c && curtok == STR)
+      else if ((c == '-' || c == '+') && c1 == c && this_expr.curtok == STR)
         c = (c == '-') ? POSTDEC : POSTINC;
-      else if ((c == '-' || c == '+') && c1 == c && curtok == NUM
-               && (lasttok == PREINC || lasttok == PREDEC))
+#ifdef STRICT_ARITH_PARSING
+      else if ((c == '-' || c == '+') && c1 == c && this_expr.curtok == NUM)
+#else
+      else if ((c == '-' || c == '+') && c1 == c && this_expr.curtok == NUM
+               && (this_expr.lasttok == PREINC || this_expr.lasttok == PREDEC))
+#endif
         {
           /* This catches something like --FOO++ */
+          /* TAG:bash-5.3 add gettext calls here or make this a separate
+           * function */
           if (c == '-')
             evalerror ("--: assignment requires lvalue");
           else
@@ -1223,34 +1193,35 @@ Shell::readtok ()
           xp = cp;
           while (xp && *xp && cr_whitespace (*xp))
             xp++;
-          if (legal_variable_starter ((unsigned char)*xp))
+          if (legal_variable_starter (*xp))
             c = (c == '-') ? PREDEC : PREINC;
           else
           /* Could force parsing as preinc or predec and throw an error */
-#if 0
-	    {
-	      /* Posix says unary plus and minus have higher priority than
-		 preinc and predec. */
-	      /* This catches something like --4++ */
-	      if (c == '-')
-		evalerror ("--: assignment requires lvalue");
-	      else
-		evalerror ("++: assignment requires lvalue");
-	    }
+#ifdef STRICT_ARITH_PARSING
+            {
+              /* Posix says unary plus and minus have higher priority than
+                 preinc and predec. */
+              /* This catches something like --4++ */
+              if (c == '-')
+                evalerror ("--: assignment requires lvalue");
+              else
+                evalerror ("++: assignment requires lvalue");
+            }
 #else
             cp--; /* not preinc or predec, so unget the character */
 #endif
         }
       else if (c1 == EQ && member (c, "*/%+-&^|"))
         {
-          assigntok = c; /* a OP= b */
+          assigntok = static_cast<token_t> (c); /* a OP= b */
           c = OP_ASSIGN;
         }
-      else if (_is_arithop (c) == 0)
+      else if (!_is_arithop (c))
         {
           cp--;
           /* use curtok, since it hasn't been copied to lasttok yet */
-          if (curtok == 0 || _is_arithop (curtok) || _is_multiop (curtok))
+          if (this_expr.curtok == 0 || _is_arithop (this_expr.curtok)
+              || _is_multiop (this_expr.curtok))
             evalerror (_ ("syntax error: operand expected"));
           else
             evalerror (_ ("syntax error: invalid arithmetic operator"));
@@ -1262,23 +1233,26 @@ Shell::readtok ()
          of the recognized operators and flag an error if not.  Could create
          a character map the first time through and check it on subsequent
          calls. */
-      lasttok = curtok;
-      curtok = c;
+      this_expr.lasttok = this_expr.curtok;
+      this_expr.curtok = static_cast<token_t> (c);
     }
-  tp = cp;
+  this_expr.tp = cp;
 }
 
 void
-Shell::evalerror (string_view msg)
+Shell::evalerror (const char *msg)
 {
-  const std::string &name, *t;
+  const char *name, *t;
 
-  name = this_command_name;
-  for (t = expression; t && whitespace (*t); t++)
+  name = this_command_name.c_str ();
+  for (t = this_expr.expression; t && whitespace (*t); t++)
     ;
+
   internal_error (_ ("%s%s%s: %s (error token is \"%s\")"), name ? name : "",
                   name ? ": " : "", t ? t : "", msg,
-                  (lasttp && *lasttp) ? lasttp : "");
+                  (this_expr.lasttp && *this_expr.lasttp) ? this_expr.lasttp
+                                                          : "");
+
   throw bash_exception (FORCE_EOF);
 }
 
@@ -1293,20 +1267,15 @@ Shell::evalerror (string_view msg)
    from [0-9][a-z][A-Z]_@ (a = 10, z = 35, A = 36, Z = 61, @ = 62, _ = 63 --
    you get the picture). */
 
-#define VALID_NUMCHAR(c) (ISALNUM (c) || ((c) == '_') || ((c) == '@'))
+#define VALID_NUMCHAR(c) (c_isalnum (c) || ((c) == '_') || ((c) == '@'))
 
 int64_t
-Shell::strlong (string_view num)
+Shell::strlong (const char *num)
 {
-  const std::string &s;
-  unsigned char c;
-  int base, foundbase;
-  int64_t val;
+  const char *s = num;
 
-  s = num;
-
-  base = 10;
-  foundbase = 0;
+  int base = 10;
+  bool foundbase = false;
   if (*s == '0')
     {
       s++;
@@ -1319,14 +1288,18 @@ Shell::strlong (string_view num)
         {
           base = 16;
           s++;
+#ifdef STRICT_ARITH_PARSING
+          if (*s == 0)
+            evalerror (_ ("invalid number"));
+#endif
         }
       else
         base = 8;
-      foundbase++;
+      foundbase = true;
     }
 
-  val = 0;
-  for (c = *s++; c; c = *s++)
+  int64_t val = 0;
+  for (char c = *s++; c; c = *s++)
     {
       if (c == '#')
         {
@@ -1337,9 +1310,9 @@ Shell::strlong (string_view num)
           if (val < 2 || val > 64)
             evalerror (_ ("invalid arithmetic base"));
 
-          base = val;
+          base = static_cast<int> (val);
           val = 0;
-          foundbase++;
+          foundbase = true;
 
           /* Make sure a base# is followed by a character that can compose a
              valid integer constant. Jeremy Townshend
@@ -1350,7 +1323,7 @@ Shell::strlong (string_view num)
       else if (VALID_NUMCHAR (c))
         {
           if (c_isdigit (c))
-            c = c_todigit (c);
+            c = todigit (c);
           else if (c >= 'a' && c <= 'z')
             c -= 'a' - 10;
           else if (c >= 'A' && c <= 'Z')
@@ -1363,13 +1336,20 @@ Shell::strlong (string_view num)
           if (c >= base)
             evalerror (_ ("value too great for base"));
 
+#ifdef CHECK_OVERFLOW
+          int64_t pval = val;
           val = (val * base) + c;
+          if (val < 0 || val < pval) /* overflow */
+            return INTMAX_MAX;
+#else
+          val = (val * base) + c;
+#endif
         }
       else
         break;
     }
 
-  return val;
+  return (val);
 }
 
 } // namespace bash
