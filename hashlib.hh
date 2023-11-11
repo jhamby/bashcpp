@@ -174,10 +174,10 @@ public:
       }
   }
 
-private:
   std::vector<BUCKET_CONTENTS<T> *> buckets; // Where the data is kept.
   size_t nentries; // How many entries this table has.
 
+private:
   bool
   should_grow ()
   {
@@ -399,6 +399,10 @@ HASH_TABLE<T>::insert (string_view string, hsearch_flags flags)
 
   return bucket;
 }
+
+/* Redefine the function as a macro for speed. */
+#define hash_items(bucket, table)                                             \
+  ((bucket < table.size ()) ? table.buckets[bucket] : nullptr)
 
 } // namespace bash
 

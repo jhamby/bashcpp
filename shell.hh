@@ -1689,10 +1689,10 @@ protected:
   // typedefs moved from general.h so they can become method pointers to Shell.
 
   /* Map over jobs for job control. */
-  typedef int (Shell::*sh_job_map_func_t) (JOB *, int, int, int);
+  typedef bool (Shell::*sh_job_map_func_t) (JOB *, int, int, int);
 
   /* Stuff for hacking variables. */
-  typedef int (Shell::*sh_var_map_func_t) (SHELL_VAR *);
+  typedef bool (Shell::*sh_var_map_func_t) (SHELL_VAR *);
 
   /* Shell function typedefs with prototypes */
   /* `Generic' function pointer typedefs (TODO: remove unused?) */
@@ -5438,20 +5438,19 @@ protected:
   int unbind_global_variable (const string &);
   int unbind_global_variable_noref (const string &);
 
-  SHELL_VAR **map_over (sh_var_map_func_t *, VAR_CONTEXT *);
-  SHELL_VAR **map_over_funcs (sh_var_map_func_t *);
-
-  SHELL_VAR **all_shell ();
-  SHELL_VAR **all_shell_functions ();
-  SHELL_VAR **all_visible ();
-  SHELL_VAR **all_visible_functions ();
-  SHELL_VAR **all_exported ();
-  SHELL_VAR **local_exported ();
-  SHELL_VAR **all_local (int);
+  VARLIST *map_over (sh_var_map_func_t, VAR_CONTEXT *);
+  VARLIST *map_over_funcs (sh_var_map_func_t);
+  void flatten (HASH_TABLE<SHELL_VAR> &, sh_var_map_func_t, VARLIST *);
 
   SHELL_VAR *null_assign (SHELL_VAR *, const string &, arrayind_t,
                           const string &);
   SHELL_VAR *get_self (SHELL_VAR *);
+
+  void push_posix_temp_var (void *);
+  void push_temp_var (void *);
+  void propagate_temp_var (void *);
+
+  void dispose_temporary_env (sh_free_func_t);
 
 #if defined(ARRAY_VARS)
   SHELL_VAR *null_array_assign (SHELL_VAR *, const string &, arrayind_t,
@@ -5567,7 +5566,28 @@ protected:
                                      HASH_TABLE<SHELL_VAR> *, hsearch_flags,
                                      assign_flags = ASS_NOFLAGS);
 
-  void bind_tempenv_variable (const string &, const string &);
+  /* Make variable NAME have VALUE in the temporary environment. */
+  void
+  bind_tempenv_variable (string_view name, string_view value)
+  {
+    SHELL_VAR *var;
+
+    var = temporary_env ? hash_lookup (name, temporary_env) : nullptr;
+
+    if (var)
+      {
+        var->set_string_value (value);
+        var->invalidate_exportstr ();
+      }
+  }
+
+  /* Find a variable in the temporary environment that is named NAME.
+     Return the SHELL_VAR *, or nullptr if not found. */
+  SHELL_VAR *
+  find_tempenv_variable (string_view name)
+  {
+    return temporary_env ? hash_lookup (name, temporary_env) : nullptr;
+  }
 
   SHELL_VAR *
   bind_global_variable (string_view name, const string &value,
@@ -5682,11 +5702,11 @@ protected:
 
   void adjust_shell_level (int);
   void non_unsettable (const string &);
-  void dispose_variable (void *);
   void dispose_used_env_vars ();
   void dispose_function_env ();
   void dispose_builtin_env ();
   void merge_temporary_env ();
+  void merge_function_temporary_env ();
   void flush_temporary_env ();
   void merge_builtin_env ();
   void kill_all_local_variables ();
@@ -5696,7 +5716,88 @@ protected:
   void set_var_auto_export (const string &);
   void set_func_auto_export (const string &);
 
-  void sort_variables (SHELL_VAR **);
+  static void sort_variables (VARLIST &);
+
+  /* Apply FUNC to each variable in SHELL_VARIABLES, adding each one for
+     which FUNC succeeds to an array of SHELL_VAR *s.  Returns the array. */
+  VARLIST *
+  vapply (sh_var_map_func_t func)
+  {
+    VARLIST *list = map_over (func, shell_variables);
+    if (list /* && posixly_correct */)
+      sort_variables (*list);
+    return list;
+  }
+
+  /* Apply FUNC to each variable in SHELL_FUNCTIONS, adding each one for
+     which FUNC succeeds to an array of SHELL_VAR *s.  Returns the array. */
+  VARLIST *
+  fapply (sh_var_map_func_t func)
+  {
+    VARLIST *list = map_over_funcs (func);
+    if (list /* && posixly_correct */)
+      sort_variables (*list);
+    return list;
+  }
+
+  /* Create a nullptr terminated array of all the shell variables. */
+  VARLIST *
+  all_shell_variables ()
+  {
+    return vapply (nullptr);
+  }
+
+  /* Create a nullptr terminated array of all the shell functions. */
+  VARLIST *
+  all_shell_functions ()
+  {
+    return fapply (nullptr);
+  }
+
+  bool visible_var (SHELL_VAR *);
+  bool visible_and_exported (SHELL_VAR *);
+  bool local_and_exported (SHELL_VAR *);
+  bool export_environment_candidate (SHELL_VAR *);
+  bool variable_in_context (SHELL_VAR *);
+  bool visible_variable_in_context (SHELL_VAR *);
+
+  VARLIST *
+  all_visible_functions ()
+  {
+    return fapply (&Shell::visible_var);
+  }
+
+  VARLIST *
+  all_visible_variables ()
+  {
+    return vapply (&Shell::visible_var);
+  }
+
+  VARLIST *
+  all_exported_variables ()
+  {
+    return vapply (&Shell::visible_and_exported);
+  }
+
+  VARLIST *
+  local_exported_variables ()
+  {
+    return vapply (&Shell::local_and_exported);
+  }
+
+  VARLIST *all_local_variables (bool);
+
+#if defined(ARRAY_VARS)
+  bool visible_array_vars (SHELL_VAR *);
+
+  VARLIST *
+  all_array_variables ()
+  {
+    return vapply (&Shell::visible_array_vars);
+  }
+#endif
+
+  char **all_variables_matching_prefix (string_view prefix);
 
   int chkexport (const string &);
   void maybe_make_export_env ();
@@ -6846,6 +6947,9 @@ protected:
   // Variables from hashcmd.cc
 
   HASH_TABLE<PATH_DATA> *hashed_filenames;
+
+  // temporary variable list for variables.cc
+  vector<string> tempvar_list;
 
   // Buffer for buffered input.
   char localbuf[1024];
